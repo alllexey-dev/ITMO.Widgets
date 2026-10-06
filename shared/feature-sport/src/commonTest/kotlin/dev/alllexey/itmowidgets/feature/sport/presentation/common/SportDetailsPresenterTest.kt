@@ -1,22 +1,22 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.common
 
+import dev.alllexey.itmowidgets.core.model.UserSharing
+import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import dev.alllexey.itmowidgets.core.model.UserSharing
-import dev.alllexey.itmowidgets.core.model.UserSummary
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 /** The details sheet's cases at state level; the View test of the sheet keeps only what needs a window. */
 class SportDetailsPresenterTest {
@@ -33,7 +33,7 @@ class SportDetailsPresenterTest {
         submitted: Boolean = false
     ) = SportDetailsPresenter.present(item.toDetailsArgs(), at, actionsEnabled, busy, submitted)
 
-    @Test fun `booking conditions separate warnings, waiting and restrictions`() {
+    @Test fun bookingConditionsSeparateWarningsWaitingAndRestrictions() {
         val cases = listOf(
             lesson.copy(intersection = true) to
                 listOf(SportDetailsCondition.Allowed, SportDetailsCondition.ScheduleOverlap),
@@ -53,11 +53,11 @@ class SportDetailsPresenterTest {
                 ))
         )
         cases.forEachIndexed { index, (item, expected) ->
-            assertEquals("case $index", expected, state(item).conditions)
+            assertEquals(expected, state(item).conditions, "case $index")
         }
     }
 
-    @Test fun `a restricted queue still offers its own cancellation`() {
+    @Test fun aRestrictedQueueStillOffersItsOwnCancellation() {
         val blockedQueue = lesson.copy(available = 0, canSignIn = false,
             unavailableReasons = listOf(UnavailableReason.HealthGroupMismatch, UnavailableReason.Full),
             signEntry = SportCardFixtures.entry())
@@ -68,7 +68,7 @@ class SportDetailsPresenterTest {
         )
     }
 
-    @Test fun `the late queue warning starts an hour before a full real lesson`() {
+    @Test fun theLateQueueWarningStartsAnHourBeforeAFullRealLesson() {
         val full = lesson.copy(available = 0, canSignIn = false)
         val waiting = SportDetailsCondition.Waiting(predicted = false)
         assertEquals(listOf(waiting), state(full, at = full.start - 61.minutes).conditions)
@@ -79,7 +79,7 @@ class SportDetailsPresenterTest {
             state(predicted, at = full.start - 1.minutes).conditions)
     }
 
-    @Test fun `a started lesson and a signed one explain no offer`() {
+    @Test fun aStartedLessonAndASignedOneExplainNoOffer() {
         assertEquals(listOf(SportDetailsCondition.Started), state(lesson, at = lesson.start).conditions)
         assertEquals(emptyList<SportDetailsCondition>(), state(lesson.copy(signed = true)).conditions)
         assertEquals(listOf(SportDetailsCondition.ScheduleOverlap),
@@ -87,7 +87,7 @@ class SportDetailsPresenterTest {
         assertEquals(emptyList<SportDetailsCondition>(), state(SportCardFixtures.booking()).conditions)
     }
 
-    @Test fun `a restricted prediction names its rules beside the matching note`() {
+    @Test fun aRestrictedPredictionNamesItsRulesBesideTheMatchingNote() {
         val predicted = lesson.copy(isLessonReal = false, canSignIn = false,
             unavailableReasons = listOf(UnavailableReason.HealthGroupMismatch))
         assertEquals(listOf(
@@ -98,16 +98,16 @@ class SportDetailsPresenterTest {
         assertEquals(listOf(SportDetailsCondition.PredictionMatching(withRules = false)), state(predictedBooking).conditions)
     }
 
-    @Test fun `details respect read-only, busy and a changed deadline`() {
+    @Test fun detailsRespectReadOnlyBusyAndAChangedDeadline() {
         assertEquals(SportDetailsAction(SportBookingAction.SIGN, enabled = true), state(lesson).action)
-        assertNull("read-only", state(lesson, actionsEnabled = false).action)
+        assertNull(state(lesson, actionsEnabled = false).action, "read-only")
         assertEquals(SportDetailsAction(SportBookingAction.SIGN, enabled = false), state(lesson, busy = true).action)
         assertEquals(SportDetailsAction(SportBookingAction.SIGN, enabled = false), state(lesson, submitted = true).action)
-        assertNull("the start closes the offer", state(lesson, at = lesson.start).action)
+        assertNull(state(lesson, at = lesson.start).action, "the start closes the offer")
         assertEquals(SportBookingAction.NONE, lesson.toDetailsArgs().bookingAction(lesson.start))
     }
 
-    @Test fun `every offer of the sheet maps to its action`() {
+    @Test fun everyOfferOfTheSheetMapsToItsAction() {
         val cases = listOf(
             lesson to SportBookingAction.SIGN,
             lesson.copy(signed = true) to SportBookingAction.CANCEL,
@@ -117,12 +117,12 @@ class SportDetailsPresenterTest {
             SportCardFixtures.booking().copy(signed = false, signEntry = SportCardFixtures.entry()) to SportBookingAction.CANCEL_AUTO
         )
         cases.forEachIndexed { index, (item, action) ->
-            assertEquals("case $index", SportDetailsAction(action, enabled = true), state(item).action)
+            assertEquals(SportDetailsAction(action, enabled = true), state(item).action, "case $index")
         }
         assertNull(state(SportCardFixtures.booking().copy(signed = false)).action)
     }
 
-    @Test fun `share action for upcoming lessons, bookings and predictions`() {
+    @Test fun shareActionForUpcomingLessonsBookingsAndPredictions() {
         val titled = lesson.copy(sectionName = SectionName("Фитнес (функциональная тренировка с элементами кроссфита и растяжкой)"))
         val past = titled.copy(start = titled.start - 2.days, end = titled.end - 2.days)
         val cases = listOf<Pair<SportCommon, SportShareTarget?>>(
@@ -134,24 +134,24 @@ class SportDetailsPresenterTest {
             titled.copy(lessonId = -5) to null
         )
         cases.forEachIndexed { index, (item, target) ->
-            assertEquals("case $index", target, state(item).share)
+            assertEquals(target, state(item).share, "case $index")
         }
-        assertNull("an ended lesson", state(lesson, at = lesson.end).share)
+        assertNull(state(lesson, at = lesson.end).share, "an ended lesson")
         assertEquals(SportShareTarget.Lesson(1), state(lesson, at = lesson.end - 1.minutes).share)
     }
 
-    @Test fun `prediction details keep the location without a historical footnote`() {
+    @Test fun predictionDetailsKeepTheLocationWithoutAHistoricalFootnote() {
         val predicted = lesson.copy(isLessonReal = false, canSignIn = false)
         val state = state(predicted)
         assertEquals(listOf(SportDetailsCondition.Waiting(predicted = true)), state.conditions)
-        assertNull("a prediction invents no places", state.registration.occupancy)
+        assertNull(state.registration.occupancy, "a prediction invents no places")
         assertNull(state.registration.queue)
         assertNull(state.registration.status)
         assertFalse(state.registration.visible)
         assertEquals(predicted.roomName, predicted.toDetailsArgs().roomName)
     }
 
-    @Test fun `free places follow the occupancy for every Russian plural form`() {
+    @Test fun freePlacesFollowTheOccupancyForEveryRussianPluralForm() {
         listOf(1, 2, 4, 5, 11, 21, 0).forEach { available ->
             val occupancy = state(lesson.copy(available = available, limit = 40)).registration.occupancy
             assertEquals(SportOccupancy(available, 40), occupancy)
@@ -161,7 +161,7 @@ class SportDetailsPresenterTest {
         assertNull(state(SportCardFixtures.booking()).registration.occupancy)
     }
 
-    @Test fun `a waiting queue shows its position, attempts and history in order`() {
+    @Test fun aWaitingQueueShowsItsPositionAttemptsAndHistoryInOrder() {
         val entry = SportCardFixtures.entry().copy(satisfiedAt = lesson.start - 1.hours)
         val queue = state(lesson.copy(available = 0, canSignIn = false, signEntry = entry)).registration
         assertEquals(SportRegistrationStatus.WAITING, queue.status)
@@ -186,7 +186,7 @@ class SportDetailsPresenterTest {
         assertFalse(expired.positionVisible)
     }
 
-    @Test fun `friends show signed, queued and not signed statuses`() {
+    @Test fun friendsShowSignedQueuedAndNotSignedStatuses() {
         val friends = listOf(
             FriendSportBooking(UserSummary(900001, "Первый", null, emptyList(), UserSharing(true, true)), 1, null),
             FriendSportBooking(UserSummary(900002, "Второй", "https://example.invalid/a.png", emptyList(), UserSharing(true, true)), 1,

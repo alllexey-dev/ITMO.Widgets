@@ -14,21 +14,21 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepos
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
-import java.time.LocalDateTime
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlinx.datetime.LocalDateTime
 
 class SportAutoSignFlowTest {
 
     private val data = FakeSportDataRepository()
     private val actions = FakeSportActionRepository()
-    private val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 8, 12, 0))
+    private val time = FixedAcademicTime(LocalDateTime(2026, 9, 8, 12, 0))
 
     private fun TestScope.flow() = SportAutoSignFlow(
         bookingDelegate(FakeSportBookingRepository(), FakeSportScheduleRepository(), data, this, actions),
@@ -41,14 +41,14 @@ class SportAutoSignFlowTest {
     }
 
     @Test
-    fun `with custom services off the tap explains why`() = runTest {
+    fun withCustomServicesOffTheTapExplainsWhy() = runTest {
         actions.servicesEnabled = false
 
         assertEquals(SportAutoSignDecision.ServicesDisabled, flow().onClick(SportCardFixtures.lesson(1)))
     }
 
     @Test
-    fun `an active free-sign entry offers to leave its queue`() = runTest {
+    fun anActiveFreeSignEntryOffersToLeaveItsQueue() = runTest {
         val lesson = SportCardFixtures.lesson(1).copy(signEntry = SportCardFixtures.entry())
 
         assertEquals(
@@ -58,7 +58,7 @@ class SportAutoSignFlowTest {
     }
 
     @Test
-    fun `an active auto-sign entry offers to leave its queue`() = runTest {
+    fun anActiveAutoSignEntryOffersToLeaveItsQueue() = runTest {
         val lesson = predicted.copy(signEntry = autoEntry(id = 4, target = predicted.start))
 
         assertEquals(
@@ -68,7 +68,7 @@ class SportAutoSignFlowTest {
     }
 
     @Test
-    fun `a real lesson confirms a free sign and the switch reaches Backend`() = runTest {
+    fun aRealLessonConfirmsAFreeSignAndTheSwitchReachesBackend() = runTest {
         val flow = flow()
 
         val decision = flow.onClick(SportCardFixtures.lesson(1))
@@ -80,7 +80,7 @@ class SportAutoSignFlowTest {
     }
 
     @Test
-    fun `a predicted lesson within the limit confirms an auto sign`() = runTest {
+    fun aPredictedLessonWithinTheLimitConfirmsAnAutoSign() = runTest {
         assertEquals(
             SportAutoSignDecision.ConfirmAutoSign(SportSignCommand.CreateAutoSign(7)),
             flow().onClick(predicted)
@@ -88,7 +88,7 @@ class SportAutoSignFlowTest {
     }
 
     @Test
-    fun `a day that already has an auto sign names it`() = runTest {
+    fun aDayThatAlreadyHasAnAutoSignNamesIt() = runTest {
         data.entries = listOf(autoEntry(id = 4, target = predicted.start + 3.hours))
 
         assertEquals(
@@ -101,7 +101,7 @@ class SportAutoSignFlowTest {
     }
 
     @Test
-    fun `a spent limit names the next date in the academic zone`() = runTest {
+    fun aSpentLimitNamesTheNextDateInTheAcademicZone() = runTest {
         data.limits = SportAutoSignLimits(limit = 2, available = 0, nextAvailableAt = Instant.parse("2026-09-12T06:00:00Z"))
 
         assertEquals(SportAutoSignDecision.LimitReached("12 сент. 2026 г., 09:00:00"), flow().onClick(predicted))

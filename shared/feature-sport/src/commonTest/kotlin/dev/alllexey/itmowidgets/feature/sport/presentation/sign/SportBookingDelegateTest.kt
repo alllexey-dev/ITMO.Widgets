@@ -12,22 +12,22 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportActionReposi
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
-import kotlinx.coroutines.flow.flowOf
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.After
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import kotlinx.datetime.LocalDate
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SportBookingDelegateTest {
@@ -51,13 +51,13 @@ class SportBookingDelegateTest {
         followUpScope = followUpScope
     )
 
-    @After
+    @AfterTest
     fun tearDown() {
         followUpScope.cancel()
     }
 
     @Test
-    fun `a sign-up fetches the schedule, bookings and catalogue again after the follow-up delay, outside the caller`() =
+    fun aSignUpFetchesTheScheduleBookingsAndCatalogueAgainAfterTheFollowUpDelayOutsideTheCaller() =
         runTest(scheduler) {
             delegate.signIn(lesson())
             assertEquals(1, scheduleRefreshGateway.requests.size)
@@ -77,7 +77,7 @@ class SportBookingDelegateTest {
         }
 
     @Test
-    fun `successful sign in refreshes every affected schedule`() = runTest {
+    fun successfulSignInRefreshesEveryAffectedSchedule() = runTest {
         val result = delegate.signIn(lesson())
 
         assertTrue(result is AppResult.Success)
@@ -89,7 +89,7 @@ class SportBookingDelegateTest {
     }
 
     @Test
-    fun `the schedule refresh asks the lesson's academic dates, not its UTC ones`() = runTest {
+    fun theScheduleRefreshAsksTheLessonSAcademicDatesNotItsUTCOnes() = runTest {
         delegate.signIn(lesson(start = Instant.parse("2026-07-21T21:30:00Z")))
 
         val day = LocalDate(2026, 7, 22)
@@ -97,7 +97,7 @@ class SportBookingDelegateTest {
     }
 
     @Test
-    fun `failed sign in does not refresh stale sources`() = runTest {
+    fun failedSignInDoesNotRefreshStaleSources() = runTest {
         actionRepository.result = AppResult.Failure(AppError.Network)
 
         val result = delegate.signIn(lesson())
@@ -110,21 +110,21 @@ class SportBookingDelegateTest {
     }
 
     @Test
-    fun `successful sign out refreshes schedule widgets`() = runTest {
+    fun successfulSignOutRefreshesScheduleWidgets() = runTest {
         assertTrue(delegate.signOut(lesson()) is AppResult.Success)
         assertEquals(1, widgetRefreshCount)
         assertEquals(1, scheduleRefreshGateway.requests.size)
     }
 
     @Test
-    fun `cancel from my sport refreshes schedule widgets`() = runTest {
+    fun cancelFromMySportRefreshesScheduleWidgets() = runTest {
         assertTrue(delegate.cancel(booking()) is AppResult.Success)
         assertEquals(1, widgetRefreshCount)
         assertEquals(1, scheduleRefreshGateway.requests.size)
     }
 
     @Test
-    fun `failed sign out and booking cancellation leave widgets unchanged`() = runTest {
+    fun failedSignOutAndBookingCancellationLeaveWidgetsUnchanged() = runTest {
         actionRepository.result = AppResult.Failure(AppError.Network)
         assertTrue(delegate.signOut(lesson()) is AppResult.Failure)
         assertTrue(delegate.cancel(booking()) is AppResult.Failure)
@@ -133,7 +133,7 @@ class SportBookingDelegateTest {
     }
 
     @Test
-    fun `queue subscriptions refresh widget projection but never the official schedule cache`() = runTest {
+    fun queueSubscriptionsRefreshWidgetProjectionButNeverTheOfficialScheduleCache() = runTest {
         delegate.createFreeSign(1, false)
         delegate.cancelFreeSign(1)
         delegate.createAutoSign(1)
@@ -144,7 +144,7 @@ class SportBookingDelegateTest {
     }
 
     @Test
-    fun `failed queue mutations never refresh widget projection`() = runTest {
+    fun failedQueueMutationsNeverRefreshWidgetProjection() = runTest {
         actionRepository.result = AppResult.Failure(AppError.Network)
         assertTrue(delegate.createFreeSign(1, false) is AppResult.Failure)
         assertTrue(delegate.cancelFreeSign(1) is AppResult.Failure)
@@ -156,14 +156,14 @@ class SportBookingDelegateTest {
     }
 
     @Test
-    fun `successful booking enqueues widget update even when screen schedule refresh fails`() = runTest {
+    fun successfulBookingEnqueuesWidgetUpdateEvenWhenScreenScheduleRefreshFails() = runTest {
         scheduleRefreshGateway.result = AppResult.Failure(AppError.Network)
         assertTrue(delegate.signIn(lesson()) is AppResult.Success)
         assertEquals(1, widgetRefreshCount)
     }
 
     @Test
-    fun `back to back booking and cancellation each request a fresh widget snapshot`() = runTest {
+    fun backToBackBookingAndCancellationEachRequestAFreshWidgetSnapshot() = runTest {
         delegate.signIn(lesson())
         delegate.signOut(lesson())
         assertEquals(2, widgetRefreshCount)
@@ -179,7 +179,7 @@ class SportBookingDelegateTest {
     }
 
     @Test
-    fun `auto sign availability is read after both sources refresh`() = runTest {
+    fun autoSignAvailabilityIsReadAfterBothSourcesRefresh() = runTest {
         val result = delegate.loadAutoSignAvailability()
 
         assertTrue(result is AppResult.Success)

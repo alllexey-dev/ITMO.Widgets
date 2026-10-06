@@ -2,19 +2,19 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
-import java.time.LocalDateTime
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.datetime.LocalDate
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlinx.datetime.LocalDateTime
 
 class SportSignFilterControllerTest {
 
-    private val timeProvider = FixedAcademicTime(LocalDateTime.of(2026, 7, 22, 9, 0))
+    private val timeProvider = FixedAcademicTime(LocalDateTime(2026, 7, 22, 9, 0))
     private val controller = SportSignFilterController(timeProvider)
 
     @Test
-    fun `next and previous week stay inside visible range`() {
+    fun nextAndPreviousWeekStayInsideVisibleRange() {
         repeat(MAX_WEEKS_FORWARD + 2) {
             controller.nextWeek()
         }
@@ -30,7 +30,7 @@ class SportSignFilterControllerTest {
     }
 
     @Test
-    fun `reset preserves date and restores filter defaults`() {
+    fun resetPreservesDateAndRestoresFilterDefaults() {
         val selectedDate = LocalDate(2026, 7, 30)
         controller.selectDate(selectedDate)
         controller.selectSports(setOf(SectionName("Плавание")))

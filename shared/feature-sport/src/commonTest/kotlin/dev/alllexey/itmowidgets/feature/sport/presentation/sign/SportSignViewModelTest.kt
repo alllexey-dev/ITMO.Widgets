@@ -1,17 +1,15 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
@@ -19,7 +17,20 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepo
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSignPreferences
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.emptyCatalog
-import java.time.LocalDateTime
+import dev.alllexey.itmowidgets.shared.feature.sport.Res
+import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_limit_reached
+import dev.alllexey.itmowidgets.shared.feature.sport.sport_sign_success
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -27,31 +38,24 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
 import kotlinx.datetime.LocalDate
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Instant
+import kotlinx.datetime.LocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SportSignViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUpMain() = main.install()
+
+    @AfterTest
+    fun tearDownMain() = main.reset()
 
     private val schedule = FakeSportScheduleRepository()
     private val data = FakeSportDataRepository()
     private val actions = FakeSportActionRepository()
-    private val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 8, 12, 0))
+    private val time = FixedAcademicTime(LocalDateTime(2026, 9, 8, 12, 0))
 
     private fun TestScope.viewModel(): SportSignViewModel {
         val delegate = bookingDelegate(FakeSportBookingRepository(), schedule, data, this, actions)
@@ -71,7 +75,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a refresh keeps the catalogue on screen and only marks it refreshing`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aRefreshKeepsTheCatalogueOnScreenAndOnlyMarksItRefreshing() = runTest(main.dispatcher) {
         emitSnapshot()
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -91,7 +95,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `before the catalogue answers the calendar shows over a placeholder without an indicator`() = runTest(mainDispatcherRule.dispatcher) {
+    fun beforeTheCatalogueAnswersTheCalendarShowsOverAPlaceholderWithoutAnIndicator() = runTest(main.dispatcher) {
         schedule.gate = CompletableDeferred()
         val viewModel = viewModel()
         runCurrent()
@@ -106,7 +110,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `the entry refresh is silent and a pull shows the indicator`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theEntryRefreshIsSilentAndAPullShowsTheIndicator() = runTest(main.dispatcher) {
         emitSnapshot()
         val viewModel = viewModel()
         runCurrent()
@@ -121,7 +125,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a failed source after content keeps the content with a partial error`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedSourceAfterContentKeepsTheContentWithAPartialError() = runTest(main.dispatcher) {
         emitSnapshot()
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -135,7 +139,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a failed source before any content is an error`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedSourceBeforeAnyContentIsAnError() = runTest(main.dispatcher) {
         val viewModel = viewModel()
         schedule.filters.emit(AppResult.Failure(AppError.Network))
         schedule.timeSlots.emit(AppResult.Failure(AppError.Network))
@@ -145,7 +149,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a forced retry replaces the silent entry refresh and shows the indicator`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aForcedRetryReplacesTheSilentEntryRefreshAndShowsTheIndicator() = runTest(main.dispatcher) {
         emitSnapshot()
         schedule.gate = CompletableDeferred()
         val viewModel = viewModel()
@@ -155,12 +159,12 @@ class SportSignViewModelTest {
 
         viewModel.refresh(RefreshMode.Pull)
         runCurrent()
-        assertEquals("a pull joins the refresh in flight", 1, schedule.scheduleRefreshCount)
+        assertEquals(1, schedule.scheduleRefreshCount, "a pull joins the refresh in flight")
         assertTrue((viewModel.uiState.value as SportSignUiState.Content).refreshing)
 
         viewModel.refresh(RefreshMode.Force)
         runCurrent()
-        assertEquals("a retry starts a fresh request", 2, schedule.scheduleRefreshCount)
+        assertEquals(2, schedule.scheduleRefreshCount, "a retry starts a fresh request")
         assertTrue((viewModel.uiState.value as SportSignUiState.Content).refreshing)
 
         schedule.gate.complete(Unit)
@@ -169,8 +173,8 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a second tap on a lesson in flight sends nothing and the lesson is busy until the answer`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun aSecondTapOnALessonInFlightSendsNothingAndTheLessonIsBusyUntilTheAnswer() =
+        runTest(main.dispatcher) {
             emitSnapshot()
             val viewModel = viewModel()
             advanceUntilIdle()
@@ -186,13 +190,13 @@ class SportSignViewModelTest {
             actions.gate.complete(Unit)
             advanceUntilIdle()
             assertEquals(emptySet<Long>(), (viewModel.uiState.value as SportSignUiState.Content).busyLessonIds)
-            val toast = SportSignEvent.ShowToast(UiText.Resource(R.string.sport_sign_success))
+            val toast = SportSignEvent.ShowToast(UiText.Res(Res.string.sport_sign_success))
             assertEquals(toast, viewModel.events.first())
             assertEquals(toast, viewModel.events.first())
         }
 
     @Test
-    fun `a failed sign-in waits for the view and frees the lesson`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedSignInWaitsForTheViewAndFreesTheLesson() = runTest(main.dispatcher) {
         emitSnapshot()
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -209,7 +213,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a confirmed free sign reaches Backend once with the force-sign switch`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aConfirmedFreeSignReachesBackendOnceWithTheForceSignSwitch() = runTest(main.dispatcher) {
         emitSnapshot()
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -228,14 +232,14 @@ class SportSignViewModelTest {
     }
 
     private fun lessonOn(id: Long, day: Int, hour: Int = 18) = SportCardFixtures.lesson(id).let { lesson ->
-        val start = Instant.parse("2026-09-%02dT%02d:30:00+03:00".format(day, hour))
+        val start = Instant.parse("2026-09-${day.twoDigits()}T${hour.twoDigits()}:30:00+03:00")
         lesson.copy(start = start, end = start + 90.minutes)
     }
 
     private fun SportLesson.predicted() = copy(isLessonReal = false, start = start + 14.days, end = end + 14.days)
 
     @Test
-    fun `a shared lesson hidden by the filters selects its day and opens its card`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aSharedLessonHiddenByTheFiltersSelectsItsDayAndOpensItsCard() = runTest(main.dispatcher) {
         val hidden = lessonOn(5, day = 10).copy(
             available = 0, canSignIn = false, unavailableReasons = listOf(UnavailableReason.DailyLimitReached)
         )
@@ -254,7 +258,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `an ended or missing shared lesson is unavailable`() = runTest(mainDispatcherRule.dispatcher) {
+    fun anEndedOrMissingSharedLessonIsUnavailable() = runTest(main.dispatcher) {
         emitCatalog(lessonOn(3, day = 8, hour = 9))
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -270,7 +274,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a failed catalog reports the error`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedCatalogReportsTheError() = runTest(main.dispatcher) {
         val viewModel = viewModel()
         schedule.schedule.emit(LoadState.Error(AppError.Network))
         advanceUntilIdle()
@@ -282,7 +286,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a request before the catalog answers runs once it does`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aRequestBeforeTheCatalogAnswersRunsOnceItDoes() = runTest(main.dispatcher) {
         val viewModel = viewModel()
         viewModel.openSharedLesson(1)
         advanceUntilIdle()
@@ -294,8 +298,8 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a predicted link opens the prediction and a real link with the same id opens the prototype`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun aPredictedLinkOpensThePredictionAndARealLinkWithTheSameIdOpensThePrototype() =
+        runTest(main.dispatcher) {
             val prototype = lessonOn(7, day = 9)
             emitCatalog(prototype, prototype.predicted())
             val viewModel = viewModel()
@@ -313,7 +317,7 @@ class SportSignViewModelTest {
         }
 
     @Test
-    fun `a predicted link opens the real repeat once it is in the catalog`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aPredictedLinkOpensTheRealRepeatOnceItIsInTheCatalog() = runTest(main.dispatcher) {
         val prototype = lessonOn(7, day = 9)
         val repeat = lessonOn(8, day = 23)
         val otherTeacher = lessonOn(9, day = 23).copy(teacherIsu = 200)
@@ -328,7 +332,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `a predicted link whose prototype left the catalog is unavailable`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aPredictedLinkWhosePrototypeLeftTheCatalogIsUnavailable() = runTest(main.dispatcher) {
         emitCatalog(lessonOn(8, day = 23))
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -340,13 +344,9 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `the auto-sign limit date reads as a Russian device showed it`() = runTest(mainDispatcherRule.dispatcher) {
-        val nextAvailable = "2026-09-12T09:00+03:00"
-        // What java.time wrote on a "ru" device before the port; CLDR 42+ puts U+202F before "г.".
-        val legacy = OffsetDateTime.parse(nextAvailable)
-            .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.forLanguageTag("ru")))
-            .replace('\u202F', ' ').replace('\u00A0', ' ')
-        assertEquals("12 сент. 2026 г., 09:00:00", legacy)
+    fun theAutoSignLimitDateReadsAsARussianDeviceShowedIt() = runTest(main.dispatcher) {
+        // What java.time wrote on a "ru" device before the port (`SportAutoSignLegacyDateTest` pins it on the JVM).
+        val legacy = "12 сент. 2026 г., 09:00:00"
         data.limits = SportAutoSignLimits(limit = 2, available = 0, nextAvailableAt = Instant.parse("2026-09-12T09:00:00+03:00"))
         emitCatalog()
         val viewModel = viewModel()
@@ -355,7 +355,9 @@ class SportSignViewModelTest {
         viewModel.handleAutoSignClick(lessonOn(7, day = 9).predicted())
         advanceUntilIdle()
 
-        val expected = UiText.Resource(R.string.sport_auto_sign_limit_reached, listOf(legacy))
+        val expected = UiText.Res(Res.string.sport_auto_sign_limit_reached, listOf(legacy))
         assertEquals(SportSignEvent.ShowInfoDialog(message = expected), viewModel.events.first())
     }
+
+    private fun Int.twoDigits(): String = toString().padStart(2, '0')
 }

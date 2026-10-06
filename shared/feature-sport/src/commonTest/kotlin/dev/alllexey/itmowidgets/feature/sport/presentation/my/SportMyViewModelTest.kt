@@ -5,7 +5,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
@@ -16,6 +15,13 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepo
 import dev.alllexey.itmowidgets.feature.sport.presentation.applicationScope
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -23,17 +29,17 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SportMyViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUpMain() = main.install()
+
+    @AfterTest
+    fun tearDownMain() = main.reset()
 
     private val bookings = FakeSportBookingRepository()
     private val data = FakeSportDataRepository()
@@ -56,7 +62,7 @@ class SportMyViewModelTest {
     }
 
     @Test
-    fun `a refresh keeps the content on screen and only marks it refreshing`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aRefreshKeepsTheContentOnScreenAndOnlyMarksItRefreshing() = runTest(main.dispatcher) {
         emitSnapshot()
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -77,7 +83,7 @@ class SportMyViewModelTest {
     }
 
     @Test
-    fun `the first load is silent and a pull shows the indicator`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theFirstLoadIsSilentAndAPullShowsTheIndicator() = runTest(main.dispatcher) {
         emitSnapshot()
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -90,7 +96,7 @@ class SportMyViewModelTest {
     }
 
     @Test
-    fun `without a snapshot the screen stays loading through the refresh`() = runTest(mainDispatcherRule.dispatcher) {
+    fun withoutASnapshotTheScreenStaysLoadingThroughTheRefresh() = runTest(main.dispatcher) {
         val viewModel = viewModel()
         bookings.gate = CompletableDeferred()
         viewModel.ensureDataLoaded()
@@ -102,7 +108,7 @@ class SportMyViewModelTest {
     }
 
     @Test
-    fun `a failed source after content keeps the content with a partial error`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedSourceAfterContentKeepsTheContentWithAPartialError() = runTest(main.dispatcher) {
         emitSnapshot()
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -119,7 +125,7 @@ class SportMyViewModelTest {
     }
 
     @Test
-    fun `a failed source before any content is an error`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedSourceBeforeAnyContentIsAnError() = runTest(main.dispatcher) {
         val viewModel = viewModel()
         data.score.emit(AppResult.Failure(AppError.Network))
         data.attempts.emit(AppResult.Failure(AppError.Network))
@@ -129,13 +135,13 @@ class SportMyViewModelTest {
     }
 
     @Test
-    fun `a second entry with content loaded starts no request`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aSecondEntryWithContentLoadedStartsNoRequest() = runTest(main.dispatcher) {
         val viewModel = viewModel()
         bookings.gate = CompletableDeferred()
         viewModel.ensureDataLoaded()
         viewModel.ensureDataLoaded()
         runCurrent()
-        assertEquals("an entry while the first load runs joins it", 1, bookings.refreshCount)
+        assertEquals(1, bookings.refreshCount, "an entry while the first load runs joins it")
 
         emitSnapshot()
         bookings.gate.complete(Unit)
@@ -148,7 +154,7 @@ class SportMyViewModelTest {
     }
 
     @Test
-    fun `a retry over an error shows progress and reaches the repositories`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aRetryOverAnErrorShowsProgressAndReachesTheRepositories() = runTest(main.dispatcher) {
         val viewModel = viewModel()
         data.score.emit(AppResult.Failure(AppError.Network))
         data.attempts.emit(AppResult.Failure(AppError.Network))
@@ -168,7 +174,7 @@ class SportMyViewModelTest {
     }
 
     @Test
-    fun `a failed cancellation waits for the view`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedCancellationWaitsForTheView() = runTest(main.dispatcher) {
         emitSnapshot()
         val viewModel = viewModel()
         advanceUntilIdle()

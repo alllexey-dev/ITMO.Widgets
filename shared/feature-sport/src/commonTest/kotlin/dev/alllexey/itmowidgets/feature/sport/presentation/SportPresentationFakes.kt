@@ -26,12 +26,12 @@ import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.job
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.job
+import kotlinx.coroutines.test.TestScope
 
 /** Repositories whose refreshes can be held open, so a refresh is observable mid-flight. */
 internal class FakeSportBookingRepository : SportBookingRepository {

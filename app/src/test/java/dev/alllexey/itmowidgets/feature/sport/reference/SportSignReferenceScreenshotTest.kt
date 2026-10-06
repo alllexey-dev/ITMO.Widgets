@@ -36,6 +36,9 @@ class SportSignReferenceScreenshotTest {
     @get:Rule
     val shots = AppScreenshotRule(this)
 
+    @get:Rule
+    val koin = SportReferenceKoin()
+
     @Inject
     lateinit var demo: DemoPreferences
 

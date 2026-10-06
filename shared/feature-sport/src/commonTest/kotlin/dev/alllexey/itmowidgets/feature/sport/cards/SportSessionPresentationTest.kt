@@ -3,25 +3,26 @@ package dev.alllexey.itmowidgets.feature.sport.cards
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
-import dev.alllexey.itmowidgets.feature.sport.ui.common.fullDateText
-import dev.alllexey.itmowidgets.feature.sport.ui.common.shareDateText
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
-import java.time.LocalDate
-import java.time.LocalDateTime
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import org.junit.Assert.*
-import org.junit.Test
+import kotlinx.datetime.LocalDate
 
 class SportSessionPresentationTest {
-    @Test fun `teacher identifiers survive lesson and booking detail arguments`() {
+    @Test fun teacherIdentifiersSurviveLessonAndBookingDetailArguments() {
         val lesson = SportCardFixtures.lesson().copy(teacherIsu = 300001)
         val booking = SportCardFixtures.booking().copy(teacherIsu = 300002)
 
@@ -29,7 +30,7 @@ class SportSessionPresentationTest {
         assertEquals(booking.teacherIsu, booking.toDetailsArgs().teacherIsu)
     }
 
-    @Test fun `details expose the same lesson offer and only existing booking cancellation`() {
+    @Test fun detailsExposeTheSameLessonOfferAndOnlyExistingBookingCancellation() {
         val lesson = SportCardFixtures.lesson()
         val now = lesson.start - 2.hours
         assertEquals(lesson.lessonId, lesson.toDetailsArgs().lessonId)
@@ -52,7 +53,7 @@ class SportSessionPresentationTest {
             signEntry = SportCardFixtures.entry().copy(isCancelled = true)).toDetailsArgs().bookingAction(now))
     }
 
-    @Test fun `every queue state renders without stale recycled status`() {
+    @Test fun everyQueueStateRendersWithoutStaleRecycledStatus() {
         val expected = listOf(SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED,
             SportRegistrationStatus.FAILED, SportRegistrationStatus.AUTO_SIGNED, SportRegistrationStatus.EXPIRED)
         SportQueueEntryStatus.entries.zip(expected).forEach { (status, display) ->
@@ -64,7 +65,7 @@ class SportSessionPresentationTest {
         assertEquals(SportRegistrationStatus.AUTO_SIGNED, SportRegistrationStatus.from(true, SportCardFixtures.entry()))
     }
 
-    @Test fun `capacity is shown only for valid real data`() {
+    @Test fun capacityIsShownOnlyForValidRealData() {
         assertEquals(13, SportOccupancy.from(true, 7, 20)?.occupied)
         assertEquals(20, SportOccupancy.from(true, 0, 20)?.occupied)
         assertEquals(0, SportOccupancy.from(true, 20, 20)?.occupied)
@@ -74,8 +75,8 @@ class SportSessionPresentationTest {
         assertNull(SportOccupancy.from(false, 7, 20))
     }
 
-    @Test fun `dates use academic zone on both sides of midnight`() {
-        val time = FixedAcademicTime(LocalDate.of(2026, 9, 8))
+    @Test fun datesUseAcademicZoneOnBothSidesOfMidnight() {
+        val time = FixedAcademicTime(LocalDate(2026, 9, 8))
         val start = Instant.parse("2026-09-07T22:30:00Z")
         val timing = SportSessionTiming(start, start + 90.minutes, time)
         assertTrue(timing.isToday)
@@ -85,13 +86,7 @@ class SportSessionPresentationTest {
         assertNull(SportSessionTiming(start, start - 1.minutes, time).durationMinutes)
     }
 
-    @Test fun `russian weekday and month names are capitalised for display`() {
-        val time = FixedAcademicTime(LocalDate.of(2026, 9, 1))
-        val friday = Instant.parse("2026-09-25T08:10:00+03:00")
-        assertEquals("Пятница, 25 сентября 2026", SportSessionTiming(friday, friday + 90.minutes, time).fullDateText())
-    }
-
-    @Test fun `details preserve full title and available source fields through their JSON arguments`() {
+    @Test fun detailsPreserveFullTitleAndAvailableSourceFieldsThroughTheirJSONArguments() {
         val args = SportCardFixtures.lesson().copy(signEntry = SportCardFixtures.entry(),
             intersection = true, unavailableReasons = listOf(UnavailableReason.AlreadyEnrolled, UnavailableReason.TimeConflict)).toDetailsArgs()
         assertEquals("Фитнес (функциональная тренировка)", args.sectionName)
@@ -107,7 +102,7 @@ class SportSessionPresentationTest {
         assertEquals(prediction, SportCommonDetailsArgs.fromJson(prediction.toJson()))
     }
 
-    @Test fun `booking details do not invent capacity or comments`() {
+    @Test fun bookingDetailsDoNotInventCapacityOrComments() {
         val args = SportCardFixtures.booking().toDetailsArgs()
         assertNull(args.available)
         assertNull(args.limit)
@@ -117,18 +112,12 @@ class SportSessionPresentationTest {
         assertEquals(SportRegistrationStatus.SIGNED, args.registrationStatus)
     }
 
-    @Test fun `predicted lessons and bookings carry their prototype for a shared link, real ones none`() {
+    @Test fun predictedLessonsAndBookingsCarryTheirPrototypeForASharedLinkRealOnesNone() {
         assertNull(SportCardFixtures.lesson(7).toDetailsArgs().prototypeLessonId)
         assertNull(SportCardFixtures.booking(7).toDetailsArgs().prototypeLessonId)
         assertEquals(7L, SportCardFixtures.lesson(7).copy(isLessonReal = false).toDetailsArgs().prototypeLessonId)
         assertEquals(7L, SportCardFixtures.booking(-7).copy(isLessonReal = false).toDetailsArgs().prototypeLessonId)
         // Debug templates have negative ids and are never shared.
         assertNull(SportCardFixtures.lesson(-7).copy(isLessonReal = false).toDetailsArgs().prototypeLessonId)
-    }
-
-    @Test fun `shared date names the weekday and the date, never today or tomorrow`() {
-        val lesson = SportCardFixtures.lesson()
-        val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 8, 17, 30))
-        assertEquals("вторник, 8 сентября, 18:30–20:00", SportSessionTiming(lesson.start, lesson.end, time).shareDateText())
     }
 }

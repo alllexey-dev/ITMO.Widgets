@@ -4,7 +4,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
@@ -18,6 +17,14 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.applicationScope
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyEvent
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,18 +37,17 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SportBookingsHolderTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUpMain() = main.install()
+
+    @AfterTest
+    fun tearDownMain() = main.reset()
 
     private val bookings = FakeSportBookingRepository()
     private val data = FakeSportDataRepository()
@@ -71,7 +77,7 @@ class SportBookingsHolderTest {
     )
 
     @Test
-    fun `a slot prefers the signed and named booking, then signed, then named, then the first`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aSlotPrefersTheSignedAndNamedBookingThenSignedThenNamedThenTheFirst() = runTest(main.dispatcher) {
         val holder = holder()
         val signedNamed = booking(1, signed = true, section = "Фитнес")
         val signed = booking(2, signed = true, section = "Плавание")
@@ -91,14 +97,14 @@ class SportBookingsHolderTest {
         )
         cases.forEachIndexed { index, (items, expected) ->
             emitSnapshot(items)
-            assertEquals("case $index", expected, holder.findSportBookingAt(date, start, subject))
+            assertEquals(expected, holder.findSportBookingAt(date, start, subject), "case $index")
         }
         emitSnapshot(listOf(first, signed))
-        assertSame("a blank subject names nothing", signed, holder.findSportBookingAt(date, start, ""))
+        assertSame(signed, holder.findSportBookingAt(date, start, ""), "a blank subject names nothing")
     }
 
     @Test
-    fun `a lookup gives up after eight seconds without bookings`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aLookupGivesUpAfterEightSecondsWithoutBookings() = runTest(main.dispatcher) {
         val holder = holder()
         val began = currentTime
         assertNull(holder.findSportBooking(7))
@@ -106,14 +112,14 @@ class SportBookingsHolderTest {
     }
 
     @Test
-    fun `failed bookings answer no lookup`() = runTest(mainDispatcherRule.dispatcher) {
+    fun failedBookingsAnswerNoLookup() = runTest(main.dispatcher) {
         val holder = holder()
         bookings.merged.emit(LoadState.Error(AppError.Network))
         assertNull(holder.findSportBooking(7))
     }
 
     @Test
-    fun `a sheet action that changed or offers nothing yields no cancel candidate`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aSheetActionThatChangedOrOffersNothingYieldsNoCancelCandidate() = runTest(main.dispatcher) {
         val holder = holder()
         val signed = SportCardFixtures.booking(7)
         val unsigned = SportCardFixtures.booking(8).copy(signed = false)
@@ -121,15 +127,15 @@ class SportBookingsHolderTest {
         emitSnapshot(listOf(signed, unsigned, queued))
 
         assertEquals(signed, holder.cancelCandidate(7, SportBookingAction.CANCEL.name))
-        assertNull("changed", holder.cancelCandidate(7, SportBookingAction.CANCEL_AUTO.name))
-        assertNull("changed", holder.cancelCandidate(7, null))
-        assertNull("NONE", holder.cancelCandidate(8, SportBookingAction.NONE.name))
+        assertNull(holder.cancelCandidate(7, SportBookingAction.CANCEL_AUTO.name), "changed")
+        assertNull(holder.cancelCandidate(7, null), "changed")
+        assertNull(holder.cancelCandidate(8, SportBookingAction.NONE.name), "NONE")
         assertEquals(queued, holder.cancelCandidate(9, SportBookingAction.CANCEL_AUTO.name))
-        assertNull("missing", holder.cancelCandidate(10, SportBookingAction.CANCEL.name))
+        assertNull(holder.cancelCandidate(10, SportBookingAction.CANCEL.name), "missing")
     }
 
     @Test
-    fun `a cancellation error from the activity reaches the tab that opens later`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aCancellationErrorFromTheActivityReachesTheTabThatOpensLater() = runTest(main.dispatcher) {
         val holder = holder()
         emitSnapshot()
         actions.result = AppResult.Failure(AppError.Network)
@@ -142,7 +148,7 @@ class SportBookingsHolderTest {
     }
 
     @Test
-    fun `a loaded tab answers lookups without a request`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aLoadedTabAnswersLookupsWithoutARequest() = runTest(main.dispatcher) {
         val holder = holder()
         emitSnapshot()
         runCurrent()
@@ -154,7 +160,7 @@ class SportBookingsHolderTest {
     }
 
     @Test
-    fun `the first lookup loads the tab once and joins its refresh`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theFirstLookupLoadsTheTabOnceAndJoinsItsRefresh() = runTest(main.dispatcher) {
         val holder = holder()
         bookings.gate = CompletableDeferred()
         val lookup = async { holder.findSportBooking(7) }
@@ -173,7 +179,7 @@ class SportBookingsHolderTest {
     }
 
     @Test
-    fun `cleared repositories make the next lookup load again`() = runTest(mainDispatcherRule.dispatcher) {
+    fun clearedRepositoriesMakeTheNextLookupLoadAgain() = runTest(main.dispatcher) {
         val holder = holder()
         emitSnapshot()
         runCurrent()

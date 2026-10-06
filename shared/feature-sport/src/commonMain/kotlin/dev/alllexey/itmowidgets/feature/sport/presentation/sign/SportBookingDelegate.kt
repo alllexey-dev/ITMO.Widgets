@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
@@ -27,7 +26,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
@@ -37,7 +35,7 @@ data class AutoSignAvailability(
     val entries: List<SportQueueEntry>
 )
 
-class SportBookingDelegate @Inject constructor(
+class SportBookingDelegate(
     private val actionRepository: SportActionRepository,
     private val scheduleRefreshGateway: ScheduleRefreshGateway,
     private val sportBookingRepository: SportBookingRepository,
@@ -45,7 +43,7 @@ class SportBookingDelegate @Inject constructor(
     private val sportDataRepository: SportDataRepository,
     private val scheduleWidgetRefreshRequester: ScheduleWidgetRefreshRequester,
     private val timeProvider: AcademicTimeProvider,
-    @ApplicationScope private val followUpScope: CoroutineScope
+    private val followUpScope: CoroutineScope
 ) {
 
     suspend fun areCommunityServicesEnabled(): Boolean {

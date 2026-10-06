@@ -10,7 +10,6 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -45,6 +44,7 @@ import kotlin.getValue
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 @AndroidEntryPoint
 class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsListener {
@@ -74,7 +74,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     private lateinit var concatAdapter: ConcatAdapter
     private var feedbackSnackbar: Snackbar? = null
 
-    private val viewModel: SportSignViewModel by activityViewModels()
+    private val viewModel: SportSignViewModel by activityViewModel()
 
     // endregion
 

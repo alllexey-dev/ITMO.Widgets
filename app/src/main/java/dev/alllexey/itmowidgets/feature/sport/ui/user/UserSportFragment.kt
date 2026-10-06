@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,6 +27,7 @@ import dev.alllexey.itmowidgets.feature.sport.ui.my.SportBookingListener
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** Another user's confirmed and pending sport lessons, read-only. */
 @AndroidEntryPoint
@@ -36,7 +36,7 @@ class UserSportFragment : Fragment(), SportBookingListener {
     private var _binding: FragmentUserSportBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: UserSportViewModel by viewModels()
+    private val viewModel: UserSportViewModel by viewModel()
 
     @Inject
     lateinit var timeProvider: AcademicTimeProvider

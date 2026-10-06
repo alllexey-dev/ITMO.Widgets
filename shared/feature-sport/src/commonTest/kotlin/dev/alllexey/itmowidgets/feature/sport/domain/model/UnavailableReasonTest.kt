@@ -1,13 +1,13 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.model
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.time.Instant
 
 class UnavailableReasonTest {
 
     @Test
-    fun `builds ordered unique reasons from domain values`() {
+    fun buildsOrderedUniqueReasonsFromDomainValues() {
         val reasons = UnavailableReason.getSortedUnavailableReasons(
             signed = true,
             startsAt = Instant.parse("2026-07-21T10:00:00+03:00"),

@@ -8,9 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
-import javax.inject.Inject
 
-class SportSignFilterController @Inject constructor(
+class SportSignFilterController(
     private val timeProvider: AcademicTimeProvider
 ) {
 

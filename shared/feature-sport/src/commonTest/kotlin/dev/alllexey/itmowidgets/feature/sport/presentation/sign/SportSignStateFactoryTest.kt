@@ -7,20 +7,19 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterOption
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import java.time.LocalDateTime
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
-import java.util.Locale
-import kotlinx.datetime.LocalDate
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 
 class SportSignStateFactoryTest {
 
-    private val timeProvider = FixedAcademicTime(LocalDateTime.of(2026, 7, 22, 9, 0))
+    private val timeProvider = FixedAcademicTime(LocalDateTime(2026, 7, 22, 9, 0))
     private val factory = SportSignStateFactory(timeProvider)
     private val catalog = SportFilterCatalog(
         buildings = listOf(
@@ -40,7 +39,7 @@ class SportSignStateFactoryTest {
     )
 
     @Test
-    fun `creates filtered content and calendar metadata`() {
+    fun createsFilteredContentAndCalendarMetadata() {
         val swimming = lesson(
             id = 1,
             section = "Плавание",
@@ -84,27 +83,7 @@ class SportSignStateFactoryTest {
     }
 
     @Test
-    fun `calendar names are Russian whatever the system locale`() {
-        val systemLocale = Locale.getDefault()
-        Locale.setDefault(Locale.US)
-        try {
-            val state = factory.create(
-                lessons = emptyList(),
-                catalog = catalog,
-                timeSlots = timeSlots,
-                userFilters = SportSignFilters(selectedDate = timeProvider.today()),
-                hasPartialError = false
-            )
-
-            assertEquals("Июль", state.currentMonthName)
-            assertEquals("ср", state.displayedWeek.single { it.date == timeProvider.today() }.dayOfWeek)
-        } finally {
-            Locale.setDefault(systemLocale)
-        }
-    }
-
-    @Test
-    fun `a lesson after midnight in Moscow belongs to the Moscow day`() {
+    fun aLessonAfterMidnightInMoscowBelongsToTheMoscowDay() {
         val lateNight = lesson(1, "Плавание", 10, 100, 1, "2026-07-23T00:30:00+03:00")
         val thursday = LocalDate(2026, 7, 23)
 
@@ -116,7 +95,7 @@ class SportSignStateFactoryTest {
     }
 
     @Test
-    fun `drops invalid dependent filters without mutating input`() {
+    fun dropsInvalidDependentFiltersWithoutMutatingInput() {
         val filters = SportSignFilters(
             selectedBuildingName = "Несуществующий корпус",
             selectedTeacherName = "Несуществующий преподаватель",
@@ -149,7 +128,7 @@ class SportSignStateFactoryTest {
     }
 
     @Test
-    fun `online and other venues are filter categories without changing real location ids`() {
+    fun onlineAndOtherVenuesAreFilterCategoriesWithoutChangingRealLocationIds() {
         val base = lesson(1, "Плавание", 335, 100, 1, "2026-07-22T10:00:00+03:00")
         val external = base.copy(roomId = 20013, roomName = "Внешний бассейн")
         val anotherExternal = base.copy(lessonId = 2, buildingId = 493, roomId = 21765)

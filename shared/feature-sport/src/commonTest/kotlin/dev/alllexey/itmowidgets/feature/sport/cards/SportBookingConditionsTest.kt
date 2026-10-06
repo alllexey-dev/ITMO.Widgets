@@ -5,24 +5,26 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingObstacle
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
-import org.junit.Assert.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.nanoseconds
-import org.junit.Test
 
 class SportBookingConditionsTest {
     private val lesson = SportCardFixtures.lesson()
     private val now = lesson.start - 1.days
 
-    @Test fun `academic schedule overlap warns but does not block official permission`() {
+    @Test fun academicScheduleOverlapWarnsButDoesNotBlockOfficialPermission() {
         val result = lesson.copy(intersection = true).bookingConditions().evaluate(now)
         assertTrue(result.manual)
         assertFalse(result.mayWait)
         assertEquals(SportBookingAction.SIGN, result.action)
     }
 
-    @Test fun `no places and unpublished predictions can be waited for`() {
+    @Test fun noPlacesAndUnpublishedPredictionsCanBeWaitedFor() {
         val full = lesson.copy(available = 0, canSignIn = false)
         assertTrue(full.bookingConditions().evaluate(now).mayWait)
         assertEquals(SportBookingAction.AUTO, full.bookingConditions().evaluate(now).action)
@@ -31,7 +33,7 @@ class SportBookingConditionsTest {
         assertFalse(prediction.bookingConditions().evaluate(now).manual)
     }
 
-    @Test fun `all official eligibility restrictions prevent offering new auto sign even with full first or last`() {
+    @Test fun allOfficialEligibilityRestrictionsPreventOfferingNewAutoSignEvenWithFullFirstOrLast() {
         val blockers = listOf(UnavailableReason.TimeConflict, UnavailableReason.DailyLimitReached,
             UnavailableReason.WeeklyLimitReached, UnavailableReason.CreditAchieved, UnavailableReason.SelectionFailed,
             UnavailableReason.ExternatOnly, UnavailableReason.DebtOnly, UnavailableReason.HealthGroupMismatch, UnavailableReason.LessonInPast,
@@ -41,7 +43,7 @@ class SportBookingConditionsTest {
                 listOf(true, false).forEach { real ->
                     val result = lesson.copy(isLessonReal = real, available = 0, canSignIn = false,
                         unavailableReasons = reasons).bookingConditions().evaluate(now)
-                    assertEquals(reason::class.simpleName, SportBookingAction.NONE, result.action)
+                    assertEquals(SportBookingAction.NONE, result.action, reason::class.simpleName)
                     assertFalse(result.manual)
                     assertFalse(result.mayWait)
                     assertEquals(1, result.restrictions.size)
@@ -50,7 +52,7 @@ class SportBookingConditionsTest {
         }
     }
 
-    @Test fun `false permission without reason and contradictory allowed flag are conservative`() {
+    @Test fun falsePermissionWithoutReasonAndContradictoryAllowedFlagAreConservative() {
         val unknown = lesson.copy(canSignIn = false).bookingConditions().evaluate(now)
         assertEquals(SportBookingObstacle.UNKNOWN, unknown.restrictions.single().kind)
         assertEquals(SportBookingAction.NONE, unknown.action)
@@ -59,7 +61,7 @@ class SportBookingConditionsTest {
         assertEquals(SportBookingAction.NONE, contradictory.action)
     }
 
-    @Test fun `starting instant blocks stale snapshot but does not trap existing queue`() {
+    @Test fun startingInstantBlocksStaleSnapshotButDoesNotTrapExistingQueue() {
         assertEquals(SportBookingAction.SIGN, lesson.bookingConditions().evaluate(lesson.start - 1.nanoseconds).action)
         assertEquals(SportBookingAction.NONE, lesson.bookingConditions().evaluate(lesson.start).action)
         assertEquals(SportBookingAction.NONE, lesson.bookingConditions().evaluate(lesson.start + 1.minutes).action)
@@ -69,7 +71,7 @@ class SportBookingConditionsTest {
         assertEquals(SportBookingAction.CANCEL, lesson.copy(signed = true).bookingConditions().evaluate(lesson.start).action)
     }
 
-    @Test fun `expired and cancelled queues do not render a cancel action`() {
+    @Test fun expiredAndCancelledQueuesDoNotRenderACancelAction() {
         listOf(SportCardFixtures.entry(SportQueueEntryStatus.EXPIRED),
             SportCardFixtures.entry().copy(isCancelled = true)).forEach { entry ->
             assertEquals(SportBookingAction.AUTO, lesson.copy(available = 0, canSignIn = false,
@@ -77,12 +79,12 @@ class SportBookingConditionsTest {
         }
     }
 
-    @Test fun `unknown server text is trimmed and repeated blockers collapse`() {
+    @Test fun unknownServerTextIsTrimmedAndRepeatedBlockersCollapse() {
         val result = lesson.copy(unavailableReasons = listOf(UnavailableReason.Other("  Причина  "),
             UnavailableReason.Other("  Причина  "))).bookingConditions().evaluate(now)
         assertEquals("Причина", result.restrictions.single().detail)
     }
-    @Test fun `unrecognized explicit denial is not missing availability information`() {
+    @Test fun unrecognizedExplicitDenialIsNotMissingAvailabilityInformation() {
         val result = lesson.copy(canSignIn = false,
             unavailableReasons = listOf(UnavailableReason.Other("Нужен специальный допуск")))
             .bookingConditions().evaluate(now)
@@ -90,7 +92,7 @@ class SportBookingConditionsTest {
         assertEquals(SportBookingAction.NONE, result.action)
     }
 
-    @Test fun `observed debt only reason is normalized at the mapper boundary`() {
+    @Test fun observedDebtOnlyReasonIsNormalizedAtTheMapperBoundary() {
         val reasons = UnavailableReason.getSortedUnavailableReasons(false, lesson.start, 0,
             listOf("  Занятие для студентов с задолженностью  "), now)
         assertEquals(listOf(UnavailableReason.Full, UnavailableReason.DebtOnly), reasons)
@@ -99,7 +101,7 @@ class SportBookingConditionsTest {
         assertEquals(SportBookingAction.NONE, result.action)
     }
 
-    @Test fun `debt class type does not invent personal ineligibility without API denial`() {
+    @Test fun debtClassTypeDoesNotInventPersonalIneligibilityWithoutAPIDenial() {
         assertTrue(lesson.copy(typeId = 5).bookingConditions().evaluate(now).manual)
     }
 

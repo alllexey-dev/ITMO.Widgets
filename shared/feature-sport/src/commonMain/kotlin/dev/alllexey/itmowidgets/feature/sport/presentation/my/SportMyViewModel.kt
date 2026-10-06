@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.my
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
@@ -19,11 +18,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
 
 /** The `Мой спорт` screen over [SportBookingsHolder], which the feed and the schedule share. */
-@HiltViewModel
-class SportMyViewModel @Inject constructor(
+class SportMyViewModel(
     sportBookingRepository: SportBookingRepository,
     sportDataRepository: SportDataRepository,
     private val holder: SportBookingsHolder

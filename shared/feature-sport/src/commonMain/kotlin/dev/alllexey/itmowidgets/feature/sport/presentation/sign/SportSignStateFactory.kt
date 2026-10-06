@@ -10,9 +10,8 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import javax.inject.Inject
 
-class SportSignStateFactory @Inject constructor(
+class SportSignStateFactory(
     private val timeProvider: AcademicTimeProvider
 ) {
 

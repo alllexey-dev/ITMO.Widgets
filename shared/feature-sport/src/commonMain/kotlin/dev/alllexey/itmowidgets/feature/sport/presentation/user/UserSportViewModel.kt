@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.user
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
@@ -13,7 +12,6 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
-import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,8 +21,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 
-@HiltViewModel
-class UserSportViewModel @Inject constructor(
+class UserSportViewModel(
     savedStateHandle: SavedStateHandle,
     private val userSport: UserSportRepository,
     private val sportSchedule: SportScheduleRepository

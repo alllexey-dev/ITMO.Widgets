@@ -6,14 +6,13 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.findLinked
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
 /**
  * Finds the lesson of a shared link in the merged catalog and remembers it, so its card keeps acting on the lesson
  * while filters hide it from the list.
  */
-class SportSharedLessonResolver @Inject constructor(
+class SportSharedLessonResolver(
     private val scheduleRepository: SportScheduleRepository,
     private val timeProvider: AcademicTimeProvider
 ) {

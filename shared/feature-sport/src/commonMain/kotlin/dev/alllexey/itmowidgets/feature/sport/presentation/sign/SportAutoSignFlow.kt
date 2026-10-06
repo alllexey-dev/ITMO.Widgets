@@ -9,7 +9,6 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
-import javax.inject.Inject
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
@@ -45,7 +44,7 @@ sealed interface SportAutoSignDecision {
  * A lesson with an active queue entry offers to leave it; otherwise a real lesson offers a free-sign queue and a
  * predicted one an auto-sign entry, unless its day already has one or the limit is spent.
  */
-class SportAutoSignFlow @Inject constructor(
+class SportAutoSignFlow(
     private val bookingDelegate: SportBookingDelegate,
     private val timeProvider: AcademicTimeProvider
 ) {

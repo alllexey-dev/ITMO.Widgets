@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.common
 
-import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
@@ -14,8 +13,6 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepo
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyEvent
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
@@ -41,13 +38,12 @@ import kotlinx.datetime.toLocalDateTime
  * cancel them through this one holder. It outlives every screen and holds no user data: the repositories do, and
  * their session cleaners clear it.
  */
-@Singleton
-class SportBookingsHolder @Inject constructor(
+class SportBookingsHolder(
     private val sportBookingRepository: SportBookingRepository,
     private val sportDataRepository: SportDataRepository,
     private val bookingDelegate: SportBookingDelegate,
     private val timeProvider: AcademicTimeProvider,
-    @ApplicationScope private val scope: CoroutineScope
+    private val scope: CoroutineScope
 ) {
 
     private val refreshes = RefreshTracker(scope)

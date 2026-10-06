@@ -6,7 +6,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
-internal object SportCardFixtures {
+object SportCardFixtures {
     val start: Instant = Instant.parse("2026-09-08T18:30:00+03:00")
     fun lesson(id: Long = 1) = SportLesson(
         isLessonReal = true, lessonId = id, start = start, end = start + 90.minutes,

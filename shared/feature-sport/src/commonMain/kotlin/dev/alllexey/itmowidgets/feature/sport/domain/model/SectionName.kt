@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.model
 
+import kotlin.jvm.JvmInline
+
 @JvmInline
 value class SectionName(val raw: String) {
 

@@ -6,7 +6,6 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
@@ -15,6 +14,13 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportBookings
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
@@ -25,20 +31,20 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserSportViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUpMain() = main.install()
+
+    @AfterTest
+    fun tearDownMain() = main.reset()
 
     @Test
-    fun `confirmed lessons resolve against the catalog without the merged schedule`() = runTest(mainDispatcherRule.dispatcher) {
+    fun confirmedLessonsResolveAgainstTheCatalogWithoutTheMergedSchedule() = runTest(main.dispatcher) {
         val schedule = CatalogSportScheduleRepository(catalog = AppResult.Success(listOf(lesson(10), lesson(11))))
         val bookings = FakeUserSportRepository(AppResult.Success(UserSportBookings(
             confirmedLessonIds = listOf(11),
@@ -56,7 +62,7 @@ class UserSportViewModelTest {
     }
 
     @Test
-    fun `a failed catalog still shows pending entries`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedCatalogStillShowsPendingEntries() = runTest(main.dispatcher) {
         val schedule = CatalogSportScheduleRepository(catalog = AppResult.Failure(AppError.Network))
         val bookings = FakeUserSportRepository(AppResult.Success(UserSportBookings(
             confirmedLessonIds = listOf(11),
@@ -70,7 +76,7 @@ class UserSportViewModelTest {
     }
 
     @Test
-    fun `backend refusal is surfaced as an error`() = runTest(mainDispatcherRule.dispatcher) {
+    fun backendRefusalIsSurfacedAsAnError() = runTest(main.dispatcher) {
         val schedule = CatalogSportScheduleRepository(catalog = AppResult.Success(emptyList()))
         val viewModel = UserSportViewModel(handle(5), FakeUserSportRepository(AppResult.Failure(AppError.Forbidden)), schedule)
         advanceUntilIdle()
@@ -79,7 +85,7 @@ class UserSportViewModelTest {
     }
 
     @Test
-    fun `a pull keeps the list under the indicator`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aPullKeepsTheListUnderTheIndicator() = runTest(main.dispatcher) {
         val schedule = CatalogSportScheduleRepository(catalog = AppResult.Success(emptyList()))
         val bookings = FakeUserSportRepository(AppResult.Success(UserSportBookings(emptyList(), listOf(pending(12)))))
         val viewModel = UserSportViewModel(handle(5), bookings, schedule)
@@ -100,7 +106,7 @@ class UserSportViewModelTest {
     }
 
     @Test
-    fun `a retry over an error shows progress until the answer`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aRetryOverAnErrorShowsProgressUntilTheAnswer() = runTest(main.dispatcher) {
         val schedule = CatalogSportScheduleRepository(catalog = AppResult.Success(emptyList()))
         val bookings = FakeUserSportRepository(AppResult.Failure(AppError.Network))
         val viewModel = UserSportViewModel(handle(5), bookings, schedule)

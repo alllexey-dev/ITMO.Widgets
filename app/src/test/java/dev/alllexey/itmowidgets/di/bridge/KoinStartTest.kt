@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -35,6 +36,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
+import kotlinx.coroutines.CoroutineScope
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -105,6 +107,8 @@ class KoinStartTest {
         assertSame(hilt.schedulePreferencesRepository(), koin.get<SchedulePreferencesRepository>())
         assertSame(hilt.pendingSportBookingsRepository(), koin.get<PendingSportBookingsRepository>())
         assertSame(hilt.teacherLessonsGateway(), koin.get<TeacherLessonsGateway>())
+        assertSame(hilt.applicationScope(), koin.get<CoroutineScope>())
+        assertSame(hilt.scheduleWidgetRefreshRequester(), koin.get<ScheduleWidgetRefreshRequester>())
     }
 
     @Test
