@@ -99,6 +99,12 @@ class KeychainSecureStore(
         if (status != errSecSuccess && status != errSecItemNotFound) throw KeychainException("delete", name, status)
     }
 
+    /** Removes every item of [SERVICE] this store can reach, whatever its name: the sign-out cleaner. */
+    fun deleteAll() {
+        val status = withGroup { group -> serviceQuery(group).use { SecItemDelete(it) } }
+        if (status != errSecSuccess && status != errSecItemNotFound) throw KeychainException("delete", "*", status)
+    }
+
     /** Runs [operation] in the access group; on a missing entitlement, once more and from now on without it. */
     private inline fun withGroup(operation: (group: String?) -> Int): Int {
         if (group == null || groupRefused.load()) return operation(null)
@@ -116,10 +122,14 @@ class KeychainSecureStore(
         vararg extra: Pair<CFStringRef?, Any?>
     ): CFDictionaryRef {
         require(name.isNotEmpty() && '/' !in name) { "'$name' is not a secret name" }
+        return serviceQuery(group, kSecAttrAccount to name, *extra)
+    }
+
+    /** Every item of [SERVICE] in [group], narrowed by [extra]; on iOS a delete removes all that match. */
+    private fun serviceQuery(group: String?, vararg extra: Pair<CFStringRef?, Any?>): CFDictionaryRef {
         val entries = buildList {
             add(kSecClass to kSecClassGenericPassword)
             add(kSecAttrService to SERVICE)
-            add(kSecAttrAccount to name)
             if (group != null) add(kSecAttrAccessGroup to group)
             addAll(extra)
         }

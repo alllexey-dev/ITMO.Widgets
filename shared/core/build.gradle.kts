@@ -31,9 +31,15 @@ kotlin {
         // The Darwin engine of every iOS Ktor client (L18 IO-04a; the client factories take the engine, ADR 0026).
         iosMain.dependencies {
             api(libs.ktor.client.darwin)
+            // iosCoreModule, the core bindings of the iOS Koin graph (L18 IO-04b); Android's come from :app's Hilt.
+            api(libs.koin.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
+        }
+        // A counting engine for the refresh and demo checks of the iOS graph (L18 IO-04b).
+        iosTest.dependencies {
+            implementation(libs.ktor.client.mock)
         }
     }
 }
