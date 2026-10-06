@@ -68,7 +68,7 @@ fun SheetScaffold(
 ) {
     val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
     BoundedBodyLayout(
-        modifier = if (ios) modifier.background(ItmoTheme.iosColors.groupedBackground) else modifier,
+        modifier = if (ios) modifier.background(ItmoTheme.iosColors.groupedSheetBackground) else modifier,
         top = {
             if (ios) {
                 IosSheetHeader(title, subtitle, close, closePlacement)
