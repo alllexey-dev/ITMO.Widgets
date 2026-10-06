@@ -12,10 +12,8 @@ import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
-import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
-import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
@@ -29,13 +27,15 @@ import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
+import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
+import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
@@ -44,6 +44,7 @@ import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
+import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import kotlin.time.Clock
@@ -60,11 +61,9 @@ import org.koin.dsl.module
 @InstallIn(SingletonComponent::class)
 interface CoreBridgeEntryPoint {
     fun academicTimeProvider(): AcademicTimeProvider
-    fun demoMode(): DemoMode
     fun appDiagnostics(): AppDiagnostics
     fun backendGate(): BackendGate
     fun appDispatchers(): AppDispatchers
-    fun sessionRepository(): SessionRepository
     fun currentUserProvider(): CurrentUserProvider
     fun secureStore(): SecureStore
     fun crossProcessLock(): CrossProcessLock
@@ -98,8 +97,13 @@ interface CoreBridgeEntryPoint {
     fun backendDeviceSession(): BackendDeviceSession
     fun fcmTokenSync(): FcmTokenSync
 
+    /** The session's ports (L16 KM-11h1): the Keystore token file, the widget and work effects, the two flags. */
+    fun sessionTokenStore(): SessionTokenStore
+    fun sessionLifecycleEffects(): SessionLifecycleEffects
+    fun demoPreferences(): DemoPreferences
+    fun utilityStorage(): UtilityStorage
+
     fun customSpoilerRepository(): CustomSpoilerRepository
-    fun onboardingRepository(): OnboardingRepository
     fun scheduleChangeTracking(): ScheduleChangeTracking
     fun markTracking(): MarkTracking
     /** Not `calendarSync()`: `CalendarSyncEntryPoint` declares that name for the implementation type. */
@@ -137,11 +141,9 @@ interface CoreBridgeEntryPoint {
  */
 val coreBridgeModule = module {
     single<AcademicTimeProvider> { CoreBridgeEntryPoint.from(androidContext()).academicTimeProvider() }
-    single<DemoMode> { CoreBridgeEntryPoint.from(androidContext()).demoMode() }
     single<AppDiagnostics> { CoreBridgeEntryPoint.from(androidContext()).appDiagnostics() }
     single<BackendGate> { CoreBridgeEntryPoint.from(androidContext()).backendGate() }
     single<AppDispatchers> { CoreBridgeEntryPoint.from(androidContext()).appDispatchers() }
-    single<SessionRepository> { CoreBridgeEntryPoint.from(androidContext()).sessionRepository() }
     single<CurrentUserProvider> { CoreBridgeEntryPoint.from(androidContext()).currentUserProvider() }
     single<SecureStore> { CoreBridgeEntryPoint.from(androidContext()).secureStore() }
     single<CrossProcessLock> { CoreBridgeEntryPoint.from(androidContext()).crossProcessLock() }
@@ -164,8 +166,11 @@ val coreBridgeModule = module {
     single<BackendIdentitySync> { CoreBridgeEntryPoint.from(androidContext()).backendIdentitySync() }
     single<BackendDeviceSession> { CoreBridgeEntryPoint.from(androidContext()).backendDeviceSession() }
     single<FcmTokenSync> { CoreBridgeEntryPoint.from(androidContext()).fcmTokenSync() }
+    single<SessionTokenStore> { CoreBridgeEntryPoint.from(androidContext()).sessionTokenStore() }
+    single<SessionLifecycleEffects> { CoreBridgeEntryPoint.from(androidContext()).sessionLifecycleEffects() }
+    single<DemoPreferences> { CoreBridgeEntryPoint.from(androidContext()).demoPreferences() }
+    single<UtilityStorage> { CoreBridgeEntryPoint.from(androidContext()).utilityStorage() }
     single<CustomSpoilerRepository> { CoreBridgeEntryPoint.from(androidContext()).customSpoilerRepository() }
-    single<OnboardingRepository> { CoreBridgeEntryPoint.from(androidContext()).onboardingRepository() }
     single<ScheduleChangeTracking> { CoreBridgeEntryPoint.from(androidContext()).scheduleChangeTracking() }
     single<MarkTracking> { CoreBridgeEntryPoint.from(androidContext()).markTracking() }
     single<CalendarSync> { CoreBridgeEntryPoint.from(androidContext()).coreCalendarSync() }

@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +28,7 @@ import kotlin.time.Clock
  * This class is the [SessionState] machine: it picks the transition and publishes each state, while [transitions]
  * runs the side effects in between.
  */
-class SessionRepositoryImpl @Inject constructor(
+class SessionRepositoryImpl(
     private val tokenStore: SessionTokenStore,
     private val myItmo: MyItmoClient,
     private val clock: Clock,

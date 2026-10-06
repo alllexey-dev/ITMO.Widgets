@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleModule
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
@@ -50,7 +51,7 @@ class ScheduleBridgeTest {
     /** The screens read the opt-in and the schedule preferences, which `settingsDataModule` constructs since KM-11e. */
     @Test
     fun `the schedule module passes the graph check against the release bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(settingsDataModule, scheduleModule))
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(authDataModule, settingsDataModule, scheduleModule))
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */

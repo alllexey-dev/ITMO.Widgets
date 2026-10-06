@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
@@ -15,30 +16,27 @@ import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeSessionDataCleaner
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import io.ktor.client.engine.mock.MockEngine
-import java.io.IOException
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
-import org.junit.Rule
-import org.junit.Test
+import okio.IOException
 
 /** The order of every session side effect, with each collaborator a fake that appends to one trace. */
 class SessionTransitionsTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
+    private val dispatcher = StandardTestDispatcher()
     private val clock = FakeClock(Instant.parse("2026-07-24T00:00:00Z"))
     private val order = mutableListOf<String>()
     private val tokenStorage = RecordingTokenStorage(order)
@@ -68,11 +66,11 @@ class SessionTransitionsTest {
         fcmTokenSync = tokenSync,
         diagnostics = diagnostics,
         demoPreferences = demoPreferences,
-        dispatchers = mainDispatcherRule.appDispatchers
+        dispatchers = AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher)
     )
 
     @Test
-    fun `sign-in prepares, clears data, ends the demo, then writes the new tokens`() = runTest {
+    fun signInPreparesClearsDataEndsTheDemoThenWritesTheNewTokens() = runTest(dispatcher) {
         demoPreferences.setDemoActive(true)
         order.clear()
 
@@ -85,14 +83,10 @@ class SessionTransitionsTest {
     }
 
     @Test
-    fun `sign-in is strict - a failing cleaner stops it before the tokens`() = runTest {
+    fun signInIsStrictAFailingCleanerStopsItBeforeTheTokens() = runTest(dispatcher) {
         cleaners = listOf(FailingCleaner(order), cleaner)
 
-        try {
-            transitions.signIn(TOKENS)
-            fail("A failed cleaner must fail the sign-in")
-        } catch (_: IOException) {
-        }
+        assertFailsWith<IOException>("A failed cleaner must fail the sign-in") { transitions.signIn(TOKENS) }
 
         assertEquals(listOf("prepare", "clean"), order)
         assertEquals(0, cleaner.requests)
@@ -100,7 +94,7 @@ class SessionTransitionsTest {
     }
 
     @Test
-    fun `completing a sign-in syncs identity, FCM token and device after the signed-in effect`() = runTest {
+    fun completingASignInSyncsIdentityFcmTokenAndDeviceAfterTheSignedInEffect() = runTest(dispatcher) {
         transitions.completeSignIn()
 
         assertEquals(listOf("signed-in", "identity", "fcm", "register"), order)
@@ -108,7 +102,7 @@ class SessionTransitionsTest {
     }
 
     @Test
-    fun `completing a sign-in ignores failures and reports only device registration`() = runTest {
+    fun completingASignInIgnoresFailuresAndReportsOnlyDeviceRegistration() = runTest(dispatcher) {
         effects.failSignedIn = true
         identitySync.fail = true
         tokenSync.fail = true
@@ -121,7 +115,7 @@ class SessionTransitionsTest {
     }
 
     @Test
-    fun `an abandoned sign-in clears tokens, then data, then signs out, ignoring failures`() = runTest {
+    fun anAbandonedSignInClearsTokensThenDataThenSignsOutIgnoringFailures() = runTest(dispatcher) {
         cleaners = listOf(FailingCleaner(order), cleaner)
         effects.failSignedOut = true
 
@@ -132,7 +126,7 @@ class SessionTransitionsTest {
     }
 
     @Test
-    fun `the demo clears the session and turns on without Backend or sync`() = runTest {
+    fun theDemoClearsTheSessionAndTurnsOnWithoutBackendOrSync() = runTest(dispatcher) {
         cleaners = listOf(FailingCleaner(order), cleaner)
         effects.failPrepare = true
 
@@ -144,7 +138,7 @@ class SessionTransitionsTest {
     }
 
     @Test
-    fun `sign-out unregisters the device before clearing data and tokens, ignoring failures`() = runTest {
+    fun signOutUnregistersTheDeviceBeforeClearingDataAndTokensIgnoringFailures() = runTest(dispatcher) {
         cleaners = listOf(FailingCleaner(order), cleaner)
         deviceSession.failUnregister = true
         effects.failPrepare = true
@@ -157,7 +151,7 @@ class SessionTransitionsTest {
     }
 
     @Test
-    fun `signing out of the demo leaves the device registration and tokens alone`() = runTest {
+    fun signingOutOfTheDemoLeavesTheDeviceRegistrationAndTokensAlone() = runTest(dispatcher) {
         demoPreferences.setDemoActive(true)
         order.clear()
 
@@ -169,7 +163,7 @@ class SessionTransitionsTest {
     }
 
     @Test
-    fun `the cleaners are read on every transition`() = runTest {
+    fun theCleanersAreReadOnEveryTransition() = runTest(dispatcher) {
         val late = FakeSessionDataCleaner()
 
         transitions.signOutOfDemo()

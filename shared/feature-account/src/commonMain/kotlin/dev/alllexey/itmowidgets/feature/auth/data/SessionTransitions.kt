@@ -9,7 +9,6 @@ import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import kotlinx.coroutines.withContext
@@ -24,7 +23,7 @@ import kotlinx.coroutines.withContext
 class SessionTransitions(
     private val myItmo: MyItmoClient,
     private val currentUserProvider: CurrentUserProvider,
-    private val dataCleaners: () -> Collection<SessionDataCleaner>,
+    private val dataCleaners: SessionDataCleaners,
     private val lifecycleEffects: SessionLifecycleEffects,
     private val backendIdentitySync: BackendIdentitySync,
     private val backendDeviceSession: BackendDeviceSession,
@@ -43,7 +42,7 @@ class SessionTransitions(
      */
     suspend fun signIn(tokens: TokenSet) {
         lifecycleEffects.prepareForSessionChange()
-        dataCleaners().forEach { cleaner -> cleaner.clearSessionData() }
+        dataCleaners.current().forEach { cleaner -> cleaner.clearSessionData() }
         demoPreferences.setDemoActive(false)
         withContext(dispatchers.io) { myItmo.tokens.replaceTokens(tokens) }
     }
@@ -100,6 +99,6 @@ class SessionTransitions(
     }
 
     private suspend fun clearSessionDataIgnoringFailures() {
-        dataCleaners().forEach { cleaner -> runCatching { cleaner.clearSessionData() } }
+        dataCleaners.current().forEach { cleaner -> runCatching { cleaner.clearSessionData() } }
     }
 }

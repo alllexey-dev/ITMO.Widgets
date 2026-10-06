@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.auth.data
 
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
@@ -11,15 +12,12 @@ import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
-import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
-import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.core.testing.FakeSessionDataCleaner
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import dev.alllexey.itmowidgets.testkit.bodyText
@@ -29,35 +27,27 @@ import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
-import java.io.File
-import java.io.IOException
-import java.time.ZoneOffset
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import okio.IOException
 
-/** The session over a real `MyItmoStorage` and the MyItmoApi 2.x client, with ITMO.ID answered by a MockEngine. */
+/** The session over an in-memory token file and the MyItmoApi 2.x client, with ITMO.ID answered by a MockEngine. */
 class SessionRepositoryImplTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
-    @get:Rule
-    val folder = TemporaryFolder()
-
-    private val dispatchers = mainDispatcherRule.appDispatchers
+    private val dispatcher = StandardTestDispatcher()
+    private val dispatchers = AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher)
     private val clock = FakeClock(Instant.parse("2026-07-24T00:00:00Z"))
 
     @Test
-    fun `initializes as signed out without a refresh token`() = runTest {
+    fun initializesAsSignedOutWithoutARefreshToken() = runTest(dispatcher) {
         val fixture = fixture(session = null)
 
         fixture.repository.initialize()
@@ -67,7 +57,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `initializes as reauthentication required for an expired token`() = runTest {
+    fun initializesAsReauthenticationRequiredForAnExpiredToken() = runTest(dispatcher) {
         val fixture = fixture(session = stored(refreshExpiresAt = clock.now() - 1.seconds))
 
         fixture.repository.initialize()
@@ -77,7 +67,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `a refresh-token-only state needs a new sign-in like 2_2`() = runTest {
+    fun aRefreshTokenOnlyStateNeedsANewSignInLike22() = runTest(dispatcher) {
         val fixture = fixture(session = null)
         fixture.storage.replaceWithRefreshToken("stored-refresh")
 
@@ -87,7 +77,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `restores the local user without requiring a network request`() = runTest {
+    fun restoresTheLocalUserWithoutRequiringANetworkRequest() = runTest(dispatcher) {
         val user = CurrentUser(123456, "Иванов Иван", null)
         val fixture = fixture(session = stored(), currentUser = user)
 
@@ -100,14 +90,14 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `validates a manual token with one refresh before replacing the current session`() = runTest {
+    fun validatesAManualTokenWithOneRefreshBeforeReplacingTheCurrentSession() = runTest(dispatcher) {
         val fixture = fixture(session = stored()) { respondJson(TOKEN_RESPONSE) }
 
         val result = fixture.repository.signInWithRefreshToken("  candidate-token  ")
 
         assertEquals(AppResult.Success(Unit), result)
         val form = fixture.requests.single().bodyText()
-        assertTrue(form, "grant_type=refresh_token" in form && "refresh_token=candidate-token" in form)
+        assertTrue("grant_type=refresh_token" in form && "refresh_token=candidate-token" in form, form)
         fixture.assertStoredTokens()
         assertEquals(1, fixture.cleaner.requests)
         assertEquals(listOf("prepare", "signed-in"), fixture.effects.events)
@@ -115,7 +105,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `keeps the current session when manual token validation has a network error`() = runTest {
+    fun keepsTheCurrentSessionWhenManualTokenValidationHasANetworkError() = runTest(dispatcher) {
         val fixture = fixture(session = stored()) { throw IOException("offline") }
 
         val result = fixture.repository.signInWithRefreshToken("candidate-token")
@@ -125,7 +115,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `a rejected manual token is unauthorized and keeps the current session`() = runTest {
+    fun aRejectedManualTokenIsUnauthorizedAndKeepsTheCurrentSession() = runTest(dispatcher) {
         val fixture = fixture(session = stored()) {
             respondJson("""{"error":"invalid_grant"}""", HttpStatusCode.BadRequest)
         }
@@ -137,17 +127,17 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `an ITMO_ID 5xx is a retriable error that keeps the current session`() = runTest {
+    fun anItmoId5xxIsARetriableErrorThatKeepsTheCurrentSession() = runTest(dispatcher) {
         val fixture = fixture(session = stored()) { respondJson("{}", HttpStatusCode.BadGateway) }
 
         val result = fixture.repository.signInWithRefreshToken("candidate-token")
 
-        assertTrue(result.toString(), (result as AppResult.Failure).error is AppError.Unknown)
+        assertTrue((result as AppResult.Failure).error is AppError.Unknown, result.toString())
         fixture.assertSessionKept()
     }
 
     @Test
-    fun `rejects an incomplete interactive token response`() = runTest {
+    fun rejectsAnIncompleteInteractiveTokenResponse() = runTest(dispatcher) {
         val fixture = fixture(session = null)
 
         val result = fixture.repository.completeItmoIdLogin("{\"access_token\":\"only\"}")
@@ -157,7 +147,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `accepts a complete Keycloak token response with fields the app does not read`() = runTest {
+    fun acceptsACompleteKeycloakTokenResponseWithFieldsTheAppDoesNotRead() = runTest(dispatcher) {
         val fixture = fixture(session = null)
 
         val result = fixture.repository.completeItmoIdLogin(
@@ -173,7 +163,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `rejects token responses without a token, with null or invalid expirations, or that are not an object`() = runTest {
+    fun rejectsTokenResponsesWithoutATokenWithNullOrInvalidExpirationsOrThatAreNotAnObject() = runTest(dispatcher) {
         val complete = mapOf(
             "access_token" to "\"access\"", "expires_in" to "300", "refresh_token" to "\"refresh\"",
             "refresh_expires_in" to "600", "id_token" to "\"header.payload.signature\""
@@ -190,13 +180,13 @@ class SessionRepositoryImplTest {
         for (body in responses) {
             val fixture = fixture(session = null)
 
-            assertEquals(body, AppResult.Failure(AppError.Unauthorized), fixture.repository.completeItmoIdLogin(body))
-            assertEquals(body, 0, fixture.cleaner.requests)
+            assertEquals(AppResult.Failure(AppError.Unauthorized), fixture.repository.completeItmoIdLogin(body), body)
+            assertEquals(0, fixture.cleaner.requests, body)
         }
     }
 
     @Test
-    fun `unregisters device and clears private data before tokens on logout`() = runTest {
+    fun unregistersDeviceAndClearsPrivateDataBeforeTokensOnLogout() = runTest(dispatcher) {
         val order = mutableListOf<String>()
         val fixture = fixture(session = stored(), order = order)
         fixture.cleaner.onClear = {
@@ -214,7 +204,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `local logout succeeds when backend is unavailable`() = runTest {
+    fun localLogoutSucceedsWhenBackendIsUnavailable() = runTest(dispatcher) {
         val fixture = fixture(
             session = stored(),
             unregisterError = IOException("offline")
@@ -227,7 +217,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `starts the demo without tokens, Backend, background work or ITMO requests`() = runTest {
+    fun startsTheDemoWithoutTokensBackendBackgroundWorkOrItmoRequests() = runTest(dispatcher) {
         val fixture = fixture(session = stored())
 
         fixture.repository.startDemo()
@@ -245,7 +235,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `initializes as the demo without checking a token`() = runTest {
+    fun initializesAsTheDemoWithoutCheckingAToken() = runTest(dispatcher) {
         val fixture = fixture(session = stored(refreshExpiresAt = clock.now() - 1.seconds))
         fixture.settings.setDemoActive(true)
 
@@ -258,7 +248,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `signing out of the demo keeps the device registration alone`() = runTest {
+    fun signingOutOfTheDemoKeepsTheDeviceRegistrationAlone() = runTest(dispatcher) {
         val order = mutableListOf<String>()
         val fixture = fixture(session = null, order = order)
         fixture.repository.startDemo()
@@ -274,7 +264,7 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun `a real sign-in ends a leftover demo flag`() = runTest {
+    fun aRealSignInEndsALeftoverDemoFlag() = runTest(dispatcher) {
         val fixture = fixture(session = null) { respondJson(TOKEN_RESPONSE) }
         fixture.settings.setDemoActive(true)
 
@@ -284,21 +274,57 @@ class SessionRepositoryImplTest {
         assertEquals(false, (fixture.repository.state.value as SessionState.SignedIn).demo)
     }
 
+    @Test
+    fun signOutRunsEveryCleanerExactlyOnce() = runTest(dispatcher) {
+        val second = FakeSessionDataCleaner()
+        val fixture = fixture(session = stored(), extraCleaners = listOf(second))
+
+        fixture.repository.signOut()
+
+        assertEquals(1, fixture.cleaner.requests)
+        assertEquals(1, second.requests)
+    }
+
+    @Test
+    fun leavingTheDemoRunsEveryCleanerExactlyOnce() = runTest(dispatcher) {
+        val second = FakeSessionDataCleaner()
+        val fixture = fixture(session = null, extraCleaners = listOf(second))
+        fixture.repository.startDemo()
+        assertEquals(1, fixture.cleaner.requests)
+        assertEquals(1, second.requests)
+
+        fixture.repository.signOut()
+
+        assertEquals(2, fixture.cleaner.requests)
+        assertEquals(2, second.requests)
+        assertEquals(SessionState.SignedOut, fixture.repository.state.value)
+    }
+
+    @Test
+    fun aHugeTokenLifetimeSaturatesLikeTwoPointTwo() = runTest(dispatcher) {
+        val fixture = fixture(session = null)
+
+        val result = fixture.repository.completeItmoIdLogin(
+            """{"access_token":"access","expires_in":${Long.MAX_VALUE},"refresh_token":"refresh",""" +
+                """"refresh_expires_in":${Long.MAX_VALUE / 1000},"id_token":"header.payload.signature"}"""
+        )
+
+        assertEquals(AppResult.Success(Unit), result)
+        assertEquals(Long.MAX_VALUE, fixture.storage.accessExpiresAt)
+        assertEquals(Long.MAX_VALUE, fixture.storage.refreshExpiresAt)
+    }
+
     private suspend fun fixture(
         session: TokenSet?,
         currentUser: CurrentUser? = null,
         unregisterError: Exception? = null,
         order: MutableList<String> = mutableListOf(),
+        extraCleaners: List<SessionDataCleaner> = emptyList(),
         answer: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData = {
             throw AssertionError("Unexpected request ${it.url}")
         }
     ): Fixture {
-        val storage = MyItmoStorage(
-            tokenFile = File(folder.newFolder(), "myitmo_tokens.enc"),
-            tokenCipher = PlainTokenCipher,
-            clock = java.time.Clock.fixed(java.time.Instant.parse("2026-07-24T00:00:00Z"), ZoneOffset.UTC),
-            log = RecordingAppLog()
-        )
+        val storage = InMemoryTokenFile()
         storage.write(session)
         val requests = mutableListOf<HttpRequestData>()
         val engine = MockEngine { request ->
@@ -316,12 +342,13 @@ class SessionRepositoryImplTest {
         val deviceSession = FakeDeviceSession(order, unregisterError)
         val settings = DemoPreferences(InMemoryPreferencesDataStore())
         val tokenSync = FakeTokenSync()
+        val cleaners = listOf(cleaner) + extraCleaners
         val transitions = SessionTransitions(
             myItmo = client,
             currentUserProvider = object : CurrentUserProvider {
                 override suspend fun getCurrentUser(): CurrentUser? = currentUser
             },
-            dataCleaners = { setOf(cleaner) },
+            dataCleaners = { cleaners },
             lifecycleEffects = effects,
             backendIdentitySync = identitySync,
             backendDeviceSession = deviceSession,
@@ -361,7 +388,7 @@ class SessionRepositoryImplTest {
 
     private inner class Fixture(
         val repository: SessionRepositoryImpl,
-        val storage: MyItmoStorage,
+        val storage: InMemoryTokenFile,
         val requests: List<HttpRequestData>,
         val cleaner: FakeSessionDataCleaner,
         val effects: FakeEffects,
@@ -372,17 +399,17 @@ class SessionRepositoryImplTest {
     ) {
         /** [TOKEN_RESPONSE] with its lifetimes counted from the test clock, as 2.2 stored them. */
         fun assertStoredTokens() {
-            assertEquals("access", storage.getAccessToken())
-            assertEquals((clock.now() + 300.seconds).toEpochMilliseconds(), storage.getAccessExpiresAt())
-            assertEquals("refresh", storage.getRefreshToken())
-            assertEquals((clock.now() + 600.seconds).toEpochMilliseconds(), storage.getRefreshExpiresAt())
+            assertEquals("access", storage.accessToken)
+            assertEquals((clock.now() + 300.seconds).toEpochMilliseconds(), storage.accessExpiresAt)
+            assertEquals("refresh", storage.refreshToken)
+            assertEquals((clock.now() + 600.seconds).toEpochMilliseconds(), storage.refreshExpiresAt)
             assertEquals("header.payload.signature", storage.getIdToken())
         }
 
         fun assertSessionKept() {
             assertEquals(0, cleaner.requests)
-            assertEquals("stored-access", storage.getAccessToken())
-            assertEquals("stored-refresh", storage.getRefreshToken())
+            assertEquals("stored-access", storage.accessToken)
+            assertEquals("stored-refresh", storage.refreshToken)
             assertTrue(effects.events.isEmpty())
         }
     }
@@ -398,12 +425,6 @@ class SessionRepositoryImplTest {
             if (tokens == null) order += "tokens"
             delegate.write(tokens)
         }
-    }
-
-    private object PlainTokenCipher : TokenCipher {
-        override fun encrypt(value: String): String = value
-
-        override fun decrypt(value: String): String = value
     }
 
     private class FakeTokenSync : FcmTokenSync {
