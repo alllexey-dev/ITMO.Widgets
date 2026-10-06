@@ -13,7 +13,6 @@ import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -32,12 +31,13 @@ import dev.alllexey.itmowidgets.feature.auth.presentation.LoginPage
 import dev.alllexey.itmowidgets.core.ui.resolve
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
-    private val viewModel: InteractiveLoginViewModel by viewModels()
+    private val viewModel: InteractiveLoginViewModel by viewModel()
     private val authBridge = ItmoAuthBridge()
     private val interceptorScript by lazy {
         assets.open(TOKEN_INTERCEPTOR_ASSET).bufferedReader().use { it.readText() }

@@ -38,13 +38,13 @@ object MeRenderer {
         binding.servicesDisabledRow.isVisible = !enabled
 
         val summary = state.friends as? MeFriendsSummary.Content
-        binding.friendsDescription.text = when (state.friends) {
+        binding.friendsDescription.text = when (val friends = state.friends) {
             MeFriendsSummary.Loading -> context.getString(R.string.me_friends_loading)
             MeFriendsSummary.Error -> context.getString(R.string.me_friends_error)
-            is MeFriendsSummary.Content -> if (state.friends.friends == 0) {
+            is MeFriendsSummary.Content -> if (friends.friends == 0) {
                 context.getString(R.string.me_friends_none)
             } else {
-                context.getString(R.string.me_friends_count, state.friends.friends)
+                context.getString(R.string.me_friends_count, friends.friends)
             }
             MeFriendsSummary.Disabled -> ""
         }

@@ -3,14 +3,10 @@ package dev.alllexey.itmowidgets.feature.auth.reference
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Canvas
-import android.os.Bundle
 import android.view.View
 import android.webkit.WebView
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.test.core.app.ApplicationProvider
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import dev.alllexey.itmowidgets.R
@@ -21,6 +17,9 @@ import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
+import dev.alllexey.itmowidgets.di.bridge.presetViewModel
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthFragment
 import dev.alllexey.itmowidgets.feature.auth.ui.LoginActivity
@@ -46,6 +45,9 @@ class AuthReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-account")
 
@@ -86,18 +88,22 @@ class AuthReferenceScreenshotTest {
     }
 
     @Test
-    fun loginError() = references.host(
-        "LoginScreen_error",
-        LoginActivity::class.java,
-        appearance = {},
-        ready = { activity ->
-            val browser = activity.findViewById<WebView>(R.id.login_web_view)
-            val error = activity.findViewById<View>(R.id.login_error_container)
-            // A main frame that is not HTTPS is the page error the activity shows instead of the browser.
-            if (!error.isVisible) shadowOf(browser).webViewClient.onPageStarted(browser, OUTSIDE_URL, null)
-            error.isVisible
-        },
-    )
+    fun loginError() {
+        // LoginActivity obtains the release ViewModel from Koin, over the Hilt test graph's session.
+        KoinStarter.ensureStarted(ApplicationProvider.getApplicationContext())
+        references.host(
+            "LoginScreen_error",
+            LoginActivity::class.java,
+            appearance = {},
+            ready = { activity ->
+                val browser = activity.findViewById<WebView>(R.id.login_web_view)
+                val error = activity.findViewById<View>(R.id.login_error_container)
+                // A main frame that is not HTTPS is the page error the activity shows instead of the browser.
+                if (!error.isVisible) shadowOf(browser).webViewClient.onPageStarted(browser, OUTSIDE_URL, null)
+                error.isVisible
+            },
+        )
+    }
 
     private fun auth(preview: String, session: Session, act: (AuthViewModel) -> Unit = {}) = references.host(
         preview,
@@ -115,7 +121,7 @@ class AuthReferenceScreenshotTest {
     private fun show(host: ReferenceHostActivity, session: Session, act: (AuthViewModel) -> Unit = {}): AuthFragment {
         val fragment = AuthFragment()
         // A fresh session per launch: every appearance starts from the same state.
-        host.supportFragmentManager.preset(fragment) { AuthViewModel(session.copy()).also(act) }
+        presetViewModel(host) { AuthViewModel(session.copy()).also(act) }
         host.show(fragment)
         return fragment
     }
@@ -138,25 +144,6 @@ class AuthReferenceScreenshotTest {
         const val OUTSIDE_URL = "http://example.com/"
     }
 }
-
-/** Hands [fragment] the view model [create] makes before Hilt could create one. */
-private fun FragmentManager.preset(fragment: Fragment, create: () -> ViewModel) =
-    registerFragmentLifecycleCallbacks(
-        object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
-                if (f !== fragment) return
-                val model = create()
-                ViewModelProvider(
-                    f,
-                    object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = model as T
-                    },
-                )[model.javaClass]
-            }
-        },
-        false,
-    )
 
 /**
  * Shows [source], a view of a dialog window, in place of the host's content: a capture finds only views of the

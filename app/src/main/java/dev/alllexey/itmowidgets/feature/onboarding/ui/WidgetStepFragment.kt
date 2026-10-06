@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -34,6 +33,7 @@ import dev.alllexey.itmowidgets.feature.onboarding.presentation.textSize
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * One widget: its real preview, the choices that shape it, and a pin to the launcher.
@@ -50,8 +50,10 @@ class WidgetStepFragment : Fragment() {
     private var _binding: FragmentOnboardingWidgetBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: OnboardingViewModel by viewModels(
-        ownerProducer = { requireParentFragment() }
+    private val viewModel: OnboardingViewModel by viewModel(
+        ownerProducer = { requireParentFragment() },
+        // The parent's extras: whichever Fragment asks first, the handle belongs to the flow, not to one page.
+        extrasProducer = { requireParentFragment().defaultViewModelCreationExtras }
     )
 
     private val kind: WidgetKind by lazy {

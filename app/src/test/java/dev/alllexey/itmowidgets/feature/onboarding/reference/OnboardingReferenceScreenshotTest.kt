@@ -1,12 +1,7 @@
 package dev.alllexey.itmowidgets.feature.onboarding.reference
 
 import android.content.Context
-import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import dagger.Module
 import dagger.Provides
@@ -33,6 +28,8 @@ import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
 import dev.alllexey.itmowidgets.di.TimeModule
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
+import dev.alllexey.itmowidgets.di.bridge.presetViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingStep
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
@@ -64,6 +61,9 @@ class OnboardingReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-account")
 
@@ -134,7 +134,7 @@ class OnboardingReferenceScreenshotTest {
                 val shown = host.supportFragmentManager.fragments.filterIsInstance<OnboardingFragment>().firstOrNull()
                     ?: OnboardingFragment().also { fragment ->
                         acted = false
-                        host.supportFragmentManager.preset(fragment) {
+                        presetViewModel(host) {
                             OnboardingViewModel(
                                 onboardingRepository = FakeOnboardingRepository(),
                                 customServicesRepository = Services(servicesEnabled),
@@ -224,22 +224,3 @@ class OnboardingReferenceScreenshotTest {
         fun overrideController(provider: DefaultAcademicTimeProvider): AcademicTimeOverrideController = provider
     }
 }
-
-/** Hands [fragment] the view model [create] makes before Hilt could create one. */
-private fun FragmentManager.preset(fragment: Fragment, create: () -> ViewModel) =
-    registerFragmentLifecycleCallbacks(
-        object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
-                if (f !== fragment) return
-                val model = create()
-                ViewModelProvider(
-                    f,
-                    object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = model as T
-                    },
-                )[model.javaClass]
-            }
-        },
-        false,
-    )

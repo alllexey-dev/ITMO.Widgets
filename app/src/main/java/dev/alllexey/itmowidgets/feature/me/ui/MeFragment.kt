@@ -11,7 +11,6 @@ import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -32,6 +31,7 @@ import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @AndroidEntryPoint
 class MeFragment : Fragment() {
@@ -39,7 +39,7 @@ class MeFragment : Fragment() {
     private var _binding: FragmentMeBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MeViewModel by viewModels()
+    private val viewModel: MeViewModel by viewModel()
 
     @Inject lateinit var shareLinks: ShareLinkFactory
 

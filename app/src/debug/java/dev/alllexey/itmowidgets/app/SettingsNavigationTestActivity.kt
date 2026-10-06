@@ -9,10 +9,12 @@ import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
+import dev.alllexey.itmowidgets.di.bridge.AccountDebugFixtures
 import dev.alllexey.itmowidgets.di.bridge.HomeDebugFixtures
 import dev.alllexey.itmowidgets.di.bridge.QrDebugFixtures
 import dev.alllexey.itmowidgets.di.bridge.SettingsDebugFixtures
 import dev.alllexey.itmowidgets.di.bridge.SocialDebugFixtures
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 import org.koin.core.module.Module
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -46,8 +48,6 @@ import androidx.fragment.app.FragmentFactory
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebFragment
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebPreviewFragment
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.transition.Transition
@@ -122,6 +122,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     private lateinit var homeKoinFixture: Module
     private lateinit var settingsKoinFixture: Module
     private lateinit var socialKoinFixture: Module
+    private lateinit var accountFixture: Module
     private val customSpoiler = FixtureCustomSpoiler()
 
     /** The first-run flow with no stored preferences and no backend behind the opt-in. */
@@ -193,11 +194,12 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Before super.onCreate(): a restored QrCodeFragment, HomeFragment, SettingsFragment, IcsExportBottomSheet,
-        // profile or picker obtains its ViewModels from Koin.
+        // profile, picker, MeFragment or OnboardingFragment obtains its ViewModels from Koin.
         qrFixture = QrDebugFixtures.load(this, FixtureQrCodeRepository, FixtureWallClock)
         homeKoinFixture = HomeDebugFixtures.load(this, FixtureHomeFakes, FixtureWallClock)
         settingsKoinFixture = SettingsDebugFixtures.load(this, settingsFakes)
         socialKoinFixture = SocialDebugFixtures.load(this, socialFakes)
+        accountFixture = AccountDebugFixtures.load(this, accountFakes)
         supportFragmentManager.fragmentFactory = object : FragmentFactory() {
             override fun instantiate(classLoader: ClassLoader, className: String): Fragment =
                 if (className == MyItmoWebFragment::class.java.name) MyItmoWebPreviewFragment()
@@ -205,35 +207,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
         }
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, state: Bundle?) {
-                if (f is MeFragment) {
-                    ViewModelProvider(f, object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            MeViewModel(ProfileSession, ProfileSocial, ProfileServices()) as T
-                    })[MeViewModel::class.java]
-                    return
-                }
-                if (f is OnboardingFragment) {
-                    ViewModelProvider(f, object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = OnboardingViewModel(
-                            onboardingRepository = Onboarding,
-                            customServicesRepository = onboardingServices,
-                            widgetAppearanceRepository = onboardingAppearance,
-                            customSpoilerRepository = customSpoiler,
-                            savedStateHandle = SavedStateHandle()
-                        ) as T
-                    })[OnboardingViewModel::class.java]
-                    return
-                }
-            }
-
             override fun onFragmentViewCreated(fm: FragmentManager, f: Fragment, v: View, state: Bundle?) {
                 if (f is OnboardingFragment) {
                     // The Fragment reports the real launcher in onCreate; the fixture decides here.
-                    ViewModelProvider(f)[OnboardingViewModel::class.java]
-                        .onPinSupportChanged(onboardingFixture.pinSupported)
+                    f.getViewModel<OnboardingViewModel>().onPinSupportChanged(onboardingFixture.pinSupported)
                     return
                 }
                 if (f is AppOverlayHostFragment) {
@@ -337,6 +314,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
         HomeDebugFixtures.unload(this, homeKoinFixture)
         SettingsDebugFixtures.unload(this, settingsKoinFixture)
         SocialDebugFixtures.unload(this, socialKoinFixture)
+        AccountDebugFixtures.unload(this, accountFixture)
     }
 
     /**
@@ -380,6 +358,18 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
 
     private object ProfileCurrentUser : CurrentUserProvider {
         override suspend fun getCurrentUser() = CurrentUser(100001, "Тестовый пользователь", null)
+    }
+
+    /** The profile tab over the social fixtures; the first-run flow over this host's in-memory preferences. */
+    private val accountFakes = object : AccountDebugFixtures.Fakes {
+        override fun me() = MeViewModel(ProfileSession, ProfileSocial, ProfileServices())
+        override fun onboarding(savedStateHandle: SavedStateHandle) = OnboardingViewModel(
+            onboardingRepository = Onboarding,
+            customServicesRepository = onboardingServices,
+            widgetAppearanceRepository = onboardingAppearance,
+            customSpoilerRepository = customSpoiler,
+            savedStateHandle = savedStateHandle
+        )
     }
 
     /** A new feed for each new ViewModel from [homeFixture]; tests reach it through [homeSource] and its siblings. */

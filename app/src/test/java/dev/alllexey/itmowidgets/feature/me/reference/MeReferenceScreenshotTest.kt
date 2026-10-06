@@ -1,10 +1,5 @@
 package dev.alllexey.itmowidgets.feature.me.reference
 
-import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import dev.alllexey.itmowidgets.core.model.RelationshipState
@@ -23,6 +18,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
+import dev.alllexey.itmowidgets.di.bridge.presetViewModel
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import org.junit.Rule
@@ -43,6 +40,9 @@ class MeReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-account")
 
@@ -90,7 +90,7 @@ class MeReferenceScreenshotTest {
         ready = { host ->
             host.supportFragmentManager.fragments.any { it is MeFragment } || run {
                 val fragment = MeFragment()
-                host.supportFragmentManager.preset(fragment) {
+                presetViewModel(host) {
                     MeViewModel(
                         FakeSessionRepository(SessionState.SignedIn(user)),
                         FakeSocialRepository().apply(social),
@@ -115,22 +115,3 @@ class MeReferenceScreenshotTest {
         const val LONG_NAME = "Александра Константиновна Константинопольская-Преображенская"
     }
 }
-
-/** Hands [fragment] the view model [create] makes before Hilt could create one. */
-private fun FragmentManager.preset(fragment: Fragment, create: () -> ViewModel) =
-    registerFragmentLifecycleCallbacks(
-        object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
-                if (f !== fragment) return
-                val model = create()
-                ViewModelProvider(
-                    f,
-                    object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = model as T
-                    },
-                )[model.javaClass]
-            }
-        },
-        false,
-    )

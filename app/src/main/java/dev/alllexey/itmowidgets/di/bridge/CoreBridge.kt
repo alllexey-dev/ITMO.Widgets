@@ -28,6 +28,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
@@ -107,6 +108,8 @@ interface CoreBridgeEntryPoint {
 
     /** The schedule's widget refresh after a sport booking changes it; the refresh gateway is bridged above. */
     fun scheduleWidgetRefreshRequester(): ScheduleWidgetRefreshRequester
+    /** The schedule and QR widget appearance; every write refreshes the pinned widgets. */
+    fun widgetAppearanceRepository(): WidgetAppearanceRepository
 
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
@@ -160,4 +163,5 @@ val coreBridgeModule = module {
     single<ScheduleWidgetRefreshRequester> {
         CoreBridgeEntryPoint.from(androidContext()).scheduleWidgetRefreshRequester()
     }
+    single<WidgetAppearanceRepository> { CoreBridgeEntryPoint.from(androidContext()).widgetAppearanceRepository() }
 }

@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.color.MaterialColors
@@ -16,6 +15,7 @@ import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiStat
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * The notification permission, asked where it is needed: right after the opt-in
@@ -26,8 +26,10 @@ class NotificationsStepFragment : Fragment() {
     private var _binding: FragmentOnboardingNotificationsBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: OnboardingViewModel by viewModels(
-        ownerProducer = { requireParentFragment() }
+    private val viewModel: OnboardingViewModel by viewModel(
+        ownerProducer = { requireParentFragment() },
+        // The parent's extras: whichever Fragment asks first, the handle belongs to the flow, not to one page.
+        extrasProducer = { requireParentFragment().defaultViewModelCreationExtras }
     )
 
     override fun onCreateView(
