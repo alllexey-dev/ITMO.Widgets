@@ -168,10 +168,14 @@ next time, and an edit made while the upload was in flight is sent next time.
 ## Storage and synchronization
 
 `core/resources/SubjectLinksRepository` is the port;
-`feature/resources/data/SubjectLinksRepositoryImpl` implements it with the
-Core API (`subjectLinks`, `saveSubjectLink`, `deleteSubjectLink`,
-`pinSubjectLink`, `voteSubjectLink`, `reportSubjectLink`, `myRestrictions`), the connection gate and an injected
-wall clock. With the connection the server is the source of truth: every action
+`feature/resources/data/SubjectLinksRepositoryImpl` implements it with Core
+2.0's `SubjectLinksApi` (`BackendClient.links`: `subjectLinks`, `saveSubjectLink`,
+`deleteSubjectLink`, `pinSubjectLink`, `voteSubjectLink`, `reportSubjectLink`,
+`myRestrictions`), the connection gate and an injected wall clock. `DemoMode` is
+checked first and every call passes `BackendGate.mayCallBackend()`.
+`SubjectLinkMappers.kt` is the one place that reads Core's types: a category a
+newer Backend adds shows as `OTHER`, a status it adds shows no badge, and authors
+map through `UserData.toUserSummary()` (`core/model/ClientUserMapping.kt`). With the connection the server is the source of truth: every action
 goes to it at once and its answer updates the cached snapshot. There is no
 background synchronization.
 
@@ -190,11 +194,16 @@ replaced with an empty one. Cloud backup and device transfer exclude the
 directory. A failed refresh keeps the cached snapshot; a scope that never
 loaded shows its local links if it has any, otherwise an error.
 
-Backend error codes map to `AppError`: `restricted` → `Restricted` (and the
-restrictions are refreshed), `permission_denied` → `Forbidden`, `not_found` →
-`NotFound`, anything else, including 409, → `Unknown`. Active restrictions from
-`GET /api/users/me/restrictions` hide the vote arrows (`VOTE`) and
-`Пожаловаться` (`REPORT`); private links, deletion, pins and adding others'
+Backend errors map to `AppError` through `BackendException.asAppError()`: 401 ->
+`Unauthorized`, 403 `restricted` -> `Restricted` (and the restrictions are
+refreshed; the caller still sees `Restricted`), any other 403 -> `Forbidden`, 404 ->
+`NotFound`, no answer -> `Network`, anything else, including 409, -> `Unknown`.
+The upload of device-only links stops at the first `Unauthorized` and keeps the
+remaining links and pins local; `Forbidden`, `NotFound` and `Unknown` skip only
+that link. An `Unauthorized` refresh does not mark the scope failed. Active
+restrictions from `GET /api/users/me/restrictions` hide the vote arrows (`VOTE`)
+and `Пожаловаться` (`REPORT`); a capability a newer Backend adds blocks like
+`ALL`; private links, deletion, pins and adding others'
 links stay available. The repository is a `SessionDataCleaner`: it cancels and
 joins calls in flight before the next account's token appears, deletes the
 file and memory state, and drops late answers of the previous session.

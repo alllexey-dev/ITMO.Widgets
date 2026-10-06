@@ -1,16 +1,15 @@
 package dev.alllexey.itmowidgets.feature.resources.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.common.ModerationReportRequest
+import dev.alllexey.itmowidgets.client.common.ResourceVoteRequest
+import dev.alllexey.itmowidgets.client.links.PinSubjectLinkRequest
+import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.resources.data.demo.DemoSubjectLinks
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.resources.ModerationReportRequest
-import dev.alllexey.itmowidgets.core.model.resources.PinSubjectLinkRequest
-import dev.alllexey.itmowidgets.core.model.resources.ResourceVoteRequest
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
@@ -51,8 +50,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import dev.alllexey.itmowidgets.core.model.resources.SubjectLink as WireLink
+import dev.alllexey.itmowidgets.client.links.SubjectLink as WireLink
 
 /**
  * With the opt-in every action goes to the server at once and its answer updates the cached snapshot;
@@ -61,7 +59,7 @@ import dev.alllexey.itmowidgets.core.model.resources.SubjectLink as WireLink
 @Singleton
 class SubjectLinksRepositoryImpl @Inject constructor(
     private val storage: SubjectLinksFileStore,
-    private val api: ItmoWidgetsApi,
+    private val api: SubjectLinksApi,
     private val backend: BackendGate,
     private val clock: Clock,
     private val demo: DemoMode,
@@ -163,7 +161,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
             return@attempt
         }
         networkLock.withLock {
-            call(generation) { api.deleteSubjectLink(id.toWireId()) }
+            request(generation) { api.deleteSubjectLink(id.toWireId()) }
             mutate(generation) { it.withoutMine(scope, id) }
         }
     }
@@ -274,7 +272,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         mutate(generation) { it.withResponse(scope, answer) }
     }
 
-    private suspend fun linkAction(scope: ResourceScope, block: suspend () -> ApiResponse<WireLink>): AppResult<Unit> = attempt {
+    private suspend fun linkAction(scope: ResourceScope, block: suspend () -> WireLink): AppResult<Unit> = attempt {
         val generation = epoch.get()
         load(generation)
         networkLock.withLock {
@@ -301,26 +299,20 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun <T> request(generation: Long, block: suspend () -> ApiResponse<T>): T =
-        call(generation, block) ?: throw Failure(AppError.Unknown())
-
-    /** Null only for answers without data, like a deletion. */
-    private suspend fun <T> call(generation: Long, block: suspend () -> ApiResponse<T>): T? {
+    /**
+     * Core 2.0 fails only with `BackendException`, mapped by `toAppError()`: 401 Unauthorized, 403 `restricted`
+     * Restricted, other 403 Forbidden, 404 NotFound, no answer Network, anything else (409 included) Unknown.
+     */
+    private suspend fun <T> request(generation: Long, block: suspend () -> T): T {
         requireEnabled(generation)
         try {
-            val response = coroutineScope {
+            val answer = coroutineScope {
                 val call = async(dispatchers.io, start = CoroutineStart.LAZY) { checkSession(generation); block() }
                 stateLock.withLock { checkSession(generation); activeRequests.add(call) }
                 try { call.await() } finally { activeRequests.remove(call) }
             }
             requireEnabled(generation)
-            if (!response.success) throw Failure(when (response.error?.code) {
-                "restricted" -> AppError.Restricted
-                "permission_denied" -> AppError.Forbidden
-                "not_found" -> AppError.NotFound
-                else -> AppError.Unknown()
-            })
-            return response.data
+            return answer
         } catch (cancel: CancellationException) {
             checkSession(generation)
             throw cancel
@@ -434,7 +426,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     private val AppError.refusesItem: Boolean
         get() = this == AppError.Forbidden || this == AppError.NotFound || this is AppError.Unknown
 
-    private fun String.toWireId() = Uuid.parse(this).toJavaUuid()
+    private fun String.toWireId() = Uuid.parse(this)
 
     private fun Exception.appError(): AppError = (this as? Failure)?.error ?: toAppError()
 
