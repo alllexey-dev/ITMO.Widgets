@@ -18,7 +18,9 @@ import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.app.shell.ShellContent
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
+import dev.alllexey.itmowidgets.core.home.HomeCardRenderer
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.home.HomeCardTestTags
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.home.HomeLessonState
 import dev.alllexey.itmowidgets.core.home.HomeScheduleRow
@@ -38,13 +40,14 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
-import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
+import dev.alllexey.itmowidgets.feature.home.di.hintCardsQualifier
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
+import dev.alllexey.itmowidgets.feature.home.ui.HintHomeCardRenderer
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
@@ -52,6 +55,10 @@ import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
 import dev.alllexey.itmowidgets.feature.qr.ui.QrPassTestTags
+import dev.alllexey.itmowidgets.feature.recordbook.ui.home.MarksHomeCardRenderer
+import dev.alllexey.itmowidgets.feature.schedule.ui.home.ScheduleHomeCardRenderer
+import dev.alllexey.itmowidgets.feature.social.ui.home.FriendRequestsHomeCardRenderer
+import dev.alllexey.itmowidgets.feature.sport.ui.home.SportHomeCardRenderer
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -67,8 +74,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.compose.KoinContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -92,18 +101,26 @@ class HomeEntriesTest {
     @Before
     fun startGraph() {
         val clock = FakeClock(Instant.fromEpochMilliseconds(0))
-        startKoin {
+        val koin = startKoin {
             modules(
                 module {
                     viewModel {
-                        HomeViewModel(listOf(FakeHomeSource), NothingHidden, NoHintDismissed, clock, FixedAcademicTime(DATE))
+                        HomeViewModel(listOf(FakeHomeSource), NothingHidden, NoHintDismissed, clock)
                     }
                     viewModel { QrCodeViewModel(FakeQrRepository, PlainQrAppearance, clock) }
+                    single<HomeCardRenderer>(named("schedule")) { ScheduleHomeCardRenderer(ZONE) }
+                    single<HomeCardRenderer>(named("recordbook")) { MarksHomeCardRenderer }
+                    single<HomeCardRenderer>(named("sport")) { SportHomeCardRenderer(ZONE) }
+                    single<HomeCardRenderer>(named("social")) { FriendRequestsHomeCardRenderer }
+                    single<HomeCardRenderer>(hintCardsQualifier) { HintHomeCardRenderer }
                 },
             )
-        }
+        }.koin
         compose.setContent {
-            ItmoTheme { ShellContent(navigator, shellEntries(), ShellSurface.Tabs(demoBanner = false), onDemoSignIn = {}) }
+            // Koin Compose caches the first graph it reads for the JVM; this test's graph replaces the stopped one.
+            KoinContext(koin) {
+                ItmoTheme { ShellContent(navigator, shellEntries(), ShellSurface.Tabs(demoBanner = false), onDemoSignIn = {}) }
+            }
         }
         compose.waitForIdle()
     }
@@ -127,12 +144,12 @@ class HomeEntriesTest {
 
     @Test
     fun scheduleRowsOpenTheirSheets() {
-        compose.onAllNodesWithTag(HomeTestTags.SCHEDULE_ROW).onFirst().performClick()
+        compose.onAllNodesWithTag(HomeCardTestTags.SCHEDULE_ROW).onFirst().performClick()
         compose.waitForIdle()
         assertEquals(listOf(AppRoutes.LessonDetails(LESSON)), navigator.state.floating)
 
         act { select(AppTab.HOME) }
-        compose.onAllNodesWithTag(HomeTestTags.SCHEDULE_ROW)[1].performClick()
+        compose.onAllNodesWithTag(HomeCardTestTags.SCHEDULE_ROW)[1].performClick()
         compose.waitForIdle()
         assertEquals(listOf(AppRoutes.PendingSportDetails(PENDING)), navigator.state.floating)
     }
@@ -141,16 +158,16 @@ class HomeEntriesTest {
     fun cardsOpenTheirScreens() {
         assertOpens(listOf(AppRoutes.ScheduleChanges)) { card(HomeCardKind.SCHEDULE_CHANGES).performClick() }
         assertOpens(listOf(AppRoutes.UserProfile(FRIEND_ISU))) {
-            scrollTo(HomeTestTags.FRIEND_ROW)
-            compose.onAllNodesWithTag(HomeTestTags.FRIEND_ROW).onFirst().performClick()
+            scrollTo(HomeCardTestTags.FRIEND_ROW)
+            compose.onAllNodesWithTag(HomeCardTestTags.FRIEND_ROW).onFirst().performClick()
         }
         assertOpens(listOf(AppRoutes.Friends)) {
-            scrollTo(HomeTestTags.FRIENDS_ALL)
-            compose.onNodeWithTag(HomeTestTags.FRIENDS_ALL).performClick()
+            scrollTo(HomeCardTestTags.FRIENDS_ALL)
+            compose.onNodeWithTag(HomeCardTestTags.FRIENDS_ALL).performClick()
         }
         assertOpens(listOf(AppRoutes.Settings(page = "SERVICES"))) {
-            scrollTo(HomeTestTags.HINT_ACTION)
-            compose.onNodeWithTag(HomeTestTags.HINT_ACTION).performClick()
+            scrollTo(HomeCardTestTags.HINT_ACTION)
+            compose.onNodeWithTag(HomeCardTestTags.HINT_ACTION).performClick()
         }
         assertOpens(listOf(AppRoutes.MyItmoWeb)) { compose.onNodeWithTag(HomeTestTags.WEB_FAB).performClick() }
         assertOpens(listOf(AppRoutes.QrPass)) { compose.onNodeWithTag(HomeTestTags.QR_FAB).performClick() }
