@@ -108,7 +108,8 @@ class FcmNotificationFlowTest {
                 manager.activeNotifications.single { it.tag == AppNotificationChannels.SPORT }.notification.contentIntent.send()
                 eventually { assertEquals(AppTab.SPORT, ShellProbe.current().tab) }
                 notifier.clear()
-                assertTrue(manager.activeNotifications.isEmpty())
+                // NotificationManagerService applies cancelAll on its own handler, after the call returns.
+                eventually { assertTrue(manager.activeNotifications.isEmpty()) }
             }
         } finally {
             runCatching { onActivity { it.finish() } }
