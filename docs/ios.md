@@ -126,8 +126,8 @@ runs on fixtures: placeholder roots, the session gate and the demo banner, witho
 
 - Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
   sport, me. The recordbook is declared but hidden until IO-09d2 (no placeholder reaches App Review); home is
-  selected at launch. The container is one type, `Shell/ShellTabs.swift` (a `TabView` today), so IO-SW1 can swap it
-  without touching the stacks or the router.
+  selected at launch. The container is one type, `Shell/ShellTabs.swift` (a `TabView`). Tabs switch by the native
+  tab bar only, with no swipe between them (owner decision 2026-10-06; IO-SW1 dropped, see design.md "Tab swipe").
 - Stacks and sheets. Each tab has one `NavigationStack` whose path the router holds; sheets open at the medium
   detent and drag to large.
 - Session gate. No tab bar while the session is loading or signed out; the demo banner (`ItmoDemoBanner`) sits

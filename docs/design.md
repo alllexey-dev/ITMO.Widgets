@@ -296,10 +296,16 @@ the geometry.
 
 ### Tab swipe
 
-The same rules on Android and iOS. The kit's `designsystem/gesture/` package
-holds the pieces: `TabSwipeDefaults` (the numbers below), `tabSwipeHandover`,
-`tabSwipeBlocked` and `TabSwipeRegistry`; `GestureRulesTest` enforces rules 3
-and 5.
+Android only. The kit's `designsystem/gesture/` package holds the pieces:
+`TabSwipeDefaults` (the numbers below), `tabSwipeHandover`, `tabSwipeBlocked`
+and `TabSwipeRegistry`; `GestureRulesTest` enforces rules 3 and 5.
+
+iOS has no tab swipe (owner decision, 2026-10-06): paging between tab bar tabs
+is not an iOS convention, so the tabs switch by the native tab bar only, inner
+horizontal content just scrolls, and the leading edge belongs to the back
+swipe. Shared screens keep `tabSwipeHandover` and `tabSwipeBlocked` (rule 3);
+with no tab pager around them they change nothing. `TabSwipeRegistry` and
+`TabSwipeDefaults.edgeDeadZone` stay in the kit, unused on iOS for now.
 
 1. The five bottom tabs switch by a tap and by a horizontal swipe on a tab
    root, in bar order, one tab per swipe, no wrap-around.
@@ -313,21 +319,20 @@ and 5.
 4. Days never move by a horizontal swipe on content: day lists scroll
    vertically; a week strip changes the day by a tap and the week by its arrows
    and is `tabSwipeBlocked`.
-5. System gestures win: no gesture exclusion; on Android the back edges stay
-   the system's; on iOS the tab swipe never starts within 24 pt of the left
-   edge, and a pushed screen has only the back swipe.
+5. System gestures win: no gesture exclusion; the back edges stay the
+   system's.
 6. Diagonal drags belong to vertical lists (2x slop for the tab pager).
 7. Feedback: the bar's indicator moves to the target tab when the drag passes
    the commit threshold, with one threshold haptic; no hint, coach mark, peek
    animation or new text.
 8. Accessibility: the tabs stay bar buttons and nothing needs the swipe; the
-   tab pager exposes no page semantics and is off under TalkBack, Switch
-   Access, VoiceOver and Switch Control.
+   tab pager exposes no page semantics and is off under TalkBack and Switch
+   Access.
 9. Reduced motion: the drag still follows the finger; the settle and tap
-   switches are instant on Android and a cross-fade on iOS.
-10. Entry points land on screens: widgets, links, notifications, shortcuts and
-    the Control open a route with its tab, never a page index; a switch by a
-    route, a tap or Back never slides through the tabs in between.
+   switches are instant.
+10. Entry points land on screens: widgets, links, notifications and shortcuts
+    open a route with its tab, never a page index; a switch by a route, a tap
+    or Back never slides through the tabs in between.
 
 ## Shared components
 
