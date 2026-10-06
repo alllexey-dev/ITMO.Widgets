@@ -1,10 +1,13 @@
 package dev.alllexey.itmowidgets.feature.social
 
+import android.app.Activity
+import android.app.Application
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Rect
 import android.net.Uri
+import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -75,6 +78,7 @@ import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.datetime.YearMonth
 import org.junit.Assert.*
 import org.junit.Test
@@ -350,28 +354,30 @@ class UserProfileVisualTest {
     }
 
     @Test fun staggeredRepliesBeforeTheDeadlinePublishOneCompletePage() = appearances { spec ->
-        preview(spec, {
-            friendFixture()
-            UserProfilePreviewActivity.person = AppResult.Success(teacher())
-            UserProfilePreviewActivity.cachedSocial = friend()
-            // Both replies come before the 3 s deadline but late enough for a cold, dark launch to show the skeleton.
-            UserProfilePreviewActivity.personDelayMs = 2_000
-            UserProfilePreviewActivity.reviewsDelayMs = 2_400
-            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews()))
-        }) { scenario ->
-            loading(scenario)
-            TestUi.settle(300)
-            loading(scenario)
-            assertTrue(states().none { it is UserProfileUiState.Content })
-            frame(scenario, "staggered-loading-${spec.name}")
-            content(scenario, attempts = 100)
-            TestUi.settle(150)
-            assertEquals(listOf(UserProfileUiState.Loading::class, UserProfileUiState.Content::class), states().map { it::class }.distinct())
-            val page = states().filterIsInstance<UserProfileUiState.Content>().single()
-            assertEquals(LONG_NAME, page.name)
-            assertNotNull(page.social)
-            assertEquals(3, page.reviews?.items?.size)
-            frame(scenario, "staggered-content-${spec.name}")
+        val skeletonFrames = AtomicInteger()
+        countSkeletonFrames(skeletonFrames) {
+            preview(spec, {
+                friendFixture()
+                UserProfilePreviewActivity.person = AppResult.Success(teacher())
+                UserProfilePreviewActivity.cachedSocial = friend()
+                // Both replies come before the 3 s deadline but late enough for a cold, dark launch to show the skeleton.
+                UserProfilePreviewActivity.personDelayMs = 2_000
+                UserProfilePreviewActivity.reviewsDelayMs = 2_400
+                UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews()))
+            }) { scenario ->
+                // No polling for the skeleton: it animates, so the idle syncs of launch() and onActivity() may return
+                // only after both replies. The recorded states and the drawn frames prove it came first instead.
+                content(scenario, attempts = 100)
+                TestUi.settle(150)
+                assertTrue(states().first() is UserProfileUiState.Loading)
+                assertTrue("The skeleton must be drawn before the page", skeletonFrames.get() > 0)
+                assertEquals(listOf(UserProfileUiState.Loading::class, UserProfileUiState.Content::class), states().map { it::class }.distinct())
+                val page = states().filterIsInstance<UserProfileUiState.Content>().single()
+                assertEquals(LONG_NAME, page.name)
+                assertNotNull(page.social)
+                assertEquals(3, page.reviews?.items?.size)
+                frame(scenario, "staggered-content-${spec.name}")
+            }
         }
     }
 
@@ -1471,6 +1477,35 @@ class UserProfileVisualTest {
         val position = manager.findFirstVisibleItemPosition()
         return position to manager.getDecoratedTop(checkNotNull(manager.findViewByPosition(position)))
     }
+
+    /**
+     * Counts into [frames] every frame a [UserProfilePreviewActivity] started inside [block] draws with the skeleton
+     * and without the list, from its first frame on.
+     */
+    private fun countSkeletonFrames(frames: AtomicInteger, block: () -> Unit) {
+        val application = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as Application
+        val callbacks = object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityStarted(activity: Activity) {
+                if (activity !is UserProfilePreviewActivity) return
+                activity.window.decorView.viewTreeObserver.addOnDrawListener {
+                    if (activity.findViewById<View>(R.id.loading).isShown && !activity.list().isShown) frames.incrementAndGet()
+                }
+            }
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+            override fun onActivityResumed(activity: Activity) = Unit
+            override fun onActivityPaused(activity: Activity) = Unit
+            override fun onActivityStopped(activity: Activity) = Unit
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+            override fun onActivityDestroyed(activity: Activity) = Unit
+        }
+        application.registerActivityLifecycleCallbacks(callbacks)
+        try {
+            block()
+        } finally {
+            application.unregisterActivityLifecycleCallbacks(callbacks)
+        }
+    }
+
     private fun states(): List<UserProfileUiState> = synchronized(UserProfilePreviewActivity.states) { UserProfilePreviewActivity.states.toList() }
 
     private fun friendFixture() {
