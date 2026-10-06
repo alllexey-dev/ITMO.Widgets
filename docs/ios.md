@@ -320,7 +320,8 @@ and every push to `v2.3/next` and `master`, and on `workflow_dispatch`.
   pages, sampled every 5 s).
 - `.github/workflows/ios-nightly.yml` runs on a schedule against `v2.3/next`: `test.sh --ci kn` over every shared
   module with the testing convention, and `test.sh --ci ui` (every class in `UITests`, `SmokeUITests` included). It
-  is never a required check.
+  is never a required check. It installs JetBrains 21 with toolchain auto-download off and resolves the Gradle
+  plugins with retries before the build, as `ios.yml` and `android-ci.yml` do.
 
 Measured on the first runs (no caches yet): the job takes 18.5 to 20 minutes, `test.sh --ci` 1076 to 1157 s, with
 a peak of 6.3 to 6.4 GB used of 7 GB. If the build runs out of memory, split it into a framework job and an
