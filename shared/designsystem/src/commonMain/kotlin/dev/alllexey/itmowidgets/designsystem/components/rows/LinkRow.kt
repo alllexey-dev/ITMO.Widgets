@@ -19,7 +19,10 @@ import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.components.buttons.Pill
+import dev.alllexey.itmowidgets.designsystem.components.groups.IosListRow
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.IosMetrics
 
 /**
  * A link in a connected group (port of `item_subject_link.xml` and `core/ui/SubjectLinkRow.kt`): an optional
@@ -30,6 +33,10 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
  * The whole row opens the link; [onLongClick] opens its actions, named for TalkBack by [longClickLabel]. TalkBack
  * reads the row once: title, caption, badge and score, with the pill's votes as custom actions. Pass
  * `Modifier.connectedGroupItem(...)` in [modifier] so the ripple keeps the row's shape.
+ *
+ * Under the iOS style it is a cell of an inset group: the icon in the tint, UIKit's row height and margins, the
+ * caption in subheadline `secondaryLabel`, the separator under it inset to the title, the pressed cell instead of a
+ * ripple. The badge and the pill keep their geometry.
  */
 @Composable
 fun LinkRow(
@@ -44,6 +51,13 @@ fun LinkRow(
     votes: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val trailing = ownBadge != null || votes != null
+    if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
+        val separatorInset = if (icon != null) IosMetrics.separatorInsetWithIcon else IosMetrics.separatorInset
+        IosListRow(separatorInset) {
+            IosLinkRowLayout(title, onClick, modifier, icon, caption, ownBadge, onLongClick, longClickLabel, votes)
+        }
+        return
+    }
     Row(
         modifier
             .fillMaxWidth()
@@ -80,6 +94,57 @@ fun LinkRow(
                     color = ItmoTheme.colorScheme.onSurfaceVariant,
                     style = ItmoTheme.typography.bodyMedium,
                 )
+            }
+        }
+        if (ownBadge != null) {
+            Pill(ownBadge, Modifier.padding(end = ItmoTheme.spacing.content))
+        }
+        votes?.invoke(this)
+    }
+}
+
+@Composable
+private fun IosLinkRowLayout(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    icon: Painter?,
+    caption: String?,
+    ownBadge: String?,
+    onLongClick: (() -> Unit)?,
+    longClickLabel: String?,
+    votes: (@Composable RowScope.() -> Unit)?,
+) {
+    val trailing = ownBadge != null || votes != null
+    Row(
+        modifier
+            .fillMaxWidth()
+            .heightIn(min = IosMetrics.rowMinHeight)
+            .combinedClickable(onLongClickLabel = longClickLabel, onLongClick = onLongClick, onClick = onClick)
+            .padding(
+                start = IosMetrics.rowHorizontalPadding,
+                // The pill's own inset keeps its arrows clear of the edge, as in the Material row.
+                end = if (trailing) ItmoTheme.spacing.related else IosMetrics.rowHorizontalPadding,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.padding(end = IosMetrics.rowHorizontalPadding).size(IconSize),
+                tint = ItmoTheme.colorScheme.primary,
+            )
+        }
+        Column(
+            Modifier
+                .weight(1f)
+                .padding(end = if (trailing) IosMetrics.accessoryGap else 0.dp)
+                .padding(vertical = IosMetrics.rowVerticalPadding),
+        ) {
+            Text(title, color = ItmoTheme.colorScheme.onSurface, style = ItmoTheme.typography.bodyLarge.wrapping())
+            if (!caption.isNullOrEmpty()) {
+                Text(caption, color = ItmoTheme.iosColors.secondaryLabel, style = ItmoTheme.typography.bodyMedium)
             }
         }
         if (ownBadge != null) {

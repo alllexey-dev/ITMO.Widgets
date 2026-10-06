@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import dev.alllexey.itmowidgets.designsystem.components.groups.PreviewBackdrop
+import dev.alllexey.itmowidgets.designsystem.components.groups.groupPreviewBackdrop
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
@@ -35,7 +37,7 @@ private fun VotePillReadOnlyPreview() = ItmoPreview {
 @Composable
 private fun PillColumn(content: @Composable () -> Unit) {
     Column(
-        Modifier.padding(ItmoTheme.spacing.screenMargin),
+        Modifier.groupPreviewBackdrop(PreviewBackdrop.Cell).padding(ItmoTheme.spacing.screenMargin),
         verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
     ) { content() }
 }

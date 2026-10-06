@@ -21,7 +21,12 @@ import org.jetbrains.compose.resources.painterResource
 @Preview
 @Composable
 private fun ConnectedGroupPreview() = ItmoPreview {
-    Column(Modifier.padding(horizontal = ItmoTheme.spacing.screenMargin).padding(bottom = ItmoTheme.spacing.group)) {
+    Column(
+        Modifier
+            .groupPreviewBackdrop()
+            .padding(horizontal = ItmoTheme.spacing.screenMargin)
+            .padding(bottom = ItmoTheme.spacing.group),
+    ) {
         SectionHeading("Ссылки", spacing = SectionHeadingSpacing.First)
         PreviewLinks(GroupSurface.Screen)
     }
@@ -33,6 +38,7 @@ private fun ConnectedGroupSheetPreview() = ItmoPreview {
     Column(
         Modifier
             .background(ItmoTheme.colorScheme.surfaceContainerLow)
+            .groupPreviewBackdrop(PreviewBackdrop.Sheet)
             .padding(horizontal = ItmoTheme.spacing.screenMargin)
             .padding(bottom = ItmoTheme.spacing.group),
     ) {
@@ -44,7 +50,7 @@ private fun ConnectedGroupSheetPreview() = ItmoPreview {
 @Preview
 @Composable
 private fun ConnectedGroupSinglePreview() = ItmoPreview {
-    Column(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
+    Column(Modifier.groupPreviewBackdrop().padding(ItmoTheme.spacing.screenMargin)) {
         PreviewRow(PreviewFixtures.LongSubjectName, "Экзамен, 5 ECTS", GroupPosition.Single, GroupSurface.Screen)
         Text(
             "Группа сразу после группы без заголовка",

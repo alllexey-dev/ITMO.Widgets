@@ -31,6 +31,12 @@ data class ItmoIosColors(
     val tertiarySystemFill: Color,
     /** The selected segment's thumb of a segmented control: read off its render (DS-IOS-02). */
     val segmentedThumb: Color,
+    /** `systemGroupedBackground` at the elevated level: behind the inset groups of a sheet (DS-IOS-03). */
+    val groupedSheetBackground: Color,
+    /** `secondarySystemGroupedBackground` at the elevated level: a cell of an inset group in a sheet (DS-IOS-03). */
+    val groupedSheetCell: Color,
+    /** A pressed cell: `UIBackgroundConfiguration.listCell()` highlighted, `systemGray4` at both levels (DS-IOS-03). */
+    val cellHighlight: Color,
 ) {
     companion object {
         val Light = ItmoIosColors(
@@ -44,6 +50,9 @@ data class ItmoIosColors(
             systemRed = Color(0xFFFF383C),
             tertiarySystemFill = Color(0x1F767680),
             segmentedThumb = Color(0xFFFFFFFF),
+            groupedSheetBackground = Color(0xFFF2F2F7),
+            groupedSheetCell = Color(0xFFFFFFFF),
+            cellHighlight = Color(0xFFD1D1D6),
         )
 
         val Dark = ItmoIosColors(
@@ -57,6 +66,9 @@ data class ItmoIosColors(
             systemRed = Color(0xFFFF4245),
             tertiarySystemFill = Color(0x3D767680),
             segmentedThumb = Color(0xFF5A5A5E),
+            groupedSheetBackground = Color(0xFF1C1C1E),
+            groupedSheetCell = Color(0xFF2C2C2E),
+            cellHighlight = Color(0xFF3A3A3C),
         )
 
         fun of(dark: Boolean): ItmoIosColors = if (dark) Dark else Light

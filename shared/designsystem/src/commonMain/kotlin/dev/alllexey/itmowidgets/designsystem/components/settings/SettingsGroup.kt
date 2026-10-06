@@ -15,7 +15,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.components.groups.IosSectionHeader
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.IosMetrics
 
 /**
  * How tightly the rows of a settings group sit. Groups carry no outer spacing: a screen spaces them by
@@ -48,6 +51,9 @@ internal class SettingsGroupRow(val key: Any?, val content: @Composable () -> Un
  * One settings or profile group, never a card per row: an optional [title] label, one card (20 dp corners,
  * `surfaceContainerLow`) with the rows of [content] and dividers between them, and an optional [footer] below, usually
  * [SettingsGroupFooter]. The rows read [density] from the group.
+ *
+ * Under the iOS style it is a section of an inset-grouped list: the [title] as its header, one inset group of cells
+ * with hairline separators inset to the rows' text, the footer below; both densities draw UIKit's rows.
  */
 @Composable
 fun SettingsGroup(
@@ -60,12 +66,16 @@ fun SettingsGroup(
     val rows = SettingsGroupScope().apply(content).rows
     CompositionLocalProvider(LocalSettingsDensity provides density) {
         Column(modifier.fillMaxWidth()) {
-            if (title != null) SettingsGroupLabel(title, density)
+            val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
+            val surface = if (ios) ItmoTheme.iosColors.groupedCell else ItmoTheme.colorScheme.surfaceContainerLow
+            if (title != null) {
+                if (ios) IosSectionHeader(title, Modifier, top = 0.dp) else SettingsGroupLabel(title, density)
+            }
             Column(
                 Modifier
                     .fillMaxWidth()
                     .clip(ItmoTheme.shapes.cardContent)
-                    .background(ItmoTheme.colorScheme.surfaceContainerLow),
+                    .background(surface),
             ) {
                 rows.forEachIndexed { index, row ->
                     if (index > 0) SettingsDivider(density)
@@ -77,12 +87,31 @@ fun SettingsGroup(
     }
 }
 
-/** The note under a settings group (`Widget.ItmoWidgets.CompactSettingsSectionFooter`): `bodySmall`, 8 dp below it. */
+/**
+ * The note under a settings group (`Widget.ItmoWidgets.CompactSettingsSectionFooter`): `bodySmall`, 8 dp below it.
+ * Under the iOS style an inset group's footer (`groupedFooter()`): footnote in `secondaryLabel`, inset to the rows'
+ * text, at UIKit's distance below the group.
+ */
 @Composable
 fun SettingsGroupFooter(
     text: String,
     modifier: Modifier = Modifier,
 ) {
+    if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
+        Text(
+            text,
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    start = IosMetrics.rowHorizontalPadding,
+                    top = IosMetrics.sectionFooterTop,
+                    end = IosMetrics.rowHorizontalPadding,
+                ),
+            color = ItmoTheme.iosColors.secondaryLabel,
+            style = ItmoTheme.typography.bodySmall,
+        )
+        return
+    }
     Text(
         text,
         modifier
@@ -118,6 +147,15 @@ private fun SettingsGroupLabel(text: String, density: SettingsDensity) {
 /** `Widget.ItmoWidgets.SettingsDivider`; the compact one is inset at both ends and half as strong. */
 @Composable
 private fun SettingsDivider(density: SettingsDensity) {
+    if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
+        // The settings rows start their text at the cell's margin, so every separator takes the plain inset.
+        HorizontalDivider(
+            Modifier.padding(start = IosMetrics.separatorInset, end = IosMetrics.separatorTrailingInset),
+            thickness = IosMetrics.separatorThickness,
+            color = ItmoTheme.iosColors.separator,
+        )
+        return
+    }
     val compact = density == SettingsDensity.Compact
     HorizontalDivider(
         Modifier.padding(start = ItmoTheme.spacing.group, end = if (compact) ItmoTheme.spacing.group else 0.dp),
