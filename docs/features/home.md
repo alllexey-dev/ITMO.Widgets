@@ -15,23 +15,39 @@ and only the owner of that kind resets what the card shows; the default does
 nothing. Every feature that owns data contributes a source from its `data`
 package through the `@IntoSet` multibinding in its Hilt module (`HomeBridge`
 hands the set to Koin); `HomeViewModel` (`:shared:feature-home`, built by Koin)
-receives the sources, flattens the flows, drops the kinds hidden in settings,
-sorts by `HomeCardKind`, whose declaration order is the feed order, and turns
-each card into a `HomeCardUi` through `HomeCardFormatter`. Nothing in
-`feature/home` imports another feature.
+receives the sources, flattens the flows, drops the kinds hidden in settings
+and sorts by `HomeCardKind`, whose declaration order is the feed order. Nothing
+in `feature/home` imports another feature.
+
+Each card is drawn by the feature that produces it. `core/home` also holds
+`HomeCardRenderer` (the `kinds` it claims and a `@Composable` `Content(card,
+actions, modifier)`), `HomeCardActions` (the host's navigation and
+`onDismiss(kind)`) and `HomeCardTestTags`. A feature keeps its card in its
+`ui/home` package and registers one renderer in its Koin module as a qualified
+`single<HomeCardRenderer>`: `ScheduleHomeCardRenderer` (`SCHEDULE`,
+`SCHEDULE_CHANGES`) in `:shared:feature-schedule`, `MarksHomeCardRenderer` in
+`:shared:feature-recordbook`, `SportHomeCardRenderer` in
+`:shared:feature-sport`, `FriendRequestsHomeCardRenderer` in
+`:shared:feature-social` and `HintHomeCardRenderer` for the three hints in
+home. Every kind has exactly one renderer (`HomeRenderersGraphTest` over the
+release Koin modules); a card no renderer claims is left out of the feed. The
+cards share the kit's frame (`FeedCard`, `FeedCardHeader`, `FeedRowBadge`,
+`FeedCloseButton`, `ClosableFeedCard`), and each card's strings and goldens
+live in its feature's module.
 
 The screen is Compose in `:shared:feature-home` `commonMain`: `HomeRoute`
-obtains the ViewModel and `HomeScreen` draws `HomeUiState` (`HomeScreen.kt`,
-`HomeCards.kt`). `HomeCardFormatter` writes every time and date in the
-`AcademicTimeProvider` zone (`HH:mm` with `DateTexts`, the date as
-`понедельник, 7 сентября`, sport queues as `пн, 7 сент. · 16:00–17:30`), so
-the UI parses no ISO text; `HomeRulesTest` keeps `java.time` and
-`kotlinx.datetime` out of `feature.home.ui`. `HomeFragment` keeps its class
-name and hosts the route through `itmoComposeView`; it owns what only Android
-does: navigation through `AppNavigator`, the widget pin
-(`WidgetPinRequester`), the notification permission and the services settings
-page (`SERVICES_PAGE`). The strings are `strings_home.xml` in the module's
-`composeResources`.
+obtains the ViewModel and every Koin `HomeCardRenderer`, and `HomeScreen`
+draws `HomeUiState` with them. The schedule and sport renderers format their
+times and dates in the `AcademicTimeProvider` zone (`ScheduleHomeCardFormatter`,
+`SportHomeCardFormatter`: `HH:mm` with `DateTexts`, the date as
+`понедельник, 7 сентября`, sport queues as `пн, 7 сент. · 16:00–17:30`), so no
+UI parses ISO text; `HomeRulesTest` keeps `java.time` and `kotlinx.datetime`
+out of `feature.home.ui`. `HomeFragment` keeps its class name and hosts the
+route through `itmoComposeView`; it owns what only Android does: navigation
+through `AppNavigator`, the widget pin (`WidgetPinRequester`), the
+notification permission and the services settings page (`SERVICES_PAGE`).
+Home's own strings (the buttons, the empty state, the hints) are
+`strings_home.xml` in the module's `composeResources`.
 
 | Card | Source | Shown when |
 |---|---|---|
@@ -67,11 +83,13 @@ scrolls clear of the two FABs; the snackbar sits above them. Test tags are in
 `HomeTestTags`.
 
 `Настройки → Главный экран` hides a card kind (`home_hidden_cards`); hints are
-not settings, only dismissible. The look is covered by JVM goldens
-(`HomeScreenshotTest`, `shared/feature-home/screenshots/`: loading, empty,
-content, refreshing, long names, every card kind) from synthetic
-`HomePreviewSamples`; behaviour by `HomeScreenTest` (touch targets, the FABs
-never covering the last card, every action) and `HomeCardFormatterTest`.
+not settings, only dismissible. The look is covered by JVM goldens: the screen
+(loading, empty, content, refreshing) and the hints in
+`shared/feature-home/screenshots/`, every other card with long names in its
+feature's `screenshots/` (`Home<Card>Preview`, from synthetic samples in
+`ui/home/preview`). Behaviour by `HomeScreenTest` (touch targets, the FABs
+never covering the last card, drawing by kind, every action), each card's own
+test and the formatter tests.
 Instrumented flows (`HomeQrVisualTest`, `HomeWebVisualTest`,
 `MainNavigationTest`) replace the whole feed with one in-memory source
 (`HomeFixture`) and never touch MyITMO or Backend.

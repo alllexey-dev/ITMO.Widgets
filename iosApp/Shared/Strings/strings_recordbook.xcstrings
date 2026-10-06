@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
+    "home_marks_description" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$lld. %3$@"
+          }
+        }
+      }
+    },
+    "home_marks_dismiss" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитано"
+          }
+        }
+      }
+    },
     "links_all_count" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",

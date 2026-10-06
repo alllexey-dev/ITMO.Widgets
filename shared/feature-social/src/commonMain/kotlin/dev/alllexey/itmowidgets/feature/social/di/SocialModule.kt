@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.social.di
 
+import dev.alllexey.itmowidgets.core.home.HomeCardRenderer
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
@@ -13,6 +14,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserSearchViewModel
+import dev.alllexey.itmowidgets.feature.social.ui.home.FriendRequestsHomeCardRenderer
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -42,6 +44,7 @@ val socialModule = module {
     singleOf(::PeopleSearchRepositoryImpl) { bind<PeopleSearchRepository>() }
     singleOf(::SocialHomeCardSource)
     single<HomeCardSource>(socialCardsQualifier) { get<SocialHomeCardSource>() }
+    single<HomeCardRenderer>(named("social")) { FriendRequestsHomeCardRenderer }
 
     viewModelOf(::FriendsViewModel)
     viewModelOf(::UserSearchViewModel)

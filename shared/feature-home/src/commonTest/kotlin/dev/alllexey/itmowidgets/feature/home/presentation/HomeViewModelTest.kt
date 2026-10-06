@@ -7,7 +7,6 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeHomeCardSource
-import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.feature.home.FakeHomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStore
@@ -48,7 +47,7 @@ class HomeViewModelTest {
     fun tearDown() = main.reset()
 
     private fun model(vararg sources: FakeHomeCardSource = arrayOf(hints, sport, schedule)) =
-        HomeViewModel(sources.toList(), preferences, hintStore, clock, FixedAcademicTime())
+        HomeViewModel(sources.toList(), preferences, hintStore, clock)
 
     private fun TestScope.subscribe(vm: HomeViewModel): Job =
         vm.uiState.onEach { }.launchIn(backgroundScope)

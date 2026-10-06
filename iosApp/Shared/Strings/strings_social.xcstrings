@@ -409,6 +409,30 @@
         }
       }
     },
+    "home_friends_all" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все заявки"
+          }
+        }
+      }
+    },
+    "home_friends_title" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заявки в друзья"
+          }
+        }
+      }
+    },
     "person_course" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",

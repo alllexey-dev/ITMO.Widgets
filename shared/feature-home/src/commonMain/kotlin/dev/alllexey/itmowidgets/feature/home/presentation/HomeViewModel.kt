@@ -9,7 +9,6 @@ import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
 import kotlin.time.Clock
@@ -26,18 +25,15 @@ import kotlinx.coroutines.supervisorScope
 /**
  * Merges every registered [HomeCardSource]: cards sort by kind, hidden kinds
  * drop out, and a refresh asks all sources at once. Errors never replace the
- * feed; the first one becomes a single event. Staleness follows the wall [clock]; cards are formatted in the
- * academic time zone of [timeProvider].
+ * feed; the first one becomes a single event. Staleness follows the wall [clock]. Each feature draws its own cards
+ * (`HomeCardRenderer`), so the state holds the sources' cards as they are.
  */
 class HomeViewModel(
     private val sources: List<HomeCardSource>,
     preferences: HomeCardPreferences,
     private val hintStore: HomeHintStore,
-    private val clock: Clock,
-    timeProvider: AcademicTimeProvider
+    private val clock: Clock
 ) : ViewModel() {
-
-    private val formatter = HomeCardFormatter(timeProvider.timeZone)
 
     private val refreshing = MutableStateFlow(false)
     private var inFlight = false
@@ -51,10 +47,7 @@ class HomeViewModel(
         combine(sources.map { it.observe() }) { lists -> lists.flatMap { it } }
 
     val uiState: StateFlow<HomeUiState> = combine(cards, preferences.observeHidden(), refreshing) { all, hidden, busy ->
-        HomeUiState.Content(
-        all.filterNot { it.kind in hidden }.sortedBy { it.kind.ordinal }.map(formatter::format),
-        busy
-    )
+        HomeUiState.Content(all.filterNot { it.kind in hidden }.sortedBy { it.kind.ordinal }, busy)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), HomeUiState.Loading)
 
     /** The first show refreshes once; later visits go through [onScreenResumed]. */

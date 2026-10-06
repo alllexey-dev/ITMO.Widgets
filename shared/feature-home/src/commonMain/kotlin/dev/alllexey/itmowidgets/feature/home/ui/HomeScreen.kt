@@ -24,7 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.core.home.HomeCard
+import dev.alllexey.itmowidgets.core.home.HomeCardActions
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
+import dev.alllexey.itmowidgets.core.home.HomeCardRenderer
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
@@ -33,7 +36,6 @@ import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.Skeleton
 import dev.alllexey.itmowidgets.designsystem.components.state.SkeletonStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.home.presentation.HomeCardUi
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeUiState
 import dev.alllexey.itmowidgets.shared.designsystem.ic_home
 import dev.alllexey.itmowidgets.shared.designsystem.ic_language
@@ -46,19 +48,16 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
-/** Test tags of [HomeScreen], read by host tests and the instrumented navigation and FAB flows. */
+/**
+ * Test tags of [HomeScreen], read by host tests and the instrumented navigation and FAB flows; the rows and buttons
+ * inside the cards carry `HomeCardTestTags`.
+ */
 object HomeTestTags {
     const val FEED = "home_feed"
     const val LOADING = "home_loading"
     const val EMPTY = "home_empty"
     const val WEB_FAB = "home_web_fab"
     const val QR_FAB = "home_qr_fab"
-    const val SCHEDULE_ROW = "home_schedule_row"
-    const val SPORT_ROW = "home_sport_row"
-    const val FRIEND_ROW = "home_friend_row"
-    const val DISMISS = "home_card_dismiss"
-    const val HINT_ACTION = "home_hint_action"
-    const val FRIENDS_ALL = "home_friends_all"
 
     /** The card of [kind]; one per kind, the feed's item key. */
     fun card(kind: HomeCardKind): String = "home_card_${kind.name.lowercase()}"
@@ -66,7 +65,8 @@ object HomeTestTags {
 
 /**
  * Everything the feed can ask its host to do. Navigation, the widget pin and the notification permission stay with
- * the platform host; dismissing and refreshing go to the ViewModel through [HomeRoute].
+ * the platform host; dismissing (the close button of a card of that kind) and refreshing go to the ViewModel through
+ * [HomeRoute]. The cards get their part as `HomeCardActions`.
  */
 data class HomeActions(
     val onRefresh: () -> Unit = {},
@@ -76,24 +76,37 @@ data class HomeActions(
     val onOpenFriends: () -> Unit = {},
     val onOpenUser: (isu: Int) -> Unit = {},
     val onHint: (HomeHint) -> Unit = {},
-    val onDismissHint: (HomeHint) -> Unit = {},
     val onOpenScheduleChanges: () -> Unit = {},
-    val onDismissScheduleChanges: () -> Unit = {},
     val onOpenMarks: () -> Unit = {},
-    val onDismissMarks: () -> Unit = {},
+    val onDismiss: (HomeCardKind) -> Unit = {},
     val onOpenWeb: () -> Unit = {},
     val onOpenQr: () -> Unit = {},
-)
+) {
+    internal fun forCards() = HomeCardActions(
+        onLesson = onLesson,
+        onPendingSport = onPendingSport,
+        onOpenSport = onOpenSport,
+        onOpenFriends = onOpenFriends,
+        onOpenUser = onOpenUser,
+        onOpenScheduleChanges = onOpenScheduleChanges,
+        onOpenMarks = onOpenMarks,
+        onHint = onHint,
+        onDismiss = onDismiss,
+    )
+}
 
 /**
  * The home feed: placeholder cards on the first load, then the cards in feed order under pull-to-refresh, or the
  * `Пока пусто` state; the MyITMO and QR buttons float over the bottom end, and the list keeps its last card clear of
- * them. A failed refresh shows in [snackbarHostState] above the buttons. Stateless; [HomeRoute] feeds it.
+ * them. Each card is drawn by the one of [renderers] that claims its kind (its producing feature's); a card no
+ * renderer claims is left out. A failed refresh shows in [snackbarHostState] above the buttons. Stateless;
+ * [HomeRoute] feeds it.
  */
 @Composable
 fun HomeScreen(
     state: HomeUiState,
     actions: HomeActions,
+    renderers: List<HomeCardRenderer>,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
@@ -111,7 +124,9 @@ fun HomeScreen(
                 onRefresh = actions.onRefresh,
                 modifier = Modifier.fillMaxSize(),
             ) {
-                if (state.cards.isEmpty()) EmptyFeed() else Feed(state.cards, actions, listState)
+                val byKind = remember(renderers) { renderers.byKind() }
+                val cards = remember(state.cards, byKind) { state.cards.filter { it.kind in byKind } }
+                if (cards.isEmpty()) EmptyFeed() else Feed(cards, byKind, actions, listState)
             }
         }
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
@@ -121,8 +136,18 @@ fun HomeScreen(
     }
 }
 
+/** The renderer of each kind; a kind claimed twice keeps its first renderer. */
+private fun List<HomeCardRenderer>.byKind(): Map<HomeCardKind, HomeCardRenderer> =
+    flatMap { renderer -> renderer.kinds.map { it to renderer } }.distinctBy { it.first }.toMap()
+
 @Composable
-private fun Feed(cards: List<HomeCardUi>, actions: HomeActions, listState: LazyListState) {
+private fun Feed(
+    cards: List<HomeCard>,
+    renderers: Map<HomeCardKind, HomeCardRenderer>,
+    actions: HomeActions,
+    listState: LazyListState,
+) {
+    val cardActions = remember(actions) { actions.forCards() }
     LazyColumn(
         Modifier.fillMaxSize().testTag(HomeTestTags.FEED),
         state = listState,
@@ -132,7 +157,7 @@ private fun Feed(cards: List<HomeCardUi>, actions: HomeActions, listState: LazyL
         ),
     ) {
         items(cards, key = { it.kind.name }, contentType = { it::class.simpleName }) { card ->
-            HomeCard(card, actions, Modifier.testTag(HomeTestTags.card(card.kind)))
+            renderers.getValue(card.kind).Content(card, cardActions, Modifier.testTag(HomeTestTags.card(card.kind)))
         }
     }
 }

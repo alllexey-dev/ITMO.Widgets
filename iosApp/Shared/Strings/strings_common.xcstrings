@@ -265,6 +265,30 @@
         }
       }
     },
+    "home_pending_predicted" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прогноз"
+          }
+        }
+      }
+    },
+    "home_pending_waiting" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ждём запись"
+          }
+        }
+      }
+    },
     "home_schedule_today" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

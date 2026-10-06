@@ -104,6 +104,8 @@
     <string name="user_profile_sport_title">Спорт</string>
     <string name="user_profile_hidden">Скрыто настройками приватности</string>
     <string name="home_schedule_today">Сегодня</string>
+    <string name="home_pending_waiting">ждём запись</string>
+    <string name="home_pending_predicted">прогноз</string>
     <string name="my_itmo_web_title">My ITMO</string>
     <string name="links_title">Ссылки</string>
     <string name="links_add">Добавить ссылку</string>
