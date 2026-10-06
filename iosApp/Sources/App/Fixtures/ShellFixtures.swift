@@ -1,4 +1,5 @@
 import Foundation
+import Shared
 import SwiftUI
 
 /// Fixture mode of the shell (IO-06b): placeholder roots, the session gate and the demo banner without Kotlin. The
@@ -24,7 +25,7 @@ struct FixtureRootScreen: View {
             ItmoEmptyView(symbol: tab.symbol, title: tab.title)
             if tab == .home {
                 ItmoProgressButton(title: AppStrings.string("home_open_qr"), symbol: .qrCode) {
-                    router.open(.qrPass)
+                    router.open(AppRoutes.QrPass.shared)
                 }
                 .padding(.horizontal, ItmoSpacing.screenMargin)
                 .accessibilityIdentifier("home.openQr")

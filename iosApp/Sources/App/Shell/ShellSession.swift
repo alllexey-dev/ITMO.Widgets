@@ -1,4 +1,5 @@
 import Observation
+import Shared
 
 /// What the shell gates on: no tab bar until a session is ready, the demo banner while the demo session is open.
 enum ShellSessionState: String, CaseIterable {
@@ -7,8 +8,18 @@ enum ShellSessionState: String, CaseIterable {
     case demo
     case signedIn = "signed-in"
 
-    /// A route runs and the tab bar shows only in a ready session.
-    var isReady: Bool { self == .demo || self == .signedIn }
+    /// The shared session state `ShellGate` reads: routes run only on its tabs.
+    var sessionState: SessionState {
+        switch self {
+        case .loading: SessionStateInitializing.shared
+        case .signedOut: SessionStateSignedOut.shared
+        case .demo: SessionStateSignedIn(user: nil, demo: true)
+        case .signedIn: SessionStateSignedIn(user: nil, demo: false)
+        }
+    }
+
+    /// The fixture has no first-run flow (IO-07b brings it).
+    var onboarding: OnboardingStatus { .passed }
 }
 
 /// The session as the shell sees it. Until IO-21 binds it to the shared `SessionRepository` it is a fixture

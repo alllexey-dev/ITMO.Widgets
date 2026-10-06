@@ -7,7 +7,8 @@
 - `src/iosMain/kotlin/.../ios/`: the Swift-facing entry points: `IosPlatform`, `di/` (`startKoinIos`, `IosKoin`,
   `IosKoinModules`), `bridge/` (`ScreenViewModelStore`; the test probe `BridgeProbeViewModel` in
   `bridge/presentation/`, where Konsist wants every ViewModel), `screens/` (the
-  Compose hosts: `ScreenControllers.kt` and one `<Feature>Screens.kt` per feature), `IosStrings`, `IosSecureStore`.
+  Compose hosts: `ScreenControllers.kt` and one `<Feature>Screens.kt` per feature), `navigation/` (`IosRoutes`: the
+  feature of each shared route key and the entry routes Swift builds), `IosStrings`, `IosSecureStore`.
 - No resources of its own: the Compose plugins pack every dependency's `composeResources` into the app bundle.
 
 ## Depends on
