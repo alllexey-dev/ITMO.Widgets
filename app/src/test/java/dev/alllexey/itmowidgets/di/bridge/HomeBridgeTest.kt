@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeHomeCardSource
+import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import kotlinx.coroutines.flow.first
@@ -64,6 +65,6 @@ class HomeBridgeTest {
     /** The hint cards read the services opt-in, which `settingsDataModule` constructs since KM-11e. */
     @Test
     fun `the home module passes the graph check against the release bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(settingsDataModule, homeModule))
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(authDataModule, settingsDataModule, homeModule))
     }
 }

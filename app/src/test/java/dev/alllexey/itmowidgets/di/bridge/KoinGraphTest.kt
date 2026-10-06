@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -18,7 +19,7 @@ class KoinGraphTest {
 
     @Test
     fun `a constructed definition may depend on a bridged core contract`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(module { singleOf(::NeedsDemoMode) }))
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(module { singleOf(::NeedsAcademicTime) }))
     }
 
     @Test
@@ -51,6 +52,7 @@ class KoinGraphTest {
     }
 
     class NeedsDemoMode(@Suppress("unused") val demo: DemoMode)
+    class NeedsAcademicTime(@Suppress("unused") val time: AcademicTimeProvider)
 
     class CycleA(@Suppress("unused") val b: CycleB)
     class CycleB(@Suppress("unused") val a: CycleA)

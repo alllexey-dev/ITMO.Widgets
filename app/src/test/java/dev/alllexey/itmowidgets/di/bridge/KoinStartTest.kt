@@ -9,10 +9,8 @@ import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
-import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
@@ -25,11 +23,13 @@ import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
+import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
@@ -37,6 +37,7 @@ import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
+import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import java.util.concurrent.Callable
@@ -87,11 +88,9 @@ class KoinStartTest {
         val koin = GlobalContext.get()
 
         assertSame(hilt.academicTimeProvider(), koin.get<AcademicTimeProvider>())
-        assertSame(hilt.demoMode(), koin.get<DemoMode>())
         assertSame(hilt.appDiagnostics(), koin.get<AppDiagnostics>())
         assertSame(hilt.backendGate(), koin.get<BackendGate>())
         assertSame(hilt.appDispatchers(), koin.get<AppDispatchers>())
-        assertSame(hilt.sessionRepository(), koin.get<SessionRepository>())
         assertSame(hilt.currentUserProvider(), koin.get<CurrentUserProvider>())
         assertSame(hilt.clock(), koin.get<Clock>())
         assertSame(hilt.myItmoClient(), koin.get<MyItmoClient>())
@@ -110,8 +109,11 @@ class KoinStartTest {
         assertSame(hilt.backendIdentitySync(), koin.get<BackendIdentitySync>())
         assertSame(hilt.backendDeviceSession(), koin.get<BackendDeviceSession>())
         assertSame(hilt.fcmTokenSync(), koin.get<FcmTokenSync>())
+        assertSame(hilt.sessionTokenStore(), koin.get<SessionTokenStore>())
+        assertSame(hilt.sessionLifecycleEffects(), koin.get<SessionLifecycleEffects>())
+        assertSame(hilt.demoPreferences(), koin.get<DemoPreferences>())
+        assertSame(hilt.utilityStorage(), koin.get<UtilityStorage>())
         assertSame(hilt.customSpoilerRepository(), koin.get<CustomSpoilerRepository>())
-        assertSame(hilt.onboardingRepository(), koin.get<OnboardingRepository>())
         assertSame(hilt.scheduleChangeTracking(), koin.get<ScheduleChangeTracking>())
         assertSame(hilt.markTracking(), koin.get<MarkTracking>())
         assertSame(hilt.coreCalendarSync(), koin.get<CalendarSync>())

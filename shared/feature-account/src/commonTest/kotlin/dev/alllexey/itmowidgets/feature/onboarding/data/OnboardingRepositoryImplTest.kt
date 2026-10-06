@@ -2,27 +2,23 @@ package dev.alllexey.itmowidgets.feature.onboarding.data
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Test
 
 class OnboardingRepositoryImplTest {
 
     @Test
-    fun `a fresh install has not passed the flow`() = runTest {
+    fun aFreshInstallHasNotPassedTheFlow() = runTest {
         assertEquals(false, createRepository().observeCompleted().first())
     }
 
     @Test
-    fun `completing the flow is remembered`() = runTest {
+    fun completingTheFlowIsRemembered() = runTest {
         val repository = createRepository()
 
         repository.complete()
@@ -31,7 +27,7 @@ class OnboardingRepositoryImplTest {
     }
 
     @Test
-    fun `a replay brings the flow back`() = runTest {
+    fun aReplayBringsTheFlowBack() = runTest {
         val repository = createRepository()
         repository.complete()
 
@@ -41,7 +37,7 @@ class OnboardingRepositoryImplTest {
     }
 
     @Test
-    fun `the flag belongs to the device and outlives the repository instance`() = runTest {
+    fun theFlagBelongsToTheDeviceAndOutlivesTheRepositoryInstance() = runTest {
         val dataStore = InMemoryPreferencesDataStore()
         createRepository(dataStore).complete()
 
@@ -49,24 +45,20 @@ class OnboardingRepositoryImplTest {
         assertEquals(true, createRepository(dataStore).observeCompleted().first())
     }
 
+    @Test
+    fun theFlagKeepsItsStableKey() = runTest {
+        val dataStore = InMemoryPreferencesDataStore()
+
+        createRepository(dataStore).complete()
+
+        assertEquals(true, dataStore.data.first()[booleanPreferencesKey("onboarding_completed")])
+    }
+
     private fun createRepository(
         dataStore: DataStore<Preferences> = InMemoryPreferencesDataStore()
     ) = OnboardingRepositoryImpl(
         UtilityStorage(dataStore, appVersionName = INSTALLED_VERSION)
     )
-
-    private class InMemoryPreferencesDataStore : DataStore<Preferences> {
-        private val state = MutableStateFlow<Preferences>(emptyPreferences())
-        private val mutex = Mutex()
-
-        override val data: Flow<Preferences> = state.asStateFlow()
-
-        override suspend fun updateData(
-            transform: suspend (t: Preferences) -> Preferences
-        ): Preferences = mutex.withLock {
-            transform(state.value).also { state.value = it }
-        }
-    }
 
     private companion object {
         const val INSTALLED_VERSION = "2.1"

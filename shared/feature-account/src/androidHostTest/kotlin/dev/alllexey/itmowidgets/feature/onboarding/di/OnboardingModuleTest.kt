@@ -1,24 +1,31 @@
 package dev.alllexey.itmowidgets.feature.onboarding.di
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
+import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import kotlin.test.Test
 import org.koin.core.annotation.KoinExperimentalAPI
+import org.koin.dsl.module
 import org.koin.test.verify.verify
 
+@OptIn(KoinExperimentalAPI::class)
 class OnboardingModuleTest {
 
-    /** The flag, the session, the opt-in and the widget settings are bridged from the app's Hilt graph. */
-    @OptIn(KoinExperimentalAPI::class)
+    /** The first-run flag resolves over the platform's `UtilityStorage`. */
     @Test
-    fun theOnboardingModuleResolvesWithTheBridgedTypes() {
-        onboardingModule.verify(
+    fun theOnboardingDataModuleResolvesWithThePlatformStorage() {
+        onboardingDataModule.verify(extraTypes = listOf(UtilityStorage::class))
+    }
+
+    /** The flow reads the flag of [onboardingDataModule]; the session, opt-in and widget settings are bridged. */
+    @Test
+    fun theOnboardingModulesResolveWithTheBridgedTypes() {
+        module { includes(onboardingDataModule, onboardingModule) }.verify(
             extraTypes = listOf(
-                OnboardingRepository::class,
+                UtilityStorage::class,
                 SessionRepository::class,
                 CustomServicesRepository::class,
                 WidgetAppearanceRepository::class,

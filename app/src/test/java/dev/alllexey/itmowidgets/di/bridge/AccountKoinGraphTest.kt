@@ -3,9 +3,16 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.feature.auth.data.DataStoreDemoMode
+import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
+import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
+import dev.alllexey.itmowidgets.feature.onboarding.data.OnboardingRepositoryImpl
+import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
@@ -29,24 +36,33 @@ class AccountKoinGraphTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the first-run flag resolves in Koin to the instance Hilt builds`() {
-        val application = bootApplication()
+    fun `Koin builds one session, one demo switch and one first-run flag`() {
+        bootApplication()
+        val koin = GlobalContext.get()
 
-        assertSame(
-            CoreBridgeEntryPoint.from(application).onboardingRepository(),
-            GlobalContext.get().get<OnboardingRepository>(),
-        )
+        assertSame(koin.get<SessionRepositoryImpl>(), koin.get<SessionRepository>())
+        assertSame(koin.get<DataStoreDemoMode>(), koin.get<DemoMode>())
+        assertSame(koin.get<OnboardingRepositoryImpl>(), koin.get<OnboardingRepository>())
     }
 
     /**
      * Onboarding and Me read the services opt-in, which `settingsDataModule` constructs since KM-11e, and Me reads
-     * `SocialRepository`, which `socialModule` constructs since KM-11d.
+     * `SocialRepository`, which `socialModule` constructs since KM-11d; the session, the demo switch and the first-run
+     * flag come from `authDataModule` and `onboardingDataModule` since KM-11h1.
      */
     @Test
     fun `the auth, onboarding and Me modules pass the graph check against the release bridges`() {
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
-            listOf(settingsDataModule, socialModule, authModule, onboardingModule, meModule),
+            listOf(
+                settingsDataModule,
+                socialModule,
+                authDataModule,
+                authModule,
+                onboardingDataModule,
+                onboardingModule,
+                meModule,
+            ),
         )
     }
 

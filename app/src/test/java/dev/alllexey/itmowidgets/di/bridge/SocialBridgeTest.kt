@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
@@ -72,7 +73,7 @@ class SocialBridgeTest {
     fun `the social and picker modules resolve against the bridges`() {
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
-            listOf(settingsDataModule, socialModule, friendSelectorModule),
+            listOf(authDataModule, settingsDataModule, socialModule, friendSelectorModule),
         )
     }
 

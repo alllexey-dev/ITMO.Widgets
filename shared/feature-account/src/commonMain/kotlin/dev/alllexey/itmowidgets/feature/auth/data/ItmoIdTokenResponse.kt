@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
 import dev.alllexey.itmoapi.itmoid.TokenSet
-import dev.alllexey.itmowidgets.core.storage.calculateTokenExpiration
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -40,9 +39,25 @@ internal fun ItmoIdTokenResponse.toTokenSet(nowMillis: Long): TokenSet {
     }
     return TokenSet(
         accessToken = access,
-        accessExpiresAt = Instant.fromEpochMilliseconds(calculateTokenExpiration(nowMillis, expiresIn)),
+        accessExpiresAt = Instant.fromEpochMilliseconds(expirationMillis(nowMillis, expiresIn)),
         refreshToken = refresh,
-        refreshExpiresAt = Instant.fromEpochMilliseconds(calculateTokenExpiration(nowMillis, refreshExpiresIn)),
+        refreshExpiresAt = Instant.fromEpochMilliseconds(expirationMillis(nowMillis, refreshExpiresIn)),
         idToken = identity
     )
 }
+
+/**
+ * [nowMillis] plus [lifetimeSeconds], [Long.MAX_VALUE] on overflow: the common form of the app's
+ * `calculateTokenExpiration` (`Math.multiplyExact` and `Math.addExact`), which `MyItmoStorage` still uses.
+ */
+private fun expirationMillis(nowMillis: Long, lifetimeSeconds: Long): Long {
+    if (lifetimeSeconds !in MIN_LIFETIME_SECONDS..MAX_LIFETIME_SECONDS) return Long.MAX_VALUE
+    val lifetimeMillis = lifetimeSeconds * MILLIS_PER_SECOND
+    val sum = nowMillis + lifetimeMillis
+    val overflowed = ((nowMillis xor sum) and (lifetimeMillis xor sum)) < 0
+    return if (overflowed) Long.MAX_VALUE else sum
+}
+
+private const val MILLIS_PER_SECOND = 1000L
+private const val MIN_LIFETIME_SECONDS = Long.MIN_VALUE / MILLIS_PER_SECOND
+private const val MAX_LIFETIME_SECONDS = Long.MAX_VALUE / MILLIS_PER_SECOND

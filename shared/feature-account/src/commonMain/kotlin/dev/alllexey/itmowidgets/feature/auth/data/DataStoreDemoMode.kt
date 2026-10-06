@@ -2,10 +2,9 @@ package dev.alllexey.itmowidgets.feature.auth.data
 
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
-class DataStoreDemoMode @Inject constructor(
+class DataStoreDemoMode(
     private val demoPreferences: DemoPreferences
 ) : DemoMode {
 
