@@ -13,6 +13,9 @@
 #          History (CHANGELOG.md, changelog.d/**, docs/decisions/**) is exempt from path and link.
 # - vibe   [<doc>:vibe:<path>] no doc anywhere names a path below vibe/ (the bare `vibe/` directory may be named).
 # - lines  [AGENTS.md:lines] AGENTS.md has at most 130 lines.
+# - module [<dir>/AGENTS.md:missing|lines] every project directory of an `include(...)` in settings.gradle.kts, plus
+#          build-logic/ and iosApp/ when they exist, has an AGENTS.md of at most 40 lines. `includeBuild` (the
+#          MyItmoApi pin, build-logic itself) declares no project.
 # - unindexed [<doc>:unindexed] every docs/**/*.md is linked from docs/README.md or from a directory README.md
 #          that docs/README.md links; fails for docs/decisions/*.md, warns for other docs (fails with --strict).
 # - changelog `scripts/changelog.sh check` validates the changelog.d/ fragments when that script exists.
@@ -29,6 +32,8 @@ set -u
 me=check-docs.sh
 NEVER_OPEN="serviceAccountKey.json properties.env"
 AGENTS_MAX_LINES=130
+MODULE_AGENTS_MAX_LINES=40
+MODULE_EXTRA_DIRS="build-logic iosApp"
 
 die() { printf '%s: %s\n' "$me" "$*" >&2; exit 2; }
 
@@ -117,6 +122,19 @@ function slug(h,   s, i, c, out) {
 function add_anchor(file, a,   n) {
   n = anchor_count[file, a]++
   anchors[file, (n ? a "-" n : a)] = 1
+}
+function check_modules(   n, dirs, i, d, f) {
+  n = split(module_dirs, dirs, " ")
+  for (i = 1; i <= n; i++) {
+    d = dirs[i]
+    if (d == "" || (d in module_seen)) continue
+    module_seen[d] = 1
+    f = d "/AGENTS.md"
+    if (!(f in listed))
+      printf "E\t%s:missing\t%s:1\tdoes not exist: every module has an AGENTS.md\t\n", f, f
+    else if (line_count[f] > module_max)
+      printf "E\t%s:lines\t%s:%d\thas %d lines, at most %d\t\n", f, f, line_count[f], line_count[f], module_max
+  }
 }
 function emit(sev, key, msg, token) {
   printf "%s\t%s\t%s:%d\t%s\t%s\n", sev, key, FILENAME, FNR, msg, token
@@ -250,6 +268,7 @@ END {
   if (("AGENTS.md" in line_count) && line_count["AGENTS.md"] > agents_max)
     printf "E\tAGENTS.md:lines\tAGENTS.md:%d\thas %d lines, at most %d\t\n",
       line_count["AGENTS.md"], line_count["AGENTS.md"], agents_max
+  check_modules()
   n = split(links["docs/README.md"], targets, SUBSEP)
   for (i = 1; i <= n; i++) if (targets[i] != "") indexed[targets[i]] = 1
   for (i = 1; i <= n; i++) {
@@ -308,17 +327,47 @@ END {
 AWK
 }
 
+# The module directories: each `include(...)` project path of settings.gradle.kts (`:a:b` -> a/b; comments dropped,
+# `includeBuild` and other include* calls are not projects), then the extra directories that exist.
+module_dirs() {
+  if [ -f settings.gradle.kts ]; then
+    awk '
+      { sub(/\/\/.*$/, "") }
+      !open && /(^|[^A-Za-z0-9_.])include\(/ { open = 1; sub(/^.*include\(/, "") }
+      open {
+        s = $0
+        while (match(s, /"[^"]*"/)) {
+          p = substr(s, RSTART + 1, RLENGTH - 2)
+          s = substr(s, RSTART + RLENGTH)
+          if (p !~ /^:/) continue
+          sub(/^:/, "", p)
+          gsub(/:/, "/", p)
+          print p
+        }
+        if (index($0, ")")) open = 0
+      }' settings.gradle.kts || die "cannot read settings.gradle.kts"
+  fi
+  local d
+  for d in $MODULE_EXTRA_DIRS; do
+    if [ -d "$d" ]; then printf '%s\n' "$d"; fi
+  done
+}
+
 run_check() {
-  local docs=() f
+  local docs=() f modules
   git ls-files -co --exclude-standard > "$tmp/files" || die "git ls-files failed"
   while IFS= read -r f; do
     case $f in *.md) [ -f "$f" ] && docs[${#docs[@]}]=$f ;; esac
   done < "$tmp/files"
   [ ${#docs[@]} -gt 0 ] || die "no *.md files listed"
 
+  modules=$(module_dirs) || exit 2
+  modules=$(printf '%s\n' "$modules" | tr '\n' ' ')
+
   write_scan_awk "$tmp/scan.awk"
   write_ratchet_awk "$tmp/ratchet.awk"
-  LC_ALL=C awk -v agents_max="$AGENTS_MAX_LINES" -v never_open="$NEVER_OPEN" -f "$tmp/scan.awk" \
+  LC_ALL=C awk -v agents_max="$AGENTS_MAX_LINES" -v never_open="$NEVER_OPEN" -v module_dirs="$modules" \
+    -v module_max="$MODULE_AGENTS_MAX_LINES" -f "$tmp/scan.awk" \
     "$tmp/files" pass=1 "${docs[@]}" pass=2 "${docs[@]}" > "$tmp/raw" || die "the scan failed"
 
   awk -F '\t' '$5 != "" && !seen[$5]++ { print $5 }' "$tmp/raw" > "$tmp/candidates"
@@ -381,6 +430,27 @@ MD
   printf '# Changelog\n\n- Removed `app/src/main/Gone.kt`, see [old](old.md).\n' > "$st_repo/CHANGELOG.md"
 }
 st_append() { printf '%s\n' "$2" >> "$st_repo/$1"; }
+# The clean fixture plus modules: a multi-line include, a commented and an includeBuild path that are no projects.
+st_modules() {
+  st_fixture
+  cat > "$st_repo/settings.gradle.kts" <<'KTS'
+pluginManagement {
+    includeBuild("build-logic") // include(":not:a:project")
+}
+// The modules use string paths (`project(":gone")`).
+include(":app")
+include(
+    ":shared:core", // the core
+    ":shared:feature-qr",
+)
+includeBuild("../MyItmoApi/kmp")
+KTS
+  local d
+  for d in app shared/core shared/feature-qr build-logic; do
+    mkdir -p "$st_repo/$d"
+    awk 'BEGIN { print "# module"; for (i = 1; i < 40; i++) print "" }' > "$st_repo/$d/AGENTS.md"
+  done
+}
 
 st_failures=0
 st_expect() { # expected-exit description args...
@@ -439,6 +509,16 @@ self_test() {
   st_expect 0 "patterns, home, sibling and URL tokens pass" --strict
   st_fixture; awk 'BEGIN { for (i = 0; i < 131; i++) print "line" }' > "$st_repo/AGENTS.md"
   st_expect 1 "AGENTS.md over 130 lines fails"
+  st_modules; st_expect 0 "modules with an AGENTS.md of at most 40 lines pass" --strict
+  st_modules; rm "$st_repo/shared/core/AGENTS.md"
+  st_expect 1 "a module without AGENTS.md fails"
+  st_modules; rm "$st_repo/build-logic/AGENTS.md"
+  st_expect 1 "build-logic/ without AGENTS.md fails"
+  st_modules; awk 'BEGIN { for (i = 0; i < 41; i++) print "line" }' > "$st_repo/app/AGENTS.md"
+  st_expect 1 "a 41-line module AGENTS.md fails"
+  st_modules; rm "$st_repo/shared/core/AGENTS.md"
+  st_append scripts/check-docs.known 'shared/core/AGENTS.md:missing  # written in a later card'
+  st_expect 0 "a known missing module AGENTS.md passes --strict" --strict
   if [ -f "$script_dir/changelog.sh" ]; then
     st_fixture; cp "$script_dir/changelog.sh" "$st_repo/scripts/changelog.sh"; mkdir "$st_repo/changelog.d"
     printf -- '- Schedule widget in Compose.\n' > "$st_repo/changelog.d/l10-schedule-widgets.md"

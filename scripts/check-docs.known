@@ -36,3 +36,15 @@ docs/product/releases.md:path:V10__teacher_summaries.sql  # Backend migration wi
 docs/settings.md:path:docs/ops/account-deletion.md  # Backend doc without the B/ prefix
 
 shared/backend-client/src/commonTest/resources/contract/README.md  # Backend README vendored verbatim by scripts/sync-backend-contract.sh; its paths are Backend paths
+
+shared/backend-client/AGENTS.md:missing  # L19 CO-10 writes it
+shared/feature-qr/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
+shared/feature-home/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
+shared/feature-schedule/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
+shared/feature-sport/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
+shared/feature-recordbook/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
+shared/feature-social/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
+shared/feature-settings/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
+shared/feature-resources/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
+shared/feature-reviews/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
+shared/feature-account/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
