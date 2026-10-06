@@ -1,0 +1,19 @@
+package dev.alllexey.itmowidgets.feature.__name__.domain
+
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import kotlinx.coroutines.flow.Flow
+
+/**
+ * The __name__ data as the screen sees it: a cached flow and a refresh. Until the implementation lives in `data/`
+ * and `__name__Module` binds it, the app builds it and hands it to Koin through its `di/bridge/__Name__Bridge.kt`.
+ */
+interface __Name__Repository {
+
+    fun observe(): Flow<LoadState<__Name__Summary>>
+
+    /** [force] bypasses the cache (`RefreshMode.Force`); the answer reaches the screen through [observe]. */
+    suspend fun refresh(force: Boolean): AppResult<Unit>
+}
+
+data class __Name__Summary(val title: String)

@@ -1,0 +1,29 @@
+package dev.alllexey.itmowidgets.feature.__name__.ui
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
+import dev.alllexey.itmowidgets.feature.__name__.domain.__Name__Summary
+import dev.alllexey.itmowidgets.feature.__name__.presentation.__Name__UiState
+
+/** Synthetic data only: previews become the goldens of `__Name__ScreenshotTest`. */
+private val PreviewSummary = __Name__Summary("ITMO-TEST")
+
+@Preview
+@Composable
+private fun __Name__ScreenContentPreview() = ItmoPreview {
+    __Name__Screen(__Name__UiState.Content(PreviewSummary), onRefresh = {}, onBack = {})
+}
+
+@Preview
+@Composable
+private fun __Name__ScreenLoadingPreview() = ItmoPreview {
+    __Name__Screen(__Name__UiState.Loading, onRefresh = {}, onBack = {})
+}
+
+@Preview
+@Composable
+private fun __Name__ScreenErrorPreview() = ItmoPreview {
+    __Name__Screen(__Name__UiState.Error(AppError.Network), onRefresh = {}, onBack = {})
+}

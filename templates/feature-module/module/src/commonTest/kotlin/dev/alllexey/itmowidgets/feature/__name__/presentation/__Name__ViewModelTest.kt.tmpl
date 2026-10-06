@@ -1,0 +1,85 @@
+package dev.alllexey.itmowidgets.feature.__name__.presentation
+
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.feature.__name__.domain.__Name__Repository
+import dev.alllexey.itmowidgets.feature.__name__.domain.__Name__Summary
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class __Name__ViewModelTest {
+    private val main = TestMainDispatcher()
+    private val repository = Fake__Name__Repository()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
+
+    @Test
+    fun entryRefreshesSilentlyAndOnlyForceBypassesTheCache() = runTest(main.dispatcher) {
+        val vm = __Name__ViewModel(repository)
+        runCurrent()
+        vm.refresh(RefreshMode.Pull)
+        runCurrent()
+        vm.refresh(RefreshMode.Force)
+        runCurrent()
+        assertEquals(listOf(false, false, true), repository.calls)
+        assertEquals(__Name__UiState.Content(Summary), vm.uiState.value)
+    }
+
+    @Test
+    fun anErrorStaysHiddenWhileARefreshMayStillReplaceIt() = runTest(main.dispatcher) {
+        repository.data.value = LoadState.Error(AppError.Network)
+        val vm = __Name__ViewModel(repository)
+        runCurrent()
+        assertEquals(__Name__UiState.Error(AppError.Network), vm.uiState.value)
+        repository.pending = CompletableDeferred()
+        vm.refresh(RefreshMode.Force)
+        runCurrent()
+        assertEquals(__Name__UiState.Loading, vm.uiState.value)
+        repository.pending!!.complete(AppResult.Failure(AppError.Network))
+        runCurrent()
+        assertEquals(__Name__UiState.Error(AppError.Network), vm.uiState.value)
+    }
+
+    @Test
+    fun aFailedRefreshOverContentReachesTheNextCollector() = runTest(main.dispatcher) {
+        val vm = __Name__ViewModel(repository)
+        runCurrent()
+        repository.result = AppResult.Failure(AppError.Network)
+        vm.refresh(RefreshMode.Force)
+        runCurrent()
+        assertEquals(__Name__UiState.Content(Summary), vm.uiState.value)
+        assertEquals(__Name__Event.RefreshFailed(AppError.Network), vm.events.first())
+    }
+
+    private class Fake__Name__Repository : __Name__Repository {
+        val data = MutableStateFlow<LoadState<__Name__Summary>>(LoadState.Content(Summary))
+        var result: AppResult<Unit> = AppResult.Success(Unit)
+        var pending: CompletableDeferred<AppResult<Unit>>? = null
+        val calls = mutableListOf<Boolean>()
+        override fun observe() = data
+        override suspend fun refresh(force: Boolean): AppResult<Unit> {
+            calls += force
+            return pending?.await() ?: result
+        }
+    }
+
+    private companion object {
+        val Summary = __Name__Summary("ITMO-TEST")
+    }
+}

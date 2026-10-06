@@ -1,0 +1,22 @@
+package dev.alllexey.itmowidgets.feature.__name__.di
+
+import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.feature.__name__.domain.__Name__Repository
+import kotlin.test.Test
+import org.koin.core.annotation.KoinExperimentalAPI
+import org.koin.test.verify.verify
+
+class __Name__ModuleTest {
+
+    /** The repository is bridged from the app's Hilt graph; every other type is Koin's. */
+    @OptIn(KoinExperimentalAPI::class)
+    @Test
+    fun the__Name__ModuleResolvesWithTheBridgedTypes() {
+        __name__Module.verify(
+            extraTypes = listOf(
+                __Name__Repository::class,
+                SavedStateHandle::class,
+            ),
+        )
+    }
+}

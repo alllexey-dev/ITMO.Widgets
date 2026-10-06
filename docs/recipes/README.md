@@ -9,3 +9,7 @@ worked, the traps and the files to copy. One line per recipe.
 - [Screen in a shared module](shared-module-screen.md): a stateless CMP
   screen in `shared/feature-<x>`, its route, ViewModel and Koin module,
   strings, icons, previews, goldens, host tests and the Android and iOS hosts.
+- [Feature module generator](../../scripts/new-feature-module.sh): renders
+  the QR pilot's module shape from `templates/feature-module/` into
+  `shared/feature-<x>`, adding only missing files; its self-test
+  `scripts/test-new-feature-module.sh` keeps it in step with the pilot.

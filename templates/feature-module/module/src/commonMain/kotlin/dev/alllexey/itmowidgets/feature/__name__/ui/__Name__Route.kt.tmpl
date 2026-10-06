@@ -1,0 +1,56 @@
+package dev.alllexey.itmowidgets.feature.__name__.ui
+
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.feature.__name__.presentation.__Name__Event
+import dev.alllexey.itmowidgets.feature.__name__.presentation.__Name__ViewModel
+import dev.alllexey.itmowidgets.shared.core.Res
+import dev.alllexey.itmowidgets.shared.core.common_retry
+import org.jetbrains.compose.resources.getString
+import org.koin.compose.viewmodel.koinViewModel
+
+/**
+ * The __name__ screen with its Koin ViewModel: a failed refresh over content shows a snackbar with a retry. Android
+ * hosts it in a Fragment through `itmoComposeView`, iOS in a `ComposeUIViewController`.
+ */
+@Composable
+fun __Name__Route(onBack: () -> Unit, viewModel: __Name__ViewModel = koinViewModel()) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbars = remember { SnackbarHostState() }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    LaunchedEffect(viewModel, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.events.collect { event ->
+                when (event) {
+                    is __Name__Event.RefreshFailed -> {
+                        val result = snackbars.showSnackbar(
+                            message = getString(event.error.textResource()),
+                            actionLabel = getString(Res.string.common_retry),
+                            duration = SnackbarDuration.Long,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) viewModel.refresh(RefreshMode.Force)
+                    }
+                }
+            }
+        }
+    }
+
+    __Name__Screen(
+        state = state,
+        onRefresh = { viewModel.refresh(RefreshMode.Force) },
+        onBack = onBack,
+        snackbarHostState = snackbars,
+    )
+}
