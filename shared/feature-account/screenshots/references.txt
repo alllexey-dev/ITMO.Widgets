@@ -9,16 +9,6 @@ AuthScreen_signing-in
 AuthScreen_token-dialog
 LoginScreen_error
 MyItmoWebScreen_error
-OnboardingScreen_notifications-ask
-OnboardingScreen_notifications-denied
-OnboardingScreen_notifications-granted
-OnboardingScreen_services-busy
-OnboardingScreen_services-off
-OnboardingScreen_services-on
-OnboardingScreen_widget-day-schedule
-OnboardingScreen_widget-no-pinning
-OnboardingScreen_widget-qr
-OnboardingScreen_widget-single-lesson
 WebLoginSheetContent_approving
 WebLoginSheetContent_checking
 WebLoginSheetContent_confirm
