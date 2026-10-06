@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.home
 
 import android.os.SystemClock
-import android.graphics.Rect
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebSettings
@@ -16,6 +15,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
+import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.web.data.WebSessionDataCleaner
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebPreviewFragment
@@ -44,14 +44,12 @@ class HomeWebVisualTest {
                     settle()
                     capture("home-web-$index")
                     scenario.onActivity {
-                        val qr = it.findViewById<View>(R.id.qr_fab)
-                        val web = it.findViewById<View>(R.id.web_fab)
-                        val qrBounds = Rect().also(qr::getGlobalVisibleRect)
-                        val webBounds = Rect().also(web::getGlobalVisibleRect)
-                        assertFalse(Rect.intersects(qrBounds, webBounds))
-                        assertTrue(web.height >= 48 * it.resources.displayMetrics.density)
-                        assertEquals(it.getString(R.string.home_open_my_itmo), web.contentDescription)
-                        web.performClick()
+                        val qr = HomeSemantics.node(it, HomeTestTags.QR_FAB)!!
+                        val web = HomeSemantics.node(it, HomeTestTags.WEB_FAB)!!
+                        assertFalse(qr.boundsInWindow.overlaps(web.boundsInWindow))
+                        assertTrue(web.size.height >= 48 * it.resources.displayMetrics.density)
+                        assertEquals("Открыть My ITMO", HomeSemantics.describedAs(web))
+                        HomeSemantics.click(HomeSemantics.root(it), HomeTestTags.WEB_FAB)
                     }
                     settle()
                     scenario.onActivity {
@@ -94,8 +92,8 @@ class HomeWebVisualTest {
                     settle()
                     scenario.onActivity {
                         assertNull(it.navigation.overlayHost)
-                        assertTrue(it.findViewById<View>(R.id.web_fab).isShown)
-                        assertTrue(it.findViewById<View>(R.id.qr_fab).isShown)
+                        assertNotNull(HomeSemantics.node(it, HomeTestTags.WEB_FAB))
+                        assertNotNull(HomeSemantics.node(it, HomeTestTags.QR_FAB))
                     }
                 }
             }

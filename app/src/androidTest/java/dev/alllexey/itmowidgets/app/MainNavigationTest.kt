@@ -13,8 +13,6 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.fragment.app.DialogFragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -25,6 +23,8 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.debug.ui.DebugToolsTestTags
+import dev.alllexey.itmowidgets.feature.home.HomeSemantics
+import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -194,12 +194,14 @@ class MainNavigationTest {
         SettingsNavigationTestActivity.homeFixture = HomeFixture()
         ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
             settle()
-            scenario.onActivity { (it.feed().layoutManager as LinearLayoutManager).scrollToPositionWithOffset(3, -24) }
+            scenario.onActivity { HomeSemantics.scrollToIndex(HomeSemantics.root(it), HomeTestTags.FEED, 3) }
             settle()
-            var feedAnchor = 0 to 0
+            scenario.onActivity { HomeSemantics.scrollBy(HomeSemantics.root(it), HomeTestTags.FEED, 24f) }
+            settle()
+            var feedAnchor = 0f
             scenario.onActivity {
                 feedAnchor = it.feedAnchor()
-                assertTrue("The feed must be scrolled away from its top", feedAnchor != 0 to 0)
+                assertTrue("The feed must be scrolled away from its top: $feedAnchor", feedAnchor > 0f)
             }
             scenario.onActivity { assertTrue(it.navigation.selectRoot(R.id.navigation_schedule)) }
             settle()
@@ -319,16 +321,9 @@ class MainNavigationTest {
         }
     }
 
-    private fun SettingsNavigationTestActivity.feed(): RecyclerView =
-        host.childFragmentManager.primaryNavigationFragment!!.requireView().findViewById(R.id.home_feed)
-
-    /** The first visible card of the feed and its offset from the top of the list. */
-    private fun SettingsNavigationTestActivity.feedAnchor(): Pair<Int, Int> {
-        val feed = feed()
-        val layout = feed.layoutManager as LinearLayoutManager
-        val position = layout.findFirstVisibleItemPosition()
-        return position to (layout.findViewByPosition(position)!!.top - feed.paddingTop)
-    }
+    /** The first visible card of the feed and its offset into it, as the Compose list reports them. */
+    private fun SettingsNavigationTestActivity.feedAnchor(): Float =
+        HomeSemantics.scrollPosition(HomeSemantics.root(this), HomeTestTags.FEED)
 
     private fun SettingsNavigationTestActivity.blankScroll(): ScrollView =
         host.childFragmentManager.primaryNavigationFragment!!.requireView().findViewById(R.id.blank_tab_scroll)

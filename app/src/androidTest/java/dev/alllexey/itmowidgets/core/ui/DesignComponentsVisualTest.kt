@@ -83,7 +83,7 @@ class DesignComponentsVisualTest {
     }
 
     @Test
-    fun errorEmptyAndHomeStatesFitFullScreenAndInlineLayouts() {
+    fun errorAndEmptyStatesFitFullScreenAndInlineLayouts() {
         Appearances.default.forEachIndexed { index, spec -> preview(spec) { scenario ->
             val cases = listOf(
                 StateLayout("recordbook", R.layout.fragment_recordbook),
@@ -142,19 +142,6 @@ class DesignComponentsVisualTest {
                         assertTrue("Action height", button.height >= minimum)
                     }
                 }
-            }
-            lateinit var home: View
-            scenario.onActivity { activity ->
-                home = activity.layoutInflater.inflate(R.layout.fragment_home, FrameLayout(activity), false)
-                show(activity, home, spec.widthDp)
-            }
-            settle()
-            screenshot("home-$index")
-            scenario.onActivity {
-                assertContentBounds(home)
-                // The feed refreshes by a pull; besides that only the quick actions are targets, not the empty state.
-                assertEquals(1, home.descendants().count { it is SwipeRefreshLayout })
-                assertEquals(setOf(R.id.web_fab, R.id.qr_fab), home.descendants().filter { it.isClickable }.map { it.id }.toSet())
             }
         } }
     }

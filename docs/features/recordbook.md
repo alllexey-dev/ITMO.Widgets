@@ -578,8 +578,8 @@ the session clear, a new half-year, network failures); `MarksCheckTest`,
 and advancing in `RecordbookViewModelTest`, `RecordbookBarsOverlayTest` and
 `RecordbookSubjectViewModelTest`. Instrumented: `MarksWorkTest` (the app's
 `WorkManager` through the debug `MarksTestEntryPoint`), `MarksNotificationTest`,
-`RecordbookVisualTest.newMarksShowADotUntilTheSubjectOpens` and the marks card
-in `HomeFeedVisualTest`. They use synthetic subjects and restore the
+`RecordbookVisualTest.newMarksShowADotUntilTheSubjectOpens`; the marks card
+is in `HomeScreenTest` and the `HomeScreenshotTest` goldens. They use synthetic subjects and restore the
 WorkManager state they found.
 
 ## Sheet scores

@@ -60,8 +60,6 @@ class DesignCardResourcesTest {
             "item_recordbook_subject" to "Content",
             "item_recordbook_note" to "Content",
             "item_schedule_change" to "Content",
-            "item_home_schedule_changes" to "Content",
-            "item_home_marks" to "Content",
             // The AI summary sits on the quiet surface of the reviews' groups, never told apart by an outline.
             "item_teacher_summary" to "Content",
             "item_recordbook_summary" to "CompactSummary",

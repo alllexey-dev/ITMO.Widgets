@@ -44,8 +44,7 @@
     <fragment
         android:id="@+id/navigation_home"
         android:name="dev.alllexey.itmowidgets.feature.home.ui.HomeFragment"
-        android:label="Home"
-        tools:layout="@layout/fragment_home" />
+        android:label="Home" />
 
     <fragment
         android:id="@+id/navigation_sport"

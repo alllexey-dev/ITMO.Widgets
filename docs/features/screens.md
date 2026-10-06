@@ -73,7 +73,7 @@ Feature doc: [Home and quick actions](home.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/home/ui/HomeFragment.kt` | Fragment | `HomeViewModel` | `navigation_home`, `AppRoot.HOME` | `app/SettingsNavigationTestActivity.kt` | `feature/home/HomeFeedVisualTest.kt`, `core/ui/DesignComponentsVisualTest.kt` (layout) |
+| `feature/home/ui/HomeFragment.kt` hosting `HomeRoute` (`:shared:feature-home`) | Fragment | `HomeViewModel` (Koin) | `navigation_home`, `AppRoot.HOME` | `app/SettingsNavigationTestActivity.kt` (`HomeDebugFixtures`) | `HomeScreenshotTest` (`:shared:feature-home`), `app/MainNavigationTest.kt` |
 
 ## QR pass
 
@@ -112,8 +112,8 @@ Feature doc: [Schedule](schedule.md).
 | `feature/schedule/ui/ScheduleFragment.kt` | Fragment | `ScheduleViewModel` | `navigation_schedule`, `AppRoot.SCHEDULE`; child of `UserScheduleFragment` | `feature/schedule/ui/ScheduleLifecycleTestActivity.kt` | `feature/schedule/ScheduleCardsVisualTest.kt`, `feature/schedule/LessonDetailsVisualTest.kt`, `core/ui/DesignComponentsVisualTest.kt` (layout) |
 | `feature/schedule/ui/UserScheduleFragment.kt` | Fragment | — (hosts `ScheduleFragment`) | `user_schedule`, `AppScreen.USER_SCHEDULE` | — | — |
 | `feature/schedule/ui/changes/ScheduleChangesFragment.kt` | Fragment | `ScheduleChangesViewModel` | `schedule_changes`, `AppScreen.SCHEDULE_CHANGES` | `feature/schedule/ui/changes/ScheduleChangesPreviewActivity.kt` | `feature/schedule/ScheduleChangesVisualTest.kt` |
-| `feature/schedule/ui/details/LessonDetailsBottomSheet.kt` | bottom sheet | `LessonDetailsViewModel` | `AppNavigator.openLessonDetails` | `feature/schedule/ui/ScheduleLifecycleTestActivity.kt` | `feature/schedule/LessonDetailsVisualTest.kt`, `feature/home/HomeFeedVisualTest.kt` |
-| `feature/schedule/ui/details/PendingSportDetailsBottomSheet.kt` | bottom sheet | — | `AppNavigator.openPendingSportDetails` | `feature/schedule/ui/ScheduleLifecycleTestActivity.kt` | `feature/schedule/LessonDetailsVisualTest.kt`, `feature/home/HomeFeedVisualTest.kt` |
+| `feature/schedule/ui/details/LessonDetailsBottomSheet.kt` | bottom sheet | `LessonDetailsViewModel` | `AppNavigator.openLessonDetails` | `feature/schedule/ui/ScheduleLifecycleTestActivity.kt` | `feature/schedule/LessonDetailsVisualTest.kt` |
+| `feature/schedule/ui/details/PendingSportDetailsBottomSheet.kt` | bottom sheet | — | `AppNavigator.openPendingSportDetails` | `feature/schedule/ui/ScheduleLifecycleTestActivity.kt` | `feature/schedule/LessonDetailsVisualTest.kt` |
 
 ## Friend selector
 

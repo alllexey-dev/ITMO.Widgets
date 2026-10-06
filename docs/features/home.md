@@ -13,10 +13,25 @@ two FABs at the bottom end; the list reserves space under them.
 own close button: `HomeViewModel.dismissCard(kind)` passes it to every source,
 and only the owner of that kind resets what the card shows; the default does
 nothing. Every feature that owns data contributes a source from its `data`
-package through the `@IntoSet` multibinding in its Hilt module; `HomeViewModel`
-receives the set, flattens the flows, drops the kinds hidden in settings and
-sorts by `HomeCardKind`, whose declaration order is the feed order. Nothing in
+package through the `@IntoSet` multibinding in its Hilt module (`HomeBridge`
+hands the set to Koin); `HomeViewModel` (`:shared:feature-home`, built by Koin)
+receives the sources, flattens the flows, drops the kinds hidden in settings,
+sorts by `HomeCardKind`, whose declaration order is the feed order, and turns
+each card into a `HomeCardUi` through `HomeCardFormatter`. Nothing in
 `feature/home` imports another feature.
+
+The screen is Compose in `:shared:feature-home` `commonMain`: `HomeRoute`
+obtains the ViewModel and `HomeScreen` draws `HomeUiState` (`HomeScreen.kt`,
+`HomeCards.kt`). `HomeCardFormatter` writes every time and date in the
+`AcademicTimeProvider` zone (`HH:mm` with `DateTexts`, the date as
+`понедельник, 7 сентября`, sport queues as `пн, 7 сент. · 16:00–17:30`), so
+the UI parses no ISO text; `HomeRulesTest` keeps `java.time` and
+`kotlinx.datetime` out of `feature.home.ui`. `HomeFragment` keeps its class
+name and hosts the route through `itmoComposeView`; it owns what only Android
+does: navigation through `AppNavigator`, the widget pin
+(`WidgetPinRequester`), the notification permission and the services settings
+page (`SERVICES_PAGE`). The strings are `strings_home.xml` in the module's
+`composeResources`.
 
 | Card | Source | Shown when |
 |---|---|---|
@@ -24,7 +39,7 @@ sorts by `HomeCardKind`, whose declaration order is the feed order. Nothing in
 | `Изменения в расписании` | `feature/schedule/data/home/ScheduleChangesHomeCardSource`, from the local [schedule changes](schedule.md#schedule-changes) only: a badge with the number of unread changes of lessons still ahead and the headline of the newest one (by detection, then the sooner lesson), for example `Физика — перенесена на ср, 9 сентября, 10:00`. A tap opens the history; the 48 dp close button `Прочитано` (`dismiss`) marks every change read and removes the notification. A one-minute ticker drops changes whose lessons are over; `refresh` asks nothing, the check runs in the background. TalkBack reads `Изменения в расписании, N. <headline>` | at least one unread change of a lesson not yet over |
 | `Новые оценки` | `feature/recordbook/data/home/MarksHomeCardSource`, from the local [mark tracking](recordbook.md#mark-tracking) only: `ic_menu_book`, a badge with the number of unread subjects and their names without marks, up to three and then `… и ещё N` (`core/ui/markSubjectList`), wrapping without truncation. A tap opens the recordbook root; the 48 dp close button `Прочитано` (`dismiss(MARKS)` → `markAllRead()`) marks every subject read and removes the notification. `refresh` asks nothing, the check runs in the background. TalkBack reads `Новые оценки, N. <names>` | at least one unread subject |
 | `Спорт` | `feature/sport/data/home/SportHomeCardSource`: score progress out of 100 and own queues (three, then `ещё N`) | a score below 100 or a non-empty queue |
-| `Заявки в друзья` | `feature/social/data/home/SocialHomeCardSource`: incoming requests as `item_user_row.xml` rows, `Все заявки` opens the friends screen | at least one incoming request behind the opt-in |
+| `Заявки в друзья` | `feature/social/data/home/SocialHomeCardSource`: the first three incoming requests as the kit's `UserRow` with `Avatar` and the primary group, `Все заявки` opens the friends screen | at least one incoming request behind the opt-in |
 | Hints | `feature/home/data/HintHomeCardSource`: no widget on the launcher (`Добавить` pins the single-lesson widget through `core/ui/widget/WidgetPinRequester`), notifications off (`Включить` asks for the permission while the dialog can still appear, otherwise opens the app's notification page), user services off (`Включить` opens the services settings page) | while the reason holds and the hint was not closed; closed hints are kept per installation in `home_dismissed_hints` |
 
 Lesson and pending rows open sheets through `AppNavigator.openLessonDetails` /
@@ -44,13 +59,22 @@ return to the screen after five minutes do it again; every return also calls
 and the feed shows one `Часть данных не загрузилась` snackbar with `Повторить`.
 The first show and a stale resume refresh silently (`refresh(silent = true)`);
 only a pull sets `Content.refreshing`.
-The state is `Loading` only until every source has answered from its cache; an
-empty list of cards is content and shows the `Пока пусто` state. The list and
-the empty state switch atomically after `submitList` commits.
+The state is `Loading` (three placeholder cards, `Skeleton`) only until every
+source has answered from its cache; an empty list of cards is content and
+shows the `Пока пусто` state inside the same pull-to-refresh (`AppRefreshBox`).
+The list ends with `fabStackClearance` (152 dp) of padding, so the last card
+scrolls clear of the two FABs; the snackbar sits above them. Test tags are in
+`HomeTestTags`.
 
 `Настройки → Главный экран` hides a card kind (`home_hidden_cards`); hints are
-not settings, only dismissible. Debug visual tests replace the whole feed with
-one in-memory source (`HomeFixture`) and never touch MyITMO or Backend.
+not settings, only dismissible. The look is covered by JVM goldens
+(`HomeScreenshotTest`, `shared/feature-home/screenshots/`: loading, empty,
+content, refreshing, long names, every card kind) from synthetic
+`HomePreviewSamples`; behaviour by `HomeScreenTest` (touch targets, the FABs
+never covering the last card, every action) and `HomeCardFormatterTest`.
+Instrumented flows (`HomeQrVisualTest`, `HomeWebVisualTest`,
+`MainNavigationTest`) replace the whole feed with one in-memory source
+(`HomeFixture`) and never touch MyITMO or Backend.
 
 ## QR pass
 
