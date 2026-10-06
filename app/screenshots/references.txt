@@ -9,3 +9,4 @@ ShellBar
 ShellDemoBanner
 ShellOverlay
 ShellSheet
+ShellTabSwipe

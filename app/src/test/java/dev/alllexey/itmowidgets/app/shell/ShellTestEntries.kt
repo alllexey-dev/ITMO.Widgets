@@ -38,10 +38,14 @@ import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import java.util.concurrent.atomic.AtomicInteger
 
-/** What the fake entries saw: the tab roots' bounds and composition, taps on a tab, Back inside a form sheet. */
+/**
+ * What the fake entries saw: the tab roots' bounds and composition (now, and every time one entered it in order), taps
+ * on a tab, Back inside a form sheet.
+ */
 class ShellProbe {
     val tabBounds = mutableMapOf<AppTab, Rect>()
     val composedTabs = mutableSetOf<AppTab>()
+    val compositions = mutableListOf<AppTab>()
     var tabClicks = 0
     var formBacks = 0
 }
@@ -87,6 +91,7 @@ private fun FakeTabRoot(tab: AppTab, probe: ShellProbe) {
     val list = rememberLazyListState()
     DisposableEffect(tab) {
         probe.composedTabs += tab
+        probe.compositions += tab
         onDispose { probe.composedTabs -= tab }
     }
     Column(
@@ -99,7 +104,7 @@ private fun FakeTabRoot(tab: AppTab, probe: ShellProbe) {
         Text("sub:$subTab", Modifier.testTag("sub:$tab"))
         Text("vm:${counter.id}", Modifier.testTag("vm:$tab"))
         Button(onClick = { subTab++ }, Modifier.testTag("nextSub:$tab")) { Text("next") }
-        LazyColumn(Modifier.weight(1f).testTag("list:$tab"), state = list) {
+        LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("list:$tab"), state = list) {
             items(100) { Text("$tab $it", Modifier.height(48.dp).testTag("item:$tab:$it")) }
         }
     }
