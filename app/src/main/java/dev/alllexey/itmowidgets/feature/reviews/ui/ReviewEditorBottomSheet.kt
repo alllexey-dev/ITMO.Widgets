@@ -11,7 +11,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -34,13 +33,14 @@ import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorViewMod
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewFieldError
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** Writes or edits the viewer's review: subject with suggestions, text, anonymity. Changes are never lost silently. */
 @AndroidEntryPoint
 class ReviewEditorBottomSheet : BottomSheetDialogFragment() {
     private var _binding: SheetReviewEditorBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ReviewEditorViewModel by viewModels()
+    private val viewModel: ReviewEditorViewModel by viewModel()
     /** Programmatic updates of the fields must not read as the user's input. */
     private var rendering = false
     private var shownSuggestions: List<String>? = null

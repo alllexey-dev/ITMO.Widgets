@@ -8,10 +8,17 @@ import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLessonsGateway
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.testing.ownReview
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -20,20 +27,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReviewEditorViewModelTest {
-    @get:Rule val main = MainDispatcherRule()
+    private val main = TestMainDispatcher()
     private val repository = FakeTeacherReviewsRepository()
     private val lessons = FakeTeacherLessonsGateway()
 
-    @Test fun `a new review starts empty and anonymous`() = runTest(main.dispatcher) {
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
+
+    @Test fun aNewReviewStartsEmptyAndAnonymous() = runTest(main.dispatcher) {
         val vm = model()
 
         val state = vm.uiState.value
@@ -46,7 +53,7 @@ class ReviewEditorViewModelTest {
         assertEquals(TEACHER, lessons.teacherIsu)
     }
 
-    @Test fun `editing starts from the cached own review`() = runTest(main.dispatcher) {
+    @Test fun editingStartsFromTheCachedOwnReview() = runTest(main.dispatcher) {
         repository.cached = mapOf(TEACHER to teacherReviews(TEACHER, mine = ownReview(OwnReviewStatus.PENDING).copy(anonymous = false)))
         val vm = model()
 
@@ -58,7 +65,7 @@ class ReviewEditorViewModelTest {
         assertFalse(state.showsMinimumHint)
     }
 
-    @Test fun `values restored after process death win over the cached review`() = runTest(main.dispatcher) {
+    @Test fun valuesRestoredAfterProcessDeathWinOverTheCachedReview() = runTest(main.dispatcher) {
         repository.cached = mapOf(TEACHER to teacherReviews(TEACHER, mine = ownReview()))
         val handle = handle()
         model(handle).apply { onTextChanged("Черновик после правки"); onAnonymousChanged(false) }
@@ -72,7 +79,7 @@ class ReviewEditorViewModelTest {
         assertTrue(restored.hasChanges())
     }
 
-    @Test fun `an untouched editor restored after process death keeps its opening values`() = runTest(main.dispatcher) {
+    @Test fun anUntouchedEditorRestoredAfterProcessDeathKeepsItsOpeningValues() = runTest(main.dispatcher) {
         val handle = handle()
         model(handle)
         repository.cached = mapOf(TEACHER to teacherReviews(TEACHER, mine = ownReview()))
@@ -84,7 +91,7 @@ class ReviewEditorViewModelTest {
         assertFalse(restored.hasChanges())
     }
 
-    @Test fun `subjects of own lessons become suggestions and a failed history stays silent`() = runTest(main.dispatcher) {
+    @Test fun subjectsOfOwnLessonsBecomeSuggestionsAndAFailedHistoryStaysSilent() = runTest(main.dispatcher) {
         lessons.answer(AppResult.Success(TeacherLessons(setOf(7L), listOf("Физика", "Механика"))))
         lessons.finish()
         assertEquals(listOf("Физика", "Механика"), model().uiState.value.suggestions)
@@ -98,7 +105,7 @@ class ReviewEditorViewModelTest {
         assertTrue(events.isEmpty())
     }
 
-    @Test fun `suggestions grow as the schedule weeks answer`() = runTest(main.dispatcher) {
+    @Test fun suggestionsGrowAsTheScheduleWeeksAnswer() = runTest(main.dispatcher) {
         val vm = model()
         assertTrue(vm.uiState.value.suggestions.isEmpty())
 
@@ -109,7 +116,7 @@ class ReviewEditorViewModelTest {
         assertEquals(listOf("Физика", "Механика"), vm.uiState.value.suggestions)
     }
 
-    @Test fun `save sends the trimmed draft with the history flows`() = runTest(main.dispatcher) {
+    @Test fun saveSendsTheTrimmedDraftWithTheHistoryFlows() = runTest(main.dispatcher) {
         lessons.answer(AppResult.Success(TeacherLessons(setOf(7L, 3L), listOf("Физика"))))
         lessons.finish()
         repository.saveResult = AppResult.Success(teacherReviews(TEACHER, mine = ownReview(OwnReviewStatus.PENDING)))
@@ -126,7 +133,7 @@ class ReviewEditorViewModelTest {
         assertFalse(vm.uiState.value.saving)
     }
 
-    @Test fun `a save during the history sends the flows collected so far`() = runTest(main.dispatcher) {
+    @Test fun aSaveDuringTheHistorySendsTheFlowsCollectedSoFar() = runTest(main.dispatcher) {
         repository.saveResult = AppResult.Success(teacherReviews(TEACHER))
         val vm = model()
         lessons.answer(AppResult.Success(TeacherLessons(setOf(3L), listOf("Механика")))); runCurrent()
@@ -140,7 +147,7 @@ class ReviewEditorViewModelTest {
         assertEquals(listOf("Физика", "Механика"), vm.uiState.value.suggestions)
     }
 
-    @Test fun `a blank subject is sent as none and a slow history does not delay the save`() = runTest(main.dispatcher) {
+    @Test fun aBlankSubjectIsSentAsNoneAndASlowHistoryDoesNotDelayTheSave() = runTest(main.dispatcher) {
         repository.saveResult = AppResult.Success(teacherReviews(TEACHER))
         val vm = model()
 
@@ -152,7 +159,7 @@ class ReviewEditorViewModelTest {
         assertEquals(ReviewEditorEvent.Saved, vm.events.first())
     }
 
-    @Test fun `lengths out of bounds are field errors without a network call`() = runTest(main.dispatcher) {
+    @Test fun lengthsOutOfBoundsAreFieldErrorsWithoutANetworkCall() = runTest(main.dispatcher) {
         val vm = model()
 
         vm.onTextChanged("а".repeat(29)); vm.save(); runCurrent()
@@ -171,7 +178,43 @@ class ReviewEditorViewModelTest {
         assertTrue(repository.actions.isEmpty())
     }
 
-    @Test fun `a restricted save reports moderation and can be sent again`() = runTest(main.dispatcher) {
+    /** An emoji outside the basic plane is two UTF-16 units but one code point, as Backend counts it. */
+    @Test fun emojiCountOnceAtTheTextBounds() = runTest(main.dispatcher) {
+        repository.saveResult = AppResult.Success(teacherReviews(TEACHER))
+        val vm = model()
+
+        vm.onTextChanged(EMOJI.repeat(29)); vm.save(); runCurrent()
+        assertEquals(ReviewFieldError.TEXT_TOO_SHORT, vm.uiState.value.textError)
+
+        vm.onTextChanged(EMOJI.repeat(30))
+        assertFalse(vm.uiState.value.showsMinimumHint)
+        vm.save(); runCurrent()
+        assertNull(vm.uiState.value.textError)
+        assertEquals(EMOJI.repeat(30), repository.lastDraft?.text)
+
+        vm.onTextChanged(EMOJI.repeat(3001)); vm.save(); runCurrent()
+        assertEquals(ReviewFieldError.TEXT_TOO_LONG, vm.uiState.value.textError)
+
+        vm.onTextChanged(EMOJI.repeat(3000)); vm.save(); runCurrent()
+        assertNull(vm.uiState.value.textError)
+        assertEquals(EMOJI.repeat(3000), repository.lastDraft?.text)
+        assertEquals(listOf("save:$TEACHER", "save:$TEACHER"), repository.actions)
+    }
+
+    @Test fun aSavedEventWaitsForTheNextCollector() = runTest(main.dispatcher) {
+        repository.saveResult = AppResult.Success(teacherReviews(TEACHER))
+        val vm = model()
+        val first = backgroundScope.launch { vm.events.collect {} }
+        runCurrent()
+        first.cancel(); runCurrent()
+
+        vm.onTextChanged(VALID_TEXT)
+        vm.save(); runCurrent()
+
+        assertEquals(ReviewEditorEvent.Saved, vm.events.first())
+    }
+
+    @Test fun aRestrictedSaveReportsModerationAndCanBeSentAgain() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         repository.mutationGate = { gate.await() }
         repository.saveResult = AppResult.Failure(AppError.Restricted)
@@ -189,7 +232,7 @@ class ReviewEditorViewModelTest {
         assertEquals(1, repository.actions.size)
     }
 
-    @Test fun `changes are known only after an edit`() = runTest(main.dispatcher) {
+    @Test fun changesAreKnownOnlyAfterAnEdit() = runTest(main.dispatcher) {
         repository.cached = mapOf(TEACHER to teacherReviews(TEACHER, mine = ownReview()))
         val vm = model()
         assertFalse(vm.hasChanges())
@@ -212,5 +255,6 @@ class ReviewEditorViewModelTest {
     private companion object {
         const val TEACHER = 123456
         const val VALID_TEXT = "Понятно объясняет материал и подробно отвечает на вопросы."
+        const val EMOJI = "\uD83D\uDE00"
     }
 }

@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -20,11 +19,12 @@ import dev.alllexey.itmowidgets.databinding.DialogReportReviewBinding
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewEvent
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** A reason and an optional comment; the dialog stays until the report is accepted. */
 @AndroidEntryPoint
 class ReportReviewDialogFragment : DialogFragment() {
-    private val viewModel: ReportReviewViewModel by viewModels()
+    private val viewModel: ReportReviewViewModel by viewModel()
     private lateinit var form: DialogReportReviewBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

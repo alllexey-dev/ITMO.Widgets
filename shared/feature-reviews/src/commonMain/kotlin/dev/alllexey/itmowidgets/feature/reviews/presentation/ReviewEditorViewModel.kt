@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.reviews.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -11,7 +10,6 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewLimits
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,8 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Writes the viewer's review of a teacher, or edits the one in the cached reviews. */
-@HiltViewModel
-class ReviewEditorViewModel @Inject constructor(
+class ReviewEditorViewModel(
     private val handle: SavedStateHandle,
     private val repository: TeacherReviewsRepository,
     private val lessons: TeacherLessonsGateway,
