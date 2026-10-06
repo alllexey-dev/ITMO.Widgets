@@ -85,9 +85,9 @@ class SportDemoGateTest {
 
         val confirmed = (bookings.observeConfirmedSportBookings().first() as AppResult.Success).value
         assertTrue(confirmed.isNotEmpty() && confirmed.all { it.signed })
-        val points = (data.observeSportScore().first() as AppResult.Success).value
+        val points = (data.observeSportScore().first() as LoadState.Content).value
         assertTrue(points.total in 1 until 100)
-        assertTrue(data.observeSportAttempts().first() is AppResult.Success)
+        assertTrue(data.observeSportAttempts().first() is LoadState.Content)
         assertTrue(data.observeSportAutoSignLimits().first() is LoadState.Content)
         val periods = (score.getScorePeriods() as AppResult.Success).value
         assertEquals(1, periods.count { it.current })

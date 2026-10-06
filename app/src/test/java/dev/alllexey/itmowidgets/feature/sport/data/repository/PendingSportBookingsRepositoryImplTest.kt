@@ -301,9 +301,9 @@ class PendingSportBookingsRepositoryImplTest {
             refreshes++
             refreshAction()
         }
-        override fun observeSportScore(): Flow<AppResult<SportScore>> = error("Not needed")
+        override fun observeSportScore(): Flow<LoadState<SportScore>> = error("Not needed")
         override suspend fun refreshSportScore() = error("Not needed")
-        override fun observeSportAttempts(): Flow<AppResult<SportAttempts>> = error("Not needed")
+        override fun observeSportAttempts(): Flow<LoadState<SportAttempts>> = error("Not needed")
         override suspend fun refreshSportAttempts() = error("Not needed")
         override fun observeSportAutoSignLimits(): Flow<LoadState<SportAutoSignLimits>> = error("Not needed")
         override suspend fun refreshSportAutoSignLimits() = error("Not needed")

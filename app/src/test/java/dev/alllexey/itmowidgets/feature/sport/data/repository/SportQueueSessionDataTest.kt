@@ -41,6 +41,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -121,6 +122,20 @@ class SportQueueSessionDataTest {
         assertEquals(listOf(2L), fixture.repository.observeSportQueueEntries().first().valueOrNull()?.map { it.id })
         assertEquals(2, fixture.api.autoSignCalls.get())
         assertEquals(2, fixture.api.freeSignCalls.get())
+    }
+
+    @Test
+    fun `session clear forgets the previous session's points and attempts, failures included`() = runTest {
+        val fixture = createFixture()
+        fixture.repository.refreshSportScore()
+        fixture.repository.refreshSportAttempts()
+        assertTrue(fixture.repository.observeSportScore().first() is LoadState.Error)
+        assertTrue(fixture.repository.observeSportAttempts().first() is LoadState.Error)
+
+        fixture.repository.clearSessionData()
+
+        assertEquals(LoadState.Loading, fixture.repository.observeSportScore().first())
+        assertEquals(LoadState.Loading, fixture.repository.observeSportAttempts().first())
     }
 
     @Test

@@ -44,11 +44,12 @@ class SportDataRepositoryImpl @Inject constructor(
     private val dispatchers: AppDispatchers
 ) : SportDataRepository, SessionDataCleaner {
 
-    private val queueSessionMutex = Mutex()
-    private var queueSessionGeneration = 0L
+    /** Bumped by [clearSessionData], so a response of the previous session cannot land in the next one. */
+    private val sessionMutex = Mutex()
+    private var sessionGeneration = 0L
 
-    private val attemptsFlow = MutableSharedFlow<AppResult<SportAttempts>>(replay = 1)
-    private val scoreFlow = MutableSharedFlow<AppResult<SportScore>>(replay = 1)
+    private val attemptsFlow = MutableSharedFlow<LoadState<SportAttempts>>(replay = 1)
+    private val scoreFlow = MutableSharedFlow<LoadState<SportScore>>(replay = 1)
 
     private val autoSignLimitsFlow =
         MutableSharedFlow<LoadState<SportAutoSignLimits>>(replay = 1)
@@ -71,21 +72,27 @@ class SportDataRepositoryImpl @Inject constructor(
     override fun observeFriendsBookings() = friendsBookingsFlow
 
     override suspend fun refreshSportScore() {
-        scoreFlow.emit(scoreRepository.getSportScore())
+        val generation = currentGeneration()
+        val state = when (val result = scoreRepository.getSportScore()) {
+            is AppResult.Success -> LoadState.Content(result.value)
+            is AppResult.Failure -> LoadState.Error(result.error)
+        }
+        emitInSession(generation, scoreFlow, state)
     }
 
     override suspend fun refreshSportAttempts() {
+        val generation = currentGeneration()
         if (demo.isActive()) {
-            attemptsFlow.emit(AppResult.Success(DemoSport.attempts()))
+            emitInSession(generation, attemptsFlow, LoadState.Content(DemoSport.attempts()))
             return
         }
         try {
             val result = withContext(dispatchers.io) { myItmo.sport.getSportAttempts().requireResult().toModel() }
-            attemptsFlow.emit(AppResult.Success(result))
+            emitInSession(generation, attemptsFlow, LoadState.Content(result))
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            attemptsFlow.emit(AppResult.Failure(error.toAppError()))
+            emitInSession(generation, attemptsFlow, LoadState.Error(error.toAppError()))
         }
     }
 
@@ -110,7 +117,7 @@ class SportDataRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshSportQueueEntries() {
-        val generation = queueSessionMutex.withLock { queueSessionGeneration }
+        val generation = currentGeneration()
         if (demo.isActive()) {
             emitQueueState(generation, LoadState.Content(DemoSport.queueEntries(time)))
             return
@@ -139,13 +146,24 @@ class SportDataRepositoryImpl @Inject constructor(
     }
 
     private suspend fun emitQueueState(generation: Long, state: LoadState<List<SportQueueEntry>>) =
-        queueSessionMutex.withLock {
-            if (generation == queueSessionGeneration) queueEntriesFlow.emit(state)
+        emitInSession(generation, queueEntriesFlow, state)
+
+    private suspend fun currentGeneration(): Long = sessionMutex.withLock { sessionGeneration }
+
+    private suspend fun <T> emitInSession(generation: Long, flow: MutableSharedFlow<T>, value: T) =
+        sessionMutex.withLock {
+            if (generation == sessionGeneration) flow.emit(value)
         }
 
-    override suspend fun clearSessionData() = queueSessionMutex.withLock {
-        queueSessionGeneration++
+    /**
+     * Forgets the previous session's points, attempts and queues, failures included: `Loading` makes the next
+     * entry of the sport tab load them again instead of showing another account's data or its expired session.
+     */
+    override suspend fun clearSessionData() = sessionMutex.withLock {
+        sessionGeneration++
         queueEntriesFlow.emit(LoadState.Disabled)
+        attemptsFlow.emit(LoadState.Loading)
+        scoreFlow.emit(LoadState.Loading)
     }
 
     override suspend fun refreshSportQueues() {

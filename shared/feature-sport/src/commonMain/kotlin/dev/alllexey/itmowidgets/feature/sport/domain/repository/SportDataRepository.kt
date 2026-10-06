@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.repository
 
-import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
@@ -12,11 +11,13 @@ import kotlinx.coroutines.flow.Flow
 
 interface SportDataRepository {
 
-    fun observeSportScore(): Flow<AppResult<SportScore>>
+    /** [LoadState.Loading] until the first answer and again after the session is cleared. */
+    fun observeSportScore(): Flow<LoadState<SportScore>>
 
     suspend fun refreshSportScore()
 
-    fun observeSportAttempts(): Flow<AppResult<SportAttempts>>
+    /** [LoadState.Loading] until the first answer and again after the session is cleared. */
+    fun observeSportAttempts(): Flow<LoadState<SportAttempts>>
 
     suspend fun refreshSportAttempts()
 

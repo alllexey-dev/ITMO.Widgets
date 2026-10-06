@@ -65,8 +65,8 @@ class SportBookingsHolderTest {
     )
 
     private suspend fun emitSnapshot(items: List<SportBooking> = listOf(SportCardFixtures.booking(7))) {
-        data.attempts.emit(AppResult.Success(SportAttempts(total = 3, used = 1, free = 2, canSignIn = true)))
-        data.score.emit(AppResult.Success(SportScore(attendances = 40, other = 10, attendancesData = emptyList())))
+        data.attempts.emit(LoadState.Content(SportAttempts(total = 3, used = 1, free = 2, canSignIn = true)))
+        data.score.emit(LoadState.Content(SportScore(attendances = 40, other = 10, attendancesData = emptyList())))
         bookings.merged.emit(LoadState.Content(items))
     }
 
@@ -195,5 +195,24 @@ class SportBookingsHolderTest {
         emitSnapshot()
         advanceUntilIdle()
         assertEquals(7L, lookup.await()?.lessonId)
+    }
+
+    @Test
+    fun aFailureOfAClearedSessionDoesNotKeepTheNextEntryFromLoading() = runTest(main.dispatcher) {
+        val holder = holder()
+        data.attempts.emit(LoadState.Error(AppError.Unauthorized))
+        data.score.emit(LoadState.Error(AppError.Unauthorized))
+        bookings.merged.emit(LoadState.Content(emptyList()))
+        runCurrent()
+        holder.ensureDataLoaded()
+        runCurrent()
+        assertEquals(0, bookings.refreshCount, "a failure stays until a retry")
+
+        data.attempts.emit(LoadState.Loading)
+        data.score.emit(LoadState.Loading)
+        runCurrent()
+        holder.ensureDataLoaded()
+        runCurrent()
+        assertEquals(1, bookings.refreshCount)
     }
 }

@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.my
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
@@ -48,8 +47,8 @@ class SportMyViewModel(
     fun cancelBooking(booking: SportBooking) = holder.cancel(booking)
 
     private fun toUiState(
-        attemptsState: AppResult<SportAttempts>,
-        scoreState: AppResult<SportScore>,
+        attemptsState: LoadState<SportAttempts>,
+        scoreState: LoadState<SportScore>,
         bookingsState: LoadState<List<SportBooking>>,
         operationCount: Int,
         byUser: Boolean
@@ -58,6 +57,8 @@ class SportMyViewModel(
         val score = scoreState.valueOrNull()
         val bookings = bookingsState.valueOrNull()
         val errors = listOfNotNull(attemptsState.errorOrNull(), scoreState.errorOrNull(), bookingsState.errorOrNull())
+        // Both sources are only `Loading` again after the session was cleared: the last content was another session's.
+        if (attemptsState == LoadState.Loading && scoreState == LoadState.Loading) lastContent = null
         val previous = lastContent
 
         if (attempts == null || score == null || bookings == null) {

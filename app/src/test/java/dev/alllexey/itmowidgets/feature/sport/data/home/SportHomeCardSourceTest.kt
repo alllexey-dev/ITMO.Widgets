@@ -36,7 +36,7 @@ class SportHomeCardSourceTest {
 
     @Test
     fun `progress and future queues make the card`() = runTest {
-        sportData.score.value = AppResult.Success(SportScore(50, 22, emptyList()))
+        sportData.score.value = LoadState.Content(SportScore(50, 22, emptyList()))
         pending.values.value = AppResult.Success(listOf(booking(2, hour = 18), booking(1, hour = 16), booking(1, hour = 16), booking(3, hour = 9)))
 
         val card = source.observe().first().single() as HomeCard.Sport
@@ -47,7 +47,7 @@ class SportHomeCardSourceTest {
 
     @Test
     fun `a scored semester without queues needs no card`() = runTest {
-        sportData.score.value = AppResult.Success(SportScore(80, 40, emptyList()))
+        sportData.score.value = LoadState.Content(SportScore(80, 40, emptyList()))
 
         assertTrue(source.observe().first().isEmpty())
 
@@ -67,13 +67,13 @@ class SportHomeCardSourceTest {
 
     @Test
     fun `refresh reports the score error after asking both sources`() = runTest {
-        sportData.score.value = AppResult.Failure(AppError.Network)
+        sportData.score.value = LoadState.Error(AppError.Network)
 
         assertEquals(AppResult.Failure(AppError.Network), source.refresh())
         assertEquals(1, sportData.scoreRefreshes)
         assertEquals(1, pending.refreshes)
 
-        sportData.score.value = AppResult.Success(SportScore(1, 0, emptyList()))
+        sportData.score.value = LoadState.Content(SportScore(1, 0, emptyList()))
         assertEquals(AppResult.Success(Unit), source.refresh())
     }
 
@@ -87,11 +87,11 @@ class SportHomeCardSourceTest {
     private object Today : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 
     private class ScoreOnlySportData : SportDataRepository {
-        val score = MutableStateFlow<AppResult<SportScore>>(AppResult.Failure(AppError.Network))
+        val score = MutableStateFlow<LoadState<SportScore>>(LoadState.Error(AppError.Network))
         var scoreRefreshes = 0
-        override fun observeSportScore(): Flow<AppResult<SportScore>> = score
+        override fun observeSportScore(): Flow<LoadState<SportScore>> = score
         override suspend fun refreshSportScore() { scoreRefreshes++ }
-        override fun observeSportAttempts(): Flow<AppResult<SportAttempts>> = flowOf(AppResult.Failure(AppError.Unknown()))
+        override fun observeSportAttempts(): Flow<LoadState<SportAttempts>> = flowOf(LoadState.Error(AppError.Unknown()))
         override suspend fun refreshSportAttempts() = Unit
         override fun observeSportAutoSignLimits(): Flow<LoadState<SportAutoSignLimits>> = flowOf(LoadState.Disabled)
         override suspend fun refreshSportAutoSignLimits() = Unit

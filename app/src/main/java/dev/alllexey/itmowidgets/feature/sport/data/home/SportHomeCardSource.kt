@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.sport.data.home
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -43,10 +44,7 @@ class SportHomeCardSource @Inject constructor(
         val bookings = async { pending.refresh() }
         score.await()
         bookings.await()
-        when (val state = sportData.observeSportScore().first()) {
-            is AppResult.Failure -> AppResult.Failure(state.error)
-            is AppResult.Success -> AppResult.Success(Unit)
-        }
+        sportData.observeSportScore().first().errorOrNull()?.let { AppResult.Failure(it) } ?: AppResult.Success(Unit)
     }
 
     private companion object {
