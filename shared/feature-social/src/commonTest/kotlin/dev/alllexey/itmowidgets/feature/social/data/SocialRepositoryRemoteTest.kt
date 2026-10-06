@@ -5,15 +5,12 @@ import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.network.Core2Harness
-import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.session
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.social.data.SocialRemoteFixtures.FRIEND_ISU
 import dev.alllexey.itmowidgets.feature.social.data.SocialRemoteFixtures.INCOMING_ISU
 import dev.alllexey.itmowidgets.feature.social.data.SocialRemoteFixtures.ME_ISU
@@ -27,29 +24,24 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** `SocialRepositoryImpl` over the real Core 2.0 client and a MockEngine: routes, mapping, errors and the gates. */
 class SocialRepositoryRemoteTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
-    private val dispatchers = mainDispatcherRule.appDispatchers
-
     @Test
-    fun `refresh reads the own data, friends and both request lists with the stored token`() = runTest {
+    fun refreshReadsTheOwnDataFriendsAndBothRequestListsWithTheStoredToken() = runTest {
         val harness = harness { request ->
             when (request.url.encodedPath) {
                 "/api/users/me/data" -> respondJson(SocialRemoteFixtures.MY_USER_DATA)
@@ -65,10 +57,10 @@ class SocialRepositoryRemoteTest {
 
         assertEquals(
             listOf("/api/friends", "/api/friends/requests/incoming", "/api/friends/requests/outgoing", "/api/users/me/data"),
-            harness.backendRequests.map { it.url.encodedPath }.sorted()
+            harness.requests.map { it.url.encodedPath }.sorted()
         )
-        assertTrue(harness.backendRequests.all { it.method == HttpMethod.Get })
-        assertTrue(harness.backendRequests.all { it.headers[HttpHeaders.Authorization] == "Bearer stored-access" })
+        assertTrue(harness.requests.all { it.method == HttpMethod.Get })
+        assertTrue(harness.requests.all { it.headers[HttpHeaders.Authorization] == "Bearer stored-access" })
         assertEquals(
             UserSummary(
                 ME_ISU, "Студент Тестовый", "https://example.org/avatars/100001.jpg",
@@ -90,7 +82,7 @@ class SocialRepositoryRemoteTest {
     }
 
     @Test
-    fun `a profile and another user's friends are read by ISU and cached`() = runTest {
+    fun aProfileAndAnotherUsersFriendsAreReadByISUAndCached() = runTest {
         val harness = harness { request ->
             when (request.url.encodedPath) {
                 "/api/users/$FRIEND_ISU" -> respondJson(SocialRemoteFixtures.profile(FRIEND_ISU, "FRIENDS"))
@@ -110,11 +102,11 @@ class SocialRepositoryRemoteTest {
         assertEquals(listOf(INCOMING_ISU to RelationshipState.INCOMING, SECOND_FRIEND_ISU to RelationshipState.NONE),
             friends.map { it.isu to it.relationship })
         assertEquals(friends, repository.cachedUserFriends(FRIEND_ISU))
-        assertTrue(harness.backendRequests.all { it.method == HttpMethod.Get })
+        assertTrue(harness.requests.all { it.method == HttpMethod.Get })
     }
 
     @Test
-    fun `lookup posts distinct ISUs in chunks of fifty and keeps the answer order`() = runTest {
+    fun lookupPostsDistinctISUsInChunksOfFiftyAndKeepsTheAnswerOrder() = runTest {
         val harness = harness { request ->
             respondJson(SocialRemoteFixtures.lookup(request.lookupIsus()))
         }
@@ -123,12 +115,12 @@ class SocialRepositoryRemoteTest {
         val result = repository.lookup((1..60).toList() + 1)
 
         assertEquals((1..60).toList(), (result as AppResult.Success).value.map(UserProfile::isu))
-        assertEquals(listOf((1..50).toList(), (51..60).toList()), harness.backendRequests.map { it.lookupIsus() })
-        assertTrue(harness.backendRequests.all { it.method == HttpMethod.Post && it.url.encodedPath == "/api/users/lookup" })
+        assertEquals(listOf((1..50).toList(), (51..60).toList()), harness.requests.map { it.lookupIsus() })
+        assertTrue(harness.requests.all { it.method == HttpMethod.Post && it.url.encodedPath == "/api/users/lookup" })
     }
 
     @Test
-    fun `each relationship action calls its route and folds the answer into the lists`() = runTest {
+    fun eachRelationshipActionCallsItsRouteAndFoldsTheAnswerIntoTheLists() = runTest {
         val answers = mapOf(
             "POST /api/friends/$OUTGOING_ISU/cancel" to "NONE",
             "POST /api/friends/$INCOMING_ISU/accept" to "FRIENDS",
@@ -155,14 +147,14 @@ class SocialRepositoryRemoteTest {
         assertTrue(repository.rejectRequest(ME_ISU) is AppResult.Success)
         assertTrue(repository.removeFriend(FRIEND_ISU) is AppResult.Success)
 
-        assertEquals(answers.keys.toList(), harness.backendRequests.drop(4).map { "${it.method.value} ${it.url.encodedPath}" })
+        assertEquals(answers.keys.toList(), harness.requests.drop(4).map { "${it.method.value} ${it.url.encodedPath}" })
         assertEquals(listOf(INCOMING_ISU, SECOND_FRIEND_ISU), repository.friendIsus())
         assertEquals(emptyList<Int>() to emptyList<Int>(), repository.requestIsus())
         assertEquals(RelationshipState.NONE, repository.cachedProfile(FRIEND_ISU)?.relationship)
     }
 
     @Test
-    fun `Backend errors keep the released semantics`() = runTest {
+    fun backendErrorsKeepTheReleasedSemantics() = runTest {
         val cases = listOf(
             Answer(HttpStatusCode.Forbidden, SocialRemoteFixtures.error("permission_denied")) to AppError.Forbidden,
             Answer(HttpStatusCode.Forbidden, SocialRemoteFixtures.error("restricted")) to AppError.Restricted,
@@ -173,19 +165,19 @@ class SocialRepositoryRemoteTest {
             val harness = harness { respondJson(answer.body, answer.status) }
             val repository = repository(harness, backgroundScope)
 
-            assertEquals("$answer profile", AppResult.Failure(expected), repository.profile(FRIEND_ISU))
-            assertEquals("$answer friends", AppResult.Failure(expected), repository.userFriends(FRIEND_ISU))
-            assertEquals("$answer lookup", AppResult.Failure(expected), repository.lookup(listOf(FRIEND_ISU)))
-            assertEquals("$answer action", AppResult.Failure(expected), repository.sendRequest(FRIEND_ISU))
+            assertEquals(AppResult.Failure(expected), repository.profile(FRIEND_ISU), "$answer profile")
+            assertEquals(AppResult.Failure(expected), repository.userFriends(FRIEND_ISU), "$answer friends")
+            assertEquals(AppResult.Failure(expected), repository.lookup(listOf(FRIEND_ISU)), "$answer lookup")
+            assertEquals(AppResult.Failure(expected), repository.sendRequest(FRIEND_ISU), "$answer action")
             repository.refresh()
-            assertEquals("$answer list", LoadState.Error(expected), repository.observeFriends().first())
-            assertEquals("$answer requests", LoadState.Error(expected), repository.observeRequests().first())
+            assertEquals(LoadState.Error(expected), repository.observeFriends().first(), "$answer list")
+            assertEquals(LoadState.Error(expected), repository.observeRequests().first(), "$answer requests")
             assertEquals(null, repository.cachedProfile(FRIEND_ISU))
         }
     }
 
     @Test
-    fun `an unknown relationship fails the answer instead of becoming none`() = runTest {
+    fun anUnknownRelationshipFailsTheAnswerInsteadOfBecomingNone() = runTest {
         val harness = harness { respondJson(SocialRemoteFixtures.UNKNOWN_RELATIONSHIP) }
         val repository = repository(harness, backgroundScope)
 
@@ -198,7 +190,7 @@ class SocialRepositoryRemoteTest {
     }
 
     @Test
-    fun `no request leaves the device with the opt-in off`() = runTest {
+    fun noRequestLeavesTheDeviceWithTheOptInOff() = runTest {
         val harness = harness { request -> throw AssertionError("The opted-out session asked ${request.url.encodedPath}") }
         val repository = repository(harness, backgroundScope, gate = FakeBackendGate(optedIn = false))
 
@@ -212,7 +204,7 @@ class SocialRepositoryRemoteTest {
     }
 
     @Test
-    fun `the demo session sends no request`() = runTest {
+    fun theDemoSessionSendsNoRequest() = runTest {
         val demo = FakeDemoMode(active = true)
         val harness = harness { request -> throw AssertionError("The demo session asked ${request.url.encodedPath}") }
         val repository = repository(harness, backgroundScope, demo = demo, gate = FakeBackendGate(optedIn = true, demo))
@@ -228,14 +220,14 @@ class SocialRepositoryRemoteTest {
 
     private fun harness(
         backend: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
-    ) = Core2Harness(session(), backend = backend)
+    ) = BackendHarness(backend)
 
-    private fun repository(
-        harness: Core2Harness,
+    private fun TestScope.repository(
+        harness: BackendHarness,
         scope: CoroutineScope,
         demo: FakeDemoMode = FakeDemoMode(active = false),
         gate: FakeBackendGate = FakeBackendGate(optedIn = true, demo),
-    ) = SocialRepositoryImpl(gate, harness.client.users, harness.client.friends, scope, demo, dispatchers)
+    ) = SocialRepositoryImpl(gate, harness.client.users, harness.client.friends, scope, demo, testAppDispatchers())
 
     private suspend fun SocialRepositoryImpl.everyRemoteCall(): List<AppResult<*>> = listOf(
         profile(FRIEND_ISU),

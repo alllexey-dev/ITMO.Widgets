@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
@@ -90,8 +91,9 @@ interface CoreBridgeEntryPoint {
     fun sportSignSelectorPreferences(): SportSignSelectorPreferences
     fun markSourcePreferences(): MarkSourcePreferences
 
-    /** Core 2.0's users area; unscoped in Hilt over the one `BackendClient`, so every call returns the same API. */
+    /** Core 2.0's users and friends areas; unscoped in Hilt over the one `BackendClient`, so each returns the same API. */
     fun usersApi(): UsersApi
+    fun friendsApi(): FriendsApi
 
     fun backendIdentitySync(): BackendIdentitySync
     fun backendDeviceSession(): BackendDeviceSession
@@ -161,6 +163,7 @@ val coreBridgeModule = module {
     single<SportSignSelectorPreferences> { CoreBridgeEntryPoint.from(androidContext()).sportSignSelectorPreferences() }
     single<MarkSourcePreferences> { CoreBridgeEntryPoint.from(androidContext()).markSourcePreferences() }
     single<UsersApi> { CoreBridgeEntryPoint.from(androidContext()).usersApi() }
+    single<FriendsApi> { CoreBridgeEntryPoint.from(androidContext()).friendsApi() }
     single<BackendIdentitySync> { CoreBridgeEntryPoint.from(androidContext()).backendIdentitySync() }
     single<BackendDeviceSession> { CoreBridgeEntryPoint.from(androidContext()).backendDeviceSession() }
     single<FcmTokenSync> { CoreBridgeEntryPoint.from(androidContext()).fcmTokenSync() }

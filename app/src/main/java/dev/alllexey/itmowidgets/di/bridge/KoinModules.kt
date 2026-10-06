@@ -32,7 +32,6 @@ object KoinModules {
         homeBridgeModule,
         settingsBridgeModule,
         recordbookBridgeModule,
-        socialBridgeModule,
         scheduleBridgeModule,
         sportBridgeModule,
     )

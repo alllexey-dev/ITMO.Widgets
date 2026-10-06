@@ -11,6 +11,8 @@ import dev.alllexey.itmowidgets.feature.home.data.HintHomeCardSource
 import dev.alllexey.itmowidgets.feature.home.di.hintCardsQualifier
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
+import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
+import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -44,6 +46,7 @@ class HomeDebugFixturesTest {
         val releasePreferences = koin.get<HomeCardPreferences>()
         val releaseHintStore = koin.get<HomeHintStore>()
         val hints = koin.get<HintHomeCardSource>()
+        val social = koin.get<SocialHomeCardSource>()
 
         val fixture = HomeDebugFixtures.load(application, Fakes, EpochClock)
         val sources = koin.getAll<HomeCardSource>()
@@ -59,6 +62,7 @@ class HomeDebugFixturesTest {
         assertSame(hints, koin.get<HomeCardSource>(hintCardsQualifier))
         assertSame(hints, koin.get<HintHomeCardSource>())
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === hints })
+        assertSame(social, koin.get<HomeCardSource>(socialCardsQualifier))
         assertSame(releasePreferences, koin.get<HomeCardPreferences>())
         assertSame(releaseHintStore, koin.get<HomeHintStore>())
         assertSame(CoreBridgeEntryPoint.from(application).clock(), koin.get<Clock>())

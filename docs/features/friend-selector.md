@@ -85,10 +85,14 @@ otherwise.
 - `DataStoreFriendSelectionHistory` keeps `recent_schedule_friends` in
   `app_preferences`: ISUs, newest first, without repeats, at most five. It is a
   `SessionDataCleaner`, so sign-out forgets it.
+- Both live in `:shared:feature-social` `commonMain` and `friendSelectorModule`
+  constructs them; the history's cleaner is bound under the `friend-history`
+  qualifier.
 
 ## Tests
 
-- JVM: `FriendSelectorViewModelTest`, `RecentFriendOrderTest`.
+- JVM: `FriendSelectorViewModelTest`, `RecentFriendOrderTest`,
+  `DataStoreFriendSelectionHistoryTest` (reads a 2.2 value), `FriendRepositoryImplTest`.
 - Instrumented: `RecentFriendsStabilityTest`, `SelectionRowsTest`. The sheet
   renders with `FriendSelectorFixture` in `SettingsNavigationTestActivity`
   (debug); it has no visual test.

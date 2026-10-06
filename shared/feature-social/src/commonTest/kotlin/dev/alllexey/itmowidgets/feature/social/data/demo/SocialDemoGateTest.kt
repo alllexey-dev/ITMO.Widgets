@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.feature.social.data.demo
 
-import dev.alllexey.itmowidgets.client.friends.FriendsApi
-import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -9,37 +7,30 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.UnreachableFriends
+import dev.alllexey.itmowidgets.feature.social.data.UnreachableUsers
+import dev.alllexey.itmowidgets.feature.social.data.testAppDispatchers
 import dev.alllexey.itmowidgets.feature.social.data.unreachablePersonalitiesClient
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** Friends, profiles and the directory of the demo session, without Backend or My ITMO. */
 class SocialDemoGateTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
-    private val dispatchers = mainDispatcherRule.appDispatchers
-
     private val demo = FakeDemoMode(active = true)
-    private val users = unreachable<UsersApi>()
-    private val friendships = unreachable<FriendsApi>()
     // Without the stored opt-in the demo still reads as connected.
     private val gate = FakeBackendGate(optedIn = false, demo)
 
     @Test
-    fun `friends, requests and profiles come from the demo set and actions are refused`() = runTest {
-        val social = SocialRepositoryImpl(gate, users, friendships, backgroundScope, demo, dispatchers)
+    fun friendsRequestsAndProfilesComeFromTheDemoSetAndActionsAreRefused() = runTest {
+        val social = SocialRepositoryImpl(gate, UnreachableUsers, UnreachableFriends, backgroundScope, demo, testAppDispatchers())
 
         social.refresh()
 
@@ -56,10 +47,10 @@ class SocialDemoGateTest {
     }
 
     @Test
-    fun `people and the directory search come from the demo set`() = runTest {
-        val social = SocialRepositoryImpl(gate, users, friendships, backgroundScope, demo, dispatchers)
-        val persons = PersonRepositoryImpl(unreachablePersonalitiesClient(), demo, dispatchers)
-        val search = PeopleSearchRepositoryImpl(unreachablePersonalitiesClient(), social, demo, dispatchers)
+    fun peopleAndTheDirectorySearchComeFromTheDemoSet() = runTest {
+        val social = SocialRepositoryImpl(gate, UnreachableUsers, UnreachableFriends, backgroundScope, demo, testAppDispatchers())
+        val persons = PersonRepositoryImpl(unreachablePersonalitiesClient(), demo, testAppDispatchers())
+        val search = PeopleSearchRepositoryImpl(unreachablePersonalitiesClient(), social, demo, testAppDispatchers())
 
         val teacher = (persons.person(DemoPeople.DATABASES_TEACHER.isu) as AppResult.Success).value
         val student = (persons.person(DemoPeople.MARIA.isu) as AppResult.Success).value

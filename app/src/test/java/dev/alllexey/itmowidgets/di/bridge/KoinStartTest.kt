@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
@@ -106,6 +107,7 @@ class KoinStartTest {
         assertSame(hilt.sportSignSelectorPreferences(), koin.get<SportSignSelectorPreferences>())
         assertSame(hilt.markSourcePreferences(), koin.get<MarkSourcePreferences>())
         assertSame(hilt.usersApi(), koin.get<UsersApi>())
+        assertSame(hilt.friendsApi(), koin.get<FriendsApi>())
         assertSame(hilt.backendIdentitySync(), koin.get<BackendIdentitySync>())
         assertSame(hilt.backendDeviceSession(), koin.get<BackendDeviceSession>())
         assertSame(hilt.fcmTokenSync(), koin.get<FcmTokenSync>())

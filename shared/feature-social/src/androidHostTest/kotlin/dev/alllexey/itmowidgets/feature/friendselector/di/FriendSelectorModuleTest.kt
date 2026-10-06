@@ -1,24 +1,24 @@
 package dev.alllexey.itmowidgets.feature.friendselector.di
 
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
-import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
+import dev.alllexey.itmowidgets.core.social.SocialRepository
 import kotlin.test.Test
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.test.verify.verify
 
 class FriendSelectorModuleTest {
 
-    /** The friend list, the people search and the history are bridged from the app's Hilt graph. */
+    /** The friend list and the history resolve inside the module over social's ports and the preferences store. */
     @OptIn(KoinExperimentalAPI::class)
     @Test
     fun theFriendSelectorModuleResolvesWithTheBridgedTypes() {
         friendSelectorModule.verify(
             extraTypes = listOf(
-                FriendRepository::class,
+                SocialRepository::class,
                 PeopleSearchRepository::class,
-                FriendSelectionHistory::class,
+                DataStore::class,
                 SavedStateHandle::class,
             )
         )

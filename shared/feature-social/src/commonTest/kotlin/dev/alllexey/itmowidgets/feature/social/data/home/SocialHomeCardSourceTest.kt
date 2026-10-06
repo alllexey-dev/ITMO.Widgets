@@ -9,11 +9,11 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.profile
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class SocialHomeCardSourceTest {
     private val social = FakeSocialRepository()
@@ -21,7 +21,7 @@ class SocialHomeCardSourceTest {
     private val source = SocialHomeCardSource(social, services)
 
     @Test
-    fun `disabled loading or empty requests give no card`() = runTest {
+    fun disabledLoadingOrEmptyRequestsGiveNoCard() = runTest {
         social.requests.value = LoadState.Disabled
         assertTrue(source.observe().first().isEmpty())
 
@@ -33,7 +33,7 @@ class SocialHomeCardSourceTest {
     }
 
     @Test
-    fun `incoming requests become the card in order`() = runTest {
+    fun incomingRequestsBecomeTheCardInOrder() = runTest {
         social.requests.value = LoadState.Content(
             FriendRequests(listOf(profile(1, RelationshipState.INCOMING), profile(2, RelationshipState.INCOMING)), emptyList())
         )
@@ -44,7 +44,7 @@ class SocialHomeCardSourceTest {
     }
 
     @Test
-    fun `refresh skips the backend without the opt-in and reports its error with it`() = runTest {
+    fun refreshSkipsTheBackendWithoutTheOptInAndReportsItsErrorWithIt() = runTest {
         services.enabled.value = false
         assertEquals(AppResult.Success(Unit), source.refresh())
         assertEquals(0, social.refreshes)

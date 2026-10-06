@@ -8,10 +8,9 @@ import dev.alllexey.itmowidgets.core.result.map
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 /** The picker's narrow view of [SocialRepository]: friends as plain identities. */
-class FriendRepositoryImpl @Inject constructor(
+class FriendRepositoryImpl(
     private val social: SocialRepository
 ) : FriendRepository {
 
