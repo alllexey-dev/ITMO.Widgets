@@ -1,53 +1,40 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
-import dev.alllexey.itmowidgets.core.testing.noDemo
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.GroupData
-import dev.alllexey.itmowidgets.core.model.UserCapabilities
-import dev.alllexey.itmowidgets.core.model.UserData
-import dev.alllexey.itmowidgets.core.model.resources.ModerationReportRequest
+import dev.alllexey.itmowidgets.client.common.GroupData
+import dev.alllexey.itmowidgets.client.common.ModerationReportRequest
+import dev.alllexey.itmowidgets.client.common.ReportReason
+import dev.alllexey.itmowidgets.client.common.ResourceVoteRequest
+import dev.alllexey.itmowidgets.client.common.UserCapabilities
+import dev.alllexey.itmowidgets.client.common.UserData
+import dev.alllexey.itmowidgets.client.error.BackendException
+import dev.alllexey.itmowidgets.client.reviews.SaveTeacherReviewRequest
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewKind
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewStatus
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
+import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryLevel
 import dev.alllexey.itmowidgets.core.model.toUserSummary
-import dev.alllexey.itmowidgets.core.model.resources.ReportReason
-import dev.alllexey.itmowidgets.core.model.resources.ResourceVoteRequest
-import dev.alllexey.itmowidgets.core.model.reviews.OwnTeacherReview as WireOwnReview
-import dev.alllexey.itmowidgets.core.model.reviews.SaveTeacherReviewRequest
-import dev.alllexey.itmowidgets.core.model.reviews.TeacherReview as WireReview
-import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewKind
-import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewStatus
-import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewsResponse as WireTeacherReviews
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
-import dev.alllexey.itmowidgets.core.reviews.TeacherReview
-import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
-import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.SummaryConfidence
 import dev.alllexey.itmowidgets.core.reviews.SummaryScale
 import dev.alllexey.itmowidgets.core.reviews.SummaryScaleKind
 import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
 import dev.alllexey.itmowidgets.core.reviews.SummaryTag
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherReview
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
-import dev.alllexey.itmowidgets.core.model.reviews.SummaryConfidence as WireConfidence
-import dev.alllexey.itmowidgets.core.model.reviews.SummaryLevel as WireLevel
-import dev.alllexey.itmowidgets.core.model.reviews.SummaryScaleKind as WireScaleKind
-import dev.alllexey.itmowidgets.core.model.reviews.SummaryScaleValue as WireScaleValue
-import dev.alllexey.itmowidgets.core.model.reviews.TeacherSummary as WireSummary
-import dev.alllexey.itmowidgets.core.model.reviews.TeacherSummaryScale as WireScale
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import java.io.IOException
-import java.lang.reflect.Proxy
-import java.time.Instant
-import java.time.LocalDate
-import kotlinx.datetime.YearMonth
-import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -63,13 +50,24 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import okhttp3.ResponseBody.Companion.toResponseBody
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.YearMonth
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
-import retrofit2.HttpException
-import retrofit2.Response
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
+import dev.alllexey.itmowidgets.client.reviews.OwnTeacherReview as WireOwnReview
+import dev.alllexey.itmowidgets.client.reviews.SummaryConfidence as WireConfidence
+import dev.alllexey.itmowidgets.client.reviews.SummaryLevel as WireLevel
+import dev.alllexey.itmowidgets.client.reviews.SummaryScaleKind as WireScaleKind
+import dev.alllexey.itmowidgets.client.reviews.SummaryScaleValue as WireScaleValue
+import dev.alllexey.itmowidgets.client.reviews.TeacherReview as WireReview
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsResponse as WireTeacherReviews
+import dev.alllexey.itmowidgets.client.reviews.TeacherSummary as WireSummary
+import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryScale as WireScale
 
+/** The repository's state machine and mapping over a fake [TeacherReviewsApi]; the wire is in the remote test. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TeacherReviewsRepositoryImplTest {
 
@@ -82,7 +80,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `disabled or unknown opt-in exposes no cache and disabled requests never call Backend`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(false), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(false), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         assertNull(repository.cachedReviews(100001))
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.reviews(100001))
@@ -95,19 +93,19 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `maps exact date before year and absent date preserving Backend order`() = runTest {
         val api = FakeTeacherReviewsApi().apply {
-            result = result!!.copy(reviews = listOf(
-                review(1).copy(writtenOn = LocalDate.of(2025, 1, 25)),
+            result = result.copy(reviews = listOf(
+                review(1).copy(writtenOn = LocalDate(2025, 1, 25)),
                 review(2).copy(writtenBeforeYear = 2024),
                 review(3),
             ))
         }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         val reviews = (repository.reviews(100001) as AppResult.Success).value
 
         assertEquals(listOf(100001), api.requestedIsus)
         assertEquals(100001, reviews.isu)
-        assertEquals(listOf(UUID(0, 1).toString(), UUID(0, 2).toString(), UUID(0, 3).toString()), reviews.reviews.map { it.id })
+        assertEquals(listOf(Uuid.fromLongs(0, 1).toString(), Uuid.fromLongs(0, 2).toString(), Uuid.fromLongs(0, 3).toString()), reviews.reviews.map { it.id })
         assertEquals(listOf(ReviewDate.Month(YearMonth(2025, 1)), ReviewDate.BeforeYear(2024), null), reviews.reviews.map { it.written })
         assertEquals(reviews, repository.cachedReviews(100001))
     }
@@ -116,9 +114,9 @@ class TeacherReviewsRepositoryImplTest {
     fun `keeps https source links and falls back for absent unsafe and malformed links`() = runTest {
         val links = listOf(" https://example.test/source ", "http://example.test/source", null, " ", "not a url", "https:///missing-host")
         val api = FakeTeacherReviewsApi().apply {
-            result = result!!.copy(reviews = links.mapIndexed { index, link -> review(index + 1).copy(sourceLink = link) })
+            result = result.copy(reviews = links.mapIndexed { index, link -> review(index + 1).copy(sourceLink = link) })
         }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         val reviews = (repository.reviews(100001) as AppResult.Success).value
 
@@ -128,17 +126,17 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `trims optional strings drops blank reviews and preserves full text and order`() = runTest {
         val api = FakeTeacherReviewsApi().apply {
-            result = result!!.copy(reviews = listOf(
+            result = result.copy(reviews = listOf(
                 review(1).copy(subjectTitle = " Предмет ", sourceTitle = " Источник ", text = " Первый\nвторой абзац "),
                 review(2).copy(text = " \n\t "),
                 review(3).copy(subjectTitle = " ", sourceTitle = " ", text = " Третий "),
             ))
         }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         val reviews = (repository.reviews(100001) as AppResult.Success).value.reviews
 
-        assertEquals(listOf(UUID(0, 1).toString(), UUID(0, 3).toString()), reviews.map { it.id })
+        assertEquals(listOf(Uuid.fromLongs(0, 1).toString(), Uuid.fromLongs(0, 3).toString()), reviews.map { it.id })
         assertEquals(listOf("Первый\nвторой абзац", "Третий"), reviews.map { it.text })
         assertEquals("Предмет", reviews[0].subject)
         assertEquals("Источник", reviews[0].source().sourceTitle)
@@ -148,22 +146,22 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `HTTP and network failures preserve the successful cache`() = runTest {
-        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val api = FakeTeacherReviewsApi().apply { result = result.copy(reviews = listOf(review(1))) }
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val cached = (repository.reviews(100001) as AppResult.Success).value
 
-        api.failure = HttpException(Response.error<Any>(404, "{}".toResponseBody()))
+        api.failure = BackendException.NotFound("not_found")
         assertEquals(AppResult.Failure(AppError.NotFound), repository.reviews(100001))
         assertEquals(cached, repository.cachedReviews(100001))
-        api.failure = IOException("Synthetic offline response")
+        api.failure = BackendException.Transport(IOException("Synthetic offline response"))
         assertEquals(AppResult.Failure(AppError.Network), repository.reviews(100001))
         assertEquals(cached, repository.cachedReviews(100001))
     }
 
     @Test
-    fun `an absent Backend payload is a failure instead of an empty successful list`() = runTest {
-        val api = FakeTeacherReviewsApi().apply { result = null }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+    fun `an answer that breaks the contract is a failure instead of an empty successful list`() = runTest {
+        val api = FakeTeacherReviewsApi().apply { failure = BackendException.Contract(IllegalStateException("Synthetic missing data")) }
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         assertTrue((repository.reviews(100001) as AppResult.Failure).error is AppError.Unknown)
         assertNull(repository.cachedReviews(100001))
@@ -171,8 +169,8 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `maps the whole summary skipping unknown tags and blank items`() = runTest {
-        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(summary = wireSummary()) }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val api = FakeTeacherReviewsApi().apply { result = result.copy(summary = wireSummary()) }
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         val summary = (repository.reviews(100001) as AppResult.Success).value.summary
 
@@ -201,17 +199,17 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `a reply without a summary or with a blank description has no summary`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         assertNull((repository.reviews(100001) as AppResult.Success).value.summary)
-        api.result = api.result!!.copy(summary = wireSummary().copy(description = " \n "))
+        api.result = api.result.copy(summary = wireSummary().copy(description = " \n "))
         assertNull((repository.reviews(100001) as AppResult.Success).value.summary)
     }
 
     @Test
     fun `a low confidence summary hides its level`() = runTest {
-        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(summary = wireSummary().copy(confidence = WireConfidence.LOW)) }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val api = FakeTeacherReviewsApi().apply { result = result.copy(summary = wireSummary().copy(confidence = WireConfidence.LOW)) }
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         val summary = (repository.reviews(100001) as AppResult.Success).value.summary!!
 
@@ -220,10 +218,58 @@ class TeacherReviewsRepositoryImplTest {
     }
 
     @Test
+    fun `an unknown tone or confidence keeps the summary with its tone hidden`() = runTest {
+        val api = FakeTeacherReviewsApi().apply { result = result.copy(summary = wireSummary().copy(level = WireLevel.UNKNOWN)) }
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+
+        val unknownTone = (repository.reviews(100001) as AppResult.Success).value.summary!!
+        api.result = api.result.copy(summary = wireSummary().copy(confidence = WireConfidence.UNKNOWN))
+        val unknownConfidence = (repository.reviews(100001) as AppResult.Success).value.summary!!
+
+        assertEquals("Понятно объясняет, но строго принимает лабораторные.", unknownTone.description)
+        assertFalse(unknownTone.showsLevel)
+        assertEquals(TeacherLevel.POSITIVE, unknownConfidence.level)
+        assertFalse(unknownConfidence.showsLevel)
+    }
+
+    @Test
+    fun `a scale of an unknown kind or value is left out`() = runTest {
+        val scales = listOf(
+            WireScale(WireScaleKind.EXPLAINS, WireScaleValue.UNKNOWN, "Новое значение"),
+            WireScale(WireScaleKind.ATTITUDE, WireScaleValue.MEDIUM, "Ровное отношение"),
+            WireScale(WireScaleKind.FAIRNESS, WireScaleValue.HIGH, "Оценки честные"),
+            WireScale(WireScaleKind.STRICTNESS, WireScaleValue.HIGH, "Строгая защита"),
+            WireScale(WireScaleKind.UNKNOWN, WireScaleValue.LOW, "Новая шкала"),
+        )
+        val api = FakeTeacherReviewsApi().apply { result = result.copy(summary = wireSummary().copy(scales = scales)) }
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+
+        val summary = (repository.reviews(100001) as AppResult.Success).value.summary!!
+
+        assertEquals(listOf(SummaryScaleKind.ATTITUDE, SummaryScaleKind.FAIRNESS, SummaryScaleKind.STRICTNESS), summary.scales.map { it.kind })
+    }
+
+    @Test
+    fun `a review of an unknown kind is hidden and an unknown own status reads as pending`() = runTest {
+        val api = FakeTeacherReviewsApi().apply {
+            result = result.copy(
+                reviews = listOf(review(1).copy(kind = TeacherReviewKind.UNKNOWN), review(2)),
+                mine = ownWire().copy(status = TeacherReviewStatus.UNKNOWN),
+            )
+        }
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+
+        val reviews = (repository.reviews(100001) as AppResult.Success).value
+
+        assertEquals(listOf(Uuid.fromLongs(0, 2).toString()), reviews.reviews.map { it.id })
+        assertEquals(OwnReviewStatus.PENDING, reviews.mine?.status)
+    }
+
+    @Test
     fun `opting out clears warm cache and reconnect does not resurrect it`() = runTest {
         val services = FakeBackendGate(true)
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(services, api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         repository.reviews(100001)
         assertNotNull(repository.cachedReviews(100001))
 
@@ -241,7 +287,7 @@ class TeacherReviewsRepositoryImplTest {
     fun `direct disabled gate clears caches before the observer runs`() = runTest {
         val services = FakeBackendGate(true)
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(services, api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         repository.reviews(100001)
 
         services.optedIn.value = false
@@ -256,7 +302,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `clearing session data forgets cached reviews`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         repository.reviews(100001)
         assertNotNull(repository.cachedReviews(100001))
 
@@ -269,7 +315,7 @@ class TeacherReviewsRepositoryImplTest {
     fun `pending responses cannot report success or restore cache after opting out`() = runTest {
         val services = FakeBackendGate(true)
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(services, api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         repository.reviews(100001)
         val gate = ResponseGate()
         api.beforeResponse = gate::await
@@ -287,8 +333,8 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `pre-disconnect responses cannot replace fresh reviews after reconnect`() = runTest {
         val services = FakeBackendGate(true)
-        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
-        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val api = FakeTeacherReviewsApi().apply { result = result.copy(reviews = listOf(review(1))) }
+        val repository = TeacherReviewsRepositoryImpl(services, api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val gate = ResponseGate()
         api.beforeResponse = gate::await
         val pending = async { repository.reviews(100001) }
@@ -300,19 +346,19 @@ class TeacherReviewsRepositoryImplTest {
         assertNull(repository.cachedReviews(100001))
 
         api.beforeResponse = {}
-        api.result = api.result!!.copy(reviews = listOf(review(2)))
+        api.result = api.result.copy(reviews = listOf(review(2)))
         val fresh = (repository.reviews(100001) as AppResult.Success).value
         gate.open()
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), pending.await())
         assertEquals(fresh, repository.cachedReviews(100001))
-        assertEquals(UUID(0, 2).toString(), fresh.reviews.single().id)
+        assertEquals(Uuid.fromLongs(0, 2).toString(), fresh.reviews.single().id)
     }
 
     @Test
     fun `pre-clear responses cannot replace fresh session cache`() = runTest {
-        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val api = FakeTeacherReviewsApi().apply { result = result.copy(reviews = listOf(review(1))) }
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val gate = ResponseGate()
         api.beforeResponse = gate::await
         val pending = async { repository.reviews(100001) }
@@ -320,7 +366,7 @@ class TeacherReviewsRepositoryImplTest {
 
         repository.clearSessionData()
         api.beforeResponse = {}
-        api.result = api.result!!.copy(reviews = listOf(review(2)))
+        api.result = api.result.copy(reviews = listOf(review(2)))
         val fresh = (repository.reviews(100001) as AppResult.Success).value
         gate.open()
 
@@ -334,7 +380,7 @@ class TeacherReviewsRepositoryImplTest {
         val gate = CompletableDeferred<Unit>()
         services.beforeAnswer = { gate.await() }
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(services, api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val pending = async(start = CoroutineStart.UNDISPATCHED) { repository.reviews(100001) }
         runCurrent()
         assertEquals(0, api.calls)
@@ -349,7 +395,7 @@ class TeacherReviewsRepositoryImplTest {
     fun `a suspended enabled read cannot reach Backend after disconnect and reconnect`() = runTest {
         val services = FakeBackendGate(true)
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(services, api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         runCurrent()
         val gate = CompletableDeferred<Unit>()
         services.beforeAnswer = { gate.await() }
@@ -370,7 +416,7 @@ class TeacherReviewsRepositoryImplTest {
     fun `a suspended disabled read cannot clear newer connected reviews`() = runTest {
         val services = FakeBackendGate(false)
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(services, api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         runCurrent()
         val gate = CompletableDeferred<Unit>()
         services.beforeAnswer = { gate.await() }
@@ -391,7 +437,7 @@ class TeacherReviewsRepositoryImplTest {
     fun `session cleanup invalidates a suspended opt-in read before the API call`() = runTest {
         val services = FakeBackendGate(true)
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(services, api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         runCurrent()
         val gate = CompletableDeferred<Unit>()
         services.beforeAnswer = { gate.await() }
@@ -408,7 +454,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `request cancellation remains cancellation`() = runTest {
         val api = FakeTeacherReviewsApi().apply { failure = CancellationException("Synthetic cancellation") }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         try {
             repository.reviews(100001)
@@ -421,37 +467,37 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `maps own community reviews copies own review and viewer capabilities`() = runTest {
         val author = UserData(100002, " Автор Отзыва ", null, listOf(GroupData("M3234", 2, "ФИТиП")),
-            UserCapabilities(canViewSchedule = true, canViewSport = false))
+            UserCapabilities(canViewSchedule = true, canViewSport = false, canViewFriends = false))
         val api = FakeTeacherReviewsApi().apply {
-            result = result!!.copy(
+            result = result.copy(
                 reviews = listOf(
-                    community(1).copy(verified = true, author = author, writtenOn = LocalDate.of(2026, 9, 12), score = 3, myVote = 1),
+                    community(1).copy(verified = true, author = author, writtenOn = LocalDate(2026, 9, 12), score = 3, myVote = 1),
                     community(2).copy(reportedByMe = true, myVote = -1),
                     review(3).copy(sourceTitle = " Отзывы ПИ ", sourceLink = "https://example.test/review/3"),
                     review(4).copy(sourceLink = "http://example.test/review/4", writtenBeforeYear = 2023),
                 ),
-                mine = WireOwnReview(UUID(0, 9), " Предмет ", " Мой отзыв ", false, TeacherReviewStatus.REJECTED,
-                    " Грубость ", 2, true, LocalDate.of(2026, 9, 20)),
+                mine = WireOwnReview(Uuid.fromLongs(0, 9), " Предмет ", " Мой отзыв ", false, TeacherReviewStatus.REJECTED,
+                    " Грубость ", 2, true, LocalDate(2026, 9, 20)),
                 canWrite = true, canVote = true, canReport = false, knownTeacher = true,
             )
         }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         val reviews = (repository.reviews(100001) as AppResult.Success).value
 
         assertEquals(listOf(
-            TeacherReview(UUID(0, 1).toString(), null, ReviewDate.Month(YearMonth(2026, 9)), "Отзыв 1", 3, 1,
+            TeacherReview(Uuid.fromLongs(0, 1).toString(), null, ReviewDate.Month(YearMonth(2026, 9)), "Отзыв 1", 3, 1,
                 ReviewOrigin.Community(verified = true, author = author.toUserSummary(), reportedByMe = false)),
-            TeacherReview(UUID(0, 2).toString(), null, null, "Отзыв 2", 0, -1,
+            TeacherReview(Uuid.fromLongs(0, 2).toString(), null, null, "Отзыв 2", 0, -1,
                 ReviewOrigin.Community(verified = false, author = null, reportedByMe = true)),
-            TeacherReview(UUID(0, 3).toString(), null, null, "Отзыв 3", 0, 0,
+            TeacherReview(Uuid.fromLongs(0, 3).toString(), null, null, "Отзыв 3", 0, 0,
                 ReviewOrigin.Reviews("Отзывы ПИ", "https://example.test/review/3")),
-            TeacherReview(UUID(0, 4).toString(), null, ReviewDate.BeforeYear(2023), "Отзыв 4", 0, 0,
+            TeacherReview(Uuid.fromLongs(0, 4).toString(), null, ReviewDate.BeforeYear(2023), "Отзыв 4", 0, 0,
                 ReviewOrigin.Reviews(null, PROVIDER_URL)),
         ), reviews.reviews)
         assertEquals("Автор Отзыва", (reviews.reviews[0].origin as ReviewOrigin.Community).author?.name)
         val mine = checkNotNull(reviews.mine)
-        assertEquals(UUID(0, 9).toString(), mine.id)
+        assertEquals(Uuid.fromLongs(0, 9).toString(), mine.id)
         assertEquals("Предмет", mine.subject)
         assertEquals("Мой отзыв", mine.text)
         assertFalse(mine.anonymous)
@@ -466,9 +512,9 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `save sends cleaned content and sorted flows and publishes the answer`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val updates = collectUpdates(repository)
-        api.result = api.result!!.copy(mine = ownWire())
+        api.result = api.result.copy(mine = ownWire())
 
         val result = repository.save(100001, TeacherReviewDraft(" Матанализ ", "  $VALID_TEXT\r\nВторая строка ", false, setOf(30, 10, 20)))
 
@@ -483,7 +529,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `save sends a blank subject as null and at most fifty flows`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         repository.save(100001, TeacherReviewDraft("   ", VALID_TEXT, true, (60L downTo 1L).toSet()))
 
@@ -496,9 +542,9 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `delete vote and report call their routes with the review UUID`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val updates = collectUpdates(repository)
-        val id = UUID(0, 7)
+        val id = Uuid.fromLongs(0, 7)
 
         assertTrue(repository.delete(100001) is AppResult.Success)
         assertTrue(repository.vote(100001, id.toString(), 1) is AppResult.Success)
@@ -518,8 +564,8 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `mutations without the opt-in never call Backend`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(false), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
-        val id = UUID(0, 7).toString()
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(false), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val id = Uuid.fromLongs(0, 7).toString()
 
         val results = listOf(
             repository.save(100001, TeacherReviewDraft(null, VALID_TEXT, true, emptySet())),
@@ -535,8 +581,8 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `invalid input fails before the network`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
-        val id = UUID(0, 7).toString()
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val id = Uuid.fromLongs(0, 7).toString()
 
         val results = listOf(
             repository.save(100001, TeacherReviewDraft(null, "a".repeat(29), true, emptySet())),
@@ -556,7 +602,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `limits count code points like Backend`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val emoji = "\uD83D\uDE00"
 
         assertTrue(repository.save(100001, TeacherReviewDraft(emoji.repeat(200), emoji.repeat(3000), true, emptySet())) is AppResult.Success)
@@ -567,15 +613,15 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `restricted and network failures keep the cache and publish nothing`() = runTest {
-        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val api = FakeTeacherReviewsApi().apply { result = result.copy(reviews = listOf(review(1))) }
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val cached = (repository.reviews(100001) as AppResult.Success).value
         val updates = collectUpdates(repository)
-        api.result = api.result!!.copy(reviews = emptyList())
+        api.result = api.result.copy(reviews = emptyList())
 
-        api.failure = HttpException(Response.error<Any>(403, """{"error":{"code":"restricted"}}""".toResponseBody()))
-        assertEquals(AppResult.Failure(AppError.Restricted), repository.vote(100001, UUID(0, 1).toString(), 1))
-        api.failure = IOException("Synthetic offline response")
+        api.failure = BackendException.Forbidden("restricted")
+        assertEquals(AppResult.Failure(AppError.Restricted), repository.vote(100001, Uuid.fromLongs(0, 1).toString(), 1))
+        api.failure = BackendException.Transport(IOException("Synthetic offline response"))
         assertEquals(AppResult.Failure(AppError.Network), repository.save(100001, TeacherReviewDraft(null, VALID_TEXT, true, emptySet())))
 
         runCurrent()
@@ -587,7 +633,7 @@ class TeacherReviewsRepositoryImplTest {
     fun `a mutation answer after opting out reaches neither cache nor updates`() = runTest {
         val services = FakeBackendGate(true)
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(services, api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val updates = collectUpdates(repository)
         val gate = ResponseGate()
         api.beforeResponse = gate::await
@@ -609,11 +655,11 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `a mutation answer after session cleanup reaches neither cache nor updates`() = runTest {
         val api = FakeTeacherReviewsApi()
-        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val updates = collectUpdates(repository)
         val gate = ResponseGate()
         api.beforeResponse = gate::await
-        val pending = async { repository.vote(100001, UUID(0, 1).toString(), -1) }
+        val pending = async { repository.vote(100001, Uuid.fromLongs(0, 1).toString(), -1) }
         gate.entered.await()
 
         repository.clearSessionData()
@@ -633,10 +679,10 @@ class TeacherReviewsRepositoryImplTest {
 
     private fun community(number: Int) = review(number).copy(kind = TeacherReviewKind.COMMUNITY)
 
-    private fun ownWire() = WireOwnReview(UUID(0, 9), null, VALID_TEXT, true, TeacherReviewStatus.PENDING, null, 0, false,
-        LocalDate.of(2026, 9, 29))
+    private fun ownWire() = WireOwnReview(Uuid.fromLongs(0, 9), null, VALID_TEXT, true, TeacherReviewStatus.PENDING, null, 0, false,
+        LocalDate(2026, 9, 29))
 
-    private fun review(number: Int) = WireReview(UUID(0, number.toLong()), TeacherReviewKind.REVIEWS, null, null, null,
+    private fun review(number: Int) = WireReview(Uuid.fromLongs(0, number.toLong()), TeacherReviewKind.REVIEWS, null, null, null,
         "Отзыв $number", 0, 0, false, false, null, null, null)
 
     private fun TeacherReview.source() = origin as ReviewOrigin.Reviews
@@ -659,7 +705,6 @@ class TeacherReviewsRepositoryImplTest {
         generatedAt = Instant.parse("2026-09-29T03:00:00Z"),
     )
 
-
     private class ResponseGate {
         val entered = CompletableDeferred<Unit>()
         private val release = CountDownLatch(1)
@@ -672,8 +717,8 @@ class TeacherReviewsRepositoryImplTest {
         fun open() = release.countDown()
     }
 
-    private class FakeTeacherReviewsApi {
-        var result: WireTeacherReviews? = WireTeacherReviews(100001, PROVIDER_URL, emptyList(), null, false, false, false, false)
+    private class FakeTeacherReviewsApi : TeacherReviewsApi {
+        var result = WireTeacherReviews(100001, PROVIDER_URL, emptyList(), null, false, false, false, false, null)
         var failure: Exception? = null
         var beforeResponse: () -> Unit = {}
         val requestedIsus = CopyOnWriteArrayList<Int>()
@@ -681,32 +726,44 @@ class TeacherReviewsRepositoryImplTest {
         private val callCount = AtomicInteger()
         val calls: Int get() = callCount.get()
 
-        val instance: ItmoWidgetsApi = Proxy.newProxyInstance(
-            ItmoWidgetsApi::class.java.classLoader,
-            arrayOf(ItmoWidgetsApi::class.java),
-        ) { proxy, method, arguments ->
-            when (method.name) {
-                "equals" -> return@newProxyInstance proxy === arguments?.firstOrNull()
-                "hashCode" -> return@newProxyInstance System.identityHashCode(proxy)
-                "toString" -> return@newProxyInstance "FakeReviewsApi"
-            }
-            check(method.name in ROUTES) { "Unexpected ItmoWidgetsApi call: ${method.name}" }
+        override suspend fun teacherReviews(isu: Int): WireTeacherReviews {
+            requestedIsus += isu
+            return answer()
+        }
+
+        override suspend fun saveMyTeacherReview(isu: Int, request: SaveTeacherReviewRequest) =
+            record("saveMyTeacherReview", isu, request)
+
+        override suspend fun deleteMyTeacherReview(isu: Int) = record("deleteMyTeacherReview", isu)
+
+        override suspend fun voteTeacherReview(id: Uuid, request: ResourceVoteRequest) =
+            record("voteTeacherReview", id, request)
+
+        override suspend fun reportTeacherReview(id: Uuid, request: ModerationReportRequest) =
+            record("reportTeacherReview", id, request)
+
+        override suspend fun teacherSummaryLevels(isus: List<Int>): List<TeacherSummaryLevel> =
+            throw AssertionError("Reviews never ask for levels")
+
+        private fun record(method: String, vararg arguments: Any): WireTeacherReviews {
+            requests += Request(method, arguments.toList())
+            return answer()
+        }
+
+        private fun answer(): WireTeacherReviews {
             callCount.incrementAndGet()
-            if (method.name == "teacherReviews") requestedIsus += arguments[0] as Int
-            else requests += Request(method.name, arguments.dropLast(1))
             failure?.let { throw it }
-            val response = ApiResponse.success(result)
+            val response = result
             beforeResponse()
-            response
-        } as ItmoWidgetsApi
+            return response
+        }
     }
 
-    /** A mutation route with its arguments, without the continuation. */
+    /** A mutation route with its arguments. */
     private data class Request(val method: String, val arguments: List<Any?>)
 
     private companion object {
         const val PROVIDER_URL = "https://onetwozzzplus.github.io/reviews/#/teacher/100001"
         const val VALID_TEXT = "Понятно объясняет материал и отвечает на вопросы."
-        val ROUTES = setOf("teacherReviews", "saveMyTeacherReview", "deleteMyTeacherReview", "voteTeacherReview", "reportTeacherReview")
     }
 }

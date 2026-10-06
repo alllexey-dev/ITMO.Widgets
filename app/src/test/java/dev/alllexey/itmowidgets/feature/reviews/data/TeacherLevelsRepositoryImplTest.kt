@@ -6,14 +6,17 @@ import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.reviews.SummaryLevel
-import dev.alllexey.itmowidgets.core.model.reviews.TeacherSummaryLevel
+import dev.alllexey.itmowidgets.client.common.ModerationReportRequest
+import dev.alllexey.itmowidgets.client.common.ResourceVoteRequest
+import dev.alllexey.itmowidgets.client.error.BackendException
+import dev.alllexey.itmowidgets.client.reviews.SaveTeacherReviewRequest
+import dev.alllexey.itmowidgets.client.reviews.SummaryLevel
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsResponse
+import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import java.io.File
 import java.io.IOException
-import java.lang.reflect.Proxy
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.test.runTest
 import okio.Path.Companion.toOkioPath
@@ -30,6 +33,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class TeacherLevelsRepositoryImplTest {
 
@@ -59,7 +63,7 @@ class TeacherLevelsRepositoryImplTest {
     }
 
     private fun repository(demo: DemoMode = noDemo()) =
-        TeacherLevelsRepositoryImpl(services, api.instance, TeacherLevelsFileStore(directory.toOkioPath()), clock, demo, dispatchers)
+        TeacherLevelsRepositoryImpl(services, api, TeacherLevelsFileStore(directory.toOkioPath()), clock, demo, dispatchers)
 
     @Test
     fun `a disabled opt-in answers nothing without a request and erases the file`() = runTest {
@@ -140,6 +144,17 @@ class TeacherLevelsRepositoryImplTest {
     }
 
     @Test
+    fun `a tone this app does not know is remembered as no level`() = runTest {
+        api.levels[100001] = SummaryLevel.UNKNOWN
+        api.levels[100002] = SummaryLevel.NEGATIVE
+        val repository = repository()
+
+        assertEquals(mapOf(100002 to TeacherLevel.NEGATIVE), repository.levels(setOf(100001, 100002)))
+        assertEquals(mapOf(100002 to TeacherLevel.NEGATIVE), repository.levels(setOf(100001, 100002)))
+        assertEquals(1, api.requests.size)
+    }
+
+    @Test
     fun `an ISU outside the asked batch in the reply is ignored`() = runTest {
         api.extra = TeacherSummaryLevel(100009, SummaryLevel.VERY_NEGATIVE)
         val repository = repository()
@@ -157,7 +172,7 @@ class TeacherLevelsRepositoryImplTest {
         repository.levels(setOf(100001))
         val written = file.readText()
 
-        api.failure = IOException("Synthetic offline response")
+        api.failure = BackendException.Transport(IOException("Synthetic offline response"))
         assertEquals(mapOf(100001 to TeacherLevel.POSITIVE), repository.levels(setOf(100001, 100002)))
         assertEquals(written, file.readText())
 
@@ -204,29 +219,26 @@ class TeacherLevelsRepositoryImplTest {
         override fun now(): Instant = now
     }
 
-    private class FakeTeacherLevelsApi {
+    private class FakeTeacherLevelsApi : TeacherReviewsApi {
         val levels = mutableMapOf<Int, SummaryLevel>()
         val requests = CopyOnWriteArrayList<List<Int>>()
         var failure: Exception? = null
         var extra: TeacherSummaryLevel? = null
         var beforeResponse: () -> Unit = {}
 
-        @Suppress("UNCHECKED_CAST")
-        val instance: ItmoWidgetsApi = Proxy.newProxyInstance(
-            ItmoWidgetsApi::class.java.classLoader,
-            arrayOf(ItmoWidgetsApi::class.java),
-        ) { proxy, method, arguments ->
-            when (method.name) {
-                "equals" -> return@newProxyInstance proxy === arguments?.firstOrNull()
-                "hashCode" -> return@newProxyInstance System.identityHashCode(proxy)
-                "toString" -> return@newProxyInstance "FakeLevelsApi"
-            }
-            check(method.name == "teacherSummaryLevels") { "Unexpected ItmoWidgetsApi call: ${method.name}" }
-            val isus = arguments[0] as List<Int>
+        override suspend fun teacherSummaryLevels(isus: List<Int>): List<TeacherSummaryLevel> {
             requests += isus
             failure?.let { throw it }
             beforeResponse()
-            ApiResponse.success(isus.mapNotNull { isu -> levels[isu]?.let { TeacherSummaryLevel(isu, it) } } + listOfNotNull(extra))
-        } as ItmoWidgetsApi
+            return isus.mapNotNull { isu -> levels[isu]?.let { TeacherSummaryLevel(isu, it) } } + listOfNotNull(extra)
+        }
+
+        override suspend fun teacherReviews(isu: Int): TeacherReviewsResponse = unexpected()
+        override suspend fun saveMyTeacherReview(isu: Int, request: SaveTeacherReviewRequest): TeacherReviewsResponse = unexpected()
+        override suspend fun deleteMyTeacherReview(isu: Int): TeacherReviewsResponse = unexpected()
+        override suspend fun voteTeacherReview(id: Uuid, request: ResourceVoteRequest): TeacherReviewsResponse = unexpected()
+        override suspend fun reportTeacherReview(id: Uuid, request: ModerationReportRequest): TeacherReviewsResponse = unexpected()
+
+        private fun unexpected(): Nothing = throw AssertionError("Levels ask only for summary levels")
     }
 }

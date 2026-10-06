@@ -1,16 +1,15 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.common.ModerationReportRequest
+import dev.alllexey.itmowidgets.client.common.ResourceVoteRequest
+import dev.alllexey.itmowidgets.client.reviews.SaveTeacherReviewRequest
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsResponse
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.reviews.data.demo.DemoReviews
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.resources.ModerationReportRequest
-import dev.alllexey.itmowidgets.core.model.resources.ResourceVoteRequest
-import dev.alllexey.itmowidgets.core.model.reviews.SaveTeacherReviewRequest
-import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewsResponse
 import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -31,12 +30,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
 
 @Singleton
 class TeacherReviewsRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val api: TeacherReviewsApi,
     @param:ApplicationScope private val scope: CoroutineScope,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
@@ -67,7 +65,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
             return AppResult.Success(reviews)
         }
         val generation = beginRequest() ?: return AppResult.Failure(AppError.CustomServicesDisabled)
-        val result = call(generation) { widgetsApi.teacherReviews(isu) }
+        val result = call(generation) { api.teacherReviews(isu) }
         return synchronized(cacheLock) {
             if (!isCurrent(generation)) AppResult.Failure(AppError.CustomServicesDisabled)
             else result.also { if (it is AppResult.Success) cache[isu] = it.value }
@@ -78,15 +76,15 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
 
     override suspend fun save(isu: Int, draft: TeacherReviewDraft): AppResult<TeacherReviews> {
         val request = draft.toRequest() ?: return invalidInput()
-        return mutate { widgetsApi.saveMyTeacherReview(isu, request) }
+        return mutate { api.saveMyTeacherReview(isu, request) }
     }
 
-    override suspend fun delete(isu: Int): AppResult<TeacherReviews> = mutate { widgetsApi.deleteMyTeacherReview(isu) }
+    override suspend fun delete(isu: Int): AppResult<TeacherReviews> = mutate { api.deleteMyTeacherReview(isu) }
 
     override suspend fun vote(isu: Int, reviewId: String, value: Int): AppResult<TeacherReviews> {
         val id = reviewId.toWireId()
         if (id == null || value !in -1..1) return invalidInput()
-        return mutate { widgetsApi.voteTeacherReview(id, ResourceVoteRequest(value)) }
+        return mutate { api.voteTeacherReview(id, ResourceVoteRequest(value)) }
     }
 
     override suspend fun report(
@@ -98,7 +96,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
         val id = reviewId.toWireId() ?: return invalidInput()
         val note = comment?.trim()?.takeIf(String::isNotEmpty)
         if (note != null && TeacherReviewLimits.length(note) > TeacherReviewLimits.MAX_COMMENT) return invalidInput()
-        return mutate { widgetsApi.reportTeacherReview(id, ModerationReportRequest(reason.toWire(), note)) }
+        return mutate { api.reportTeacherReview(id, ModerationReportRequest(reason.toWire(), note)) }
     }
 
     override suspend fun clearSessionData() {
@@ -133,7 +131,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
     }
 
     /** The answer lands in the cache and in [updates] only while the generation it was sent in is current. */
-    private suspend fun mutate(block: suspend () -> ApiResponse<TeacherReviewsResponse>): AppResult<TeacherReviews> {
+    private suspend fun mutate(block: suspend () -> TeacherReviewsResponse): AppResult<TeacherReviews> {
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         val generation = beginRequest() ?: return AppResult.Failure(AppError.CustomServicesDisabled)
         val result = call(generation, block)
@@ -149,13 +147,10 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
 
     private suspend fun call(
         generation: Long,
-        block: suspend () -> ApiResponse<TeacherReviewsResponse>,
+        block: suspend () -> TeacherReviewsResponse,
     ): AppResult<TeacherReviews> = withContext(dispatchers.io) {
         if (!isCurrent(generation)) return@withContext AppResult.Failure(AppError.CustomServicesDisabled)
-        appResultOf {
-            val reviews = checkNotNull(block().data) { "Backend returned no reviews" }
-            reviews.toModel()
-        }
+        appResultOf { block().toModel() }
     }
 
     private fun TeacherReviewDraft.toRequest(): SaveTeacherReviewRequest? {
@@ -172,7 +167,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun String.toWireId() = Uuid.parseOrNull(this)?.toJavaUuid()
+    private fun String.toWireId() = Uuid.parseOrNull(this)
 
     private fun invalidInput(): AppResult<TeacherReviews> = AppResult.Failure(AppError.Unknown())
 }
