@@ -653,16 +653,14 @@ settings, and restore them if a separate test explicitly changes them.
 - Avatar image failure: `core/ui/AvatarView.kt` keeps current initials ready and
   guards the posted Glide fallback against a newer binding or successful load.
 - Friend picker: `res/layout/dialog_friend_selector.xml`.
-- Home feed: `res/layout/fragment_home.xml`, `res/layout/item_home_*.xml`,
-  `feature/home/ui/HomeFeedAdapter.kt`, `feature/home/HomeFeedVisualTest.kt`.
-  `res/layout/item_home_schedule_changes.xml` is a `Card.Content` that closes:
-  a header with `ic_edit_calendar` in `colorPrimary`, the title, the count
-  badge (`bg_home_badge`) and a trailing 48 dp close button, then the headline
-  of the latest change wrapping without truncation; the whole card opens the
-  history. `res/layout/item_home_marks.xml` has the same geometry with
-  `ic_menu_book`, `Новые оценки`, the number of subjects and `Прочитано`; its
-  body is the list of names, wrapping without truncation, and the whole card
-  opens the recordbook.
+- Home feed: Compose in `:shared:feature-home`
+  (`feature/home/ui/HomeScreen.kt`, `feature/home/ui/HomeCards.kt`), see
+  [Home and quick actions](features/home.md#feed). The schedule changes and
+  new marks cards are `Card.Content` cards that close: a header with
+  `ic_edit_calendar` (`ic_menu_book`) in `primary`, the title, the count
+  `Pill` and a trailing 48 dp close button, then the headline (the subject
+  names) wrapping without truncation; the whole card opens the history (the
+  recordbook).
 - Schedule changes: the history row `res/layout/item_schedule_change.xml`
   (`Card.Content`, not clickable: subject with an 8 dp `colorPrimary` dot for a
   new change, the main line, one `item_schedule_change_line.xml` per changed

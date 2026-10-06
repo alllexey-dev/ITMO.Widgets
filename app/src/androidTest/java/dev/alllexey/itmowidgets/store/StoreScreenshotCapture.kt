@@ -26,6 +26,8 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.toBundle
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.feature.home.HomeSemantics
+import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestSession
@@ -72,7 +74,7 @@ class StoreScreenshotCapture {
 
             frame(activity, "01-home")
             // Scrolled to the end, the feed's FAB clearance keeps the last cards clear of the quick actions.
-            open(scenario) { main -> main.findViewById<RecyclerView>(R.id.home_feed).scrollBy(0, FEED_END_PX) }
+            open(scenario) { main -> HomeSemantics.scrollBy(HomeSemantics.feedRoot(main), HomeTestTags.FEED, FEED_END_PX) }
             frame(activity, "01-home-end")
 
             open(scenario) { it.openRoot(AppRoot.SCHEDULE) }
@@ -192,7 +194,7 @@ class StoreScreenshotCapture {
         const val TOAST_MILLIS = 4_000L
         const val MIN_TEXTS = 6
         const val REVIEWS_SCROLL_DP = 420
-        const val FEED_END_PX = 10_000
+        const val FEED_END_PX = 10_000f
         const val TEST_WORDING = "Тест"
     }
 }

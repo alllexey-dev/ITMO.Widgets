@@ -5,22 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.navigation.SettingsScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
-import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaZone
-import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openLessonDetails
@@ -32,34 +21,21 @@ import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
 import dev.alllexey.itmowidgets.core.ui.permission.openNotificationSettingsIfLocked
 import dev.alllexey.itmowidgets.core.ui.permission.requestNotifications
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
-import dev.alllexey.itmowidgets.databinding.FragmentHomeBinding
-import dev.alllexey.itmowidgets.feature.home.presentation.HomeEvent
-import dev.alllexey.itmowidgets.feature.home.presentation.HomeUiState
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
-import javax.inject.Inject
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/**
+ * The home tab (`navigation_home`), kept by name for the main graph. The feed is `HomeRoute` from
+ * `:shared:feature-home`; this host keeps what only Android does: navigation through `AppNavigator`, the widget pin,
+ * the notification permission and the services settings page. Its ViewModel is the route's: Koin's, in this
+ * Fragment's store, never Hilt's default factory.
+ */
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
-    // region Binding
-
-    private var _binding: FragmentHomeBinding? = null
-    private val binding get() = _binding!!
-
-    // endregion
-
-    // region State
-
     private val viewModel: HomeViewModel by viewModel()
-    private var adapter: HomeFeedAdapter? = null
     private var pinRequester: WidgetPinRequester? = null
-    private var feedbackSnackbar: Snackbar? = null
-
-    @Inject
-    lateinit var timeProvider: AcademicTimeProvider
 
     private val notificationPermissionLauncher =
         registerForActivityResult(RequestNotificationPermission()) { granted ->
@@ -67,9 +43,18 @@ class HomeFragment : Fragment() {
             viewModel.onScreenResumed()
         }
 
-    // endregion
-
-    // region Lifecycle
+    private val actions = HomeActions(
+        onLesson = { openLessonDetails(it) },
+        onPendingSport = { openPendingSportDetails(it) },
+        onOpenSport = { openRoot(AppRoot.SPORT) },
+        onOpenFriends = { openScreen(AppScreen.FRIENDS) },
+        onOpenUser = { openUserProfile(it) },
+        onHint = { actOnHint(it) },
+        onOpenScheduleChanges = { openScreen(AppScreen.SCHEDULE_CHANGES) },
+        onOpenMarks = { openRoot(AppRoot.RECORDBOOK) },
+        onOpenWeb = { openScreen(AppScreen.MY_ITMO_WEB) },
+        onOpenQr = { openScreen(AppScreen.QR_PASS) },
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,127 +62,13 @@ class HomeFragment : Fragment() {
         pinRequester = WidgetPinRequester(requireContext()).also { it.start { viewModel.onScreenResumed() } }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setupFeed()
-        setupListeners()
-        setupObservers()
-        viewModel.ensureDataLoaded()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.onScreenResumed()
-    }
-
-    override fun onPause() {
-        feedbackSnackbar?.dismiss()
-        super.onPause()
-    }
-
-    override fun onDestroyView() {
-        feedbackSnackbar = null
-        adapter = null
-        super.onDestroyView()
-        _binding = null
-    }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        itmoComposeView { HomeRoute(actions, viewModel) }
 
     override fun onDestroy() {
         pinRequester?.stop()
         pinRequester = null
         super.onDestroy()
-    }
-
-    // endregion
-
-    // region Setup
-
-    private fun setupFeed() {
-        val feed = HomeFeedAdapter(
-            actions = HomeFeedActions(
-                onLesson = ::openLessonDetails,
-                onPendingSport = ::openPendingSportDetails,
-                onOpenSport = { openRoot(AppRoot.SPORT) },
-                onOpenFriends = { openScreen(AppScreen.FRIENDS) },
-                onOpenUser = { user ->
-                    openUserProfile(user.isu)
-                },
-                onHint = ::actOnHint,
-                onDismissHint = viewModel::dismissHint,
-                onOpenScheduleChanges = { openScreen(AppScreen.SCHEDULE_CHANGES) },
-                onDismissScheduleChanges = { viewModel.dismissCard(HomeCardKind.SCHEDULE_CHANGES) },
-                onOpenMarks = { openRoot(AppRoot.RECORDBOOK) },
-                onDismissMarks = { viewModel.dismissCard(HomeCardKind.MARKS) }
-            ),
-            zoneId = timeProvider.javaZone()
-        )
-        adapter = feed
-        binding.homeFeed.adapter = feed
-        binding.homeFeed.itemAnimator = null
-        binding.swipeRefresh.applyAppRefreshColors()
-    }
-
-    private fun setupListeners() {
-        binding.swipeRefresh.setOnRefreshListener { viewModel.refresh(RefreshMode.Pull) }
-        binding.webFab.setOnClickListener { openScreen(AppScreen.MY_ITMO_WEB) }
-        binding.qrFab.setOnClickListener { openScreen(AppScreen.QR_PASS) }
-    }
-
-    private fun setupObservers() {
-        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
-            .onEach { state ->
-                when (state) {
-                    HomeUiState.Loading -> showLoading()
-                    is HomeUiState.Content -> showContent(state)
-                }
-            }
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.RESUMED)
-            .onEach { event ->
-                when (event) {
-                    is HomeEvent.RefreshFailed -> showFeedback()
-                }
-            }
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    // endregion
-
-    // region UI
-
-    private fun showLoading() {
-        binding.loading.isVisible = true
-        binding.homeFeed.isVisible = false
-        binding.emptyState.isVisible = false
-        binding.swipeRefresh.isRefreshing = false
-    }
-
-    private fun showContent(state: HomeUiState.Content) {
-        binding.loading.isVisible = false
-        binding.swipeRefresh.isRefreshing = state.refreshing
-        val rendered = binding
-        adapter?.submitCards(state.cards) {
-            if (_binding !== rendered) return@submitCards
-            rendered.homeFeed.isVisible = state.cards.isNotEmpty()
-            rendered.emptyState.isVisible = state.cards.isEmpty()
-        }
-    }
-
-    private fun showFeedback() {
-        feedbackSnackbar?.dismiss()
-        feedbackSnackbar = Snackbar.make(binding.root, R.string.common_partial_load_error, Snackbar.LENGTH_LONG)
-            .setAnchorView(binding.quickActions)
-            .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Pull) }
-            .also(Snackbar::show)
     }
 
     private fun actOnHint(hint: HomeHint) {
@@ -207,8 +78,6 @@ class HomeFragment : Fragment() {
             HomeHint.SERVICES -> openScreen(AppScreen.SETTINGS, bundleOf(SettingsScreenArgs.PAGE to SERVICES_PAGE))
         }
     }
-
-    // endregion
 
     private companion object {
         const val SERVICES_PAGE = "SERVICES"

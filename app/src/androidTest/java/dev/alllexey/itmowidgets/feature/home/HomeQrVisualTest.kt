@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.home
 
-import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
@@ -17,6 +16,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
+import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.qr.ui.QrPassTestTags
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.toSettingsNavigation
@@ -44,10 +44,10 @@ class HomeQrVisualTest {
                     settle()
                     capture("home-$index")
                     scenario.onActivity {
-                        val fab = it.findViewById<View>(R.id.qr_fab)
-                        assertTrue(fab.height >= 48 * it.resources.displayMetrics.density)
-                        assertEquals(it.getString(R.string.home_open_qr), fab.contentDescription)
-                        fab.performClick()
+                        val fab = HomeSemantics.node(it, HomeTestTags.QR_FAB)!!
+                        assertTrue(fab.size.height >= 48 * it.resources.displayMetrics.density)
+                        assertEquals("Открыть QR-пропуск", HomeSemantics.describedAs(fab))
+                        HomeSemantics.click(HomeSemantics.root(it), HomeTestTags.QR_FAB)
                     }
                     settle()
                     scenario.onActivity {
@@ -102,7 +102,7 @@ class HomeQrVisualTest {
                     settle()
                     scenario.onActivity {
                         assertNull(it.navigation.overlayHost)
-                        assertTrue(it.findViewById<View>(R.id.qr_fab).isShown)
+                        assertNotNull(HomeSemantics.node(it, HomeTestTags.QR_FAB))
                     }
                 }
             }

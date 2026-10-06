@@ -22,7 +22,7 @@ val hintCardsQualifier: Qualifier = named("hints")
 
 /**
  * The home feed definitions Koin constructs. The feed takes every Koin `HomeCardSource` (`getAll()`). The
- * `HomeLayoutPreferences` store, the services opt-in and the wall clock come from the app's `CoreBridge`, the
+ * `HomeLayoutPreferences` store, the services opt-in, the wall clock and the academic time come from the app's `CoreBridge`, the
  * device's `HomeHintStatus` from the platform (`HomeBridge` on Android).
  */
 val homeModule = module {
@@ -32,5 +32,5 @@ val homeModule = module {
     // replace the member and point it back without building a second source.
     singleOf(::HintHomeCardSource)
     single<HomeCardSource>(qualifier = hintCardsQualifier) { get<HintHomeCardSource>() }
-    viewModel<HomeViewModel> { HomeViewModel(getAll(), get(), get(), get()) }
+    viewModel<HomeViewModel> { HomeViewModel(getAll(), get(), get(), get(), get()) }
 }
