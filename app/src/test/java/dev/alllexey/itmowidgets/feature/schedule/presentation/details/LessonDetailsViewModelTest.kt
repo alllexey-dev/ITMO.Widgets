@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation.details
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
@@ -16,8 +17,10 @@ import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import kotlin.time.Instant
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -44,7 +47,7 @@ class LessonDetailsViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        assertEquals(LessonFriendsState.Disabled, viewModel.friends.value)
+        assertEquals(LessonFriendsState.Disabled, viewModel.uiState.value.friends)
         assertEquals(emptyList<Pair<Long, LocalDate>>(), repository.requests)
     }
 
@@ -57,22 +60,75 @@ class LessonDetailsViewModelTest {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            assertEquals(LessonFriendsState.Content(listOf(second, first)), viewModel.friends.value)
+            assertEquals(LessonFriendsState.Content(listOf(second, first)), viewModel.uiState.value.friends)
             assertEquals(listOf(42L to LocalDate(2026, 9, 8)), repository.requests)
         }
 
     @Test
-    fun `a failure is reported and retry asks again`() = runTest(mainDispatcherRule.dispatcher) {
+    fun `the silent first load shows the block loading`() = runTest(mainDispatcherRule.dispatcher) {
+        val answer = CompletableDeferred<AppResult<List<UserSummary>>>()
+        repository.handler = { answer.await() }
+        val viewModel = createViewModel()
+        runCurrent()
+        assertEquals(LessonFriendsState.Loading, viewModel.uiState.value.friends)
+
+        answer.complete(AppResult.Success(emptyList()))
+        advanceUntilIdle()
+        assertEquals(LessonFriendsState.Content(emptyList()), viewModel.uiState.value.friends)
+        assertEquals(1, repository.requests.size)
+    }
+
+    @Test
+    fun `a failure is reported and a forced retry shows progress and asks again`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            repository.result = AppResult.Failure(AppError.Network)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+            assertEquals(LessonFriendsState.Error(AppError.Network), viewModel.uiState.value.friends)
+
+            val answer = CompletableDeferred<AppResult<List<UserSummary>>>()
+            repository.handler = { answer.await() }
+            viewModel.refresh(RefreshMode.Force)
+            runCurrent()
+            assertEquals(LessonFriendsState.Loading, viewModel.uiState.value.friends)
+
+            answer.complete(AppResult.Success(emptyList()))
+            advanceUntilIdle()
+            assertEquals(LessonFriendsState.Content(emptyList()), viewModel.uiState.value.friends)
+            assertEquals(2, repository.requests.size)
+        }
+
+    @Test
+    fun `a pull during a refresh joins it instead of asking twice`() = runTest(mainDispatcherRule.dispatcher) {
+        val answer = CompletableDeferred<AppResult<List<UserSummary>>>()
+        repository.handler = { answer.await() }
+        val viewModel = createViewModel()
+        runCurrent()
+
+        viewModel.refresh(RefreshMode.Pull)
+        runCurrent()
+        answer.complete(AppResult.Success(emptyList()))
+        advanceUntilIdle()
+
+        assertEquals(LessonFriendsState.Content(emptyList()), viewModel.uiState.value.friends)
+        assertEquals(1, repository.requests.size)
+    }
+
+    @Test
+    fun `a failed silent refresh keeps the error without a progress flash`() = runTest(mainDispatcherRule.dispatcher) {
         repository.result = AppResult.Failure(AppError.Network)
         val viewModel = createViewModel()
         advanceUntilIdle()
-        assertEquals(LessonFriendsState.Error(AppError.Network), viewModel.friends.value)
 
-        repository.result = AppResult.Success(emptyList())
-        viewModel.retry()
+        val answer = CompletableDeferred<AppResult<List<UserSummary>>>()
+        repository.handler = { answer.await() }
+        viewModel.refresh(RefreshMode.Silent)
+        runCurrent()
+        assertEquals(LessonFriendsState.Error(AppError.Network), viewModel.uiState.value.friends)
+
+        answer.complete(AppResult.Failure(AppError.Network))
         advanceUntilIdle()
-
-        assertEquals(LessonFriendsState.Content(emptyList()), viewModel.friends.value)
+        assertEquals(LessonFriendsState.Error(AppError.Network), viewModel.uiState.value.friends)
         assertEquals(2, repository.requests.size)
     }
 
@@ -83,7 +139,7 @@ class LessonDetailsViewModelTest {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            assertEquals(LessonFriendsState.Disabled, viewModel.friends.value)
+            assertEquals(LessonFriendsState.Disabled, viewModel.uiState.value.friends)
         }
 
     @Test
@@ -92,7 +148,7 @@ class LessonDetailsViewModelTest {
         val viewModel = createViewModel(teacherIsu = 123456)
         advanceUntilIdle()
 
-        assertEquals(TeacherLevel.POSITIVE, viewModel.teacherLevel.value)
+        assertEquals(TeacherLevel.POSITIVE, viewModel.uiState.value.teacherLevel)
         assertEquals(listOf(setOf(123456)), levels.calls)
     }
 
@@ -101,7 +157,7 @@ class LessonDetailsViewModelTest {
         val viewModel = createViewModel(teacherIsu = 123456)
         advanceUntilIdle()
 
-        assertNull(viewModel.teacherLevel.value)
+        assertNull(viewModel.uiState.value.teacherLevel)
         assertEquals(listOf(setOf(123456)), levels.calls)
     }
 
@@ -114,8 +170,8 @@ class LessonDetailsViewModelTest {
         val withoutOptIn = createViewModel(teacherIsu = 123456)
         advanceUntilIdle()
 
-        assertNull(withoutIsu.teacherLevel.value)
-        assertNull(withoutOptIn.teacherLevel.value)
+        assertNull(withoutIsu.uiState.value.teacherLevel)
+        assertNull(withoutOptIn.uiState.value.teacherLevel)
         assertEquals(emptyList<Set<Int>>(), levels.calls)
     }
 
@@ -131,7 +187,7 @@ class LessonDetailsViewModelTest {
         val viewModel = createViewModel(changes = changes)
         advanceUntilIdle()
 
-        assertEquals(newer, viewModel.change.value)
+        assertEquals(newer, viewModel.uiState.value.change)
     }
 
     @Test
@@ -144,7 +200,7 @@ class LessonDetailsViewModelTest {
         val viewModel = createViewModel(changes = changes)
         advanceUntilIdle()
 
-        assertNull(viewModel.change.value)
+        assertNull(viewModel.uiState.value.change)
     }
 
     @Test
@@ -154,11 +210,11 @@ class LessonDetailsViewModelTest {
 
         val viewModel = createViewModel(changes = changes)
         advanceUntilIdle()
-        assertEquals(cancelled, viewModel.change.value)
+        assertEquals(cancelled, viewModel.uiState.value.change)
 
         changes.changes.value = emptyList()
         advanceUntilIdle()
-        assertNull(viewModel.change.value)
+        assertNull(viewModel.uiState.value.change)
     }
 
     private fun createViewModel(
@@ -182,10 +238,11 @@ class LessonDetailsViewModelTest {
 
     private class FakeLessonFriendsRepository : LessonFriendsRepository {
         var result: AppResult<List<UserSummary>> = AppResult.Success(emptyList())
+        var handler: suspend () -> AppResult<List<UserSummary>> = { result }
         val requests = mutableListOf<Pair<Long, LocalDate>>()
         override suspend fun friendsOnLesson(pairId: Long, date: LocalDate): AppResult<List<UserSummary>> {
             requests += pairId to date
-            return result
+            return handler()
         }
     }
 

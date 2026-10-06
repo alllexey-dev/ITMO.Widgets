@@ -17,6 +17,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.navigation.ScheduleTodayRequest
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
@@ -148,7 +149,7 @@ class ScheduleFragmentLifecycleTest {
             scenario.onActivity { activity ->
                 root = activity.schedule().requireView()
                 root.viewTreeObserver.addOnPreDrawListener(observer)
-                activity.viewModel().loadInitialSchedule(forceRefresh = true)
+                activity.viewModel().refresh(RefreshMode.Pull)
             }
             try {
                 eventually(scenario) { activity ->
@@ -183,7 +184,7 @@ class ScheduleFragmentLifecycleTest {
                 ScheduleLifecycleTestActivity.days.value = emptyList()
             }
             ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Failure(AppError.Network) }
-            scenario.onActivity { it.viewModel().loadInitialSchedule(forceRefresh = true) }
+            scenario.onActivity { it.viewModel().refresh(RefreshMode.Pull) }
             eventually(scenario) { activity ->
                 val state = activity.viewModel().uiState.value as ScheduleUiState.Content
                 assertFalse(state.loadingMore)
@@ -298,7 +299,7 @@ class ScheduleFragmentLifecycleTest {
             scenario.onActivity { activity ->
                 root = activity.schedule().requireView()
                 root.viewTreeObserver.addOnPreDrawListener(observer)
-                activity.viewModel().loadInitialSchedule(forceRefresh = true)
+                activity.viewModel().refresh(RefreshMode.Pull)
             }
             try {
                 eventually(scenario) { activity ->
@@ -377,7 +378,7 @@ class ScheduleFragmentLifecycleTest {
                 val request = CompletableDeferred<AppResult<Unit>>()
                 ScheduleLifecycleTestActivity.refreshOutcome = { request.await() }
                 try {
-                    scenario.onActivity { it.viewModel().loadInitialSchedule(forceRefresh = true) }
+                    scenario.onActivity { it.viewModel().refresh(RefreshMode.Pull) }
                     eventually(scenario) { activity ->
                         val current = activity.viewModel().uiState.value
                         assertTrue(current is ScheduleUiState.Content)
@@ -409,7 +410,7 @@ class ScheduleFragmentLifecycleTest {
                     }
                     ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Success(Unit) }
                     ScheduleLifecycleTestActivity.days.value = sampleDays()
-                    scenario.onActivity { it.viewModel().loadInitialSchedule(forceRefresh = true) }
+                    scenario.onActivity { it.viewModel().refresh(RefreshMode.Pull) }
                     eventually(scenario) { activity ->
                         assertEquals(30, activity.recycler().adapter!!.itemCount)
                         assertTrue(activity.recycler().isShown)
@@ -491,7 +492,7 @@ class ScheduleFragmentLifecycleTest {
                 // directly on main and release the barrier in that same action.
                 InstrumentationRegistry.getInstrumentation().runOnMainSync {
                     try {
-                        activity.viewModel().loadInitialSchedule()
+                        activity.viewModel().refresh(RefreshMode.Force)
                         assertEquals(ScheduleUiState.Error(AppError.Network, null), activity.viewModel().uiState.value)
                         assertEquals(30, activity.recycler().adapter!!.itemCount)
                     } finally {
@@ -527,7 +528,7 @@ class ScheduleFragmentLifecycleTest {
                 }
                 InstrumentationRegistry.getInstrumentation().runOnMainSync {
                     try {
-                        activity.viewModel().loadInitialSchedule()
+                        activity.viewModel().refresh(RefreshMode.Force)
                         assertEquals(ScheduleUiState.Loading(null), activity.viewModel().uiState.value)
                         assertEquals(30, activity.recycler().adapter!!.itemCount)
                     } finally {

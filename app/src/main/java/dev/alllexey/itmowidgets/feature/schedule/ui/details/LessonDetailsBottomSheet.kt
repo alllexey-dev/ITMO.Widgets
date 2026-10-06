@@ -32,6 +32,7 @@ import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.navigationArgs
 import dev.alllexey.itmowidgets.core.navigation.putNavigationArgs
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
@@ -49,6 +50,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsUiState
 import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonFriendsState
 import dev.alllexey.itmowidgets.feature.schedule.ui.colorRes
@@ -117,7 +119,6 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
             ),
             teacherIsu?.let { isu -> { openProfile(isu) } }
         ) { destination?.let(::openMap) }
-        showTeacherLevel(viewModel.teacherLevel.value)
         // The button is the link; only what the reader has to type or know is a fact.
         linkFact.bindFact(R.string.schedule_lesson_details_link, listOfNotNull(
             lesson.zoomInfo,
@@ -130,21 +131,19 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
 
         noteCard.isVisible = lesson.note != null
         note.text = lesson.note
-        friendsRetry.setOnClickListener { viewModel.retry() }
+        friendsRetry.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
 
-        viewModel.friends
+        render(viewModel.uiState.value)
+        viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach(::renderFriends)
+            .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.teacherLevel
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach(::showTeacherLevel)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-        showChange(viewModel.change.value)
-        viewModel.change
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach(::showChange)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    private fun render(state: LessonDetailsUiState) {
+        renderFriends(state.friends)
+        showTeacherLevel(state.teacherLevel)
+        showChange(state.change)
     }
 
     /** "было → стало" per changed field of the latest change; the block leaves when there is none. */
