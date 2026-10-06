@@ -8,11 +8,6 @@ AuthScreen_reauthentication
 AuthScreen_signing-in
 AuthScreen_token-dialog
 LoginScreen_error
-MeScreen_friends-error
-MeScreen_friends-loading
-MeScreen_group-requests
-MeScreen_long-name
-MeScreen_services-off
 MyItmoWebScreen_error
 OnboardingScreen_notifications-ask
 OnboardingScreen_notifications-denied

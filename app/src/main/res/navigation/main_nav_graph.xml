@@ -55,7 +55,6 @@
     <fragment
         android:id="@+id/navigation_me"
         android:name="dev.alllexey.itmowidgets.feature.me.ui.MeFragment"
-        android:label="Me"
-        tools:layout="@layout/fragment_me" />
+        android:label="Me" />
 
 </navigation>

@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.settings
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -11,7 +10,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.net.Uri
 import android.os.SystemClock
-import android.view.View
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -19,18 +17,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.canhub.cropper.CropImageView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
-import dev.alllexey.itmowidgets.core.session.CurrentUser
-import dev.alllexey.itmowidgets.databinding.FragmentMeBinding
-import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
-import dev.alllexey.itmowidgets.feature.me.ui.MeRenderer
-import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropActivity
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
-import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.toSettingsPreview
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.io.File
@@ -42,57 +32,6 @@ import org.junit.runner.RunWith
 class ProfileAndSpoilerTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
-
-    @Test
-    fun profileAppearanceAndLongNamesRemainCompactWithoutClipping() {
-        for (spec in Appearances.default) {
-            SettingsPreviewActivity.appearance = spec.toSettingsPreview()
-            val intent = Intent(context, SettingsPreviewActivity::class.java)
-                .putExtra(SettingsPreviewActivity.EXTRA_PROFILE, true)
-                .putExtra(SettingsPreviewActivity.EXTRA_WIDTH_DP, spec.widthDp)
-            spec.colorSeed?.let { intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }
-            ActivityScenario.launch<SettingsPreviewActivity>(intent).use { scenario ->
-                scenario.onActivity {
-                    val binding = FragmentMeBinding.bind(it.findViewById(R.id.main))
-                    binding.debugToolsRow.visibility = View.VISIBLE
-                    binding.debugDivider.visibility = View.VISIBLE
-                    MeRenderer.render(binding, MeUiState(CurrentUser(123456, "Александрова-Константинопольская Мария Александровна", null)))
-                }
-                instrumentation.waitForIdleSync()
-                SystemClock.sleep(300)
-                scenario.onActivity {
-                    val binding = FragmentMeBinding.bind(it.findViewById(R.id.main))
-                    val text = binding.profileName
-                    assertEquals(0, text.layout.getEllipsisCount(text.lineCount - 1))
-                    assertTrue(text.layout.height <= text.height - text.compoundPaddingTop - text.compoundPaddingBottom)
-                    for (row in listOf(binding.settingsRow, binding.debugToolsRow, binding.signOutRow)) {
-                        assertTrue(row.height >= 48 * it.resources.displayMetrics.density)
-                        assertTrue(row.right <= (row.parent as View).width)
-                    }
-                }
-                screenshot("profile-${spec.name}", scenario)
-            }
-        }
-        SettingsPreviewActivity.appearance = PreviewAppearance()
-    }
-
-    @Test
-    fun unavailableProfileHidesMetadataAndDisablesSignOutDuringOperation() {
-        val intent = Intent(context, SettingsPreviewActivity::class.java)
-            .putExtra(SettingsPreviewActivity.EXTRA_PROFILE, true)
-        ActivityScenario.launch<SettingsPreviewActivity>(intent).use { scenario ->
-            scenario.onActivity {
-                val binding = FragmentMeBinding.bind(it.findViewById(R.id.main))
-                MeRenderer.render(binding, MeUiState(signOutInProgress = true))
-                assertEquals(it.getString(R.string.me_unknown_user), binding.profileName.text.toString())
-                assertEquals(View.GONE, binding.profileMeta.visibility)
-                assertFalse(binding.signOutRow.isEnabled)
-                MeRenderer.render(binding, MeUiState())
-                assertTrue(binding.signOutRow.isEnabled)
-            }
-            screenshot("profile-unavailable", scenario)
-        }
-    }
 
     @Test
     fun croppedImageHasVisibleConfirmationAndSurvivesRecreation() {

@@ -6,142 +6,90 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
-import androidx.core.view.ViewCompat
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.ProjectLinks
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
-import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.ui.shareText
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openWebLogin
-import dev.alllexey.itmowidgets.databinding.FragmentMeBinding
-import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
-import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import dev.alllexey.itmowidgets.core.ui.shareText
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import javax.inject.Inject
-import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/**
+ * The Me tab (`navigation_me`), kept by name for the main graph. The screen is `MeRoute` from
+ * `:shared:feature-account`; its ViewModel is Koin's, in this Fragment's store. This host keeps what only Android
+ * does: navigation through `AppNavigator`, sharing with the App Link and opening the project pages.
+ */
 @AndroidEntryPoint
 class MeFragment : Fragment() {
 
-    private var _binding: FragmentMeBinding? = null
-    private val binding get() = _binding!!
-
-    private val viewModel: MeViewModel by viewModel()
-
     @Inject lateinit var shareLinks: ShareLinkFactory
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentMeBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+    private val actions = MeActions(
+        onOpenFriends = { openScreen(AppScreen.FRIENDS) },
+        onFindPeople = { openScreen(AppScreen.USER_SEARCH) },
+        onOpenPrivacy = { openScreen(AppScreen.SETTINGS, bundleOf(SETTINGS_PAGE_ARGUMENT to SETTINGS_PAGE_PRIVACY)) },
+        onOpenServices = { openScreen(AppScreen.SETTINGS) },
+        onOpenWebLogin = { openWebLogin() },
+        onOpenSettings = { openScreen(AppScreen.SETTINGS) },
+        onOpenDebugTools = { openScreen(AppScreen.DEBUG_TOOLS) },
+        onShareProfile = { name, isu -> shareOwnProfile(name, isu) },
+        onOpenProjectLink = { link ->
+            when (link) {
+                MeProjectLink.GITHUB -> openLink(ProjectLinks.GITHUB_URL)
+                // The native client handles tg:// itself; the web page is only a fallback.
+                MeProjectLink.TELEGRAM -> openLink(ProjectLinks.TELEGRAM_DEEPLINK, ProjectLinks.TELEGRAM_URL)
+            }
+        },
+    )
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.debugToolsRow.isVisible = BuildConfig.DEBUG
-        binding.debugDivider.isVisible = BuildConfig.DEBUG
-        // Bind cached identity before the first frame, including activity recreation.
-        render(viewModel.uiState.value)
-
-        listOf(
-            binding.friendsRow,
-            binding.findPeopleRow,
-            binding.privacyRow,
-            binding.servicesDisabledRow,
-            binding.webLoginRow,
-            binding.settingsRow,
-            binding.debugToolsRow
-        ).forEach { ViewCompat.setScreenReaderFocusable(it, true) }
-
-        binding.friendsRow.setOnClickListener { openScreen(AppScreen.FRIENDS) }
-        binding.findPeopleRow.setOnClickListener { openScreen(AppScreen.USER_SEARCH) }
-        binding.privacyRow.setOnClickListener {
-            openScreen(AppScreen.SETTINGS, bundleOf(SETTINGS_PAGE_ARGUMENT to SETTINGS_PAGE_PRIVACY))
-        }
-        binding.servicesDisabledRow.setOnClickListener { openScreen(AppScreen.SETTINGS) }
-        binding.webLoginRow.setOnClickListener { openWebLogin() }
-        binding.settingsRow.setOnClickListener { openScreen(AppScreen.SETTINGS) }
-        binding.debugToolsRow.setOnClickListener { openScreen(AppScreen.DEBUG_TOOLS) }
-        binding.signOutRow.setOnClickListener { showSignOutConfirmation() }
-        binding.profileShareButton.setOnClickListener { shareOwnProfile() }
-        binding.githubButton.setOnClickListener { openLink(ProjectLinks.GITHUB_URL) }
-        // The native client handles tg:// itself; the web page is only a fallback.
-        binding.telegramButton.setOnClickListener {
-            openLink(ProjectLinks.TELEGRAM_DEEPLINK, ProjectLinks.TELEGRAM_URL)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        itmoComposeView {
+            MeRoute(actions, showDebugTools = BuildConfig.DEBUG && !releaseLook)
+        }.apply {
+            // The tab stays one stationary surface under an overlay's back gesture.
+            isTransitionGroup = true
         }
 
-        viewModel.uiState
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach(::render)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        // Returning from a contextual screen may have changed friends or requests.
-        viewModel.refresh(RefreshMode.Silent)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun render(state: MeUiState) {
-        MeRenderer.render(binding, state)
-    }
-
-    /** Shares the name and ISU the profile card shows. */
-    private fun shareOwnProfile() {
-        val state = viewModel.uiState.value
-        val isu = (state.user?.isu ?: state.backendUser?.isu)?.takeIf { it > 0 } ?: return
+    /** Shares the name and ISU the profile header shows. */
+    private fun shareOwnProfile(name: String, isu: Int) {
         shareText(
             getString(R.string.share_profile_title),
-            getString(R.string.share_profile_text, binding.profileName.text, shareLinks.profile(isu))
+            getString(R.string.share_profile_text, name, shareLinks.profile(isu)),
         )
     }
 
-    private fun openLink(vararg urls: String) {
+    /** Opens the first of [urls] some app handles; false when none does. */
+    private fun openLink(vararg urls: String): Boolean {
         for (url in urls) {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
-                return
+                return true
             } catch (_: ActivityNotFoundException) {
                 continue
             }
         }
-        Snackbar.make(binding.root, R.string.link_open_failed, Snackbar.LENGTH_LONG).show()
+        return false
     }
 
-    private fun showSignOutConfirmation() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.me_sign_out_confirm_title)
-            .setMessage(R.string.me_sign_out_confirm_message)
-            .setNegativeButton(R.string.common_cancel, null)
-            .setPositiveButton(R.string.me_sign_out) { _, _ -> viewModel.signOut() }
-            .show()
-    }
-
-    private companion object {
+    companion object {
         /** Mirrors the settings graph argument; features must not import each other. */
-        const val SETTINGS_PAGE_ARGUMENT = "settings_page"
-        const val SETTINGS_PAGE_PRIVACY = "PRIVACY"
+        private const val SETTINGS_PAGE_ARGUMENT = "settings_page"
+        private const val SETTINGS_PAGE_PRIVACY = "PRIVACY"
+
+        /**
+         * Debug-only hook for the store screenshots: hides the developer tools row so a debug build shows the
+         * release screen. Release builds never show the row, whatever this says.
+         */
+        @VisibleForTesting
+        @Volatile
+        var releaseLook = false
     }
 }

@@ -15,7 +15,7 @@ data, the view model and the sheet. The Backend contract is
 tab, between the connection hint and `Настройки`. It is visible only while
 `Подключение к ITMO.Widgets` is on: `MeViewModel` maps
 `CustomServicesRepository.observeEnabled()` to `MeUiState.webLoginAvailable`,
-and `MeRenderer` hides the row and its divider otherwise. Without the connection
+and `MeScreen` leaves out the row and its divider otherwise. Without the connection
 the profile shows the connection hint instead, so there is never a row that can
 only fail.
 
@@ -137,8 +137,8 @@ the app.
 - JVM: `WebLoginCodeTest` (codes, links, rejected hosts and paths),
   `BrowserDescriptionTest` (User-Agent table), `WebLoginRepositoryImplTest`
   (gate, error codes, blank User-Agent), `WebLoginViewModelTest` (every state
-  and error path), `MeViewModelTest` (row visibility).
+  and error path), `MeViewModelTest` (row visibility), `MeScreenTest` (the row
+  and its divider only with the connection).
 - Instrumented: `WebLoginVisualTest` on the `WebLoginPreviewActivity` debug
   host with a fixture repository: the approve flow, wrong and expired codes, a
-  large font on a narrow screen; the profile row only with the connection is
-  checked in `SettingsNavigationTestActivity`.
+  large font on a narrow screen.
