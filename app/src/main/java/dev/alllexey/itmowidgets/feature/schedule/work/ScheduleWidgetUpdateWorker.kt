@@ -110,8 +110,13 @@ class ScheduleWidgetUpdateWorker(
                 snapshot = snapshot
             )
         }
-        if (listIds.isNotEmpty()) {
-            ScheduleWidgetRenderer.notifyListChanged(manager, listIds)
+        listIds.forEach { appWidgetId ->
+            ScheduleWidgetRenderer.renderList(
+                context = applicationContext,
+                appWidgetManager = manager,
+                appWidgetId = appWidgetId,
+                snapshot = snapshot
+            )
         }
     }
 

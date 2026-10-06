@@ -11,7 +11,7 @@ import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
-import androidx.core.net.toUri
+import androidx.core.widget.RemoteViewsCompat
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
@@ -69,30 +69,29 @@ object ScheduleWidgetRenderer {
         return views
     }
 
-    fun renderListShell(
+    /**
+     * A full update with the rows inline (`RemoteCollectionItems`): no adapter service round trip and no separate
+     * data-changed notification, so a launcher never shows rows from an older snapshot under a newer shell.
+     */
+    fun renderList(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
+        snapshot: ScheduleWidgetSnapshot,
     ) {
-        val serviceIntent = Intent(context, ScheduleWidgetRemoteViewsService::class.java).apply {
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            data = "itmowidgets://schedule-widget/$appWidgetId".toUri()
-        }
-        val views = RemoteViews(context.packageName, R.layout.widget_lesson_list).apply {
-            setRemoteAdapter(R.id.lesson_list, serviceIntent)
-            setPendingIntentTemplate(
-                R.id.lesson_list,
-                openSchedulePendingIntent(context, appWidgetId)
-            )
-        }
+        val views = RemoteViews(context.packageName, R.layout.widget_lesson_list)
+        RemoteViewsCompat.setRemoteAdapter(
+            context,
+            views,
+            appWidgetId,
+            R.id.lesson_list,
+            ScheduleListRowRenderer(context).collectionItems(snapshot)
+        )
+        views.setPendingIntentTemplate(
+            R.id.lesson_list,
+            openSchedulePendingIntent(context, appWidgetId)
+        )
         appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
-
-    fun notifyListChanged(
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray,
-    ) {
-        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.lesson_list)
     }
 
     fun lessonListRow(

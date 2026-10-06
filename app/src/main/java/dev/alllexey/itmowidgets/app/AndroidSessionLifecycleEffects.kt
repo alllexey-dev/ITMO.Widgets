@@ -70,10 +70,14 @@ class AndroidSessionLifecycleEffects @Inject constructor(
                 snapshot = snapshot
             )
         }
-        ScheduleWidgetRenderer.notifyListChanged(
-            manager,
-            ScheduleWidgetProviders.dayScheduleIds(context)
-        )
+        ScheduleWidgetProviders.dayScheduleIds(context).forEach { appWidgetId ->
+            ScheduleWidgetRenderer.renderList(
+                context = context,
+                appWidgetManager = manager,
+                appWidgetId = appWidgetId,
+                snapshot = snapshot
+            )
+        }
     }
 
     private suspend fun renderSignedOutQrWidgets() {

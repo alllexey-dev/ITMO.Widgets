@@ -162,6 +162,7 @@ dependencies {
     implementation(libs.okio)
     implementation(libs.kotlinx.atomicfu)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.remoteviews)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.work.runtime.ktx)
