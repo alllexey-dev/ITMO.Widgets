@@ -10,9 +10,4 @@ PendingSportDetailsContent_predicted
 PendingSportDetailsContent_waiting
 ScheduleChangesScreen_empty
 ScheduleChangesScreen_list
-ScheduleScreen_empty
-ScheduleScreen_error
-ScheduleScreen_friend
-ScheduleScreen_own
-ScheduleScreen_skeleton
 UserScheduleScreen_content
