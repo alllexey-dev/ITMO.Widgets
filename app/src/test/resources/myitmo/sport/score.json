@@ -1,0 +1,38 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": {
+    "sum": {
+      "attendances": 2,
+      "other": 3
+    },
+    "attendances": [
+      {
+        "type": "lesson",
+        "name": "Synthetic lesson",
+        "evaluation_id": 9,
+        "evaluation_name": "Attendance",
+        "section_level": 1,
+        "score": 2,
+        "date": "2026-01-05T10:00:00+03:00",
+        "is_competition": false,
+        "discipline_name": null,
+        "competition_name": null,
+        "place": null
+      },
+      {
+        "type": "competition",
+        "name": "Synthetic competition",
+        "evaluation_id": 9,
+        "evaluation_name": "Attendance",
+        "section_level": 1,
+        "score": 3,
+        "date": "2026-01-05T10:00:00+03:00",
+        "is_competition": true,
+        "discipline_name": "Synthetic sport",
+        "competition_name": "Synthetic cup",
+        "place": "Participation"
+      }
+    ]
+  }
+}

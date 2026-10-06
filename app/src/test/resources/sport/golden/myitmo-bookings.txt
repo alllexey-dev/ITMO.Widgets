@@ -1,0 +1,11 @@
+# confirmed
+SportBooking(type=booking, isLessonReal=true, lessonId=500001, sectionName=SectionName(raw=Synthetic section), start=2026-01-05T07:00:00Z, end=2026-01-05T08:30:00Z, roomName=Online, teacherFio=Synthetic coach, teacherIsu=200002, sectionLevel=1, lessonLevel=2, signed=true, signEntry=null, friendsBookings=[])
+
+# empty
+[]
+
+# requests
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync [500001]
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync []

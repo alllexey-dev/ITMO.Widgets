@@ -1,0 +1,9 @@
+# outcomes
+signed in: SIGNED_IN
+rejected with reasons (137): REJECTED
+no capacity: NO_CAPACITY
+no capacity without context: REJECTED
+HTTP 400 envelope: RETRY_LATER
+HTTP 502: RETRY_LATER
+missing result: RETRY_LATER
+network: RETRY_LATER

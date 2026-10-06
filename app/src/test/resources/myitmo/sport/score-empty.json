@@ -1,0 +1,11 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": {
+    "sum": {
+      "attendances": 0,
+      "other": 0
+    },
+    "attendances": null
+  }
+}

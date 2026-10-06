@@ -1,0 +1,11 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "id": 1,
+      "time_start": "08:20",
+      "time_end": "09:50"
+    }
+  ]
+}

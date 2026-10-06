@@ -1,0 +1,14 @@
+# catalog
+SportLesson(type=lesson, isLessonReal=true, lessonId=500001, start=2026-10-05T07:00:00Z, end=2026-10-05T08:30:00Z, sectionId=31, sectionName=SectionName(raw=Тестовая секция), sectionLevel=1, lessonGroupId=41, lessonLevel=1, typeId=2, buildingId=13, roomId=1001, roomName=Спортзал 1, limit=20, available=3, comment=null, timeSlotId=2, timeSlotStart=10:00, timeSlotEnd=11:30, intersection=false, canSignIn=false, unavailableReasons=[Other(reason=synthetic_reason)], signed=false, teacherIsu=200002, teacherFio=Тренер Тестовый, signEntry=null, signQueue=null, friendsBookings=[])
+SportLesson(type=lesson, isLessonReal=true, lessonId=500003, start=2026-10-05T15:00:00Z, end=2026-10-05T16:30:00Z, sectionId=32, sectionName=SectionName(raw=Онлайн-секция), sectionLevel=1, lessonGroupId=42, lessonLevel=1, typeId=6, buildingId=null, roomId=-1, roomName=Online, limit=50, available=50, comment=null, timeSlotId=7, timeSlotStart=18:00, timeSlotEnd=19:30, intersection=true, canSignIn=true, unavailableReasons=[AlreadyEnrolled], signed=true, teacherIsu=200003, teacherFio=Тренер Второй, signEntry=null, signQueue=null, friendsBookings=[])
+
+# filters
+SportFilterCatalog(buildings=[SportFilterOption(id=0, value=Other venues)], sections=[SportFilterOption(id=31, value=Synthetic section)], sportTypes=[SportFilterOption(id=2, value=Synthetic sport)], teachers=[SportFilterOption(id=200002, value=Synthetic coach)])
+
+# time slots
+SportTimeSlot(id=1, start=08:20, end=09:50)
+
+# requests
+my GET /api/sport/sign/schedule?date_start=2026-10-05&date_end=2026-10-26
+my GET /api/sport/sign/schedule/filters
+my GET /api/sport/time_slots

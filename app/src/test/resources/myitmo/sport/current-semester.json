@@ -1,0 +1,20 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": {
+    "id": 101,
+    "study_year": "2025/2026",
+    "semester": 0,
+    "current": true,
+    "sign_duration": 7,
+    "date_start": "2026-01-05T00:00:00+03:00",
+    "date_end": "2026-06-01T00:00:00+03:00",
+    "hard_date_end": "2026-07-01T00:00:00+03:00",
+    "choice_start": "0001-01-01T00:00:00+03:00",
+    "bachelor_bound": "0001-01-01T00:00:00+03:00",
+    "ppa1_start": "2026-06-02T00:00:00+03:00",
+    "ppa1_end": "2026-06-10T00:00:00+03:00",
+    "ppa2_start": "2026-06-11T00:00:00+03:00",
+    "ppa2_end": "2026-06-20T00:00:00+03:00"
+  }
+}

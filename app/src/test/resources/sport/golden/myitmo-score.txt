@@ -1,0 +1,22 @@
+# score
+SportScore(attendances=2, other=3, attendancesData=[SportAttendance(type=lesson, name=SectionName(raw=Synthetic lesson), evaluationId=9, evaluationName=Attendance, sectionLevel=1, score=2, dateTime=2026-01-05T07:00:00Z, isCompetition=false), SportAttendance(type=competition, name=SectionName(raw=Synthetic competition), evaluationId=9, evaluationName=Attendance, sectionLevel=1, score=3, dateTime=2026-01-05T07:00:00Z, isCompetition=true)])
+
+# attempts
+SportAttempts(total=4, used=1, free=3, canSignIn=true)
+
+# periods
+SportScorePeriod(id=101, label=Spring 2025/2026, endsAt=2026-05-31T21:00:00Z, current=true)
+
+# summary 101
+SportScoreSummary(attendances=2, bonus=3)
+
+# empty score
+SportScore(attendances=0, other=0, attendancesData=[])
+
+# requests
+my GET /api/sport/personal/score
+my GET /api/sport/personal/have_attempts
+my GET /api/sport/semesters/list
+my GET /api/sport/semesters/current
+my GET /api/sport/personal/score?semester_id=101
+my GET /api/sport/personal/score
