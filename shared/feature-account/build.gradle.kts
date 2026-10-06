@@ -10,9 +10,24 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
+            // The auth, onboarding and Me ViewModels are KMP ViewModels that :app obtains through Koin (L16 LA-2a,
+            // recipe koin-module).
+            api(libs.jetbrains.lifecycle.viewmodel)
+            api(libs.koin.core)
+            api(libs.koin.core.viewmodel)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
         }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.koin.test)
+        }
     }
+}
+
+// :app reads these files as Android resources until --retire (scripts/strings-move.py, L05 KM-09b).
+itmowidgetsStrings {
+    androidExport("values/strings_auth.xml")
+    androidExport("values/strings_onboarding.xml")
+    androidExport("values/strings_me.xml")
 }

@@ -1,7 +1,10 @@
 package dev.alllexey.itmowidgets.di.bridge
 
+import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
+import dev.alllexey.itmowidgets.feature.me.di.meModule
+import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
 import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
@@ -44,6 +47,9 @@ object KoinModules {
         friendSelectorModule,
         scheduleModule,
         sportModule,
+        authModule,
+        onboardingModule,
+        meModule,
     )
 
     val all: List<Module> get() = bridges + constructed

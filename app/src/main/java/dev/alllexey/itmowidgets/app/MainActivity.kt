@@ -52,6 +52,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), AppNavigator {
@@ -69,7 +70,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private var updateDownloaded: Snackbar? = null
 
     private val updateGate: AppUpdateGateViewModel by viewModels()
-    private val onboardingGate: OnboardingGateViewModel by viewModels()
+    private val onboardingGate: OnboardingGateViewModel by viewModel()
     private lateinit var binding: ActivityMainBinding
     private lateinit var navigation: MainNavigationCoordinator
     private val routes = MainRouteQueue()
@@ -112,7 +113,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             .onEach(::renderSession)
             .launchIn(lifecycleScope)
         // The gate resolves and later flips on its own; the session state alone never reports it.
-        onboardingGate.state
+        onboardingGate.uiState
             .flowWithLifecycle(lifecycle)
             .onEach { renderSession(sessionRepository.state.value) }
             .launchIn(lifecycleScope)
@@ -134,7 +135,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private val demoSession: Boolean get() = (sessionRepository.state.value as? SessionState.SignedIn)?.demo == true
 
     /** The demo session skips the first-run flow without marking it passed. */
-    private fun onboardingPassed(): Boolean = demoSession || onboardingGate.state.value == OnboardingGate.Passed
+    private fun onboardingPassed(): Boolean = demoSession || onboardingGate.uiState.value == OnboardingGate.Passed
 
     /** My ITMO in the browser and the web sign-in need a real account. */
     private fun refusedInDemo(): Boolean {
@@ -319,7 +320,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             }
 
             is SessionState.SignedIn -> {
-                val gate = onboardingGate.state.value
+                val gate = onboardingGate.uiState.value
                 if (!state.demo && gate == OnboardingGate.Unknown) {
                     // The stored flag decides the start destination; do not guess it for one frame.
                     binding.bottomNavView.isVisible = false

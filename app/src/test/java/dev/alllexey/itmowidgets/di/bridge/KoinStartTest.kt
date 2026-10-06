@@ -24,6 +24,8 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
+import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
@@ -109,6 +111,8 @@ class KoinStartTest {
         assertSame(hilt.teacherLessonsGateway(), koin.get<TeacherLessonsGateway>())
         assertSame(hilt.applicationScope(), koin.get<CoroutineScope>())
         assertSame(hilt.scheduleWidgetRefreshRequester(), koin.get<ScheduleWidgetRefreshRequester>())
+        assertSame(hilt.widgetAppearanceRepository(), koin.get<WidgetAppearanceRepository>())
+        assertSame(hilt.socialRepository(), koin.get<SocialRepository>())
     }
 
     @Test

@@ -10,7 +10,6 @@ import androidx.core.net.toUri
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
@@ -21,6 +20,7 @@ import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiStat
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * The backend opt-in as one switch row, with the stored data named in full.
@@ -33,8 +33,10 @@ class ServicesStepFragment : Fragment() {
     private var _binding: FragmentOnboardingServicesBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: OnboardingViewModel by viewModels(
-        ownerProducer = { requireParentFragment() }
+    private val viewModel: OnboardingViewModel by viewModel(
+        ownerProducer = { requireParentFragment() },
+        // The parent's extras: whichever Fragment asks first, the handle belongs to the flow, not to one page.
+        extrasProducer = { requireParentFragment().defaultViewModelCreationExtras }
     )
 
     override fun onCreateView(

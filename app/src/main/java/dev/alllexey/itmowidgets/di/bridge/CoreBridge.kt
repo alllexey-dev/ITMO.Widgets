@@ -28,6 +28,8 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
+import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
@@ -107,6 +109,11 @@ interface CoreBridgeEntryPoint {
 
     /** The schedule's widget refresh after a sport booking changes it; the refresh gateway is bridged above. */
     fun scheduleWidgetRefreshRequester(): ScheduleWidgetRefreshRequester
+    /** The schedule and QR widget appearance; every write refreshes the pinned widgets. */
+    fun widgetAppearanceRepository(): WidgetAppearanceRepository
+
+    /** The one social cache of the process; its session cleaner holds the same instance. */
+    fun socialRepository(): SocialRepository
 
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
@@ -160,4 +167,6 @@ val coreBridgeModule = module {
     single<ScheduleWidgetRefreshRequester> {
         CoreBridgeEntryPoint.from(androidContext()).scheduleWidgetRefreshRequester()
     }
+    single<WidgetAppearanceRepository> { CoreBridgeEntryPoint.from(androidContext()).widgetAppearanceRepository() }
+    single<SocialRepository> { CoreBridgeEntryPoint.from(androidContext()).socialRepository() }
 }
