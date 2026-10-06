@@ -54,7 +54,7 @@ class PersonRepositoryImpl(
     }
 
     override suspend fun clearSessionData() {
-        cache.value = emptyMap()
+        cache.update { emptyMap() }
     }
 
     private fun remember(isu: Int, person: Person) {
