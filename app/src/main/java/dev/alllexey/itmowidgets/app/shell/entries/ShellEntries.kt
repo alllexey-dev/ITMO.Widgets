@@ -2,10 +2,13 @@ package dev.alllexey.itmowidgets.app.shell.entries
 
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.entryRegistry
+import dev.alllexey.itmowidgets.app.shell.shellHostEntries
 
 /**
  * Every key the Compose shell can show. Each registration card (SH-1b3...SH-1b8) adds one `<Tab>Entries.kt` beside
  * this file with an `EntryRegistry.Builder.<tab>Entries()` extension and one call to it here (recipe `nav3-entry`);
- * until then every key shows the shell's placeholder.
+ * until then every key but the shell host's own alert shows the shell's placeholder.
  */
-fun shellEntries(): EntryRegistry = entryRegistry { }
+fun shellEntries(): EntryRegistry = entryRegistry {
+    shellHostEntries()
+}

@@ -4,32 +4,36 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.ParcelFileDescriptor
-import androidx.navigation.fragment.NavHostFragment
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import dagger.hilt.android.EntryPointAccessors
-import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.app.AppOverlayHostFragment
 import dev.alllexey.itmowidgets.app.MainActivity
+import dev.alllexey.itmowidgets.app.shell.ShellModeRule
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
 import dev.alllexey.itmowidgets.feature.qr.ui.QrTileService
+import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /** The QR pass tile in the emulator's real SystemUI, driven by `cmd statusbar`. */
 @RunWith(AndroidJUnit4::class)
 class QrTileFlowTest {
+    @get:Rule
+    val shells = ShellModeRule()
+
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val deviceHints = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java).deviceHints()
@@ -54,13 +58,9 @@ class QrTileFlowTest {
 
         shell("cmd statusbar click-tile $TILE")
         eventually {
-            onActivity { activity ->
-                val root = activity.supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-                assertEquals(R.id.navigation_home, root.navController.currentDestination?.id)
-                val overlay = activity.supportFragmentManager.findFragmentById(R.id.overlay_container) as? AppOverlayHostFragment
-                assertNotNull(overlay)
-                assertEquals(R.id.qr_pass, overlay!!.navController.currentDestination?.id)
-            }
+            val shown = ShellProbe.current()
+            assertEquals(AppTab.HOME, shown.tab)
+            assertEquals(listOf(AppRoutes.QrPass), shown.overlays)
         }
     }
 

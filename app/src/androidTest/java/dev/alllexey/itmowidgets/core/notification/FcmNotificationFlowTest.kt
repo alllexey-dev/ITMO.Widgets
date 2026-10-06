@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.navigation.fragment.NavHostFragment
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import androidx.test.core.app.ApplicationProvider
@@ -14,22 +13,31 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
-import dev.alllexey.itmowidgets.app.AppOverlayHostFragment
 import dev.alllexey.itmowidgets.app.OnboardingTestEntryPoint
+import dev.alllexey.itmowidgets.app.shell.ShellModeRule
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.navigation.AppTab
+import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.Base64
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /** Synthetic local notifications and authentication; never sends Firebase messages or registers test users. */
 @RunWith(AndroidJUnit4::class)
 class FcmNotificationFlowTest {
+    @get:Rule
+    val shells = ShellModeRule()
+
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val dependencies = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java)
@@ -53,7 +61,7 @@ class FcmNotificationFlowTest {
             }
             instrumentation.startActivitySync(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
             run {
-                eventually { onActivity { assertEquals(R.id.auth, root(it).navController.currentDestination?.id) } }
+                eventually { assertEquals(ShellSurface.Auth, ShellProbe.current().surface) }
                 recreate()
                 runBlocking {
                     withTimeout(30_000) { dependencies.session().completeItmoIdLogin(tokenResponse()) }
@@ -92,14 +100,16 @@ class FcmNotificationFlowTest {
                 recreate()
                 eventually { assertProfile(100002) }
                 onActivity { it.onBackPressedDispatcher.onBackPressed() }
-                eventually { onActivity {
-                    assertNull(it.supportFragmentManager.findFragmentByTag("app-overlay"))
-                    assertEquals(R.id.navigation_me, root(it).navController.currentDestination?.id)
-                } }
+                eventually {
+                    val shown = ShellProbe.current()
+                    assertEquals(emptyList<AppRoute>(), shown.overlays)
+                    assertEquals(AppTab.ME, shown.tab)
+                }
                 manager.activeNotifications.single { it.tag == AppNotificationChannels.SPORT }.notification.contentIntent.send()
-                eventually { onActivity { assertEquals(R.id.navigation_sport, root(it).navController.currentDestination?.id) } }
+                eventually { assertEquals(AppTab.SPORT, ShellProbe.current().tab) }
                 notifier.clear()
-                assertTrue(manager.activeNotifications.isEmpty())
+                // NotificationManagerService applies cancelAll on its own handler, after the call returns.
+                eventually { assertTrue(manager.activeNotifications.isEmpty()) }
             }
         } finally {
             runCatching { onActivity { it.finish() } }
@@ -113,13 +123,9 @@ class FcmNotificationFlowTest {
     }
 
     private fun assertProfile(isu: Int) {
-        onActivity {
-            assertEquals(R.id.navigation_me, root(it).navController.currentDestination?.id)
-            val overlay = it.supportFragmentManager.findFragmentByTag("app-overlay") as? AppOverlayHostFragment
-            assertNotNull(overlay)
-            assertEquals(R.id.user_profile, overlay!!.navController.currentDestination?.id)
-            assertEquals(isu, overlay.navController.currentBackStackEntry?.arguments?.getInt(UserScreenArgs.ISU))
-        }
+        val shown = ShellProbe.current()
+        assertEquals(AppTab.ME, shown.tab)
+        assertEquals(AppRoutes.UserProfile(isu), shown.overlays.lastOrNull())
     }
 
     // ActivityScenario matches the original Intent and loses track when onNewIntent replaces it.
@@ -141,8 +147,6 @@ class FcmNotificationFlowTest {
         onActivity { previous = it; it.recreate() }
         eventually { onActivity { assertNotSame(previous, it) } }
     }
-
-    private fun root(activity: MainActivity) = activity.supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
 
     private fun tokenResponse(): String {
         fun encode(value: String) = Base64.getUrlEncoder().withoutPadding().encodeToString(value.toByteArray())
