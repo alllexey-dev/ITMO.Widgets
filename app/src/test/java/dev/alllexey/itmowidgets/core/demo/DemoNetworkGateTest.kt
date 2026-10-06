@@ -5,7 +5,6 @@ import android.content.ContextWrapper
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.network.BackendClientFactory
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -22,7 +21,6 @@ import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
-import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.feature.qr.data.demo.DemoQr
 import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
@@ -57,7 +55,6 @@ class DemoNetworkGateTest {
     private val dispatchers = mainDispatcherRule.appDispatchers
 
     private val demo = FakeDemoMode(active = true)
-    private val backend = unreachable<ItmoWidgetsApi>()
     private val stores = PreferenceStores().also {
         kotlinx.coroutines.runBlocking { it.servicesOptIn.setCustomServicesEnabled(true) }
     }
@@ -87,7 +84,7 @@ class DemoNetworkGateTest {
     @Test
     fun `no update is offered and web sign-in is refused`() = runTest {
         val update = update(gate, demo)
-        val webLogin = WebLoginRepositoryImpl(gate, backend, demo, dispatchers)
+        val webLogin = WebLoginRepositoryImpl(gate, backendClient.users, demo, dispatchers)
 
         assertNull(update.loadUpdate())
         assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.preview("ABCD2345"))
@@ -114,7 +111,7 @@ class DemoNetworkGateTest {
         val noDemo = FakeDemoMode()
         val stored = PreferenceStores()
         val optedOut = DefaultBackendGate(stored.servicesOptIn, noDemo)
-        val webLogin = WebLoginRepositoryImpl(optedOut, backend, noDemo, dispatchers)
+        val webLogin = WebLoginRepositoryImpl(optedOut, backendClient.users, noDemo, dispatchers)
         val privacy = settingsRepository(stored, optedOut, noDemo)
 
         assertNull(update(optedOut, noDemo).loadUpdate())
@@ -128,7 +125,7 @@ class DemoNetworkGateTest {
     }
 
     private fun update(gate: BackendGate, demo: DemoMode) = AppUpdateRepositoryImpl(
-        backend, gate, UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2"), AppVersionName("2.2"),
+        backendClient.app, gate, UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2"), AppVersionName("2.2"),
         Clock.System, RecordingDiagnostics(), demo,
         dispatchers = dispatchers
     )
@@ -140,7 +137,7 @@ class DemoNetworkGateTest {
         val utility = UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2").also {
             it.setFirebaseToken("demo-token")
         }
-        val devices = DefaultBackendDeviceSession(gate, utility, backend, "Pixel", user, demo, dispatchers)
+        val devices = DefaultBackendDeviceSession(gate, utility, backendClient.device, "Pixel", user, demo, dispatchers)
         val identity = DefaultBackendIdentitySync(
             unusedContext(), gate, unreachableSession.tokens, unreachableTokens, backendClient.users, RecordingDiagnostics(), demo,
             dispatchers
@@ -163,7 +160,7 @@ class DemoNetworkGateTest {
         stores.homeLayout,
         stores.deviceHints,
         gate,
-        backend,
+        backendClient.users,
         demo,
         dispatchers
     )

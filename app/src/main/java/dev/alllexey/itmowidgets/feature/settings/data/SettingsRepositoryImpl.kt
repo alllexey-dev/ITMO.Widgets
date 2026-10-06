@@ -1,12 +1,11 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.users.UserPrivacySettings
+import dev.alllexey.itmowidgets.client.users.UsersApi
+import dev.alllexey.itmowidgets.client.users.SharingVisibility as ApiSharingVisibility
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.UserPrivacySettings
-import dev.alllexey.itmowidgets.core.model.SharingVisibility as ApiSharingVisibility
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -49,7 +48,7 @@ class SettingsRepositoryImpl @Inject constructor(
     private val homeLayout: HomeLayoutPreferences,
     private val deviceHints: DeviceHintPreferences,
     private val backend: BackendGate,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val users: UsersApi,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
 ) : SettingsRepository {
@@ -260,10 +259,9 @@ class SettingsRepositoryImpl @Inject constructor(
         sharingState.value = SharingSettingsState.Content(requested, updating = true)
 
         try {
-            val response = withContext(dispatchers.io) {
-                widgetsApi.updateMyPrivacySettings(requested.toDto())
-            }
-            val saved = response.requireData().toDomain()
+            val saved = withContext(dispatchers.io) {
+                users.updateMyPrivacySettings(requested.toDto())
+            }.toDomain()
             sharingState.value = SharingSettingsState.Content(saved)
             AppResult.Success(Unit)
         } catch (cancellation: CancellationException) {
@@ -277,7 +275,7 @@ class SettingsRepositoryImpl @Inject constructor(
 
     private suspend fun fetchSharingSettings(): SharingSettings {
         return withContext(dispatchers.io) {
-            widgetsApi.myPrivacySettings().requireData().toDomain()
+            users.myPrivacySettings().toDomain()
         }
     }
 
@@ -295,14 +293,6 @@ class SettingsRepositoryImpl @Inject constructor(
             sportVisibility = ApiSharingVisibility.valueOf(sportVisibility.name),
             friendsVisibility = ApiSharingVisibility.valueOf(friendsVisibility.name)
         )
-    }
-
-    private fun <T> ApiResponse<T>.requireData(): T {
-        val responseData = data
-        if (!success || responseData == null) {
-            throw IllegalStateException(error?.message ?: "Backend returned empty settings")
-        }
-        return responseData
     }
 }
 

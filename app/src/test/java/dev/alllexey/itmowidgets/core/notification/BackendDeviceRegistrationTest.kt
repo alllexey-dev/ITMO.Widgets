@@ -1,31 +1,46 @@
 package dev.alllexey.itmowidgets.core.notification
 
 import androidx.datastore.core.DataStore
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.model.ApiResponse
+import dev.alllexey.itmowidgets.client.error.BackendException
+import dev.alllexey.itmowidgets.core.network.Core2Harness
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.contractFixture
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.errorEnvelope
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.session
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
-import java.lang.reflect.Proxy
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.testkit.bodyText
+import dev.alllexey.itmowidgets.testkit.respondJson
+import io.ktor.client.engine.mock.MockRequestHandleScope
+import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 
+/** The push registration of this installation over Core 2.0 and MockEngine. */
 class BackendDeviceRegistrationTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
-
-    private val dispatchers = mainDispatcherRule.appDispatchers
 
     @Test fun `only successful registration is persisted with its owner and unregister clears it`() = runTest {
         val fixture = Fixture()
@@ -36,16 +51,57 @@ class BackendDeviceRegistrationTest {
         fixture.device.unregisterCurrentDevice()
         assertNull(fixture.utility.getRegisteredFirebaseToken())
         assertNull(fixture.utility.getRegisteredFirebaseOwner())
-        assertEquals(listOf("registerDevice", "unregisterCurrentDevice"), fixture.calls)
+        assertEquals(
+            listOf("POST /api/device/register-device", "DELETE /api/device/current"),
+            fixture.harness.requests.map { "${it.method.value} ${it.url.encodedPath}" }
+        )
+        assertTrue(fixture.harness.requests.all { it.headers[HttpHeaders.Authorization] == "Bearer stored-access" })
+    }
+
+    @Test fun `registration names Android and leaves alerts and the app version to Backend's defaults`() = runTest {
+        val fixture = Fixture()
+        fixture.prepare()
+
+        fixture.device.registerCurrentDevice()
+
+        val body = Json.parseToJsonElement(fixture.harness.requests.single().bodyText()).jsonObject
+        assertEquals(
+            Json.parseToJsonElement("""{"fcmToken":"synthetic-token","deviceName":"Synthetic device","platform":"ANDROID"}"""),
+            body
+        )
+        assertFalse("alertsAllowed" in body)
+        assertFalse("appVersion" in body)
+    }
+
+    @Test fun `unregistration sends the token in the body, never in the URL`() = runTest {
+        val fixture = Fixture()
+        fixture.prepare()
+
+        fixture.device.unregisterCurrentDevice()
+
+        val request = fixture.harness.requests.single()
+        assertEquals(HttpMethod.Delete, request.method)
+        assertFalse("synthetic-token" in request.url.toString())
+        assertEquals(Json.parseToJsonElement("""{"fcmToken":"synthetic-token"}"""), Json.parseToJsonElement(request.bodyText()))
     }
 
     @Test fun `backend rejection never records a successful token sync`() = runTest {
-        val fixture = Fixture()
-        fixture.prepare()
-        fixture.response = ApiResponse.error("Synthetic rejection")
-        try { fixture.device.registerCurrentDevice(); fail("Expected rejection") } catch (_: IllegalStateException) { }
-        assertNull(fixture.utility.getRegisteredFirebaseToken())
-        assertNull(fixture.utility.getRegisteredFirebaseOwner())
+        val rejections = listOf<suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData>(
+            { respondJson(errorEnvelope("unauthorized"), HttpStatusCode.Unauthorized) },
+            { respondJson(errorEnvelope("restricted"), HttpStatusCode.Forbidden) },
+            { respondJson("""{"success":false,"data":null,"error":{"message":"synthetic","code":"rejected"}}""") }
+        )
+        for (rejection in rejections) {
+            val fixture = Fixture(rejection)
+            fixture.prepare()
+            try {
+                fixture.device.registerCurrentDevice()
+                fail("Expected rejection")
+            } catch (_: BackendException) {
+            }
+            assertNull(fixture.utility.getRegisteredFirebaseToken())
+            assertNull(fixture.utility.getRegisteredFirebaseOwner())
+        }
     }
 
     @Test fun `disabled services signed out and missing token never call backend`() = runTest {
@@ -57,20 +113,40 @@ class BackendDeviceRegistrationTest {
         fixture.owner = 123456
         fixture.utility.setFirebaseToken(null)
         fixture.device.registerCurrentDevice()
-        assertTrue(fixture.calls.isEmpty())
+        fixture.device.unregisterCurrentDevice()
+        assertTrue(fixture.harness.requests.isEmpty())
     }
 
-    private inner class Fixture {
+    @Test fun `the demo session sends nothing, even with the stored opt-in`() = runTest {
+        val fixture = Fixture(demo = FakeDemoMode(active = true))
+        fixture.prepare()
+
+        fixture.device.registerCurrentDevice()
+        fixture.device.unregisterCurrentDevice()
+
+        assertTrue(fixture.harness.requests.isEmpty())
+        assertNull(fixture.utility.getRegisteredFirebaseToken())
+    }
+
+    private inner class Fixture(
+        answer: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData = { request ->
+            val path = if (request.method == HttpMethod.Delete) "unregisterCurrentDevice" else "registerDevice"
+            respondJson(contractFixture("http/device/$path.json"))
+        },
+        demo: FakeDemoMode = FakeDemoMode(),
+    ) {
         val settings = ServicesOptInPreferences(MemoryPreferences())
         val utility = UtilityStorage(MemoryPreferences(), "test")
         var owner: Int? = 123456
-        var response: ApiResponse<*> = ApiResponse.success("OK")
-        val calls = mutableListOf<String>()
-        private val api = Proxy.newProxyInstance(ItmoWidgetsApi::class.java.classLoader,
-            arrayOf(ItmoWidgetsApi::class.java)) { _, method, _ -> calls += method.name; response } as ItmoWidgetsApi
-        val device = DefaultBackendDeviceSession(DefaultBackendGate(settings, noDemo()), utility, api, "Synthetic device", object : CurrentUserProvider {
-            override suspend fun getCurrentUser() = owner?.let { CurrentUser(it, "Synthetic user", null) }
-        }, noDemo(), dispatchers)
+        val harness = Core2Harness(session(), backend = answer)
+        val device = DefaultBackendDeviceSession(
+            DefaultBackendGate(settings, demo), utility, harness.client.device, "Synthetic device",
+            object : CurrentUserProvider {
+                override suspend fun getCurrentUser() = owner?.let { CurrentUser(it, "Synthetic user", null) }
+            },
+            demo, mainDispatcherRule.appDispatchers
+        )
+
         suspend fun prepare() {
             settings.setCustomServicesEnabled(true)
             utility.setFirebaseToken("synthetic-token")
