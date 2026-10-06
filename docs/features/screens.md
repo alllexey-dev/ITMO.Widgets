@@ -162,7 +162,7 @@ Feature doc: [Social](social.md).
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
 | `feature/social/ui/FriendsFragment.kt` hosting `FriendsRoute` (`:shared:feature-social`) | Fragment | `FriendsViewModel` (Koin) | `friends`, `AppScreen.FRIENDS` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
-| `feature/social/ui/UserSearchFragment.kt` | Fragment | `UserSearchViewModel` | `user_search`, `AppScreen.USER_SEARCH` | — | — |
+| `feature/social/ui/UserSearchFragment.kt` hosting `UserSearchRoute` (`:shared:feature-social`) | Fragment | `UserSearchViewModel` (Koin) | `user_search`, `AppScreen.USER_SEARCH` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
 | `feature/social/ui/UserProfileFragment.kt` | Fragment | `UserProfileViewModel` | `user_profile`, `AppScreen.USER_PROFILE` | `feature/social/ui/UserProfilePreviewActivity.kt`, `app/SettingsNavigationTestActivity.kt` | `feature/social/UserProfileVisualTest.kt` |
 | `feature/social/ui/UserFriendsFragment.kt` hosting `UserFriendsRoute` (`:shared:feature-social`) | Fragment | `UserFriendsViewModel` (Koin) | `user_friends`, `AppScreen.USER_FRIENDS` | `app/SettingsNavigationTestActivity.kt` | `SocialScreenshotTest` (`:shared:feature-social`) |
 

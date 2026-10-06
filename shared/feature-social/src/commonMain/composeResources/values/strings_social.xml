@@ -173,4 +173,6 @@
     <!-- Home card: friend requests -->
     <string name="home_friends_title">Заявки в друзья</string>
     <string name="home_friends_all">Все заявки</string>
+    <!-- People search: the clear button of the query field (TalkBack) -->
+    <string name="user_search_clear">Очистить текст</string>
 </resources>

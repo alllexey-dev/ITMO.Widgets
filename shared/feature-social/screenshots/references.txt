@@ -9,7 +9,3 @@ UserProfileScreen_not-found
 UserProfileScreen_self
 UserProfileScreen_skeleton
 UserProfileScreen_teacher-summary
-UserSearchScreen_empty
-UserSearchScreen_error
-UserSearchScreen_idle
-UserSearchScreen_results

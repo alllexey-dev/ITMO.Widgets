@@ -360,7 +360,7 @@ A port uses the kit and grows it instead of drawing its own variant.
 | `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | `item_section_heading.xml`; `item_recordbook_control_group.xml` |
 | `GroupActionRow` | The last row of a group that leads further | `item_group_action_row.xml` |
 | `LinkRow`, `VotePill` | A link with its own badge or the vote pill | `item_subject_link.xml`, `core/ui/SubjectLinkRow.kt`, `view_link_vote_pill.xml` |
-| `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | `item_user_row.xml`; rows with `bindSelectionAccessibility` |
+| `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | the user row of the XML social lists; rows with `bindSelectionAccessibility` |
 | `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | `Card.SettingsGroup` and the rows of `feature/settings/ui/SettingsRenderer.kt` |
 | `DetailsHeader` | The head of every details sheet | `view_details_header.xml`, `core/ui/DetailsHeader.kt` |
 | `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | the handle and header of each sheet layout |
@@ -377,7 +377,7 @@ the module.
 XML screens that are not ported yet keep XML, Material components and their
 helpers. That shared layer is deliberately small: card variants, named
 dimensions, refresh helper, content-state styles, the accessible selection row
-(`bindSelectionAccessibility`), the user row (`item_user_row.xml`), the
+(`bindSelectionAccessibility`), the
 contextual screen header and the details-sheet header
 (`view_details_header.xml`: title, kind, date with the time range and duration,
 teacher, flow, place, map button) that every bottom sheet with a session starts
@@ -610,7 +610,6 @@ settings, and restore them if a separate test explicitly changes them.
 - Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt` (connected
   groups per category), `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`,
   `res/layout/item_subject_link.xml`.
-- User row: `res/layout/item_user_row.xml`.
 - Person profile: `res/layout/fragment_user_profile.xml`,
   `feature/social/ui/UserProfileAdapter.kt`: the hero `res/layout/item_profile_header.xml`
   (`Card.Hero`: avatar, name, one short line, the ISU number with a copy symbol
