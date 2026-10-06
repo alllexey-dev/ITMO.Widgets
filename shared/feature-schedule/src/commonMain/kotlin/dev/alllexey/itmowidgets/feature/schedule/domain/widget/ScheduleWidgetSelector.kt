@@ -96,6 +96,70 @@ class ScheduleWidgetSelector {
         )
     }
 
+    /**
+     * [select] at [from] and at every later instant before [until] where its snapshot can change: lesson starts and
+     * ends, the compact early switch before an end and its stop before midnight, midnights and pending starts.
+     * Adjacent equal snapshots merge into one entry. [select] only reads today and tomorrow of its instant, so
+     * [schedule] covers the dates of [from] through the day after the last instant before [until].
+     */
+    fun timeline(
+        schedule: List<DaySchedule>,
+        from: Instant,
+        until: Instant,
+        timeZone: TimeZone,
+        preferences: ScheduleWidgetPreferences,
+        pendingSport: List<PendingSportBooking> = emptyList(),
+    ): ScheduleWidgetTimeline {
+        require(from < until) { "Timeline ends at $until, not after its start $from" }
+        val starts = listOf(from) + boundaries(schedule, from, until, timeZone, pendingSport)
+            .filter { it > from && it < until }
+            .sorted()
+        val merged = mutableListOf<ScheduleWidgetTimelineEntry>()
+        for (start in starts) {
+            val snapshot = select(schedule, start, timeZone, preferences, pendingSport).snapshot
+            if (merged.lastOrNull()?.snapshot?.withoutValidity() != snapshot.withoutValidity()) {
+                merged += ScheduleWidgetTimelineEntry(start, snapshot)
+            }
+        }
+        val timeline = ScheduleWidgetTimeline(generatedAt = from, validUntil = until, entries = merged)
+        // pendingValidUntil from select() moves with every instant; an entry's pending rows hold to its own end.
+        return timeline.copy(entries = merged.mapIndexed { index, entry ->
+            val snapshot = entry.snapshot
+            if (snapshot.pendingValidUntil == null) entry
+            else entry.copy(snapshot = snapshot.copy(pendingValidUntil = timeline.validityEnd(index).toString()))
+        })
+    }
+
+    private fun boundaries(
+        schedule: List<DaySchedule>,
+        from: Instant,
+        until: Instant,
+        timeZone: TimeZone,
+        pendingSport: List<PendingSportBooking>,
+    ): Set<Instant> {
+        fun instantOf(date: LocalDate, time: LocalTime) = LocalDateTime(date, time).toInstant(timeZone)
+        val early = FORWARD_MINUTES.minutes
+        val lessons = schedule.flatMap { day ->
+            day.lessons.flatMap { lesson ->
+                val end = instantOf(day.date, lesson.end)
+                listOf(instantOf(day.date, lesson.start), end, end - early)
+            }
+        }
+        val pending = pendingSport.flatMap { booking ->
+            val start = booking.start.toLocalDateTime(timeZone)
+            val end = instantOf(start.date, booking.end.toLocalDateTime(timeZone).time)
+            listOf(booking.start, end, end - early)
+        }
+        val lastMidnight = until.toLocalDateTime(timeZone).date.plus(1, DateTimeUnit.DAY)
+        val midnights = generateSequence(from.toLocalDateTime(timeZone).date.plus(1, DateTimeUnit.DAY)) {
+            it.plus(1, DateTimeUnit.DAY)
+        }.takeWhile { it <= lastMidnight }
+            .flatMap { date -> date.atStartOfDayIn(timeZone).let { sequenceOf(it, it - early) } }
+        return (lessons + pending + midnights).toSet()
+    }
+
+    private fun ScheduleWidgetSnapshot.withoutValidity() = copy(pendingValidUntil = null)
+
     private fun selectSingleLesson(
         lessons: List<TimelineLesson>,
         lessonToShow: TimelineLesson?,
