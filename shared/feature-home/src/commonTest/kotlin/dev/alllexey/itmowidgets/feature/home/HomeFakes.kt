@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.home.HomeLessonState
 import dev.alllexey.itmowidgets.core.home.HomeScheduleRow
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
+import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
 import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.flow.Flow
@@ -36,4 +37,11 @@ class FakeHomeHintStore : HomeHintStore {
     override suspend fun dismiss(hint: HomeHint) {
         dismissed.value = dismissed.value + hint
     }
+}
+
+class FakeHomeHintStatus : HomeHintStatus {
+    var widgetPlaced = true
+    var notifications = true
+    override suspend fun anyWidgetPlaced() = widgetPlaced
+    override suspend fun notificationsEnabled() = notifications
 }

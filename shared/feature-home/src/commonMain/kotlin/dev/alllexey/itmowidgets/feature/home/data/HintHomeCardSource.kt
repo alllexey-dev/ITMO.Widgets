@@ -7,16 +7,13 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 
 /** Local only: device state and the opt-in, minus what the user already closed. */
-@Singleton
-class HintHomeCardSource @Inject constructor(
+class HintHomeCardSource(
     private val status: HomeHintStatus,
     private val store: HomeHintStore,
     private val services: CustomServicesRepository

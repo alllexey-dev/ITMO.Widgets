@@ -4,8 +4,13 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.feature.home.data.AndroidHomeHintStatus
+import dev.alllexey.itmowidgets.feature.home.data.DataStoreHomeCardPreferences
+import dev.alllexey.itmowidgets.feature.home.data.DataStoreHomeHintStore
 import dev.alllexey.itmowidgets.feature.home.data.HintHomeCardSource
+import dev.alllexey.itmowidgets.feature.home.di.hintCardsQualifier
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
+import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleChangesHomeCardSource
@@ -26,7 +31,7 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
  * The home feed sees every feature's source exactly once while the sources sit in two graphs: Hilt's `@IntoSet`
- * set behind the composite, and whatever a lane has already bound in Koin.
+ * set behind the composite, and the qualified sources a lane has already moved to Koin (home's hints).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -58,12 +63,24 @@ class HomeSourcesGraphTest {
         val hilt = HomeBridgeEntryPoint.from(application)
         val koin = GlobalContext.get()
 
-        val composite = koin.get<HomeCardSource>() as CompositeHomeCardSource
+        val composite = koin.get<HomeCardSource>(hiltCardsQualifier) as CompositeHomeCardSource
         assertEquals(hilt.homeCardSources().size, composite.parts.size)
         hilt.homeCardSources().forEach { source -> assertTrue(composite.parts.any { it === source }) }
-        assertSame(composite, koin.get<HomeCardSource>())
-        assertSame(koin.get<HomeCardPreferences>(), koin.get<HomeCardPreferences>())
-        assertSame(koin.get<HomeHintStore>(), koin.get<HomeHintStore>())
+        assertSame(composite, koin.get<HomeCardSource>(hiltCardsQualifier))
+        assertSame(koin.get<DataStoreHomeCardPreferences>(), koin.get<HomeCardPreferences>())
+        assertSame(koin.get<DataStoreHomeHintStore>(), koin.get<HomeHintStore>())
+    }
+
+    @Test
+    fun `the hint source is one Koin single over the Android device status`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+
+        val hints = koin.get<HintHomeCardSource>()
+        assertSame(hints, koin.get<HomeCardSource>(hintCardsQualifier))
+        assertEquals(1, koin.getAll<HomeCardSource>().count { it === hints })
+        assertTrue(HomeBridgeEntryPoint.from(application).homeCardSources().none { it is HintHomeCardSource })
+        assertTrue(koin.get<HomeHintStatus>() is AndroidHomeHintStatus)
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */

@@ -9,28 +9,29 @@ import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
-import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
+import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.supervisorScope
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.qualifier.Qualifier
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
- * Hilt to Koin for the home feed. Until every feature's `HomeCardSource` moves to Koin (KM-11a-d, KM-11g2), Hilt
- * still collects them with `@IntoSet`, and this bridge hands the whole set to Koin as one [CompositeHomeCardSource].
- * A lane that moves its source binds it in its own Koin module (`bind HomeCardSource::class`) and drops its
- * `@IntoSet`; nothing goes back into the Hilt set, or the card would show twice.
+ * Hilt to Koin for the home feed. Until every feature's `HomeCardSource` moves to Koin (KM-11a-d), Hilt still
+ * collects them with `@IntoSet`, and this bridge hands the whole set to Koin as one [CompositeHomeCardSource] under
+ * [hiltCardsQualifier]. A lane that moves its source defines it in its own Koin module as a `HomeCardSource` under its
+ * own qualifier (home's hints: `hintCardsQualifier`) and drops its `@IntoSet`; nothing goes back into the Hilt set,
+ * or the card would show twice. The device's [HomeHintStatus] stays Android and reaches Koin here.
  */
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface HomeBridgeEntryPoint {
     fun homeCardSources(): Set<@JvmSuppressWildcards HomeCardSource>
-    fun homeCardPreferences(): HomeCardPreferences
-    fun homeHintStore(): HomeHintStore
+    fun homeHintStatus(): HomeHintStatus
 
     companion object {
         fun from(context: Context): HomeBridgeEntryPoint =
@@ -63,11 +64,13 @@ class CompositeHomeCardSource(val parts: List<HomeCardSource>) : HomeCardSource 
     }
 }
 
+/** The Hilt-built sources' place in the open set of `HomeCardSource`s. */
+val hiltCardsQualifier: Qualifier = named("hilt")
+
 /** Lazy singles: Koin starts before Hilt builds its component, so each one reads Hilt on first use. */
 val homeBridgeModule = module {
-    single<HomeCardSource> {
+    single<HomeCardSource>(qualifier = hiltCardsQualifier) {
         CompositeHomeCardSource(HomeBridgeEntryPoint.from(androidContext()).homeCardSources().toList())
     }
-    single<HomeCardPreferences> { HomeBridgeEntryPoint.from(androidContext()).homeCardPreferences() }
-    single<HomeHintStore> { HomeBridgeEntryPoint.from(androidContext()).homeHintStore() }
+    single<HomeHintStatus> { HomeBridgeEntryPoint.from(androidContext()).homeHintStatus() }
 }

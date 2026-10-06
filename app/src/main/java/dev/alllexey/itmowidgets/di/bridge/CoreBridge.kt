@@ -13,11 +13,13 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
+import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -56,6 +58,10 @@ interface CoreBridgeEntryPoint {
     fun appDirectories(): AppDirectories
     fun qrSettingsPreferences(): QrSettingsPreferences
     fun deviceHintPreferences(): DeviceHintPreferences
+    fun homeLayoutPreferences(): HomeLayoutPreferences
+
+    /** The custom-services opt-in; reading it is local and never calls Backend. */
+    fun customServicesRepository(): CustomServicesRepository
 
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
@@ -84,4 +90,6 @@ val coreBridgeModule = module {
     single<AppDirectories> { CoreBridgeEntryPoint.from(androidContext()).appDirectories() }
     single<QrSettingsPreferences> { CoreBridgeEntryPoint.from(androidContext()).qrSettingsPreferences() }
     single<DeviceHintPreferences> { CoreBridgeEntryPoint.from(androidContext()).deviceHintPreferences() }
+    single<HomeLayoutPreferences> { CoreBridgeEntryPoint.from(androidContext()).homeLayoutPreferences() }
+    single<CustomServicesRepository> { CoreBridgeEntryPoint.from(androidContext()).customServicesRepository() }
 }
