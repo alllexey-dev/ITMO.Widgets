@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
-import org.koin.core.Koin
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -56,29 +55,18 @@ object SocialDebugFixtures {
 
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
-     * overrode, so each key points at Hilt's instance again. Declared one by one instead of reloading the bridge
-     * modules: `CoreBridge` also defines the wall clock that the QR and home fixtures of the same host may still
-     * override. A fixture that a newer host already replaced is left to that host.
+     * overrode, so the social and reviews bridge modules load again: their lazy singles forward Hilt's instances on
+     * first use, and the real data graph is not built on the host's main thread. The current user, a light object,
+     * is declared directly instead of reloading `coreBridgeModule`, which also defines the wall clock that the QR and
+     * home fixtures of the same host may still override. A fixture that a newer host already replaced is left to
+     * that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
         val koin = KoinStarter.ensureStarted(context)
         koin.unloadModules(listOf(fixture))
-        koin.restoreReleaseBindings(context)
+        koin.loadModules(listOf(socialBridgeModule, reviewsBridgeModule), allowOverride = true)
+        koin.declare<CurrentUserProvider>(CoreBridgeEntryPoint.from(context).currentUserProvider(), allowOverride = true)
         current = null
-    }
-
-    private fun Koin.restoreReleaseBindings(context: Context) {
-        val social = SocialBridgeEntryPoint.from(context)
-        declare<SocialRepository>(social.socialRepository(), allowOverride = true)
-        declare<PersonRepository>(social.personRepository(), allowOverride = true)
-        declare<FriendRepository>(social.friendRepository(), allowOverride = true)
-        declare<FriendSelectionHistory>(social.friendSelectionHistory(), allowOverride = true)
-        declare<PeopleSearchRepository>(social.peopleSearchRepository(), allowOverride = true)
-        declare<TeacherReviewsRepository>(
-            ReviewsBridgeEntryPoint.from(context).teacherReviewsRepository(),
-            allowOverride = true,
-        )
-        declare<CurrentUserProvider>(CoreBridgeEntryPoint.from(context).currentUserProvider(), allowOverride = true)
     }
 }
