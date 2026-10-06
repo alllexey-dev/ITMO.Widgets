@@ -39,6 +39,10 @@ targets:
       Release: Config/App.xcconfig
     settings:
       groups: [signing]
+      base:
+        # The URL type of `itmowidgets://route/<id>` (IO-06b): Info.plist's CFBundleURLTypes reads it. Widgets and
+        # Controls hold these URLs, so the scheme is frozen (StableIdentifiersTests).
+        APP_URL_SCHEME: itmowidgets
     dependencies:
       - target: ITMOWidgetsWidgets
       - target: ITMOWidgetsNotificationService

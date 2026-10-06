@@ -2,8 +2,9 @@
 
 The iOS client is a SwiftUI shell around the shared Compose Multiplatform screens, with WidgetKit extensions and a
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
-umbrella framework, `Shared`, built from `shared/ios/`. Today the app is a skeleton: it shows a string from the
-framework, the widget bundle is empty and the notification service passes notifications through unchanged.
+umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell on fixtures (tabs, router,
+session gate, placeholder roots; see Shell and routes), the widget bundle is empty and the notification service
+passes notifications through unchanged.
 
 ## Prerequisites
 
@@ -118,6 +119,41 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 - `SnapshotTests/DesignSystem/DesignSystemSnapshotTests` holds the references of every kit view in the four
   appearances.
 
+## Shell and routes
+
+The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Until IO-21 binds the shared session it
+runs on fixtures: placeholder roots, the session gate and the demo banner, without Kotlin.
+
+- Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
+  sport, me. The recordbook is declared but hidden until IO-09d2 (no placeholder reaches App Review); home is
+  selected at launch. The container is one type, `Shell/ShellTabs.swift` (a `TabView` today), so IO-SW1 can swap it
+  without touching the stacks or the router.
+- Stacks and sheets. Each tab has one `NavigationStack` whose path the router holds; sheets open at the medium
+  detent and drag to large.
+- Session gate. No tab bar while the session is loading or signed out; the demo banner (`ItmoDemoBanner`) sits
+  above the tab bar while the demo session is open. The fixture session comes from the launch argument
+  `-itmoShellSession loading|signed-out|demo|signed-in` (signed in without it); UI tests pass it through
+  `XCUIApplication.itmo(session:)`.
+- Chrome rule (the owner may veto at T12). A CMP route draws its own DS-03 top bar and hides the SwiftUI navigation
+  bar (`shellChrome(.compose)`); a SwiftUI screen keeps the native bar (`.native`). Hiding the bar turns UIKit's
+  edge swipe back off, so the compose chrome turns it on again for the stack above its root;
+  `ShellUITests.testEdgeSwipeGoesBackFromComposeChrome` fails without it.
+- Router. Every input (an `itmowidgets://route/<id>` URL, an App Intent, a tap, a link) calls `AppRouter.open`.
+  `RouteQueue` mirrors Android's `MainRouteQueue`: a route runs once, only when the session is ready and its root
+  could be selected (the tab bar is on screen); a newer route replaces a waiting one. Leaving the session clears the
+  stacks and the sheet. IO-06c moves the routes, the queue and the gate onto the shared route model.
+
+| Route id | URL | Opens |
+|---|---|---|
+| `schedule`, `home`, `sport`, `me` | `itmowidgets://route/<root>` | that root as it is |
+| `qr_pass` | `itmowidgets://route/qr_pass` | the QR pass above home (QR widget, Control, quick action) |
+| `today` | `itmowidgets://route/today` | the schedule root on today (quick action) |
+| any other id | `itmowidgets://route/<id>` | the damaged-link sheet above home (`app_link_unavailable_*`) |
+
+The URL scheme is the build setting `APP_URL_SCHEME` (the app target in `project.yml`), registered in the app's
+Info.plist as `CFBundleURLTypes`. Placed widgets and Controls keep their URLs, so the scheme and the route ids are
+frozen; `StableIdentifiersTests.testRouteUrls` pins them.
+
 ## Identifiers
 
 Frozen from the first TestFlight build; `iosApp/Tests/UnitTests/StableIdentifiersTests.swift` pins each one that
@@ -131,6 +167,7 @@ exists in the build.
 | App Group | `group.dev.alllexey.itmowidgets` (app, widget, notification service) |
 | Keychain access group | `$(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared` (app and notification service) |
 | Marketing version | 2.3.0 for all three bundles |
+| URL scheme and route ids | `itmowidgets://route/<id>`, ids in Shell and routes |
 
 The App Group and Keychain group are build settings (`APP_GROUP_ID`, `KEYCHAIN_GROUP` in `Base.xcconfig`). Xcode
 expands them into each bundle's Info.plist (keys `AppGroupID`, `KeychainGroup`) and entitlements; code reads them
