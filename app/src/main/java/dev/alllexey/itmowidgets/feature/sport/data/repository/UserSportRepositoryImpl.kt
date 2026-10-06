@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 class UserSportRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val sportApi: SportApi,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
@@ -31,8 +31,7 @@ class UserSportRepositoryImpl @Inject constructor(
         }
         if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
         return try {
-            val response = withContext(dispatchers.io) { widgetsApi.userSportBookings(isu).data }
-                ?: return AppResult.Failure(IllegalStateException("Backend returned no data").toAppError())
+            val response = withContext(dispatchers.io) { sportApi.userSportBookings(isu) }
             AppResult.Success(
                 UserSportBookings(
                     confirmedLessonIds = response.lessonIds,

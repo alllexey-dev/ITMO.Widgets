@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import api.myitmo.MyItmoApi
+import dev.alllexey.itmoapi.core.requireResult
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -9,9 +11,7 @@ import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.network.toAppError
-import dev.alllexey.itmowidgets.core.network.requireResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBooking
@@ -29,14 +29,13 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
-import retrofit2.HttpException
 
 @Singleton
 class SportBookingRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
     private val sportDataRepository: SportDataRepository,
-    private val myItmoApi: MyItmoApi,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val myItmo: MyItmoClient,
+    private val sportApi: SportApi,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
@@ -107,18 +106,14 @@ class SportBookingRepositoryImpl @Inject constructor(
         }
         try {
             val result = withContext(dispatchers.io) {
-                val response = myItmoApi.chosenSportSections.execute()
-                if (!response.isSuccessful) throw HttpException(response)
-                response.body().requireResult().flatMap { it.toBookings() }
+                myItmo.sport.getChosenSportSections().requireResult().flatMap { it.toBookings() }
             }
 
             if (sessionMutex.withLock { generation != sessionGeneration }) return
 
             if (backend.mayCallBackend()) {
                 try {
-                    withContext(dispatchers.io) {
-                        widgetsApi.syncSportLessons(result.map { it.lessonId })
-                    }
+                    withContext(dispatchers.io) { sportApi.syncSportLessons(result.map { it.lessonId }) }
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (_: Exception) {

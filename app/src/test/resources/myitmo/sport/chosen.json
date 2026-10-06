@@ -1,0 +1,56 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "id": 31,
+      "section_name": "Synthetic section",
+      "level": 1,
+      "lesson_groups": [
+        {
+          "id": 41,
+          "level": 2,
+          "level_name": "Training",
+          "has_future_lessons": true,
+          "lessons": [
+            {
+              "id": 500001,
+              "date_start": "2026-01-05T10:00:00+03:00",
+              "date_end": "2026-01-05T11:30:00+03:00",
+              "time_slot_id": 2,
+              "time_start": "10:00",
+              "time_end": "11:30",
+              "room_id": -1,
+              "room_name": "Online",
+              "teacher_isu": 200002,
+              "teacher_fio": "Synthetic coach",
+              "type_id": 2,
+              "link_url": "https://example.invalid/lesson",
+              "comment": null,
+              "intersection": false
+            }
+          ],
+          "weekdays": [
+            {
+              "id": 500002,
+              "date_start": null,
+              "date_end": null,
+              "time_slot_id": 2,
+              "time_start": "10:00",
+              "time_end": "11:30",
+              "room_id": -1,
+              "room_name": "Online",
+              "teacher_isu": 200002,
+              "teacher_fio": "Synthetic coach",
+              "type_id": 2,
+              "link_url": null,
+              "comment": null,
+              "intersection": false,
+              "weekday": "Monday"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

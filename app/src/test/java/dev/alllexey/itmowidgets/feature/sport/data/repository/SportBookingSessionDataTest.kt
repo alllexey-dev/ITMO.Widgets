@@ -9,14 +9,14 @@ import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.model.ApiResponse
+import dev.alllexey.itmowidgets.core.network.Core2Harness
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
-import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
+import dev.alllexey.itmowidgets.testkit.respondJson
+import io.ktor.http.HttpStatusCode
 import java.lang.reflect.Proxy
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CompletableDeferred
@@ -33,7 +33,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import okhttp3.Interceptor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -87,17 +86,24 @@ class SportBookingSessionDataTest {
 
     @Test
     fun `HTTP errors are not reported as empty confirmed bookings`() = runTest {
-        val fixture = fixture().apply {
-            responseCode = 403
+        // MyItmoApi 2.x reads a bare MyITMO 403 as a lost session, as it reads a 401.
+        for ((code, error) in listOf(403 to AppError.Unauthorized, 404 to AppError.NotFound)) {
+            val fixture = fixture().apply {
+                responseCode = code
+                responseBody = { EMPTY_RESULT }
+            }
+
+            fixture.repository.refreshSportBookings()
+
+            assertEquals(AppResult.Failure(error), fixture.repository.observeConfirmedSportBookings().first())
+        }
+        val failing = fixture().apply {
+            responseCode = 502
             responseBody = { EMPTY_RESULT }
         }
-
-        fixture.repository.refreshSportBookings()
-
-        assertEquals(
-            AppResult.Failure(AppError.Forbidden),
-            fixture.repository.observeConfirmedSportBookings().first()
-        )
+        failing.repository.refreshSportBookings()
+        val failure = failing.repository.observeConfirmedSportBookings().first() as AppResult.Failure
+        assertTrue(failure.error is AppError.Unknown)
     }
 
     @Test
@@ -184,22 +190,15 @@ class SportBookingSessionDataTest {
         @Volatile var responseCode = 200
         @Volatile var responseBody: () -> String = { BOOKINGS }
 
-        private val myItmo = myItmoStub { responseBody() }.apply {
-            okHttpClient = okHttpClient.newBuilder().apply {
-                interceptors().add(0, Interceptor { chain ->
-                    chain.proceed(chain.request()).newBuilder()
-                        .code(responseCode).message("Synthetic response").build()
-                })
-            }.build()
+        private val clients = Core2Harness(Core2Harness.session()) { request ->
+            if (request.url.host == "my.itmo.ru") {
+                respondJson(responseBody(), HttpStatusCode.fromValue(responseCode))
+            } else {
+                check(request.url.encodedPath == "/api/sport/sign/sync") { "Unexpected Backend call: ${request.url}" }
+                syncCalls.incrementAndGet()
+                respondJson(Core2Harness.contractFixture("http/sport/syncSportLessons.json"))
+            }
         }
-        private val widgetsApi = Proxy.newProxyInstance(
-            ItmoWidgetsApi::class.java.classLoader,
-            arrayOf(ItmoWidgetsApi::class.java)
-        ) { _, method, _ ->
-            check(method.name == "syncSportLessons") { "Unexpected Backend call: ${method.name}" }
-            syncCalls.incrementAndGet()
-            ApiResponse.success("OK")
-        } as ItmoWidgetsApi
         private val sportData = Proxy.newProxyInstance(
             SportDataRepository::class.java.classLoader,
             arrayOf(SportDataRepository::class.java)
@@ -210,7 +209,7 @@ class SportBookingSessionDataTest {
             flowOf(LoadState.Disabled)
         } as SportDataRepository
 
-        val repository = SportBookingRepositoryImpl(DefaultBackendGate(settings, noDemo()), sportData, myItmo.api, widgetsApi, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = SportBookingRepositoryImpl(DefaultBackendGate(settings, noDemo()), sportData, clients.myItmo, clients.client.sport, FixedAcademicTime(), noDemo(), dispatchers)
     }
 
     private class InMemoryPreferencesDataStore : DataStore<Preferences> {

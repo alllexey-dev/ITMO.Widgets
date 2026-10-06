@@ -1,12 +1,15 @@
 package dev.alllexey.itmowidgets.feature.sport.data.demo
 
-import api.myitmo.MyItmoApi
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmoapi.itmoid.TokenSet
+import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoSportSlots
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
@@ -16,7 +19,6 @@ import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachable
-import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
@@ -26,6 +28,8 @@ import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScoreReposito
 import dev.alllexey.itmowidgets.feature.sport.data.repository.UserSportRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFreeSignEntry
+import io.ktor.client.engine.mock.MockEngine
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.flow.first
@@ -48,14 +52,14 @@ class SportDemoGateTest {
     private val time = FixedAcademicTime()
     // The stored opt-in is on: the demo alone must keep every request local.
     private val backend = FakeBackendGate(optedIn = true, demo)
-    private val myItmoApi = unreachable<MyItmoApi>()
-    private val widgetsApi = unreachable<ItmoWidgetsApi>()
-    private val score = SportScoreRepositoryImpl(unreachableMyItmo(), NoOverride, time, demo, dispatchers)
-    private val data = SportDataRepositoryImpl(NoFriends, backend, myItmoApi, widgetsApi, score, time, demo, dispatchers)
+    private val myItmo = unreachableMyItmoClient()
+    private val sportApi = unreachable<SportApi>()
+    private val score = SportScoreRepositoryImpl(myItmo, NoOverride, time, demo, dispatchers)
+    private val data = SportDataRepositoryImpl(NoFriends, backend, myItmo, sportApi, score, time, demo, dispatchers)
 
     @Test
     fun `the catalog merges the demo queues and friends without a request`() = runTest {
-        val schedule = SportScheduleRepositoryImpl(data, myItmoApi, time, NoTemplates, demo, dispatchers)
+        val schedule = SportScheduleRepositoryImpl(data, myItmo, time, NoTemplates, demo, dispatchers)
 
         schedule.refreshSportSchedule()
         data.refreshSportQueueEntries()
@@ -72,7 +76,7 @@ class SportDemoGateTest {
 
     @Test
     fun `own bookings, points and limits come from the demo set`() = runTest {
-        val bookings = SportBookingRepositoryImpl(backend, data, myItmoApi, widgetsApi, time, demo, dispatchers)
+        val bookings = SportBookingRepositoryImpl(backend, data, myItmo, sportApi, time, demo, dispatchers)
 
         bookings.refreshSportBookings()
         data.refreshSportScore()
@@ -92,7 +96,7 @@ class SportDemoGateTest {
 
     @Test
     fun `sign-ups and queues are refused`() = runTest {
-        val actions = SportActionRepositoryImpl(backend, myItmoApi, widgetsApi, demo, dispatchers)
+        val actions = SportActionRepositoryImpl(backend, myItmo, sportApi, demo, dispatchers)
         val refused = AppResult.Failure(AppError.DemoUnavailable)
 
         assertTrue(actions.areCommunityServicesEnabled())
@@ -106,7 +110,7 @@ class SportDemoGateTest {
 
     @Test
     fun `a friend's sport comes from the demo set`() = runTest {
-        val users = UserSportRepositoryImpl(backend, widgetsApi, time, demo, dispatchers)
+        val users = UserSportRepositoryImpl(backend, sportApi, time, demo, dispatchers)
 
         val polina = (users.getUserBookings(DemoPeople.POLINA.isu) as AppResult.Success).value
         val stranger = users.getUserBookings(DemoPeople.ME_ISU + 5000)
@@ -114,6 +118,17 @@ class SportDemoGateTest {
         assertEquals(1, polina.pending.size)
         assertEquals(AppResult.Failure(AppError.Forbidden), stranger)
     }
+
+    /** MyItmoApi 2.x whose session storage and engine both fail the test, as in `DemoNetworkGateTest`. */
+    private fun unreachableMyItmoClient(): MyItmoClient = MyItmoClientFactory.create(
+        storage = object : TokenStorage {
+            override suspend fun read(): TokenSet? = throw AssertionError("The demo session read the ITMO session")
+
+            override suspend fun write(tokens: TokenSet?) = throw AssertionError("The demo session wrote the ITMO session")
+        },
+        engine = MockEngine { request -> throw AssertionError("The demo session asked ${request.url.host}${request.url.encodedPath}") },
+        clock = Clock.System
+    )
 
     private object NoFriends : FriendRepository {
         override fun observeFriendList(): Flow<LoadState<List<UserSummary>>> = flowOf(LoadState.Disabled)

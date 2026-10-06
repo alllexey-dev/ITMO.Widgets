@@ -2,18 +2,18 @@ package dev.alllexey.itmowidgets.feature.sport.data.debug
 
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaToday
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import java.time.LocalDate
-import java.time.LocalTime
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
 class DefaultSportLessonTemplateProvider @Inject constructor(
     private val timeProvider: AcademicTimeProvider,
@@ -23,17 +23,13 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
     override fun getSchedule(): Map<LocalDate, List<SportLesson>>? {
         if (!templateController.isEnabled()) return null
 
-        val now = timeProvider.javaNow()
-        val firstDate = if (now.toLocalTime() < LAST_TODAY_START) {
-            timeProvider.javaToday()
-        } else {
-            timeProvider.javaToday().plusDays(1)
-        }
+        val today = timeProvider.today()
+        val firstDate = if (timeProvider.localNow().time < LAST_TODAY_START) today else today.plusDays(1)
         val lessons = listOf(
             createLesson(
                 id = -1_001,
                 date = firstDate,
-                startTime = if (firstDate == timeProvider.javaToday()) LAST_TODAY_START else MORNING_START,
+                startTime = if (firstDate == today) LAST_TODAY_START else MORNING_START,
                 durationMinutes = 90,
                 sectionName = "Фитнес (функциональная тренировка)",
                 teacher = "Иванова Анна Сергеевна",
@@ -98,7 +94,7 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
                 available = 6
             )
         )
-        return lessons.groupBy { it.start.toJavaInstant().atZone(timeProvider.javaZone()).toLocalDate() }
+        return lessons.groupBy { it.start.toLocalDateTime(timeProvider.timeZone).date }
     }
 
     private fun createLesson(
@@ -113,13 +109,13 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
         available: Int,
         unavailableReasons: List<UnavailableReason> = emptyList()
     ): SportLesson {
-        val zonedStart = date.atTime(startTime).atZone(timeProvider.javaZone())
-        val start = zonedStart.toInstant().toKotlinInstant()
+        val start = date.atTime(startTime).toInstant(timeProvider.timeZone)
+        val end = start + durationMinutes.minutes
         return SportLesson(
             isLessonReal = true,
             lessonId = id,
             start = start,
-            end = start + durationMinutes.minutes,
+            end = end,
             sectionId = id,
             sectionName = SectionName(sectionName),
             sectionLevel = 1,
@@ -134,7 +130,7 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
             comment = "Шаблонное занятие для проверки интерфейса",
             timeSlotId = id,
             timeSlotStart = startTime.toString(),
-            timeSlotEnd = zonedStart.plusMinutes(durationMinutes).toLocalTime().toString(),
+            timeSlotEnd = end.toLocalDateTime(timeProvider.timeZone).time.toString(),
             intersection = false,
             canSignIn = available > 0 && unavailableReasons.isEmpty(),
             unavailableReasons = unavailableReasons,
@@ -147,10 +143,12 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
         )
     }
 
+    private fun LocalDate.plusDays(days: Int): LocalDate = plus(DatePeriod(days = days))
+
     private companion object {
-        val MORNING_START: LocalTime = LocalTime.of(10, 0)
-        val AFTERNOON_START: LocalTime = LocalTime.of(14, 0)
-        val EVENING_START: LocalTime = LocalTime.of(17, 30)
-        val LAST_TODAY_START: LocalTime = LocalTime.of(21, 30)
+        val MORNING_START = LocalTime(10, 0)
+        val AFTERNOON_START = LocalTime(14, 0)
+        val EVENING_START = LocalTime(17, 30)
+        val LAST_TODAY_START = LocalTime(21, 30)
     }
 }

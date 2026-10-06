@@ -1,0 +1,61 @@
+# free signed in
+my POST /api/sport/sign/schedule/lessons [9001]
+backend POST /api/sport/free-sign/lesson/9001/mark-satisfied
+widgets refresh
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync []
+success [Плавание, 7 окт., 10:00] sport Sport
+
+# free rejected
+my POST /api/sport/sign/schedule/lessons [9001]
+backend POST /api/sport/free-sign/lesson/9001/cancel
+widgets refresh
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync []
+failure [Плавание, 7 окт., 10:00] sport Sport
+
+# free no capacity
+my POST /api/sport/sign/schedule/lessons [9001]
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync []
+
+# free network
+my POST /api/sport/sign/schedule/lessons [9001]
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync []
+
+# auto signed in
+my POST /api/sport/sign/schedule/lessons [9001]
+backend POST /api/sport/auto-sign/lesson/9001/mark-satisfied
+widgets refresh
+my POST /api/sport/sign/schedule/lessons [9002]
+backend POST /api/sport/auto-sign/lesson/9002/mark-satisfied
+widgets refresh
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync []
+success [Плавание, 7 окт., 10:00] sport Sport
+success [Плавание, 8 окт., 12:00] sport Sport
+
+# auto rejected
+my POST /api/sport/sign/schedule/lessons [9001]
+backend POST /api/sport/auto-sign/lesson/9001/cancel
+widgets refresh
+my POST /api/sport/sign/schedule/lessons [9002]
+backend POST /api/sport/auto-sign/lesson/9002/cancel
+widgets refresh
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync []
+failure [Плавание, 7 окт., 10:00] sport Sport
+failure [Плавание, 8 окт., 12:00] sport Sport
+
+# auto no capacity
+my POST /api/sport/sign/schedule/lessons [9001]
+my POST /api/sport/sign/schedule/lessons [9002]
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync []
+
+# auto network
+my POST /api/sport/sign/schedule/lessons [9001]
+my POST /api/sport/sign/schedule/lessons [9002]
+my GET /api/sport/sign/chosen
+backend POST /api/sport/sign/sync []

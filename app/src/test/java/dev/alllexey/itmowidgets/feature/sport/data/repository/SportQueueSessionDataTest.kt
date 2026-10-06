@@ -9,21 +9,22 @@ import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.sport.SportApi
+import dev.alllexey.itmowidgets.client.sport.model.QueueEntryStatus
+import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignEntry
+import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignEntry
+import dev.alllexey.itmowidgets.client.sport.model.SportLessonDto
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
-import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
-import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
-import dev.alllexey.itmowidgets.core.model.SportLessonDto
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.network.Core2Harness
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
-import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import java.io.IOException
 import java.lang.reflect.Proxy
-import java.time.OffsetDateTime
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.intrinsics.startCoroutineUninterceptedOrReturn
@@ -75,7 +76,7 @@ class SportQueueSessionDataTest {
         response.entered.await()
 
         fixture.repository.clearSessionData()
-        response.result.complete(ApiResponse.success(listOf(autoSignEntry(1))))
+        response.result.complete(listOf(autoSignEntry(1)))
         refresh.join()
 
         assertEquals(listOf(LoadState.Disabled), states)
@@ -107,11 +108,11 @@ class SportQueueSessionDataTest {
         oldResponse.entered.await()
 
         fixture.repository.clearSessionData()
-        fixture.api.autoSignResponse = { ApiResponse.success(listOf(autoSignEntry(2))) }
+        fixture.api.autoSignResponse = { listOf(autoSignEntry(2)) }
         fixture.repository.refreshSportQueueEntries()
         assertEquals(listOf(2L), fixture.repository.observeSportQueueEntries().first().valueOrNull()?.map { it.id })
 
-        oldResponse.result.complete(ApiResponse.success(listOf(autoSignEntry(1))))
+        oldResponse.result.complete(listOf(autoSignEntry(1)))
         oldRefresh.join()
 
         assertEquals(2, states.size)
@@ -150,7 +151,7 @@ class SportQueueSessionDataTest {
         val settings = ServicesOptInPreferences(InMemoryPreferencesDataStore())
         settings.setCustomServicesEnabled(true)
         val api = QueueApi()
-        val myItmo = myItmoStub { error("Queue refresh must not request MyITMO") }
+        val myItmo = Core2Harness(Core2Harness.session()) { error("Queue refresh must not request MyITMO") }.myItmo
         val friends = object : FriendRepository {
             override fun observeFriendList(): Flow<LoadState<List<UserSummary>>> = error("Friend list is unrelated to personal queues")
             override fun observeCurrentUser(): Flow<UserSummary?> = error("Current user is unrelated to personal queues")
@@ -160,8 +161,8 @@ class SportQueueSessionDataTest {
         val repository = SportDataRepositoryImpl(
             friendRepository = friends,
             backend = DefaultBackendGate(settings, noDemo()),
-            myItmoApi = myItmo.api,
-            widgetsApi = api.instance,
+            myItmo = myItmo,
+            sportApi = api.instance,
             scoreRepository = SportScoreRepositoryImpl(myItmo, object : SportScoreOverrideProvider {
                 override fun getOverride() = null
             }, FixedAcademicTime(), noDemo(), dispatchers),
@@ -180,14 +181,14 @@ class SportQueueSessionDataTest {
 
     private class DeferredResponse {
         val entered = CompletableDeferred<Unit>()
-        val result = CompletableDeferred<ApiResponse<List<SportAutoSignEntry>>>()
+        val result = CompletableDeferred<List<SportAutoSignEntry>>()
     }
 
     private class QueueApi {
         val freeSignCalls = AtomicInteger()
         val autoSignCalls = AtomicInteger()
-        var autoSignResponse: suspend () -> ApiResponse<List<SportAutoSignEntry>> = {
-            ApiResponse.success(listOf(autoSignEntry(1)))
+        var autoSignResponse: suspend () -> List<SportAutoSignEntry> = {
+            listOf(autoSignEntry(1))
         }
 
         fun delayAutoSignResponse(): DeferredResponse = DeferredResponse().also { response ->
@@ -197,14 +198,14 @@ class SportQueueSessionDataTest {
             }
         }
 
-        val instance: ItmoWidgetsApi = Proxy.newProxyInstance(
-            ItmoWidgetsApi::class.java.classLoader,
-            arrayOf(ItmoWidgetsApi::class.java)
+        val instance: SportApi = Proxy.newProxyInstance(
+            SportApi::class.java.classLoader,
+            arrayOf(SportApi::class.java)
         ) { proxy, method, arguments ->
             when (method.name) {
                 "mySportFreeSignEntries" -> respond(arguments) {
                     freeSignCalls.incrementAndGet()
-                    ApiResponse.success(emptyList<SportFreeSignEntry>())
+                    emptyList<SportFreeSignEntry>()
                 }
                 "mySportAutoSignEntries" -> respond(arguments) {
                     autoSignCalls.incrementAndGet()
@@ -213,9 +214,9 @@ class SportQueueSessionDataTest {
                 "equals" -> proxy === arguments?.firstOrNull()
                 "hashCode" -> System.identityHashCode(proxy)
                 "toString" -> "QueueApi"
-                else -> error("Unexpected ItmoWidgetsApi call: ${method.name}")
+                else -> error("Unexpected SportApi call: ${method.name}")
             }
-        } as ItmoWidgetsApi
+        } as SportApi
 
         @Suppress("UNCHECKED_CAST")
         private fun respond(arguments: Array<out Any?>?, response: suspend () -> Any?): Any? =
@@ -231,7 +232,7 @@ class SportQueueSessionDataTest {
     }
 
     private companion object {
-        val START: OffsetDateTime = OffsetDateTime.parse("2026-09-08T12:00:00+03:00")
+        val START: Instant = Instant.parse("2026-09-08T12:00:00+03:00")
 
         fun autoSignEntry(id: Long) = SportAutoSignEntry(
             id = id,
@@ -241,7 +242,7 @@ class SportQueueSessionDataTest {
             total = 1,
             isCancelled = false,
             status = QueueEntryStatus.WAITING,
-            createdAt = START.minusDays(1),
+            createdAt = START - 1.days,
             firstNotifiedAt = null,
             lastNotifiedAt = null,
             cancelledAt = null,
@@ -259,7 +260,7 @@ class SportQueueSessionDataTest {
                 buildingId = 1,
                 roomName = "Бассейн",
                 start = START,
-                end = START.plusHours(1),
+                end = START + 1.hours,
                 timeSlotId = 1,
                 teacherIsu = 123456,
                 teacherFio = "Тестовый преподаватель"

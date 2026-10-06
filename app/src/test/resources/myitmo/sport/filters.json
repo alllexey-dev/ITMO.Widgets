@@ -1,0 +1,30 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": {
+    "building_id": [
+      {
+        "id": 0,
+        "value": "Other venues"
+      }
+    ],
+    "section_id": [
+      {
+        "id": 31,
+        "value": "Synthetic section"
+      }
+    ],
+    "sport_type_id": [
+      {
+        "id": 2,
+        "value": "Synthetic sport"
+      }
+    ],
+    "teacher_isu": [
+      {
+        "id": 200002,
+        "value": "Synthetic coach"
+      }
+    ]
+  }
+}

@@ -104,7 +104,7 @@ class DemoContentTest {
         assertTrue(schedule.count { it.lessons.isNotEmpty() } >= 16)
         assertTrue(sport.all { it in DemoSportSlots.annaBookedDates(today.toKotlinLocalDate()) })
         assertTrue(DemoSchedule.changes(today.toKotlinLocalDate(), time.now()).all { change -> listOfNotNull(change.before, change.after).all { it.date.toJavaLocalDate() in ahead } })
-        assertTrue(DemoSport.schedule(time).keys.all { it in ahead })
+        assertTrue(DemoSport.schedule(time).keys.all { it.toJavaLocalDate() in ahead })
         assertTrue(DemoSport.bookings(time).all { it.start.academicDate(time) in ahead })
         assertTrue(DemoSport.queueEntries(time).all { it.targetLesson.start.academicDate(time) in ahead })
         assertTrue(DemoSport.score(time).attendancesData.all { !it.dateTime.academicDate(time).isAfter(today) })
@@ -121,7 +121,7 @@ class DemoContentTest {
         )
         moments.map(::FixedAcademicTime).forEach { time ->
             val now = time.now()
-            val today = DemoSport.schedule(time).getValue(time.javaToday())
+            val today = DemoSport.schedule(time).getValue(time.today())
 
             assertTrue("Nothing to sign up for at $now", today.any { it.start > now && it.canSignIn && it.available > 0 })
             assertTrue(today.all { it.start.academicDate(time) == time.javaToday() && it.end > it.start })

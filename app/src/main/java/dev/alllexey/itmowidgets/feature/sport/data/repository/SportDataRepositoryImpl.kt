@@ -1,16 +1,16 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import api.myitmo.MyItmoApi
+import dev.alllexey.itmoapi.core.requireResult
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.network.toAppError
-import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
@@ -36,8 +36,8 @@ import javax.inject.Singleton
 class SportDataRepositoryImpl @Inject constructor(
     private val friendRepository: FriendRepository,
     private val backend: BackendGate,
-    private val myItmoApi: MyItmoApi,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val myItmo: MyItmoClient,
+    private val sportApi: SportApi,
     private val scoreRepository: SportScoreRepositoryImpl,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
@@ -80,17 +80,8 @@ class SportDataRepositoryImpl @Inject constructor(
             return
         }
         try {
-            val result = withContext(dispatchers.io) {
-                val response = myItmoApi.sportAttempts.execute()
-                response.body()?.result?.toModel()
-            }
-
-            if (result != null) {
-                attemptsFlow.emit(AppResult.Success(result))
-            } else {
-                attemptsFlow.emit(AppResult.Failure(AppError.Unknown()))
-            }
-
+            val result = withContext(dispatchers.io) { myItmo.sport.getSportAttempts().requireResult().toModel() }
+            attemptsFlow.emit(AppResult.Success(result))
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
@@ -109,16 +100,8 @@ class SportDataRepositoryImpl @Inject constructor(
         }
 
         try {
-            val result = withContext(dispatchers.io) {
-                widgetsApi.sportAutoSignLimits().data?.toModel()
-            }
-
-            if (result != null) {
-                autoSignLimitsFlow.emit(LoadState.Content(result))
-            } else {
-                autoSignLimitsFlow.emit(LoadState.Error(AppError.Unknown()))
-            }
-
+            val result = withContext(dispatchers.io) { sportApi.sportAutoSignLimits().toModel() }
+            autoSignLimitsFlow.emit(LoadState.Content(result))
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
@@ -140,20 +123,9 @@ class SportDataRepositoryImpl @Inject constructor(
         try {
             val result = withContext(dispatchers.io) {
                 supervisorScope {
-                    val freeSign = async {
-                        widgetsApi.mySportFreeSignEntries().data
-                    }
-                    val autoSign = async {
-                        widgetsApi.mySportAutoSignEntries().data
-                    }
-
-                    (
-                        freeSign.await()
-                            ?: throw RuntimeException("FreeSignEntries response is null")
-                    ).map { it.toModel() } + (
-                        autoSign.await()
-                            ?: throw RuntimeException("AutoSignEntries response is null")
-                    ).map { it.toModel() }
+                    val freeSign = async { sportApi.mySportFreeSignEntries() }
+                    val autoSign = async { sportApi.mySportAutoSignEntries() }
+                    freeSign.await().map { it.toModel() } + autoSign.await().map { it.toModel() }
                 }
             }
 
@@ -189,20 +161,9 @@ class SportDataRepositoryImpl @Inject constructor(
         try {
             val result = withContext(dispatchers.io) {
                 supervisorScope {
-                    val freeSign = async {
-                        widgetsApi.currentSportFreeSignQueues().data
-                    }
-                    val autoSign = async {
-                        widgetsApi.currentSportAutoSignQueues().data
-                    }
-
-                    (
-                        freeSign.await()
-                            ?: throw RuntimeException("FreeSignQueues response is null")
-                    ).map { it.toModel() } + (
-                        autoSign.await()
-                            ?: throw RuntimeException("AutoSignQueues response is null")
-                    ).map { it.toModel() }
+                    val freeSign = async { sportApi.currentSportFreeSignQueues() }
+                    val autoSign = async { sportApi.currentSportAutoSignQueues() }
+                    freeSign.await().map { it.toModel() } + autoSign.await().map { it.toModel() }
                 }
             }
 
@@ -226,9 +187,7 @@ class SportDataRepositoryImpl @Inject constructor(
         }
 
         try {
-            val bookings = withContext(dispatchers.io) {
-                widgetsApi.friendsSportBookings().data?.bookings
-            } ?: throw RuntimeException("FriendSportBookings response is null")
+            val bookings = withContext(dispatchers.io) { sportApi.friendsSportBookings().bookings }
 
             fun map(): List<FriendSportBooking> {
                 val friends = friendRepository.currentFriends.orEmpty()

@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
+import dev.alllexey.itmowidgets.core.network.Core2Harness
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
@@ -8,7 +10,8 @@ import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
-import dev.alllexey.itmowidgets.core.testing.myItmoStub
+import dev.alllexey.itmowidgets.testkit.respondJson
+import io.ktor.client.request.HttpRequestData
 import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -25,7 +28,7 @@ class SportScoreRepositoryImplTest {
     @Test fun `sends explicit sport semester query and accepts null attendance history`() = runTest {
         val repository = SportScoreRepositoryImpl(myItmoStub { request ->
             assertEquals("/api/sport/personal/score", request.url.encodedPath)
-            assertEquals("10", request.url.queryParameter("semester_id"))
+            assertEquals("10", request.url.parameters["semester_id"])
             SCORE
         }, overrides(), FixedAcademicTime(), noDemo(),
             dispatchers = dispatchers)
@@ -67,6 +70,10 @@ class SportScoreRepositoryImplTest {
         assertEquals(listOf("Весна 2025/2026", "Осень 2026/2027"), periods.map { it.label })
         assertTrue(periods.all { it.current && it.endsAt == null })
     }
+
+    /** MyItmoApi 2.x over a valid session, my.itmo.ru answering with [answer]. */
+    private fun myItmoStub(answer: (HttpRequestData) -> String): MyItmoClient =
+        Core2Harness(Core2Harness.session()) { request -> respondJson(answer(request)) }.myItmo
 
     private fun overrides(value: SportScoreOverride? = null) = object : SportScoreOverrideProvider {
         override fun getOverride() = value

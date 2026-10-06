@@ -1,0 +1,19 @@
+# results
+sign in: kotlin.Unit
+sign out: kotlin.Unit
+free create: kotlin.Unit
+free cancel: kotlin.Unit
+auto create: kotlin.Unit
+auto cancel: kotlin.Unit
+sign in rejected: Failure(Unknown)
+sign out rejected: Failure(Unknown)
+
+# requests
+my POST /api/sport/sign/schedule/lessons [500001]
+my DELETE /api/sport/sign/schedule/lessons [500001]
+backend POST /api/sport/free-sign/entry/create {"lessonId":9001,"forceSign":true}
+backend POST /api/sport/free-sign/entry/11/cancel
+backend POST /api/sport/auto-sign/entry/create {"prototypeLessonId":9101}
+backend POST /api/sport/auto-sign/entry/21/cancel
+my POST /api/sport/sign/schedule/lessons [500001]
+my DELETE /api/sport/sign/schedule/lessons [500001]

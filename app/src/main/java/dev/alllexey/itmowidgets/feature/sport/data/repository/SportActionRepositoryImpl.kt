@@ -1,27 +1,25 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import api.myitmo.MyItmoApi
+import dev.alllexey.itmoapi.core.requireResult
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.sport.SportApi
+import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.result.AppError
-import api.myitmo.utils.ApiException
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.SportAutoSignRequest
-import dev.alllexey.itmowidgets.core.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
-import retrofit2.HttpException
 import javax.inject.Inject
 
 class SportActionRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
-    private val myItmoApi: MyItmoApi,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val myItmo: MyItmoClient,
+    private val sportApi: SportApi,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
 ) : SportActionRepository {
@@ -31,32 +29,20 @@ class SportActionRepositoryImpl @Inject constructor(
         return backend.isConnected()
     }
 
+    /**
+     * MyITMO's refusal stays a `MyItmoException.Api` with its message inside [AppError.Unknown]: the push handler
+     * tells a full lesson from another rule by it (`SportSignOutcome`).
+     */
     override suspend fun signIn(lessonId: Long): AppResult<Unit> {
         return runAction {
-            withContext(dispatchers.io) {
-                val response = myItmoApi.signInLessons(listOf(lessonId)).execute()
-                if (!response.isSuccessful) throw HttpException(response)
-                val body = response.body()
-                    ?: throw IllegalStateException("Empty sport sign-in response")
-                if (body.errorCode != 0) {
-                    throw ApiException(body.errorCode, body.errorMessage)
-                }
-                check(body.result != null) { "Missing sport action result" }
-            }
+            withContext(dispatchers.io) { myItmo.sport.signInLessons(listOf(lessonId)).requireResult() }
         }
     }
 
+    /** Only the error envelope fails a withdrawal; its result list is not needed. */
     override suspend fun signOut(lessonId: Long): AppResult<Unit> {
         return runAction {
-            withContext(dispatchers.io) {
-                val response = myItmoApi.signOutLessons(listOf(lessonId)).execute()
-                if (!response.isSuccessful) throw HttpException(response)
-                val body = response.body()
-                    ?: throw ApiException("Empty sport sign-out response", null)
-                if (body.errorCode != 0) {
-                    throw ApiException(body.errorCode, body.errorMessage)
-                }
-            }
+            withContext(dispatchers.io) { myItmo.sport.signOutLessons(listOf(lessonId)) }
         }
     }
 
@@ -65,42 +51,35 @@ class SportActionRepositoryImpl @Inject constructor(
         forceSign: Boolean
     ): AppResult<Unit> {
         return runBackendAction {
-            widgetsApi.createSportFreeSignEntry(
-                SportFreeSignRequest(
-                    lessonId = lessonId,
-                    forceSign = forceSign
-                )
-            )
+            sportApi.createSportFreeSignEntry(SportFreeSignRequest(lessonId = lessonId, forceSign = forceSign))
         }
     }
 
     override suspend fun cancelFreeSignEntry(entryId: Long): AppResult<Unit> {
         return runBackendAction {
-            widgetsApi.cancelSportFreeSignEntry(entryId)
+            sportApi.cancelSportFreeSignEntry(entryId)
         }
     }
 
     override suspend fun createAutoSignEntry(prototypeLessonId: Long): AppResult<Unit> {
         return runBackendAction {
-            widgetsApi.createSportAutoSignEntry(
-                SportAutoSignRequest(prototypeLessonId = prototypeLessonId)
-            )
+            sportApi.createSportAutoSignEntry(SportAutoSignRequest(prototypeLessonId = prototypeLessonId))
         }
     }
 
     override suspend fun cancelAutoSignEntry(entryId: Long): AppResult<Unit> {
         return runBackendAction {
-            widgetsApi.cancelSportAutoSignEntry(entryId)
+            sportApi.cancelSportAutoSignEntry(entryId)
         }
     }
 
     /** The queues live on Backend: outside the demo, which refuses them itself, the opt-in must allow the call. */
-    private suspend fun runBackendAction(request: suspend () -> ApiResponse<*>): AppResult<Unit> {
+    private suspend fun runBackendAction(request: suspend () -> Any): AppResult<Unit> {
         if (!demo.isActive() && !backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
-        return runAction { request().requireSuccess() }
+        return runAction { withContext(dispatchers.io) { request() } }
     }
 
-    private suspend fun runAction(action: suspend () -> Unit): AppResult<Unit> {
+    private suspend fun runAction(action: suspend () -> Any): AppResult<Unit> {
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         return try {
             action()
@@ -109,12 +88,6 @@ class SportActionRepositoryImpl @Inject constructor(
             throw cancellation
         } catch (error: Exception) {
             AppResult.Failure(error.toAppError())
-        }
-    }
-
-    private fun ApiResponse<*>.requireSuccess() {
-        if (!success) {
-            throw IllegalStateException(error?.message ?: "Backend rejected sport action")
         }
     }
 }
