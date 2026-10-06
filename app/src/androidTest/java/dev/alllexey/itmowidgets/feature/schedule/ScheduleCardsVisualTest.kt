@@ -29,10 +29,11 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.ui.DayScheduleAdapter
 import dev.alllexey.itmowidgets.feature.schedule.ui.LessonAdapter
-import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleTimelineMarker
 import dev.alllexey.itmowidgets.feature.schedule.ui.renderTimelineMarker
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleRowUi
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
@@ -103,13 +104,13 @@ class ScheduleCardsVisualTest {
         for (dark in listOf(false, true)) preview(Appearances.light.copy(dark = dark)) { scenario ->
             scenario.onActivity { activity ->
                 val states = listOf(
-                    ScheduleItem.LessonState.COMPLETED,
-                    ScheduleItem.LessonState.CURRENT,
-                    ScheduleItem.LessonState.NEXT,
-                    ScheduleItem.LessonState.COMPLETED,
-                    ScheduleItem.LessonState.UPCOMING
+                    ScheduleLessonState.COMPLETED,
+                    ScheduleLessonState.CURRENT,
+                    ScheduleLessonState.NEXT,
+                    ScheduleLessonState.COMPLETED,
+                    ScheduleLessonState.UPCOMING
                 )
-                val adapter = LessonAdapter(states.map { ScheduleItem.LessonItem(lesson(), it, true) })
+                val adapter = LessonAdapter(states.map { ScheduleRowUi.LessonRow(lesson(), it, isLast = true, changed = false) })
                 val holder = adapter.onCreateViewHolder(FrameLayout(activity), adapter.getItemViewType(0))
                 states.forEachIndexed { index, state ->
                     val root = holder.itemView
@@ -386,7 +387,7 @@ class ScheduleCardsVisualTest {
         }
     }
 
-    private fun assertLessonState(root: View, state: ScheduleItem.LessonState) {
+    private fun assertLessonState(root: View, state: ScheduleLessonState) {
         val colors = root.context.color
         val title = root.findViewById<TextView>(R.id.title)
         val start = root.findViewById<TextView>(R.id.time_start)
@@ -398,11 +399,11 @@ class ScheduleCardsVisualTest {
         assertEquals(1f, root.findViewById<View>(R.id.location_building).alpha, 0f)
         assertEquals(1f, start.alpha, 0f)
         assertEquals(1f, end.alpha, 0f)
-        assertEquals(if (state == ScheduleItem.LessonState.COMPLETED) colors.onSurfaceVariant else colors.onSurface, title.currentTextColor)
+        assertEquals(if (state == ScheduleLessonState.COMPLETED) colors.onSurfaceVariant else colors.onSurface, title.currentTextColor)
         assertEquals(when (state) {
-            ScheduleItem.LessonState.CURRENT -> colors.primary
-            ScheduleItem.LessonState.COMPLETED -> colors.onSurfaceVariant
-            ScheduleItem.LessonState.UPCOMING, ScheduleItem.LessonState.NEXT -> colors.onSurface
+            ScheduleLessonState.CURRENT -> colors.primary
+            ScheduleLessonState.COMPLETED -> colors.onSurfaceVariant
+            ScheduleLessonState.UPCOMING, ScheduleLessonState.NEXT -> colors.onSurface
         }, start.currentTextColor)
         assertEquals(colors.onSurfaceVariant, end.currentTextColor)
         val expectedScale = 1f

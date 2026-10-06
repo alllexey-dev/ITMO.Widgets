@@ -18,11 +18,14 @@ import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.dp
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
+import dev.alllexey.itmowidgets.feature.schedule.presentation.PendingSportStatus
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleRowUi
 import kotlin.math.ceil
 import kotlinx.datetime.format
 
 class LessonAdapter(
-    private val scheduleList: List<ScheduleItem>,
+    private val scheduleList: List<ScheduleRowUi>,
     private val onLessonClick: (Lesson) -> Unit = {},
     private val onPendingClick: (PendingSportBooking) -> Unit = {}
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -39,10 +42,10 @@ class LessonAdapter(
 
     override fun getItemViewType(position: Int): Int {
         return when (scheduleList[position]) {
-            is ScheduleItem.LessonItem -> VIEW_TYPE_LESSON
-            is ScheduleItem.BreakItem -> VIEW_TYPE_BREAK
-            is ScheduleItem.NoLessonsItem -> VIEW_TYPE_NO_LESSONS
-            is ScheduleItem.PendingSportItem -> VIEW_TYPE_PENDING_SPORT
+            is ScheduleRowUi.LessonRow -> VIEW_TYPE_LESSON
+            is ScheduleRowUi.BreakRow -> VIEW_TYPE_BREAK
+            ScheduleRowUi.NoLessons -> VIEW_TYPE_NO_LESSONS
+            is ScheduleRowUi.PendingSportRow -> VIEW_TYPE_PENDING_SPORT
         }
     }
 
@@ -61,16 +64,16 @@ class LessonAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = scheduleList[position]) {
-            is ScheduleItem.LessonItem -> {
+            is ScheduleRowUi.LessonRow -> {
                 updateTimelineGuide(holder.itemView, R.id.timeline_guide)
                 (holder as LessonViewHolder).bind(item, onLessonClick)
             }
-            is ScheduleItem.BreakItem -> {
+            is ScheduleRowUi.BreakRow -> {
                 updateTimelineGuide(holder.itemView, R.id.timeline_guide_break)
                 (holder as BreakViewHolder).bind(item)
             }
-            is ScheduleItem.NoLessonsItem -> (holder as EmptyDayViewHolder).bind(item)
-            is ScheduleItem.PendingSportItem -> {
+            ScheduleRowUi.NoLessons -> Unit
+            is ScheduleRowUi.PendingSportRow -> {
                 updateTimelineGuide(holder.itemView, R.id.timeline_guide)
                 (holder as PendingSportViewHolder).bind(item, onPendingClick)
             }
@@ -85,8 +88,8 @@ class LessonAdapter(
                 ?: LayoutInflater.from(row.context).inflate(R.layout.item_schedule_lesson, FrameLayout(row.context), false)
                     .findViewById<TextView>(R.id.time_start)
             val widestTime = scheduleList.flatMap { item -> when (item) {
-                is ScheduleItem.LessonItem -> listOf(item.lesson.start, item.lesson.end)
-                is ScheduleItem.PendingSportItem -> listOf(item.start, item.end)
+                is ScheduleRowUi.LessonRow -> listOf(item.lesson.start, item.lesson.end)
+                is ScheduleRowUi.PendingSportRow -> listOf(item.start, item.end)
                 else -> emptyList()
             } }
                 .maxOfOrNull { ceil(timeLabel.paint.measureText(it.format(TIME_FORMATTER))).toInt() } ?: 0
@@ -117,14 +120,14 @@ class LessonAdapter(
         private val linkIndicator: View = itemView.findViewById(R.id.link_indicator)
         private val changeIndicator: View = itemView.findViewById(R.id.change_indicator)
 
-        fun bind(item: ScheduleItem.LessonItem, onClick: (Lesson) -> Unit) {
+        fun bind(item: ScheduleRowUi.LessonRow, onClick: (Lesson) -> Unit) {
             val lesson = item.lesson
             card.setOnClickListener { onClick(lesson) }
             card.isFocusable = true
             linkIndicator.visibility = if (lesson.zoomUrl.isNullOrBlank()) View.GONE else View.VISIBLE
             changeIndicator.isVisible = item.changed
 
-            (card.layoutParams as? ViewGroup.MarginLayoutParams?)?.bottomMargin = if (item.isLastLesson) 0 else 16.dp
+            (card.layoutParams as? ViewGroup.MarginLayoutParams?)?.bottomMargin = if (item.isLast) 0 else 16.dp
 
             title.text = lesson.subjectName.ifBlank {
                 itemView.context.getString(R.string.schedule_unknown_subject)
@@ -169,25 +172,25 @@ class LessonAdapter(
             card.alpha = 1f
             timeEnd.setTextColor(color.onSurfaceVariant)
 
-            when (item.lessonState) {
-                ScheduleItem.LessonState.CURRENT -> {
+            when (item.state) {
+                ScheduleLessonState.CURRENT -> {
                     title.setTextColor(color.onSurface)
 
                     timelineDot.renderTimelineMarker(ScheduleTimelineMarker.CURRENT)
                     timeStart.setTextColor(color.primary)
                 }
-                ScheduleItem.LessonState.NEXT -> {
+                ScheduleLessonState.NEXT -> {
                     title.setTextColor(color.onSurface)
                     timelineDot.renderTimelineMarker(ScheduleTimelineMarker.NEXT)
                     timeStart.setTextColor(color.onSurface)
                 }
-                ScheduleItem.LessonState.COMPLETED -> {
+                ScheduleLessonState.COMPLETED -> {
                     title.setTextColor(color.onSurfaceVariant)
 
                     timelineDot.renderTimelineMarker(ScheduleTimelineMarker.COMPLETED)
                     timeStart.setTextColor(color.onSurfaceVariant)
                 }
-                ScheduleItem.LessonState.UPCOMING -> {
+                ScheduleLessonState.UPCOMING -> {
                     title.setTextColor(color.onSurface)
 
                     timelineDot.renderTimelineMarker(ScheduleTimelineMarker.UPCOMING)
@@ -208,7 +211,7 @@ class LessonAdapter(
         private val typeIndicator: ImageView = itemView.findViewById(R.id.type_indicator)
         private val content: View = itemView.findViewById(R.id.card_container)
 
-        fun bind(item: ScheduleItem.PendingSportItem, onClick: (PendingSportBooking) -> Unit) {
+        fun bind(item: ScheduleRowUi.PendingSportRow, onClick: (PendingSportBooking) -> Unit) {
             val booking = item.booking
             content.setOnClickListener { onClick(booking) }
             content.isFocusable = true
@@ -222,9 +225,10 @@ class LessonAdapter(
             end.setTextColor(itemView.context.color.onSurfaceVariant)
             timelineDot.renderTimelineMarker(ScheduleTimelineMarker.AUTO_SIGN)
             typeIndicator.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(itemView.context, R.color.lesson_type_sport))
-            status.setText(if (booking.isPrediction) R.string.schedule_auto_sign_prediction else R.string.schedule_auto_sign_waiting)
+            val prediction = item.status == PendingSportStatus.PREDICTION
+            status.setText(if (prediction) R.string.schedule_auto_sign_prediction else R.string.schedule_auto_sign_waiting)
             status.contentDescription = itemView.context.getString(
-                if (booking.isPrediction) R.string.schedule_auto_sign_prediction_description else R.string.schedule_auto_sign_waiting_description
+                if (prediction) R.string.schedule_auto_sign_prediction_description else R.string.schedule_auto_sign_waiting_description
             )
             teacher.text = booking.teacherFio
             itemView.findViewById<View>(R.id.teacher_layout).visibility = if (booking.teacherFio.isBlank()) View.GONE else View.VISIBLE
@@ -241,7 +245,7 @@ class LessonAdapter(
     class BreakViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val breakText: TextView = itemView.findViewById(R.id.break_text)
 
-        fun bind(item: ScheduleItem.BreakItem) {
+        fun bind(item: ScheduleRowUi.BreakRow) {
             breakText.text = itemView.context.getString(
                 R.string.schedule_break_range,
                 item.from.format(TIME_FORMATTER),
@@ -250,9 +254,5 @@ class LessonAdapter(
         }
     }
 
-    class EmptyDayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-        fun bind(item: ScheduleItem.NoLessonsItem) {
-        }
-    }
+    class EmptyDayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 }
