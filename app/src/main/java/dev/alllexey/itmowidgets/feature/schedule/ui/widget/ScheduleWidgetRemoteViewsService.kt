@@ -8,6 +8,10 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSna
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetEntryPoint
 import kotlinx.coroutines.runBlocking
 
+/**
+ * The day list's adapter before rows went inline: a launcher may still bind this cached adapter intent until the
+ * first re-render after an update, so it serves the same rows and ids as [ScheduleListRowRenderer.collectionItems].
+ */
 class ScheduleWidgetRemoteViewsService : RemoteViewsService() {
 
     override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
@@ -20,33 +24,26 @@ class ScheduleWidgetRemoteViewsService : RemoteViewsService() {
 
         private val rowRenderer = ScheduleListRowRenderer(context)
         private val store = ScheduleWidgetEntryPoint.from(context).scheduleWidgetSnapshotStore()
-        private var snapshot = ScheduleWidgetSnapshot.loading()
+        private var rows = rowRenderer.rows(ScheduleWidgetSnapshot.loading())
 
         override fun onCreate() = Unit
 
         override fun onDataSetChanged() {
-            snapshot = runBlocking { store.read() }
+            rows = rowRenderer.rows(runBlocking { store.read() })
         }
 
-        override fun getCount(): Int = snapshot.lessonList.size
+        override fun getCount(): Int = rows.size
 
-        override fun getViewAt(position: Int): RemoteViews? {
-            val item = snapshot.lessonList.getOrNull(position) ?: return null
-            return rowRenderer.render(item, snapshot.lessonListStyle, snapshot.resolvedFullTextSize)
-        }
+        override fun getViewAt(position: Int): RemoteViews? = rows.getOrNull(position)?.views
 
         override fun getLoadingView(): RemoteViews? = null
 
-        override fun getViewTypeCount(): Int = VIEW_TYPE_COUNT
+        override fun getViewTypeCount(): Int = ScheduleListRowRenderer.VIEW_TYPE_COUNT
 
-        override fun getItemId(position: Int): Long = position.toLong()
+        override fun getItemId(position: Int): Long = rows.getOrNull(position)?.id ?: position.toLong()
 
-        override fun hasStableIds(): Boolean = false
+        override fun hasStableIds(): Boolean = true
 
         override fun onDestroy() = Unit
-
-        private companion object {
-            const val VIEW_TYPE_COUNT = 9
-        }
     }
 }

@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.core.graphics.ColorUtils
+import androidx.core.widget.RemoteViewsCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
@@ -272,6 +273,90 @@ class ScheduleWidgetRenderingTest {
             }
         }
     }
+
+    @Test
+    fun dayListCollectionItemsCarryIdentityIdsAndScaledTextForEveryListKind() {
+        SettingsPreviewActivity.appearance = Appearances.light.toSettingsPreview()
+        ActivityScenario.launch(SettingsPreviewActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                val renderer = ScheduleListRowRenderer(activity)
+                val parent = FrameLayout(activity)
+                val math = lesson(ScheduleWidgetLessonState.COMPLETED)
+                val physics = lesson(ScheduleWidgetLessonState.UPCOMING).copy(subject = "Физика", start = "15:20", end = "16:50")
+                val day = listOf(
+                    ScheduleListWidgetItem(ScheduleListWidgetItemKind.HEADER, dateIso = "2026-09-07"),
+                    ScheduleListWidgetItem(ScheduleListWidgetItemKind.LESSON, math),
+                    ScheduleListWidgetItem(ScheduleListWidgetItemKind.LESSON, physics),
+                    // An official and a pending row with the same identity still get distinct ids.
+                    ScheduleListWidgetItem(ScheduleListWidgetItemKind.LESSON, physics.copy(pendingStatus = ScheduleWidgetPendingStatus.WAITING)),
+                    ScheduleListWidgetItem(ScheduleListWidgetItemKind.END)
+                )
+                for (style in LessonStyle.entries) {
+                    val snapshot = ScheduleWidgetSnapshot(
+                        SingleLessonWidgetContent(SingleLessonWidgetKind.LOADING), day, style, style,
+                        fullTextSize = WidgetTextSize.EXTRA_LARGE
+                    )
+                    val items = renderer.collectionItems(snapshot)
+                    assertEquals(day.size, items.itemCount)
+                    assertTrue(items.hasStableIds())
+                    assertEquals(9, items.viewTypeCount)
+                    val ids = items.ids()
+                    assertEquals(ids.size, ids.toSet().size)
+
+                    // Ids follow the row, not its position or state: the launcher keeps scroll and recycling.
+                    val later = renderer.collectionItems(snapshot.copy(lessonList = day.map { item ->
+                        item.copy(lesson = item.lesson?.copy(state = ScheduleWidgetLessonState.COMPLETED))
+                    }))
+                    assertEquals(ids, later.ids())
+                    val withoutFirst = renderer.collectionItems(snapshot.copy(lessonList = day - day[1]))
+                    assertEquals(ids - ids[1], withoutFirst.ids())
+                    val tomorrow = renderer.collectionItems(snapshot.copy(lessonList = day.map { item ->
+                        if (item.kind == ScheduleListWidgetItemKind.HEADER) item.copy(dateIso = "2026-09-08") else item
+                    }))
+                    assertTrue(ids.intersect(tomorrow.ids().toSet()).isEmpty())
+
+                    val lessonLayout = if (style == LessonStyle.DOT) R.layout.item_lesson_list_entry_dot else R.layout.item_lesson_list_entry_dash
+                    val expected = listOf(
+                        R.layout.item_lesson_list_day_title to R.id.day_title,
+                        lessonLayout to R.id.title,
+                        lessonLayout to R.id.title,
+                        lessonLayout to R.id.title,
+                        R.layout.item_lesson_list_end to R.id.end_marker
+                    )
+                    expected.forEachIndexed { index, (layout, textId) ->
+                        val row = items.getItemView(index).apply(activity, parent)
+                        val xml = activity.layoutInflater.inflate(layout, parent, false)
+                        assertEquals("$style $index", xml.textSize(textId) * 1.4f, row.textSize(textId), 1f)
+                    }
+                }
+
+                val messages = mapOf(
+                    ScheduleListWidgetItemKind.EMPTY_TODAY to (R.layout.item_lesson_list_empty to R.id.no_lessons),
+                    ScheduleListWidgetItemKind.EMPTY_TODAY_AND_TOMORROW to (R.layout.item_lesson_list_empty to R.id.no_lessons),
+                    ScheduleListWidgetItemKind.NO_MORE_TODAY to (R.layout.item_lesson_list_no_more to R.id.no_more_lessons),
+                    ScheduleListWidgetItemKind.ERROR to (R.layout.item_lesson_list_error to R.id.empty_view),
+                    ScheduleListWidgetItemKind.SIGNED_OUT to (R.layout.item_lesson_list_error to R.id.empty_view),
+                    ScheduleListWidgetItemKind.LOADING to (R.layout.item_lesson_list_updating to R.id.empty_view)
+                )
+                val messageIds = messages.map { (kind, view) ->
+                    val (layout, textId) = view
+                    val items = renderer.collectionItems(ScheduleWidgetSnapshot(
+                        SingleLessonWidgetContent(SingleLessonWidgetKind.LOADING), listOf(ScheduleListWidgetItem(kind)),
+                        LessonStyle.DOT, LessonStyle.DOT, fullTextSize = WidgetTextSize.EXTRA_LARGE
+                    ))
+                    assertEquals("$kind", 1, items.itemCount)
+                    val row = items.getItemView(0).apply(activity, parent)
+                    val xml = activity.layoutInflater.inflate(layout, parent, false)
+                    assertEquals("$kind", xml.textSize(textId) * 1.4f, row.textSize(textId), 1f)
+                    items.getItemId(0)
+                }
+                // A switch between two single-message states replaces the row instead of rebinding it.
+                assertEquals(messageIds.size, messageIds.toSet().size)
+            }
+        }
+    }
+
+    private fun RemoteViewsCompat.RemoteCollectionItems.ids(): List<Long> = List(itemCount, ::getItemId)
 
     /**
      * API 31+ fades [faded] as a whole. Below it `View.setAlpha` is not a RemoteViews method, so every label keeps
