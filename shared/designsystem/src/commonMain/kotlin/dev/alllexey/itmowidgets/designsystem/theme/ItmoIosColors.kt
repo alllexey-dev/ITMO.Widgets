@@ -37,6 +37,14 @@ data class ItmoIosColors(
     val groupedSheetCell: Color,
     /** A pressed cell: `UIBackgroundConfiguration.listCell()` highlighted, `systemGray4` at both levels (DS-IOS-03). */
     val cellHighlight: Color,
+    /** `label`: an alert's title and its buttons' labels (DS-IOS-05). */
+    val label: Color,
+    /**
+     * The opaque stand-in for the glass of alerts and menus, which the kit does not draw: `systemBackground` in light
+     * and the elevated `secondarySystemBackground` in dark. Not measured: the glass has no colour of its own
+     * (DS-IOS-05).
+     */
+    val overlay: Color,
 ) {
     companion object {
         val Light = ItmoIosColors(
@@ -53,6 +61,8 @@ data class ItmoIosColors(
             groupedSheetBackground = Color(0xFFF2F2F7),
             groupedSheetCell = Color(0xFFFFFFFF),
             cellHighlight = Color(0xFFD1D1D6),
+            label = Color(0xFF000000),
+            overlay = Color(0xFFFFFFFF),
         )
 
         val Dark = ItmoIosColors(
@@ -69,6 +79,8 @@ data class ItmoIosColors(
             groupedSheetBackground = Color(0xFF1C1C1E),
             groupedSheetCell = Color(0xFF2C2C2E),
             cellHighlight = Color(0xFF3A3A3C),
+            label = Color(0xFFFFFFFF),
+            overlay = Color(0xFF2C2C2E),
         )
 
         fun of(dark: Boolean): ItmoIosColors = if (dark) Dark else Light

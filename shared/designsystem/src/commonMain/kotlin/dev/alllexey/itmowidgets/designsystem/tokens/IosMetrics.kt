@@ -87,6 +87,42 @@ object IosMetrics {
     /** A button of an alert, a capsule: the action view's frame and corner radius 24. */
     val alertButtonHeight: Dp = 48.dp
 
+    /** The title's and the message's distance from an alert's sides: the labels' x (DS-IOS-05). */
+    val alertTextInset: Dp = 30.dp
+
+    /** The title's distance from an alert's top: the title label's y. */
+    val alertTextTop: Dp = 22.dp
+
+    /** Between the title's and the message's frames. */
+    val alertMessageGap: Dp = 7.33.dp
+
+    /** Between the message and a text field's capsule: `_UIAlertControllerTextFieldView`'s y. */
+    val alertContentGap: Dp = 16.dp
+
+    /** Between the last text or field and the buttons: the action stack's y. */
+    val alertButtonsGap: Dp = 20.dp
+
+    /** The buttons' distance from an alert's sides and bottom: the action stack's frame. */
+    val alertButtonInset: Dp = 16.dp
+
+    /** Between two buttons, side by side or stacked: the action stack's spacing. */
+    val alertButtonSpacing: Dp = 8.dp
+
+    /** A text field's capsule from an alert's sides: `_UIAlertControllerTextFieldView`'s x; 48 high, radius 24. */
+    val alertFieldInset: Dp = 15.dp
+
+    /** The text's inset inside an alert's text field capsule: the text field's x inside it. */
+    val alertFieldPadding: Dp = 15.dp
+
+    /**
+     * A sheet's navigation bar below the sheet's top edge: `UINavigationBar`'s y in a presented navigation controller
+     * (medium detent, grabber shown); the bar is [navigationBarHeight] high, as on a screen.
+     */
+    val sheetBarTop: Dp = 16.dp
+
+    /** The platter of a bar button in a sheet's bar, the circled close among them: its `ItemWrapperView`. */
+    val sheetBarButtonPlatter: Dp = 36.dp
+
     /**
      * A pull-down menu's corners. Not measurable on the simulator, which draws the menu's glass platter without its
      * shape; the inset group's radius until DS-IOS-04 checks it against a device screenshot.
