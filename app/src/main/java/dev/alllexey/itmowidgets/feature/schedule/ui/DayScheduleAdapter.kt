@@ -10,23 +10,24 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.text.DateTexts
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.dp
-import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDayUi
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDaySummary
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
+import dev.alllexey.itmowidgets.feature.schedule.presentation.buildScheduleListUi
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.format
+import kotlinx.datetime.isoDayNumber
 
+/**
+ * Binds [ScheduleDayUi] built by [buildScheduleListUi]. The list stays keyed by [ScheduleDisplayDay] so content
+ * changes diff by date; time only recomputes the model ([updateLessonStates]).
+ */
 class DayScheduleAdapter(
     private val timeProvider: AcademicTimeProvider,
     private val onLessonClick: (Lesson, LocalDate) -> Unit = { _, _ -> },
@@ -34,21 +35,18 @@ class DayScheduleAdapter(
 ) :
     ListAdapter<ScheduleDisplayDay, DayScheduleAdapter.DayViewHolder>(ScheduleDiffCallback) {
 
-    private var timelineDays = emptyList<ScheduleDisplayDay>()
-    private var timelineStates = emptyList<List<ScheduleItem.LessonState>>()
-    private var renderedToday = timeProvider.today()
+    private var modelDays = emptyList<ScheduleDisplayDay>()
+    private var model = emptyList<ScheduleDayUi>()
 
     override fun onCurrentListChanged(
         previousList: List<ScheduleDisplayDay>,
         currentList: List<ScheduleDisplayDay>
     ) {
-        val previousStatesByDate = timelineDays.mapIndexed { index, day ->
-            day.date to timelineStates[index]
-        }.toMap()
-        updateTimeline(currentList)
-        currentList.forEachIndexed { index, day ->
-            val previousStates = previousStatesByDate[day.date]
-            if (previousStates != null && previousStates != timelineStates[index]) {
+        val previousByDate = model.associateBy { it.date }
+        updateModel(currentList)
+        model.forEachIndexed { index, day ->
+            val previous = previousByDate[day.date]
+            if (previous != null && previous != day) {
                 // An inserted earlier lesson can move NEXT off an unchanged day,
                 // which the day-content DiffUtil comparison cannot detect.
                 notifyItemChanged(index)
@@ -63,89 +61,72 @@ class DayScheduleAdapter(
     }
 
     override fun onBindViewHolder(holder: DayViewHolder, position: Int) {
-        val daySchedule = getItem(position)
-        val date = daySchedule.date
-        val lessons = daySchedule.officialDay?.lessons.orEmpty()
+        // Also support a first bind before ListAdapter's list-change callback.
+        // Keep the committed model intact for its old/new comparison.
+        val day = if (modelDays === currentList) model[position] else buildModel(currentList)[position]
         val context = holder.itemView.context
 
-        val javaDate = date.toJavaLocalDate()
-        holder.dayTitle.text = javaDate.dayOfWeek
-            .getDisplayName(TextStyle.FULL, RUSSIAN_LOCALE)
-            .replaceFirstChar { it.uppercase(RUSSIAN_LOCALE) }
-        holder.dayDate.text = javaDate.format(DATE_FORMATTER)
+        holder.dayTitle.text = DateTexts.Names.DAYS_FULL.names[day.title.weekday.isoDayNumber - 1]
+            .replaceFirstChar { it.uppercaseChar() }
+        holder.dayDate.text = day.title.date.format(DateTexts.DAY_MONTH)
 
-        holder.numberOfLessons.text = if (lessons.isEmpty()) {
-            context.getString(if (daySchedule.pendingSport.isEmpty()) R.string.schedule_no_lessons else R.string.schedule_auto_sign_label)
-        } else {
-            context.resources.getQuantityString(
+        holder.numberOfLessons.text = when (val summary = day.summary) {
+            is ScheduleDaySummary.Lessons -> context.resources.getQuantityString(
                 R.plurals.schedule_lesson_count,
-                lessons.size,
-                lessons.size
+                summary.count,
+                summary.count
             )
+            ScheduleDaySummary.AutoSignOnly -> context.getString(R.string.schedule_auto_sign_label)
+            ScheduleDaySummary.NoLessons -> context.getString(R.string.schedule_no_lessons)
         }
 
-        val today = timeProvider.today()
-        val isToday = date == today
-
-        if (isToday) {
+        holder.card.setCardBackgroundColor(
+            context.color.resolve(com.google.android.material.R.attr.colorSurfaceContainerLow)
+        )
+        holder.card.elevation = 0f
+        if (day.isToday) {
             holder.card.strokeWidth = 2.dp
             holder.card.strokeColor = context.color.primary
-            holder.card.setCardBackgroundColor(
-                context.color.resolve(com.google.android.material.R.attr.colorSurfaceContainerLow)
-            )
             holder.dayTitle.setTextColor(context.color.primary)
-            holder.card.elevation = 0f
             holder.numberOfLessons.setBackgroundResource(R.drawable.shape_pill_outline_selected)
         } else {
             holder.card.strokeWidth = 0
-            holder.card.setCardBackgroundColor(
-                context.color.resolve(com.google.android.material.R.attr.colorSurfaceContainerLow)
-            )
             holder.dayTitle.setTextColor(context.color.onSurface)
-            holder.card.elevation = 0f
             holder.numberOfLessons.setBackgroundResource(R.drawable.shape_pill_outline)
         }
 
-        // Past days keep the established fade; lesson rows remain opaque so it
-        // is applied only once. Always reset it when a holder is reused.
-        holder.itemRoot.alpha = if (date < today) 0.72f else 1f
+        // Lesson rows remain opaque so the fade is applied only once. Always
+        // reset it when a holder is reused.
+        holder.itemRoot.alpha = if (day.isPast) PAST_DAY_ALPHA else 1f
 
-        // Also support a first bind before ListAdapter's list-change callback.
-        // Keep the committed snapshot intact for its old/new marker comparison.
-        val states = if (timelineDays === currentList) timelineStates
-        else resolveScheduleTimeline(currentList, timeProvider.localNow())
-        val processed = processLessonsWithBreaks(lessons, states[position], daySchedule.pendingSport, daySchedule.changedPairIds)
-        val lessonAdapter = LessonAdapter(processed, { lesson -> onLessonClick(lesson, date) }, onPendingClick)
+        val lessonAdapter = LessonAdapter(day.rows, { lesson -> onLessonClick(lesson, day.date) }, onPendingClick)
         // Days are recycled by the outer list. A day's bounded rows must all
         // contribute their natural height; a nested wrap-content RecyclerView
         // can stop measuring at the viewport and silently hide large-font rows.
         holder.lessonList.removeAllViews()
-        processed.indices.forEach { index ->
+        day.rows.indices.forEach { index ->
             val row = lessonAdapter.onCreateViewHolder(holder.lessonList, lessonAdapter.getItemViewType(index))
             lessonAdapter.onBindViewHolder(row, index)
             holder.lessonList.addView(row.itemView)
         }
     }
 
+    /** Called by the minute ticker: rebinds only the days whose time states or today/past flags changed. */
     fun updateLessonStates() {
-        val previousStates = timelineStates
-        val previousToday = renderedToday
-        updateTimeline(currentList)
-        renderedToday = timeProvider.today()
-        if (previousToday != renderedToday) {
-            // Date-card emphasis and past-day alpha also change at midnight.
-            notifyItemRangeChanged(0, itemCount)
-        } else {
-            timelineStates.forEachIndexed { index, states ->
-                if (previousStates.getOrNull(index) != states) notifyItemChanged(index)
-            }
+        val previous = model
+        updateModel(currentList)
+        model.forEachIndexed { index, day ->
+            if (previous.getOrNull(index) != day) notifyItemChanged(index)
         }
     }
 
-    private fun updateTimeline(days: List<ScheduleDisplayDay>) {
-        timelineDays = days
-        timelineStates = resolveScheduleTimeline(days, timeProvider.localNow())
+    private fun updateModel(days: List<ScheduleDisplayDay>) {
+        modelDays = days
+        model = buildModel(days)
     }
+
+    private fun buildModel(days: List<ScheduleDisplayDay>) =
+        buildScheduleListUi(days, timeProvider.localNow(), timeProvider.timeZone)
 
     class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val card: MaterialCardView = itemView.findViewById(R.id.day_card)
@@ -156,64 +137,8 @@ class DayScheduleAdapter(
         val lessonList: LinearLayout = itemView.findViewById(R.id.lesson_list)
     }
 
-    private fun processLessonsWithBreaks(
-        lessons: List<Lesson>,
-        states: List<ScheduleItem.LessonState>,
-        pending: List<PendingSportBooking>,
-        changedPairIds: Set<Long>
-    ): List<ScheduleItem> {
-        val processedList = mutableListOf<ScheduleItem>()
-        val sortedLessons = lessons.withIndex().sortedBy { it.value.start }
-        val pendingItems = pending.map { booking ->
-            ScheduleItem.PendingSportItem(booking, booking.start.wallTime(), booking.end.wallTime(), isLast = false)
-        }
-
-        sortedLessons.forEachIndexed { index, indexedLesson ->
-            val currentLesson = indexedLesson.value
-            processedList.add(
-                ScheduleItem.LessonItem(
-                    currentLesson,
-                    states[indexedLesson.index],
-                    isLastLesson = index == sortedLessons.size - 1,
-                    changed = currentLesson.pairId in changedPairIds
-                )
-            )
-
-            if (index < sortedLessons.size - 1) {
-                val nextLesson = sortedLessons[index + 1].value
-                val currentEndTime = currentLesson.end
-                val nextStartTime = nextLesson.start
-                val breakDuration = (nextStartTime.toSecondOfDay() - currentEndTime.toSecondOfDay()).seconds
-                val overlapsPending = pendingItems.any { it.start < nextStartTime && it.end > currentEndTime }
-                if (breakDuration > BIG_BREAK_THRESHOLD && !overlapsPending) {
-                    processedList.add(ScheduleItem.BreakItem(currentEndTime, nextStartTime))
-                }
-            }
-        }
-
-        processedList += pendingItems
-        if (processedList.isEmpty()) {
-            return listOf(ScheduleItem.NoLessonsItem(ScheduleItem.LessonState.COMPLETED))
-        }
-
-        return processedList.sortedBy { item -> when (item) {
-            is ScheduleItem.LessonItem -> item.lesson.start
-            is ScheduleItem.PendingSportItem -> item.start
-            is ScheduleItem.BreakItem -> item.from
-            is ScheduleItem.NoLessonsItem -> LocalTime(0, 0)
-        } }.mapIndexed { index, item -> when (item) {
-            is ScheduleItem.LessonItem -> item.copy(isLastLesson = index == processedList.lastIndex)
-            is ScheduleItem.PendingSportItem -> item.copy(isLast = index == processedList.lastIndex)
-            else -> item
-        } }
-    }
-
-    private fun Instant.wallTime(): LocalTime = toLocalDateTime(timeProvider.timeZone).time
-
     companion object {
-        private val BIG_BREAK_THRESHOLD = 60.minutes
-        private val RUSSIAN_LOCALE = Locale.forLanguageTag("ru")
-        private val DATE_FORMATTER = DateTimeFormatter.ofPattern("d MMMM", RUSSIAN_LOCALE)
+        private const val PAST_DAY_ALPHA = 0.72f
         private val ScheduleDiffCallback = object : DiffUtil.ItemCallback<ScheduleDisplayDay>() {
             override fun areItemsTheSame(oldItem: ScheduleDisplayDay, newItem: ScheduleDisplayDay) = oldItem.date == newItem.date
             override fun areContentsTheSame(oldItem: ScheduleDisplayDay, newItem: ScheduleDisplayDay) = oldItem == newItem

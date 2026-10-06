@@ -1,14 +1,12 @@
-package dev.alllexey.itmowidgets.feature.schedule.ui
+package dev.alllexey.itmowidgets.feature.schedule.presentation
 
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
-import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem.LessonState
-import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem.LessonState.COMPLETED
-import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem.LessonState.CURRENT
-import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem.LessonState.NEXT
-import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem.LessonState.UPCOMING
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState.COMPLETED
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState.CURRENT
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState.NEXT
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState.UPCOMING
 import kotlin.time.Duration.Companion.hours
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -155,9 +153,9 @@ class ScheduleTimelineResolverTest {
 
     @Test
     fun `empty schedule and days without official lessons preserve empty result shapes`() {
-        assertEquals(emptyList<List<LessonState>>(), resolveScheduleTimeline(emptyList(), NOW))
+        assertEquals(emptyList<List<ScheduleLessonState>>(), resolveScheduleTimeline(emptyList(), NOW))
         assertEquals(
-            listOf(emptyList<LessonState>(), emptyList()),
+            listOf(emptyList<ScheduleLessonState>(), emptyList()),
             resolveScheduleTimeline(listOf(day(TODAY), ScheduleDisplayDay(TODAY.plus(1, DateTimeUnit.DAY), null)), NOW)
         )
     }
