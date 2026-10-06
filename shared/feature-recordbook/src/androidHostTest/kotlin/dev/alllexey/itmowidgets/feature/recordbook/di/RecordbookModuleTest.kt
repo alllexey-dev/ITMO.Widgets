@@ -9,7 +9,10 @@ import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
@@ -17,15 +20,22 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.InMemorySecureStore
+import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.recordbook.FakeMarksScheduler
+import dev.alllexey.itmowidgets.feature.recordbook.RecordingMarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsClient
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkReader
@@ -36,11 +46,19 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
+import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.PublicSheetClient
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
@@ -50,6 +68,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
+import okio.Path.Companion.toPath
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
@@ -63,18 +82,15 @@ class RecordbookModuleTest {
     fun closeKoin() = koin.close()
 
     /**
-     * The data Hilt still builds and the Android side of BARS come from the app's `RecordbookBridge`, the core
-     * contracts from `CoreBridge`, links and levels from the resources and reviews bridges, the handle from the
-     * platform; the MyITMO and BARS data, the resolvers, the loaders and the ViewModels resolve inside the module.
+     * The Android side of BARS and the marks worker's scheduler and notifier come from the app's `RecordbookBridge`,
+     * the core contracts from `CoreBridge`, links and levels from the resources and reviews bridges, the handle from
+     * the platform; all recordbook data, the resolvers, the loaders and the ViewModels resolve inside the module.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
     fun theRecordbookModuleResolvesWithTheBridgedTypes() {
         recordbookModule.verify(
             extraTypes = listOf(
-                MarkTrackingRepository::class,
-                SheetScoresRepository::class,
-                SubjectBindingStore::class,
                 SportScoreRepository::class,
                 SubjectLessonsGateway::class,
                 ScheduleRefreshGateway::class,
@@ -89,11 +105,16 @@ class RecordbookModuleTest {
                 CurrentUserProvider::class,
                 DemoMode::class,
                 AppDispatchers::class,
+                AppDirectories::class,
+                AppNotifier::class,
+                SessionTokenStore::class,
+                Clock::class,
                 BarsSilentLogin::class,
                 ItmoIdCookies::class,
-                BarsSessionListener::class,
                 BarsLogin::class,
                 HttpClientEngine::class,
+                MarksScheduler::class,
+                MarksNotifier::class,
             )
         )
     }
@@ -111,16 +132,34 @@ class RecordbookModuleTest {
         assertSame(koin.get<BarsRecordbookRepositoryImpl>(), koin.get<BarsRecordbookRepository>())
         assertSame(koin.get<BarsPreferenceRepositoryImpl>(), koin.get<BarsPreferenceRepository>())
         assertSame(koin.get<BarsMarkReader>(), koin.get<BarsMarkSource>())
+        assertSame(koin.get<MarkTrackingRepositoryImpl>(), koin.get<MarkTrackingRepository>())
+        assertSame(koin.get<SheetScoresRepositoryImpl>(), koin.get<SheetScoresRepository>())
+        assertSame(koin.get<DataStoreSubjectBindingStore>(), koin.get<SubjectBindingStore>())
+        assertSame(koin.get<DefaultMarkTracking>(), koin.get<MarkTracking>())
+        assertSame(koin.get<BarsMarksActivation>(), koin.get<BarsSessionListener>())
+        assertSame(koin.get<PublicSheetClient>(), koin.get<PublicSheetClient>())
     }
 
     @Test
-    fun theRecordbookCacheBarsCacheAndBarsSwitchAreTheCleaners() {
+    fun theSixRecordbookStoresAreTheCleaners() {
         val cleaners = koin.getAll<SessionDataCleaner>()
 
-        assertEquals(3, cleaners.size)
+        assertEquals(6, cleaners.size)
         assertEquals(1, cleaners.count { it === koin.get<RecordbookRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<BarsRecordbookRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<BarsPreferenceRepositoryImpl>() })
+        assertEquals(1, cleaners.count { it === koin.get<DataStoreSubjectBindingStore>() })
+        assertEquals(1, cleaners.count { it === koin.get<MarkTrackingRepositoryImpl>() })
+        assertEquals(1, cleaners.count { it === koin.get<SheetScoresRepositoryImpl>() })
+    }
+
+    /** The home feed reads every `HomeCardSource` once; the marks card is its own single under its own qualifier. */
+    @Test
+    fun theMarksCardIsOneQualifiedHomeCardSource() {
+        val marks = koin.get<MarksHomeCardSource>()
+
+        assertSame(marks, koin.get<HomeCardSource>(marksCardsQualifier))
+        assertEquals(listOf<HomeCardSource>(marks), koin.getAll<HomeCardSource>())
     }
 
     /** What the app's bridges supply, as fakes; no request leaves the test. */
@@ -157,7 +196,18 @@ class RecordbookModuleTest {
                 override suspend fun store(url: String, setCookies: List<String>) = Unit
             }
         }
-        single<BarsSessionListener> { BarsSessionListener { } }
+        single<AppDirectories> {
+            object : AppDirectories {
+                override val files = "/unused/files".toPath()
+                override val cache = "/unused/cache".toPath()
+                override val noBackup = "/unused/no_backup".toPath()
+            }
+        }
+        single<AppNotifier> { RecordingAppNotifier() }
+        single<SessionTokenStore> { FakeSessionTokenStore() }
+        single<Clock> { Clock.System }
+        single<MarksScheduler> { FakeMarksScheduler() }
+        single<MarksNotifier> { RecordingMarksNotifier() }
         single<HttpClientEngine>(barsEngineQualifier) { MockEngine { error("BARS is not requested here") } }
         single { BarsLogin(get(barsEngineQualifier)) }
     }

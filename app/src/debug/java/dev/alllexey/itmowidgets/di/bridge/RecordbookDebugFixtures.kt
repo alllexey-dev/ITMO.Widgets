@@ -1,11 +1,6 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
-import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
@@ -13,10 +8,11 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsClient
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
@@ -56,11 +52,11 @@ object RecordbookDebugFixtures {
     }
 
     /**
-     * The bridge modules that define the overridden types, loaded again once the last fixture goes. The MyITMO and
-     * BARS repositories are `recordbookModule`'s and are pointed back at its instances instead.
+     * The bridge modules that define the overridden types, loaded again once the last fixture goes. The recordbook's
+     * own repositories are `recordbookModule`'s and are pointed back at its instances instead.
      */
     private val bridgeModules: List<Module>
-        get() = listOf(coreBridgeModule, resourcesBridgeModule, reviewsBridgeModule, recordbookBridgeModule)
+        get() = listOf(coreBridgeModule, resourcesBridgeModule, reviewsBridgeModule)
 
     private var current: Module? = null
 
@@ -88,41 +84,27 @@ object RecordbookDebugFixtures {
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
      * overrode, so the bridge modules load again; their singles forward Hilt's instances, so readers get the same
-     * objects as before. Reloading `recordbookModule` would build a second recordbook cache, BARS client and session
-     * store beside the ones Hilt-built code already holds, so the overridden repository keys point at its instances
-     * again; the schedule gateways point back at `scheduleDataModule`'s singles the same way. A fixture that a newer
-     * host already replaced is left to that host.
+     * objects as before. Reloading `recordbookModule` would build a second recordbook cache, BARS client, session
+     * store and mark state beside the ones the worker and the app already hold, so the overridden repository keys
+     * point at its instances again; the schedule gateways point back at `scheduleDataModule`'s singles the same way.
+     * A fixture that a newer host already replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
         val koin = KoinStarter.ensureStarted(context)
         koin.unloadModules(listOf(fixture))
         koin.loadModules(bridgeModules, allowOverride = true)
+        // In dependency order: a repository first built here reads the keys declared before it (mark tracking reads
+        // the recordbook and the sheets).
         koin.declare<RecordbookRepository>(koin.get<RecordbookRepositoryImpl>(), allowOverride = true)
         koin.declare<BarsRecordbookRepository>(koin.get<BarsRecordbookRepositoryImpl>(), allowOverride = true)
         koin.declare<BarsPreferenceRepository>(koin.get<BarsPreferenceRepositoryImpl>(), allowOverride = true)
         koin.declare<SubjectLessonsGateway>(koin.get<SubjectLessonsGatewayImpl>(), allowOverride = true)
         koin.declare<ScheduleRefreshGateway>(koin.get<ScheduleRepositoryImpl>(), allowOverride = true)
+        koin.declare<SubjectBindingStore>(koin.get<DataStoreSubjectBindingStore>(), allowOverride = true)
+        koin.declare<SheetScoresRepository>(koin.get<SheetScoresRepositoryImpl>(), allowOverride = true)
+        koin.declare<MarkTrackingRepository>(koin.get<MarkTrackingRepositoryImpl>(), allowOverride = true)
         current = null
     }
 }
 
-/**
- * Debug-only access to the real Hilt bindings the recordbook bridges forward from Koin, for identity checks (one
- * `BarsClient`, one BARS session store per process); no session operations. A test `@EntryPoint` would only join a
- * `@HiltAndroidTest` component.
- */
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface RecordbookBindingsEntryPoint {
-    fun recordbookRepository(): RecordbookRepository
-    fun barsPreferenceRepository(): BarsPreferenceRepository
-    fun barsMarkSource(): BarsMarkSource
-    fun barsClient(): BarsClient
-    fun barsLogin(): BarsLogin
-
-    companion object {
-        fun from(context: Context): RecordbookBindingsEntryPoint =
-            EntryPointAccessors.fromApplication(context.applicationContext, RecordbookBindingsEntryPoint::class.java)
-    }
-}

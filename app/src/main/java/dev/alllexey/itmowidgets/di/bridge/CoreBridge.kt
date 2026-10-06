@@ -16,7 +16,6 @@ import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
-import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
@@ -94,7 +93,10 @@ interface CoreBridgeEntryPoint {
     fun backendDeviceSession(): BackendDeviceSession
     fun fcmTokenSync(): FcmTokenSync
 
-    /** The Android notifications (`@Singleton` in Hilt); the schedule changes post and cancel theirs here. */
+    /**
+     * The Android notifications (`@Singleton` in Hilt): channels, permission, destinations; the schedule changes post
+     * and cancel theirs here, the recordbook's mark checks post through it.
+     */
     fun appNotifier(): AppNotifier
 
     /** The session's ports (L16 KM-11h1): the Keystore token file, the widget and work effects, the two flags. */
@@ -104,7 +106,6 @@ interface CoreBridgeEntryPoint {
     fun utilityStorage(): UtilityStorage
 
     fun customSpoilerRepository(): CustomSpoilerRepository
-    fun markTracking(): MarkTracking
     /** Not `calendarSync()`: `CalendarSyncEntryPoint` declares that name for the implementation type. */
     fun coreCalendarSync(): CalendarSync
 
@@ -167,7 +168,6 @@ val coreBridgeModule = module {
     single<DemoPreferences> { CoreBridgeEntryPoint.from(androidContext()).demoPreferences() }
     single<UtilityStorage> { CoreBridgeEntryPoint.from(androidContext()).utilityStorage() }
     single<CustomSpoilerRepository> { CoreBridgeEntryPoint.from(androidContext()).customSpoilerRepository() }
-    single<MarkTracking> { CoreBridgeEntryPoint.from(androidContext()).markTracking() }
     single<CalendarSync> { CoreBridgeEntryPoint.from(androidContext()).coreCalendarSync() }
     factory<ScheduleIcsExport> { CoreBridgeEntryPoint.from(androidContext()).scheduleIcsExport() }
     single<SportScoreRepository> { CoreBridgeEntryPoint.from(androidContext()).sportScoreRepository() }

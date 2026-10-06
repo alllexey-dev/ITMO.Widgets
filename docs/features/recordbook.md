@@ -433,7 +433,17 @@ format, a missing or invalid required field (an unknown half-year, an absent
 name) or another account's file is deleted and the state starts empty, so the
 next check of each source is a baseline.
 
-`MarkTrackingRepositoryImpl` is a `@Singleton` that reads the file once and
+The mark tracking data (`MarksFileStore`, `MarkTrackingRepositoryImpl`,
+`DefaultMarkTracking`, `MarksCheck`, `BarsMarksActivation`,
+`MarksHomeCardSource`) lives in `:shared:feature-recordbook` `commonMain` and is
+built by Koin (`recordbookModule`); the files go through okio on the platform
+file system, the wall clock is the injected `kotlin.time.Clock`. The app's
+`RecordbookBridge` hands `MarksWorker` its `MarksCheck` (`MarksEntryPoint`),
+Hilt readers `DefaultMarkTracking` as `MarkTracking` and as one of the
+Application's background checks, and Koin the Android `MarksScheduler` and
+`MarksNotifier`.
+
+`MarkTrackingRepositoryImpl` is one Koin single that reads the file once and
 keeps the state in memory:
 
 - Two mutexes: `checks` runs one check at a time, `lock` guards the state, so
@@ -579,19 +589,24 @@ the outcome, the step, counts and the process age. Debug builds only.
 
 ### Tests
 
-Unit: `StudyHalfTest`, `MarkSnapshotsTest`, `MarkDiffTest`,
-`MarkNewsRulesTest`, `MarkDigestsTest` and `MarkSubjectsTest` for the model,
-the comparison, the unread rules and the digest; `BarsMarkReaderTest`,
+Unit, in `shared/feature-recordbook/src/androidHostTest` with the 2.2 files in
+its `resources/stores/`: `StudyHalfTest`, `MarkSnapshotsTest`, `MarkDiffTest`,
+`MarkNewsRulesTest` and `MarkDigestsTest` for the model, the comparison, the
+unread rules and the digest; `BarsMarkReaderTest`,
 `MarksFileStoreTest` and `MarkTrackingRepositoryImplTest` for the BARS read,
 the file and the repository (baselines, carrying over, echoes, stale answers,
 the session clear, a new half-year, network failures); `MarksCheckTest`,
-`DefaultMarkTrackingTest`, `BarsMarksActivationTest` and
-`BackgroundChecksTest` for the run, the work and the switches;
-`BarsCookieSilentLoginTest` and `BarsClientTest` for the cookie renewal and
-`backgroundAccount`; `RecordbookSubjectArgsTest`,
-`MainActivityIntentRoutingTest`, `MarksHomeCardSourceTest`; the dots, reading
-and advancing in `RecordbookViewModelTest`, `RecordbookBarsOverlayTest` and
-`RecordbookSubjectViewModelTest`. Instrumented: `MarksWorkTest` (the app's
+`DefaultMarkTrackingTest` and `BarsMarksActivationTest` for the run, the work
+and the switches; `BarsCookieSilentLoginTest` and `BarsClientTest` for the
+cookie renewal and `backgroundAccount`; `MarksHomeCardSourceTest`,
+`RecordbookModuleTest` (the graph, one instance per type, the six cleaners, the
+qualified home card) and `RecordbookSignOutTest`; the dots, reading and
+advancing in `RecordbookViewModelTest`, `RecordbookBarsOverlayTest` and
+`RecordbookSubjectViewModelTest`. In `:shared:core`: `MarkSubjectsTest`,
+`BackgroundChecksTest` and `RecordbookSubjectArgsTest`. In `:app`:
+`MainActivityIntentRoutingTest`, and for the two graphs `RecordbookBridgeTest`,
+`RecordbookBindingsTest`, `BackgroundCheckGraphTest` and
+`HomeSourcesGraphTest`. Instrumented: `MarksWorkTest` (the app's
 `WorkManager` through the debug `MarksTestEntryPoint`), `MarksNotificationTest`,
 `RecordbookVisualTest.newMarksShowADotUntilTheSubjectOpens`; the marks card
 is in `HomeScreenTest` and the `HomeScreenshotTest` goldens. They use synthetic subjects and restore the
@@ -636,16 +651,19 @@ and `ui/sheets`; `feature/resources` only offers the action.
 
 ### Downloading
 
-`PublicSheetClient` uses its own `@PublicWebClient OkHttpClient`: no cookies,
-no HTTPS-to-HTTP redirects, timeouts 15/30/90 s, requests only to
-`https://docs.google.com/`. Addresses and bodies never reach the log or an
-exception.
+`PublicSheetClient` (`commonMain`, one Koin single) owns its Ktor client over
+the platform engine (OkHttp on Android, URLSession on iOS, neither with a cookie
+store, cache or redirects of its own): no `HttpCookies`, `HttpRedirect` follows
+redirects but never from HTTPS to HTTP, `HttpTimeout` 15 s to connect, 30 s
+between bytes and 90 s per request, requests only to
+`https://docs.google.com/`, nothing in the demo session. Bodies are streamed and
+read up to the limit. Addresses and bodies never reach the log or an exception.
 
 - A tab: CSV `GET /spreadsheets/d/<id>/export?format=csv&gid=<gid>` (redirects
   to the download host are followed). An answer that is not `text/csv`, or 401
   or 403, falls back to the HTML tab
   `GET /spreadsheets/d/<id>/htmlview/sheet?headers=false&gid=<gid>`, parsed by
-  `SheetHtmlGrid` (Jsoup, `table.waffle`, `colspan`/`rowspan` spread as in CSV).
+  `SheetHtmlGrid` (Ksoup, `table.waffle`, `colspan`/`rowspan` spread as in CSV).
 - The tabs: `GET /spreadsheets/d/<id>/htmlview`, the JavaScript
   `items.push({name, pageUrl, gid})` lines (`SheetTabsParser`). The link's tab
   comes first; at most 50 tabs, 4 at a time. `gviz/tq` and `pubhtml` are not used.
@@ -752,21 +770,25 @@ Gson wrote: format 1, absent nulls, `format` and an empty `connections` always
 written. Excluded from backup and device transfer. A corrupt file, another
 format, a missing or invalid required field (a blank key, an address that is
 not a sheet, an unknown key kind or status) or another account's file is
-deleted. `SheetScoresRepositoryImpl` is a `@Singleton`
-`SessionDataCleaner`: sign-out deletes the file; a reading is written only when
+deleted. The store, the client and `SheetScoresRepositoryImpl` live in
+`:shared:feature-recordbook` `commonMain`; the repository is one Koin single and
+a `SessionDataCleaner`: sign-out deletes the file; a reading is written only when
 the session generation and the whole connection it was taken for are unchanged.
 
 ### Tests
 
-Unit: `GoogleSheetUrlTest`, `CsvGridTest`, `SheetIdentityTest`,
-`SheetHeadersTest`, `SheetRowsTest`, `SheetTotalsTest`, `SheetScoreRulesTest`
-on synthetic sheets in `app/src/test/resources/sheets/`;
-`SheetTabsParserTest`, `SheetHtmlGridTest`, `PublicSheetClientTest`
-(MockWebServer), `SheetScoresFileStoreTest`, `SheetScoresRepositoryImplTest`,
+Unit, in `shared/feature-recordbook/src/androidHostTest`: `CsvGridTest`,
+`SheetIdentityTest`, `SheetHeadersTest`, `SheetRowsTest`, `SheetTotalsTest`,
+`SheetScoreRulesTest` on synthetic sheets in its `resources/sheets/`;
+`SheetTabsParserTest`, `SheetHtmlGridTest`, `PublicSheetClientTest` (the
+production Ktor configuration on a `MockEngine`: cookies, redirects, timeouts,
+the limit), `SheetScoresFileStoreTest`, `SheetScoresRepositoryImplTest`
+(MockWebServer over the OkHttp engine),
 `SheetScoresViewModelTest`; the sheet cases of `MarkTrackingRepositoryImplTest`,
 `MarksCheckTest`, `DefaultMarkTrackingTest`, `MarkNewsRulesTest`,
 `RecordbookSubjectViewModelTest`, `RecordbookViewModelTest` and
-`RecordbookDisplayedScoreTest`. Instrumented: `SheetScoresVisualTest`, the sheet
+`RecordbookDisplayedScoreTest`; `GoogleSheetUrlTest` in `:shared:core`.
+Instrumented: `SheetScoresVisualTest`, the sheet
 cases of `RecordbookVisualTest` and
 `SubjectLinksVisualTest.actionsSheetOffersMyScoresOnlyForAGoogleSheet`. No real
 sheet is opened; names and ISUs are made up.

@@ -13,11 +13,14 @@ two FABs at the bottom end; the list reserves space under them.
 own close button: `HomeViewModel.dismissCard(kind)` passes it to every source,
 and only the owner of that kind resets what the card shows; the default does
 nothing. Every feature that owns data contributes a source from its `data`
-package through the `@IntoSet` multibinding in its Hilt module (`HomeBridge`
-hands the set to Koin); `HomeViewModel` (`:shared:feature-home`, built by Koin)
-receives the sources, flattens the flows, drops the kinds hidden in settings
-and sorts by `HomeCardKind`, whose declaration order is the feed order. Nothing
-in `feature/home` imports another feature.
+package: a source still built by Hilt through the `@IntoSet` multibinding in its
+Hilt module (`HomeBridge` hands the set to Koin as one composite), a source in a
+shared module as a Koin single under the feature's own qualifier (home's hints,
+social's friend requests, the schedule's two cards, the recordbook's new marks);
+`HomeViewModel` (`:shared:feature-home`, built by Koin) receives the sources,
+flattens the flows, drops the kinds hidden in settings and sorts by
+`HomeCardKind`, whose declaration order is the feed order. Nothing in
+`feature/home` imports another feature.
 
 Each card is drawn by the feature that produces it. `core/home` also holds
 `HomeCardRenderer` (the `kinds` it claims and a `@Composable` `Content(card,

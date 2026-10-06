@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
+import dev.alllexey.itmowidgets.feature.recordbook.di.marksCardsQualifier
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleChangesHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleCardsQualifier
@@ -35,7 +36,7 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 /**
  * The home feed sees every feature's source exactly once while the sources sit in two graphs: Hilt's `@IntoSet`
  * set behind the composite, and the qualified sources a lane has already moved to Koin (home's hints, social's
- * friend requests, the schedule's two cards).
+ * friend requests, the schedule's two cards, the recordbook's new marks).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -111,6 +112,17 @@ class HomeSourcesGraphTest {
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === schedule })
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === changes })
         assertTrue(hilt.none { it is ScheduleHomeCardSource || it is ScheduleChangesHomeCardSource })
+    }
+
+    @Test
+    fun `the new-marks source is one Koin single outside the Hilt set`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+
+        val marks = koin.get<MarksHomeCardSource>()
+        assertSame(marks, koin.get<HomeCardSource>(marksCardsQualifier))
+        assertEquals(1, koin.getAll<HomeCardSource>().count { it === marks })
+        assertTrue(HomeBridgeEntryPoint.from(application).homeCardSources().none { it is MarksHomeCardSource })
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
