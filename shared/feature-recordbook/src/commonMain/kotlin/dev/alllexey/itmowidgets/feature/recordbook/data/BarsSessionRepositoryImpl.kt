@@ -5,10 +5,9 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsClient
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
-import javax.inject.Inject
 
 /** The interactive sign-in: URL and callback checks of [BarsLogin], the code exchange through [BarsClient]. */
-class BarsSessionRepositoryImpl @Inject constructor(
+class BarsSessionRepositoryImpl(
     private val login: BarsLogin,
     private val client: BarsClient
 ) : BarsSessionRepository {

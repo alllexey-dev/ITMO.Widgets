@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
+import kotlinx.coroutines.runBlocking
 import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -16,7 +17,7 @@ import org.junit.Test
 
 /**
  * The token files 2.2 sealed with the Keystore read through [FileSecureStore] as they are, and what it writes back by
- * the same name is what the 2.2 readers (`MyItmoStorage`, `BarsTokenStore`) read: L12 moves the BARS session onto it.
+ * the same name is what the 2.2 reader `MyItmoStorage` and the BARS session store (on it since L12 KM-11b1) read.
  */
 class SecureStoreUpgradeTest {
 
@@ -55,8 +56,8 @@ class SecureStoreUpgradeTest {
         assertEquals("upgrade22-refresh-token", myItmo.getRefreshToken())
         assertEquals(Captured22.TOKEN_EXPIRES_AT, myItmo.getRefreshExpiresAt())
         assertEquals(Captured22.ID_TOKEN, myItmo.getIdToken())
-        val bars = BarsTokenStore(File(target, BARS), AndroidKeystoreTokenCipher())
-        assertEquals(Captured22.BARS_HEADER, bars.load(Captured22.ISU))
+        val bars = BarsTokenStore(store)
+        assertEquals(Captured22.BARS_HEADER, runBlocking { bars.load(Captured22.ISU) })
         for (name in TOKEN_FILES) assertEquals(name, plaintext(name), store.read(name))
     }
 

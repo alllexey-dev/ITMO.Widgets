@@ -18,12 +18,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** Re-issues a BARS authorization code from the ITMO.ID session the app's WebView already holds. */
-interface BarsSilentLogin {
-    /** Null when ITMO.ID wants the user (session ended) or the flow did not finish in time. */
-    suspend fun authorizationCode(state: String): String?
-}
-
 /** Headless copy of the interactive flow: same official URLs, no JavaScript bridge, no token reading. */
 class BarsWebSilentLogin @Inject constructor(
     @param:ApplicationContext private val context: Context,

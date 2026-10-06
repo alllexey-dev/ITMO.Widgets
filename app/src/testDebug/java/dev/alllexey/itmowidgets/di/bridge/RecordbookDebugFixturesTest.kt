@@ -21,6 +21,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSubjectBindingStore
+import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
@@ -51,6 +54,9 @@ class RecordbookDebugFixturesTest {
     fun `a fixture replaces every bridged type of the recordbook until its host unloads it`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
+        val recordbookBefore = koin.get<RecordbookRepository>()
+        val barsBefore = koin.get<BarsRecordbookRepository>()
+        val barsPreferenceBefore = koin.get<BarsPreferenceRepository>()
 
         val fixture = RecordbookDebugFixtures.load(application, Fakes)
         assertSame(Fakes.recordbook, koin.get<RecordbookRepository>())
@@ -69,9 +75,13 @@ class RecordbookDebugFixturesTest {
         RecordbookDebugFixtures.unload(application, fixture)
         val recordbook = RecordbookBridgeEntryPoint.from(application)
         val core = CoreBridgeEntryPoint.from(application)
-        assertSame(recordbook.recordbookRepository(), koin.get<RecordbookRepository>())
-        assertSame(recordbook.barsRecordbookRepository(), koin.get<BarsRecordbookRepository>())
-        assertSame(recordbook.barsPreferenceRepository(), koin.get<BarsPreferenceRepository>())
+        // The module's own instances again, not a second cache or BARS client beside the ones Hilt-built code holds.
+        assertSame(recordbookBefore, koin.get<RecordbookRepository>())
+        assertSame(koin.get<RecordbookRepositoryImpl>(), koin.get<RecordbookRepository>())
+        assertSame(barsBefore, koin.get<BarsRecordbookRepository>())
+        assertSame(koin.get<BarsRecordbookRepositoryImpl>(), koin.get<BarsRecordbookRepository>())
+        assertSame(barsPreferenceBefore, koin.get<BarsPreferenceRepository>())
+        assertSame(koin.get<BarsPreferenceRepositoryImpl>(), koin.get<BarsPreferenceRepository>())
         assertSame(recordbook.markTrackingRepository(), koin.get<MarkTrackingRepository>())
         assertSame(recordbook.sheetScoresRepository(), koin.get<SheetScoresRepository>())
         assertSame(recordbook.subjectBindingStore(), koin.get<SubjectBindingStore>())

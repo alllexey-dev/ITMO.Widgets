@@ -8,20 +8,20 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
-@Singleton
-class BarsPreferenceRepositoryImpl @Inject constructor(
+/**
+ * The BARS overlay switch of the recordbook, key `recordbook_bars` of the one `app_preferences` DataStore. Koin holds
+ * one instance for the screens, the marks check and sign-out (`recordbookModule`).
+ */
+class BarsPreferenceRepositoryImpl(
     private val tokens: BarsTokenStore,
-    @param:AppPreferences private val preferences: DataStore<Preferences>,
+    private val preferences: DataStore<Preferences>,
     private val markSources: MarkSourcePreferences,
     private val dispatchers: AppDispatchers
 ) : BarsPreferenceRepository, SessionDataCleaner {

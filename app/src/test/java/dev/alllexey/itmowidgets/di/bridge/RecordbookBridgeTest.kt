@@ -1,16 +1,19 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
+import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
+import io.ktor.client.engine.HttpClientEngine
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -31,18 +34,21 @@ class RecordbookBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the recordbook data resolves in Koin to the instances Hilt builds`() {
+    fun `what the recordbook takes from the app resolves in Koin to what Hilt builds`() {
         val application = bootApplication()
         val hilt = RecordbookBridgeEntryPoint.from(application)
         val koin = GlobalContext.get()
 
-        assertSame(hilt.recordbookRepository(), koin.get<RecordbookRepository>())
-        assertSame(hilt.barsRecordbookRepository(), koin.get<BarsRecordbookRepository>())
-        assertSame(hilt.barsPreferenceRepository(), koin.get<BarsPreferenceRepository>())
-        assertSame(hilt.barsSessionRepository(), koin.get<BarsSessionRepository>())
         assertSame(hilt.markTrackingRepository(), koin.get<MarkTrackingRepository>())
         assertSame(hilt.sheetScoresRepository(), koin.get<SheetScoresRepository>())
         assertSame(hilt.subjectBindingStore(), koin.get<SubjectBindingStore>())
+        assertSame(hilt.barsEngine(), koin.get<HttpClientEngine>(barsEngineQualifier))
+        assertSame(hilt.barsLogin(), koin.get<BarsLogin>())
+        // Unscoped in Hilt and stateless: the same implementations, Koin keeps its first instance.
+        assertEquals(hilt.barsSilentLogin()::class, koin.get<BarsSilentLogin>()::class)
+        assertEquals(hilt.itmoIdCookies()::class, koin.get<ItmoIdCookies>()::class)
+        assertEquals(hilt.barsSessionListener()::class, koin.get<BarsSessionListener>()::class)
+        assertSame(koin.get<BarsSilentLogin>(), koin.get<BarsSilentLogin>())
     }
 
     @Test

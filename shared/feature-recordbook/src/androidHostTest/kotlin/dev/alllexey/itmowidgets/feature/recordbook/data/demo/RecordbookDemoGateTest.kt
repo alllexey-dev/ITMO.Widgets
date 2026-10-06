@@ -3,27 +3,31 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.demo
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import io.ktor.client.engine.mock.MockEngine
 import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Rule
+import org.junit.Before
 import org.junit.Test
 
 class RecordbookDemoGateTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+    private val dispatchers = main.dispatcher.let { AppDispatchers(io = it, default = it, main = it) }
 
-    private val dispatchers = mainDispatcherRule.appDispatchers
+    @Before fun installMain() = main.install()
+
+    @After fun resetMain() = main.reset()
 
     @Test
     fun `the program, subjects and control points come from the demo set`() = runTest {

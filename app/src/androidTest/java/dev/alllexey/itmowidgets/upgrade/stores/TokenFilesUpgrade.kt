@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.upgrade.stores
 
 import dev.alllexey.itmowidgets.core.diagnostics.AndroidAppLog
+import dev.alllexey.itmowidgets.core.platform.FileSecureStore
 import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipher
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
@@ -8,6 +9,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -20,16 +22,18 @@ import org.junit.Assert.assertTrue
 object TokenFilesUpgrade {
 
     fun check(fixture: Upgrade22Fixture) {
-        val noBackup = AndroidAppDirectories(fixture.context).noBackup.toFile()
+        val directories = AndroidAppDirectories(fixture.context)
+        val noBackup = directories.noBackup.toFile()
         val myItmoFile = File(noBackup, "myitmo_tokens.enc")
         assertTrue(myItmoFile.readText().startsWith("v1:"))
         assertFalse(myItmoFile.readText().contains("upgrade22"))
 
         assertCapturedSession(myItmoFile, fixture)
 
-        val bars = BarsTokenStore(File(noBackup, "bars_tokens.enc"), AndroidKeystoreTokenCipher())
-        assertEquals(Captured22.BARS_HEADER, bars.load(Captured22.ISU))
-        assertNull(bars.load(Captured22.ISU + 1))
+        // The BARS session reads through the SecureStore the app builds over noBackupFilesDir (L12 KM-11b1).
+        val bars = BarsTokenStore(FileSecureStore(directories.noBackup, AndroidKeystoreTokenCipher()))
+        assertEquals(Captured22.BARS_HEADER, runBlocking { bars.load(Captured22.ISU) })
+        assertNull(runBlocking { bars.load(Captured22.ISU + 1) })
 
         // API 26-29: AtomicFile moved the valid file to `.bak` and died while rewriting the file itself.
         val captured = myItmoFile.readBytes()

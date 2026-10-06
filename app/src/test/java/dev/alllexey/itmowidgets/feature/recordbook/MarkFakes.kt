@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.recordbook
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkRead
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkSource
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheckpointMark
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
@@ -148,15 +147,6 @@ class RecordingMarksNotifier : MarksNotifier {
 
     override fun showBarsPrompt() {
         prompts++
-    }
-}
-
-/** Counts successful BARS answers reported by the client. */
-class CountingBarsSessionListener : BarsSessionListener {
-    var answers = 0
-
-    override suspend fun onBarsAnswered() {
-        answers++
     }
 }
 

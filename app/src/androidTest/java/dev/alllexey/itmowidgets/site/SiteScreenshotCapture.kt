@@ -26,8 +26,6 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
@@ -269,11 +267,11 @@ class SiteScreenshotCapture {
     }
 
     private class SiteRecordbook : RecordbookRepository {
-        override suspend fun getPrograms() = AppResult.Success(DemoRecordbook.programs(RECORDBOOK_TODAY))
+        override suspend fun getPrograms() = AppResult.Success(DemoRecordbook.programs(RECORDBOOK_TODAY.toKotlinLocalDate()))
         override suspend fun getSubjects(programId: Long, semester: Int): AppResult<List<RecordbookSubject>> =
-            AppResult.Success(DemoRecordbook.subjects(programId, semester, RECORDBOOK_TODAY, RECORDBOOK_TIME.javaZone()).orEmpty())
+            AppResult.Success(DemoRecordbook.subjects(programId, semester, RECORDBOOK_TIME.today(), RECORDBOOK_TIME.timeZone).orEmpty())
         override suspend fun getControls(entryId: Long) =
-            AppResult.Success(DemoRecordbook.controls(entryId, RECORDBOOK_TIME.javaNow()).orEmpty())
+            AppResult.Success(DemoRecordbook.controls(entryId, RECORDBOOK_TIME.now()).orEmpty())
     }
     // endregion
 

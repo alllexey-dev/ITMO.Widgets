@@ -5,7 +5,6 @@ import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
@@ -42,7 +41,7 @@ class DemoContentTest {
     fun `every person named anywhere belongs to the demo people`() = clocks.forEach { time ->
         val today = time.javaToday()
         val schedule = DemoSchedule.ownDays(today.minusDays(14).toKotlinLocalDate(), today.plusDays(14).toKotlinLocalDate(), today.toKotlinLocalDate())
-        val semester = DemoRecordbook.programs(today).single().periods.single { it.actual }
+        val semester = DemoRecordbook.programs(time.today()).single().periods.single { it.actual }
         val people = buildList {
             addAll(schedule.flatMap { day -> day.lessons.mapNotNull { it.teacherFio } })
             addAll(DemoSport.schedule(time).values.flatten().map { it.teacherFio })
@@ -57,9 +56,9 @@ class DemoContentTest {
                 (snapshot.mine + snapshot.shared).mapNotNull { it.author?.name }
             })
             (1..semester.semester).forEach { number ->
-                DemoRecordbook.subjects(DemoStudy.PROGRAM_ID, number, today, time.javaZone()).orEmpty().forEach { subject ->
+                DemoRecordbook.subjects(DemoStudy.PROGRAM_ID, number, time.today(), time.timeZone).orEmpty().forEach { subject ->
                     subject.teacherName?.let(::add)
-                    DemoRecordbook.controls(subject.entryId, time.javaNow()).orEmpty().mapNotNull { it.teacherName }.forEach(::add)
+                    DemoRecordbook.controls(subject.entryId, time.now()).orEmpty().mapNotNull { it.teacherName }.forEach(::add)
                 }
             }
         }
@@ -81,9 +80,9 @@ class DemoContentTest {
             DemoSocial.friends(), DemoSocial.requests(), DemoPeople.EVERYONE.map { DemoSocial.person(it.isu) },
             DemoPeople.TEACHERS.map { DemoReviews.reviews(it.isu, time.today()) },
             DemoStudy.CURRENT.map { DemoSubjectLinks.snapshot(ResourceScope(it.id, it.name, StudyHalf.of(time.today()).periodKey), time.now()) },
-            DemoRecordbook.programs(today), (1..4).map { DemoRecordbook.subjects(DemoStudy.PROGRAM_ID, it, today, time.javaZone()) },
-            DemoStudy.CURRENT.map { DemoRecordbook.controls(it.id * 10 + 3, time.javaNow()) },
-            DemoRecordbook.news(today, time.javaNow().toInstant()), DemoRecordbook.sheetScores(today, time.javaNow().toInstant())
+            DemoRecordbook.programs(time.today()), (1..4).map { DemoRecordbook.subjects(DemoStudy.PROGRAM_ID, it, time.today(), time.timeZone) },
+            DemoStudy.CURRENT.map { DemoRecordbook.controls(it.id * 10 + 3, time.now()) },
+            DemoRecordbook.news(time.today(), time.now()), DemoRecordbook.sheetScores(time.today(), time.now())
         ).joinToString("\n")
 
         val forbidden = Regex("тест|синтет|lorem|123456", RegexOption.IGNORE_CASE).findAll(text).map { it.value }.toList()

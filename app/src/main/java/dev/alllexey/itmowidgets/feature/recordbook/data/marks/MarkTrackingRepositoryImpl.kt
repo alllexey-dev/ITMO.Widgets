@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import kotlinx.coroutines.flow.update
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
@@ -88,7 +87,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
 
     override fun observeNews(): Flow<List<MarkNews>> = flow {
         if (demo.isActive()) {
-            emitAll(demoRead.map { read -> DemoRecordbook.news(time.javaToday(), clock.instant()).filterNot { it.id in read } })
+            emitAll(demoRead.map { read -> DemoRecordbook.news(time.today(), clock.instant().toKotlinInstant()).filterNot { it.id in read } })
             return@flow
         }
         lock.withLock { loaded() }
@@ -214,7 +213,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun target(news: MarkNews, withBars: Boolean): MarkSubjectTarget? = if (demo.isActive()) {
-        DemoRecordbook.target(news, time.javaToday())
+        DemoRecordbook.target(news, time.today())
     } else lock.withLock {
         val stored = loaded()
         MarkNewsRules.target(news, stored.myItmo?.toModel(), stored.bars?.toModel(), withBars)
@@ -242,7 +241,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
 
     override suspend fun markAllRead() {
         if (demo.isActive()) {
-            demoRead.update { read -> read + DemoRecordbook.news(time.javaToday(), clock.instant()).map { it.id } }
+            demoRead.update { read -> read + DemoRecordbook.news(time.today(), clock.instant().toKotlinInstant()).map { it.id } }
             return
         }
         update { stored -> stored.copy(news = emptyList()) }

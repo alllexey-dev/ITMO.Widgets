@@ -10,8 +10,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import javax.inject.Inject
-import javax.inject.Singleton
+import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -21,13 +20,12 @@ import dev.alllexey.itmoapi.bars.BarsClient as LibraryBarsClient
 /**
  * App-side seam over the library client: binds the session to the signed-in ISU, serializes period selection, and
  * turns library failures into [AppError]. The library client is built over [OwnerBoundBarsStorage] and [BarsRenewal]
- * (see `RecordbookModule`): screens ([account]) renew through the headless WebView flow, the background
+ * (`recordbookModule` holds the one instance of each per process, so there is one session lock): screens ([account]) renew through the headless WebView flow, the background
  * ([backgroundAccount]) through ITMO.ID cookies. Only one block runs at a time, so the renewal mode belongs to the
  * block that holds the lock. The library's locks are not reentrant: a block never nests period changes. Every
  * successful answer is reported to [BarsSessionListener] after the lock is released.
  */
-@Singleton
-class BarsClient @Inject constructor(
+class BarsClient internal constructor(
     private val bars: LibraryBarsClient,
     private val renewal: BarsRenewal,
     private val storage: OwnerBoundBarsStorage,
@@ -36,6 +34,20 @@ class BarsClient @Inject constructor(
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
 ) {
+    /** The library client over the platform's BARS [engine] (no cookie jar, cache or redirects, ADR 0012). */
+    constructor(
+        engine: HttpClientEngine,
+        renewal: BarsRenewal,
+        storage: OwnerBoundBarsStorage,
+        currentUser: CurrentUserProvider,
+        listener: BarsSessionListener,
+        demo: DemoMode,
+        dispatchers: AppDispatchers
+    ) : this(
+        LibraryBarsClient(engine, storage = storage, codeSupplier = renewal),
+        renewal, storage, currentUser, listener, demo, dispatchers
+    )
+
     private val mutex = Mutex()
 
     suspend fun <T> account(block: suspend Account.() -> T): AppResult<T> = safe {
