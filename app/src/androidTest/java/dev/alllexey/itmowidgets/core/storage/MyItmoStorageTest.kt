@@ -4,10 +4,12 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.core.diagnostics.AndroidAppLog
+import dev.alllexey.itmowidgets.core.session.SessionTokens
 import java.io.File
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -38,7 +40,7 @@ class MyItmoStorageTest {
 
     @Test
     fun writesEncryptedFileAndReadsPlainValue() {
-        storage.setAccessToken("test-access-token")
+        storage.replaceWithTokens(sessionTokens(accessToken = "test-access-token"))
 
         assertEquals("test-access-token", storage.getAccessToken())
         assertFalse(tokenFile.readText().contains("test-access-token"))
@@ -46,8 +48,7 @@ class MyItmoStorageTest {
 
     @Test
     fun replacesSessionWithRefreshTokenOnly() {
-        storage.setAccessToken("old-access-token")
-        storage.setAccessExpiresAt(42L)
+        storage.replaceWithTokens(sessionTokens(accessToken = "old-access-token"))
 
         storage.replaceWithRefreshToken("new-refresh-token")
 
@@ -58,15 +59,16 @@ class MyItmoStorageTest {
 
     @Test
     fun readsTheTwoPointTwoTokenStateAndWritesItBackByteIdentically() {
-        for (sample in listOf(SIGNED_IN_22, REFRESH_ONLY_22)) {
-            tokenFile.parentFile?.mkdirs()
-            tokenFile.writeText(sample)
-            val restored = storage(PlainTokenCipher)
+        tokenFile.parentFile?.mkdirs()
+        tokenFile.writeText(SIGNED_IN_22)
+        val signedIn = storage(PlainTokenCipher)
+        runBlocking { signedIn.write(signedIn.read()) }
+        assertEquals(SIGNED_IN_22, tokenFile.readText())
 
-            restored.setAccessExpiresAt(restored.getAccessExpiresAt())
-
-            assertEquals(sample, tokenFile.readText())
-        }
+        tokenFile.writeText(REFRESH_ONLY_22)
+        val refreshOnly = storage(PlainTokenCipher)
+        refreshOnly.replaceWithRefreshToken(requireNotNull(refreshOnly.getRefreshToken()))
+        assertEquals(REFRESH_ONLY_22, tokenFile.readText())
     }
 
     @Test
@@ -103,6 +105,14 @@ class MyItmoStorageTest {
             ZoneOffset.UTC
         ),
         log = AndroidAppLog()
+    )
+
+    private fun sessionTokens(accessToken: String) = SessionTokens(
+        accessToken = accessToken,
+        accessExpiresInSeconds = 300,
+        refreshToken = "test-refresh-token",
+        refreshExpiresInSeconds = 600,
+        idToken = "test.id.token"
     )
 
     /** Plaintext as 2.2 serialized it: unpadded URL-safe Base64 fields, covering every remainder and `-`/`_`. */

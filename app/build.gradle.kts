@@ -152,9 +152,6 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.coil.network.okhttp)
     implementation(libs.android.image.cropper)
-    implementation(libs.itmo.widgets.core)
-    implementation(libs.my.itmo.api)
-    // MyItmoApi 2.x beside 1.x (KM-10a1): auth and the token storage moved; 1.x serves the unswapped areas until KM-10i.
     implementation(libs.my.itmo.api.kmp)
     // The BARS engine of di/RecordbookModule (KM-10b2): OkHttp with the BARS timeouts, apart from MyITMO's engine.
     implementation(libs.ktor.client.okhttp)
@@ -184,7 +181,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.ksoup)
     implementation(libs.kotlinx.datetime)
-    // kotlinx JSON of the core stores, auth and the FCM envelope (KM-05d); Gson goes with Core 1.x in KM-10i.
+    // kotlinx JSON of the core stores, auth and the FCM envelope (KM-05d).
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.android)
     // Koin beside Hilt (ADR 0019): the graph starts in di/bridge/KoinStarter.
@@ -195,6 +192,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.okhttp.mockwebserver)
+    // The store tests prove 2.2 (Gson) reads what kotlinx writes; Gson is on no runtime classpath (KM-10i).
+    testImplementation(libs.gson)
     testImplementation(libs.koin.test)
     // Screenshot tests that host @AndroidEntryPoint screens (AppScreenshotRule, XmlReferenceCapture).
     testImplementation(libs.hilt.android.testing)

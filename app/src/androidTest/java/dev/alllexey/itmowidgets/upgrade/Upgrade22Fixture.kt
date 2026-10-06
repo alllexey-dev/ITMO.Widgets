@@ -6,9 +6,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.test.platform.app.InstrumentationRegistry
-import api.myitmo.MyItmo
-import com.google.gson.Gson
-import dev.alllexey.itmowidgets.di.NetworkModule
 import java.io.Closeable
 import java.io.File
 import java.time.Clock
@@ -47,9 +44,6 @@ class Upgrade22Fixture : Closeable {
 
     /** Ten minutes after the capture: nothing captured has expired yet. */
     val clock: Clock = Clock.fixed(Captured22.AT.plusSeconds(600), ZoneOffset.UTC)
-
-    /** The application's Gson, built by the same provider the graph uses. */
-    val gson: Gson = NetworkModule.provideGson(NetworkModule.provideWidgetsClient(MyItmo(), "https://localhost/"))
 
     /** `app_preferences` as `StorageModule` opens it; one instance per fixture, closed with it. */
     val preferences: DataStore<Preferences> by lazy {

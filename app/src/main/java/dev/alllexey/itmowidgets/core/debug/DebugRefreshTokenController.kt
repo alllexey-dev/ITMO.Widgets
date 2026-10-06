@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.core.debug
 
-import api.myitmo.MyItmo
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -19,10 +19,14 @@ interface DebugRefreshTokenController {
     suspend fun replaceRefreshToken(refreshToken: String): AppResult<Unit>
 }
 
+/**
+ * Replaces the session with a pasted refresh token. `tokens.forceRefresh` needs a whole session, so the token is
+ * exchanged once through `identity` and the result written through `tokens`, the client's only write entry point.
+ */
 @DebugOnly
 class DefaultDebugRefreshTokenController(
     private val tokenStore: SessionTokenStore,
-    private val myItmo: MyItmo,
+    private val myItmo: MyItmoClient,
     private val dataCleaners: Set<SessionDataCleaner>,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
@@ -48,7 +52,7 @@ class DefaultDebugRefreshTokenController(
         try {
             tokenStore.replaceWithRefreshToken(normalizedToken)
             clearSessionData()
-            myItmo.forceRefreshTokens()
+            myItmo.tokens.replaceTokens(myItmo.identity.refresh(normalizedToken))
             AppResult.Success(Unit)
         } catch (cancellation: CancellationException) {
             throw cancellation

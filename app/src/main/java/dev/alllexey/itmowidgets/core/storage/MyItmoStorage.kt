@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.core.storage
 
-import api.myitmo.model.other.TokenResponse
-import api.myitmo.storage.Storage
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
@@ -16,10 +14,9 @@ import kotlin.io.encoding.Base64
 import kotlin.time.Instant
 
 /**
- * The only writer of `myitmo_tokens.enc`: the MyItmoApi 1.x [Storage], the 2.x [TokenStorage] and the session's
- * [SessionTokenStore] read and write the same 5-field state under one lock, so a write through one is what the
- * others read next. The 2.x client's `tokens` is the only proactive refresher; 1.x still refreshes on demand for
- * the areas it serves, which at worst rotates the refresh token twice (ITMO.ID does not revoke the old one).
+ * The only writer of `myitmo_tokens.enc`: the MyItmoApi 2.x [TokenStorage] and the session's [SessionTokenStore]
+ * read and write the same 5-field state under one lock, so a write through one is what the other reads next. The
+ * 2.x client's `tokens` is the only refresher.
  */
 @Singleton
 class MyItmoStorage @Inject constructor(
@@ -27,63 +24,26 @@ class MyItmoStorage @Inject constructor(
     private val tokenCipher: TokenCipher,
     @param:WallClock private val clock: Clock,
     private val log: AppLog
-) : Storage, TokenStorage, SessionTokenStore {
+) : TokenStorage, SessionTokenStore {
 
     private val encryptedFile = AtomicTextFile(tokenFile)
     private var cachedState: TokenState? = null
 
+    /** The stored fields as 2.2 laid them out, a refresh-token-only state included, which [read] hides. */
     @Synchronized
-    override fun getAccessToken(): String? = currentState().accessToken
+    internal fun getAccessToken(): String? = currentState().accessToken
 
     @Synchronized
-    override fun getAccessExpiresAt(): Long = currentState().accessExpiresAt
+    internal fun getAccessExpiresAt(): Long = currentState().accessExpiresAt
 
     @Synchronized
-    override fun getRefreshToken(): String? = currentState().refreshToken
+    internal fun getRefreshToken(): String? = currentState().refreshToken
 
     @Synchronized
-    override fun getRefreshExpiresAt(): Long = currentState().refreshExpiresAt
+    internal fun getRefreshExpiresAt(): Long = currentState().refreshExpiresAt
 
     @Synchronized
     override fun getIdToken(): String? = currentState().idToken
-
-    @Synchronized
-    override fun setAccessToken(accessToken: String?) {
-        updateState { it.copy(accessToken = accessToken) }
-    }
-
-    @Synchronized
-    override fun setAccessExpiresAt(accessExpiresAt: Long) {
-        updateState { it.copy(accessExpiresAt = accessExpiresAt) }
-    }
-
-    @Synchronized
-    override fun setRefreshToken(refreshToken: String?) {
-        updateState { it.copy(refreshToken = refreshToken) }
-    }
-
-    @Synchronized
-    override fun setRefreshExpiresAt(refreshExpiresAt: Long) {
-        updateState { it.copy(refreshExpiresAt = refreshExpiresAt) }
-    }
-
-    @Synchronized
-    override fun setIdToken(idToken: String?) {
-        updateState { it.copy(idToken = idToken) }
-    }
-
-    @Synchronized
-    override fun update(tokenResponse: TokenResponse) {
-        replaceWithTokens(
-            SessionTokens(
-                accessToken = tokenResponse.accessToken,
-                accessExpiresInSeconds = tokenResponse.expiresIn,
-                refreshToken = tokenResponse.refreshToken,
-                refreshExpiresInSeconds = tokenResponse.refreshExpiresIn,
-                idToken = tokenResponse.idToken
-            )
-        )
-    }
 
     @Synchronized
     override fun replaceWithTokens(tokens: SessionTokens) {

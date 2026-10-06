@@ -15,7 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-/** `MyItmoStorage` as MyItmoApi 1.x `Storage` and 2.x `TokenStorage` over one `myitmo_tokens.enc`. */
+/** `MyItmoStorage` as the MyItmoApi 2.x `TokenStorage` over the 2.2 `myitmo_tokens.enc`. */
 class MyItmoStorageTokenStorageTest {
 
     @get:Rule
@@ -24,7 +24,7 @@ class MyItmoStorageTokenStorageTest {
     private val tokenFile by lazy { File(folder.root, "myitmo_tokens.enc") }
 
     @Test
-    fun `reads the 2_2 token state through both interfaces`() = runTest {
+    fun `reads the 2_2 token state field for field`() = runTest {
         tokenFile.writeText(SIGNED_IN_22)
         val storage = storage()
 
@@ -50,7 +50,7 @@ class MyItmoStorageTokenStorageTest {
     }
 
     @Test
-    fun `a 2_x write is what 1_x and a new process read`() = runTest {
+    fun `a 2_x write is what the stored fields and a new process hold`() = runTest {
         val storage = storage()
 
         storage.write(TOKENS)
@@ -65,20 +65,6 @@ class MyItmoStorageTokenStorageTest {
     }
 
     @Test
-    fun `a 1_x write is what 2_x reads next`() = runTest {
-        val storage = storage()
-        storage.write(TOKENS)
-
-        storage.setAccessToken("rotated-access")
-        storage.setAccessExpiresAt(1_900_000_000_000L)
-
-        val tokens = requireNotNull(storage.read())
-        assertEquals("rotated-access", tokens.accessToken)
-        assertEquals(Instant.fromEpochMilliseconds(1_900_000_000_000L), tokens.accessExpiresAt)
-        assertEquals("refresh", tokens.refreshToken)
-    }
-
-    @Test
     fun `a refresh-token-only state is no 2_x session`() = runTest {
         tokenFile.writeText(REFRESH_ONLY_22)
         val storage = storage()
@@ -88,7 +74,7 @@ class MyItmoStorageTokenStorageTest {
     }
 
     @Test
-    fun `writing no tokens signs out for both interfaces`() = runTest {
+    fun `writing no tokens signs out`() = runTest {
         val storage = storage()
         storage.write(TOKENS)
 

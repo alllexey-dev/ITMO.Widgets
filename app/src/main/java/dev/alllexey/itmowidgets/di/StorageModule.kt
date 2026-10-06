@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import api.myitmo.storage.Storage
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -48,13 +47,7 @@ abstract class StorageModule {
         impl: AndroidKeystoreTokenCipher
     ): TokenCipher
 
-    @Binds
-    @Singleton
-    abstract fun bindMyItmoStorage(
-        impl: MyItmoStorage
-    ): Storage
-
-    /** The same instance as [Storage]: one writer of `myitmo_tokens.enc` for MyItmoApi 1.x and 2.x. */
+    /** The same instance as [SessionTokenStore]: one writer of `myitmo_tokens.enc`. */
     @Binds
     @Singleton
     abstract fun bindTokenStorage(
