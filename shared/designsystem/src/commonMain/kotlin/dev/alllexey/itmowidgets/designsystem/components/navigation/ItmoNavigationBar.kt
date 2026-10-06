@@ -40,6 +40,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.navigationLabelsOnSelectedOnly
 import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 
 /**
@@ -68,8 +69,9 @@ fun ItmoNavigationBar(
 
 /**
  * One tab of [ItmoNavigationBar]: [icon], or [selectedIcon] (the FILL 1 variant) in the pill of the active indicator
- * while [selected]. The label shows on the selected tab only while [NavigationBarTokens.LabelsOnSelectedOnly] holds;
- * TalkBack reads it as the tab's name either way (the cell's description). The whole cell is the target.
+ * while [selected]. The label shows on the selected tab only while [NavigationBarTokens.LabelsOnSelectedOnly] holds
+ * (an M3E candidate of the owner's contact sheets may say otherwise); TalkBack reads it as the tab's name either way
+ * (the cell's description). The whole cell is the target.
  */
 @Composable
 fun RowScope.ItmoNavigationBarItem(
@@ -87,7 +89,8 @@ fun RowScope.ItmoNavigationBarItem(
         animationSpec = if (reducedMotion) snap() else tween(motion.standardMillis, easing = motion.easing),
         label = "indicator",
     )
-    val showLabel = selected || !NavigationBarTokens.LabelsOnSelectedOnly
+    val labelsOnSelectedOnly = navigationLabelsOnSelectedOnly(NavigationBarTokens.LabelsOnSelectedOnly)
+    val showLabel = selected || !labelsOnSelectedOnly
     Column(
         modifier
             .weight(1f)
@@ -122,7 +125,7 @@ fun RowScope.ItmoNavigationBarItem(
                 label,
                 // Alone in the bar, the selected label may run past its cell into its neighbours' empty label space
                 // rather than lose letters (`Расписание` at 1.3 in 320 dp); with every label shown it ellipsizes.
-                if (NavigationBarTokens.LabelsOnSelectedOnly) Modifier.wrapContentWidth(unbounded = true) else Modifier,
+                if (labelsOnSelectedOnly) Modifier.wrapContentWidth(unbounded = true) else Modifier,
                 color = if (selected) ItmoTheme.colorScheme.onSurface else ItmoTheme.colorScheme.onSurfaceVariant,
                 style = ItmoTheme.typography.labelMedium,
                 maxLines = 1,
