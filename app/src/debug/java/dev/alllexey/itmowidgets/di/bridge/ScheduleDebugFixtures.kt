@@ -39,17 +39,7 @@ object ScheduleDebugFixtures {
     }
 
     /** The bridge modules that define the overridden types, loaded again once the last fixture goes. */
-    private val bridgeModules: List<Module>
-        get() = listOf(coreBridgeModule, reviewsBridgeModule, scheduleBridgeModule, settingsDataBindings)
-
-    /**
-     * Koin owns the opt-in and the schedule preferences (`settingsDataModule`); loading that module again would build
-     * second repositories, so the contracts point back at its singles, which the fixture never overrode.
-     */
-    private val settingsDataBindings: Module = module {
-        factory<CustomServicesRepository> { get<CustomServicesRepositoryImpl>() }
-        factory<SchedulePreferencesRepository> { get<SchedulePreferencesRepositoryImpl>() }
-    }
+    private val bridgeModules: List<Module> get() = listOf(coreBridgeModule, reviewsBridgeModule, scheduleBridgeModule)
 
     private var current: Module? = null
 
@@ -62,14 +52,18 @@ object ScheduleDebugFixtures {
 
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
-     * overrode, so the bridge modules load again; their singles forward Hilt's instances and the settings bindings
-     * Koin's, as before. A fixture that a newer host already replaced is left to that host.
+     * overrode, so the bridge modules load again; their singles forward Hilt's instances, as before. Koin owns the
+     * opt-in and the schedule preferences (`settingsDataModule`): loading that module again would build second
+     * repositories, so the two contracts point back at its singles, which the fixture never overrode. A fixture that
+     * a newer host already replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
         val koin = KoinStarter.ensureStarted(context)
         koin.unloadModules(listOf(fixture))
         koin.loadModules(bridgeModules, allowOverride = true)
+        koin.declare<CustomServicesRepository>(koin.get<CustomServicesRepositoryImpl>(), allowOverride = true)
+        koin.declare<SchedulePreferencesRepository>(koin.get<SchedulePreferencesRepositoryImpl>(), allowOverride = true)
         current = null
     }
 
