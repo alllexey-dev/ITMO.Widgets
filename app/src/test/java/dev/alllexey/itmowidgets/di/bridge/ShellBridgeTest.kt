@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
-import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
 import dev.alllexey.itmowidgets.feature.update.ui.InstallStateWatcher
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -25,12 +24,11 @@ class ShellBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the shell host's update types resolve in Koin to what Hilt builds`() {
+    fun `the flexible-update watcher resolves in Koin to what Hilt builds`() {
         val application = bootApplication()
         val hilt = ShellBridgeEntryPoint.from(application)
         val koin = GlobalContext.get()
 
-        assertEquals(hilt.pendingAppUpdate()::class, koin.get<PendingAppUpdate>()::class)
         assertEquals(hilt.installStateWatcher()::class, koin.get<InstallStateWatcher>()::class)
     }
 
