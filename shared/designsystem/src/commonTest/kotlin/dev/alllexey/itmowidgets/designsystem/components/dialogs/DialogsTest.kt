@@ -1,5 +1,9 @@
 package dev.alllexey.itmowidgets.designsystem.components.dialogs
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -12,6 +16,10 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import dev.alllexey.itmowidgets.designsystem.components.controls.RecordingHaptics
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoHapticEvent
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
+import dev.alllexey.itmowidgets.designsystem.platform.LocalItmoHaptics
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -19,14 +27,16 @@ import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/** Every behaviour holds in both platform styles: the iOS alerts keep the Material dialogs' contract. */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
 class DialogsTest {
     @Test
     fun confirmReportsEitherChoiceWithoutClosingItself() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
         val events = mutableListOf<String>()
         setContent {
-            ItmoTheme {
+            ItmoTheme(platformStyle = style) {
                 ConfirmDialog(
                     title = TITLE,
                     text = TEXT,
@@ -38,55 +48,103 @@ class DialogsTest {
             }
         }
 
-        onNodeWithText(TITLE).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-        onNodeWithText(TEXT).assertIsDisplayed()
-        onNodeWithText(CONFIRM).performClick()
-        onNodeWithText(CANCEL).performClick()
+        ItmoPlatformStyle.entries.forEach {
+            style = it
+            onNodeWithText(TITLE).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+            onNodeWithText(TEXT).assertIsDisplayed()
+            onNodeWithText(CONFIRM).performClick()
+            onNodeWithText(CANCEL).performClick()
+            onNodeWithText(TITLE).assertIsDisplayed()
+            assertTouchTargets(it.minTouchTarget)
+        }
 
-        assertEquals(listOf(CONFIRM, CANCEL), events)
-        onNodeWithText(TITLE).assertIsDisplayed()
-        assertTouchTargets()
+        assertEquals(listOf(CONFIRM, CANCEL, CONFIRM, CANCEL), events)
+    }
+
+    @Test
+    fun aDestructiveConfirmWarnsOnlyOnIos() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
+        val haptics = RecordingHaptics()
+        val heard = mutableMapOf<ItmoPlatformStyle, List<ItmoHapticEvent>>()
+        var confirms = 0
+        setContent {
+            CompositionLocalProvider(LocalItmoHaptics provides haptics) {
+                ItmoTheme(platformStyle = style) {
+                    ConfirmDialog(
+                        title = TITLE,
+                        confirmLabel = CONFIRM,
+                        dismissLabel = CANCEL,
+                        onConfirm = { confirms++ },
+                        onDismiss = {},
+                        destructive = true,
+                    )
+                }
+            }
+        }
+
+        ItmoPlatformStyle.entries.forEach {
+            style = it
+            haptics.events.clear()
+            onNodeWithText(CANCEL).performClick()
+            onNodeWithText(CONFIRM).performClick()
+            heard[it] = haptics.events.toList()
+        }
+
+        assertEquals(2, confirms)
+        assertEquals(emptyList(), heard.getValue(ItmoPlatformStyle.Material))
+        assertEquals(listOf(ItmoHapticEvent.Warning), heard.getValue(ItmoPlatformStyle.Ios))
     }
 
     @Test
     fun singleChoiceRowsAreRadioButtonsWithTheCurrentOneSelected() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
         val picks = mutableListOf<Int>()
         setContent {
-            ItmoTheme {
+            ItmoTheme(platformStyle = style) {
                 ChoiceDialog(TITLE, OPTIONS, selectedIndex = 1, onSelect = { picks += it }, onDismiss = {}, dismissLabel = CANCEL)
             }
         }
 
-        onNodeWithText(OPTIONS[1]).assertIsSelected()
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
-        onNodeWithText(OPTIONS[0]).assertIsNotSelected().performClick()
-        onNodeWithText(OPTIONS[2]).performClick()
+        ItmoPlatformStyle.entries.forEach {
+            style = it
+            onNodeWithText(OPTIONS[1]).assertIsSelected()
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+            onNodeWithText(OPTIONS[0]).assertIsNotSelected().performClick()
+            onNodeWithText(OPTIONS[2]).performClick()
+            onNodeWithText(CANCEL).assertIsDisplayed()
+            assertTouchTargets(it.minTouchTarget)
+        }
 
-        assertEquals(listOf(0, 2), picks)
-        assertTouchTargets()
+        assertEquals(listOf(0, 2, 0, 2), picks)
     }
 
     @Test
     fun plainItemsAreButtonsAndTheCancelButtonIsOptional() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
         val picks = mutableListOf<Int>()
         setContent {
-            ItmoTheme {
+            ItmoTheme(platformStyle = style) {
                 ChoiceDialog(TITLE, OPTIONS, selectedIndex = null, onSelect = { picks += it }, onDismiss = {})
             }
         }
 
-        onNodeWithText(OPTIONS[2]).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
-            .performClick()
+        ItmoPlatformStyle.entries.forEach {
+            style = it
+            onNodeWithText(OPTIONS[2]).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+                .performClick()
+            onNodeWithText(CANCEL).assertDoesNotExist()
+            assertTouchTargets(it.minTouchTarget)
+        }
 
-        assertEquals(listOf(2), picks)
-        onNodeWithText(CANCEL).assertDoesNotExist()
+        assertEquals(listOf(2, 2), picks)
     }
 
     @Test
     fun reportSendNeedsAReasonAndShowsTheError() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
         var sends = 0
         setContent {
-            ItmoTheme {
+            ItmoTheme(platformStyle = style) {
                 ReportDialog(
                     title = TITLE,
                     reasons = OPTIONS,
@@ -102,17 +160,22 @@ class DialogsTest {
             }
         }
 
-        onNodeWithText(SEND).assertIsNotEnabled()
-        onNodeWithText(ERROR).assertIsDisplayed()
+        ItmoPlatformStyle.entries.forEach {
+            style = it
+            onNodeWithText(SEND).assertIsNotEnabled()
+            onNodeWithText(ERROR).assertIsDisplayed()
+            assertTouchTargets(it.minTouchTarget)
+        }
+
         assertEquals(0, sends)
-        assertTouchTargets()
     }
 
     @Test
     fun reportSendsOnceAndStaysOpenWhileSending() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
         val events = mutableListOf<String>()
         setContent {
-            ItmoTheme {
+            ItmoTheme(platformStyle = style) {
                 ReportDialog(
                     title = TITLE,
                     reasons = OPTIONS,
@@ -128,18 +191,22 @@ class DialogsTest {
             }
         }
 
-        onNodeWithText(OPTIONS[1]).performClick()
-        onNodeWithText(SEND).performClick()
+        ItmoPlatformStyle.entries.forEach {
+            style = it
+            onNodeWithText(OPTIONS[1]).performClick()
+            onNodeWithText(SEND).performClick()
+            onNodeWithText(TITLE).assertIsDisplayed()
+        }
 
-        assertEquals(listOf("reason 1", SEND), events)
-        onNodeWithText(TITLE).assertIsDisplayed()
+        assertEquals(listOf("reason 1", SEND, "reason 1", SEND), events)
     }
 
     @Test
     fun whileSendingTheReasonsAreLockedAndSendIgnoresTaps() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
         val events = mutableListOf<String>()
         setContent {
-            ItmoTheme {
+            ItmoTheme(platformStyle = style) {
                 ReportDialog(
                     title = TITLE,
                     reasons = OPTIONS,
@@ -155,11 +222,15 @@ class DialogsTest {
             }
         }
 
-        onNodeWithText(OPTIONS[1]).assertIsNotEnabled().performClick()
-        onNodeWithText(SEND).performClick()
-        onNodeWithText(CANCEL).performClick()
+        ItmoPlatformStyle.entries.forEach {
+            style = it
+            onNodeWithText(OPTIONS[1]).assertIsNotEnabled().performClick()
+            onNodeWithText(SEND).performClick()
+            onNodeWithText(CANCEL).performClick()
+            onNodeWithText(TITLE).assertIsDisplayed()
+        }
 
-        assertEquals(listOf(CANCEL), events)
+        assertEquals(listOf(CANCEL, CANCEL), events)
     }
 
     private companion object {

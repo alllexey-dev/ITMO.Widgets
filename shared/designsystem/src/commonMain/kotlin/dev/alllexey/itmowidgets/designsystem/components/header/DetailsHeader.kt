@@ -26,7 +26,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
+import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ToneDot
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
@@ -65,6 +68,9 @@ data class DetailsMapAction(val label: String, val onClick: () -> Unit)
  * [kind] with an optional type colour), when ([date], [time] and [duration], all preformatted), who and where
  * ([teacher], [flow], [place]) and the [map] button. A missing row disappears instead of reading as empty. The caller
  * pads the header horizontally, as the sheets pad their content.
+ *
+ * Under the iOS style the layout and the teacher-chevron rule stay; the title is title 2 semibold, the secondary text
+ * and the icons take the secondary label colour, the chevron the tertiary one, and the map button is a tinted capsule.
  */
 @Composable
 fun DetailsHeader(
@@ -80,56 +86,81 @@ fun DetailsHeader(
     place: DetailsFact? = null,
     map: DetailsMapAction? = null,
 ) {
+    val look = detailsLook()
     Column(modifier.fillMaxWidth()) {
         Text(
             title,
             Modifier
                 .padding(top = ItmoTheme.spacing.compact)
                 .semantics { heading() },
-            color = ItmoTheme.colorScheme.onSurface,
-            style = ItmoTheme.typography.titleLarge,
+            color = look.primary,
+            style = look.title,
         )
-        if (!kind.isNullOrBlank()) KindRow(kind, kindColor)
-        TimeRow(date, time, duration)
+        if (!kind.isNullOrBlank()) KindRow(kind, kindColor, look)
+        TimeRow(date, time, duration, look)
         val facts = listOfNotNull(teacher?.fact, flow, place).filter { it.value.isNotBlank() }
         if (facts.isNotEmpty() || map != null) {
             Column(Modifier.padding(top = ItmoTheme.spacing.compact)) {
-                if (teacher != null && teacher.fact.value.isNotBlank()) TeacherRow(teacher)
-                flow?.takeIf { it.value.isNotBlank() }?.let { FactRow(it, painterResource(Res.drawable.ic_group)) }
-                place?.takeIf { it.value.isNotBlank() }?.let { FactRow(it, painterResource(Res.drawable.ic_location_on)) }
+                if (teacher != null && teacher.fact.value.isNotBlank()) TeacherRow(teacher, look)
+                flow?.takeIf { it.value.isNotBlank() }?.let {
+                    FactRow(it, painterResource(Res.drawable.ic_group), look)
+                }
+                place?.takeIf { it.value.isNotBlank() }?.let {
+                    FactRow(it, painterResource(Res.drawable.ic_location_on), look)
+                }
                 if (map != null) MapButton(map)
             }
         }
     }
 }
 
+/** The colours and the title style a [DetailsHeader] draws in: Material's roles, or iOS's labels and type. */
+@Immutable
+private class DetailsLook(val title: TextStyle, val primary: Color, val secondary: Color, val chevron: Color)
+
 @Composable
-private fun KindRow(kind: String, kindColor: Color?) {
+private fun detailsLook(): DetailsLook = when (ItmoTheme.platformStyle) {
+    ItmoPlatformStyle.Material -> DetailsLook(
+        title = ItmoTheme.typography.titleLarge,
+        primary = ItmoTheme.colorScheme.onSurface,
+        secondary = ItmoTheme.colorScheme.onSurfaceVariant,
+        chevron = ItmoTheme.colorScheme.onSurfaceVariant,
+    )
+    ItmoPlatformStyle.Ios -> DetailsLook(
+        title = ItmoTheme.emphasizedTypography.headlineSmall,
+        primary = ItmoTheme.iosColors.label,
+        secondary = ItmoTheme.iosColors.secondaryLabel,
+        chevron = ItmoTheme.iosColors.tertiaryLabel,
+    )
+}
+
+@Composable
+private fun KindRow(kind: String, kindColor: Color?, look: DetailsLook) {
     Row(Modifier.padding(top = ItmoTheme.spacing.related), verticalAlignment = Alignment.CenterVertically) {
         if (kindColor != null) {
             ToneDot(kindColor)
             Spacer(Modifier.width(ItmoTheme.spacing.compact))
         }
-        Text(kind, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+        Text(kind, color = look.secondary, style = ItmoTheme.typography.bodyMedium)
     }
 }
 
 @Composable
-private fun TimeRow(date: String, time: String, duration: String?) {
+private fun TimeRow(date: String, time: String, duration: String?, look: DetailsLook) {
     val dateStyle = ItmoTheme.typography.bodyMedium
     Row(Modifier.padding(top = ItmoTheme.spacing.compact).semantics(mergeDescendants = true) {}) {
-        RailIcon(painterResource(Res.drawable.ic_schedule), dateStyle)
+        RailIcon(painterResource(Res.drawable.ic_schedule), dateStyle, look)
         Column(Modifier.weight(1f)) {
-            Text(date, color = ItmoTheme.colorScheme.onSurfaceVariant, style = dateStyle)
+            Text(date, color = look.secondary, style = dateStyle)
             Row(Modifier.padding(top = TimeGap), verticalAlignment = Alignment.Bottom) {
-                Text(time, color = ItmoTheme.colorScheme.onSurface, style = ItmoTheme.typography.titleMedium)
+                Text(time, color = look.primary, style = ItmoTheme.typography.titleMedium)
                 if (duration != null) {
                     Text(
                         duration,
                         Modifier
                             .weight(1f)
                             .padding(start = ItmoTheme.spacing.content),
-                        color = ItmoTheme.colorScheme.onSurfaceVariant,
+                        color = look.secondary,
                         style = ItmoTheme.typography.bodySmall,
                         textAlign = TextAlign.End,
                     )
@@ -140,14 +171,14 @@ private fun TimeRow(date: String, time: String, duration: String?) {
 }
 
 @Composable
-private fun TeacherRow(teacher: DetailsTeacher) {
+private fun TeacherRow(teacher: DetailsTeacher, look: DetailsLook) {
     val onClick = teacher.onClick
     val interaction = if (onClick == null) {
         Modifier.semantics(mergeDescendants = true) {}
     } else {
         Modifier.clickable(onClickLabel = teacher.clickLabel, onClick = onClick)
     }
-    FactRow(teacher.fact, painterResource(Res.drawable.ic_person), interaction, clickable = onClick != null) {
+    FactRow(teacher.fact, painterResource(Res.drawable.ic_person), look, interaction, clickable = onClick != null) {
         if (teacher.tone != null || teacher.reserveTone) {
             val description = teacher.toneDescription
             ToneDot(
@@ -164,7 +195,7 @@ private fun TeacherRow(teacher: DetailsTeacher) {
                 modifier = Modifier
                     .padding(start = ItmoTheme.spacing.compact)
                     .size(RailIconSize),
-                tint = ItmoTheme.colorScheme.onSurfaceVariant,
+                tint = look.chevron,
             )
         }
     }
@@ -178,6 +209,7 @@ private fun TeacherRow(teacher: DetailsTeacher) {
 private fun FactRow(
     fact: DetailsFact,
     icon: Painter,
+    look: DetailsLook,
     interaction: Modifier = Modifier.semantics(mergeDescendants = true) {},
     clickable: Boolean = false,
     trailing: @Composable () -> Unit = {},
@@ -193,15 +225,15 @@ private fun FactRow(
             .then(interaction)
             .padding(vertical = vertical),
     ) {
-        RailIcon(icon, style, label = fact.label)
-        Text(fact.value, Modifier.weight(1f), color = ItmoTheme.colorScheme.onSurfaceVariant, style = style)
+        RailIcon(icon, style, look, label = fact.label)
+        Text(fact.value, Modifier.weight(1f), color = look.secondary, style = style)
         Row(verticalAlignment = Alignment.CenterVertically) { trailing() }
     }
 }
 
 /** A 20 dp icon centred on the first line of text in [style], at any font scale (`alignRailIcon`). */
 @Composable
-private fun RailIcon(icon: Painter, style: TextStyle, label: String? = null) {
+private fun RailIcon(icon: Painter, style: TextStyle, look: DetailsLook, label: String? = null) {
     val top = ((style.lineHeightDp() - RailIconSize) / 2).coerceAtLeast(0.dp)
     Icon(
         icon,
@@ -209,12 +241,22 @@ private fun RailIcon(icon: Painter, style: TextStyle, label: String? = null) {
         modifier = Modifier
             .padding(top = top, end = ItmoTheme.spacing.compact)
             .size(RailIconSize),
-        tint = ItmoTheme.colorScheme.onSurfaceVariant,
+        tint = look.secondary,
     )
 }
 
 @Composable
 private fun MapButton(map: DetailsMapAction) {
+    if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
+        ProgressButton(
+            map.label,
+            onClick = map.onClick,
+            modifier = Modifier.padding(start = MapButtonInset),
+            style = ProgressButtonStyle.Tonal,
+            icon = painterResource(Res.drawable.ic_location_on),
+        )
+        return
+    }
     ElevatedButton(onClick = map.onClick, modifier = Modifier.padding(start = MapButtonInset)) {
         Icon(painterResource(Res.drawable.ic_location_on), contentDescription = null, Modifier.size(MapIconSize))
         Spacer(Modifier.width(ItmoTheme.spacing.compact))
