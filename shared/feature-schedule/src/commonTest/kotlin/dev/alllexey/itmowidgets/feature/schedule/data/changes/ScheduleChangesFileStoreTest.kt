@@ -1,23 +1,31 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
-import java.io.File
-import okio.Path.Companion.toOkioPath
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertThrows
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import dev.alllexey.itmowidgets.testkit.fakeFileSystemOf
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import okio.Path.Companion.toPath
+import okio.fakefilesystem.FakeFileSystem
 
+/** `files/schedule_changes/state.json` on okio's fake file system; the 2.2 golden is `ScheduleChanges22GoldenTest` in `:app`. */
 class ScheduleChangesFileStoreTest {
-    @get:Rule val temporary = TemporaryFolder()
 
-    private val directory get() = File(temporary.root, "schedule_changes")
-    private val store get() = ScheduleChangesFileStore(directory.toOkioPath())
+    private val directory = "/files/schedule_changes".toPath()
+    private val file = directory / "state.json"
+    private val fileSystem: FakeFileSystem = fakeFileSystemOf()
+    private val store get() = ScheduleChangesFileStore(directory, fileSystem)
+
+    @AfterTest
+    fun tearDown() {
+        fileSystem.checkNoOpenFiles()
+    }
 
     @Test
-    fun `the written state reads back and no temporary file is left`() {
+    fun theWrittenStateReadsBackAndNoTemporaryFileIsLeft() {
         val lesson = StoredLesson(
             pairId = 1, date = "2026-09-08", start = "10:00", end = "11:30", subjectId = 10, subjectName = "Физика",
             typeId = 1, flowId = 100, flowName = "ФИЗ ПИИКТ 3.2", teacherIsu = 300001, teacherName = "Тестовый преподаватель",
@@ -36,32 +44,32 @@ class ScheduleChangesFileStoreTest {
         store.write(state)
 
         assertEquals(state, store.read())
-        assertFalse(File(directory, "state.json.new").exists())
+        assertTrue(fileSystem.read(file) { readUtf8() }.startsWith("{\"format\":1,"))
+        assertFalse(fileSystem.exists(directory / "state.json.new"))
     }
 
     @Test
-    fun `a missing file reads as null and clear removes the directory`() {
+    fun aMissingFileReadsAsNullAndClearRemovesTheDirectory() {
         assertNull(store.read())
         store.write(StoredScheduleChanges())
 
         store.clear()
 
-        assertFalse(directory.exists())
+        assertFalse(fileSystem.exists(directory))
         assertNull(store.read())
     }
 
     @Test
-    fun `another format an unknown kind or a broken file fail to read`() {
-        directory.mkdirs()
-        val file = File(directory, "state.json")
+    fun anotherFormatAnUnknownKindOrABrokenFileFailToRead() {
+        fileSystem.createDirectories(directory)
         listOf(
             """{"format":2,"emptyHeld":false,"changes":[]}""",
             """{"format":1,"emptyHeld":false,"changes":[{"id":"1","detectedAt":1,"kind":"MOVED","fields":[],"subjectName":"","typeId":1,"read":false,"notified":false,"after":{"pairId":1,"date":"2026-09-08","start":"10:00","end":"11:30","subjectId":1,"subjectName":"","typeId":1,"flowId":1,"formatId":1}}]}""",
             """{"format":1,"emptyHeld":false,"snapshot":{"start":"2026-09-07","end":"not a date","lessons":[]},"changes":[]}""",
             "{",
         ).forEach { content ->
-            file.writeText(content)
-            assertThrows(content, Exception::class.java) { store.read() }
+            fileSystem.write(file) { writeUtf8(content) }
+            assertFailsWith<Exception>(content) { store.read() }
         }
     }
 }

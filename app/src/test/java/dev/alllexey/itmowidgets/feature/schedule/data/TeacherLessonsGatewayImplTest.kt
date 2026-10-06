@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atTime
-import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -42,7 +41,7 @@ class TeacherLessonsGatewayImplTest {
     private val dispatchers = blockingIoAppDispatchers(mainDispatcherRule.dispatcher)
 
     @get:Rule val temporary = TemporaryFolder()
-    private val folder by lazy { temporary.newFolder() }
+    private val folder by lazy { File(temporary.root, "files/teacher_lessons").apply { mkdirs() } }
     private val requests = CopyOnWriteArrayList<ClosedRange<LocalDate>>()
     private val days = ConcurrentHashMap<LocalDate, List<String>>()
     private val failing = ConcurrentHashMap.newKeySet<LocalDate>()
@@ -132,13 +131,13 @@ class TeacherLessonsGatewayImplTest {
 
     @Test
     fun `the disk keeps only the minimal lessons of finished weeks still sampled`() = runTest {
-        TeacherWeeksFileStore(folder.toOkioPath()).write(mapOf(LocalDate(2022, 9, 19) to listOf(WeekLesson(TEACHER.toLong(), 1, "Старое"))))
+        TeacherWeeksFileStore(directoriesAt(temporary.root)).write(mapOf(LocalDate(2022, 9, 19) to listOf(WeekLesson(TEACHER.toLong(), 1, "Старое"))))
         days[WEEKS[1].start] = listOf(day("2026-09-22", lesson(21, "Алгебра", TEACHER), lesson(22, "Спорт", TEACHER, flowType = 3)))
         days[WEEKS[0].start] = listOf(day("2026-10-13", lesson(11, "Физика", TEACHER)))
 
         gateway().taughtBy(TEACHER).toList()
 
-        val stored = TeacherWeeksFileStore(folder.toOkioPath()).read()
+        val stored = TeacherWeeksFileStore(directoriesAt(temporary.root)).read()
         assertEquals(WEEKS.drop(1).map { it.start }.toSet(), stored.keys)
         assertEquals(listOf(WeekLesson(TEACHER.toLong(), 21, "Алгебра")), stored[WEEKS[1].start])
     }
@@ -154,7 +153,7 @@ class TeacherLessonsGatewayImplTest {
 
             assertEquals(TeacherLessons(setOf(21L), listOf("Алгебра")), lessons)
             assertEquals(WEEKS.toSet(), requests.toSet())
-            assertEquals(WEEKS.size - 1, TeacherWeeksFileStore(folder.toOkioPath()).read().size)
+            assertEquals(WEEKS.size - 1, TeacherWeeksFileStore(directoriesAt(temporary.root)).read().size)
         }
     }
 
@@ -232,7 +231,7 @@ class TeacherLessonsGatewayImplTest {
         assertTrue(requests.isEmpty())
     }
 
-    private fun gateway(demo: DemoMode = noDemo()) = TeacherLessonsGatewayImpl(myItmo, TeacherWeeksFileStore(folder.toOkioPath()), FixedAcademicTime(TODAY.atTime(12, 0)), demo, dispatchers)
+    private fun gateway(demo: DemoMode = noDemo()) = TeacherLessonsGatewayImpl(myItmo, TeacherWeeksFileStore(directoriesAt(temporary.root)), FixedAcademicTime(TODAY.atTime(12, 0)), demo, dispatchers)
 
     private fun day(date: String, vararg lessons: String) =
         """{"day_number":1,"week_number":1,"date":"$date","lessons":[${lessons.joinToString(",")}]}"""

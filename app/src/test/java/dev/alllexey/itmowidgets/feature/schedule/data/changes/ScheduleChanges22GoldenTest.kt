@@ -4,12 +4,12 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.feature.schedule.data.assertSameJson
 import dev.alllexey.itmowidgets.feature.schedule.data.copyStored22
+import dev.alllexey.itmowidgets.feature.schedule.data.directoriesAt
 import dev.alllexey.itmowidgets.feature.schedule.data.stored22
 import java.io.File
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlin.time.Instant
-import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -21,9 +21,8 @@ class ScheduleChanges22GoldenTest {
 
     @Test
     fun `the 2_2 state maps to the same moments and is rewritten unchanged`() {
-        val directory = File(temporary.root, "schedule_changes")
-        val file = copyStored22(FIXTURE, directory)
-        val store = ScheduleChangesFileStore(directory.toOkioPath())
+        val file = copyStored22(FIXTURE, File(temporary.root, "files/schedule_changes"))
+        val store = ScheduleChangesFileStore(directoriesAt(temporary.root))
 
         val state = checkNotNull(store.read())
         val change = state.changes.single().toModel()

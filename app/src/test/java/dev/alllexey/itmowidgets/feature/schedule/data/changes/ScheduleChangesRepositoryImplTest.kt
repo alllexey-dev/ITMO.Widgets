@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
+import dev.alllexey.itmowidgets.feature.schedule.data.directoriesAt
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.requestedRange
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.scheduleMyItmoClient
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
@@ -31,7 +32,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -48,7 +48,7 @@ class ScheduleChangesRepositoryImplTest {
     private val dispatchers = blockingIoAppDispatchers(mainDispatcherRule.dispatcher)
 
     @get:Rule val temporary = TemporaryFolder()
-    private val folder by lazy { File(temporary.root, "schedule_changes") }
+    private val folder by lazy { File(temporary.root, "files/schedule_changes") }
     private val requests = CopyOnWriteArrayList<String>()
     /** Day objects of the next answer; [status] and [body] replace the whole answer when set. */
     @Volatile private var days: List<String> = emptyList()
@@ -65,7 +65,7 @@ class ScheduleChangesRepositoryImplTest {
     }
     private val clock = MutableClock(Instant.parse("2026-09-07T09:00:00Z"))
     private val notifier = RecordingAppNotifier()
-    private val store get() = ScheduleChangesFileStore(folder.toOkioPath())
+    private val store get() = ScheduleChangesFileStore(directoriesAt(temporary.root))
     private val file get() = File(folder, "state.json")
 
     @Test

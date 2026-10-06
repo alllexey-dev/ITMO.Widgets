@@ -8,6 +8,7 @@ import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
@@ -18,18 +19,21 @@ import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
 import dev.alllexey.itmowidgets.core.work.CheckScheduler
 import dev.alllexey.itmowidgets.core.work.PeriodicCheckScheduler
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.TeacherWeeksFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.AndroidPhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.IcsFileExport
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleChangeTracking
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleChangesHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
@@ -53,6 +57,7 @@ import dev.alllexey.itmowidgets.feature.schedule.work.AndroidScheduleChangeNotif
 import dev.alllexey.itmowidgets.feature.schedule.work.CALENDAR_SYNC_SPEC
 import dev.alllexey.itmowidgets.feature.schedule.work.SCHEDULE_CHANGES_SPEC
 import javax.inject.Singleton
+import kotlin.time.Clock
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -62,12 +67,6 @@ abstract class ScheduleModule {
     abstract fun bindScheduleWidgetRefreshRequester(
         impl: WidgetRefreshCoordinator
     ): ScheduleWidgetRefreshRequester
-
-    @Binds
-    @Singleton
-    abstract fun bindScheduleLocalDataSource(
-        impl: ScheduleLocalDataSourceImpl
-    ): ScheduleLocalDataSource
 
     @Binds
     @Singleton
@@ -216,6 +215,23 @@ abstract class ScheduleModule {
     ): ScheduleIcsExport
 
     companion object {
+        // The local stores live in :shared:feature-schedule without @Inject; Hilt constructs them until KM-11a2
+        // hands the schedule data graph to Koin.
+        @Provides
+        @Singleton
+        fun scheduleLocalDataSource(
+            clock: Clock,
+            directories: AppDirectories,
+            dispatchers: AppDispatchers
+        ): ScheduleLocalDataSource = ScheduleLocalDataSourceImpl(clock, directories, dispatchers)
+
+        @Provides
+        fun teacherWeeksFileStore(directories: AppDirectories): TeacherWeeksFileStore = TeacherWeeksFileStore(directories)
+
+        @Provides
+        fun scheduleChangesFileStore(directories: AppDirectories): ScheduleChangesFileStore =
+            ScheduleChangesFileStore(directories)
+
         @Provides
         fun scheduleChangesScheduler(@ApplicationContext context: Context): ScheduleChangesScheduler =
             object : ScheduleChangesScheduler, CheckScheduler by PeriodicCheckScheduler(context, SCHEDULE_CHANGES_SPEC) {}
