@@ -5,7 +5,8 @@
   exported, so `UiText` and `AppIcon` reach Swift without a module prefix.
 - SKIE (sealed classes as Swift enums, suspend as `async`, Flow as `AsyncSequence`) and the export list.
 - `src/iosMain/kotlin/.../ios/`: the Swift-facing entry points: `IosPlatform`, `di/` (`startKoinIos`, `IosKoin`,
-  `IosKoinModules`), `bridge/` (`ScreenViewModelStore`, the test probe `BridgeProbeViewModel`), `screens/` (the
+  `IosKoinModules`), `bridge/` (`ScreenViewModelStore`; the test probe `BridgeProbeViewModel` in
+  `bridge/presentation/`, where Konsist wants every ViewModel), `screens/` (the
   Compose hosts: `ScreenControllers.kt` and one `<Feature>Screens.kt` per feature), `IosStrings`, `IosSecureStore`.
 - No resources of its own: the Compose plugins pack every dependency's `composeResources` into the app bundle.
 

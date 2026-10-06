@@ -276,7 +276,8 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   card of a SwiftUI-owned ViewModel exports its feature module. Each export grows the header and the link.
 - Koin start. `App.init` calls `startKoinIos(platform: AppPlatform())` after the app locale: one global graph over
   `IosKoinModules.all(platform)` (`shared/ios/src/iosMain/.../ios/di/`), `allowOverride(false)`. A second call keeps
-  the running graph and returns false. Each feature adds one line to `IosKoinModules`; its bindings live in
+  the running graph and returns false. `IosKoin` keeps the graph `startKoin` returned; iOS code never reads Koin's
+  global context. Each feature adds one line to `IosKoinModules`; its bindings live in
   `shared/feature-<x>/src/iosMain/.../di/<Area>IosModule.kt`.
 - `IosPlatform` is the Kotlin interface Swift implements once, `iosApp/Sources/Bridge/AppPlatform.swift`: the core
   graph's `IosCoreHost` (WidgetKit reloads, the top view controller, WebKit clearing) and `installedWidgetKinds`

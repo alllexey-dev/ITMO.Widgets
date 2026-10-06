@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.ios.bridge
+package dev.alllexey.itmowidgets.ios.bridge.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,12 +38,4 @@ class BridgeProbeViewModel(private val onCleared: (scopeCancelled: Boolean) -> U
     override fun onCleared() {
         onCleared(scopeJob?.isActive == false)
     }
-}
-
-data class BridgeProbeState(val count: Int)
-
-/** Sealed, so Swift switches over `onEnum(of:)`. */
-sealed interface BridgeProbeEvent {
-    data class Reached(val count: Int) : BridgeProbeEvent
-    data object Reset : BridgeProbeEvent
 }
