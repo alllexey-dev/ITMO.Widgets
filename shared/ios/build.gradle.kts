@@ -1,5 +1,5 @@
-// The iOS umbrella: the static framework `Shared` that the Xcode project links. SKIE and further exports come
-// with L18 IO-05; linking needs Xcode (T10), compiling the klibs does not. Xcode builds it through the app target's
+// The iOS umbrella: the static framework `Shared` that the Xcode project links, with SKIE's Swift layer (L18 IO-05);
+// linking needs Xcode (T10), compiling the klibs does not. Xcode builds it through the app target's
 // Run Script (`embedAndSignAppleFrameworkForXcode`, iosApp/project.yml); see docs/ios.md.
 // The Compose plugins copy every module's `composeResources` into the app bundle during that task (L18 IO-20);
 // without them CMP finds no string on iOS.
@@ -7,6 +7,8 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.plugin.compose")
+    // Sealed classes as Swift enums (`onEnum(of:)`), suspend as `async`, Flow as `AsyncSequence` (ADR 0023).
+    alias(libs.plugins.skie)
 }
 
 kotlin {
@@ -16,7 +18,9 @@ kotlin {
             isStatic = true
             // Without it K/N warns that it cannot infer a bundle ID (T10).
             binaryOption("bundleId", "dev.alllexey.itmowidgets.shared")
-            // UiText and AppIcon reach Swift without a module prefix (L18 IO-20).
+            // Exports are what Swift names without a module prefix: core for UiText, AppIcon (L18 IO-20) and the
+            // ports Swift implements; the IO card of a SwiftUI-owned ViewModel exports its feature module. Every
+            // export grows the header and the link (recipe ios-swiftui-screen).
             export(project(":shared:core"))
         }
     }
@@ -36,10 +40,19 @@ kotlin {
             implementation(project(":shared:feature-resources"))
             implementation(project(":shared:feature-reviews"))
             implementation(project(":shared:feature-account"))
-            // The composition probe of IosStrings.
+            // The composition probe of IosStrings and the screen hosts (screens/).
             implementation(libs.compose.runtime)
             implementation(libs.compose.ui)
+            // The Swift bridge: the ViewModelStore each SwiftUI screen owns (bridge/ScreenViewModelStore.kt).
+            implementation(libs.jetbrains.lifecycle.viewmodel)
         }
+    }
+}
+
+skie {
+    // The build never reaches Touchlab's analytics endpoint (T10: the upload only timed out).
+    analytics {
+        disableUpload.set(true)
     }
 }
 
