@@ -166,7 +166,7 @@ class ShellHost(
         LaunchedEffect(navigator) {
             val route = updateRoute ?: return@LaunchedEffect
             activity.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                updateGate.offers.collect { navigator.open(route(it)) }
+                updateGate.events.collect { navigator.open(route(it)) }
             }
         }
         ItmoComposeHost.locals {
