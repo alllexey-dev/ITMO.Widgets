@@ -1,6 +1,11 @@
 # Baselines of app/screenshots/ that no preview of :app renders: the XmlReferenceCapture harness proof
-# (XmlReferenceScreenshotTest), kept as XML on purpose. Listed so a PreviewScreenshotTest of :app
+# (XmlReferenceScreenshotTest), kept as XML on purpose, and the shell chrome (ShellChromeScreenshotTest), which
+# captures the whole screen with its sheet window. Listed so a PreviewScreenshotTest of :app
 # (DebugToolsScreenshotTest) does not report them as stale.
 AppUpdateFragment_offer
 AppUpdateLayout
 AppUpdateScreen_offer
+ShellBar
+ShellDemoBanner
+ShellOverlay
+ShellSheet
