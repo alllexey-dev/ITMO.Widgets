@@ -4,8 +4,8 @@ The iOS client is a SwiftUI shell around the shared Compose Multiplatform screen
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
 umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with placeholder roots, gated on
 the shared session with the sign-in screen and the first-run flow (see Shell and routes, Sign-in), the QR pass is
-its first Compose screen, the widget bundle is empty and the notification service passes notifications through
-unchanged.
+its first Compose screen, the widget bundle holds the QR widget (see Widgets) and the notification service passes
+notifications through unchanged.
 
 ## Prerequisites
 
@@ -38,9 +38,9 @@ xcodegen --version
 | `iosApp/Config/` | `Base.xcconfig` (identifiers, versions, signing defaults) and one xcconfig per target |
 | `iosApp/Resources/` | `Info/` plists and the entitlements of each target, unsigned and `.signed` |
 | `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `Bridge/` holds the Kotlin side's Swift glue (Swift bridge), `Features/<Feature>/` the Swift screen of each route (the QR pass's host) |
-| `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin) |
+| `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin); `<Widget>/` per widget. The app target compiles these sources too, without `WidgetsBundle.swift`, so the hosted tests reach them |
 | `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin) |
-| `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images, `WidgetSnapshots/` (readers of the App Group snapshots) |
+| `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images, `WidgetSnapshots/` (readers of the App Group snapshots), `Intents/` (App Intents of widget buttons; not in the notification service) |
 | `iosApp/Strings/` | `strings_ios*.xml`: catalog files with copy only iOS shows |
 | `iosApp/Tests/UnitTests/` | `ITMOWidgetsTests`, hosted in the app; `Fixtures/` holds the App Group JSON the Kotlin writers' tests produce |
 | `iosApp/Tests/SnapshotTests/` | `SnapshotTests`, hosted in the app: SwiftUI and widget entry view snapshots (swift-snapshot-testing), references in `__Snapshots__/` |
@@ -193,6 +193,8 @@ exists in the build.
 | Keychain access group | `$(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared` (app and notification service) |
 | Marketing version | 2.3.0 for all three bundles |
 | URL scheme and route ids | `itmowidgets://route/<id>`, ids in Shell and routes |
+| Widget kinds | `dev.alllexey.itmowidgets.widget.qr` |
+| App Group file names | `<name>-v<N>.json`, listed in Data sharing |
 
 The App Group and Keychain group are build settings (`APP_GROUP_ID`, `KEYCHAIN_GROUP` in `Base.xcconfig`). Xcode
 expands them into each bundle's Info.plist (keys `AppGroupID`, `KeychainGroup`) and entitlements; code reads them
@@ -227,14 +229,19 @@ container, logs one warning per process and carries on; the extensions then see 
 | File | Written by | Read by | Notes |
 |---|---|---|---|
 | `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted; `myitmo-refresh` guards the token refresh |
-| session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension, notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` false until IO-13a |
-| qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String]}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`) |
+| session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension (`SessionFile.swift` in `iosApp/Shared/WidgetSnapshots/`), notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` false until IO-13a |
+| qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool?}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`); `spoiler` is the global QR widget option, absent (as the writer leaves it today) means on, the Android default |
+| qr-widget-v1.json | `RevealQrIntent` in the widget extension, on a tap on the spoiler | widget extension (`QrWidgetReveal.swift`) | `{"revealedUntil": ISO 8601}`: the tap's time plus 30 s, Android's auto-hide delay; one file for every placed QR widget; never read by the app |
 | `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | each card that adds a snapshot adds its row |
 
 - Snapshots hold `{"version": N, "value": ...}`. A write goes to a temporary file of its own and is renamed over
   the old one, so a reader sees the old or the new snapshot, never a partial one; then the writer asks WidgetKit to
   reload the given kinds through `WidgetReloader`, which Swift implements (WidgetKit has no Objective-C API). A
   reader rejects a `version` above its own.
+- Swift reads them with `AppGroupSnapshot` (`iosApp/Shared/WidgetSnapshots/`), in any process and without Kotlin:
+  the container from the process's own `AppGroupID`, then `ALTAppGroups`; a missing container or file, a corrupt
+  file and a newer `version` all read as nil, and the reader shows its placeholder, never crashes
+  (`ITMOWidgetsTests/SnapshotReaderTests`).
 - Lock trap (0xdead10cc): iOS kills a suspended process that holds a lock on a file in a shared container. A
   `FileCrossProcessLock` is held only around the guarded call; a snapshot write takes no lock.
 
@@ -297,6 +304,29 @@ image row; the services step is the shared opt-in; the notifications step asks w
 Sign-out. Three `SessionDataCleaner`s run with the shared ones: the Keychain (every item of the service), the App
 Group container (every file but the `locks` directory) and WebKit's website data, which Swift removes through
 `IosCoreHost.clearWebsiteData` (`WKWebsiteDataStore`, as Android clears its WebView data).
+
+## Widgets
+
+The widget extension links no Kotlin (its limit is about 30 MB, SP-16a): each widget reads App Group files on every
+timeline request and makes no network call. The app's writers reload a widget's kind when its files change.
+
+QR widget (`Extensions/Widgets/Qr/`, kind `dev.alllexey.itmowidgets.widget.qr`, small, `StaticConfiguration`).
+Android keeps the widget options global, so they come from `qr-pass-v1.json`, not from a per-widget configuration.
+
+| State | When | Shows | Tap |
+|---|---|---|---|
+| Signed out | no `session-v1.json` (or no container) | QR symbol, `schedule_widget_signed_out` | the QR pass in the app |
+| Spoiler | a valid pass, no reveal running | noise, `ios_widget_qr_reveal` | `RevealQrIntent`: the code for 30 s |
+| Revealed | a reveal running, or the spoiler option off | the code, dark on white in both themes; in the demo with `demo_entered` | the QR pass in the app |
+| Expired | signed in, no pass or past its `expiresAt` | refresh symbol, `ios_widget_qr_expired` | the QR pass in the app |
+
+- `QrWidgetTimeline` turns the files into entries: the current state, the spoiler when the reveal ends, the
+  expired state at the pass's deadline; a new timeline at least every hour, Android's update period.
+- The tap URL is `itmowidgets://route/qr_pass` (`widgetURL`); the spoiler alone is a `Button(intent:)`.
+- Degradations: no circle animation on reveal (WidgetKit animates only between entries); a custom spoiler image is
+  v2.4; the spoiler option has no iOS setting yet, so the spoiler is always on.
+- `SnapshotTests/WidgetSnapshotTests` holds each state at the small family size (170 x 170 pt on the pinned
+  iPhone, `WidgetSizes`) in the four appearances; `ITMOWidgetsTests/QrWidgetTimelineTests` the timeline.
 
 ## Core graph
 
