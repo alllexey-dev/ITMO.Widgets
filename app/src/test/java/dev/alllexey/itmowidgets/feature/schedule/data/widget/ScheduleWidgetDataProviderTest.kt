@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import org.junit.Assert.*
 import org.junit.Test
@@ -158,6 +159,60 @@ class ScheduleWidgetDataProviderTest {
             assertEquals(0, pending.reads)
         }
     }
+
+    @Test
+    fun `timeline reads through the day after until and starts with the worker snapshot`() = runTest {
+        enable()
+        val until = endOfTomorrow()
+        val timeline = (provider.loadTimeline(until) as ScheduleWidgetTimelineLoadResult.Available).timeline
+        assertEquals(
+            Time.today() to Time.today().plus(2, DateTimeUnit.DAY),
+            official.refreshed.map { it.startDate to it.endDate }.single()
+        )
+        assertEquals(Time.now(), timeline.generatedAt)
+        assertEquals(until, timeline.validUntil)
+        val current = timeline.entryAt(Time.now())!!.snapshot
+        assertEquals(ScheduleWidgetPendingStatus.PREDICTED, current.singleLesson.lesson?.pendingStatus)
+        assertEquals(available().snapshot.copy(pendingValidUntil = null), current.copy(pendingValidUntil = null))
+    }
+
+    @Test
+    fun `timeline keeps the pending gates of the worker`() = runTest {
+        stores.servicesOptIn.setCustomServicesEnabled(true)
+        val timeline = (provider.loadTimeline(endOfTomorrow()) as ScheduleWidgetTimelineLoadResult.Available).timeline
+        assertTrue(timeline.entries.all { it.snapshot.officialFallback == null })
+        assertEquals(0, pending.refreshes)
+        assertEquals(0, pending.reads)
+    }
+
+    @Test
+    fun `signed out timeline is one signed-out entry without calling sources`() = runTest {
+        enable()
+        tokens.signedIn = false
+        val timeline = (provider.loadTimeline(endOfTomorrow()) as ScheduleWidgetTimelineLoadResult.Available).timeline
+        assertEquals(SingleLessonWidgetKind.SIGNED_OUT, timeline.entries.single().snapshot.singleLesson.kind)
+        assertEquals(0, pending.refreshes)
+        assertTrue(official.refreshed.isEmpty())
+    }
+
+    @Test
+    fun `official failure without cache gives an unavailable timeline`() = runTest {
+        official.days.value = emptyList()
+        official.refreshResult = AppResult.Failure(AppError.Network)
+        assertTrue(provider.loadTimeline(endOfTomorrow()) is ScheduleWidgetTimelineLoadResult.Unavailable)
+    }
+
+    @Test
+    fun `timeline must end after now`() = runTest {
+        try {
+            provider.loadTimeline(Time.now())
+            fail("A timeline ending now must be rejected")
+        } catch (_: IllegalArgumentException) {
+            assertTrue(official.refreshed.isEmpty())
+        }
+    }
+
+    private fun endOfTomorrow() = Time.today().plus(2, DateTimeUnit.DAY).atStartOfDayIn(Time.timeZone)
 
     private suspend fun enable() {
         stores.scheduleChecks.setScheduleSportAutoSignEnabled(true)

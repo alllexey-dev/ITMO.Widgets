@@ -1,0 +1,867 @@
+{
+  "version": 1,
+  "generatedAt": "2026-08-10T07:00:30.250Z",
+  "validUntil": "2026-08-11T21:00:00Z",
+  "entries": [
+    {
+      "validFrom": "2026-08-10T07:00:30.250Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "LESSON",
+          "lesson": {
+            "subject": "Математика",
+            "start": "10:00",
+            "end": "11:30",
+            "typeId": 1,
+            "teacher": "Тестовый преподаватель",
+            "room": "1404",
+            "state": "CURRENT"
+          },
+          "remainingLessons": 2
+        },
+        "lessonList": [
+          {
+            "kind": "HEADER",
+            "dateIso": "2026-08-10",
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Математика",
+              "start": "10:00",
+              "end": "11:30",
+              "typeId": 1,
+              "teacher": "Тестовый преподаватель",
+              "room": "1404",
+              "state": "CURRENT"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "UPCOMING"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Секция 7",
+              "start": "15:30",
+              "end": "17:00",
+              "typeId": 11,
+              "teacher": "Тестовый преподаватель",
+              "room": "Тестовый корпус",
+              "state": "UPCOMING",
+              "pendingStatus": "PREDICTED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "END",
+            "tomorrow": false
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "officialFallback": {
+          "singleLesson": {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Математика",
+              "start": "10:00",
+              "end": "11:30",
+              "typeId": 1,
+              "teacher": "Тестовый преподаватель",
+              "room": "1404",
+              "state": "CURRENT"
+            },
+            "remainingLessons": 1
+          },
+          "lessonList": [
+            {
+              "kind": "HEADER",
+              "dateIso": "2026-08-10",
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Математика",
+                "start": "10:00",
+                "end": "11:30",
+                "typeId": 1,
+                "teacher": "Тестовый преподаватель",
+                "room": "1404",
+                "state": "CURRENT"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Физика",
+                "start": "11:40",
+                "end": "13:10",
+                "typeId": 1,
+                "state": "UPCOMING"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "END",
+              "tomorrow": false
+            }
+          ],
+          "singleLessonStyle": "DOT",
+          "lessonListStyle": "LINE",
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-08-10T08:15:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    },
+    {
+      "validFrom": "2026-08-10T08:15:00Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "LESSON",
+          "lesson": {
+            "subject": "Физика",
+            "start": "11:40",
+            "end": "13:10",
+            "typeId": 1,
+            "state": "UPCOMING"
+          },
+          "remainingLessons": 1
+        },
+        "lessonList": [
+          {
+            "kind": "HEADER",
+            "dateIso": "2026-08-10",
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Математика",
+              "start": "10:00",
+              "end": "11:30",
+              "typeId": 1,
+              "teacher": "Тестовый преподаватель",
+              "room": "1404",
+              "state": "CURRENT"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "UPCOMING"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Секция 7",
+              "start": "15:30",
+              "end": "17:00",
+              "typeId": 11,
+              "teacher": "Тестовый преподаватель",
+              "room": "Тестовый корпус",
+              "state": "UPCOMING",
+              "pendingStatus": "PREDICTED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "END",
+            "tomorrow": false
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "officialFallback": {
+          "singleLesson": {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "UPCOMING"
+            },
+            "remainingLessons": 0
+          },
+          "lessonList": [
+            {
+              "kind": "HEADER",
+              "dateIso": "2026-08-10",
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Математика",
+                "start": "10:00",
+                "end": "11:30",
+                "typeId": 1,
+                "teacher": "Тестовый преподаватель",
+                "room": "1404",
+                "state": "CURRENT"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Физика",
+                "start": "11:40",
+                "end": "13:10",
+                "typeId": 1,
+                "state": "UPCOMING"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "END",
+              "tomorrow": false
+            }
+          ],
+          "singleLessonStyle": "DOT",
+          "lessonListStyle": "LINE",
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-08-10T08:30:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    },
+    {
+      "validFrom": "2026-08-10T08:30:00Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "LESSON",
+          "lesson": {
+            "subject": "Физика",
+            "start": "11:40",
+            "end": "13:10",
+            "typeId": 1,
+            "state": "UPCOMING"
+          },
+          "remainingLessons": 1
+        },
+        "lessonList": [
+          {
+            "kind": "HEADER",
+            "dateIso": "2026-08-10",
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Математика",
+              "start": "10:00",
+              "end": "11:30",
+              "typeId": 1,
+              "teacher": "Тестовый преподаватель",
+              "room": "1404",
+              "state": "COMPLETED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "UPCOMING"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Секция 7",
+              "start": "15:30",
+              "end": "17:00",
+              "typeId": 11,
+              "teacher": "Тестовый преподаватель",
+              "room": "Тестовый корпус",
+              "state": "UPCOMING",
+              "pendingStatus": "PREDICTED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "END",
+            "tomorrow": false
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "officialFallback": {
+          "singleLesson": {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "UPCOMING"
+            },
+            "remainingLessons": 0
+          },
+          "lessonList": [
+            {
+              "kind": "HEADER",
+              "dateIso": "2026-08-10",
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Математика",
+                "start": "10:00",
+                "end": "11:30",
+                "typeId": 1,
+                "teacher": "Тестовый преподаватель",
+                "room": "1404",
+                "state": "COMPLETED"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Физика",
+                "start": "11:40",
+                "end": "13:10",
+                "typeId": 1,
+                "state": "UPCOMING"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "END",
+              "tomorrow": false
+            }
+          ],
+          "singleLessonStyle": "DOT",
+          "lessonListStyle": "LINE",
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-08-10T08:40:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    },
+    {
+      "validFrom": "2026-08-10T08:40:00Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "LESSON",
+          "lesson": {
+            "subject": "Физика",
+            "start": "11:40",
+            "end": "13:10",
+            "typeId": 1,
+            "state": "CURRENT"
+          },
+          "remainingLessons": 1
+        },
+        "lessonList": [
+          {
+            "kind": "HEADER",
+            "dateIso": "2026-08-10",
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Математика",
+              "start": "10:00",
+              "end": "11:30",
+              "typeId": 1,
+              "teacher": "Тестовый преподаватель",
+              "room": "1404",
+              "state": "COMPLETED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "CURRENT"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Секция 7",
+              "start": "15:30",
+              "end": "17:00",
+              "typeId": 11,
+              "teacher": "Тестовый преподаватель",
+              "room": "Тестовый корпус",
+              "state": "UPCOMING",
+              "pendingStatus": "PREDICTED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "END",
+            "tomorrow": false
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "officialFallback": {
+          "singleLesson": {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "CURRENT"
+            },
+            "remainingLessons": 0
+          },
+          "lessonList": [
+            {
+              "kind": "HEADER",
+              "dateIso": "2026-08-10",
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Математика",
+                "start": "10:00",
+                "end": "11:30",
+                "typeId": 1,
+                "teacher": "Тестовый преподаватель",
+                "room": "1404",
+                "state": "COMPLETED"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Физика",
+                "start": "11:40",
+                "end": "13:10",
+                "typeId": 1,
+                "state": "CURRENT"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "END",
+              "tomorrow": false
+            }
+          ],
+          "singleLessonStyle": "DOT",
+          "lessonListStyle": "LINE",
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-08-10T09:55:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    },
+    {
+      "validFrom": "2026-08-10T09:55:00Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "LESSON",
+          "lesson": {
+            "subject": "Секция 7",
+            "start": "15:30",
+            "end": "17:00",
+            "typeId": 11,
+            "teacher": "Тестовый преподаватель",
+            "room": "Тестовый корпус",
+            "state": "UPCOMING",
+            "pendingStatus": "PREDICTED"
+          },
+          "remainingLessons": 0
+        },
+        "lessonList": [
+          {
+            "kind": "HEADER",
+            "dateIso": "2026-08-10",
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Математика",
+              "start": "10:00",
+              "end": "11:30",
+              "typeId": 1,
+              "teacher": "Тестовый преподаватель",
+              "room": "1404",
+              "state": "COMPLETED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "CURRENT"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Секция 7",
+              "start": "15:30",
+              "end": "17:00",
+              "typeId": 11,
+              "teacher": "Тестовый преподаватель",
+              "room": "Тестовый корпус",
+              "state": "UPCOMING",
+              "pendingStatus": "PREDICTED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "END",
+            "tomorrow": false
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "officialFallback": {
+          "singleLesson": {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "CURRENT"
+            },
+            "remainingLessons": 0
+          },
+          "lessonList": [
+            {
+              "kind": "HEADER",
+              "dateIso": "2026-08-10",
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Математика",
+                "start": "10:00",
+                "end": "11:30",
+                "typeId": 1,
+                "teacher": "Тестовый преподаватель",
+                "room": "1404",
+                "state": "COMPLETED"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Физика",
+                "start": "11:40",
+                "end": "13:10",
+                "typeId": 1,
+                "state": "CURRENT"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "END",
+              "tomorrow": false
+            }
+          ],
+          "singleLessonStyle": "DOT",
+          "lessonListStyle": "LINE",
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-08-10T10:10:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    },
+    {
+      "validFrom": "2026-08-10T10:10:00Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "LESSON",
+          "lesson": {
+            "subject": "Секция 7",
+            "start": "15:30",
+            "end": "17:00",
+            "typeId": 11,
+            "teacher": "Тестовый преподаватель",
+            "room": "Тестовый корпус",
+            "state": "UPCOMING",
+            "pendingStatus": "PREDICTED"
+          },
+          "remainingLessons": 0
+        },
+        "lessonList": [
+          {
+            "kind": "HEADER",
+            "dateIso": "2026-08-10",
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Математика",
+              "start": "10:00",
+              "end": "11:30",
+              "typeId": 1,
+              "teacher": "Тестовый преподаватель",
+              "room": "1404",
+              "state": "COMPLETED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Физика",
+              "start": "11:40",
+              "end": "13:10",
+              "typeId": 1,
+              "state": "COMPLETED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Секция 7",
+              "start": "15:30",
+              "end": "17:00",
+              "typeId": 11,
+              "teacher": "Тестовый преподаватель",
+              "room": "Тестовый корпус",
+              "state": "UPCOMING",
+              "pendingStatus": "PREDICTED"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "END",
+            "tomorrow": false
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "officialFallback": {
+          "singleLesson": {
+            "kind": "NO_MORE_TODAY",
+            "remainingLessons": 0
+          },
+          "lessonList": [
+            {
+              "kind": "HEADER",
+              "dateIso": "2026-08-11",
+              "tomorrow": true
+            },
+            {
+              "kind": "LESSON",
+              "lesson": {
+                "subject": "Алгоритмы",
+                "start": "08:20",
+                "end": "09:50",
+                "typeId": 1,
+                "state": "UPCOMING"
+              },
+              "tomorrow": false
+            },
+            {
+              "kind": "END",
+              "tomorrow": true
+            }
+          ],
+          "singleLessonStyle": "DOT",
+          "lessonListStyle": "LINE",
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-08-10T12:30:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    },
+    {
+      "validFrom": "2026-08-10T12:30:00Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "NO_MORE_TODAY",
+          "remainingLessons": 0
+        },
+        "lessonList": [
+          {
+            "kind": "HEADER",
+            "dateIso": "2026-08-11",
+            "tomorrow": true
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Алгоритмы",
+              "start": "08:20",
+              "end": "09:50",
+              "typeId": 1,
+              "state": "UPCOMING"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "END",
+            "tomorrow": true
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    },
+    {
+      "validFrom": "2026-08-10T21:00:00Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "LESSON",
+          "lesson": {
+            "subject": "Алгоритмы",
+            "start": "08:20",
+            "end": "09:50",
+            "typeId": 1,
+            "state": "UPCOMING"
+          },
+          "remainingLessons": 0
+        },
+        "lessonList": [
+          {
+            "kind": "HEADER",
+            "dateIso": "2026-08-11",
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Алгоритмы",
+              "start": "08:20",
+              "end": "09:50",
+              "typeId": 1,
+              "state": "UPCOMING"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "END",
+            "tomorrow": false
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    },
+    {
+      "validFrom": "2026-08-11T05:20:00Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "LESSON",
+          "lesson": {
+            "subject": "Алгоритмы",
+            "start": "08:20",
+            "end": "09:50",
+            "typeId": 1,
+            "state": "CURRENT"
+          },
+          "remainingLessons": 0
+        },
+        "lessonList": [
+          {
+            "kind": "HEADER",
+            "dateIso": "2026-08-11",
+            "tomorrow": false
+          },
+          {
+            "kind": "LESSON",
+            "lesson": {
+              "subject": "Алгоритмы",
+              "start": "08:20",
+              "end": "09:50",
+              "typeId": 1,
+              "state": "CURRENT"
+            },
+            "tomorrow": false
+          },
+          {
+            "kind": "END",
+            "tomorrow": false
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    },
+    {
+      "validFrom": "2026-08-11T06:50:00Z",
+      "snapshot": {
+        "singleLesson": {
+          "kind": "NO_MORE_TODAY",
+          "remainingLessons": 0
+        },
+        "lessonList": [
+          {
+            "kind": "EMPTY_TODAY_AND_TOMORROW",
+            "tomorrow": false
+          }
+        ],
+        "singleLessonStyle": "DOT",
+        "lessonListStyle": "LINE",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      }
+    }
+  ]
+}
