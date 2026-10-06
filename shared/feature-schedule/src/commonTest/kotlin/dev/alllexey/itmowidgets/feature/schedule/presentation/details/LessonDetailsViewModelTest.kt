@@ -10,12 +10,17 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
-import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
-import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,24 +30,24 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
-import kotlinx.datetime.toKotlinLocalDate
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LessonDetailsViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     private val services = FakeCustomServicesRepository(enabled = true)
     private val repository = FakeLessonFriendsRepository()
     private val levels = FakeTeacherLevelsRepository()
 
     @Test
-    fun `without the opt-in the block is disabled and Backend is never asked`() = runTest(mainDispatcherRule.dispatcher) {
+    fun withoutTheOptInTheBlockIsDisabledAndBackendIsNeverAsked() = runTest(main.dispatcher) {
         services.enabled.value = false
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -52,8 +57,8 @@ class LessonDetailsViewModelTest {
     }
 
     @Test
-    fun `friends arrive in server order for the pair and date the sheet was opened with`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun friendsArriveInServerOrderForThePairAndDateTheSheetWasOpenedWith() =
+        runTest(main.dispatcher) {
             val first = friend(200002, "Первый")
             val second = friend(300003, "Второй")
             repository.result = AppResult.Success(listOf(second, first))
@@ -65,7 +70,7 @@ class LessonDetailsViewModelTest {
         }
 
     @Test
-    fun `the silent first load shows the block loading`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theSilentFirstLoadShowsTheBlockLoading() = runTest(main.dispatcher) {
         val answer = CompletableDeferred<AppResult<List<UserSummary>>>()
         repository.handler = { answer.await() }
         val viewModel = createViewModel()
@@ -79,8 +84,8 @@ class LessonDetailsViewModelTest {
     }
 
     @Test
-    fun `a failure is reported and a forced retry shows progress and asks again`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun aFailureIsReportedAndAForcedRetryShowsProgressAndAsksAgain() =
+        runTest(main.dispatcher) {
             repository.result = AppResult.Failure(AppError.Network)
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -99,7 +104,7 @@ class LessonDetailsViewModelTest {
         }
 
     @Test
-    fun `a pull during a refresh joins it instead of asking twice`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aPullDuringARefreshJoinsItInsteadOfAskingTwice() = runTest(main.dispatcher) {
         val answer = CompletableDeferred<AppResult<List<UserSummary>>>()
         repository.handler = { answer.await() }
         val viewModel = createViewModel()
@@ -115,7 +120,7 @@ class LessonDetailsViewModelTest {
     }
 
     @Test
-    fun `a failed silent refresh keeps the error without a progress flash`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedSilentRefreshKeepsTheErrorWithoutAProgressFlash() = runTest(main.dispatcher) {
         repository.result = AppResult.Failure(AppError.Network)
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -133,8 +138,8 @@ class LessonDetailsViewModelTest {
     }
 
     @Test
-    fun `an opt-in revoked between the check and the call still reads as disabled`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun anOptInRevokedBetweenTheCheckAndTheCallStillReadsAsDisabled() =
+        runTest(main.dispatcher) {
             repository.result = AppResult.Failure(AppError.CustomServicesDisabled)
             val viewModel = createViewModel()
             advanceUntilIdle()
@@ -143,7 +148,7 @@ class LessonDetailsViewModelTest {
         }
 
     @Test
-    fun `the teacher's tone arrives with the opt-in`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theTeacherSToneArrivesWithTheOptIn() = runTest(main.dispatcher) {
         levels.levels[123456] = TeacherLevel.POSITIVE
         val viewModel = createViewModel(teacherIsu = 123456)
         advanceUntilIdle()
@@ -153,7 +158,7 @@ class LessonDetailsViewModelTest {
     }
 
     @Test
-    fun `a teacher without a tone has no level`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aTeacherWithoutAToneHasNoLevel() = runTest(main.dispatcher) {
         val viewModel = createViewModel(teacherIsu = 123456)
         advanceUntilIdle()
 
@@ -162,7 +167,7 @@ class LessonDetailsViewModelTest {
     }
 
     @Test
-    fun `without a teacher ISU or the opt-in there is no level and no request`() = runTest(mainDispatcherRule.dispatcher) {
+    fun withoutATeacherISUOrTheOptInThereIsNoLevelAndNoRequest() = runTest(main.dispatcher) {
         levels.levels[123456] = TeacherLevel.POSITIVE
         val withoutIsu = createViewModel(teacherIsu = null)
         advanceUntilIdle()
@@ -176,7 +181,7 @@ class LessonDetailsViewModelTest {
     }
 
     @Test
-    fun `the newest change of this occurrence is shown`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theNewestChangeOfThisOccurrenceIsShown() = runTest(main.dispatcher) {
         val older = scheduleChange(id = "older", after = slot(42, DATE), detectedAt = Instant.parse("2026-09-06T09:00:00Z"))
         val newer = scheduleChange(
             id = "newer", fields = setOf(ScheduleChangeField.PLACE), before = slot(42, DATE),
@@ -191,7 +196,7 @@ class LessonDetailsViewModelTest {
     }
 
     @Test
-    fun `a change of another lesson or date is not this one's`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aChangeOfAnotherLessonOrDateIsNotThisOneS() = runTest(main.dispatcher) {
         val changes = FakeScheduleChangesRepository(
             scheduleChange(id = "other-lesson", after = slot(7, DATE)),
             scheduleChange(id = "other-date", kind = ScheduleChangeKind.ADDED, after = slot(42, DATE.plus(1, DateTimeUnit.DAY)))
@@ -204,7 +209,7 @@ class LessonDetailsViewModelTest {
     }
 
     @Test
-    fun `a cancellation is found by its old slot and leaves with the store`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aCancellationIsFoundByItsOldSlotAndLeavesWithTheStore() = runTest(main.dispatcher) {
         val cancelled = scheduleChange(kind = ScheduleChangeKind.CANCELLED, before = slot(42, DATE))
         val changes = FakeScheduleChangesRepository(cancelled)
 

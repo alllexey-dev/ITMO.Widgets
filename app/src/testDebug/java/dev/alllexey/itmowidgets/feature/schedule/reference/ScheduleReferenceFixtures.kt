@@ -186,6 +186,9 @@ internal object ScheduleReferenceFixtures {
         ScheduleLifecycleTestActivity.showPendingSport = MutableStateFlow(false)
         ScheduleLifecycleTestActivity.pendingSport = MutableStateFlow(AppResult.Success(emptyList()))
         ScheduleLifecycleTestActivity.refreshPendingOutcome = {}
+        ScheduleLifecycleTestActivity.servicesEnabled = false
+        ScheduleLifecycleTestActivity.friendsOutcome = { AppResult.Success(emptyList()) }
+        ScheduleLifecycleTestActivity.teacherLevelsByIsu = emptyMap()
         ScheduleLifecycleTestActivity.changes.value = emptyList()
     }
 

@@ -5,25 +5,23 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.atTime
 import kotlinx.datetime.plus
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinLocalTime
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class ScheduleChangeDigestTest {
 
     @Test
-    fun `nothing is shown or marked from midnight until six`() {
+    fun nothingIsShownOrMarkedFromMidnightUntilSix() {
         val changes = listOf(moved("1", TUE, WED), moved("2", MON, MON))
 
         for (time in listOf(LocalTime(0, 0), LocalTime(3, 0), LocalTime(5, 59, 59))) {
@@ -32,7 +30,7 @@ class ScheduleChangeDigestTest {
     }
 
     @Test
-    fun `six o'clock and late evening are not quiet`() {
+    fun sixOClockAndLateEveningAreNotQuiet() {
         val changes = listOf(moved("1", WED, THU))
 
         assertNotNull(ScheduleChangeDigests.decide(changes, TUE.atTime(6, 0)).digest)
@@ -40,7 +38,7 @@ class ScheduleChangeDigestTest {
     }
 
     @Test
-    fun `a change found at night is delivered after six and today and tomorrow count from the delivery`() {
+    fun aChangeFoundAtNightIsDeliveredAfterSixAndTodayAndTomorrowCountFromTheDelivery() {
         val nightly = moved("1", THU, WED)
 
         assertNull(ScheduleChangeDigests.decide(listOf(nightly), TUE.atTime(1, 0)).digest)
@@ -52,7 +50,7 @@ class ScheduleChangeDigestTest {
     }
 
     @Test
-    fun `pending changes over by the delivery are handled without being shown`() {
+    fun pendingChangesOverByTheDeliveryAreHandledWithoutBeingShown() {
         val over = moved("1", MON, MON)
         val fresh = moved("2", THU, FRI)
 
@@ -66,7 +64,7 @@ class ScheduleChangeDigestTest {
     }
 
     @Test
-    fun `a change touching today or tomorrow makes a sound and a later one does not`() {
+    fun aChangeTouchingTodayOrTomorrowMakesASoundAndALaterOneDoesNot() {
         val now = TUE.atTime(12, 0)
 
         assertTrue(ScheduleChangeDigests.decide(listOf(moved("1", TUE, FRI, start = LocalTime(15, 0))), now).digest!!.audible)
@@ -75,7 +73,7 @@ class ScheduleChangeDigestTest {
     }
 
     @Test
-    fun `the digest names the soonest fresh change and counts every unread one that is not over`() {
+    fun theDigestNamesTheSoonestFreshChangeAndCountsEveryUnreadOneThatIsNotOver() {
         val later = moved("1", FRI, FRI.plus(1, DateTimeUnit.DAY))
         val soonest = moved("2", THU, FRI)
         val deliveredBefore = moved("3", WED, THU, notified = true)
@@ -89,7 +87,7 @@ class ScheduleChangeDigestTest {
     }
 
     @Test
-    fun `read and delivered changes are not pending`() {
+    fun readAndDeliveredChangesAreNotPending() {
         val decision = ScheduleChangeDigests.decide(
             listOf(moved("1", WED, THU, read = true), moved("2", WED, THU, notified = true)),
             MON.atTime(12, 0)

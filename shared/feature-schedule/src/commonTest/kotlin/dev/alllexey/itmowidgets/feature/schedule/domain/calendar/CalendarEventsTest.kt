@@ -5,6 +5,9 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -12,14 +15,11 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
 
 class CalendarEventsTest {
 
     @Test
-    fun `every lesson of the answer becomes an event, sport and room bookings too`() {
+    fun everyLessonOfTheAnswerBecomesAnEventSportAndRoomBookingsToo() {
         val events = CalendarEvents.from(
             listOf(day(MONDAY, lesson(1), lesson(2, flowTypeId = 3), lesson(3, flowTypeId = 5))),
             MOSCOW
@@ -29,7 +29,7 @@ class CalendarEventsTest {
     }
 
     @Test
-    fun `a repeated lesson id is one event at its first slot`() {
+    fun aRepeatedLessonIdIsOneEventAtItsFirstSlot() {
         val events = CalendarEvents.from(
             listOf(
                 day(MONDAY.plus(1, DateTimeUnit.DAY), lesson(1, start = LocalTime(8, 20))),
@@ -42,7 +42,7 @@ class CalendarEventsTest {
     }
 
     @Test
-    fun `lessons without an id are named by their slot`() {
+    fun lessonsWithoutAnIdAreNamedByTheirSlot() {
         val events = CalendarEvents.from(
             listOf(day(MONDAY, lesson(0, start = LocalTime(10, 0)), lesson(-1, start = LocalTime(11, 40)))),
             MOSCOW
@@ -52,7 +52,7 @@ class CalendarEventsTest {
     }
 
     @Test
-    fun `times are Moscow wall times and events are in time order`() {
+    fun timesAreMoscowWallTimesAndEventsAreInTimeOrder() {
         val events = CalendarEvents.from(
             listOf(day(MONDAY, lesson(2, start = LocalTime(13, 30)), lesson(1, start = LocalTime(8, 20)))),
             MOSCOW
@@ -64,7 +64,7 @@ class CalendarEventsTest {
     }
 
     @Test
-    fun `title location and description come from the lesson`() {
+    fun titleLocationAndDescriptionComeFromTheLesson() {
         val event = CalendarEvents.from(listOf(day(MONDAY, lesson(1))), MOSCOW) { "Кронверкский проспект, 49, Санкт-Петербург" }
             .single()
 
@@ -75,7 +75,7 @@ class CalendarEventsTest {
     }
 
     @Test
-    fun `an unknown building keeps its own text and missing parts are left out`() {
+    fun anUnknownBuildingKeepsItsOwnTextAndMissingPartsAreLeftOut() {
         val known = CalendarEvents.from(listOf(day(MONDAY, lesson(1, room = null))), MOSCOW) { null }.single()
         val nothing = CalendarEvents.from(
             listOf(day(MONDAY, lesson(1, room = null, building = null, teacher = null, groupName = " "))),
@@ -88,7 +88,7 @@ class CalendarEventsTest {
     }
 
     @Test
-    fun `the calendar description ends with a tag that names the occurrence`() {
+    fun theCalendarDescriptionEndsWithATagThatNamesTheOccurrence() {
         val event = CalendarEvents.from(listOf(day(MONDAY, lesson(1))), MOSCOW) { null }.single()
 
         assertEquals("Лекция\nТестовый преподаватель\nФИЗ ПИИКТ 3.2\nITMO.Widgets · lesson-1", event.taggedDescription)

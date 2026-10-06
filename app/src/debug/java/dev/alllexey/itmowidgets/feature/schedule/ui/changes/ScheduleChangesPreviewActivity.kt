@@ -10,11 +10,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,15 +19,16 @@ import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.di.bridge.ScheduleDebugFixtures
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
-import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleChangesViewModel
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
+import org.koin.core.module.Module
 
 /** Hosts the real history screen over changes kept in memory; no file, no check and no notification. */
 @AndroidEntryPoint
@@ -50,17 +46,11 @@ class ScheduleChangesPreviewActivity : AppCompatActivity() {
         super.attachBaseContext(newBase.createConfigurationContext(config))
     }
 
+    private lateinit var koinFixture: Module
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
-                if (fragment !is ScheduleChangesFragment) return
-                ViewModelProvider(fragment, object : ViewModelProvider.Factory {
-                    @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                        ScheduleChangesViewModel(MemoryChanges, FixedTime, SavedStateHandle()) as T
-                })[ScheduleChangesViewModel::class.java]
-            }
-        }, false)
+        // Before super.onCreate(): a restored ScheduleChangesFragment obtains its ViewModel from Koin there.
+        koinFixture = ScheduleDebugFixtures.loadChanges(this, MemoryChanges, FixedTime)
         super.onCreate(savedInstanceState)
         appearance.colorSeed?.let {
             DynamicColors.applyToActivityIfAvailable(this, DynamicColorsOptions.Builder().setContentBasedSource(it).build())
@@ -87,6 +77,11 @@ class ScheduleChangesPreviewActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .add(container.id, ScheduleChangesFragment(), FRAGMENT)
             .commitNow()
+    }
+
+    override fun onDestroy() {
+        ScheduleDebugFixtures.unload(this, koinFixture)
+        super.onDestroy()
     }
 
     val fragment: ScheduleChangesFragment

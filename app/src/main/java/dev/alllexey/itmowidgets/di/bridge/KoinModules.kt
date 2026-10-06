@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
 import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import org.koin.core.module.Module
@@ -27,6 +28,7 @@ object KoinModules {
         settingsBridgeModule,
         recordbookBridgeModule,
         socialBridgeModule,
+        scheduleBridgeModule,
     )
 
     /** Definitions Koin constructs; the graph check verifies their constructors. */
@@ -38,6 +40,7 @@ object KoinModules {
         recordbookModule,
         socialModule,
         friendSelectorModule,
+        scheduleModule,
     )
 
     val all: List<Module> get() = bridges + constructed

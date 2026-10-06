@@ -1,12 +1,16 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
@@ -18,17 +22,13 @@ import kotlinx.datetime.asTimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class ScheduleWidgetSelectorTest {
 
     private val selector = ScheduleWidgetSelector()
 
     @Test
-    fun `shows current lesson and schedules forward switch before its end`() {
+    fun showsCurrentLessonAndSchedulesForwardSwitchBeforeItsEnd() {
         val first = lesson(1, "09:30", "11:00", "Математика")
         val second = lesson(2, "11:20", "12:50", "Физика")
 
@@ -49,7 +49,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `moves to next lesson during forward window`() {
+    fun movesToNextLessonDuringForwardWindow() {
         val first = lesson(1, "09:30", "11:00", "Математика")
         val second = lesson(2, "11:20", "12:50", "Физика")
 
@@ -70,7 +70,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `shows tomorrow in list after todays lessons finish`() {
+    fun showsTomorrowInListAfterTodaysLessonsFinish() {
         val todayLesson = lesson(1, "08:20", "09:50", "История")
         val tomorrowLesson = lesson(2, "10:00", "11:30", "Алгоритмы")
 
@@ -101,7 +101,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `hides completed lessons from day list`() {
+    fun hidesCompletedLessonsFromDayList() {
         val completed = lesson(1, "08:20", "09:50", "История")
         val current = lesson(2, "10:00", "11:30", "Алгоритмы")
         val upcoming = lesson(3, "11:40", "13:10", "Физика")
@@ -120,7 +120,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `reports empty today and tomorrow without exposing teacher`() {
+    fun reportsEmptyTodayAndTomorrowWithoutExposingTeacher() {
         val result = selector.select(
             schedule = emptyList(),
             now = at("10:30"),
@@ -143,7 +143,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `uses seven minute refresh when smart scheduling is disabled`() {
+    fun usesSevenMinuteRefreshWhenSmartSchedulingIsDisabled() {
         val result = selector.select(
             schedule = listOf(day(TODAY, lesson(1, "08:20", "19:50", "Практика"))),
             now = at("10:30"),
@@ -155,7 +155,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `removes teacher according to widget privacy setting`() {
+    fun removesTeacherAccordingToWidgetPrivacySetting() {
         val result = selector.select(
             schedule = listOf(
                 day(
@@ -179,7 +179,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `pending only today appears in both widgets with waiting and predicted markers`() {
+    fun pendingOnlyTodayAppearsInBothWidgetsWithWaitingAndPredictedMarkers() {
         val result = selector.select(
             schedule = emptyList(),
             now = at("10:00"),
@@ -207,7 +207,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `pending only tomorrow appears in tomorrow list without becoming todays next lesson`() {
+    fun pendingOnlyTomorrowAppearsInTomorrowListWithoutBecomingTodaysNextLesson() {
         val tomorrow = pending(1, "11:00", prediction = true, date = TODAY.plus(1, DateTimeUnit.DAY))
         val result = selector.select(
             schedule = emptyList(),
@@ -233,7 +233,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `mixed official and pending lessons are ordered and respect hidden teachers`() {
+    fun mixedOfficialAndPendingLessonsAreOrderedAndRespectHiddenTeachers() {
         val result = selector.select(
             schedule = listOf(day(
                 TODAY,
@@ -259,7 +259,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `pending times normalize to widget offset while started expired and invalid entries are excluded`() {
+    fun pendingTimesNormalizeToWidgetOffsetWhileStartedExpiredAndInvalidEntriesAreExcluded() {
         val future = pending(1, "11:00").copy(
             start = Instant.parse("2026-08-10T08:00:00Z"),
             end = Instant.parse("2026-08-10T09:30:00Z"),
@@ -292,7 +292,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `smart refresh reaches pending start before current official lesson ends`() {
+    fun smartRefreshReachesPendingStartBeforeCurrentOfficialLessonEnds() {
         val official = listOf(day(TODAY, lesson(1, "09:30", "11:30", "Математика")))
         val waiting = pending(1, "10:05")
         val result = selector.select(official, at("10:00"), ZONE, preferences(), listOf(waiting))
@@ -307,7 +307,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `pending replay validity is capped at seven minutes or its earliest start`() {
+    fun pendingReplayValidityIsCappedAtSevenMinutesOrItsEarliestStart() {
         val now = at("10:00")
         val later = selector.select(emptyList(), now, ZONE, preferences(), listOf(pending(1, "11:00")))
         assertEquals((now + 7.minutes).toString(), later.snapshot.pendingValidUntil)
@@ -319,7 +319,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `official fallback restores exact next lesson list and remaining count rather than filtering pending rows`() {
+    fun officialFallbackRestoresExactNextLessonListAndRemainingCountRatherThanFilteringPendingRows() {
         val schedule = listOf(day(
             TODAY,
             lesson(2, "14:00", "15:30", "Физика"),
@@ -345,7 +345,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
-    fun `pending teachers and official fallback respect each format independently`() {
+    fun pendingTeachersAndOfficialFallbackRespectEachFormatIndependently() {
         val options = preferences().copy(display = ScheduleWidgetSettings(
             compact = CompactScheduleWidgetSettings(hideTeacher = true),
             full = FullScheduleWidgetSettings(hideTeacher = false)

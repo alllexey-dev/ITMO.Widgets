@@ -3,11 +3,9 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation.changes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,8 +21,7 @@ import kotlinx.datetime.toLocalDateTime
  * The history of schedule changes. While the screen is visible every unread change is marked read, and the rows that
  * were unread keep their "new" dot for the life of the screen, recreation included.
  */
-@HiltViewModel
-class ScheduleChangesViewModel @Inject constructor(
+class ScheduleChangesViewModel(
     private val repository: ScheduleChangesRepository,
     private val timeProvider: AcademicTimeProvider,
     private val savedStateHandle: SavedStateHandle

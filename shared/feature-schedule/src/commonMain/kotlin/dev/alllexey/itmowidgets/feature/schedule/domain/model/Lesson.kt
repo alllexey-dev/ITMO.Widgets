@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.model
 
+import kotlin.jvm.JvmInline
 import kotlinx.datetime.LocalTime
 
 data class Lesson(

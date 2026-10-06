@@ -16,7 +16,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.core.widget.TextViewCompat
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -61,6 +60,7 @@ import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * One lesson occurrence: what the schedule card shows, in full, plus the map
@@ -73,7 +73,7 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
 
     @Inject lateinit var buildings: BuildingDirectory
 
-    private val viewModel: LessonDetailsViewModel by viewModels()
+    private val viewModel: LessonDetailsViewModel by viewModel()
 
     private val lesson: LessonDetailsArgs by lazy {
         requireNotNull(requireArguments().navigationArgs<LessonDetailsArgs>(ARG_LESSON))

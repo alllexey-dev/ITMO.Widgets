@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -31,10 +30,8 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import javax.inject.Inject
 
-@HiltViewModel
-class ScheduleViewModel @Inject constructor(
+class ScheduleViewModel(
     private val repository: ScheduleRepository,
     private val timeProvider: AcademicTimeProvider,
     private val savedStateHandle: SavedStateHandle,

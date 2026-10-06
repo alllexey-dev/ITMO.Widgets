@@ -7,6 +7,10 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonStat
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState.CURRENT
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState.NEXT
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState.UPCOMING
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -19,15 +23,11 @@ import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class ScheduleListUiTest {
 
     @Test
-    fun `a gap of more than an hour between lessons becomes a break row`() {
+    fun aGapOfMoreThanAnHourBetweenLessonsBecomesABreakRow() {
         val rows = rowsOf(day(TODAY, lesson(1, "08:20", "09:50"), lesson(2, "11:00", "12:30"), lesson(3, "13:31", "15:00")))
 
         assertEquals(
@@ -46,14 +46,14 @@ class ScheduleListUiTest {
     }
 
     @Test
-    fun `a gap of exactly an hour is not a break`() {
+    fun aGapOfExactlyAnHourIsNotABreak() {
         val rows = rowsOf(day(TODAY, lesson(1, "08:20", "09:50"), lesson(2, "10:50", "12:20")))
 
         assertTrue(rows.none { it is ScheduleRowUi.BreakRow })
     }
 
     @Test
-    fun `lessons are ordered by start and only the last row is flagged last`() {
+    fun lessonsAreOrderedByStartAndOnlyTheLastRowIsFlaggedLast() {
         val rows = rowsOf(day(TODAY, lesson(2, "11:00", "12:30"), lesson(1, "09:30", "11:00")))
 
         assertEquals(listOf(1L, 2L), rows.map { (it as ScheduleRowUi.LessonRow).lesson.pairId })
@@ -61,14 +61,14 @@ class ScheduleListUiTest {
     }
 
     @Test
-    fun `states follow the original lesson index after sorting`() {
+    fun statesFollowTheOriginalLessonIndexAfterSorting() {
         val rows = rowsOf(day(TODAY, lesson(2, "10:30", "12:00"), lesson(1, "08:00", "09:30")))
 
         assertEquals(listOf(COMPLETED, NEXT), rows.map { (it as ScheduleRowUi.LessonRow).state })
     }
 
     @Test
-    fun `pending sport rows merge by start, fill a gap and can be last`() {
+    fun pendingSportRowsMergeByStartFillAGapAndCanBeLast() {
         val rows = rowsOf(
             day(TODAY, lesson(1, "08:20", "09:50"), lesson(2, "13:30", "15:00")).copy(
                 pendingSport = listOf(pending(TODAY, "11:00", prediction = false), pending(TODAY, "17:00", prediction = true))
@@ -96,7 +96,7 @@ class ScheduleListUiTest {
     }
 
     @Test
-    fun `a pending row outside the gap keeps the break`() {
+    fun aPendingRowOutsideTheGapKeepsTheBreak() {
         val rows = rowsOf(
             day(TODAY, lesson(1, "08:20", "09:50"), lesson(2, "13:30", "15:00")).copy(
                 pendingSport = listOf(pending(TODAY, "15:00", prediction = true))
@@ -108,7 +108,7 @@ class ScheduleListUiTest {
     }
 
     @Test
-    fun `summary counts official lessons only`() {
+    fun summaryCountsOfficialLessonsOnly() {
         val days = build(
             day(TODAY, lesson(1, "08:20", "09:50"), lesson(2, "10:00", "11:30")).copy(
                 pendingSport = listOf(pending(TODAY, "17:00", prediction = true))
@@ -125,7 +125,7 @@ class ScheduleListUiTest {
     }
 
     @Test
-    fun `changed lessons are marked by pair id`() {
+    fun changedLessonsAreMarkedByPairId() {
         val rows = rowsOf(
             day(TODAY, lesson(1, "08:20", "09:50"), lesson(2, "10:00", "11:30")).copy(changedPairIds = setOf(2L))
         )
@@ -134,7 +134,7 @@ class ScheduleListUiTest {
     }
 
     @Test
-    fun `past today and future flags and the title follow the academic date`() {
+    fun pastTodayAndFutureFlagsAndTheTitleFollowTheAcademicDate() {
         val days = build(day(TODAY.minus(1, DateTimeUnit.DAY)), day(TODAY), day(TODAY.plus(1, DateTimeUnit.DAY)))
 
         assertEquals(listOf(true, false, false), days.map { it.isPast })
@@ -143,7 +143,7 @@ class ScheduleListUiTest {
     }
 
     @Test
-    fun `flags flip exactly at midnight`() {
+    fun flagsFlipExactlyAtMidnight() {
         val days = listOf(day(TODAY), day(TODAY.plus(1, DateTimeUnit.DAY)))
 
         val beforeMidnight = buildScheduleListUi(days, TODAY.atTime(23, 59, 59, 999_999_999), ZONE)
@@ -156,7 +156,7 @@ class ScheduleListUiTest {
     }
 
     @Test
-    fun `lesson boundaries switch states on the exact instant`() {
+    fun lessonBoundariesSwitchStatesOnTheExactInstant() {
         val days = listOf(day(TODAY, lesson(1, "10:00", "11:30"), lesson(2, "11:40", "13:10")))
 
         fun statesAt(hour: Int, minute: Int, nanosecond: Int = 0) =
@@ -172,7 +172,7 @@ class ScheduleListUiTest {
     }
 
     @Test
-    fun `a later instant without boundaries yields an equal model`() {
+    fun aLaterInstantWithoutBoundariesYieldsAnEqualModel() {
         val days = listOf(day(TODAY, lesson(1, "10:00", "11:30")))
 
         assertEquals(

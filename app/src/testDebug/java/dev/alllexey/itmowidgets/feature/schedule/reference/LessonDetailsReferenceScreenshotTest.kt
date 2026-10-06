@@ -1,11 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule.reference
 
-import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -13,23 +7,16 @@ import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
-import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
-import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
-import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
-import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsViewModel
 import dev.alllexey.itmowidgets.feature.schedule.reference.ScheduleReferenceFixtures.CHANGED_PAIR_ID
 import dev.alllexey.itmowidgets.feature.schedule.reference.ScheduleReferenceFixtures.TEACHER_ISU
 import dev.alllexey.itmowidgets.feature.schedule.reference.ScheduleReferenceFixtures.today
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import org.junit.After
 import org.junit.Before
@@ -114,7 +101,7 @@ class LessonDetailsReferenceScreenshotTest {
 
     private fun capture(preview: String, lesson: LessonDetailsArgs, backend: Backend) =
         ScheduleReferenceFixtures.onEachLaunch(ScheduleLifecycleTestActivity::class.java, onCreated = { activity ->
-            activity.supportFragmentManager.registerFragmentLifecycleCallbacks(backend, false)
+            backend.install()
             LessonDetailsBottomSheet.newInstance(lesson)
                 .show(activity.supportFragmentManager, LessonDetailsBottomSheet.TAG)
         }) {
@@ -131,43 +118,19 @@ class LessonDetailsReferenceScreenshotTest {
         supportFragmentManager.findFragmentByTag(LessonDetailsBottomSheet.TAG) as LessonDetailsBottomSheet?
 
     /**
-     * The sheet's view model over [CustomServicesRepository], [LessonFriendsRepository] and [TeacherLevelsRepository]
-     * in memory, and the host's change; set before Hilt would build the real one.
+     * The sheet's opt-in, friends and teacher tones and the host's change, in the fields the host's Koin fixture reads
+     * when it builds the sheet's view model.
      */
     private class Backend(
         private val enabled: Boolean = true,
         private val friends: suspend () -> AppResult<List<UserSummary>> = { AppResult.Success(emptyList()) },
         private val levels: Map<Int, TeacherLevel> = emptyMap(),
-    ) : FragmentManager.FragmentLifecycleCallbacks() {
-
-        override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
-            if (fragment !is LessonDetailsBottomSheet) return
-            val arguments = fragment.requireArguments()
-            ViewModelProvider(fragment, object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T = LessonDetailsViewModel(
-                    SavedStateHandle(
-                        mapOf(
-                            LessonDetailsViewModel.ARG_PAIR_ID to arguments.getLong(LessonDetailsViewModel.ARG_PAIR_ID),
-                            LessonDetailsViewModel.ARG_DATE to arguments.getString(LessonDetailsViewModel.ARG_DATE),
-                            LessonDetailsViewModel.ARG_TEACHER_ISU to
-                                arguments.getInt(LessonDetailsViewModel.ARG_TEACHER_ISU, 0),
-                        ),
-                    ),
-                    object : LessonFriendsRepository {
-                        override suspend fun friendsOnLesson(pairId: Long, date: LocalDate) = friends()
-                    },
-                    object : CustomServicesRepository {
-                        override fun observeEnabled() = MutableStateFlow(enabled)
-                        override suspend fun isEnabled() = enabled
-                        override suspend fun setEnabled(enabled: Boolean) = Unit
-                    },
-                    object : TeacherLevelsRepository {
-                        override suspend fun levels(isus: Set<Int>) = levels.filterKeys { it in isus }
-                    },
-                    FakeScheduleChangesRepository(ScheduleReferenceFixtures.roomChange()),
-                ) as T
-            })[LessonDetailsViewModel::class.java]
+    ) {
+        fun install() {
+            ScheduleLifecycleTestActivity.servicesEnabled = enabled
+            ScheduleLifecycleTestActivity.friendsOutcome = friends
+            ScheduleLifecycleTestActivity.teacherLevelsByIsu = levels
+            ScheduleLifecycleTestActivity.changes.value = listOf(ScheduleReferenceFixtures.roomChange())
         }
     }
 }

@@ -1,28 +1,28 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.model
 
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
 
 class LessonDetailsMappingTest {
 
     @Test
-    fun `the flow name is trimmed and every other field is carried as before`() {
+    fun theFlowNameIsTrimmedAndEveryOtherFieldIsCarriedAsBefore() {
         val args = lesson(groupName = " ФИЗ ПИИКТ 3.2 ").toDetailsArgs(DATE)
 
         assertEquals(expected(flowName = "ФИЗ ПИИКТ 3.2"), args)
     }
 
     @Test
-    fun `an empty flow name is no flow`() {
+    fun anEmptyFlowNameIsNoFlow() {
         assertNull(lesson(groupName = "").toDetailsArgs(DATE).flowName)
     }
 
     @Test
-    fun `a blank flow name is no flow`() {
+    fun aBlankFlowNameIsNoFlow() {
         assertEquals(expected(flowName = null), lesson(groupName = "  ").toDetailsArgs(DATE))
     }
 

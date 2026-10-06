@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
@@ -16,13 +15,14 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleCh
 import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleChangesViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** The schedule changes of the last 30 days by the day they were found. Opening it marks everything read. */
 @AndroidEntryPoint
 class ScheduleChangesFragment : Fragment() {
     private var _binding: FragmentScheduleChangesBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ScheduleChangesViewModel by viewModels()
+    private val viewModel: ScheduleChangesViewModel by viewModel()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentScheduleChangesBinding.inflate(inflater, container, false)

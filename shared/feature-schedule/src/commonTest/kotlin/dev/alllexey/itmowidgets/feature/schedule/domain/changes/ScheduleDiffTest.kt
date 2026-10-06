@@ -8,19 +8,19 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind.ADDED
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind.CANCELLED
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind.UPDATED
 import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.atTime
 import kotlinx.datetime.plus
-import org.junit.Assert.assertEquals
-import org.junit.Test
 
 class ScheduleDiffTest {
 
     @Test
-    fun `identical snapshots and reordered lessons or days are no change`() {
+    fun identicalSnapshotsAndReorderedLessonsOrDaysAreNoChange() {
         val lessons = listOf(lesson(1, TUE), lesson(2, TUE, at(10, 0)), lesson(3, WED), lesson(4, FRI))
 
         assertEquals(emptyList<DetectedChange>(), compare(snapshot(lessons), snapshot(lessons)))
@@ -30,7 +30,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `a new lesson in the overlap is added and one on the new last day of the window is not`() {
+    fun aNewLessonInTheOverlapIsAddedAndOneOnTheNewLastDayOfTheWindowIsNot() {
         val added = lesson(2, WED)
 
         assertEquals(listOf(DetectedChange(ADDED, emptySet(), null, added)),
@@ -42,7 +42,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `a lesson gone from the overlap is cancelled and one from a day that left the window is not`() {
+    fun aLessonGoneFromTheOverlapIsCancelledAndOneFromADayThatLeftTheWindowIsNot() {
         val gone = lesson(2, WED)
 
         assertEquals(listOf(DetectedChange(CANCELLED, emptySet(), gone, null)),
@@ -54,7 +54,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `the same pair id on another day is one move wherever the dates are`() {
+    fun theSamePairIdOnAnotherDayIsOneMoveWhereverTheDatesAre() {
         val before = lesson(1, TUE)
         val moved = lesson(1, WED)
         assertEquals(listOf(DetectedChange(UPDATED, setOf(TIME), before, moved)),
@@ -71,7 +71,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `a new pair id of the same subject flow and type on another day is one move`() {
+    fun aNewPairIdOfTheSameSubjectFlowAndTypeOnAnotherDayIsOneMove() {
         val before = lesson(1, TUE, subjectId = 10)
         val after = lesson(21, THU, subjectId = 10)
 
@@ -80,7 +80,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `two gone and one new of one key link the earlier and cancel the other in a stable order`() {
+    fun twoGoneAndOneNewOfOneKeyLinkTheEarlierAndCancelTheOtherInAStableOrder() {
         val tuesday = lesson(1, TUE, subjectId = 10)
         val wednesday = lesson(2, WED, subjectId = 10)
         val friday = lesson(21, FRI, subjectId = 10)
@@ -94,7 +94,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `a lesson recreated with a new pair id at the same slot is no change`() {
+    fun aLessonRecreatedWithANewPairIdAtTheSameSlotIsNoChange() {
         assertEquals(emptyList<DetectedChange>(), compare(
             snapshot(listOf(lesson(1, TUE, subjectId = 10))),
             snapshot(listOf(lesson(31, TUE, subjectId = 10)))
@@ -102,7 +102,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `a weekly lesson entering on the new last day does not pair with a lesson gone from the overlap`() {
+    fun aWeeklyLessonEnteringOnTheNewLastDayDoesNotPairWithALessonGoneFromTheOverlap() {
         val tuesday = lesson(1, TUE, at(14, 0), subjectId = 10)
         val monday = lesson(2, NEXT_MON, subjectId = 10)
         val nextTuesday = lesson(3, NEXT_TUE, at(14, 0), subjectId = 10)
@@ -115,7 +115,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `a room or building change is a place change and case or spacing is not`() {
+    fun aRoomOrBuildingChangeIsAPlaceChangeAndCaseOrSpacingIsNot() {
         val before = lesson(1, TUE, room = "1506", building = "Кронверкский проспект, 49")
 
         assertEquals(setOf(PLACE), fieldsOf(before, before.copy(room = "2202")))
@@ -128,7 +128,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `going online without a room is one change of format and place`() {
+    fun goingOnlineWithoutARoomIsOneChangeOfFormatAndPlace() {
         val before = lesson(1, TUE, formatId = 1, room = "1506")
 
         assertEquals(listOf(DetectedChange(UPDATED, setOf(FORMAT, PLACE), before, before.copy(formatId = 3, room = null))),
@@ -136,7 +136,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `teachers compare by ISU when both have one and by name otherwise`() {
+    fun teachersCompareByISUWhenBothHaveOneAndByNameOtherwise() {
         val before = lesson(1, TUE, teacherIsu = 1, teacherName = "Тестовый преподаватель")
 
         assertEquals(setOf(TEACHER), fieldsOf(before, before.copy(teacherIsu = 2)))
@@ -147,14 +147,14 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `a move to another room at once is one change of time and place`() {
+    fun aMoveToAnotherRoomAtOnceIsOneChangeOfTimeAndPlace() {
         val before = lesson(1, TUE, room = "1506")
 
         assertEquals(setOf(TIME, PLACE), fieldsOf(before, before.copy(start = at(10, 0), end = at(11, 30), room = "2202")))
     }
 
     @Test
-    fun `changes of lessons that are over are dropped and a move out of the past is kept`() {
+    fun changesOfLessonsThatAreOverAreDroppedAndAMoveOutOfThePastIsKept() {
         val morning = lesson(1, MON, at(8, 20))
         assertEquals(emptyList<DetectedChange>(), compare(snapshot(listOf(morning)), snapshot(emptyList())))
 
@@ -169,7 +169,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `snapshots without an overlap are no change`() {
+    fun snapshotsWithoutAnOverlapAreNoChange() {
         val old = LocalDate(2026, 8, 20)
 
         assertEquals(emptyList<DetectedChange>(), compare(
@@ -179,7 +179,7 @@ class ScheduleDiffTest {
     }
 
     @Test
-    fun `changes are ordered by the earliest start then the subject then the pair id`() {
+    fun changesAreOrderedByTheEarliestStartThenTheSubjectThenThePairId() {
         val changes = compare(
             snapshot(listOf(lesson(5, THU, subjectName = "Физика"))),
             snapshot(listOf(

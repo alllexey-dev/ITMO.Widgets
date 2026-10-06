@@ -1,17 +1,17 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.calendar
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class CalendarSyncPlannerTest {
 
     @Test
-    fun `new lessons are inserted`() {
+    fun newLessonsAreInserted() {
         val plan = CalendarSyncPlanner.plan(listOf(event("a"), event("b", day = 1)), emptyList(), WINDOW, NOW)
 
         assertEquals(listOf("a", "b"), plan.inserts.map { it.key })
@@ -19,7 +19,7 @@ class CalendarSyncPlannerTest {
     }
 
     @Test
-    fun `the same schedule again changes nothing`() {
+    fun theSameScheduleAgainChangesNothing() {
         val events = listOf(event("a"), event("b", day = 1))
         val synced = events.mapIndexed { index, event -> SyncedEvent(index + 1L, event) }
 
@@ -30,14 +30,14 @@ class CalendarSyncPlannerTest {
     }
 
     @Test
-    fun `a key repeated in the schedule is inserted once`() {
+    fun aKeyRepeatedInTheScheduleIsInsertedOnce() {
         val plan = CalendarSyncPlanner.plan(listOf(event("a"), event("a", day = 2)), emptyList(), WINDOW, NOW)
 
         assertEquals(listOf(event("a")), plan.inserts)
     }
 
     @Test
-    fun `a changed title time place or description updates the same event`() {
+    fun aChangedTitleTimePlaceOrDescriptionUpdatesTheSameEvent() {
         val synced = listOf(
             SyncedEvent(1, event("a")),
             SyncedEvent(2, event("b")),
@@ -59,7 +59,7 @@ class CalendarSyncPlannerTest {
     }
 
     @Test
-    fun `a vanished or cancelled future lesson in the window is deleted`() {
+    fun aVanishedOrCancelledFutureLessonInTheWindowIsDeleted() {
         val synced = listOf(SyncedEvent(1, event("a")), SyncedEvent(2, event("b", day = 3)))
 
         val plan = CalendarSyncPlanner.plan(listOf(event("a")), synced, WINDOW, NOW)
@@ -69,7 +69,7 @@ class CalendarSyncPlannerTest {
     }
 
     @Test
-    fun `past events stay as they were`() {
+    fun pastEventsStayAsTheyWere() {
         val past = event("a", day = -1)
         val endedToday = event("b", hour = 6)
         val synced = listOf(SyncedEvent(1, past), SyncedEvent(2, endedToday))
@@ -81,14 +81,14 @@ class CalendarSyncPlannerTest {
     }
 
     @Test
-    fun `a lesson that ended before the first sync is not inserted, a running one is`() {
+    fun aLessonThatEndedBeforeTheFirstSyncIsNotInsertedARunningOneIs() {
         val plan = CalendarSyncPlanner.plan(listOf(event("ended", hour = 6), event("running", hour = 8)), emptyList(), WINDOW, NOW)
 
         assertEquals(listOf("running"), plan.inserts.map { it.key })
     }
 
     @Test
-    fun `events outside the window are not deleted`() {
+    fun eventsOutsideTheWindowAreNotDeleted() {
         val later = SyncedEvent(1, event("a", day = 30))
 
         val plan = CalendarSyncPlanner.plan(emptyList(), listOf(later), WINDOW, NOW)
@@ -98,7 +98,7 @@ class CalendarSyncPlannerTest {
     }
 
     @Test
-    fun `events that ended over half a year ago are forgotten`() {
+    fun eventsThatEndedOverHalfAYearAgoAreForgotten() {
         val old = SyncedEvent(1, event("old", day = -181))
         val recent = SyncedEvent(2, event("recent", day = -179))
 

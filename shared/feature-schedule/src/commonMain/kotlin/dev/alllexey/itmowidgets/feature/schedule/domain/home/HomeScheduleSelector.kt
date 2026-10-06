@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
@@ -24,7 +23,7 @@ import kotlinx.datetime.toLocalDateTime
  * today is over, the same way the single-lesson widget does without its
  * look-ahead. Pure: the caller supplies the cached days and the clock.
  */
-class HomeScheduleSelector @Inject constructor() {
+class HomeScheduleSelector {
 
     fun select(
         days: List<DaySchedule>,

@@ -12,29 +12,32 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
+import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
+import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
+import dev.alllexey.itmowidgets.di.bridge.ScheduleDebugFixtures
+import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,8 +46,12 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
+import org.koin.core.module.Module
 
-/** Real Fragment/FragmentManager lifecycle, with no session, network, or persistent fixtures. */
+/**
+ * Real Fragment/FragmentManager lifecycle, with no session, network, or persistent fixtures: the schedule and the
+ * lesson sheet read the fixture fields below through Koin (`ScheduleDebugFixtures`).
+ */
 @AndroidEntryPoint
 class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator by NoOpAppNavigator {
     val openedScreens = mutableListOf<Pair<AppScreen, Bundle?>>()
@@ -60,22 +67,14 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator by NoOpA
         super.attachBaseContext(newBase.createConfigurationContext(config))
     }
 
+    private lateinit var koinFixture: Module
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Before super.onCreate(): a restored ScheduleFragment or lesson sheet obtains its ViewModel from Koin there.
+        koinFixture = ScheduleDebugFixtures.load(this, PreviewFakes)
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
-                if (fragment !is ScheduleFragment) return
-                fragment.timeProvider = FixedTime
-                ViewModelProvider(fragment, object : ViewModelProvider.Factory {
-                    @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                        ScheduleViewModel(PreviewRepository(), FixedTime, SavedStateHandle(),
-                            object : SchedulePreferencesRepository {
-                                override fun observeSportAutoSignEnabled() = showPendingSport
-                            }, object : PendingSportBookingsRepository {
-                                override fun observePendingBookings() = pendingSport
-                                override suspend fun refresh() = refreshPendingOutcome()
-                            }, PreviewChanges, MemoryCalendarSync()) as T
-                })[ScheduleViewModel::class.java]
+                if (fragment is ScheduleFragment) fragment.timeProvider = FixedTime
             }
         }, false)
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
@@ -125,8 +124,39 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator by NoOpA
         }
     }
 
+    override fun onDestroy() {
+        ScheduleDebugFixtures.unload(this, koinFixture)
+        super.onDestroy()
+    }
+
     override fun openScreen(screen: AppScreen, arguments: Bundle?) {
         openedScreens.add(screen to arguments?.let(::Bundle))
+    }
+
+    /** Fresh fakes for every ViewModel, over the fixture fields as they are when it is built. */
+    private object PreviewFakes : ScheduleDebugFixtures.Fakes {
+        override fun time(): AcademicTimeProvider = FixedTime
+        override fun schedule(): ScheduleRepository = PreviewRepository()
+        override fun changes(): ScheduleChangesRepository = PreviewChanges
+        override fun preferences() = object : SchedulePreferencesRepository {
+            override fun observeSportAutoSignEnabled() = showPendingSport
+        }
+        override fun pendingSport() = object : PendingSportBookingsRepository {
+            override fun observePendingBookings() = pendingSport
+            override suspend fun refresh() = refreshPendingOutcome()
+        }
+        override fun calendarSync(): CalendarSync = MemoryCalendarSync()
+        override fun lessonFriends() = object : LessonFriendsRepository {
+            override suspend fun friendsOnLesson(pairId: Long, date: LocalDate) = friendsOutcome()
+        }
+        override fun customServices() = object : CustomServicesRepository {
+            override fun observeEnabled() = MutableStateFlow(servicesEnabled)
+            override suspend fun isEnabled() = servicesEnabled
+            override suspend fun setEnabled(enabled: Boolean) = Unit
+        }
+        override fun teacherLevels() = object : TeacherLevelsRepository {
+            override suspend fun levels(isus: Set<Int>) = teacherLevelsByIsu.filterKeys { it in isus }
+        }
     }
 
     private class PreviewRepository : ScheduleRepository {
@@ -168,6 +198,10 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator by NoOpA
         @Volatile var showPendingSport = MutableStateFlow(false)
         @Volatile var pendingSport = MutableStateFlow<AppResult<List<PendingSportBooking>>>(AppResult.Success(emptyList()))
         @Volatile var refreshPendingOutcome: suspend () -> Unit = {}
+        /** The lesson sheet's opt-in, friends and teacher tones; off, as in a fresh install. */
+        @Volatile var servicesEnabled = false
+        @Volatile var friendsOutcome: suspend () -> AppResult<List<UserSummary>> = { AppResult.Success(emptyList()) }
+        @Volatile var teacherLevelsByIsu: Map<Int, TeacherLevel> = emptyMap()
         /** Tests put changes here and set it back to an empty list afterwards. */
         val changes = MutableStateFlow<List<ScheduleChange>>(emptyList())
     }

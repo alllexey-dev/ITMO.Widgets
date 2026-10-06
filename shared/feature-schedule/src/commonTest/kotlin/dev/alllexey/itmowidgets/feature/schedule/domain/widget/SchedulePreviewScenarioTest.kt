@@ -4,23 +4,23 @@ import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class SchedulePreviewScenarioTest {
     private val scenario = SchedulePreviewScenario(ScheduleWidgetSelector())
     private val labels = SchedulePreviewLabels("History", "Math", "Programming", "Physics", "Teacher")
 
     @Test
-    fun `early selection uses the real fifteen minute boundary`() {
+    fun earlySelectionUsesTheRealFifteenMinuteBoundary() {
         assertEquals("Programming", snapshot().singleLesson.lesson?.subject)
         assertEquals("Math", snapshot(ScheduleWidgetSettings(compact = CompactScheduleWidgetSettings(showNextLessonEarly = false))).singleLesson.lesson?.subject)
     }
 
     @Test
-    fun `text sizes reach the snapshot per format so the previews render them`() {
+    fun textSizesReachTheSnapshotPerFormatSoThePreviewsRenderThem() {
         val snapshot = snapshot(
             ScheduleWidgetSettings(
                 compact = CompactScheduleWidgetSettings(textSize = WidgetTextSize.EXTRA_LARGE),
@@ -33,7 +33,7 @@ class SchedulePreviewScenarioTest {
     }
 
     @Test
-    fun `hiding teacher affects both widget types`() {
+    fun hidingTeacherAffectsBothWidgetTypes() {
         val shown = snapshot()
         val hidden = snapshot(ScheduleWidgetSettings(compact = CompactScheduleWidgetSettings(hideTeacher = true), full = FullScheduleWidgetSettings(hideTeacher = true)))
         assertEquals("Teacher", shown.singleLesson.lesson?.teacher)
@@ -42,7 +42,7 @@ class SchedulePreviewScenarioTest {
     }
 
     @Test
-    fun `past lessons disappear using the real selector`() {
+    fun pastLessonsDisappearUsingTheRealSelector() {
         val shown = snapshot().lessonList.mapNotNull { it.lesson?.subject }
         val hidden = snapshot(ScheduleWidgetSettings(full = FullScheduleWidgetSettings(hidePastLessons = true))).lessonList.mapNotNull { it.lesson?.subject }
         assertEquals(listOf("History", "Math", "Programming"), shown)
@@ -50,7 +50,7 @@ class SchedulePreviewScenarioTest {
     }
 
     @Test
-    fun `evening example exposes tomorrow only in day widget when enabled`() {
+    fun eveningExampleExposesTomorrowOnlyInDayWidgetWhenEnabled() {
         val today = snapshot(evening = true)
         val tomorrow = snapshot(ScheduleWidgetSettings(full = FullScheduleWidgetSettings(showTomorrowWhenTodayIsOver = true)), evening = true)
         assertEquals(SingleLessonWidgetKind.NO_MORE_TODAY, today.singleLesson.kind)
@@ -63,12 +63,12 @@ class SchedulePreviewScenarioTest {
     }
 
     @Test
-    fun `same sample inputs produce identical output`() {
+    fun sameSampleInputsProduceIdenticalOutput() {
         assertEquals(snapshot(), snapshot())
     }
 
     @Test
-    fun `compact early selection never hides the ongoing lesson in the full widget`() {
+    fun compactEarlySelectionNeverHidesTheOngoingLessonInTheFullWidget() {
         val full = FullScheduleWidgetSettings(hidePastLessons = true)
         val early = snapshot(ScheduleWidgetSettings(full = full))
         val regular = snapshot(ScheduleWidgetSettings(CompactScheduleWidgetSettings(showNextLessonEarly = false), full))
@@ -79,7 +79,7 @@ class SchedulePreviewScenarioTest {
     }
 
     @Test
-    fun `each format hides its own teachers without altering the other content`() {
+    fun eachFormatHidesItsOwnTeachersWithoutAlteringTheOtherContent() {
         val original = snapshot()
         val compact = snapshot(ScheduleWidgetSettings(compact = CompactScheduleWidgetSettings(hideTeacher = true)))
         assertEquals(null, compact.singleLesson.lesson?.teacher)

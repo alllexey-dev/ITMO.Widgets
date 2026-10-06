@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
@@ -19,7 +18,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
-class ScheduleWidgetSelector @Inject constructor() {
+class ScheduleWidgetSelector {
 
     fun select(
         schedule: List<DaySchedule>,

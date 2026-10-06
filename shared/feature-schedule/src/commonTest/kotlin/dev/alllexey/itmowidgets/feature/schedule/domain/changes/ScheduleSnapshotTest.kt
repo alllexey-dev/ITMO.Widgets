@@ -5,20 +5,20 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
 
 class ScheduleSnapshotTest {
 
     @Test
-    fun `sport and room bookings are left out`() {
+    fun sportAndRoomBookingsAreLeftOut() {
         val snapshot = listOf(day(START, lesson(1), lesson(2, flowTypeId = 3), lesson(3, flowTypeId = 5)))
             .academicSnapshot(START, END)
 
@@ -26,7 +26,7 @@ class ScheduleSnapshotTest {
     }
 
     @Test
-    fun `a repeated pair id is kept once at its earliest slot`() {
+    fun aRepeatedPairIdIsKeptOnceAtItsEarliestSlot() {
         val snapshot = listOf(
             day(START.plus(1, DateTimeUnit.DAY), lesson(1, start = LocalTime(8, 20))),
             day(START, lesson(1, start = LocalTime(13, 30)), lesson(1, start = LocalTime(10, 0)))
@@ -38,7 +38,7 @@ class ScheduleSnapshotTest {
     }
 
     @Test
-    fun `days outside the window are left out and both ends are kept`() {
+    fun daysOutsideTheWindowAreLeftOutAndBothEndsAreKept() {
         val snapshot = listOf(
             day(START.minus(1, DateTimeUnit.DAY), lesson(1)),
             day(START, lesson(2)),
@@ -52,7 +52,7 @@ class ScheduleSnapshotTest {
     }
 
     @Test
-    fun `empty room building and flow name become null`() {
+    fun emptyRoomBuildingAndFlowNameBecomeNull() {
         val lesson = listOf(day(START, lesson(1, room = Room(" "), building = Building(""), groupName = "  ")))
             .academicSnapshot(START, END).lessons.single()
 
@@ -62,7 +62,7 @@ class ScheduleSnapshotTest {
     }
 
     @Test
-    fun `the lesson fields are carried`() {
+    fun theLessonFieldsAreCarried() {
         val lesson = listOf(day(START, lesson(7))).academicSnapshot(START, END).lessons.single()
 
         assertEquals(

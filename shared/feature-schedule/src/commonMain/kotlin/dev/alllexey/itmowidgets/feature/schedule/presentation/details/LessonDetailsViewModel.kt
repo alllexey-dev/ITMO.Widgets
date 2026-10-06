@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation.details
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -15,7 +14,6 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,8 +28,7 @@ import kotlinx.datetime.LocalDate
  * Friends on one lesson occurrence, the tone of its teacher's reviews and its latest schedule change. The lesson
  * itself arrives with the sheet; only friends and the tone need Backend, and only behind the opt-in.
  */
-@HiltViewModel
-class LessonDetailsViewModel @Inject constructor(
+class LessonDetailsViewModel(
     savedStateHandle: SavedStateHandle,
     private val friendsRepository: LessonFriendsRepository,
     private val customServices: CustomServicesRepository,

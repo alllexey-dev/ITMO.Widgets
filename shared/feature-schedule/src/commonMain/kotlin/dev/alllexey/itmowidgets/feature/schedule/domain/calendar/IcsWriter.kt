@@ -47,9 +47,10 @@ object IcsWriter {
         var octets = 0
         var index = 0
         while (index < line.length) {
-            val codePoint = line.codePointAt(index)
-            val character = String(Character.toChars(codePoint))
-            val size = character.toByteArray(Charsets.UTF_8).size
+            // A surrogate pair is one code point and never splits across lines.
+            val pair = line[index].isHighSurrogate() && index + 1 < line.length && line[index + 1].isLowSurrogate()
+            val character = line.substring(index, index + if (pair) 2 else 1)
+            val size = character.encodeToByteArray().size
             // The leading space of a continuation line counts toward its 75 octets.
             val limit = if (parts.isEmpty()) MAX_OCTETS else MAX_OCTETS - 1
             if (octets + size > limit) {
@@ -59,7 +60,7 @@ object IcsWriter {
             }
             current.append(character)
             octets += size
-            index += Character.charCount(codePoint)
+            index += character.length
         }
         parts += current.toString()
         return parts.joinToString("$CRLF ")

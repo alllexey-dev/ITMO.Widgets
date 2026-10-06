@@ -8,6 +8,10 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
@@ -20,17 +24,13 @@ import kotlinx.datetime.asTimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class HomeScheduleSelectorTest {
 
     private val selector = HomeScheduleSelector()
 
     @Test
-    fun `the lesson in progress is current and the ones after it upcoming`() {
+    fun theLessonInProgressIsCurrentAndTheOnesAfterItUpcoming() {
         val card = selector.select(
             days = listOf(day(TODAY, lesson(1, "09:30"), lesson(2, "11:20"), lesson(3, "13:30"))),
             pending = emptyList(),
@@ -50,7 +50,7 @@ class HomeScheduleSelectorTest {
     }
 
     @Test
-    fun `during a break the next lesson is marked next and finished ones are only counted`() {
+    fun duringABreakTheNextLessonIsMarkedNextAndFinishedOnesAreOnlyCounted() {
         val card = selector.select(
             days = listOf(day(TODAY, lesson(1, "09:30"), lesson(2, "11:20"))),
             pending = emptyList(),
@@ -65,7 +65,7 @@ class HomeScheduleSelectorTest {
     }
 
     @Test
-    fun `future bookings join the timeline by time and duplicates collapse`() {
+    fun futureBookingsJoinTheTimelineByTimeAndDuplicatesCollapse() {
         val card = selector.select(
             days = listOf(day(TODAY, lesson(1, "09:30"), lesson(2, "13:30"))),
             pending = listOf(booking(7, "12:00"), booking(7, "12:00"), booking(8, "08:00")),
@@ -77,7 +77,7 @@ class HomeScheduleSelectorTest {
     }
 
     @Test
-    fun `once today is over tomorrow takes the card`() {
+    fun onceTodayIsOverTomorrowTakesTheCard() {
         val card = selector.select(
             days = listOf(day(TODAY, lesson(1, "09:30")), day(TODAY.plus(1, DateTimeUnit.DAY), lesson(5, "09:30"), lesson(6, "11:20"))),
             pending = listOf(booking(9, "16:00", date = TODAY.plus(1, DateTimeUnit.DAY))),
@@ -92,7 +92,7 @@ class HomeScheduleSelectorTest {
     }
 
     @Test
-    fun `a free day without lessons tomorrow is an empty card`() {
+    fun aFreeDayWithoutLessonsTomorrowIsAnEmptyCard() {
         val card = selector.select(days = emptyList(), pending = emptyList(), now = at("10:00"), timeZone = ZONE)
 
         assertFalse(card.tomorrow)
@@ -101,7 +101,7 @@ class HomeScheduleSelectorTest {
     }
 
     @Test
-    fun `a finished day without tomorrow keeps the count`() {
+    fun aFinishedDayWithoutTomorrowKeepsTheCount() {
         val card = selector.select(
             days = listOf(day(TODAY, lesson(1, "09:30"), lesson(2, "11:20"))),
             pending = emptyList(),
@@ -114,7 +114,7 @@ class HomeScheduleSelectorTest {
     }
 
     @Test
-    fun `a booking alone today still fills the card without a focus lesson`() {
+    fun aBookingAloneTodayStillFillsTheCardWithoutAFocusLesson() {
         val card = selector.select(days = emptyList(), pending = listOf(booking(1, "16:00")), now = at("10:00"), timeZone = ZONE)
 
         assertEquals(listOf("pending 1"), card.rows.map(::label))

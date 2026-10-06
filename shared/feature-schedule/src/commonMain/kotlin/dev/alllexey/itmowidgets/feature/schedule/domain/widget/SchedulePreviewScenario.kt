@@ -6,7 +6,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import javax.inject.Inject
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -26,7 +25,7 @@ data class SchedulePreviewLabels(
 )
 
 /** Explicit, deterministic examples. Never a user's schedule or the current academic date. */
-class SchedulePreviewScenario @Inject constructor(private val selector: ScheduleWidgetSelector) {
+class SchedulePreviewScenario(private val selector: ScheduleWidgetSelector) {
     fun snapshot(settings: ScheduleWidgetSettings, evening: Boolean, labels: SchedulePreviewLabels): ScheduleWidgetSnapshot {
         val today = day(
             DATE,

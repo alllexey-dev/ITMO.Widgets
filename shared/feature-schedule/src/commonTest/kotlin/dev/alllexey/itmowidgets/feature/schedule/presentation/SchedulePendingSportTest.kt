@@ -1,20 +1,27 @@
 package dev.alllexey.itmowidgets.feature.schedule.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.MutableAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -29,18 +36,20 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
-import org.junit.Assert.*
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SchedulePendingSportTest {
-    @get:Rule val dispatcher = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `disabled preference never observes or refreshes sport`() = runTest(dispatcher.dispatcher) {
+    fun disabledPreferenceNeverObservesOrRefreshesSport() = runTest(main.dispatcher) {
         val pending = FakePendingSportBookingsRepository(booking())
         val model = model(pending = pending)
         model.refresh(RefreshMode.Silent)
@@ -55,8 +64,8 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `time updates remove started pending rows without reloading or clearing official data`() = runTest(dispatcher.dispatcher) {
-        val clock = MutableAcademicTime(LocalDateTime(2026, 9, 7, 12, 0).toJavaLocalDateTime())
+    fun timeUpdatesRemoveStartedPendingRowsWithoutReloadingOrClearingOfficialData() = runTest(main.dispatcher) {
+        val clock = MovingAcademicTime(LocalDateTime(2026, 9, 7, 12, 0))
         val official = FakeScheduleRepository(listOf(day()))
         val pending = FakePendingSportBookingsRepository(booking())
         val model = ScheduleViewModel(official, clock, SavedStateHandle(), FakeSchedulePreferencesRepository(true), pending, FakeScheduleChangesRepository(), FakeCalendarSync())
@@ -64,7 +73,7 @@ class SchedulePendingSportTest {
         runCurrent()
         val original = model.content().schedule
         assertEquals(1, model.content().displayDays.single().pendingSport.size)
-        clock.current = booking().start.toLocalDateTime(Today.timeZone).toJavaLocalDateTime()
+        clock.current = booking().start.toLocalDateTime(Today.timeZone)
         model.updateTimeState()
         assertEquals(original, model.content().schedule)
         assertTrue(model.content().displayDays.single().pendingSport.isEmpty())
@@ -74,7 +83,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `live toggles and queue emissions update the overlay without touching official data`() = runTest(dispatcher.dispatcher) {
+    fun liveTogglesAndQueueEmissionsUpdateTheOverlayWithoutTouchingOfficialData() = runTest(main.dispatcher) {
         val preference = FakeSchedulePreferencesRepository()
         val pending = FakePendingSportBookingsRepository(booking())
         val official = FakeScheduleRepository(listOf(day()))
@@ -103,7 +112,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `friend root argument never exposes own queues even without selected user`() = runTest(dispatcher.dispatcher) {
+    fun friendRootArgumentNeverExposesOwnQueuesEvenWithoutSelectedUser() = runTest(main.dispatcher) {
         val pending = FakePendingSportBookingsRepository(booking())
         val official = FakeScheduleRepository(listOf(day())).apply { schedulesFor(123456).value = listOf(day()) }
         val model = model(official, FakeSchedulePreferencesRepository(true), pending,
@@ -118,7 +127,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `selecting friend hides queues immediately and returning to own restarts projection`() = runTest(dispatcher.dispatcher) {
+    fun selectingFriendHidesQueuesImmediatelyAndReturningToOwnRestartsProjection() = runTest(main.dispatcher) {
         val pending = FakePendingSportBookingsRepository(booking())
         val model = model(preferences = FakeSchedulePreferencesRepository(true), pending = pending)
         model.refresh(RefreshMode.Silent)
@@ -138,7 +147,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `pending errors and an unfinished refresh do not replace academic content or spinner state`() = runTest(dispatcher.dispatcher) {
+    fun pendingErrorsAndAnUnfinishedRefreshDoNotReplaceAcademicContentOrSpinnerState() = runTest(main.dispatcher) {
         val pending = FakePendingSportBookingsRepository(booking())
         val model = model(preferences = FakeSchedulePreferencesRepository(true), pending = pending)
         model.refresh(RefreshMode.Silent)
@@ -165,7 +174,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `pending does not disguise failure of an empty official schedule`() = runTest(dispatcher.dispatcher) {
+    fun pendingDoesNotDisguiseFailureOfAnEmptyOfficialSchedule() = runTest(main.dispatcher) {
         val official = FakeScheduleRepository(listOf(day())).apply {
             days.value = emptyList()
             refreshResult = AppResult.Failure(AppError.Network)
@@ -177,7 +186,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `pending only initial load stays loading and does not hide its failure`() = runTest(dispatcher.dispatcher) {
+    fun pendingOnlyInitialLoadStaysLoadingAndDoesNotHideItsFailure() = runTest(main.dispatcher) {
         val response = CompletableDeferred<AppResult<Unit>>()
         val official = FakeScheduleRepository(listOf(day())).apply {
             days.value = emptyList()
@@ -200,7 +209,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `pending only content survives delayed refresh failure and paginated loading after official success`() = runTest(dispatcher.dispatcher) {
+    fun pendingOnlyContentSurvivesDelayedRefreshFailureAndPaginatedLoadingAfterOfficialSuccess() = runTest(main.dispatcher) {
         val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
         val near = booking(day = Today.today().plus(2, DateTimeUnit.DAY))
         val nextPage = booking(id = 2, day = Today.today().plus(15, DateTimeUnit.DAY))
@@ -240,7 +249,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `returning from a friend must successfully load own schedule again before showing pending only data`() = runTest(dispatcher.dispatcher) {
+    fun returningFromAFriendMustSuccessfullyLoadOwnScheduleAgainBeforeShowingPendingOnlyData() = runTest(main.dispatcher) {
         val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
         val model = model(official, FakeSchedulePreferencesRepository(true))
         model.refresh(RefreshMode.Silent)
@@ -270,7 +279,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `removing pending only data during refresh restores loading and subsequent official error`() = runTest(dispatcher.dispatcher) {
+    fun removingPendingOnlyDataDuringRefreshRestoresLoadingAndSubsequentOfficialError() = runTest(main.dispatcher) {
         for (disablePreference in listOf(true, false)) {
             val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
             val preference = FakeSchedulePreferencesRepository(true)
@@ -295,7 +304,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `queue-only dates follow loaded range and never enter official schedule`() = runTest(dispatcher.dispatcher) {
+    fun queueOnlyDatesFollowLoadedRangeAndNeverEnterOfficialSchedule() = runTest(main.dispatcher) {
         val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
         val near = booking(day = Today.today().plus(2, DateTimeUnit.DAY))
         val nextPage = booking(id = 2, day = Today.today().plus(15, DateTimeUnit.DAY))
@@ -315,7 +324,7 @@ class SchedulePendingSportTest {
     }
 
     @Test
-    fun `projection normalizes dates and deduplicates queue keys not titles times or academic IDs`() {
+    fun projectionNormalizesDatesAndDeduplicatesQueueKeysNotTitlesTimesOrAcademicIDs() {
         val booking = booking().copy(
             start = Today.today().atTime(22, 0).toInstant(TimeZone.UTC),
             end = Today.today().atTime(23, 0).toInstant(TimeZone.UTC)
@@ -352,5 +361,12 @@ class SchedulePendingSportTest {
             end = day.atTime(17, 30).toInstant(Today.timeZone), teacherFio = "Тестовый преподаватель",
             roomName = "Тестовый корпус", isPrediction = true
         )
+    }
+
+    /** An academic clock in Moscow that a test moves by setting [current]. */
+    private class MovingAcademicTime(var current: LocalDateTime) : AcademicTimeProvider {
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+        override fun today(): LocalDate = current.date
+        override fun now(): Instant = current.toInstant(timeZone)
     }
 }

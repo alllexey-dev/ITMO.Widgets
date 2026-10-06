@@ -3,10 +3,14 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation.changes
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -14,20 +18,22 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
-import org.junit.Assert.assertEquals
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleChangesViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     private val time = FixedAcademicTime(LocalDateTime(2026, 9, 7, 12, 0))
 
     @Test
-    fun `the screen is blank until the file answers and says when there is nothing`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theScreenIsBlankUntilTheFileAnswersAndSaysWhenThereIsNothing() = runTest(main.dispatcher) {
         val viewModel = ScheduleChangesViewModel(FakeScheduleChangesRepository(), time, SavedStateHandle())
 
         assertEquals(ScheduleChangesUiState.Loading, viewModel.uiState.value)
@@ -36,7 +42,7 @@ class ScheduleChangesViewModelTest {
     }
 
     @Test
-    fun `changes group by the Moscow day they were found, newest first`() = runTest(mainDispatcherRule.dispatcher) {
+    fun changesGroupByTheMoscowDayTheyWereFoundNewestFirst() = runTest(main.dispatcher) {
         val repository = FakeScheduleChangesRepository(
             read("other", "2026-09-03T10:00:00Z"),
             // 23:30 UTC is already 02:30 of the next day in Moscow.
@@ -66,7 +72,7 @@ class ScheduleChangesViewModelTest {
     }
 
     @Test
-    fun `a visible screen marks unread changes read and keeps them new`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aVisibleScreenMarksUnreadChangesReadAndKeepsThemNew() = runTest(main.dispatcher) {
         val repository = FakeScheduleChangesRepository(unread("1"), scheduleChange(id = "2", read = true))
         val viewModel = ScheduleChangesViewModel(repository, time, SavedStateHandle())
         advanceUntilIdle()
@@ -97,7 +103,7 @@ class ScheduleChangesViewModelTest {
     }
 
     @Test
-    fun `new rows survive recreation after everything was read`() = runTest(mainDispatcherRule.dispatcher) {
+    fun newRowsSurviveRecreationAfterEverythingWasRead() = runTest(main.dispatcher) {
         val handle = SavedStateHandle()
         val repository = FakeScheduleChangesRepository(unread("1"), scheduleChange(id = "2", read = true))
         ScheduleChangesViewModel(repository, time, handle).setVisible(true)
