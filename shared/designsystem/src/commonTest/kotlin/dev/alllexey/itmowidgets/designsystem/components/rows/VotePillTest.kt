@@ -15,8 +15,8 @@ import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
-import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.testkit.MinTouchTarget
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
@@ -31,7 +31,9 @@ class VotePillTest {
         setContent { ItmoTheme { VotePill(12, myVote = null, SCORE, onVote = {}, Labels) } }
 
         listOf(UP, DOWN).forEach { label ->
-            onNodeWithContentDescription(label).assertWidthIsEqualTo(48.dp).assertHeightIsEqualTo(48.dp)
+            onNodeWithContentDescription(label)
+                .assertWidthIsEqualTo(MinTouchTarget)
+                .assertHeightIsEqualTo(MinTouchTarget)
         }
         assertTouchTargets()
     }

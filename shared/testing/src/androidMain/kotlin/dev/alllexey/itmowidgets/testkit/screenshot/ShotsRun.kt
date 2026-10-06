@@ -13,7 +13,14 @@ object ShotsRun {
 
     /** `-Pshots.appearance=full` or a gallery: the two narrow appearances join light and dark. */
     val fullMatrix: Boolean
-        get() = System.getProperty("shots.appearance") == FULL || gallery != null
+        get() = FULL in appearanceSets || gallery != null
+
+    /** `-Pshots.appearance=ios` (or `full,ios`): the three iOS appearances join, in every module. */
+    val iosMatrix: Boolean
+        get() = IOS in appearanceSets
+
+    private val appearanceSets: Set<String>
+        get() = System.getProperty("shots.appearance").orEmpty().split(',').map(String::trim).toSet()
 
     /**
      * `-Pshots.gallery=<dir>` (`scripts/verify.sh shots ... --gallery <dir>`): a record renders into `<dir>/<module>/`
@@ -39,4 +46,5 @@ object ShotsRun {
         }
 
     private const val FULL = "full"
+    private const val IOS = "ios"
 }

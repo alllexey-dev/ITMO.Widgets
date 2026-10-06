@@ -95,6 +95,21 @@ data class ItmoShapes(
             cardStroke = ShapeTokens.CardStroke,
             cardElevation = ShapeTokens.CardElevation,
         )
+
+        /**
+         * The set of `ItmoPlatformStyle.Ios`: every card is an inset group ([IosMetrics.insetGroupRadius]) and a
+         * connected group's rows touch with square inner corners, as rows of an inset-grouped list do (a separator
+         * parts them). The corner scale stays [Default]'s, so Material components keep their geometry.
+         */
+        val Ios = Default.copy(
+            cardContent = RoundedCornerShape(IosMetrics.insetGroupRadius),
+            cardSummary = RoundedCornerShape(IosMetrics.insetGroupRadius),
+            cardHero = RoundedCornerShape(IosMetrics.insetGroupRadius),
+            scheduleDay = RoundedCornerShape(IosMetrics.insetGroupRadius),
+            groupOuterRadius = IosMetrics.insetGroupRadius,
+            groupInnerRadius = 0.dp,
+            groupGap = 0.dp,
+        )
     }
 }
 

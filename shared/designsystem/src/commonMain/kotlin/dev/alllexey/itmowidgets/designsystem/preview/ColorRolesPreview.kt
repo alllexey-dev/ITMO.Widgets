@@ -17,18 +17,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoExtendedColors
+import dev.alllexey.itmowidgets.designsystem.theme.ItmoIosColors
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /**
- * Every colour the kit reads, scheme roles first, then the app's own colours: the golden that shows a scheme change
- * (a seed, the M3E token change) at a glance. Labels are role names, not user-visible text. The window is as tall as
- * the list at 1.3, so no row is cut off.
+ * Every colour the kit reads, scheme roles first, then the app's own colours and, under the iOS style, UIKit's system
+ * colours: the golden that shows a scheme change (a seed, the M3E token change) at a glance. Labels are role names,
+ * not user-visible text. The window is as tall as the list at 1.3, so no row is cut off.
  */
-@Preview(heightDp = 1800)
+@Preview(heightDp = 1900)
 @Composable
 private fun ColorRolesPreview() = ItmoPreview {
-    val roles = schemeRoles(MaterialTheme.colorScheme) + extendedRoles(ItmoTheme.extendedColors)
+    val ios = if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) iosRoles(ItmoTheme.iosColors) else emptyList()
+    val roles = schemeRoles(MaterialTheme.colorScheme) + extendedRoles(ItmoTheme.extendedColors) + ios
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         roles.forEach { (name, color) -> RoleRow(name, color) }
     }
@@ -112,5 +115,18 @@ private fun extendedRoles(colors: ItmoExtendedColors): List<Pair<String, Color>>
         "teacherLevelMixed" to teacherLevelMixed,
         "teacherLevelPositive" to teacherLevelPositive,
         "teacherLevelVeryPositive" to teacherLevelVeryPositive,
+    )
+}
+
+private fun iosRoles(colors: ItmoIosColors): List<Pair<String, Color>> = with(colors) {
+    listOf(
+        "ios.groupedBackground" to groupedBackground,
+        "ios.groupedCell" to groupedCell,
+        "ios.separator" to separator,
+        "ios.secondaryLabel" to secondaryLabel,
+        "ios.tertiaryLabel" to tertiaryLabel,
+        "ios.systemFill" to systemFill,
+        "ios.systemGreen" to systemGreen,
+        "ios.systemRed" to systemRed,
     )
 }

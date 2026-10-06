@@ -42,6 +42,28 @@ class BaselineInventoryTest {
     }
 
     @Test
+    fun `an iOS file name keeps its own appearance`() {
+        assertEquals(PreviewAppearance.IosDark, BaselineDirectory.parse("Card_ios-dark.png").appearance)
+        assertEquals("Card", BaselineDirectory.parse("Card_ios-narrow.png").base)
+        assertEquals(PreviewAppearance.DarkNarrow, BaselineDirectory.parse("Card_dark-narrow.png").appearance)
+    }
+
+    @Test
+    fun `iOS appearances join when asked for or once recorded`() {
+        touch("Card_ios-light.png")
+
+        assertEquals(
+            PreviewAppearance.Default + PreviewAppearance.IosAll,
+            directory.appearances("Other", full = false, ios = true),
+        )
+        assertEquals(PreviewAppearance.Default, directory.appearances("Other", full = false))
+        assertEquals(
+            PreviewAppearance.Default + PreviewAppearance.IosLight,
+            directory.appearances("Card", full = false),
+        )
+    }
+
+    @Test
     fun `a listed reference without its preview is pending, not stale`() {
         touch("Card_light.png", "SportScreen_content_light.png", "SportScreen_content_dark.png")
         directory.addReference("SportScreen_content")

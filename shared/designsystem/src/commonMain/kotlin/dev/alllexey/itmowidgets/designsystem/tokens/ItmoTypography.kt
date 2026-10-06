@@ -66,11 +66,14 @@ data class ItmoEmphasizedTypography(
  * Material's [Typography] with every role and emphasized role from [TypeScaleTokens]. Each style starts from
  * material3's own role, so its platform text settings and line-height alignment stay Material's.
  */
-internal val ItmoMaterialTypography: Typography = run {
+internal val ItmoMaterialTypography: Typography = typographyOf(TypeScaleTokens.roles)
+
+/** Material's [Typography] with every role and emphasized role from [roles] (`name -> (role, emphasized role)`). */
+internal fun typographyOf(roles: Map<String, Pair<TypeRole, TypeRole>>): Typography {
     val defaults = Typography()
-    fun role(name: String, template: TextStyle) = template.with(TypeScaleTokens.roles.getValue(name).first)
-    fun emphasized(name: String, template: TextStyle) = template.with(TypeScaleTokens.roles.getValue(name).second)
-    Typography(
+    fun role(name: String, template: TextStyle) = template.with(roles.getValue(name).first)
+    fun emphasized(name: String, template: TextStyle) = template.with(roles.getValue(name).second)
+    return Typography(
         displayLarge = role("displayLarge", defaults.displayLarge),
         displayMedium = role("displayMedium", defaults.displayMedium),
         displaySmall = role("displaySmall", defaults.displaySmall),

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 
 /**
  * Spacing and fixed sizes on the 4 dp grid, one slot per `design_*` dimen of `res/values/dimens.xml` that is not a
@@ -52,6 +53,16 @@ data class ItmoSpacing(
             statePadding = 32.dp,
             stateIcon = 64.dp,
             stateInlineIcon = 56.dp,
+        )
+
+        /**
+         * The set of [ItmoPlatformStyle.Ios]: UIKit's screen margin, row padding and Apple's 44 pt touch target
+         * ([IosMetrics]); the rest has no UIKit counterpart and stays on [Default]'s 4 dp grid.
+         */
+        val Ios = Default.copy(
+            screenMargin = IosMetrics.insetGroupMargin,
+            cardPadding = IosMetrics.rowHorizontalPadding,
+            touchTarget = ItmoPlatformStyle.Ios.minTouchTarget,
         )
     }
 }

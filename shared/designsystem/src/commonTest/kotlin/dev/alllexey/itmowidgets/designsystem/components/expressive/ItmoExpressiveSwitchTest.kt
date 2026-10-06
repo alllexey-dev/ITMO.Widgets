@@ -11,6 +11,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.v2.runComposeUiTest
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -48,7 +49,8 @@ class ItmoExpressiveSwitchTest {
         var standard: MotionScheme? = null
         setContent {
             ItmoTheme { standard = MaterialTheme.motionScheme }
-            ItmoTheme(expressive = true) {
+            // The iOS style ignores the switch (ItmoPlatformStyleThemeTest).
+            ItmoTheme(expressive = true, platformStyle = ItmoPlatformStyle.Material) {
                 expressive = ItmoTheme.expressive
                 hero = ItmoTheme.heroMotionScheme
                 components = MaterialTheme.motionScheme

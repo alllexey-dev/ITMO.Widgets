@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeUiState
@@ -39,7 +40,8 @@ class QrPassScreenTest {
         var state by mutableStateOf<QrCodeUiState>(QrCodeUiState.Loading)
         var width by mutableStateOf(NarrowWidth)
         setContent {
-            ItmoTheme {
+            // The sides below are Material's (16 dp screen margin); DS-IOS-06's QR pilot checks the iOS look.
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
                 Box(Modifier.requiredSize(width, WindowHeight)) { QrPassScreen(state, onRefresh = {}, onBack = {}) }
             }
         }

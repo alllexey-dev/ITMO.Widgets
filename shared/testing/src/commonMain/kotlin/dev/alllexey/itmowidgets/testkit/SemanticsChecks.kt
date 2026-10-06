@@ -9,15 +9,17 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-
-/** The minimum touch target of an actionable element (Material, `docs/design.md`). */
-val MinTouchTarget: Dp = 48.dp
 
 /**
- * Every clickable node is at least [minSize] square. It measures the layout node that carries the click, outer
- * modifiers such as `minimumInteractiveComponentSize` included; the node's touch bounds would not do, since Compose
- * stretches them to 48 dp for any clickable. Replaces `ViewChecks.assertTouchTargets` for Compose screens.
+ * The minimum touch target of an actionable element under the platform's default style: Material's 48 dp on
+ * Android, Apple's 44 pt on iOS (`ItmoPlatformStyle.minTouchTarget`, which `ItmoTheme` applies by default there).
+ */
+expect val MinTouchTarget: Dp
+
+/**
+ * Every clickable node is at least [minSize] square; the default is the platform style's minimum ([MinTouchTarget]).
+ * It measures the layout node that carries the click, outer modifiers such as `minimumInteractiveComponentSize`
+ * included; the node's touch bounds would not do, since Compose stretches them to 48 dp for any clickable. Replaces `ViewChecks.assertTouchTargets` for Compose screens.
  */
 fun SemanticsNodeInteractionsProvider.assertTouchTargets(minSize: Dp = MinTouchTarget) {
     val failures = onAllNodes(hasClickAction()).fetchSemanticsNodes().mapNotNull { node ->
