@@ -11,10 +11,16 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
+import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
@@ -63,6 +69,16 @@ interface CoreBridgeEntryPoint {
     /** The custom-services opt-in; reading it is local and never calls Backend. */
     fun customServicesRepository(): CustomServicesRepository
 
+    fun customSpoilerRepository(): CustomSpoilerRepository
+    fun onboardingRepository(): OnboardingRepository
+    fun scheduleChangeTracking(): ScheduleChangeTracking
+    fun markTracking(): MarkTracking
+    /** Not `calendarSync()`: `CalendarSyncEntryPoint` declares that name for the implementation type. */
+    fun coreCalendarSync(): CalendarSync
+
+    /** Unscoped in Hilt: the export keeps no state, so every reader gets a new one. */
+    fun scheduleIcsExport(): ScheduleIcsExport
+
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
             EntryPointAccessors.fromApplication(context.applicationContext, CoreBridgeEntryPoint::class.java)
@@ -92,4 +108,10 @@ val coreBridgeModule = module {
     single<DeviceHintPreferences> { CoreBridgeEntryPoint.from(androidContext()).deviceHintPreferences() }
     single<HomeLayoutPreferences> { CoreBridgeEntryPoint.from(androidContext()).homeLayoutPreferences() }
     single<CustomServicesRepository> { CoreBridgeEntryPoint.from(androidContext()).customServicesRepository() }
+    single<CustomSpoilerRepository> { CoreBridgeEntryPoint.from(androidContext()).customSpoilerRepository() }
+    single<OnboardingRepository> { CoreBridgeEntryPoint.from(androidContext()).onboardingRepository() }
+    single<ScheduleChangeTracking> { CoreBridgeEntryPoint.from(androidContext()).scheduleChangeTracking() }
+    single<MarkTracking> { CoreBridgeEntryPoint.from(androidContext()).markTracking() }
+    single<CalendarSync> { CoreBridgeEntryPoint.from(androidContext()).coreCalendarSync() }
+    factory<ScheduleIcsExport> { CoreBridgeEntryPoint.from(androidContext()).scheduleIcsExport() }
 }

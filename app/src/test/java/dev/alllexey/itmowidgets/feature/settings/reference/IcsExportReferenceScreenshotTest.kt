@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.IcsExportBottomSheet
@@ -36,6 +37,9 @@ class IcsExportReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-settings")
 

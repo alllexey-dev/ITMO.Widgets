@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -25,6 +24,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsRangeOption
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * «Выгрузить в .ics»: the range with its days, then the file to send or open. Choice, loading, the file, an empty
@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.onEach
 class IcsExportBottomSheet : BottomSheetDialogFragment() {
     private var _binding: SheetIcsExportBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: IcsExportViewModel by viewModels()
+    private val viewModel: IcsExportViewModel by viewModel()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = SheetIcsExportBinding.inflate(inflater, container, false)

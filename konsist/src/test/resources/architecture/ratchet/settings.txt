@@ -1,16 +1,2 @@
 # Known violations in feature.settings, KN-01c. Lines only go away: delete yours when the code is fixed
 # (a stale line fails its rule) and never add one. Format and rules: vibe/v2.3/recipes/konsist-rule.md.
-
-# LT-2b: the R imports of SettingsViewModel.kt moved with its rows into the page providers and SettingRows; they
-# leave with the Res strings at the move (LT-3b).
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.HomePageProvider
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.RecordbookPageProvider
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.SchedulePageProvider
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.ServicesPageProvider
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.SettingRows
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.SportPageProvider
-presentation-imports-r dev.alllexey.itmowidgets.feature.settings.presentation.WidgetsPageProvider

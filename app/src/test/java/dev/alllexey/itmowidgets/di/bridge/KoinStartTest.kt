@@ -9,9 +9,15 @@ import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
+import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
@@ -77,6 +83,13 @@ class KoinStartTest {
         assertSame(hilt.deviceHintPreferences(), koin.get<DeviceHintPreferences>())
         assertSame(hilt.homeLayoutPreferences(), koin.get<HomeLayoutPreferences>())
         assertSame(hilt.customServicesRepository(), koin.get<CustomServicesRepository>())
+        assertSame(hilt.customSpoilerRepository(), koin.get<CustomSpoilerRepository>())
+        assertSame(hilt.onboardingRepository(), koin.get<OnboardingRepository>())
+        assertSame(hilt.scheduleChangeTracking(), koin.get<ScheduleChangeTracking>())
+        assertSame(hilt.markTracking(), koin.get<MarkTracking>())
+        assertSame(hilt.coreCalendarSync(), koin.get<CalendarSync>())
+        // Unscoped in Hilt, a factory in Koin: the same implementation, a new instance each time.
+        assertEquals(hilt.scheduleIcsExport()::class, koin.get<ScheduleIcsExport>()::class)
     }
 
     @Test

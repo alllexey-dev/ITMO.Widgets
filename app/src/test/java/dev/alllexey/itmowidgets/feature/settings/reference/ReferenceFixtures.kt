@@ -2,11 +2,12 @@ package dev.alllexey.itmowidgets.feature.settings.reference
 
 import android.os.Looper
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import java.time.Duration
+import org.koin.core.context.loadKoinModules
+import org.koin.core.context.startKoin
+import org.koin.core.module.dsl.viewModel
+import org.koin.dsl.module
 import org.robolectric.Shadows.shadowOf
 
 /**
@@ -27,18 +28,13 @@ internal fun settle(advanceMs: Long = 0, ready: () -> Boolean = { true }) {
 }
 
 /**
- * Puts [create]'s view model into the Fragment's store once it is created, before its view asks `by viewModels()`
- * for one, so a Hilt Fragment renders fixture state without a Hilt binding for it.
+ * Defines [create]'s view model in Koin, where the Fragment's `by viewModel()` asks for it, so a Hilt Fragment
+ * renders fixture state. The test class stops Koin around each test with `StopKoinRule`.
  */
 internal inline fun <F : Fragment, reified VM : ViewModel> F.withViewModel(crossinline create: () -> VM): F = apply {
-    lifecycle.addObserver(object : DefaultLifecycleObserver {
-        override fun onCreate(owner: LifecycleOwner) {
-            ViewModelProvider(this@apply, object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T = create() as T
-            })[VM::class.java]
-        }
-    })
+    val fixture = module { viewModel<VM> { create() } }
+    // The first view of a test starts Koin; the next appearances replace the definition with their own.
+    runCatching { loadKoinModules(fixture) }.onFailure { startKoin { modules(fixture) } }
 }
 
 private val STEP: Duration = Duration.ofMillis(20)

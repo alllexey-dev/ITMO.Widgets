@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.DiagnosticsFragment
 import kotlin.time.Instant
@@ -27,6 +28,9 @@ class DiagnosticsReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-settings")
 

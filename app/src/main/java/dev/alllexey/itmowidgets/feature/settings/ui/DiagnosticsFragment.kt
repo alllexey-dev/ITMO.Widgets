@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -20,6 +19,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @AndroidEntryPoint
 class DiagnosticsFragment : Fragment() {
@@ -27,7 +27,7 @@ class DiagnosticsFragment : Fragment() {
     private var _binding: FragmentDiagnosticsBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: DiagnosticsViewModel by viewModels()
+    private val viewModel: DiagnosticsViewModel by viewModel()
 
     private lateinit var adapter: DiagnosticsAdapter
 
