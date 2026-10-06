@@ -13,7 +13,6 @@ import android.view.ViewTreeObserver
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -40,13 +39,14 @@ import dev.alllexey.itmowidgets.core.ui.title
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import dev.alllexey.itmowidgets.core.ui.expandToContent
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** Adds a link or edits an own one: address, category chips, optional title and who sees it. */
 @AndroidEntryPoint
 class LinkEditorBottomSheet : BottomSheetDialogFragment() {
     private var _binding: SheetLinkEditorBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: LinkEditorViewModel by viewModels()
+    private val viewModel: LinkEditorViewModel by viewModel()
     /** Programmatic updates of the fields must not read as the user's choice. */
     private var rendering = false
     private var shownCategory: LinkCategory? = null

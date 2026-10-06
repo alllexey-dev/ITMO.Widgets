@@ -15,10 +15,17 @@ import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.linkTime
 import dev.alllexey.itmowidgets.core.testing.linksSnapshot
 import dev.alllexey.itmowidgets.core.testing.subjectLink
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
@@ -28,20 +35,20 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import kotlin.time.Duration.Companion.hours
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SubjectLinksViewModelTest {
-    @get:Rule val main = MainDispatcherRule()
+    private val main = TestMainDispatcher()
     private val repository = FakeSubjectLinksRepository()
     private val shared = subjectLink("shared", LinkCategory.SCORES, LinkVisibility.ALL, isMine = false, score = 3)
 
-    @Test fun `links are grouped by category with chats and past periods last`() = runTest(main.dispatcher) {
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
+
+    @Test fun linksAreGroupedByCategoryWithChatsAndPastPeriodsLast() = runTest(main.dispatcher) {
         show(linksSnapshot(
             mine = listOf(subjectLink("own-other", LinkCategory.OTHER), subjectLink("own-scores", LinkCategory.SCORES)),
             shared = listOf(subjectLink("chat", LinkCategory.CHAT, LinkVisibility.FLOW, isMine = false),
@@ -61,7 +68,7 @@ class SubjectLinksViewModelTest {
         ), sections)
     }
 
-    @Test fun `own and others' links of a category are ranked together, newer first on equal scores`() = runTest(main.dispatcher) {
+    @Test fun ownAndOthersLinksOfACategoryAreRankedTogetherNewerFirstOnEqualScores() = runTest(main.dispatcher) {
         val ownTop = subjectLink("own-top", score = 7)
         val ownTied = subjectLink("own-tied", score = 2)
         val newerTied = subjectLink("newer-tied", LinkCategory.MATERIALS, LinkVisibility.ALL, isMine = false, score = 2)
@@ -73,7 +80,7 @@ class SubjectLinksViewModelTest {
         assertEquals(listOf(LinkSection.Category(LinkCategory.MATERIALS, listOf(ownTop, newerTied, ownTied, low))), vm.uiState.value.sections)
     }
 
-    @Test fun `a vote keeps the rows in place until a pull ranks them afresh`() = runTest(main.dispatcher) {
+    @Test fun aVoteKeepsTheRowsInPlaceUntilAPullRanksThemAfresh() = runTest(main.dispatcher) {
         val a = subjectLink("a", LinkCategory.SCORES, LinkVisibility.ALL, isMine = false, score = 3)
         val b = subjectLink("b", LinkCategory.SCORES, LinkVisibility.ALL, isMine = false, score = 2)
         val c = subjectLink("c", LinkCategory.SCORES, LinkVisibility.ALL, isMine = false, score = 1)
@@ -102,7 +109,7 @@ class SubjectLinksViewModelTest {
     private fun SubjectLinksUiState.scores() =
         sections.filterIsInstance<LinkSection.Category>().single { it.category == LinkCategory.SCORES }.links.map { it.id }
 
-    @Test fun `arrows set a vote and the same arrow removes it`() = runTest(main.dispatcher) {
+    @Test fun arrowsSetAVoteAndTheSameArrowRemovesIt() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared.copy(myVote = 1))))
         val vm = model()
 
@@ -112,7 +119,7 @@ class SubjectLinksViewModelTest {
         assertEquals(listOf("vote:shared:0", "vote:shared:-1"), repository.actions)
     }
 
-    @Test fun `pinning the pinned link unpins it`() = runTest(main.dispatcher) {
+    @Test fun pinningThePinnedLinkUnpinsIt() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared), pinnedId = "own"))
         val vm = model()
 
@@ -122,7 +129,7 @@ class SubjectLinksViewModelTest {
         assertEquals(listOf("pin:shared", "pin:null"), repository.actions)
     }
 
-    @Test fun `a failed action sends an event and keeps the list`() = runTest(main.dispatcher) {
+    @Test fun aFailedActionSendsAnEventAndKeepsTheList() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared)))
         val vm = model()
         val before = vm.uiState.value
@@ -134,7 +141,7 @@ class SubjectLinksViewModelTest {
         assertEquals(before, vm.uiState.value)
     }
 
-    @Test fun `a successful action sends Done`() = runTest(main.dispatcher) {
+    @Test fun aSuccessfulActionSendsDone() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared)))
         val vm = model()
 
@@ -143,7 +150,7 @@ class SubjectLinksViewModelTest {
         assertEquals(LinkEvent.Done, vm.events.first())
     }
 
-    @Test fun `a vote sends no Done, so the actions sheet stays open`() = runTest(main.dispatcher) {
+    @Test fun aVoteSendsNoDoneSoTheActionsSheetStaysOpen() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared)))
         val vm = model()
         val events = mutableListOf<LinkEvent>()
@@ -155,7 +162,7 @@ class SubjectLinksViewModelTest {
         assertTrue(events.isEmpty())
     }
 
-    @Test fun `a second action while one is in flight is ignored`() = runTest(main.dispatcher) {
+    @Test fun aSecondActionWhileOneIsInFlightIsIgnored() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared)))
         val gate = CompletableDeferred<Unit>()
         repository.gate = { gate.await() }
@@ -167,7 +174,7 @@ class SubjectLinksViewModelTest {
         assertEquals(listOf("vote:shared:1"), repository.actions)
     }
 
-    @Test fun `restrictions and a missing connection hide votes and reports`() = runTest(main.dispatcher) {
+    @Test fun restrictionsAndAMissingConnectionHideVotesAndReports() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared)))
         val vm = model()
         assertTrue(vm.uiState.value.canVote && vm.uiState.value.canReport)
@@ -183,7 +190,7 @@ class SubjectLinksViewModelTest {
         assertFalse(vm.uiState.value.canVote); assertFalse(vm.uiState.value.canReport)
     }
 
-    @Test fun `a failed pull reports the error while a silent load does not`() = runTest(main.dispatcher) {
+    @Test fun aFailedPullReportsTheErrorWhileASilentLoadDoesNot() = runTest(main.dispatcher) {
         repository.refreshResult = AppResult.Failure(AppError.Network)
         val vm = model()
         val events = mutableListOf<LinkEvent>()
@@ -194,12 +201,12 @@ class SubjectLinksViewModelTest {
 
         vm.refresh(RefreshMode.Pull); runCurrent()
 
-        assertEquals(listOf(LinkEvent.Failed(AppError.Network)), events)
+        assertEquals(listOf<LinkEvent>(LinkEvent.Failed(AppError.Network)), events)
         assertEquals(2, repository.restrictionRefreshes)
         assertFalse(vm.uiState.value.refreshing)
     }
 
-    @Test fun `the silent load on entry shows no indicator and a pull joining it does until it ends`() = runTest(main.dispatcher) {
+    @Test fun theSilentLoadOnEntryShowsNoIndicatorAndAPullJoiningItDoesUntilItEnds() = runTest(main.dispatcher) {
         val gated = GatedRefreshes(repository)
         val vm = model(gated)
         assertFalse(vm.uiState.value.refreshing)
@@ -212,7 +219,7 @@ class SubjectLinksViewModelTest {
         assertEquals(1, repository.refreshes)
     }
 
-    @Test fun `a forced retry replaces the silent load in flight`() = runTest(main.dispatcher) {
+    @Test fun aForcedRetryReplacesTheSilentLoadInFlight() = runTest(main.dispatcher) {
         val gated = GatedRefreshes(repository)
         val vm = model(gated)
 
@@ -225,7 +232,7 @@ class SubjectLinksViewModelTest {
         assertEquals(1, repository.refreshes)
     }
 
-    @Test fun `a failure sent while no view collects reaches the next collector once`() = runTest(main.dispatcher) {
+    @Test fun aFailureSentWhileNoViewCollectsReachesTheNextCollectorOnce() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared)))
         val vm = model()
         val first = mutableListOf<LinkEvent>()
@@ -242,7 +249,7 @@ class SubjectLinksViewModelTest {
         assertEquals(listOf<LinkEvent>(LinkEvent.Failed(AppError.Forbidden)), second)
     }
 
-    @Test fun `a failed action frees the sheet and a successful one keeps it busy until it closes`() = runTest(main.dispatcher) {
+    @Test fun aFailedActionFreesTheSheetAndASuccessfulOneKeepsItBusyUntilItCloses() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared)))
         val gate = CompletableDeferred<Unit>()
         repository.gate = { gate.await() }

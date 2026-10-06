@@ -10,30 +10,37 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.linksSnapshot
 import dev.alllexey.itmowidgets.core.testing.subjectLink
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LinkEditorViewModelTest {
-    @get:Rule val main = MainDispatcherRule()
+    private val main = TestMainDispatcher()
     private val repository = FakeSubjectLinksRepository()
     private val lecture = LinkAudience(7101, "ФИЗ ПИИКТ 3", typeId = 1, depth = 1)
     private val practice = LinkAudience(7102, "ФИЗ ПИИКТ 3.2", typeId = 3, depth = 2)
     private val lab = LinkAudience(7103, "ФИЗ ПИИКТ 3.2.1", typeId = 2, depth = 3)
 
-    @Test fun `the site suggests a category until one is picked`() = runTest(main.dispatcher) {
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
+
+    @Test fun theSiteSuggestsACategoryUntilOneIsPicked() = runTest(main.dispatcher) {
         val vm = model()
 
         vm.onUrlChanged("https://github.com/itmo/labs")
@@ -46,7 +53,7 @@ class LinkEditorViewModelTest {
         assertEquals(LinkCategory.NOTES, vm.uiState.value.category)
     }
 
-    @Test fun `a link that is not https or a long title is not saved`() = runTest(main.dispatcher) {
+    @Test fun aLinkThatIsNotHttpsOrALongTitleIsNotSaved() = runTest(main.dispatcher) {
         val vm = model()
         vm.onCategorySelected(LinkCategory.OTHER)
 
@@ -59,7 +66,7 @@ class LinkEditorViewModelTest {
         assertTrue(repository.actions.isEmpty())
     }
 
-    @Test fun `options are only me, every flow of the viewer in order and everybody`() = runTest(main.dispatcher) {
+    @Test fun optionsAreOnlyMeEveryFlowOfTheViewerInOrderAndEverybody() = runTest(main.dispatcher) {
         show(linksSnapshot(audiences = listOf(lecture, practice, lab)))
         val vm = model()
 
@@ -71,7 +78,7 @@ class LinkEditorViewModelTest {
         assertEquals(listOf(LinkAudienceOption.All, LinkAudienceOption.Private), vm.uiState.value.options)
     }
 
-    @Test fun `choosing a flow keeps its id and a flow gone from the schedule falls back to only me`() = runTest(main.dispatcher) {
+    @Test fun choosingAFlowKeepsItsIdAndAFlowGoneFromTheScheduleFallsBackToOnlyMe() = runTest(main.dispatcher) {
         show(linksSnapshot(audiences = listOf(lecture, practice, lab)))
         val vm = model()
 
@@ -92,7 +99,7 @@ class LinkEditorViewModelTest {
         assertNull(vm.uiState.value.flowId)
     }
 
-    @Test fun `premoderation of the period reaches the form`() = runTest(main.dispatcher) {
+    @Test fun premoderationOfThePeriodReachesTheForm() = runTest(main.dispatcher) {
         show(linksSnapshot(audiences = listOf(lecture)).copy(premoderation = false))
         val vm = model()
         assertFalse(vm.uiState.value.premoderation)
@@ -101,7 +108,7 @@ class LinkEditorViewModelTest {
         assertTrue(vm.uiState.value.premoderation)
     }
 
-    @Test fun `without the connection only private remains and a shared choice falls back`() = runTest(main.dispatcher) {
+    @Test fun withoutTheConnectionOnlyPrivateRemainsAndASharedChoiceFallsBack() = runTest(main.dispatcher) {
         show(linksSnapshot(audiences = listOf(lecture)))
         val vm = model()
         vm.onAudienceSelected(LinkAudienceOption.Flow(lecture))
@@ -116,7 +123,7 @@ class LinkEditorViewModelTest {
         assertEquals(LinkVisibility.PRIVATE, vm.uiState.value.visibility)
     }
 
-    @Test fun `saving sends the form with the chosen flow and reports it`() = runTest(main.dispatcher) {
+    @Test fun savingSendsTheFormWithTheChosenFlowAndReportsIt() = runTest(main.dispatcher) {
         show(linksSnapshot(audiences = listOf(lecture, practice, lab)))
         val vm = model()
         vm.onUrlChanged(" https://docs.google.com/spreadsheets/d/abc ")
@@ -133,7 +140,7 @@ class LinkEditorViewModelTest {
         assertEquals(7102L, saved.flowId)
     }
 
-    @Test fun `a failed save keeps the form and reports the error`() = runTest(main.dispatcher) {
+    @Test fun aFailedSaveKeepsTheFormAndReportsTheError() = runTest(main.dispatcher) {
         repository.result = AppResult.Failure(AppError.Network)
         val vm = model()
         vm.onUrlChanged("https://github.com/itmo/labs")
@@ -145,7 +152,7 @@ class LinkEditorViewModelTest {
         assertTrue(vm.uiState.value.canSave)
     }
 
-    @Test fun `editing starts from the own link and keeps its category and flow`() = runTest(main.dispatcher) {
+    @Test fun editingStartsFromTheOwnLinkAndKeepsItsCategoryAndFlow() = runTest(main.dispatcher) {
         show(linksSnapshot(mine = listOf(subjectLink("own", LinkCategory.NOTES, LinkVisibility.FLOW, title = "Конспект", flowId = 7103)),
             audiences = listOf(lecture, practice, lab)))
         val vm = model(linkId = "own")
@@ -162,7 +169,7 @@ class LinkEditorViewModelTest {
         assertEquals(7103L, repository.lastSave!!.flowId)
     }
 
-    @Test fun `a save retried after process death reaches the same new link`() = runTest(main.dispatcher) {
+    @Test fun aSaveRetriedAfterProcessDeathReachesTheSameNewLink() = runTest(main.dispatcher) {
         repository.result = AppResult.Failure(AppError.Network)
         val handle = handle()
         model(handle = handle).apply { onUrlChanged("https://github.com/itmo/labs"); save() }

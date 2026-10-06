@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
+import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -38,6 +39,11 @@ class ResourcesBridgeTest {
     @Test
     fun `a constructed definition may depend on the bridged subject links repository`() {
         KoinGraphCheck.assertValid(KoinModules.bridges, listOf(module { singleOf(::NeedsSubjectLinks) }))
+    }
+
+    @Test
+    fun `the links sheets' module resolves over the bridges`() {
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(resourcesModule))
     }
 
     class NeedsSubjectLinks(@Suppress("unused") val links: SubjectLinksRepository)

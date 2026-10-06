@@ -5,7 +5,6 @@ import android.content.DialogInterface
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -19,11 +18,12 @@ import dev.alllexey.itmowidgets.databinding.DialogReportLinkBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** A reason and an optional comment; the dialog stays until the report is accepted. */
 @AndroidEntryPoint
 class ReportLinkDialogFragment : DialogFragment() {
-    private val viewModel: SubjectLinksViewModel by viewModels()
+    private val viewModel: SubjectLinksViewModel by viewModel()
     private val linkId: String by lazy { checkNotNull(requireArguments().getString(SubjectLinksArgs.LINK_ID)) }
     private lateinit var form: DialogReportLinkBinding
 

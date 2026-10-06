@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -36,6 +35,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import dev.alllexey.itmowidgets.core.ui.openLink
 import dev.alllexey.itmowidgets.core.ui.expandToContent
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * What can be done with one link. Own: open, pin, edit, delete, with the review state and the reason
@@ -46,7 +46,7 @@ import dev.alllexey.itmowidgets.core.ui.expandToContent
 class LinkActionsBottomSheet : BottomSheetDialogFragment() {
     private var _binding: SheetLinkActionsBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: SubjectLinksViewModel by viewModels()
+    private val viewModel: SubjectLinksViewModel by viewModel()
     private val linkId: String by lazy { checkNotNull(requireArguments().getString(SubjectLinksArgs.LINK_ID)) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

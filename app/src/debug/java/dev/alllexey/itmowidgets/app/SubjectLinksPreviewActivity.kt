@@ -10,9 +10,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,19 +20,22 @@ import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
-import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
-import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel
+import dev.alllexey.itmowidgets.di.bridge.ResourcesDebugFixtures
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.ReportLinkDialogFragment
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
+import org.koin.core.module.Module
 
 /**
- * The real links sheets over an empty window, fed by a test-supplied in-memory repository; never
- * reads a session. [EXTRA_SCREEN] picks the first sheet: `links`, `editor` or `actions` (with [EXTRA_LINK_ID]).
+ * The real links sheets over an empty window, fed by a test-supplied in-memory repository through
+ * [ResourcesDebugFixtures]; never reads a session. [EXTRA_SCREEN] picks the first sheet: `links`, `editor` or
+ * `actions` (with [EXTRA_LINK_ID]).
  */
 @AndroidEntryPoint
 class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNavigator {
+    private lateinit var linksFixture: Module
+
     override fun attachBaseContext(newBase: Context) {
         val config = Configuration(newBase.resources.configuration).apply {
             fontScale = appearance.fontScale
@@ -46,8 +46,10 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator by NoOpApp
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Before super.onCreate(): a restored sheet obtains its ViewModel from Koin there.
+        linksFixture = ResourcesDebugFixtures.load(this) { repository }
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-        supportFragmentManager.registerFragmentLifecycleCallbacks(PreviewModels(), false)
+        supportFragmentManager.registerFragmentLifecycleCallbacks(NarrowWindows(), false)
         super.onCreate(savedInstanceState)
         appearance.colorSeed?.let {
             DynamicColors.applyToActivityIfAvailable(this, DynamicColorsOptions.Builder().setContentBasedSource(it).build())
@@ -60,6 +62,11 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator by NoOpApp
             SCREEN_ACTIONS -> openLinkActions(ARGS, checkNotNull(linkId))
             else -> openSubjectLinks(ARGS)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ResourcesDebugFixtures.unload(this, linksFixture)
     }
 
     override fun openSubjectLinks(args: SubjectLinksArgs) =
@@ -75,26 +82,8 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator by NoOpApp
         sheetRequests += args
     }
 
-    /** Hands every sheet a view model over [repository] before Hilt could create one, and narrows its window. */
-    private class PreviewModels : FragmentManager.FragmentLifecycleCallbacks() {
-        override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
-            val arguments = fragment.arguments ?: return
-            @Suppress("DEPRECATION")
-            val handle = SavedStateHandle(arguments.keySet().associateWith { arguments.get(it) })
-            val factory = object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                    LinkEditorViewModel::class.java -> LinkEditorViewModel(handle, repository)
-                    else -> SubjectLinksViewModel(handle, repository)
-                } as T
-            }
-            when (fragment) {
-                is LinkEditorBottomSheet -> ViewModelProvider(fragment, factory)[LinkEditorViewModel::class.java]
-                is SubjectLinksBottomSheet, is LinkActionsBottomSheet, is ReportLinkDialogFragment ->
-                    ViewModelProvider(fragment, factory)[SubjectLinksViewModel::class.java]
-            }
-        }
-
+    /** Narrows every sheet's window to the appearance's width. */
+    private class NarrowWindows : FragmentManager.FragmentLifecycleCallbacks() {
         override fun onFragmentStarted(fm: FragmentManager, fragment: Fragment) {
             val width = appearance.widthDp.takeIf { it > 0 } ?: return
             val window = (fragment as? DialogFragment)?.dialog?.window ?: return
