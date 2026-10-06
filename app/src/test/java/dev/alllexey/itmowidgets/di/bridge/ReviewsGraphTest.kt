@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherReviewsRepositoryImpl
-import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -45,10 +44,10 @@ class ReviewsGraphTest {
         assertEquals(1, cleaners.count { it === levels })
     }
 
-    /** `DemoMode` is `authDataModule`'s since KM-11h1, the lessons gateway `scheduleDataModule`'s since KM-11a2. */
+    /** `scheduleDataGraph` holds `reviewsModule` with `DemoMode` and the teacher lessons gateway it reads. */
     @Test
     fun `the reviews module resolves against the bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(reviewsModule) + scheduleDataGraph)
+        KoinGraphCheck.assertValid(KoinModules.bridges, scheduleDataGraph)
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */

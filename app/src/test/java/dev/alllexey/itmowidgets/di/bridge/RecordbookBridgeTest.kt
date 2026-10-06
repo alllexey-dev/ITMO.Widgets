@@ -16,7 +16,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.work.MarksEntryPoint
 import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
-import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import io.ktor.client.engine.HttpClientEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
@@ -76,7 +75,7 @@ class RecordbookBridgeTest {
         // The subject links and teacher levels are `resourcesModule`'s and `reviewsModule`'s since KM-11f.
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
-            listOf(resourcesModule, reviewsModule, recordbookModule) + scheduleDataGraph,
+            listOf(resourcesModule, recordbookModule) + scheduleDataGraph,
         )
     }
 

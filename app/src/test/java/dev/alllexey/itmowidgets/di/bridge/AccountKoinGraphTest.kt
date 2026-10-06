@@ -8,14 +8,11 @@ import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.feature.auth.data.DataStoreDemoMode
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
-import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.data.OnboardingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
-import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
-import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
@@ -62,25 +59,22 @@ class AccountKoinGraphTest {
     /**
      * Onboarding and Me read the services opt-in, which `settingsDataModule` constructs since KM-11e, and Me reads
      * `SocialRepository`, which `socialModule` constructs since KM-11d (its profile reads the teacher reviews of
-     * `reviewsModule` since KM-11f); the session, the demo switch and the first-run flag come from `authDataModule`
-     * and `onboardingDataModule` since KM-11h1.
+     * `reviewsModule` since KM-11f, checked with `scheduleDataGraph`); the session, the demo switch and the first-run
+     * flag come from `authDataModule` and `onboardingDataModule` since KM-11h1.
      */
     @Test
     fun `the account modules pass the graph check against the release bridges`() {
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
             listOf(
-                settingsDataModule,
-                reviewsModule,
                 socialModule,
-                authDataModule,
                 authModule,
                 onboardingDataModule,
                 onboardingModule,
                 meModule,
                 webLoginModule,
                 updateModule,
-            ),
+            ) + scheduleDataGraph,
         )
     }
 

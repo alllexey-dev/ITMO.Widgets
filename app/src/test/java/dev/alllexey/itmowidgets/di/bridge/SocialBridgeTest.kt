@@ -8,13 +8,10 @@ import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
-import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
-import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
@@ -69,13 +66,13 @@ class SocialBridgeTest {
         assertEquals(1, cards.count { it === koin.get<SocialHomeCardSource>() })
     }
 
-    /** The repository reads the services opt-in, which `settingsDataModule` constructs since KM-11e. */
+    /**
+     * The repository reads the services opt-in, which `settingsDataModule` constructs since KM-11e, and the profile the
+     * teacher reviews of `reviewsModule` since KM-11f (checked with `scheduleDataGraph`).
+     */
     @Test
     fun `the social and picker modules resolve against the bridges`() {
-        KoinGraphCheck.assertValid(
-            KoinModules.bridges,
-            listOf(authDataModule, settingsDataModule, reviewsModule, socialModule, friendSelectorModule),
-        )
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(socialModule, friendSelectorModule) + scheduleDataGraph)
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
