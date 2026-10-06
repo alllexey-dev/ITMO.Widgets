@@ -38,6 +38,7 @@ object KoinModules {
         scheduleBridgeModule,
         sportBridgeModule,
         accountAuthBridgeModule,
+        shellBridgeModule,
     )
 
     /** Definitions Koin constructs; the graph check verifies their constructors. */
