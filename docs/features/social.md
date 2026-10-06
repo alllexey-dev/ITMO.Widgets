@@ -45,8 +45,7 @@ and `friend-history`, reaching sign-out through `di/bridge/SessionCleanersBridge
 (`FriendshipPushHandler`, `SportDataRepositoryImpl`) reads `SocialRepository`
 and `FriendRepository` through `di/bridge/SocialBridge.kt`, which forwards the
 same Koin singles.
-`TeacherReviewsRepositoryImpl` is a Hilt singleton reached through
-`ReviewsBridge`. `cachedProfile`, `cachedUserFriends` and `cachedReviews` are
+`TeacherReviewsRepositoryImpl` is the single of Koin's `reviewsModule`. `cachedProfile`, `cachedUserFriends` and `cachedReviews` are
 unavailable while the opt-in is off or unknown. Disabling it clears the caches,
 changes friends and requests to `LoadState.Disabled` and clears the own Backend
 profile. `SocialRepositoryImpl` keeps the lists, the caches, the opt-in and a

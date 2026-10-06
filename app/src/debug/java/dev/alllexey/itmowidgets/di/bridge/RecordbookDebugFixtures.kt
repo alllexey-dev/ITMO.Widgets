@@ -19,6 +19,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
+import dev.alllexey.itmowidgets.feature.resources.data.SubjectLinksRepositoryImpl
+import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
 import org.koin.core.module.Module
@@ -53,10 +55,11 @@ object RecordbookDebugFixtures {
 
     /**
      * The bridge modules that define the overridden types, loaded again once the last fixture goes. The recordbook's
-     * own repositories are `recordbookModule`'s and are pointed back at its instances instead.
+     * own repositories are `recordbookModule`'s, the schedule gateways `scheduleDataModule`'s, the links and levels
+     * `resourcesModule`'s and `reviewsModule`'s, and are pointed back at their instances instead.
      */
     private val bridgeModules: List<Module>
-        get() = listOf(coreBridgeModule, resourcesBridgeModule, reviewsBridgeModule)
+        get() = listOf(coreBridgeModule)
 
     private var current: Module? = null
 
@@ -86,8 +89,9 @@ object RecordbookDebugFixtures {
      * overrode, so the bridge modules load again; their singles forward Hilt's instances, so readers get the same
      * objects as before. Reloading `recordbookModule` would build a second recordbook cache, BARS client, session
      * store and mark state beside the ones the worker and the app already hold, so the overridden repository keys
-     * point at its instances again; the schedule gateways point back at `scheduleDataModule`'s singles the same way.
-     * A fixture that a newer host already replaced is left to that host.
+     * point at its instances again; the schedule gateways, the subject links and the teacher levels point back at the
+     * singles of `scheduleDataModule`, `resourcesModule` and `reviewsModule` the same way. A fixture that a newer host
+     * already replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
@@ -104,6 +108,8 @@ object RecordbookDebugFixtures {
         koin.declare<SubjectBindingStore>(koin.get<DataStoreSubjectBindingStore>(), allowOverride = true)
         koin.declare<SheetScoresRepository>(koin.get<SheetScoresRepositoryImpl>(), allowOverride = true)
         koin.declare<MarkTrackingRepository>(koin.get<MarkTrackingRepositoryImpl>(), allowOverride = true)
+        koin.declare<SubjectLinksRepository>(koin.get<SubjectLinksRepositoryImpl>(), allowOverride = true)
+        koin.declare<TeacherLevelsRepository>(koin.get<TeacherLevelsRepositoryImpl>(), allowOverride = true)
         current = null
     }
 }

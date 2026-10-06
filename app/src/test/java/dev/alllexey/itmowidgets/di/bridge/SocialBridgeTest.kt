@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelec
 import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
+import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
@@ -73,7 +74,7 @@ class SocialBridgeTest {
     fun `the social and picker modules resolve against the bridges`() {
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
-            listOf(authDataModule, settingsDataModule, socialModule, friendSelectorModule),
+            listOf(authDataModule, settingsDataModule, reviewsModule, socialModule, friendSelectorModule),
         )
     }
 

@@ -3,12 +3,13 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
+import dev.alllexey.itmowidgets.feature.reviews.data.TeacherReviewsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 /**
- * The review editor's and report dialog's fixture in Koin: a debug host replaces the bridged reviews repository and
+ * The review editor's and report dialog's fixture in Koin: a debug host replaces the reviews repository and the
  * teacher lessons gateway with its own while it lives, so both hosts obtain their ViewModels exactly as in release.
  *
  * [reviews] and [lessons] are read whenever a ViewModel is created. Koin is process-wide: a host calls [load] in
@@ -16,9 +17,6 @@ import org.koin.dsl.module
  * fakes. Main thread only, like the host callbacks.
  */
 object ReviewsDebugFixtures {
-
-    /** The release modules that define the overridden types, loaded again once the last fixture goes. */
-    private val releaseModules: List<Module> get() = listOf(coreBridgeModule, reviewsBridgeModule)
 
     private var current: Module? = null
 
@@ -35,16 +33,15 @@ object ReviewsDebugFixtures {
 
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
-     * overrode, so the bridges load again; their singles forward Hilt's instances, the ones the session cleaners
-     * hold. The lessons gateway is Koin's own (`scheduleDataModule`): loading that module again would build a second
-     * gateway beside the session cleaner's, so the contract points back at its single. A fixture that a newer host
-     * already replaced is left to that host.
+     * overrode. Both contracts are Koin's own (`reviewsModule`, `scheduleDataModule`): loading those modules again
+     * would build a second repository and gateway beside the ones the session cleaners hold, so the contracts point
+     * back at their singles. A fixture that a newer host already replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
         val koin = KoinStarter.ensureStarted(context)
         koin.unloadModules(listOf(fixture))
-        koin.loadModules(releaseModules, allowOverride = true)
+        koin.declare<TeacherReviewsRepository>(koin.get<TeacherReviewsRepositoryImpl>(), allowOverride = true)
         koin.declare<TeacherLessonsGateway>(koin.get<TeacherLessonsGatewayImpl>(), allowOverride = true)
         current = null
     }

@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.data.OnboardingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
+import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
@@ -60,8 +61,9 @@ class AccountKoinGraphTest {
 
     /**
      * Onboarding and Me read the services opt-in, which `settingsDataModule` constructs since KM-11e, and Me reads
-     * `SocialRepository`, which `socialModule` constructs since KM-11d; the session, the demo switch and the first-run
-     * flag come from `authDataModule` and `onboardingDataModule` since KM-11h1.
+     * `SocialRepository`, which `socialModule` constructs since KM-11d (its profile reads the teacher reviews of
+     * `reviewsModule` since KM-11f); the session, the demo switch and the first-run flag come from `authDataModule`
+     * and `onboardingDataModule` since KM-11h1.
      */
     @Test
     fun `the account modules pass the graph check against the release bridges`() {
@@ -69,6 +71,7 @@ class AccountKoinGraphTest {
             KoinModules.bridges,
             listOf(
                 settingsDataModule,
+                reviewsModule,
                 socialModule,
                 authDataModule,
                 authModule,

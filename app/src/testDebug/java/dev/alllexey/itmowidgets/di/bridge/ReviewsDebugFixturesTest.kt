@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
+import dev.alllexey.itmowidgets.feature.reviews.data.TeacherReviewsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
@@ -35,13 +36,16 @@ class ReviewsDebugFixturesTest {
     fun `a fixture replaces the repository and the gateway until its host unloads it`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
+        val release = koin.get<TeacherReviewsRepository>()
 
         val fixture = ReviewsDebugFixtures.load(application, { reviews }, { lessons })
         assertSame(reviews, koin.get<TeacherReviewsRepository>())
         assertSame(lessons, koin.get<TeacherLessonsGateway>())
 
         ReviewsDebugFixtures.unload(application, fixture)
-        assertSame(ReviewsBridgeEntryPoint.from(application).teacherReviewsRepository(), koin.get<TeacherReviewsRepository>())
+        // The module's own single again, not a second repository beside the one the session cleaner holds.
+        assertSame(release, koin.get<TeacherReviewsRepository>())
+        assertSame(koin.get<TeacherReviewsRepositoryImpl>(), koin.get<TeacherReviewsRepository>())
         assertSame(koin.get<TeacherLessonsGatewayImpl>(), koin.get<TeacherLessonsGateway>())
     }
 

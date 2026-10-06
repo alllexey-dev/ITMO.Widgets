@@ -34,6 +34,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewFixtures
+import dev.alllexey.itmowidgets.feature.resources.data.SubjectLinksRepositoryImpl
+import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
 import org.junit.Assert.assertNotSame
@@ -100,8 +102,8 @@ class RecordbookDebugFixturesTest {
         assertSame(koin.get<SubjectLessonsGatewayImpl>(), koin.get<SubjectLessonsGateway>())
         assertSame(koin.get<ScheduleRepositoryImpl>(), koin.get<ScheduleRefreshGateway>())
         assertSame(core.academicTimeProvider(), koin.get<AcademicTimeProvider>())
-        assertSame(ResourcesBridgeEntryPoint.from(application).subjectLinksRepository(), koin.get<SubjectLinksRepository>())
-        assertSame(ReviewsBridgeEntryPoint.from(application).teacherLevelsRepository(), koin.get<TeacherLevelsRepository>())
+        assertSame(koin.get<SubjectLinksRepositoryImpl>(), koin.get<SubjectLinksRepository>())
+        assertSame(koin.get<TeacherLevelsRepositoryImpl>(), koin.get<TeacherLevelsRepository>())
     }
 
     @Test

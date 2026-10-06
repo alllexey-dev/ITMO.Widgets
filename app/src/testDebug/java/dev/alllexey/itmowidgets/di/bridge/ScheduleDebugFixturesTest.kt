@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
@@ -75,10 +76,7 @@ class ScheduleDebugFixturesTest {
         assertSame(core.coreCalendarSync(), koin.get<CalendarSync>())
         assertSame(koin.get<LessonFriendsRepositoryImpl>(), koin.get<LessonFriendsRepository>())
         assertSame(koin.get<CustomServicesRepositoryImpl>(), koin.get<CustomServicesRepository>())
-        assertSame(
-            ReviewsBridgeEntryPoint.from(application).teacherLevelsRepository(),
-            koin.get<TeacherLevelsRepository>(),
-        )
+        assertSame(koin.get<TeacherLevelsRepositoryImpl>(), koin.get<TeacherLevelsRepository>())
     }
 
     @Test

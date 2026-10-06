@@ -25,7 +25,10 @@ class ReviewsRulesTest {
         const val FEATURE_PREFIX = "dev.alllexey.itmowidgets.feature."
         const val REVIEWS_PACKAGE = "dev.alllexey.itmowidgets.feature.reviews"
 
-        /** The presentation and Koin files LX-2c moved; drops only with the integrator's OK. */
-        const val MIN_COMMON_FILES = 5
+        /**
+         * The presentation and Koin files LX-2c moved and the data KM-11f moved;
+         * drops only with the integrator's OK.
+         */
+        const val MIN_COMMON_FILES = 12
     }
 }

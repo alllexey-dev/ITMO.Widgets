@@ -25,8 +25,10 @@ defines the routes, limits, premoderation and the ISU check.
   lessons with a teacher ([schedule](schedule.md#lessons-with-a-teacher)).
 - `core/navigation/TeacherReviewArgs.kt`: the teacher ISU and full name for the
   editor and the report dialog.
-- `feature/reviews/data`: `TeacherReviewsRepositoryImpl`, the Core mapping,
-  `TeacherLevelsRepositoryImpl` and `TeacherLevelsFileStore`.
+- `feature/reviews/data` (`:shared:feature-reviews` `commonMain`, package
+  `dev.alllexey.itmowidgets.feature.reviews.data`): `TeacherReviewsRepositoryImpl`, the Core mapping,
+  `TeacherLevelsRepositoryImpl` and `TeacherLevelsFileStore`; Koin's `reviewsModule` builds one instance of each
+  repository, and sign-out reaches them as the `reviews` and `teacher-levels` cleaners.
 - `core/ui/TeacherLevelTone.kt`: the dot colour and words of each tone and
   `ImageView.bindLevel`, shared by the profile, the lesson sheet and the subject
   page.
@@ -47,11 +49,12 @@ every call passes `BackendGate.mayCallBackend()`.
 read and mutation. Without it the repository immediately returns
 `AppError.CustomServicesDisabled` and makes no request. Its per-ISU memory cache
 is hidden while the opt-in is off or unknown and cleared when it is disabled or
-the session is cleared. It is a singleton `SessionDataCleaner` so the cleaner,
+the session is cleared. It is a single `SessionDataCleaner` so the cleaner,
 the profile and the editor share one instance.
 
-The opt-in observer runs in `ApplicationScope`. A local generation and a short
-atomic publish check prevent requests or opt-in reads from an older connection
+The opt-in observer runs in the application `CoroutineScope`. The cache is one immutable snapshot (the opt-in, a
+local generation and the entries) that changes only under one `Mutex`, so the non-suspend `cachedReviews` reads it
+without a lock. The generation and the publish check under that lock prevent requests or opt-in reads from an older connection
 from refilling a cleared cache, including an off/on cycle. Cancellation is
 propagated, not converted into a display error.
 
@@ -295,7 +298,8 @@ requests without the opt-in or in the demo.
 summary (unknown tags, blank points, `LOW` confidence, unknown values), opt-in
 and no-network behavior, input checks before the network, mutation routes, the cache and
 `observeUpdates()` after opt-out and session clear, errors and cancellation.
-`TeacherLevelsRepositoryImplTest` and `TeacherLevelsFileStoreTest` cover the
+`TeacherLevelsRepositoryImplTest` and `TeacherLevelsFileStoreTest` (the module's `commonTest`; the 2.2 files in
+`TeacherLevels22GoldenTest`) cover the
 levels: the opt-in, the day cache, batches, the ISU range, failures and answers
 after the opt-in was switched off. `ReviewEditorViewModelTest` and `ReportReviewViewModelTest` cover
 the forms, restoration, suggestions growing with the history, saving with
