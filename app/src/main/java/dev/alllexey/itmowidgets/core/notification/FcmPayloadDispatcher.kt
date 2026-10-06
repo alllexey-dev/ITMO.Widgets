@@ -1,15 +1,16 @@
 package dev.alllexey.itmowidgets.core.notification
 
+import dev.alllexey.itmowidgets.client.error.BackendException
+import dev.alllexey.itmowidgets.client.push.FcmDecoder
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
 import javax.inject.Inject
 
+/**
+ * Routes Backend's data message to the handler of its `type` through Core 2.0's envelope. An unknown type is
+ * recorded and dropped; a message that is not an envelope (not JSON, a JSON `null`, no `type`, a `payload` that is
+ * not an object) is dropped with the fact recorded, as 2.2 dropped it.
+ */
 class FcmPayloadDispatcher @Inject constructor(
     handlers: Set<@JvmSuppressWildcards FcmPayloadHandler>,
     private val diagnostics: AppDiagnostics
@@ -22,19 +23,18 @@ class FcmPayloadDispatcher @Inject constructor(
         try {
             if (json.isBlank() || json.encodeToByteArray().size > MAX_PAYLOAD_BYTES) return
             val envelope = try {
-                decodeEnvelope(json)
-            } catch (_: SerializationException) {
-                // kotlinx puts the input into its message; the payload names people, so only the fact is recorded.
+                FcmDecoder.envelope(json)
+            } catch (_: BackendException.Contract) {
+                // The cause quotes the input, and the payload names people, so only the fact is recorded.
                 diagnostics.warn(TAG, "FCM dispatch failed: malformed message")
                 return
-            } ?: return
+            }
             val handler = handlersByType[envelope.type]
             if (handler == null) {
                 diagnostics.warn(TAG, "Unknown FCM payload type: ${envelope.type}")
                 return
             }
-            val payload = envelope.payload as? JsonObject ?: return
-            handler.handle(payload)
+            handler.handle(envelope.payload)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
@@ -42,20 +42,8 @@ class FcmPayloadDispatcher @Inject constructor(
         }
     }
 
-    /** Null for a JSON null, which 2.2 read as no message at all. */
-    private fun decodeEnvelope(json: String): FcmEnvelope? {
-        val element = ENVELOPE_JSON.parseToJsonElement(json)
-        if (element is JsonNull) return null
-        return ENVELOPE_JSON.decodeFromJsonElement(FcmEnvelope.serializer(), element)
-    }
-
-    /** Backend's `{"type": ..., "payload": {...}}`; a missing type reports as unknown, a missing payload is ignored. */
-    @Serializable
-    private class FcmEnvelope(val type: String? = null, val payload: JsonElement? = null)
-
     companion object {
         const val MAX_PAYLOAD_BYTES = 4096
         private const val TAG = "FcmPayloadDispatcher"
-        private val ENVELOPE_JSON = Json { ignoreUnknownKeys = true }
     }
 }

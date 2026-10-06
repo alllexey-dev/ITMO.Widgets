@@ -1,9 +1,8 @@
 package dev.alllexey.itmowidgets.feature.weblogin.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -12,51 +11,31 @@ import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import javax.inject.Inject
 import kotlinx.coroutines.withContext
-import kotlin.time.toKotlinInstant
 import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
-import dev.alllexey.itmowidgets.core.model.WebLoginPreview as WirePreview
+import dev.alllexey.itmowidgets.client.users.WebLoginPreview as WirePreview
 
+/**
+ * Browser sign-in through Core 2.0. An unknown, used or expired code (404) is [AppError.NotFound]; a 403 is
+ * [AppError.Forbidden], or [AppError.Restricted] for a moderation restriction, as the released app mapped them.
+ */
 class WebLoginRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val users: UsersApi,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers,
 ) : WebLoginRepository {
 
-    override suspend fun preview(code: String): AppResult<WebLoginPreview> = call { widgetsApi.webLoginPreview(code) }
-        .let { result ->
-            when (result) {
-                is AppResult.Success -> result.value?.let { AppResult.Success(it.toModel()) }
-                    ?: AppResult.Failure(AppError.Unknown())
-                is AppResult.Failure -> result
-            }
-        }
+    override suspend fun preview(code: String): AppResult<WebLoginPreview> =
+        call { users.webLoginPreview(code).toModel() }
 
-    override suspend fun approve(challengeId: Uuid): AppResult<Unit> = when (val result = call { widgetsApi.approveWebLogin(challengeId.toJavaUuid()) }) {
-        is AppResult.Success -> AppResult.Success(Unit)
-        is AppResult.Failure -> result
-    }
+    override suspend fun approve(challengeId: Uuid): AppResult<Unit> = call { users.approveWebLogin(challengeId) }
 
-    /** Null data is a valid answer only for calls without a body, like the approval. */
-    private suspend fun <T> call(request: suspend () -> ApiResponse<T>): AppResult<T?> {
+    private suspend fun <T> call(request: suspend () -> T): AppResult<T> {
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
-        val response = when (val result = appResultOf { withContext(dispatchers.io) { request() } }) {
-            is AppResult.Success -> result.value
-            is AppResult.Failure -> return result
-        }
-        return if (response.success) AppResult.Success(response.data) else AppResult.Failure(backendError(response.error?.code))
+        return appResultOf { withContext(dispatchers.io) { request() } }
     }
 
-    private fun backendError(code: String?): AppError = when (code) {
-        "not_found" -> AppError.NotFound
-        "permission_denied" -> AppError.Forbidden
-        "restricted" -> AppError.Restricted
-        else -> AppError.Unknown()
-    }
-
-    private fun WirePreview.toModel() = WebLoginPreview(challengeId.toKotlinUuid(), userAgent?.trim()?.ifEmpty { null },
-        createdAt.toInstant().toKotlinInstant(), expiresAt.toInstant().toKotlinInstant())
+    private fun WirePreview.toModel() =
+        WebLoginPreview(challengeId, userAgent?.trim()?.ifEmpty { null }, createdAt, expiresAt)
 }

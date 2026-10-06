@@ -1,28 +1,25 @@
 package dev.alllexey.itmowidgets.core.notification
 
-import api.myitmo.MyItmo
-import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
-import dev.alllexey.itmowidgets.core.model.UserCapabilities
-import dev.alllexey.itmowidgets.core.model.UserData
-import dev.alllexey.itmowidgets.core.model.fcm.FcmJsonWrapper
-import dev.alllexey.itmowidgets.core.model.fcm.impl.FriendshipEvent
-import dev.alllexey.itmowidgets.core.model.fcm.impl.FriendshipEventPayload
-import dev.alllexey.itmowidgets.core.model.fcm.impl.SportAutoSignLessonsPayload
-import dev.alllexey.itmowidgets.core.model.fcm.impl.SportFreeSignLessonsPayload
+import dev.alllexey.itmowidgets.client.push.FcmDecoder
+import dev.alllexey.itmowidgets.client.push.FriendshipEvent
+import dev.alllexey.itmowidgets.client.push.FriendshipEventPayload
+import dev.alllexey.itmowidgets.client.push.SportAutoSignLessonsPayload
+import dev.alllexey.itmowidgets.client.push.SportFreeSignLessonsPayload
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.contractFixture
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
-import java.time.OffsetDateTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.*
 import org.junit.Test
 
 class FcmPayloadDispatcherTest {
-    /** Core 1.x's Gson writes the envelope exactly as Backend sends it. */
-    private val gson = ItmoWidgetsImpl(MyItmo()).gson
 
     @Test fun `routes independent types and ignores unknown malformed and missing payloads`() = runTest {
         val received = mutableListOf<String>()
@@ -42,31 +39,32 @@ class FcmPayloadDispatcherTest {
         assertEquals(listOf("second2", "first1"), received)
     }
 
-    @Test fun `friendship and sport envelopes reach their handlers with a payload Core 1_x decodes unchanged`() = runTest {
-        val friendship = FriendshipEventPayload(
-            FriendshipEvent.REQUEST_RECEIVED,
-            UserData(100001, "Тестовый пользователь <a&b>", null, emptyList(), UserCapabilities(false, false)),
-            OffsetDateTime.parse("2026-09-15T10:00:00+03:00")
-        )
-        val lessons = """{"sportLessons":[{"id":42,"sectionName":"Секция","start":"2026-09-21T12:00:00+03:00","end":"2026-09-21T13:00:00+03:00"}]}"""
-        val recording = RecordingHandlers(FriendshipEventPayload.TYPE, SportFreeSignLessonsPayload.TYPE, SportAutoSignLessonsPayload.TYPE)
+    @Test fun `Backend's friendship and sport messages reach their handlers with the payload Core 2_0 decodes`() = runTest {
+        val types = listOf(FriendshipEventPayload.TYPE, SportFreeSignLessonsPayload.TYPE, SportAutoSignLessonsPayload.TYPE)
+        val recording = RecordingHandlers(*types.toTypedArray())
         val dispatcher = FcmPayloadDispatcher(recording.handlers, RecordingDiagnostics())
 
-        dispatcher.dispatch(gson.toJson(FcmJsonWrapper(FriendshipEventPayload.TYPE, gson.toJsonTree(friendship))))
-        dispatcher.dispatch("""{"type":"${SportFreeSignLessonsPayload.TYPE}","payload":$lessons}""")
-        dispatcher.dispatch("""{"type":"${SportAutoSignLessonsPayload.TYPE}","payload":$lessons}""")
+        for (type in types) dispatcher.dispatch(fcmData(type).toString())
 
-        assertEquals(3, recording.received.size)
-        val (friendshipType, friendshipPayload) = recording.received[0]
-        assertEquals(FriendshipEventPayload.TYPE, friendshipType)
-        assertEquals(friendship, gson.fromJson(friendshipPayload.toString(), FriendshipEventPayload::class.java))
-        for ((index, type) in listOf(SportFreeSignLessonsPayload.TYPE, SportAutoSignLessonsPayload.TYPE).withIndex()) {
-            val (receivedType, payload) = recording.received[index + 1]
-            assertEquals(type, receivedType)
-            val lesson = gson.fromJson(payload.toString(), SportFreeSignLessonsPayload::class.java).sportLessons.single()
-            assertEquals(42L, lesson.id)
-            assertEquals(OffsetDateTime.parse("2026-09-21T13:00:00+03:00"), lesson.end)
+        assertEquals(types, recording.received.map { it.first })
+        for ((type, payload) in recording.received) assertEquals(fcmData(type)["payload"], payload)
+        val friendship = FcmDecoder.friendshipEvent(recording.received[0].second)
+        assertEquals(FriendshipEvent.REQUEST_RECEIVED, friendship.event)
+        assertEquals(100002, friendship.user.isu)
+        for ((_, payload) in recording.received.drop(1)) {
+            assertEquals(9001L, FcmDecoder.sportFreeSignLessons(payload).sportLessons.first().id)
         }
+    }
+
+    @Test fun `an unknown event of a known type still reaches its handler, which owns the payload`() = runTest {
+        val recording = RecordingHandlers(FriendshipEventPayload.TYPE)
+        val dispatcher = FcmPayloadDispatcher(recording.handlers, RecordingDiagnostics())
+        val known = fcmData(FriendshipEventPayload.TYPE)
+        val payload = JsonObject(known["payload"]!!.jsonObject + ("event" to JsonPrimitive("FUTURE_EVENT")))
+
+        dispatcher.dispatch(JsonObject(known + ("payload" to payload)).toString())
+
+        assertEquals(payload, recording.received.single().second)
     }
 
     @Test fun `an unknown type is recorded and a blank or oversized message is dropped silently`() = runTest {
@@ -86,14 +84,16 @@ class FcmPayloadDispatcherTest {
     }
 
     @Test fun `a malformed message is recorded without its content`() = runTest {
-        val diagnostics = RecordingDiagnostics()
-        val dispatcher = FcmPayloadDispatcher(RecordingHandlers("known").handlers, diagnostics)
+        for (wire in listOf("""{"type":"known","payload":{"name":"Тестовый пользователь"""", """{"payload":{"name":"Тестовый"}}""")) {
+            val diagnostics = RecordingDiagnostics()
+            val dispatcher = FcmPayloadDispatcher(RecordingHandlers("known").handlers, diagnostics)
 
-        dispatcher.dispatch("""{"type":"known","payload":{"name":"Тестовый пользователь"""")
+            dispatcher.dispatch(wire)
 
-        val entry = diagnostics.entries.value.single()
-        assertEquals("FCM dispatch failed: malformed message", entry.message)
-        assertNull(entry.stackTrace)
+            val entry = diagnostics.entries.value.single()
+            assertEquals("FCM dispatch failed: malformed message", entry.message)
+            assertNull(entry.stackTrace)
+        }
     }
 
     @Test fun `one handler failure does not poison the next message and cancellation propagates`() = runTest {
@@ -121,6 +121,10 @@ class FcmPayloadDispatcherTest {
             fail("Cancellation must propagate")
         } catch (_: CancellationException) { }
     }
+
+    /** The `data` string of Backend's golden FCM message of [type], as the FCM service receives it. */
+    private fun fcmData(type: String): JsonObject =
+        Json.parseToJsonElement(contractFixture("fcm/$type.json")).jsonObject["data"]!!.jsonObject
 
     private class RecordingHandlers(vararg types: String) {
         val received = mutableListOf<Pair<String, JsonElement>>()

@@ -6,10 +6,23 @@ import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.UserPrivacySettings
-import dev.alllexey.itmowidgets.core.model.SharingVisibility as ApiSharingVisibility
+import dev.alllexey.itmowidgets.client.users.UserPrivacySettings
+import dev.alllexey.itmowidgets.client.users.SharingVisibility as ApiSharingVisibility
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.network.Core2Harness
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.contractFixture
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.errorEnvelope
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.session
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.testkit.bodyText
+import dev.alllexey.itmowidgets.testkit.respondJson
+import io.ktor.client.engine.mock.MockRequestHandleScope
+import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import kotlinx.serialization.json.Json
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
@@ -24,7 +37,6 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
 import java.io.IOException
-import java.lang.reflect.Proxy
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -108,8 +120,7 @@ class SettingsRepositoryImplTest {
         assertEquals(LocalSettings(), fixture.repository.observeLocalSettings().first())
         assertFalse(fixture.stores.scheduleChecks.getScheduleSportAutoSignEnabled())
         assertFalse(fixture.stores.servicesOptIn.getCustomServicesEnabled())
-        assertEquals(0, fixture.api.mySettingsCalls)
-        assertTrue(fixture.api.updatedSettings.isEmpty())
+        assertTrue(fixture.api.requests.isEmpty())
     }
 
     @Test
@@ -186,72 +197,122 @@ class SettingsRepositoryImplTest {
             SharingSettingsState.Disabled,
             fixture.repository.observeSharingSettings().first()
         )
-        assertEquals(0, fixture.api.mySettingsCalls)
+        assertTrue(fixture.api.requests.isEmpty())
+    }
+
+    @Test
+    fun `the demo session shows the defaults and sends nothing, even with the stored opt-in`() = runTest {
+        val demo = FakeDemoMode(active = true)
+        val fixture = createRepository(demo)
+        fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
+
+        fixture.repository.refreshSharingSettings()
+
+        assertEquals(SharingSettingsState.Content(SharingSettings()), fixture.repository.observeSharingSettings().first())
+        assertEquals(AppResult.Failure(AppError.DemoUnavailable), fixture.repository.setScheduleVisibility(SharingVisibility.ALL))
+        assertTrue(fixture.api.requests.isEmpty())
     }
 
     @Test
     fun `fetches and maps sharing settings`() = runTest {
         val fixture = createRepository()
         fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
-        fixture.api.mySettingsResponse = {
-            ApiResponse.success(
-                UserPrivacySettings(scheduleVisibility = ApiSharingVisibility.NOBODY, sportVisibility = ApiSharingVisibility.FRIENDS)
-            )
-        }
+        fixture.api.mySettings = { respondJson(contractFixture("http/users/myPrivacySettings.json")) }
 
         fixture.repository.refreshSharingSettings()
 
         assertEquals(
             SharingSettingsState.Content(
-                SharingSettings(scheduleVisibility = SharingVisibility.NOBODY, sportVisibility = SharingVisibility.FRIENDS)
+                SharingSettings(
+                    scheduleVisibility = SharingVisibility.FRIENDS,
+                    sportVisibility = SharingVisibility.ALL,
+                    friendsVisibility = SharingVisibility.NOBODY
+                )
             ),
             fixture.repository.observeSharingSettings().first()
         )
-        assertEquals(1, fixture.api.mySettingsCalls)
+        val request = fixture.api.requests.single()
+        assertEquals(HttpMethod.Get, request.method)
+        assertEquals("/api/users/me/privacy", request.url.encodedPath)
+        assertEquals("Bearer stored-access", request.headers[HttpHeaders.Authorization])
     }
 
     @Test
     fun `reports a failed sharing fetch as an error state`() = runTest {
+        for (answer in listOf(
+            errorAnswer(HttpStatusCode.Unauthorized, "unauthorized"),
+            errorAnswer(HttpStatusCode.Forbidden, "restricted"),
+            errorAnswer(HttpStatusCode.ServiceUnavailable, "unavailable")
+        )) {
+            val fixture = createRepository()
+            fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
+            fixture.api.mySettings = answer
+
+            fixture.repository.refreshSharingSettings()
+
+            assertEquals(SharingSettingsState.Error, fixture.repository.observeSharingSettings().first())
+        }
+    }
+
+    @Test
+    fun `a missing audience is an error, never a default a later update would save`() = runTest {
         val fixture = createRepository()
         fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
-        fixture.api.mySettingsResponse = {
-            ApiResponse(
-                success = false,
-                data = null,
-                error = ApiResponse.ErrorDetails("Unavailable", "unavailable")
-            )
+        fixture.api.mySettings = {
+            respondJson("""{"success":true,"data":{"scheduleVisibility":"NOBODY","sportVisibility":"NOBODY"},"error":null}""")
         }
 
         fixture.repository.refreshSharingSettings()
 
-        assertEquals(
-            SharingSettingsState.Error,
-            fixture.repository.observeSharingSettings().first()
-        )
+        assertEquals(SharingSettingsState.Error, fixture.repository.observeSharingSettings().first())
+        assertTrue(fixture.repository.setFriendsVisibility(SharingVisibility.NOBODY) is AppResult.Failure)
+        assertTrue(fixture.api.updatedSettings.isEmpty())
     }
 
     @Test
     fun `updates one sharing field while preserving the other`() = runTest {
         val fixture = createRepository()
         fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
-        fixture.api.mySettingsResponse = {
-            ApiResponse.success(
-                UserPrivacySettings(scheduleVisibility = ApiSharingVisibility.NOBODY, sportVisibility = ApiSharingVisibility.FRIENDS)
-            )
-        }
+        fixture.api.mySettings = { respondPrivacy(privacy(ApiSharingVisibility.NOBODY, ApiSharingVisibility.FRIENDS)) }
         fixture.repository.refreshSharingSettings()
-        fixture.api.updateResponse = { requested -> ApiResponse.success(requested) }
 
         val result = fixture.repository.setScheduleVisibility(SharingVisibility.FRIENDS)
 
         assertEquals(AppResult.Success(Unit), result)
         assertEquals(
-            listOf(UserPrivacySettings(scheduleVisibility = ApiSharingVisibility.FRIENDS, sportVisibility = ApiSharingVisibility.FRIENDS)),
+            listOf(privacy(ApiSharingVisibility.FRIENDS, ApiSharingVisibility.FRIENDS)),
             fixture.api.updatedSettings
         )
         assertEquals(
             SharingSettingsState.Content(
                 SharingSettings(scheduleVisibility = SharingVisibility.FRIENDS, sportVisibility = SharingVisibility.FRIENDS)
+            ),
+            fixture.repository.observeSharingSettings().first()
+        )
+        val put = fixture.api.requests.last()
+        assertEquals(HttpMethod.Put, put.method)
+        assertEquals(
+            Json.parseToJsonElement("""{"scheduleVisibility":"FRIENDS","sportVisibility":"FRIENDS","friendsVisibility":"ALL"}"""),
+            Json.parseToJsonElement(put.bodyText())
+        )
+    }
+
+    @Test
+    fun `shows what Backend saved, not what was asked`() = runTest {
+        val fixture = createRepository()
+        fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
+        fixture.repository.refreshSharingSettings()
+        fixture.api.update = { respondJson(contractFixture("http/users/updateMyPrivacySettings.json")) }
+
+        assertEquals(AppResult.Success(Unit), fixture.repository.setScheduleVisibility(SharingVisibility.NOBODY))
+
+        assertEquals(
+            SharingSettingsState.Content(
+                SharingSettings(
+                    scheduleVisibility = SharingVisibility.ALL,
+                    sportVisibility = SharingVisibility.NOBODY,
+                    friendsVisibility = SharingVisibility.FRIENDS
+                )
             ),
             fixture.repository.observeSharingSettings().first()
         )
@@ -261,13 +322,9 @@ class SettingsRepositoryImplTest {
     fun `restores sharing state when an update fails`() = runTest {
         val fixture = createRepository()
         fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
-        fixture.api.mySettingsResponse = {
-            ApiResponse.success(
-                UserPrivacySettings(scheduleVisibility = ApiSharingVisibility.FRIENDS, sportVisibility = ApiSharingVisibility.NOBODY)
-            )
-        }
+        fixture.api.mySettings = { respondPrivacy(privacy(ApiSharingVisibility.FRIENDS, ApiSharingVisibility.NOBODY)) }
         fixture.repository.refreshSharingSettings()
-        fixture.api.updateResponse = { throw IOException("Offline") }
+        fixture.api.update = { throw IOException("Offline") }
 
         val result = fixture.repository.setSportVisibility(SharingVisibility.FRIENDS)
 
@@ -282,13 +339,31 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
+    fun `a rejected update keeps the saved settings and types the error`() = runTest {
+        val cases = listOf(
+            errorAnswer(HttpStatusCode.Unauthorized, "unauthorized") to AppError.Unauthorized,
+            errorAnswer(HttpStatusCode.Forbidden, "restricted") to AppError.Restricted,
+            errorAnswer(HttpStatusCode.Forbidden, "permission_denied") to AppError.Forbidden
+        )
+        for ((answer, expected) in cases) {
+            val fixture = createRepository()
+            fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
+            fixture.repository.refreshSharingSettings()
+            fixture.api.update = { answer() }
+
+            assertEquals(AppResult.Failure(expected), fixture.repository.setScheduleVisibility(SharingVisibility.NOBODY))
+            assertEquals(SharingSettingsState.Content(SharingSettings()), fixture.repository.observeSharingSettings().first())
+        }
+    }
+
+    @Test
     fun `rejects a sharing update when custom services are disabled`() = runTest {
         val fixture = createRepository()
 
         val result = fixture.repository.setScheduleVisibility(SharingVisibility.FRIENDS)
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), result)
-        assertTrue(fixture.api.updatedSettings.isEmpty())
+        assertTrue(fixture.api.requests.isEmpty())
         assertEquals(
             SharingSettingsState.Disabled,
             fixture.repository.observeSharingSettings().first()
@@ -300,15 +375,15 @@ class SettingsRepositoryImplTest {
         for (schedule in SharingVisibility.entries) for (sport in SharingVisibility.entries) {
             val fixture = createRepository()
             fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
-            fixture.api.mySettingsResponse = {
-                ApiResponse.success(UserPrivacySettings(ApiSharingVisibility.valueOf(schedule.name), ApiSharingVisibility.valueOf(sport.name)))
+            fixture.api.mySettings = {
+                respondPrivacy(privacy(ApiSharingVisibility.valueOf(schedule.name), ApiSharingVisibility.valueOf(sport.name)))
             }
             fixture.repository.refreshSharingSettings()
             assertEquals(SharingSettingsState.Content(SharingSettings(schedule, sport)), fixture.repository.observeSharingSettings().first())
             assertEquals(AppResult.Success(Unit), fixture.repository.setScheduleVisibility(SharingVisibility.ALL))
-            assertEquals(UserPrivacySettings(ApiSharingVisibility.ALL, ApiSharingVisibility.valueOf(sport.name)), fixture.api.updatedSettings.last())
+            assertEquals(privacy(ApiSharingVisibility.ALL, ApiSharingVisibility.valueOf(sport.name)), fixture.api.updatedSettings.last())
             assertEquals(AppResult.Success(Unit), fixture.repository.setSportVisibility(SharingVisibility.NOBODY))
-            assertEquals(UserPrivacySettings(ApiSharingVisibility.ALL, ApiSharingVisibility.NOBODY), fixture.api.updatedSettings.last())
+            assertEquals(privacy(ApiSharingVisibility.ALL, ApiSharingVisibility.NOBODY), fixture.api.updatedSettings.last())
         }
     }
 
@@ -316,7 +391,7 @@ class SettingsRepositoryImplTest {
     fun `unavailable privacy API is an error not invented legacy or default values`() = runTest {
         val fixture = createRepository()
         fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
-        fixture.api.mySettingsResponse = { throw IOException("Privacy endpoint unavailable") }
+        fixture.api.mySettings = { throw IOException("Privacy endpoint unavailable") }
         fixture.repository.refreshSharingSettings()
         assertEquals(SharingSettingsState.Error, fixture.repository.observeSharingSettings().first())
         assertTrue(fixture.repository.setScheduleVisibility(SharingVisibility.ALL) is AppResult.Failure)
@@ -331,22 +406,25 @@ class SettingsRepositoryImplTest {
         fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
         fixture.repository.refreshSharingSettings()
         assertEquals(AppResult.Success(Unit), fixture.repository.setFriendsVisibility(SharingVisibility.NOBODY))
-        assertEquals(UserPrivacySettings(ApiSharingVisibility.FRIENDS, ApiSharingVisibility.FRIENDS, ApiSharingVisibility.NOBODY), fixture.api.updatedSettings.last())
+        assertEquals(
+            privacy(ApiSharingVisibility.FRIENDS, ApiSharingVisibility.FRIENDS, ApiSharingVisibility.NOBODY),
+            fixture.api.updatedSettings.last()
+        )
         fixture.repository.setScheduleVisibility(SharingVisibility.ALL)
         assertEquals(ApiSharingVisibility.NOBODY, fixture.api.updatedSettings.last().friendsVisibility)
-        fixture.api.updateResponse = { throw IOException("offline") }
+        fixture.api.update = { throw IOException("offline") }
         assertTrue(fixture.repository.setFriendsVisibility(SharingVisibility.ALL) is AppResult.Failure)
         val saved = fixture.repository.observeSharingSettings().first() as SharingSettingsState.Content
         assertEquals(SharingVisibility.NOBODY, saved.settings.friendsVisibility)
         assertEquals(SharingVisibility.ALL, saved.settings.scheduleVisibility)
     }
 
-    private fun createRepository(): Fixture {
+    private fun createRepository(demo: DemoMode = noDemo()): Fixture {
         val stores = PreferenceStores(InMemoryPreferencesDataStore())
-        val fakeApi = FakePrivacySettingsApi()
+        val backend = PrivacyBackend()
         return Fixture(
             stores = stores,
-            api = fakeApi,
+            api = backend,
             repository = SettingsRepositoryImpl(
                 stores.servicesOptIn,
                 stores.scheduleChecks,
@@ -356,9 +434,9 @@ class SettingsRepositoryImplTest {
                 stores.markSources,
                 stores.homeLayout,
                 stores.deviceHints,
-                DefaultBackendGate(stores.servicesOptIn, noDemo()),
-                fakeApi.instance,
-                noDemo(),
+                DefaultBackendGate(stores.servicesOptIn, demo),
+                backend.harness.client.users,
+                demo,
                 dispatchers
             )
         )
@@ -366,7 +444,7 @@ class SettingsRepositoryImplTest {
 
     private data class Fixture(
         val stores: PreferenceStores,
-        val api: FakePrivacySettingsApi,
+        val api: PrivacyBackend,
         val repository: SettingsRepositoryImpl
     )
 
@@ -383,38 +461,44 @@ class SettingsRepositoryImplTest {
         }
     }
 
-    private class FakePrivacySettingsApi {
-        var mySettingsCalls: Int = 0
-            private set
+    /** `/api/users/me/privacy` over Core 2.0 and MockEngine; the 2.2 wire default for friends is `ALL`. */
+    private class PrivacyBackend {
         val updatedSettings = mutableListOf<UserPrivacySettings>()
-        var mySettingsResponse: () -> ApiResponse<UserPrivacySettings> = {
-            ApiResponse.success(
-                UserPrivacySettings(scheduleVisibility = ApiSharingVisibility.FRIENDS, sportVisibility = ApiSharingVisibility.FRIENDS)
-            )
+        var mySettings: MockRequestHandleScope.() -> HttpResponseData = {
+            respondPrivacy(privacy(ApiSharingVisibility.FRIENDS, ApiSharingVisibility.FRIENDS))
         }
-        var updateResponse: (UserPrivacySettings) -> ApiResponse<UserPrivacySettings> = { requested ->
-            ApiResponse.success(requested)
+        var update: MockRequestHandleScope.(UserPrivacySettings) -> HttpResponseData = { requested ->
+            respondPrivacy(requested)
         }
 
-        val instance: ItmoWidgetsApi = Proxy.newProxyInstance(
-            ItmoWidgetsApi::class.java.classLoader,
-            arrayOf(ItmoWidgetsApi::class.java)
-        ) { proxy, method, arguments ->
-            when (method.name) {
-                "myPrivacySettings" -> {
-                    mySettingsCalls += 1
-                    mySettingsResponse()
-                }
-                "updateMyPrivacySettings" -> {
-                    val requested = arguments?.first() as UserPrivacySettings
+        val harness = Core2Harness(session()) { request ->
+            assertEquals("/api/users/me/privacy", request.url.encodedPath)
+            when (request.method) {
+                HttpMethod.Get -> mySettings()
+                HttpMethod.Put -> {
+                    val requested = Json.decodeFromString(UserPrivacySettings.serializer(), request.bodyText())
                     updatedSettings += requested
-                    updateResponse(requested)
+                    update(requested)
                 }
-                "equals" -> proxy === arguments?.firstOrNull()
-                "hashCode" -> System.identityHashCode(proxy)
-                "toString" -> "FakePrivacySettingsApi"
-                else -> error("Unexpected ItmoWidgetsApi call: ${method.name}")
+                else -> error("Unexpected privacy call: ${request.method.value}")
             }
-        } as ItmoWidgetsApi
+        }
+
+        val requests: List<HttpRequestData> get() = harness.backendRequests
+    }
+
+    private companion object {
+        fun privacy(
+            schedule: ApiSharingVisibility,
+            sport: ApiSharingVisibility,
+            friends: ApiSharingVisibility = ApiSharingVisibility.ALL
+        ) = UserPrivacySettings(scheduleVisibility = schedule, sportVisibility = sport, friendsVisibility = friends)
+
+        fun MockRequestHandleScope.respondPrivacy(settings: UserPrivacySettings): HttpResponseData = respondJson(
+            """{"success":true,"data":${Json.encodeToString(UserPrivacySettings.serializer(), settings)},"error":null}"""
+        )
+
+        fun errorAnswer(status: HttpStatusCode, code: String): MockRequestHandleScope.() -> HttpResponseData =
+            { respondJson(errorEnvelope(code), status) }
     }
 }

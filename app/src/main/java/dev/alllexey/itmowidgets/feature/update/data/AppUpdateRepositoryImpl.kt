@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.update.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.app.AppApi
+import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
@@ -21,10 +22,11 @@ import kotlinx.coroutines.withContext
  *
  * The check is gated on the backend opt-in like every other backend call: the
  * endpoint itself is unauthenticated, but the client attaches the MyITMO token
- * to whatever it sends there.
+ * to whatever it sends there. It asks for the Android values by name; a Backend
+ * that ignores the platform answers them anyway.
  */
 class AppUpdateRepositoryImpl @Inject constructor(
-    private val widgetsApi: ItmoWidgetsApi,
+    private val app: AppApi,
     private val backend: BackendGate,
     private val utilityStorage: UtilityStorage,
     private val installedVersion: AppVersionName,
@@ -63,7 +65,7 @@ class AppUpdateRepositoryImpl @Inject constructor(
     }
 
     private suspend fun fetchVersionInfo() = try {
-        withContext(dispatchers.io) { widgetsApi.appVersionInfo().data }
+        withContext(dispatchers.io) { app.versionInfo(DevicePlatform.ANDROID) }
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {

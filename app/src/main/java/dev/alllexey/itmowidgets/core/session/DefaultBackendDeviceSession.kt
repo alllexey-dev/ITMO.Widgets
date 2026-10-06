@@ -1,18 +1,24 @@
 package dev.alllexey.itmowidgets.core.session
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.device.DeviceApi
+import dev.alllexey.itmowidgets.client.device.DevicePlatform
+import dev.alllexey.itmowidgets.client.device.RegisterDeviceRequest
+import dev.alllexey.itmowidgets.client.device.UnregisterDeviceRequest
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.model.RegisterDeviceRequest
-import dev.alllexey.itmowidgets.core.model.UnregisterDeviceRequest
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import kotlinx.coroutines.withContext
 
+/**
+ * The push registration of this installation through Core 2.0. It names the platform and leaves `alertsAllowed`
+ * absent: Backend reads that as allowed, which is what every Android row meant before 2.3. Whether the user allowed
+ * notifications on this device never decides it.
+ */
 class DefaultBackendDeviceSession(
     private val gate: BackendGate,
     private val utilityStorage: UtilityStorage,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val devices: DeviceApi,
     private val deviceName: String,
     private val currentUser: CurrentUserProvider,
     private val demo: DemoMode,
@@ -26,13 +32,13 @@ class DefaultBackendDeviceSession(
             ?: return
 
         withContext(dispatchers.io) {
-            val response = widgetsApi.registerDevice(
+            devices.register(
                 RegisterDeviceRequest(
                     fcmToken = fcmToken,
-                    deviceName = deviceName
+                    deviceName = deviceName,
+                    platform = DevicePlatform.ANDROID
                 )
             )
-            check(response.success) { "Device registration rejected" }
             utilityStorage.setRegisteredFirebaseToken(fcmToken, ownerIsu)
         }
     }
@@ -43,8 +49,7 @@ class DefaultBackendDeviceSession(
             ?: return
 
         withContext(dispatchers.io) {
-            val response = widgetsApi.unregisterCurrentDevice(UnregisterDeviceRequest(fcmToken))
-            check(response.success) { "Device unregistration rejected" }
+            devices.unregisterCurrent(UnregisterDeviceRequest(fcmToken))
             utilityStorage.setRegisteredFirebaseToken(null)
         }
     }
