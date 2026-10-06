@@ -42,12 +42,29 @@ host_pkg=src/androidHostTest/kotlin/dev/alllexey/itmowidgets/feature/qr
 EXPECTED_BUILD='-itmowidgetsStrings {
 -androidExport("values/strings_qr.xml")
 -}'
-EXPECTED_MODULE=''
-# The pilot also bridges its colour setting and the wall clock.
-EXPECTED_MODULE_TEST='-fun theQrModuleResolvesWithTheBridgedRepositoryPreferencesAndClock() {
+# Since KM-11g1 the pilot binds its data layer in Koin (recipe:feature-data-to-common); a new module starts with
+# the repository bridged from the app, so its Koin module holds only the ViewModel.
+EXPECTED_MODULE='-singleOf<QrCodeLocalDataSourceImpl, AppDirectories, Clock>(::QrCodeLocalDataSourceImpl) {
+-bind<QrCodeLocalDataSource>()
+-}
+-singleOf(::QrCodeRemoteDataSourceImpl) { bind<QrCodeRemoteDataSource>() }
+-singleOf(::QrRepositoryImpl) { bind<QrRepository>() }
+-single<SessionDataCleaner>(named("qr")) { get<QrRepositoryImpl>() }
+-singleOf(::QrWidgetStateStoreImpl) { bind<QrWidgetStateStore>() }
+-singleOf(::QrAppearancePreferencesImpl) { bind<QrAppearancePreferences>() }
+-singleOf(::QrTilePreferencesImpl) { bind<QrTilePreferences>() }'
+# The pilot's graph test gives the core types its data layer needs; a new module's gives the bridged repository.
+EXPECTED_MODULE_TEST='-fun theQrModuleResolvesWithTheBridgedCoreTypes() {
 +fun theQrModuleResolvesWithTheBridgedTypes() {
--QrAppearancePreferences::class,
--Clock::class,'
+-MyItmoClient::class,
+-DataStore::class,
+-AppDirectories::class,
+-QrSettingsPreferences::class,
+-DeviceHintPreferences::class,
+-DemoMode::class,
+-AppDispatchers::class,
+-Clock::class,
++QrRepository::class,'
 EXPECTED_SCREENSHOT_TEST=''
 # runCurrent() needs the opt-in; the pilot's test compiles with a warning instead.
 EXPECTED_VIEWMODEL_TEST='+@OptIn(ExperimentalCoroutinesApi::class)'

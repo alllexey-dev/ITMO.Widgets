@@ -11,6 +11,7 @@ import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import java.io.File
+import java.util.Collections
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
@@ -27,8 +28,10 @@ class Core2Harness(
     private val backend: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
 ) {
     val storage = InMemoryTokenStorage(stored)
-    val requests = mutableListOf<HttpRequestData>()
-    val backendRequests: List<HttpRequestData> get() = requests.filter { it.url.host != ITMO_ID_HOST }
+    /** Synchronized: MockEngine answers concurrent requests (a repository's `async` calls) on several threads. */
+    val requests: MutableList<HttpRequestData> = Collections.synchronizedList(mutableListOf())
+    val backendRequests: List<HttpRequestData>
+        get() = synchronized(requests) { requests.filter { it.url.host != ITMO_ID_HOST } }
 
     private val engine = MockEngine { request ->
         requests += request

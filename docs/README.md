@@ -19,6 +19,8 @@ Everything here describes the current state of the apps. History is in
   cross-cutting decisions, testing conventions.
 - [Design](design.md) — visual language, components, states, verification matrix.
 - [Settings](settings.md) — the complete user-facing settings contract.
+- [iOS app](ios.md) — the SwiftUI shell, the `Shared` framework, toolchain
+  pins, build and verification.
 
 ## Process
 
@@ -34,6 +36,18 @@ Everything here describes the current state of the apps. History is in
   how `v2.3/next` reaches the default branches.
 - [Release checklist](process/release-checklist.md) — the order and checks of
   a release, with the owner's steps marked.
+
+## Recipes
+
+- [Recipes](recipes/README.md) — durable how-tos for repeated Android and
+  shared-module work, and the feature module generator.
+- [Background check](recipes/background-check.md) — a periodic or one-off
+  WorkManager check from worker to iOS mapping.
+- [Screen in a shared module](recipes/shared-module-screen.md) — a stateless
+  CMP screen in `shared/feature-<x>` with its route, ViewModel, Koin module and
+  goldens.
+- [Endpoint end to end](recipes/endpoint-end-to-end.md) — a Backend route or a
+  MyITMO endpoint from its source of truth to the screen.
 
 ## Features
 
