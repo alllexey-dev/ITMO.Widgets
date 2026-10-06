@@ -34,6 +34,9 @@ targets:
       - path: Sources
       # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20).
       - path: Shared
+      # The sign-in page's token interceptor (IO-07a, SP-21 path (a)): Android's asset by path, never a copy.
+      - path: ../app/src/main/assets/token_refresh_interceptor.js
+        buildPhase: resources
     configFiles:
       Debug: Config/App.xcconfig
       Release: Config/App.xcconfig
@@ -140,6 +143,10 @@ schemes:
     test:
       config: Debug
       gatherCoverageData: false
+      # The host app of the hosted tests runs the signed-in fixture shell, so it never opens the ITMO.ID page
+      # (IO-07a); the tests build their own sessions. XCUITest launches set their own arguments.
+      commandLineArguments:
+        "-itmoShellSession signed-in": true
       targets:
         - name: ITMOWidgetsTests
           parallelizable: false

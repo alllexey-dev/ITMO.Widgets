@@ -2,23 +2,32 @@ import Foundation
 import Shared
 import SwiftUI
 
-/// Fixture mode of the shell (IO-06b): placeholder roots, the session gate and the demo banner without Kotlin. The
-/// placeholders stand in for the CMP screens the feature cards host (IO-09x; the QR pass is CMP since IO-21), so
-/// they draw their own top bar under the compose chrome.
+/// Fixture mode of the shell (IO-06b): placeholder roots, and in a Debug build a fixture session gate and demo
+/// banner without Kotlin. The placeholders stand in for the CMP screens the feature cards host (IO-09x; the QR pass is
+/// CMP since IO-21), so they draw their own top bar under the compose chrome.
 enum ShellFixtures {
-    /// The launch argument that picks the fixture session: `-itmoShellSession loading|signed-out|demo|signed-in`.
+    /// The launch argument that picks a fixture session instead of the shared one:
+    /// `-itmoShellSession loading|signed-out|demo|signed-in`.
     static let sessionArgument = "itmoShellSession"
 
-    /// The session from the launch arguments, signed in without one.
-    static func sessionState(_ defaults: UserDefaults = .standard) -> ShellSessionState {
-        defaults.string(forKey: sessionArgument).flatMap(ShellSessionState.init(rawValue:)) ?? .signedIn
+    /// The fixture session from the launch arguments; nil without one, or in a Release build.
+    static func sessionState(_ defaults: UserDefaults = .standard) -> ShellSessionState? {
+        #if DEBUG
+        defaults.string(forKey: sessionArgument).flatMap(ShellSessionState.init(rawValue:))
+        #else
+        nil
+        #endif
     }
 }
 
-/// A tab root: the tab's title in its own top bar and the tab's empty state; home has the entry to the QR pass.
+/// A tab root: the tab's title in its own top bar and the tab's empty state; home has the entry to the QR pass, me
+/// the sign-out (with Android's confirmation) until the Compose Me tab is hosted.
 struct FixtureRootScreen: View {
     let tab: ShellTab
     let router: AppRouter
+    var signOut: (() -> Void)?
+
+    @State private var confirmsSignOut = false
 
     var body: some View {
         FixtureComposeScreen(title: tab.title) {
@@ -30,6 +39,28 @@ struct FixtureRootScreen: View {
                 .padding(.horizontal, ItmoSpacing.screenMargin)
                 .accessibilityIdentifier("home.openQr")
             }
+            if tab == .me, let signOut {
+                ItmoProgressButton(title: AppStrings.string("me_sign_out"), symbol: .logout) {
+                    confirmsSignOut = true
+                }
+                .padding(.horizontal, ItmoSpacing.screenMargin)
+                .accessibilityIdentifier("me.signOut")
+                .confirmationDialog(
+                    Text(verbatim: AppStrings.string("me_sign_out_confirm_title")),
+                    isPresented: $confirmsSignOut,
+                    titleVisibility: .visible
+                ) {
+                    Button(role: .destructive, action: signOut) {
+                        Text(verbatim: AppStrings.string("me_sign_out"))
+                    }
+                    .accessibilityIdentifier("me.signOut.confirm")
+                    Button(role: .cancel) {} label: {
+                        Text(verbatim: AppStrings.string("common_cancel"))
+                    }
+                } message: {
+                    Text(verbatim: AppStrings.string("me_sign_out_confirm_message"))
+                }
+            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("shell.root.\(tab.rawValue)")
@@ -38,7 +69,7 @@ struct FixtureRootScreen: View {
     }
 }
 
-/// The signed-out gate: IO-07 replaces it with the sign-in screen.
+/// The signed-out gate of a fixture session; the shared session shows `ItmoSignInScreen`.
 struct FixtureSignInGate: View {
     let signIn: () -> Void
 

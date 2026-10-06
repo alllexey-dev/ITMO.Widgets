@@ -2,9 +2,9 @@
 
 The iOS client is a SwiftUI shell around the shared Compose Multiplatform screens, with WidgetKit extensions and a
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
-umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with placeholder roots and a
-fixture session gate (see Shell and routes) over the shared session, the QR pass is its first Compose screen, the
-widget bundle is empty and the notification service passes notifications through unchanged.
+umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with placeholder roots, gated on
+the shared session with the ITMO.ID sign-in page (see Shell and routes, Sign-in), the QR pass is its first Compose
+screen, the widget bundle is empty and the notification service passes notifications through unchanged.
 
 ## Prerequisites
 
@@ -125,10 +125,9 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 
 ## Shell and routes
 
-The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Until IO-07a gates it on the shared
-`SessionRepository` and the IO-09x cards host the tab roots, its roots are placeholders and its session gate and
-demo banner run on a fixture session; the Compose screens behind it (the QR pass) run on the shared session (see
-Core graph).
+The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Its session gate and demo banner follow
+the shared `SessionRepository` (see Core graph); until the IO-09x cards host the tab roots, the roots are
+placeholders, and the me root holds the sign-out (Android's confirmation, `SessionRepository.signOut()`).
 
 - Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
   sport, me. The recordbook is declared but hidden until IO-09d2 (no placeholder reaches App Review); home is
@@ -136,10 +135,14 @@ Core graph).
   tab bar only, with no swipe between them (owner decision 2026-10-06; IO-SW1 dropped, see design.md "Tab swipe").
 - Stacks and sheets. Each tab has one `NavigationStack` whose path the router holds; sheets open at the medium
   detent and drag to large.
-- Session gate. No tab bar while the session is loading or signed out; the demo banner (`ItmoDemoBanner`) sits
-  above the tab bar, below the tab's stack, while the demo session is open. The fixture session comes from the launch argument
-  `-itmoShellSession loading|signed-out|demo|signed-in` (signed in without it); UI tests pass it through
-  `XCUIApplication.itmo(session:)`.
+- Session gate. `ShellSession` maps `SessionRepository.state` through `SessionGateway`: `Initializing` and
+  `SigningOut` show the loading gate, `SignedOut` and `ReauthenticationRequired` the sign-in page (see Sign-in), a
+  signed-in session the tabs, the demo one with the demo banner (`ItmoDemoBanner`) above the tab bar, below the
+  tab's stack. The banner's sign-in is `SessionRepository.signOut()`, which leaves the demo for the sign-in page as
+  on Android. A Debug build launched with `-itmoShellSession loading|signed-out|demo|signed-in` runs a fixture
+  session instead, whose signed-out gate signs in with one tap; UI tests pass it through
+  `XCUIApplication.itmo(session:)`, and the scheme's test action passes `signed-in` to the host app of the hosted
+  tests, so they never open the ITMO.ID page.
 - Chrome rule (the owner may veto at T12). A CMP route draws its own DS-03 top bar and hides the SwiftUI navigation
   bar (`shellChrome(.compose)`); a SwiftUI screen keeps the native bar (`.native`). Hiding the bar turns UIKit's
   edge swipe back off, so the compose chrome turns it on again for the stack above its root;
@@ -253,6 +256,20 @@ inside `FileCrossProcessLock("myitmo-refresh")` and re-reads the item once it ho
 notification service find the same expired token only the first refreshes. A value that does not parse is dropped
 (signed out); a Keychain failure is thrown and drops nothing.
 
+Sign-in (IO-07a, SP-21 path (a)). The signed-out gate is `ItmoSignInScreen` (`Sources/Features/Auth/`): my.itmo.ru
+in a `WKWebView` on `WKWebsiteDataStore.default()`, where the user types the credentials on ITMO.ID's own pages.
+Android's `app/src/main/assets/token_refresh_interceptor.js` is bundled by path (`project.yml`, no copy) and runs
+at document start in the main frame, after a bridge script that defines `window.ItmoAuthBridge` only on
+`https://my.itmo.ru/login/callback`; its `postTokens` goes to the `postTokens` script message handler, which takes a
+string from the main frame of `https://my.itmo.ru` only, and the model hands it to
+`SessionRepository.completeItmoIdLogin` only while the page is the callback (`ItmoAuthUrls.isTokenCallback`,
+Android's `ItmoAuthUrlPolicy`), one hand-over at a time. The main frame stays on https pages
+(`HttpsNavigationPolicy`, as on Android, for VK and other providers); no new windows. A failed page or sign-in shows
+an error with a retry (`auth_web_error`, Android's `auth_error_*` mapping); a retry reloads the sign-in page. The
+website data is not cleared before the page loads, unlike Android: sign-out has cleared it, and an expired session
+keeps ITMO.ID's SSO cookies for the re-sign-in. Path (b) (own PKCE with `decidePolicyFor`, SP-21's recommendation)
+needs the code exchange in shared Kotlin first; IO-07b moves the page onto `InteractiveLoginViewModel`.
+
 Sign-out. Three `SessionDataCleaner`s run with the shared ones: the Keychain (every item of the service), the App
 Group container (every file but the `locks` directory) and WebKit's website data, which Swift removes through
 `IosCoreHost.clearWebsiteData` (`WKWebsiteDataStore`, as Android clears its WebView data).
@@ -274,8 +291,9 @@ the Darwin engine, `MyItmoClient`, Core 2.0's `BackendClient`, `PlatformActions`
   work, notifications or widgets to stop); push token sync and device registration are no-ops until IO-13a, the
   Backend identity upload until an iOS card turns custom services on. `AppNotifier` is bound by the card that needs
   it.
-- Launch. `App.init` calls `SessionRepository.initialize()` after the graph starts. A Debug build launched with
-  `-itmoDemo` then opens the demo session unless it is open (`startDemo()`); every UI test passes it through
+- Launch. `App.init` starts the graph, builds the shell's session, then calls `SessionRepository.initialize()`. A
+  Debug build launched with `-itmoDemo` first opens the demo session unless `DemoMode` is already on
+  (`startDemo()`), so the gate never passes the sign-in page; every UI test passes it through
   `XCUIApplication.itmo()`, until IO-07b's five taps.
 - `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
   controller for the share sheet.
