@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.blocks
 import dev.alllexey.itmowidgets.core.result.AppResult
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
@@ -18,7 +17,7 @@ import kotlinx.coroutines.launch
 data class SubjectLinksUpdate(val links: SubjectLinksState, val canVote: Boolean)
 
 /** Links and votes of the subject page. One instance serves one page and keeps the order its rows were shown in. */
-class SubjectLinksLoader @Inject constructor(private val repository: SubjectLinksRepository) {
+class SubjectLinksLoader(private val repository: SubjectLinksRepository) {
     /** The order of the ranked links while the page is open, so a vote does not change which three are shown. */
     private val order = StableOrder()
 

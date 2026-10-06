@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
@@ -32,12 +31,13 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiStat
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @AndroidEntryPoint
 class RecordbookFragment : Fragment() {
     private var _binding: FragmentRecordbookBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: RecordbookViewModel by viewModels()
+    private val viewModel: RecordbookViewModel by viewModel()
     private lateinit var adapter: RecordbookAdapter
     private var lastRefreshError: AppError? = null
     private var lastBarsError: AppError? = null

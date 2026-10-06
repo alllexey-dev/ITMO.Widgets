@@ -561,8 +561,9 @@ class SubjectHubAdapter(
             binding.progress.isVisible = progress.limit != null
             binding.progress.setProgressCompat(progress.progress, false)
             val minimum = control.minimum?.takeIf { it > 0 }
-            val minimumMet = progress.value != null && minimum?.let { progress.value >= it } == true
-            val belowMinimum = progress.value != null && minimum != null && progress.value < minimum
+            val score = progress.value
+            val minimumMet = score != null && minimum?.let { score >= it } == true
+            val belowMinimum = score != null && minimum != null && score < minimum
             val completed = progress.isAvailable && progress.value!! >= progress.limit!!
             binding.progress.setIndicatorColor(when {
                 belowMinimum -> context.color.resolve(androidx.appcompat.R.attr.colorError)

@@ -20,7 +20,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import androidx.core.graphics.ColorUtils
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -74,6 +73,7 @@ import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 
 @RunWith(AndroidJUnit4::class)
 class RecordbookVisualTest {
@@ -513,7 +513,7 @@ class RecordbookVisualTest {
         withFixture(Phase.MIDDLE, Appearances.light.toRecordbook()) { scenario ->
             scenario.onActivity { activity ->
                 val fragment = activity.supportFragmentManager.findFragmentByTag(RecordbookPreviewActivity.ROOT_TAG)!!
-                ViewModelProvider(fragment)[RecordbookViewModel::class.java].selectPeriod(1, 1)
+                fragment.getViewModel<RecordbookViewModel>().selectPeriod(1, 1)
             }
             settle()
             openSubject(scenario, "Математический")
@@ -600,7 +600,7 @@ class RecordbookVisualTest {
             screenshot("sport-recovered")
             repository.hasSportPeriod = false
             scenario.onActivity {
-                ViewModelProvider(it.supportFragmentManager.findFragmentByTag("detail")!!)[RecordbookSubjectViewModel::class.java].refresh(RefreshMode.Pull)
+                it.supportFragmentManager.findFragmentByTag("detail")!!.getViewModel<RecordbookSubjectViewModel>().refresh(RefreshMode.Pull)
             }
             settle()
             scenario.onActivity {
@@ -919,7 +919,7 @@ class RecordbookVisualTest {
             repository.pending = pending
             scenario.onActivity { activity ->
                 val fragment = activity.supportFragmentManager.findFragmentByTag(RecordbookPreviewActivity.ROOT_TAG)!!
-                ViewModelProvider(fragment)[RecordbookViewModel::class.java].selectPeriod(1, 1)
+                fragment.getViewModel<RecordbookViewModel>().selectPeriod(1, 1)
             }
             settle()
             screenshot("state-loading")
@@ -939,7 +939,7 @@ class RecordbookVisualTest {
             repository.failure = true
             scenario.onActivity { activity ->
                 val fragment = activity.supportFragmentManager.findFragmentByTag(RecordbookPreviewActivity.ROOT_TAG)!!
-                ViewModelProvider(fragment)[RecordbookViewModel::class.java].selectPeriod(1, 2)
+                fragment.getViewModel<RecordbookViewModel>().selectPeriod(1, 2)
             }
             settle()
             screenshot("state-error")

@@ -142,7 +142,7 @@ class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit)
                 })
                 // Bind final geometry atomically; recycled rows must never animate another subject's score.
                 binding.progress.setProgressCompat(progress.progress, false)
-                context.getString(R.string.recordbook_points_out_of, formatRecordbookNumber(progress.value), "100")
+                context.getString(R.string.recordbook_points_out_of, formatRecordbookNumber(progress.value!!), "100")
             }
             binding.root.contentDescription = listOf(
                 if (item.isNew) context.getString(R.string.recordbook_subject_new) else "",

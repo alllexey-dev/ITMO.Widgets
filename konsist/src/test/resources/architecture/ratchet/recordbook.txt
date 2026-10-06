@@ -1,8 +1,5 @@
 # Known violations in feature.recordbook, KN-01c. Lines only go away: delete yours when the code is fixed
 # (a stale line fails its rule) and never add one. Format and rules: vibe/v2.3/recipes/konsist-rule.md.
 
-domain-imports-javax-inject dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
-domain-imports-javax-inject dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
-
 entry-point-accessors dev.alllexey.itmowidgets.feature.recordbook.work.BarsCookieProbeWorker
 entry-point-accessors dev.alllexey.itmowidgets.feature.recordbook.work.MarksWorker

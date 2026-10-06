@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.recordbook.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.presentation.BusyKeys
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
@@ -29,7 +28,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.domain.withBars
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -47,8 +45,7 @@ import kotlinx.datetime.number
  * One subject page: the MyITMO subject with its controls (BARS values over them when the list had a journal), and the
  * hub below it. The hub's lessons, links, sheet total and teacher tones come from their loaders.
  */
-@HiltViewModel
-class RecordbookSubjectViewModel @Inject constructor(
+class RecordbookSubjectViewModel(
     private val repository: RecordbookRepository,
     private val bars: BarsRecordbookRepository,
     savedStateHandle: SavedStateHandle,

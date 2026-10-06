@@ -10,7 +10,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -39,13 +38,14 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** One page per subject: the result, links, chats, scores, teachers and the nearest lessons. */
 @AndroidEntryPoint
 class RecordbookSubjectFragment : Fragment() {
     private var _binding: FragmentRecordbookSubjectBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: RecordbookSubjectViewModel by viewModels()
+    private val viewModel: RecordbookSubjectViewModel by viewModel()
     private lateinit var adapter: SubjectHubAdapter
     private val barsLogin = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == Activity.RESULT_OK) viewModel.refresh(RefreshMode.Force)

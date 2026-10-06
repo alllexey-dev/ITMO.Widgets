@@ -3,12 +3,10 @@ package dev.alllexey.itmowidgets.feature.recordbook.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
-import javax.inject.Inject
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,8 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-@HiltViewModel
-class BarsLoginViewModel @Inject constructor(
+class BarsLoginViewModel(
     private val repository: BarsSessionRepository,
     private val savedState: SavedStateHandle
 ) : ViewModel() {

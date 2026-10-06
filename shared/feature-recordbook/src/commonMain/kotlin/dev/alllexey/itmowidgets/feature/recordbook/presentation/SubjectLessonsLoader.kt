@@ -10,7 +10,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
@@ -27,7 +26,7 @@ data class SubjectLessonsUpdate(val lessons: SubjectLessonsState, val teachers: 
  * The subject's lessons in the next [WINDOW_DAYS] of the own schedule and the schedule subject they belong to: a
  * stored binding, an exact match, or a proposal the viewer confirms or rejects. One instance serves one page.
  */
-class SubjectLessonsLoader @Inject constructor(
+class SubjectLessonsLoader(
     private val lessonsGateway: SubjectLessonsGateway,
     private val scheduleRefresh: ScheduleRefreshGateway,
     private val bindings: SubjectBindingStore,
