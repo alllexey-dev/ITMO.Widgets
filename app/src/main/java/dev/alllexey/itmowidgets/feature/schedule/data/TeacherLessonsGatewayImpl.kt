@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
-import api.myitmo.MyItmoApi
+import dev.alllexey.itmoapi.core.requireResult
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.network.toAppError
@@ -25,8 +26,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
-import kotlinx.datetime.toJavaLocalDate
-import retrofit2.HttpException
 
 /**
  * Asks for every week of [StudyWeeks.sampled] at once. Weeks that ended before today never change: they are kept on
@@ -34,7 +33,7 @@ import retrofit2.HttpException
  */
 @Singleton
 class TeacherLessonsGatewayImpl @Inject constructor(
-    private val api: MyItmoApi,
+    private val myItmo: MyItmoClient,
     private val store: TeacherWeeksFileStore,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
@@ -118,20 +117,17 @@ class TeacherLessonsGatewayImpl @Inject constructor(
         emptyMap()
     }.also { finished = it }
 
-    private fun request(week: ClosedRange<LocalDate>): List<WeekLesson> {
-        val response = api.getPersonalSchedule(week.start.toJavaLocalDate(), week.endInclusive.toJavaLocalDate()).execute()
-        if (!response.isSuccessful) throw HttpException(response)
-        return response.body()?.data.orEmpty()
+    private suspend fun request(week: ClosedRange<LocalDate>): List<WeekLesson> =
+        myItmo.schedule.getPersonalSchedule(week.start, week.endInclusive).requireResult()
             .sortedByDescending { it.date }
             .flatMap { day ->
-                day.lessons.orEmpty()
+                day.lessons
                     .filter { it.flowTypeId == ACADEMIC_FLOW }
                     .mapNotNull { lesson ->
                         lesson.teacherId?.let { WeekLesson(it, lesson.flowId.toLong(), lesson.subject?.trim().orEmpty()) }
                     }
             }
             .distinct()
-    }
 
     private fun Map<LocalDate, List<WeekLesson>>.lessonsWith(teacherIsu: Int): TeacherLessons {
         val taught = entries.sortedByDescending { it.key }

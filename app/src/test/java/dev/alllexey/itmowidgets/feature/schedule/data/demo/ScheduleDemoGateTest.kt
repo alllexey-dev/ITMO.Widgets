@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.demo
 
-import api.myitmo.MyItmoApi
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoSportSlots
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
@@ -14,6 +13,7 @@ import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSourceImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.remote.unreachableScheduleMyItmoClient
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.isoDayNumber
@@ -34,8 +34,8 @@ class ScheduleDemoGateTest {
 
     private val demo = FakeDemoMode(active = true)
     private val time = FixedAcademicTime()
-    private val myItmo = unreachable<MyItmoApi>()
-    private val backend = unreachable<ItmoWidgetsApi>()
+    private val myItmo = unreachableScheduleMyItmoClient()
+    private val backend = unreachable<ScheduleApi>()
     // The stored opt-in is on: the demo alone must keep every request local.
     private val gate = FakeBackendGate(optedIn = true, demo)
     private val week = time.today().minus(time.today().dayOfWeek.isoDayNumber - 1L, DateTimeUnit.DAY).let { it..it.plus(6, DateTimeUnit.DAY) }

@@ -10,7 +10,8 @@ import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
-import dev.alllexey.itmowidgets.core.testing.myItmoResponses
+import dev.alllexey.itmowidgets.feature.schedule.data.remote.PERSONAL_SCHEDULE_PATH
+import dev.alllexey.itmowidgets.feature.schedule.data.remote.scheduleMyItmoClient
 import dev.alllexey.itmowidgets.feature.schedule.domain.StudyWeeks
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -47,15 +48,15 @@ class TeacherLessonsGatewayImplTest {
     private val failing = ConcurrentHashMap.newKeySet<LocalDate>()
     /** A week with a gate answers only once the test opens it. */
     private val gates = ConcurrentHashMap<LocalDate, CountDownLatch>()
-    private val api = myItmoResponses { request ->
-        val start = LocalDate.parse(checkNotNull(request.url.queryParameter("date_start")))
-        val end = LocalDate.parse(checkNotNull(request.url.queryParameter("date_end")))
-        assertEquals("/api/schedule/schedule/personal", request.url.encodedPath)
+    private val myItmo = scheduleMyItmoClient { request ->
+        val start = LocalDate.parse(checkNotNull(request.url.parameters["date_start"]))
+        val end = LocalDate.parse(checkNotNull(request.url.parameters["date_end"]))
+        assertEquals(PERSONAL_SCHEDULE_PATH, request.url.encodedPath)
         requests += start..end
         gates[start]?.let { check(it.await(WAIT_SECONDS, TimeUnit.SECONDS)) { "Week $start was never opened" } }
         if (start in failing) 500 to """{"code":500,"data":null,"message":"Synthetic failure"}"""
         else 200 to """{"code":0,"data":[${days[start].orEmpty().joinToString(",")}],"message":null}"""
-    }.api
+    }
     private val file get() = File(folder, "weeks.json")
 
     @Test
@@ -231,7 +232,7 @@ class TeacherLessonsGatewayImplTest {
         assertTrue(requests.isEmpty())
     }
 
-    private fun gateway(demo: DemoMode = noDemo()) = TeacherLessonsGatewayImpl(api, TeacherWeeksFileStore(folder.toOkioPath()), FixedAcademicTime(TODAY.atTime(12, 0)), demo, dispatchers)
+    private fun gateway(demo: DemoMode = noDemo()) = TeacherLessonsGatewayImpl(myItmo, TeacherWeeksFileStore(folder.toOkioPath()), FixedAcademicTime(TODAY.atTime(12, 0)), demo, dispatchers)
 
     private fun day(date: String, vararg lessons: String) =
         """{"day_number":1,"week_number":1,"date":"$date","lessons":[${lessons.joinToString(",")}]}"""

@@ -1,15 +1,30 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.mapper
 
-import dev.alllexey.itmowidgets.core.model.LessonDto
+import dev.alllexey.itmoapi.myitmo.schedule.Lesson as MyItmoLesson
+import dev.alllexey.itmoapi.myitmo.schedule.Schedule as MyItmoDay
+import dev.alllexey.itmowidgets.client.schedule.LessonDto
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
-import kotlinx.datetime.toJavaLocalTime
-import kotlinx.datetime.toKotlinLocalTime
 
-fun api.myitmo.model.schedule.Lesson.toModel(): Lesson {
+/**
+ * The subject name uploaded for a MyITMO lesson without one. A wire value Backend stores and shows to friends, not
+ * app text: byte-identical to Core 1.x `Lesson.toDto` (`utils/Extensions.kt`), so it is not a string resource.
+ */
+private const val UNKNOWN_SUBJECT_NAME = "Неизвестный предмет"
+
+fun MyItmoDay.toModel(): DaySchedule = DaySchedule(
+    dayNumber = dayNumber,
+    weekNumber = weekNumber,
+    date = date,
+    note = note,
+    lessons = lessons.map { it.toModel() }
+)
+
+fun MyItmoLesson.toModel(): Lesson {
     return Lesson(
         pairId = pairId,
         start = LocalTime.parse(timeStart),
@@ -19,7 +34,7 @@ fun api.myitmo.model.schedule.Lesson.toModel(): Lesson {
         note = note?.trim(),
         subjectName = subject.orEmpty().trim(),
         subjectId = subjectId,
-        groupName = group.orEmpty().trim(),
+        groupName = group.trim(),
         flowId = flowId.toLong(),
         flowTypeId = flowTypeId,
         teacherIsu = teacherId,
@@ -36,17 +51,43 @@ fun api.myitmo.model.schedule.Lesson.toModel(): Lesson {
     )
 }
 
+/** The lesson as uploaded to Backend: MyITMO's values untrimmed, as Core 1.x sent them. */
+fun MyItmoLesson.toSyncDto(date: LocalDate): LessonDto {
+    return LessonDto(
+        pairId = pairId,
+        date = date,
+        start = LocalTime.parse(timeStart),
+        end = LocalTime.parse(timeEnd),
+        type = workType,
+        typeId = workTypeId,
+        note = note,
+        subjectName = subject ?: UNKNOWN_SUBJECT_NAME,
+        subjectId = subjectId,
+        groupName = group,
+        flowId = flowId.toLong(),
+        flowTypeId = flowTypeId,
+        teacherIsu = teacherId,
+        teacherFio = teacherName,
+        room = room,
+        building = building,
+        buildingId = bldId,
+        mainBuildingId = mainBldId,
+        format = format,
+        formatId = formatId
+    )
+}
+
 fun LessonDto.toModel(): Lesson {
     return Lesson(
         pairId = pairId,
-        start = start.toKotlinLocalTime(),
-        end = end.toKotlinLocalTime(),
+        start = start,
+        end = end,
         type = type,
         typeId = Lesson.TypeId(typeId),
         note = note?.trim(),
         subjectName = subjectName.trim(),
         subjectId = subjectId,
-        groupName = groupName.orEmpty().trim(),
+        groupName = groupName.trim(),
         flowId = flowId,
         flowTypeId = flowTypeId,
         teacherIsu = teacherIsu,
@@ -60,30 +101,5 @@ fun LessonDto.toModel(): Lesson {
         zoomUrl = null,
         zoomPassword = null,
         zoomInfo = null
-    )
-}
-
-fun Lesson.toDto(date: LocalDate): LessonDto {
-    return LessonDto(
-        pairId = pairId,
-        date = date,
-        start = start.toJavaLocalTime(),
-        end = end.toJavaLocalTime(),
-        type = type,
-        typeId = typeId.raw,
-        note = note,
-        subjectName = subjectName,
-        subjectId = subjectId,
-        groupName = groupName,
-        flowId = flowId,
-        flowTypeId = flowTypeId,
-        teacherIsu = teacherIsu,
-        teacherFio = teacherFio,
-        room = room?.raw,
-        building = building?.raw,
-        buildingId = buildingId,
-        mainBuildingId = mainBuildingId,
-        format = format,
-        formatId = formatId
     )
 }

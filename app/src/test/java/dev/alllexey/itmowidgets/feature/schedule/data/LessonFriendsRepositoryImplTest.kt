@@ -1,27 +1,33 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.noDemo
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.GroupData
-import dev.alllexey.itmowidgets.core.model.UserCapabilities
-import dev.alllexey.itmowidgets.core.model.UserData
+import dev.alllexey.itmowidgets.client.common.GroupData
+import dev.alllexey.itmowidgets.client.common.RelationshipState
+import dev.alllexey.itmowidgets.client.common.UserCapabilities
+import dev.alllexey.itmowidgets.client.common.UserData
+import dev.alllexey.itmowidgets.client.common.UserProfile
+import dev.alllexey.itmowidgets.client.schedule.LessonDto
+import dev.alllexey.itmowidgets.client.schedule.LessonSyncRequest
+import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.model.social.RelationshipState
-import dev.alllexey.itmowidgets.core.model.social.UserProfile
+import dev.alllexey.itmowidgets.core.network.Core2Harness
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.errorEnvelope
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.session
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.noDemo
+import dev.alllexey.itmowidgets.testkit.respondJson
+import io.ktor.client.engine.mock.MockRequestHandleScope
+import io.ktor.client.request.HttpResponseData
+import io.ktor.http.HttpStatusCode
 import java.io.IOException
-import java.lang.reflect.Proxy
-import kotlin.coroutines.Continuation
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toKotlinLocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -37,7 +43,7 @@ class LessonFriendsRepositoryImplTest {
     @Test
     fun `without the opt-in nothing is requested`() = runTest {
         val api = FakeLessonFriendsApi()
-        val repository = LessonFriendsRepositoryImpl(services(enabled = false), api.instance, noDemo(), dispatchers = dispatchers)
+        val repository = LessonFriendsRepositoryImpl(services(enabled = false), api, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.friendsOnLesson(42, date))
         assertEquals(0, api.calls)
@@ -48,32 +54,49 @@ class LessonFriendsRepositoryImplTest {
         val api = FakeLessonFriendsApi().apply {
             result = { pairId, requestedDate ->
                 assertEquals(42L, pairId); assertEquals(date, requestedDate)
-                ApiResponse.success(listOf(
-                    profile(300003, " Второй ", UserCapabilities(true, false)),
-                    profile(200002, "Первый", UserCapabilities(true, true))
-                ))
+                listOf(
+                    profile(300003, " Второй ", UserCapabilities(canViewSchedule = true, canViewSport = false, canViewFriends = false)),
+                    profile(200002, "Первый", UserCapabilities(canViewSchedule = true, canViewSport = true, canViewFriends = true))
+                )
             }
         }
-        val repository = LessonFriendsRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
+        val repository = LessonFriendsRepositoryImpl(services(enabled = true), api, noDemo(), dispatchers = dispatchers)
 
         val friends = (repository.friendsOnLesson(42, date) as AppResult.Success).value
 
         assertEquals(listOf(300003, 200002), friends.map { it.isu })
         assertEquals(
-            UserSummary(300003, "Второй", null, listOf(UserGroup("M3100", 1, "ФТМИ")), UserSharing(sport = false, schedule = true)),
+            UserSummary(
+                300003, "Второй", null, listOf(UserGroup("M3100", 1, "ФТМИ")),
+                UserSharing(sport = false, schedule = true, friends = false)
+            ),
             friends.first()
         )
         assertEquals(1, api.calls)
     }
 
     @Test
-    fun `transport failures and empty envelopes are errors, not empty lists`() = runTest {
-        val failing = FakeLessonFriendsApi().apply { result = { _, _ -> throw IOException("offline") } }
-        assertEquals(AppResult.Failure(AppError.Network), LessonFriendsRepositoryImpl(services(true), failing.instance, noDemo(), dispatchers).friendsOnLesson(42, date))
+    fun `the request reaches the Core 2_0 route`() = runTest {
+        val harness = Core2Harness(session()) { respondJson("""{"success":true,"data":[],"error":null}""") }
+        val repository = LessonFriendsRepositoryImpl(services(true), harness.client.schedule, noDemo(), dispatchers)
 
-        val empty = FakeLessonFriendsApi().apply { result = { _, _ -> ApiResponse(success = true, data = null, error = null) } }
-        val result = LessonFriendsRepositoryImpl(services(true), empty.instance, noDemo(), dispatchers).friendsOnLesson(42, date)
-        assertEquals(true, result is AppResult.Failure)
+        assertEquals(AppResult.Success(emptyList<UserSummary>()), repository.friendsOnLesson(42, date))
+        val request = harness.backendRequests.single()
+        assertEquals("/api/schedule/lessons/42/friends", request.url.encodedPath)
+        assertEquals("2026-09-08", request.url.parameters["date"])
+    }
+
+    @Test
+    fun `transport failures, denials and empty envelopes are errors, not empty lists`() = runTest {
+        suspend fun answer(respond: suspend MockRequestHandleScope.() -> HttpResponseData): AppResult<List<UserSummary>> {
+            val harness = Core2Harness(session()) { respond() }
+            return LessonFriendsRepositoryImpl(services(true), harness.client.schedule, noDemo(), dispatchers).friendsOnLesson(42, date)
+        }
+
+        assertEquals(AppResult.Failure(AppError.Network), answer { throw IOException("offline") })
+        assertEquals(AppResult.Failure(AppError.Unauthorized), answer { respondJson(errorEnvelope("unauthorized"), HttpStatusCode.Unauthorized) })
+        val empty = answer { respondJson("""{"success":true,"data":null,"error":null}""") }
+        assertTrue((empty as AppResult.Failure).error is AppError.Unknown)
     }
 
     private fun profile(isu: Int, name: String, capabilities: UserCapabilities) = UserProfile(
@@ -84,25 +107,18 @@ class LessonFriendsRepositoryImplTest {
     private fun services(enabled: Boolean) = FakeBackendGate(enabled)
 
     /** Only the lesson-friends call is answered; anything else is a test bug. */
-    private class FakeLessonFriendsApi {
-        var result: (Long, LocalDate) -> ApiResponse<List<UserProfile>> = { _, _ -> ApiResponse.success(emptyList()) }
+    private class FakeLessonFriendsApi : ScheduleApi {
+        var result: (Long, LocalDate) -> List<UserProfile> = { _, _ -> emptyList() }
         var calls = 0
             private set
 
-        val instance: ItmoWidgetsApi = Proxy.newProxyInstance(
-            ItmoWidgetsApi::class.java.classLoader,
-            arrayOf(ItmoWidgetsApi::class.java)
-        ) { _, method, arguments ->
-            when (method.name) {
-                "friendsOnLesson" -> {
-                    calls += 1
-                    val continuation = arguments.last() as Continuation<Any?>
-                    val value = result(arguments[0] as Long, (arguments[1] as java.time.LocalDate).toKotlinLocalDate())
-                    continuation.resumeWith(Result.success(value))
-                    kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
-                }
-                else -> error("Unexpected call ${method.name}")
-            }
-        } as ItmoWidgetsApi
+        override suspend fun friendsOnLesson(pairId: Long, date: LocalDate): List<UserProfile> {
+            calls += 1
+            return result(pairId, date)
+        }
+
+        override suspend fun syncLessons(request: LessonSyncRequest) = error("Unexpected syncLessons")
+
+        override suspend fun userLessons(isu: Int, from: LocalDate, to: LocalDate): List<LessonDto> = error("Unexpected userLessons")
     }
 }
