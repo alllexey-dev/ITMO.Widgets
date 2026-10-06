@@ -1,13 +1,17 @@
 package dev.alllexey.itmowidgets.feature.update.reference
 
+import androidx.test.core.app.ApplicationProvider
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateFragment
 import dev.alllexey.itmowidgets.feature.update.ui.toScreenArguments
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,7 +31,16 @@ class AppUpdateReferenceScreenshotTest {
     @get:Rule
     val shots = AppScreenshotRule(this)
 
+    @get:Rule
+    val stopKoin = StopKoinRule()
+
     private val references = XmlReferenceCapture(shots, module = "feature-account")
+
+    /** `HiltTestApplication` starts no Koin graph; the screen's ViewModel comes from the release one. */
+    @Before
+    fun startKoin() {
+        KoinStarter.ensureStarted(ApplicationProvider.getApplicationContext())
+    }
 
     @Test
     fun supported() = update(

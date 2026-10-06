@@ -10,9 +10,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,7 +19,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
-import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
+import dev.alllexey.itmowidgets.di.bridge.AccountWebLoginDebugFixtures
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -30,6 +27,7 @@ import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
+import org.koin.core.module.Module
 
 /**
  * The real «Вход на сайт» sheet over an empty window, fed by [repository]; nothing reaches Backend
@@ -37,6 +35,8 @@ import kotlin.uuid.Uuid
  */
 @AndroidEntryPoint
 class WebLoginPreviewActivity : AppCompatActivity() {
+    private lateinit var fixture: Module
+
     override fun attachBaseContext(newBase: Context) {
         val config = Configuration(newBase.resources.configuration).apply {
             fontScale = appearance.fontScale
@@ -48,7 +48,9 @@ class WebLoginPreviewActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-        supportFragmentManager.registerFragmentLifecycleCallbacks(PreviewModels(), false)
+        // Before super.onCreate(): a restored sheet obtains its ViewModel from Koin.
+        fixture = AccountWebLoginDebugFixtures.load(this, { repository }, FixedTime)
+        supportFragmentManager.registerFragmentLifecycleCallbacks(PreviewWindow(), false)
         super.onCreate(savedInstanceState)
         appearance.colorSeed?.let {
             DynamicColors.applyToActivityIfAvailable(this, DynamicColorsOptions.Builder().setContentBasedSource(it).build())
@@ -57,18 +59,13 @@ class WebLoginPreviewActivity : AppCompatActivity() {
         if (savedInstanceState == null) WebLoginBottomSheet().show(supportFragmentManager, WebLoginBottomSheet.TAG)
     }
 
-    /** Hands the sheet a view model over [repository] before Hilt could create one, and narrows its window. */
-    private class PreviewModels : FragmentManager.FragmentLifecycleCallbacks() {
-        override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
-            if (fragment !is WebLoginBottomSheet) return
-            val factory = object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T = WebLoginViewModel(SavedStateHandle(), repository,
-                    FixedTime) as T
-            }
-            ViewModelProvider(fragment, factory)[WebLoginViewModel::class.java]
-        }
+    override fun onDestroy() {
+        super.onDestroy()
+        AccountWebLoginDebugFixtures.unload(this, fixture)
+    }
 
+    /** Narrows the sheet's window to the preview width. */
+    private class PreviewWindow : FragmentManager.FragmentLifecycleCallbacks() {
         override fun onFragmentStarted(fm: FragmentManager, fragment: Fragment) {
             val width = appearance.widthDp.takeIf { it > 0 } ?: return
             val window = (fragment as? DialogFragment)?.dialog?.window ?: return

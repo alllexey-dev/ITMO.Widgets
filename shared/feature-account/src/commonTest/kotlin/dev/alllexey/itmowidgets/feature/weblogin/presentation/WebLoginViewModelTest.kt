@@ -1,29 +1,45 @@
 package dev.alllexey.itmowidgets.feature.weblogin.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
+import dev.alllexey.itmowidgets.shared.feature.account.Res
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_chrome
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_on_platform
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_unknown
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_code_invalid
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_not_found
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_macos
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_qr_unknown
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_requested_at
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_scanner_unavailable
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_services_disabled
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class WebLoginViewModelTest {
-    @get:Rule val main = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
+
     private val repository = FakeWebLoginRepository()
     private val challenge = Uuid.parse("00000000-0000-0000-0000-000000000042")
     private val preview = WebLoginPreview(
@@ -33,7 +49,7 @@ class WebLoginViewModelTest {
         expiresAt = Instant.parse("2026-09-24T09:06:30Z"),
     )
 
-    @Test fun `a scanned link is checked then approved`() = runTest(main.dispatcher) {
+    @Test fun aScannedLinkIsCheckedThenApproved() = runTest(main.dispatcher) {
         repository.previews["ABCD2345"] = AppResult.Success(preview)
         val vm = model()
 
@@ -43,10 +59,10 @@ class WebLoginViewModelTest {
 
         val confirm = vm.uiState.value as WebLoginUiState.Confirm
         assertEquals(challenge, confirm.preview.challengeId)
-        assertEquals(UiText.Resource(R.string.web_login_browser_on_platform, listOf(
-            UiText.Resource(R.string.web_login_browser_chrome), UiText.Resource(R.string.web_login_platform_macos))), confirm.browser)
+        assertEquals(UiText.Res(Res.string.web_login_browser_on_platform, listOf(
+            UiText.Res(Res.string.web_login_browser_chrome), UiText.Res(Res.string.web_login_platform_macos))), confirm.browser)
         // Moscow time, as the rest of the app shows it.
-        assertEquals(UiText.Resource(R.string.web_login_requested_at, listOf("12:04")), confirm.requestedAt)
+        assertEquals(UiText.Res(Res.string.web_login_requested_at, listOf("12:04")), confirm.requestedAt)
 
         vm.approve()
         assertTrue((vm.uiState.value as WebLoginUiState.Confirm).approving)
@@ -57,13 +73,13 @@ class WebLoginViewModelTest {
         assertEquals(listOf("preview:ABCD2345", "approve:$challenge"), repository.calls)
     }
 
-    @Test fun `a typed code is normalized and a malformed one never reaches Backend`() = runTest(main.dispatcher) {
+    @Test fun aTypedCodeIsNormalizedAndAMalformedOneNeverReachesBackend() = runTest(main.dispatcher) {
         repository.previews["ABCD2345"] = AppResult.Success(preview)
         val vm = model()
 
         vm.onCodeChanged("abcd-234")
         vm.submit()
-        assertEquals(WebLoginUiState.Input("abcd-234", UiText.Resource(R.string.web_login_code_invalid)), vm.uiState.value)
+        assertEquals(WebLoginUiState.Input("abcd-234", UiText.Res(Res.string.web_login_code_invalid)), vm.uiState.value)
 
         vm.onCodeChanged("abcd-2345")
         assertEquals(WebLoginUiState.Input("abcd-2345"), vm.uiState.value)
@@ -74,36 +90,36 @@ class WebLoginViewModelTest {
         assertEquals(listOf("preview:ABCD2345"), repository.calls)
     }
 
-    @Test fun `a QR that is not a sign-in link keeps the typed code`() = runTest(main.dispatcher) {
+    @Test fun aQRThatIsNotASignInLinkKeepsTheTypedCode() = runTest(main.dispatcher) {
         val vm = model()
         vm.onCodeChanged("ABCD")
 
         vm.onScanned("https://t.me/itmowidgets")
 
-        assertEquals(WebLoginUiState.Input("ABCD", UiText.Resource(R.string.web_login_qr_unknown)), vm.uiState.value)
+        assertEquals(WebLoginUiState.Input("ABCD", UiText.Res(Res.string.web_login_qr_unknown)), vm.uiState.value)
         assertTrue(repository.calls.isEmpty())
     }
 
-    @Test fun `an unavailable scanner leaves manual entry`() = runTest(main.dispatcher) {
+    @Test fun anUnavailableScannerLeavesManualEntry() = runTest(main.dispatcher) {
         val vm = model()
         vm.onCodeChanged("ABCD")
 
         vm.onScannerUnavailable()
 
-        assertEquals(WebLoginUiState.Input("ABCD", UiText.Resource(R.string.web_login_scanner_unavailable)), vm.uiState.value)
+        assertEquals(WebLoginUiState.Input("ABCD", UiText.Res(Res.string.web_login_scanner_unavailable)), vm.uiState.value)
     }
 
-    @Test fun `an unknown code stays in the field to be fixed`() = runTest(main.dispatcher) {
+    @Test fun anUnknownCodeStaysInTheFieldToBeFixed() = runTest(main.dispatcher) {
         val vm = model()
         vm.onCodeChanged("ABCD2345")
 
         vm.submit()
         runCurrent()
 
-        assertEquals(WebLoginUiState.Input("ABCD2345", UiText.Resource(R.string.web_login_not_found)), vm.uiState.value)
+        assertEquals(WebLoginUiState.Input("ABCD2345", UiText.Res(Res.string.web_login_not_found)), vm.uiState.value)
     }
 
-    @Test fun `a sign-in that expired before approval cannot be retried`() = runTest(main.dispatcher) {
+    @Test fun aSignInThatExpiredBeforeApprovalCannotBeRetried() = runTest(main.dispatcher) {
         repository.previews["ABCD2345"] = AppResult.Success(preview)
         repository.approval = AppResult.Failure(AppError.NotFound)
         val vm = model()
@@ -112,23 +128,23 @@ class WebLoginViewModelTest {
 
         vm.approve()
         runCurrent()
-        assertEquals(WebLoginUiState.Error(UiText.Resource(R.string.web_login_not_found), ""), vm.uiState.value)
+        assertEquals(WebLoginUiState.Error(UiText.Res(Res.string.web_login_not_found), ""), vm.uiState.value)
 
         vm.retry()
         assertEquals(WebLoginUiState.Input(""), vm.uiState.value)
     }
 
-    @Test fun `without the connection the sheet says what is missing`() = runTest(main.dispatcher) {
+    @Test fun withoutTheConnectionTheSheetSaysWhatIsMissing() = runTest(main.dispatcher) {
         repository.previews["ABCD2345"] = AppResult.Failure(AppError.CustomServicesDisabled)
         val vm = model()
 
         vm.onScanned("ABCD2345")
         runCurrent()
 
-        assertEquals(WebLoginUiState.Error(UiText.Resource(R.string.web_login_services_disabled), ""), vm.uiState.value)
+        assertEquals(WebLoginUiState.Error(UiText.Res(Res.string.web_login_services_disabled), ""), vm.uiState.value)
     }
 
-    @Test fun `a network error checks the same code again on retry`() = runTest(main.dispatcher) {
+    @Test fun aNetworkErrorChecksTheSameCodeAgainOnRetry() = runTest(main.dispatcher) {
         repository.previews["ABCD2345"] = AppResult.Failure(AppError.Network)
         val vm = model()
         vm.onScanned("ABCD2345")
@@ -140,11 +156,11 @@ class WebLoginViewModelTest {
         runCurrent()
 
         val confirm = vm.uiState.value as WebLoginUiState.Confirm
-        assertEquals(UiText.Resource(R.string.web_login_browser_unknown), confirm.browser)
+        assertEquals(UiText.Res(Res.string.web_login_browser_unknown), confirm.browser)
         assertEquals(listOf("preview:ABCD2345", "preview:ABCD2345"), repository.calls)
     }
 
-    @Test fun `going back from the browser card keeps the code but not during approval`() = runTest(main.dispatcher) {
+    @Test fun goingBackFromTheBrowserCardKeepsTheCodeButNotDuringApproval() = runTest(main.dispatcher) {
         repository.previews["ABCD2345"] = AppResult.Success(preview)
         val pending = CompletableDeferred<AppResult<Unit>>()
         repository.pendingApproval = pending
@@ -167,7 +183,7 @@ class WebLoginViewModelTest {
         assertEquals(WebLoginUiState.Done, vm.uiState.value)
     }
 
-    @Test fun `the typed code survives process death`() = runTest(main.dispatcher) {
+    @Test fun theTypedCodeSurvivesProcessDeath() = runTest(main.dispatcher) {
         val handle = SavedStateHandle()
         model(handle).onCodeChanged("ABCD23")
 

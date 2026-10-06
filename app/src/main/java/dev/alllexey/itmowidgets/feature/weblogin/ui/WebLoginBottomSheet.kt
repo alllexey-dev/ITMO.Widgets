@@ -8,7 +8,6 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -28,13 +27,14 @@ import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** Approves a browser's sign-in to the web version with a scanned QR or a typed code. */
 @AndroidEntryPoint
 class WebLoginBottomSheet : BottomSheetDialogFragment() {
     private var _binding: SheetWebLoginBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: WebLoginViewModel by viewModels()
+    private val viewModel: WebLoginViewModel by viewModel()
     /** Programmatic updates of the field must not read as typing. */
     private var rendering = false
     private var shownState: Class<out WebLoginUiState>? = null

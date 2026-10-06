@@ -2,13 +2,8 @@ package dev.alllexey.itmowidgets.feature.weblogin.reference
 
 import android.content.Context
 import android.graphics.Canvas
-import android.os.Bundle
 import android.view.View
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -19,6 +14,8 @@ import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
+import dev.alllexey.itmowidgets.di.bridge.presetViewModel
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginBottomSheet
@@ -44,6 +41,9 @@ class WebLoginReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-account")
 
@@ -108,7 +108,7 @@ class WebLoginReferenceScreenshotTest {
             ready = { host ->
                 if (host.supportFragmentManager.findFragmentByTag(WebLoginBottomSheet.TAG) == null) {
                     val fragment = WebLoginBottomSheet()
-                    host.supportFragmentManager.preset(fragment) {
+                    presetViewModel(host) {
                         WebLoginViewModel(SavedStateHandle(), answers, FixedAcademicTime()).also {
                             model = it
                             it.act()
@@ -156,25 +156,6 @@ class WebLoginReferenceScreenshotTest {
         )
     }
 }
-
-/** Hands [fragment] the view model [create] makes before Hilt could create one. */
-private fun FragmentManager.preset(fragment: Fragment, create: () -> ViewModel) =
-    registerFragmentLifecycleCallbacks(
-        object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
-                if (f !== fragment) return
-                val model = create()
-                ViewModelProvider(
-                    f,
-                    object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = model as T
-                    },
-                )[model.javaClass]
-            }
-        },
-        false,
-    )
 
 /**
  * Shows [source], a view of a dialog window, in place of the host's content: a capture finds only views of the

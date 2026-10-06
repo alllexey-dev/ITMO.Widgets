@@ -1,21 +1,21 @@
 package dev.alllexey.itmowidgets.feature.update.domain
 
 import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateRepository
-import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
+import kotlinx.coroutines.test.runTest
 
 class PendingAppUpdateTest {
 
     private val now: Instant = Instant.parse("2026-09-15T10:00:00Z")
 
     @Test
-    fun `offers an update the user has not seen yet`() = runTest {
+    fun offersAnUpdateTheUserHasNotSeenYet() = runTest {
         val repository = FakeAppUpdateRepository(update = update())
 
         val pending = PendingAppUpdate(repository, clock())()
@@ -25,7 +25,7 @@ class PendingAppUpdateTest {
     }
 
     @Test
-    fun `stays silent without an update`() = runTest {
+    fun staysSilentWithoutAnUpdate() = runTest {
         val repository = FakeAppUpdateRepository(update = null)
 
         assertNull(PendingAppUpdate(repository, clock())())
@@ -33,7 +33,7 @@ class PendingAppUpdateTest {
     }
 
     @Test
-    fun `waits a day between offers of the same release`() = runTest {
+    fun waitsADayBetweenOffersOfTheSameRelease() = runTest {
         val repository = FakeAppUpdateRepository(
             update = update(),
             reminderState = reminder(notifiedAt = now - 23.hours)
@@ -46,7 +46,7 @@ class PendingAppUpdateTest {
     }
 
     @Test
-    fun `a skipped release stays skipped until a newer one arrives`() = runTest {
+    fun aSkippedReleaseStaysSkippedUntilANewerOneArrives() = runTest {
         val repository = FakeAppUpdateRepository(
             update = update(),
             reminderState = reminder(skipped = "2.2")
@@ -59,7 +59,7 @@ class PendingAppUpdateTest {
     }
 
     @Test
-    fun `an unsupported build ignores both the skip and the interval`() = runTest {
+    fun anUnsupportedBuildIgnoresBothTheSkipAndTheInterval() = runTest {
         val repository = FakeAppUpdateRepository(
             update = update(unsupported = true),
             reminderState = reminder(skipped = "2.2", notifiedAt = now)
