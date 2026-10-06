@@ -2,13 +2,14 @@ package dev.alllexey.itmowidgets.di
 
 import android.content.Context
 import android.os.Build
-import api.myitmo.MyItmo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoCurrentUserProvider
@@ -46,16 +47,18 @@ object SessionModule {
     fun provideBackendIdentitySync(
         @ApplicationContext context: Context,
         gate: BackendGate,
-        myItmo: MyItmo,
-        widgetsApi: ItmoWidgetsApi,
+        myItmo: MyItmoClient,
+        storage: TokenStorage,
+        users: UsersApi,
         diagnostics: AppDiagnostics,
         demo: DemoMode,
         dispatchers: AppDispatchers
     ): BackendIdentitySync = DefaultBackendIdentitySync(
         context = context,
         gate = gate,
-        myItmo = myItmo,
-        widgetsApi = widgetsApi,
+        tokens = myItmo.tokens,
+        storage = storage,
+        users = users,
         diagnostics = diagnostics,
         demo = demo,
         dispatchers = dispatchers
