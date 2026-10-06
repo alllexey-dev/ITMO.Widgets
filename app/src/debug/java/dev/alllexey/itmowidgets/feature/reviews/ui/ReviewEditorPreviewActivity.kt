@@ -10,9 +10,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,20 +27,23 @@ import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
-import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewViewModel
-import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorViewModel
+import dev.alllexey.itmowidgets.di.bridge.ReviewsDebugFixtures
 import java.util.Collections
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
+import org.koin.core.module.Module
 
 /**
- * The real review editor or report dialog over an empty window, fed by synthetic fixtures; never reads a session
- * or calls a service. [EXTRA_SCREEN] picks [SCREEN_EDITOR] or [SCREEN_REPORT].
+ * The real review editor or report dialog over an empty window, fed by synthetic fixtures through
+ * [ReviewsDebugFixtures]; never reads a session or calls a service. [EXTRA_SCREEN] picks [SCREEN_EDITOR] or
+ * [SCREEN_REPORT].
  */
 @AndroidEntryPoint
 class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNavigator {
+    private lateinit var reviewsFixture: Module
+
     override fun attachBaseContext(newBase: Context) {
         // AppCompat chooses its night configuration while attaching, before onCreate.
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
@@ -57,7 +57,9 @@ class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator by NoOpApp
 
     override fun onCreate(savedInstanceState: Bundle?) {
         check(BuildConfig.DEBUG)
-        supportFragmentManager.registerFragmentLifecycleCallbacks(PreviewModels(), false)
+        // Before super.onCreate(): a restored editor or dialog obtains its ViewModel from Koin there.
+        reviewsFixture = ReviewsDebugFixtures.load(this, { PreviewReviews }, { PreviewLessons })
+        supportFragmentManager.registerFragmentLifecycleCallbacks(NarrowWindows(), false)
         super.onCreate(savedInstanceState)
         appearance.colorSeed?.let {
             DynamicColors.applyToActivityIfAvailable(this, DynamicColorsOptions.Builder().setContentBasedSource(it).build())
@@ -70,31 +72,19 @@ class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator by NoOpApp
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        ReviewsDebugFixtures.unload(this, reviewsFixture)
+    }
+
     override fun openReviewEditor(args: TeacherReviewArgs) =
         ReviewEditorBottomSheet.newInstance(args).show(supportFragmentManager, ReviewEditorBottomSheet.TAG)
 
     override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) =
         ReportReviewDialogFragment.newInstance(args, reviewId).show(supportFragmentManager, ReportReviewDialogFragment.TAG)
 
-    /** Hands both screens a view model over the fixtures before Hilt could create one, and narrows their window. */
-    private class PreviewModels : FragmentManager.FragmentLifecycleCallbacks() {
-        override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
-            val arguments = fragment.arguments ?: return
-            @Suppress("DEPRECATION")
-            val handle = SavedStateHandle(arguments.keySet().associateWith { arguments.get(it) })
-            val factory = object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                    ReviewEditorViewModel::class.java -> ReviewEditorViewModel(handle, PreviewReviews, PreviewLessons)
-                    else -> ReportReviewViewModel(handle, PreviewReviews)
-                } as T
-            }
-            when (fragment) {
-                is ReviewEditorBottomSheet -> ViewModelProvider(fragment, factory)[ReviewEditorViewModel::class.java]
-                is ReportReviewDialogFragment -> ViewModelProvider(fragment, factory)[ReportReviewViewModel::class.java]
-            }
-        }
-
+    /** Narrows both screens' windows to the appearance's width. */
+    private class NarrowWindows : FragmentManager.FragmentLifecycleCallbacks() {
         override fun onFragmentStarted(fm: FragmentManager, fragment: Fragment) {
             val width = appearance.widthDp.takeIf { it > 0 } ?: return
             val window = (fragment as? DialogFragment)?.dialog?.window ?: return

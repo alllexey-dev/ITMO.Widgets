@@ -5,27 +5,34 @@ import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReportReviewViewModelTest {
-    @get:Rule val main = MainDispatcherRule()
+    private val main = TestMainDispatcher()
     private val repository = FakeTeacherReviewsRepository()
 
-    @Test fun `a blank comment is sent as none and success is done`() = runTest(main.dispatcher) {
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
+
+    @Test fun aBlankCommentIsSentAsNoneAndSuccessIsDone() = runTest(main.dispatcher) {
         repository.reportResult = AppResult.Success(teacherReviews(TEACHER))
         val vm = model()
 
@@ -36,14 +43,14 @@ class ReportReviewViewModelTest {
         assertEquals(ReportReviewEvent.Done, vm.events.first())
     }
 
-    @Test fun `a comment is trimmed`() = runTest(main.dispatcher) {
+    @Test fun aCommentIsTrimmed() = runTest(main.dispatcher) {
         repository.reportResult = AppResult.Success(teacherReviews(TEACHER))
         model().send(ReviewReportReason.OTHER, "  Не по теме  "); runCurrent()
 
         assertEquals("Не по теме", repository.lastComment)
     }
 
-    @Test fun `a failure can be sent again`() = runTest(main.dispatcher) {
+    @Test fun aFailureCanBeSentAgain() = runTest(main.dispatcher) {
         repository.reportResult = AppResult.Failure(AppError.Network)
         val vm = model()
 
@@ -57,7 +64,7 @@ class ReportReviewViewModelTest {
         assertEquals(2, repository.actions.size)
     }
 
-    @Test fun `a report in flight blocks a second one`() = runTest(main.dispatcher) {
+    @Test fun aReportInFlightBlocksASecondOne() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         repository.mutationGate = { gate.await() }
         repository.reportResult = AppResult.Success(teacherReviews(TEACHER))

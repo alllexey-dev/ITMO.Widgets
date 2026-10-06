@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
+import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -49,6 +50,11 @@ class ReviewsBridgeTest {
     @Test
     fun `a constructed definition may depend on the bridged reviews repositories`() {
         KoinGraphCheck.assertValid(KoinModules.bridges, listOf(module { singleOf(::NeedsReviews) }))
+    }
+
+    @Test
+    fun `the review editor's and report's module resolves over the bridges`() {
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(reviewsModule))
     }
 
     class NeedsReviews(
