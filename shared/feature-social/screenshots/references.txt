@@ -4,8 +4,3 @@ FriendSelectorSheetContent_empty-filter
 FriendSelectorSheetContent_friends
 FriendSelectorSheetContent_locked
 FriendSelectorSheetContent_people
-UserProfileScreen_friend
-UserProfileScreen_not-found
-UserProfileScreen_self
-UserProfileScreen_skeleton
-UserProfileScreen_teacher-summary
