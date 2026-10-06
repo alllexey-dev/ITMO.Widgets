@@ -8,9 +8,6 @@ FriendsScreen_content
 FriendsScreen_disabled
 FriendsScreen_empty
 FriendsScreen_requests
-UserFriendsScreen_content
-UserFriendsScreen_denied
-UserFriendsScreen_empty
 UserProfileScreen_friend
 UserProfileScreen_not-found
 UserProfileScreen_self
