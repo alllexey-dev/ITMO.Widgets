@@ -1,0 +1,27 @@
+# Build and tooling
+
+- The build moved to Gradle 9.7.0, AGP 9.3.3 with built-in Kotlin, Kotlin
+  2.4.20 and Hilt 2.60.1 on KSP instead of kapt; the app compiles against API
+  37 with minSdk 26 and targetSdk 36, and the configuration cache is on.
+- `settings.gradle.kts` declares `:app`, 15 `:shared:*` Kotlin Multiplatform
+  modules with iOS targets and `:konsist`; `build-logic` holds the convention
+  plugins and `gradle/libs.versions.toml` pins every v2.3 library.
+- MyItmoApi 2.x builds from source as a composite build at the commit in
+  `gradle/myitmoapi.ref` (`-PmyItmoApiDir` or `MYITMOAPI_DIR`); release
+  builds take it from Maven Central with `-PmyItmoApiFromCentral=true`. Maven
+  Local is gone from the build.
+- `scripts/verify.sh` is the one build entry point (`quick`, `full`,
+  `klibs`, `shots`, `ui`, `ship`, `run`); `scripts/slot.sh` shares the
+  machine between parallel builds and `scripts/emulator.sh` starts clean pool
+  emulators, so instrumented tests never run on a phone.
+- CI: `android-ci.yml` runs `verify.sh quick`, the Roborazzi screenshot
+  comparison of every module and the iOS klibs on every PR and push to
+  `v2.3/next` and `master`; `android-nightly.yml` runs the platform
+  instrumentation tests under Android Test Orchestrator on a Gradle Managed
+  Device and an advisory dependency health report; Dependabot proposes
+  updates.
+- The QR encoder is a Kotlin port pinned by golden matrices, Google Sheets
+  grids parse with Ksoup and avatars load with Coil 3, with the same output
+  as before; OkHttp is 5.5.0.
+- One lint configuration covers `:app` and the shared modules, and
+  `.editorconfig` mirrors the project code style.
