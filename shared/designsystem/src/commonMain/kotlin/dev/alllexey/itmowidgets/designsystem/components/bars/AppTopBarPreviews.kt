@@ -5,7 +5,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.shared.designsystem.Res
-import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_search
 import dev.alllexey.itmowidgets.shared.designsystem.ic_share
@@ -16,7 +15,7 @@ import org.jetbrains.compose.resources.painterResource
 private fun AppTopBarBackPreview() = ItmoPreview {
     AppTopBar(
         title = "Друзья",
-        navigation = { AppTopBarAction(painterResource(Res.drawable.ic_arrow_back), "Назад", onClick = {}) },
+        navigation = { AppTopBarBack("Назад", onClick = {}) },
         actions = { AppTopBarAction(painterResource(Res.drawable.ic_search), "Найти людей", onClick = {}) },
     )
 }
@@ -45,7 +44,19 @@ private fun AppTopBarTitleOnlyPreview() = ItmoPreview {
 private fun AppTopBarLongTitlePreview() = ItmoPreview {
     AppTopBar(
         title = PreviewFixtures.LongSubjectName,
-        navigation = { AppTopBarAction(painterResource(Res.drawable.ic_arrow_back), "Назад", onClick = {}) },
+        navigation = { AppTopBarBack("Назад", onClick = {}) },
         actions = { AppTopBarAction(painterResource(Res.drawable.ic_share), "Поделиться", onClick = {}) },
+    )
+}
+
+/** A back button with the previous screen's title, a text action and the separator of content scrolled beneath. */
+@Preview
+@Composable
+private fun AppTopBarScrolledPreview() = ItmoPreview {
+    AppTopBar(
+        title = "Занятие",
+        navigation = { AppTopBarBack("Назад", onClick = {}, title = "Расписание") },
+        actions = { AppTopBarTextAction("Готово", onClick = {}) },
+        scrolledUnder = true,
     )
 }

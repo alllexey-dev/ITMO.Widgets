@@ -6,6 +6,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -30,6 +31,21 @@ class ItmoFloatingToolbarTest {
 
         assertEquals(LABELS, clicked)
         assertTouchTargets()
+    }
+
+    @Test
+    fun theIosCapsuleKeepsEveryActionALabelledTarget() = runComposeUiTest {
+        val clicked = mutableListOf<String>()
+        setContent {
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Ios) {
+                ItmoFloatingToolbar(LABELS.map { ItmoToolbarAction(it, ICON, onClick = { clicked += it }) })
+            }
+        }
+
+        LABELS.forEach { onNodeWithContentDescription(it).performClick() }
+
+        assertEquals(LABELS, clicked)
+        assertTouchTargets(ItmoPlatformStyle.Ios.minTouchTarget)
     }
 
     @Test

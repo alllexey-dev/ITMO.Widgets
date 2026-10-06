@@ -70,6 +70,60 @@ object IosMetrics {
     /** The gap around the selected segment's capsule: its 27 pt thumb inside the 31 pt control. */
     val segmentedThumbInset: Dp = 2.dp
 
+    /** A switch: `UISwitch`'s frame after `sizeToFit()`, a capsule track (DS-IOS-02). */
+    val switchWidth: Dp = 63.dp
+
+    /** A switch's height: `UISwitch`'s frame; the track's corner radius is half of it. */
+    val switchHeight: Dp = 28.dp
+
+    /** A switch's thumb, a capsule: `_UILiquidLensView`'s frame inside the switch. */
+    val switchThumbWidth: Dp = 37.dp
+
+    /** The thumb's height: the same frame. */
+    val switchThumbHeight: Dp = 24.dp
+
+    /** The gap around the thumb: its x when off (2) and its trailing gap when on (63 - 24 - 37). */
+    val switchThumbInset: Dp = 2.dp
+
+    /** The spinner of `UIActivityIndicatorView(style: .medium)`: its intrinsic size (DS-IOS-02). */
+    val activityIndicatorMedium: Dp = 20.dp
+
+    /** The spinner of `UIActivityIndicatorView(style: .large)`: its intrinsic size. */
+    val activityIndicatorLarge: Dp = 37.dp
+
+    /**
+     * The spinner's spokes as fractions of its size, read off a 3x render of both sizes: eight round-capped spokes from
+     * 0.16 to 0.48 of the size away from the centre (medium 3.3 to 9.9 pt, large 5.5 to 17.5 pt), 0.13 of the size wide
+     * (medium 2.5 pt, large 5 pt).
+     */
+    const val activityIndicatorSpokeInner: Float = 0.16f
+    const val activityIndicatorSpokeOuter: Float = 0.48f
+    const val activityIndicatorSpokeWidth: Float = 0.13f
+
+    /**
+     * The opacity of each spoke behind the leading one, which turns clockwise: the render's grey levels over the
+     * secondary label colour (0.85, 0.71, 0.56, 0.42, then 0.27 for the other four).
+     */
+    val activityIndicatorSpokeAlphas: List<Float> = listOf(0.85f, 0.71f, 0.56f, 0.42f, 0.27f, 0.27f, 0.27f, 0.27f)
+
+    /** A button's leading and trailing content inset: `UIButton.Configuration.contentInsets` at `.medium`. */
+    val buttonHorizontalPadding: Dp = 12.dp
+
+    /** A button's top and bottom content inset: the same insets; one body line (20.33) makes [buttonHeight]. */
+    val buttonVerticalPadding: Dp = 7.dp
+
+    /**
+     * An inline navigation bar on iOS 26 and later: `UINavigationBar`'s height with `prefersLargeTitles` off (the
+     * classic 44 grew with the Liquid Glass bar).
+     */
+    val navigationBarHeight: Dp = 54.dp
+
+    /** A bar button item's frame (`UIPlatformGlassInteractionView`), back included. */
+    val barButtonSize: Dp = 44.dp
+
+    /** The first and the last bar button's distance from the screen edge: their x in the bar. */
+    val barEdgeInset: Dp = 16.dp
+
     /** A filled button, a capsule: `UIButton.Configuration.filled()` at `.medium` size, one line. */
     val buttonHeight: Dp = 34.33.dp
 

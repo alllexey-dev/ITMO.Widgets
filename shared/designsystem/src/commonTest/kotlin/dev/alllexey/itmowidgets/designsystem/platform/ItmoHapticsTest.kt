@@ -17,7 +17,7 @@ class ItmoHapticsTest {
     @Test
     fun materialStaysSilent() {
         val feedback = RecordingFeedback()
-        val haptics = ItmoHaptics(ItmoPlatformStyle.Material, feedback)
+        val haptics = PlatformHaptics(ItmoPlatformStyle.Material, feedback)
 
         ItmoHapticEvent.entries.forEach(haptics::perform)
 
@@ -27,7 +27,7 @@ class ItmoHapticsTest {
     @Test
     fun iosPlaysSuccessAndErrorThroughCompose() {
         val feedback = RecordingFeedback()
-        val haptics = ItmoHaptics(ItmoPlatformStyle.Ios, feedback)
+        val haptics = PlatformHaptics(ItmoPlatformStyle.Ios, feedback)
 
         ItmoHapticEvent.entries.forEach(haptics::perform)
 
