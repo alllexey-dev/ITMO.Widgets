@@ -23,7 +23,7 @@ data class ItmoIosColors(
     val tertiaryLabel: Color,
     /** `systemFill`: a track, an unselected control. */
     val systemFill: Color,
-    /** `systemGreen`: a switch that is on, success. */
+    /** `systemGreen`: success. A switch that is on takes the accent instead, as the SwiftUI screens tint it. */
     val systemGreen: Color,
     /** `systemRed`: destructive actions. */
     val systemRed: Color,

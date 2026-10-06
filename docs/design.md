@@ -341,34 +341,37 @@ Compose screens build from the kit in `shared/designsystem`
 callbacks in; text, icons and formatted dates as parameters; no feature or
 `core` domain types, no network or clock), each with previews (synthetic data,
 long Russian names, only in `@Preview` functions and `designsystem/preview/`)
-and baselines in all four appearances under `shared/designsystem/screenshots/`.
-A port uses the kit and grows it instead of drawing its own variant.
+and baselines in all four Material appearances and the three iOS ones under
+`shared/designsystem/screenshots/`. A port uses the kit and grows it instead of
+drawing its own variant. The last column says how a component looks under the
+iOS style ([Platform styles](#platform-styles)); "Same" means one drawing on
+both platforms.
 
-| Component | Use | Replaces |
-|---|---|---|
-| `AppTopBar`, `AppTopBarAction` | Contextual screen: back or close, a title of up to two lines (one over an optional one-line subtitle, such as the My ITMO page's host), trailing actions | `MaterialToolbar` and the hand-built contextual headers |
-| `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs; the FILL 1 icon and the label on the selected tab | `BottomNavigationView` (`Widget.ItmoWidgets.BottomNavigationView`) |
-| `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | `Widget.ItmoWidgets.ContentState.*` layouts |
-| `Skeleton` | First load without a cache, list or cards | `core/ui/SkeletonView.kt` |
-| `AppRefreshBox` | Pull-to-refresh that the user asked for | `SwipeRefreshLayout` with `applyAppRefreshColors()` |
-| `ProgressButton` | A button with its own progress, same size, second tap ignored | `core/ui/ButtonProgress.kt` |
-| `ButtonRow` | Two buttons side by side, stacked at full width when the labels do not fit | `core/ui/ButtonRow.kt` |
-| `Pill` | The `моя` badge, a count, a status in its tone over a 12 % wash | `bg_home_badge` and the badge and status pill views |
-| `ToneDot` | The review tone dot, an empty slot until the tone arrives | `bg_teacher_level_dot.xml` with `ImageView.bindLevel` |
-| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise | `core/ui/AvatarView.kt` |
-| `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | `core/ui/ConnectedGroup.kt` (`View.bindGroupPosition`) |
-| `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | `item_section_heading.xml`; `item_recordbook_control_group.xml` |
-| `GroupActionRow` | The last row of a group that leads further | `item_group_action_row.xml` |
-| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | `item_subject_link.xml`, `core/ui/SubjectLinkRow.kt`, `view_link_vote_pill.xml` |
-| `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | the user row of the XML social lists; rows with `bindSelectionAccessibility` |
-| `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | `Card.SettingsGroup` and `item_setting_row.xml`, `item_setting_toggle.xml`, `item_setting_divider.xml` |
-| `DetailsHeader` | The head of every details sheet | `view_details_header.xml`, `core/ui/DetailsHeader.kt` |
-| `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | the handle and header of each sheet layout |
-| `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link | `MaterialAlertDialogBuilder` dialogs |
-| `ScoreRing` | The sport score ring | `core/ui/CircularProgressBar.kt` |
-| `GradeScale` | A 0-100 bar with grade ticks | `feature/recordbook/ui/GradeScaleView.kt` |
-| `TimelineMarker`, `TimelineLine` | The schedule timeline | `feature/schedule/ui/ScheduleTimelineMarker.kt` |
-| `StepsIndicator` | Progress dots of a flow | `OnboardingStepsView`, the first-run flow's dot strip |
+| Component | Use | Replaces | On iOS |
+|---|---|---|---|
+| `AppTopBar`, `AppTopBarAction` | Contextual screen: back or close, a title of up to two lines (one over an optional one-line subtitle, such as the My ITMO page's host), trailing actions | `MaterialToolbar` and the hand-built contextual headers | The inline navigation bar: one centred line of headline, the navigation button and the actions in the tint, a hairline when content scrolls under it |
+| `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs; the FILL 1 icon and the label on the selected tab | `BottomNavigationView` (`Widget.ItmoWidgets.BottomNavigationView`) | Not used: the SwiftUI shell's native tab bar |
+| `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | `Widget.ItmoWidgets.ContentState.*` layouts | The action is a button capsule; loading is the large activity indicator |
+| `Skeleton` | First load without a cache, list or cards | `core/ui/SkeletonView.kt` | Shapes in `systemFill`, cards with the inset group's corners; geometry and pulse stay |
+| `AppRefreshBox` | Pull-to-refresh that the user asked for | `SwipeRefreshLayout` with `applyAppRefreshColors()` | Behaves as `UIRefreshControl`: the content follows the pull, the spinner's spokes above it, the refresh haptic at the threshold |
+| `ProgressButton` | A button with its own progress, same size, second tap ignored | `core/ui/ButtonProgress.kt` | A `UIButton` capsule: filled is prominent, tonal and outlined are bordered, text is plain; a press dims it |
+| `ButtonRow` | Two buttons side by side, stacked at full width when the labels do not fit | `core/ui/ButtonRow.kt` | Its buttons take the `ProgressButton` capsules |
+| `Pill` | The `моя` badge, a count, a status in its tone over a 12 % wash | `bg_home_badge` and the badge and status pill views | Capsules in the iOS type |
+| `ToneDot` | The review tone dot, an empty slot until the tone arrives | `bg_teacher_level_dot.xml` with `ImageView.bindLevel` | Same |
+| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise | `core/ui/AvatarView.kt` | Same |
+| `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | `core/ui/ConnectedGroup.kt` (`View.bindGroupPosition`) | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
+| `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | `item_section_heading.xml`; `item_recordbook_control_group.xml` | A section header in `secondaryLabel` at UIKit's insets |
+| `GroupActionRow` | The last row of a group that leads further | `item_group_action_row.xml` | A cell with the icon in the tint and the disclosure indicator |
+| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | `item_subject_link.xml`, `core/ui/SubjectLinkRow.kt`, `view_link_vote_pill.xml` | A cell; the vote arrows are 44 pt targets, the pill on `tertiarySystemFill` |
+| `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | the user row of the XML social lists; rows with `bindSelectionAccessibility` | A cell with the disclosure indicator; the selection is the checkmark accessory with the selection haptic |
+| `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | `Card.SettingsGroup` and `item_setting_row.xml`, `item_setting_toggle.xml`, `item_setting_divider.xml` | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
+| `DetailsHeader` | The head of every details sheet | `view_details_header.xml`, `core/ui/DetailsHeader.kt` | Title 2 semibold, secondary text and icons in `secondaryLabel`, the map button a tinted capsule |
+| `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | the handle and header of each sheet layout | No handle (the host's grabber); the header is the sheet's navigation bar ([Platform styles](#platform-styles)) |
+| `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link | `MaterialAlertDialogBuilder` dialogs | Compose-drawn iOS alerts with capsule buttons; no hero icon |
+| `ScoreRing` | The sport score ring | `core/ui/CircularProgressBar.kt` | Same |
+| `GradeScale` | A 0-100 bar with grade ticks | `feature/recordbook/ui/GradeScaleView.kt` | Same |
+| `TimelineMarker`, `TimelineLine` | The schedule timeline | `feature/schedule/ui/ScheduleTimelineMarker.kt` | Same |
+| `StepsIndicator` | Progress dots of a flow | `OnboardingStepsView`, the first-run flow's dot strip | A `UIPageControl` row of equal dots, the current one in the tint |
 
 Experimental and expressive Material components reach screens only through
 `Itmo*` wrappers in `shared/designsystem`, so a material3 line switch stays in
@@ -384,6 +387,82 @@ teacher, flow, place, map button) that every bottom sheet with a session starts
 with. Shared helpers belong to `core/ui`; screen-specific behaviour to
 `feature/<name>/ui`. Extract only rules that genuinely repeat; do not build a
 universal renderer.
+
+## Platform styles
+
+The kit draws in one of two looks, `ItmoPlatformStyle.Material` and
+`ItmoPlatformStyle.Ios` ([ADR 0023](decisions/0023-ios-client.md)). `ItmoTheme`
+picks it once (`platformStyle = defaultPlatformStyle()`: Material on Android,
+iOS on iOS); previews and tests pass it explicitly. Only the kit reads the
+style: every component has one `when` over it, with the same parameters,
+semantics and test tags in both branches, so feature code never learns which
+look drew and never branches on the platform (`ItmoTheme.platformStyle` is
+internal to the kit). Android's look and its baselines do not change with the
+iOS style.
+
+What adapts under `Ios`:
+
+- **Type.** Apple's text styles (`IosTypeScaleTokens`) in place of the M3
+  roles: `bodyLarge` is body 17, `titleMedium` headline, `titleLarge` title 3.
+  `IosTextStyle` carries the tracking that makes CMP's single optical size of
+  SF match UIKit's width; components add no letter spacing.
+- **Spacing and shape.** `ItmoSpacing.Ios` (screen margin 20, row padding 16,
+  touch target 44) and `ItmoShapes.Ios` (every card and group 26, square inner
+  group corners, no group gap); `LocalMinimumInteractiveComponentSize` is 44 pt.
+  UIKit metrics without a Material slot live in `IosMetrics`, each with the
+  UIKit view it was measured on: row height 53, separator 1 pt inset 16 (56
+  with an icon), sheet radius 38, alert 320 wide with radius 34 and 48 pt
+  capsule buttons, menu 250 wide, segmented control 31 high.
+- **Colour.** The scheme stays the static one (iOS has no wallpaper colours);
+  the accent, the tint of buttons, switches, checkmarks and links, is
+  `colorScheme.primary`, as the SwiftUI screens tint their native controls.
+  Grouped backgrounds, cells, separators, labels and fills come from
+  `ItmoTheme.iosColors` by their UIKit names (`groupedBackground`,
+  `groupedCell`, `separator`, `secondaryLabel`, `systemFill`, `systemRed`,
+  `overlay` and the sheet's elevated pair), light and dark.
+- **Controls.** Rows are cells of inset groups with disclosure and checkmark
+  accessories; buttons are `UIButton` capsules that dim when pressed instead of
+  a ripple; the switch is a `UISwitch`, the button group a
+  `UISegmentedControl`, the spinner `UIActivityIndicatorView`'s spokes,
+  progress a flat `UIProgressView`; dialogs are iOS alerts and `ItmoMenu` a
+  context-menu panel, both drawn in Compose.
+- **Sheets.** SwiftUI's `.sheet` hosts a `SheetScaffold` body and owns the
+  grabber, corners, detents, insets and dismissal; the scaffold draws no handle
+  and its header is the sheet's navigation bar.
+- **Expressive off.** `ItmoTheme(expressive = ...)` is ignored under `Ios`;
+  the M3E look is Android's only.
+
+What stays the same: content visuals are one drawing on both platforms (the
+score ring, the grade scale, the timeline marker, the avatar and the hero
+avatar mask without the expressive shape, the steps indicator's geometry,
+Material Symbols icons, the lesson-type accents and the extended colours);
+only the chrome around them follows the style. Text, icons and behaviour of a
+screen do not change between styles.
+
+- **Haptics.** `rememberItmoHaptics()` inside the kit only, a no-op under
+  Material: selection when a segment or picker value changes, toggle when a
+  switch or checkbox flips, one refresh tick when a pull passes the threshold,
+  success, warning and error when a kit action reports its outcome (a
+  destructive confirmation). Never on plain taps, scrolling or navigation.
+- **No UIKit views in the kit.** The iOS variants draw in Compose only: no
+  `UIKitView`, no UIKit interop, no blur or glass (opaque fills at the measured
+  colours), circular corners at UIKit's radii. Every variant renders under
+  Robolectric, so it has JVM baselines like the Material one.
+- **Baselines.** The harness renders every preview in `ios-light`, `ios-dark`
+  and `ios-narrow` (font scale 1.3 at 320 dp, light) as
+  `<Preview>_ios-<appearance>.png`. The kit records them always; a feature
+  module records them with
+  `scripts/verify.sh shots <module> --record -Pshots.appearance=ios`, and from
+  then on every run verifies them (the QR pass is the first such module). An
+  iOS change re-records only `_ios-*` files; a changed Material PNG in the same
+  diff is a bug. Accessibility checks assert 44 pt targets under `Ios`.
+- **The JVM font trap.** JVM captures draw the iOS type with Robolectric's
+  fallback font, not SF Pro, which is never committed or bundled. Glyph shapes
+  and exact line breaks are checked only on the simulator:
+  `scripts/ios/screenshots.sh <UITests class>` in light and dark, plus an AX1
+  run, for every screen that gets iOS baselines. A text that wraps or clips
+  with SF but not in the JVM capture is a finding of that screen; the
+  `ios-narrow` baseline is the JVM's guard for long text.
 
 ## Expressive components
 
