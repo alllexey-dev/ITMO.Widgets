@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.Lifecycle
@@ -45,6 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 import kotlin.getValue
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @AndroidEntryPoint
 class ScheduleFragment : Fragment() {
@@ -77,7 +77,7 @@ class ScheduleFragment : Fragment() {
     private var anchorPageRequests = 0
     private var anchorPagedThrough: LocalDate? = null
 
-    private val viewModel: ScheduleViewModel by viewModels()
+    private val viewModel: ScheduleViewModel by viewModel()
 
     @Inject
     lateinit var timeProvider: AcademicTimeProvider

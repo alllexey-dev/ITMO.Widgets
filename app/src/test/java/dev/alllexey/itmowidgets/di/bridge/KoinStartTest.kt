@@ -14,13 +14,16 @@ import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
+import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
@@ -99,6 +102,9 @@ class KoinStartTest {
         assertSame(hilt.scheduleRefreshGateway(), koin.get<ScheduleRefreshGateway>())
         // Unscoped in Hilt: Koin keeps the first instance it gets and hands out that one.
         assertSame(koin.get<SportScoreRepository>(), koin.get<SportScoreRepository>())
+        assertSame(hilt.schedulePreferencesRepository(), koin.get<SchedulePreferencesRepository>())
+        assertSame(hilt.pendingSportBookingsRepository(), koin.get<PendingSportBookingsRepository>())
+        assertSame(hilt.teacherLessonsGateway(), koin.get<TeacherLessonsGateway>())
     }
 
     @Test

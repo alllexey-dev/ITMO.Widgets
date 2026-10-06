@@ -17,13 +17,16 @@ import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
+import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
@@ -89,6 +92,12 @@ interface CoreBridgeEntryPoint {
 
     /** Sport scores as other features read them; unscoped in Hilt but stateless, so one instance serves Koin. */
     fun sportScoreRepository(): SportScoreRepository
+    // The schedule contracts other features read (L10 LS-2a): the screens' preferences, pending sport rows and the
+    // teacher lessons gateway; calendar sync and the refresh and subject lessons gateways are bridged above.
+    // Schedule's own data stays on Hilt.
+    fun schedulePreferencesRepository(): SchedulePreferencesRepository
+    fun pendingSportBookingsRepository(): PendingSportBookingsRepository
+    fun teacherLessonsGateway(): TeacherLessonsGateway
 
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
@@ -129,4 +138,11 @@ val coreBridgeModule = module {
     single<SubjectLessonsGateway> { CoreBridgeEntryPoint.from(androidContext()).subjectLessonsGateway() }
     single<ScheduleRefreshGateway> { CoreBridgeEntryPoint.from(androidContext()).scheduleRefreshGateway() }
     single<SportScoreRepository> { CoreBridgeEntryPoint.from(androidContext()).sportScoreRepository() }
+    single<SchedulePreferencesRepository> {
+        CoreBridgeEntryPoint.from(androidContext()).schedulePreferencesRepository()
+    }
+    single<PendingSportBookingsRepository> {
+        CoreBridgeEntryPoint.from(androidContext()).pendingSportBookingsRepository()
+    }
+    single<TeacherLessonsGateway> { CoreBridgeEntryPoint.from(androidContext()).teacherLessonsGateway() }
 }

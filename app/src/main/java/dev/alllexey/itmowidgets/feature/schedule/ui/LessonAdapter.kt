@@ -142,8 +142,9 @@ class LessonAdapter(
                 teacherLayout.visibility = View.GONE
             }
 
-            if (lesson.note != null) {
-                noteText.text = lesson.note.trim()
+            val note = lesson.note
+            if (note != null) {
+                noteText.text = note.trim()
                 noteLayout.visibility = View.VISIBLE
             } else {
                 noteLayout.visibility = View.GONE

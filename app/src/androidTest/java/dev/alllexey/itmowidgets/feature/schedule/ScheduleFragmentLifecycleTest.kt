@@ -7,7 +7,6 @@ import android.view.ViewTreeObserver
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -46,6 +45,7 @@ import kotlinx.datetime.toInstant
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 
 @RunWith(AndroidJUnit4::class)
 class ScheduleFragmentLifecycleTest {
@@ -795,7 +795,8 @@ class ScheduleFragmentLifecycleTest {
 
     private fun ScheduleLifecycleTestActivity.recycler() = schedule().requireView().findViewById<RecyclerView>(R.id.outer_recycler_view)
 
-    private fun ScheduleLifecycleTestActivity.viewModel() = ViewModelProvider(schedule())[ScheduleViewModel::class.java]
+    // The Fragment's own instance, as its Koin delegate resolves it.
+    private fun ScheduleLifecycleTestActivity.viewModel() = schedule().getViewModel<ScheduleViewModel>()
 
     private fun ScheduleLifecycleTestActivity.showAnotherScreen() {
         supportFragmentManager.beginTransaction()
