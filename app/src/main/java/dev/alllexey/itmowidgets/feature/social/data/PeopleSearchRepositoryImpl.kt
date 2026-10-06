@@ -1,17 +1,17 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
-import api.myitmo.MyItmoApi
+import dev.alllexey.itmoapi.core.requireResult
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.personalities.PersonalityMin
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
-import api.myitmo.model.personality.PersonalityMin
-import dev.alllexey.itmowidgets.core.network.requireResult
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.PersonSearchResult
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -21,7 +21,7 @@ import javax.inject.Inject
  * e-mail fields of the directory response are dropped at this boundary.
  */
 class PeopleSearchRepositoryImpl @Inject constructor(
-    private val myItmoApi: MyItmoApi,
+    private val client: MyItmoClient,
     private val social: SocialRepository,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
@@ -37,7 +37,7 @@ class PeopleSearchRepositoryImpl @Inject constructor(
 
         val page = try {
             withContext(dispatchers.io) {
-                myItmoApi.searchPersonalities(PAGE_SIZE, offset, normalized).execute().body().requireResult()
+                client.personalities.searchPersonalities(PAGE_SIZE, offset, normalized).requireResult()
             }
         } catch (cancellation: CancellationException) {
             throw cancellation
@@ -45,14 +45,14 @@ class PeopleSearchRepositoryImpl @Inject constructor(
             return AppResult.Failure(error.toAppError())
         }
 
-        val people = page.data.orEmpty().mapNotNull(PersonalityMin::toPerson)
+        val people = page.data.mapNotNull(PersonalityMin::toPerson)
         val registered = when (val lookup = social.lookup(people.map { it.isu })) {
             is AppResult.Success -> lookup.value.associateBy { it.isu }
             is AppResult.Failure -> return lookup
         }
         val results = people.map { person -> person.copy(registered = registered[person.isu]) }
-        val loaded = offset + page.data.orEmpty().size
-        val nextOffset = loaded.takeIf { page.data.orEmpty().isNotEmpty() && it < page.count }
+        val loaded = offset + page.data.size
+        val nextOffset = loaded.takeIf { page.data.isNotEmpty() && it < page.count }
         return AppResult.Success(PeopleSearchPage(results, page.count, nextOffset))
     }
 
@@ -63,11 +63,11 @@ class PeopleSearchRepositoryImpl @Inject constructor(
 
 private fun PersonalityMin.toPerson(): PersonSearchResult? {
     val isu = id.takeIf { it in 1..Int.MAX_VALUE }?.toInt() ?: return null
-    val name = fio?.trim()?.takeIf(String::isNotEmpty) ?: return null
+    val name = fio.clean() ?: return null
     return PersonSearchResult(
         isu = isu,
         name = name,
-        pictureUrl = photoUrl?.trim()?.takeIf(String::isNotEmpty),
+        pictureUrl = photoUrl.clean(),
         registered = null
     )
 }
