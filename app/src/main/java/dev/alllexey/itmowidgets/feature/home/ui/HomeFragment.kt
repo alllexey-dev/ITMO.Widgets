@@ -1,9 +1,12 @@
 package dev.alllexey.itmowidgets.feature.home.ui
 
+import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,20 +30,19 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * The home tab (`navigation_home`), kept by name for the main graph. The feed is `HomeRoute` from
- * `:shared:feature-home`; this host keeps what only Android does: navigation through `AppNavigator`, the widget pin,
- * the notification permission and the services settings page. Its ViewModel is the route's: Koin's, in this
- * Fragment's store, never Hilt's default factory.
+ * `:shared:feature-home`; this host keeps what only Android does: navigation through `AppNavigator` and the hint
+ * actions of [HomeHints]. Its ViewModel is the route's: Koin's, in this Fragment's store, never Hilt's default
+ * factory.
  */
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
     private val viewModel: HomeViewModel by viewModel()
-    private var pinRequester: WidgetPinRequester? = null
+    private var hints: HomeHints? = null
 
     private val notificationPermissionLauncher =
         registerForActivityResult(RequestNotificationPermission()) { granted ->
-            requireActivity().openNotificationSettingsIfLocked(granted)
-            viewModel.onScreenResumed()
+            requireActivity().onHomeNotificationResult(granted, viewModel)
         }
 
     private val actions = HomeActions(
@@ -49,7 +51,9 @@ class HomeFragment : Fragment() {
         onOpenSport = { openRoot(AppRoot.SPORT) },
         onOpenFriends = { openScreen(AppScreen.FRIENDS) },
         onOpenUser = { openUserProfile(it) },
-        onHint = { actOnHint(it) },
+        onHint = { hint ->
+            hints?.act(hint) { page -> openScreen(AppScreen.SETTINGS, bundleOf(SettingsScreenArgs.PAGE to page)) }
+        },
         onOpenScheduleChanges = { openScreen(AppScreen.SCHEDULE_CHANGES) },
         onOpenMarks = { openRoot(AppRoot.RECORDBOOK) },
         onOpenWeb = { openScreen(AppScreen.MY_ITMO_WEB) },
@@ -59,27 +63,58 @@ class HomeFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // The launcher confirms a pin with this screen stopped; the hint source re-checks on return.
-        pinRequester = WidgetPinRequester(requireContext()).also { it.start { viewModel.onScreenResumed() } }
+        hints = HomeHints(requireContext(), notificationPermissionLauncher)
+            .also { it.start(viewModel::onScreenResumed) }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         itmoComposeView { HomeRoute(actions, viewModel) }
 
     override fun onDestroy() {
-        pinRequester?.stop()
-        pinRequester = null
+        hints?.stop()
+        hints = null
         super.onDestroy()
     }
+}
 
-    private fun actOnHint(hint: HomeHint) {
+/**
+ * The platform side of the home hints, the same in `HomeFragment` and the Compose shell's home tab: the widget hint
+ * asks the launcher to pin the single-lesson widget, the notifications hint asks for the permission through
+ * [notifications] (or opens the system page when nothing is left to ask), the services hint opens the services page
+ * of the settings. The host owns the instance: [start] when it is created, [stop] when it goes, since the launcher
+ * confirms a pin while the screen is stopped.
+ */
+internal class HomeHints(
+    private val context: Context,
+    private val notifications: ActivityResultLauncher<Unit>,
+) {
+    private val pins = WidgetPinRequester(context)
+
+    /** [onPinned] runs for every widget the launcher pinned. */
+    fun start(onPinned: () -> Unit) {
+        pins.start { onPinned() }
+    }
+
+    fun stop() {
+        pins.stop()
+    }
+
+    /** Runs [hint]'s action; [openSettings] opens a page of the settings, named as `SettingsScreenArgs.PAGE`. */
+    fun act(hint: HomeHint, openSettings: (page: String) -> Unit) {
         when (hint) {
-            HomeHint.WIDGETS -> pinRequester?.request(WidgetProviders.SINGLE_LESSON)
-            HomeHint.NOTIFICATIONS -> requireContext().requestNotifications(notificationPermissionLauncher)
-            HomeHint.SERVICES -> openScreen(AppScreen.SETTINGS, bundleOf(SettingsScreenArgs.PAGE to SERVICES_PAGE))
+            HomeHint.WIDGETS -> pins.request(WidgetProviders.SINGLE_LESSON)
+            HomeHint.NOTIFICATIONS -> context.requestNotifications(notifications)
+            HomeHint.SERVICES -> openSettings(SERVICES_SETTINGS_PAGE)
         }
     }
 
-    private companion object {
-        const val SERVICES_PAGE = "SERVICES"
+    companion object {
+        const val SERVICES_SETTINGS_PAGE = "SERVICES"
     }
+}
+
+/** The permission dialog closed: a locked denial opens the system page, and the hint source re-checks. */
+internal fun Activity.onHomeNotificationResult(granted: Boolean, viewModel: HomeViewModel) {
+    openNotificationSettingsIfLocked(granted)
+    viewModel.onScreenResumed()
 }
