@@ -1,0 +1,37 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "id": 81001,
+      "control_name": "Синтетический контроль",
+      "parent_id": null,
+      "lower_value": 0.0,
+      "max_value": 100.0,
+      "min_value": 60.0,
+      "required": true,
+      "rate": 71.5,
+      "date": "2026-01-15T10:00:00+03:00",
+      "teacher": {
+        "surname": "Тестовый",
+        "name": "Преподаватель",
+        "patronymic": "Синтетический"
+      }
+    },
+    {
+      "id": 81002,
+      "control_name": "Синтетическая работа",
+      "parent_id": 81001,
+      "lower_value": null,
+      "max_value": 20.0,
+      "min_value": 0.0,
+      "required": false,
+      "rate": null,
+      "date": null,
+      "teacher": {
+        "surname": "Тестовый",
+        "name": null
+      }
+    }
+  ]
+}

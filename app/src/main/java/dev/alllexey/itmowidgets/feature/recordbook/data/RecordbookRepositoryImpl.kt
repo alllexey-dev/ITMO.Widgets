@@ -1,23 +1,24 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data
 
-import api.myitmo.MyItmo
+import dev.alllexey.itmoapi.core.ResultResponse
+import dev.alllexey.itmoapi.core.requireResult
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.recordbook.ControlEntry
+import dev.alllexey.itmoapi.myitmo.recordbook.RecordBookEntry
+import dev.alllexey.itmoapi.myitmo.recordbook.RecordBookTeacher
+import dev.alllexey.itmoapi.myitmo.recordbook.Semester
+import dev.alllexey.itmoapi.myitmo.recordbook.Specialization
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
-import api.myitmo.model.recordbook.ControlEntry
-import api.myitmo.model.recordbook.RecordBookEntry
-import api.myitmo.model.recordbook.RecordBookTeacher
-import api.myitmo.model.recordbook.Semester
-import api.myitmo.model.recordbook.Specialization
-import dev.alllexey.itmowidgets.core.network.requireResult
-import dev.alllexey.itmowidgets.core.network.appResultOf
-import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
@@ -26,19 +27,21 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.withContext
 
-/** One instance per process: the memory cache is what the study screens render first. */
+/**
+ * One instance per process: the memory cache is what the study screens render first. Requests go through the
+ * MyItmoApi 2.x recordbook area; the client's auth plugin owns the single 401 refresh, failures map in [appResultOf].
+ */
 @Singleton
 class RecordbookRepositoryImpl @Inject constructor(
-    private val myItmo: MyItmo,
+    private val client: MyItmoClient,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
 ) : RecordbookRepository, SessionDataCleaner {
 
-    private val api by lazy { myItmo.api }
+    private val api get() = client.recordBook
     private val cache = RecordbookMemoryCache()
 
     override suspend fun getPrograms(): AppResult<List<RecordbookProgram>> = if (demo.isActive()) {
@@ -87,12 +90,12 @@ class RecordbookRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun <T, R> request(
-        call: () -> retrofit2.Call<api.myitmo.model.ResultResponse<T>>,
+    private suspend fun <T : Any, R> request(
+        call: suspend () -> ResultResponse<T>,
         transform: (T) -> R
     ): AppResult<R> = appResultOf {
         val result = withContext(dispatchers.io) {
-            myItmo.execute(call()).requireResult()
+            call().requireResult()
         }
         transform(result)
     }
@@ -107,7 +110,7 @@ class RecordbookRepositoryImpl @Inject constructor(
         studyYear = studyYear.trim(),
         semester = semester,
         course = course,
-        actual = isActual
+        actual = actual
     )
 
     private fun RecordBookEntry.toModel() = RecordbookSubject(
@@ -118,8 +121,8 @@ class RecordbookRepositoryImpl @Inject constructor(
         score = currentScore,
         rate = rate?.trim(),
         attempt = attempt,
-        examDate = examDate?.toInstant()?.toKotlinInstant(),
-        hasDetails = isHaveTree,
+        examDate = examDate,
+        hasDetails = haveTree,
         teacherName = teacher?.displayName(),
         lmsLink = lmsLink?.trim()?.takeIf { it.isNotBlank() }
     )
@@ -130,8 +133,8 @@ class RecordbookRepositoryImpl @Inject constructor(
         score = rate,
         minimum = minValue,
         maximum = maxValue,
-        required = isRequired,
-        date = date?.toInstant()?.toKotlinInstant(),
+        required = required,
+        date = date,
         teacherName = teacher?.displayName(),
         parentId = parentId
     )
