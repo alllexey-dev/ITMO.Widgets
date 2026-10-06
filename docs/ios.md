@@ -201,8 +201,9 @@ container, logs one warning per process and carries on; the extensions then see 
 
 | File | Written by | Read by | Notes |
 |---|---|---|---|
-| `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted |
-| `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | none yet; each card that adds a snapshot adds its row |
+| `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted; `myitmo-refresh` guards the token refresh |
+| session-v1.json | `SessionSnapshotWriter` | widget extension, notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; missing means signed out; no token |
+| `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | each card that adds a snapshot adds its row |
 
 - Snapshots hold `{"version": N, "value": ...}`. A write goes to a temporary file of its own and is renamed over
   the old one, so a reader sees the old or the new snapshot, never a partial one; then the writer asks WidgetKit to
@@ -220,9 +221,43 @@ entitlements, so Keychain tests are the hosted `ITMOWidgetsTests/KeychainTests`.
 
 | Item (account) | Written by | Read by |
 |---|---|---|
-| none yet | | |
+| `myitmo_tokens` | `KeychainTokenStorage` (sign-in, and MyItmoApi's `TokenManager` on refresh) | app, notification service |
 
 Each card that stores a secret adds its row. Values are never logged.
+
+Session. `KeychainTokenStorage` is both MyItmoApi 2.x's `TokenStorage` and the session's `SessionTokenStore` over
+the one `myitmo_tokens` item, serialised as Android's `MyItmoStorage` serialises `myitmo_tokens.enc` before sealing
+it: five lines, each token base64url without padding (`~` for none), each expiry in epoch milliseconds. It keeps no
+copy, so each read sees what another process wrote. The client's `TokenManager` is the only refresher; it refreshes
+inside `FileCrossProcessLock("myitmo-refresh")` and re-reads the item once it holds the lock, so when the app and the
+notification service find the same expired token only the first refreshes. A value that does not parse is dropped
+(signed out); a Keychain failure is thrown and drops nothing.
+
+Sign-out. Three `SessionDataCleaner`s run with the shared ones: the Keychain (every item of the service), the App
+Group container (every file but the `locks` directory) and WebKit's website data, which Swift removes through
+`IosCoreHost.clearWebsiteData` (`WKWebsiteDataStore`, as Android clears its WebView data).
+
+## Core graph
+
+Koin is the only dependency graph on iOS. `iosCoreModule(host)` (`shared/core/src/iosMain/.../core/di/`) defines
+each core type once, what `:app`'s Hilt modules and `CoreBridge` give Android: `AppLog` (`OsLogAppLog`),
+`AppDiagnostics`, the wall `Clock`, `AppDispatchers`, `AcademicTimeProvider` (Moscow time, no debug override),
+`AppDirectories`, the App Group directory and snapshot writer, `SessionSnapshotWriter`, `CrossProcessLock`,
+`SecureStore`, the `app_preferences` DataStore and the core preference stores, `BackendGate`, the session storage,
+the Darwin engine, `MyItmoClient`, Core 2.0's `BackendClient`, `PlatformActions` and the sign-out cleaners.
+
+- `DemoMode` and `SessionRepository` come from the account module; ports still in `:app` (`AppNotifier`,
+  `FcmTokenSync`) are bound by the card that needs them.
+- `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
+  controller for the share sheet.
+- Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`; dev
+  (`https://dev.widgets.alllexey.dev`) in every configuration until Backend 1.8.0 is in production (gate R).
+- `AppDiagnostics` keeps this launch's records in memory and writes each to unified logging; an error contributes
+  only its type until the journal's sanitiser is shared (the crash hook and the diagnostics screen are IO-08a's).
+- `PlatformActions`: the share sheet (the title is not shown: iOS's sheet has none), links (t.me in Telegram when
+  installed), Apple Maps (`maps.apple.com`, the pin or the address) and the app's pages in Settings.
+- `IosCoreGraph` runs the module in a Koin application of its own for hosted tests (`ITMOWidgetsTests/SessionTests`);
+  `IosCoreModuleTest` resolves every definition on the simulator, since Koin's `verify()` is JVM-only.
 
 Network and log. `darwinHttpEngine()` is the Ktor engine of every iOS client: no cookie storage, no cookie
 handling, no URL cache (SP-15a, SP-15b); clients read cookies with Ktor's `setCookie()` and set

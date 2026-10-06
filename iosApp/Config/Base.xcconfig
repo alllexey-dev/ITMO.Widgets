@@ -6,6 +6,11 @@ APP_BUNDLE_ID = dev.alllexey.itmowidgets
 APP_GROUP_ID = group.dev.alllexey.itmowidgets
 KEYCHAIN_GROUP = $(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared
 
+// The Backend of every configuration, BackendBaseURL in the app's Info.plist (L18 IO-04b). Dev until Backend 1.8.0
+// is in production (gate R); then Release switches to https://widgets.alllexey.dev. `$()` keeps xcconfig from
+// reading `//` as a comment.
+BACKEND_BASE_URL = https:/$()/dev.widgets.alllexey.dev
+
 MARKETING_VERSION = 2.3.0
 CURRENT_PROJECT_VERSION = 1
 IPHONEOS_DEPLOYMENT_TARGET = 18.0
