@@ -4,10 +4,6 @@ FriendSelectorSheetContent_empty-filter
 FriendSelectorSheetContent_friends
 FriendSelectorSheetContent_locked
 FriendSelectorSheetContent_people
-FriendsScreen_content
-FriendsScreen_disabled
-FriendsScreen_empty
-FriendsScreen_requests
 UserProfileScreen_friend
 UserProfileScreen_not-found
 UserProfileScreen_self

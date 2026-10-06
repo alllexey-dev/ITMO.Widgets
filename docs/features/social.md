@@ -88,8 +88,15 @@ shown once the ISU is known, shares the own profile link
 Two tabs on one list: `Друзья` (rows with `Удалить`, confirmed by a dialog) and
 `Заявки` (incoming with `Принять`/`Отклонить`, outgoing with `Отменить`),
 grouped by section headers. The requests tab carries a badge with the incoming
-count. A search icon opens people search. Disabled services show a locked state
-that leads to settings.
+count (`999+` past three digits) beside its label, never over it. A search icon
+opens people search. A row in flight keeps its buttons inert; a failed action
+shows `Не получилось: <reason>` in a snackbar. The first load is silent behind
+list placeholders, a reload keeps the list on screen and only a pull shows the
+indicator. An empty `Друзья` tab offers `Найти людей`, an empty `Заявки` tab
+says `Заявок нет`; the tabs show only over content. Disabled services show a
+locked state that leads to settings, errors a retry. The screen is
+`FriendsRoute` from `:shared:feature-social`, hosted by `FriendsFragment` on
+Android; the remove confirmation is the kit's `ConfirmDialog`.
 
 ## People search (overlay `USER_SEARCH`)
 
@@ -258,8 +265,8 @@ optional status line, up to two action buttons or a chevron, section headers and
 a load-more row. Presentation builds `UserRowUi` values with `UiText` labels.
 In Compose, `ui/list/UserList` in `:shared:feature-social` renders them with the
 kit's `UserRow` and maps `UserAction` to its label (`UserAction.label()`);
-another user's friends uses it. The friends screen and people search still use
-`item_user_row.xml` with `UserListAdapter` until their ports.
+the friends screen and another user's friends use it. People search still uses
+`item_user_row.xml` with `UserListAdapter` until its port.
 
 ## Verification
 
@@ -274,7 +281,11 @@ scroll restoration in the full appearance matrix. Another user's friends is
 `UserFriendsScreen` in `:shared:feature-social`: `SocialScreenshotTest` records
 every state (`UserFriendsScreen_<state>`) and `UserList`, and
 `UserFriendsScreenTest` and `UserListTest` cover the states, row taps, actions,
-load-more and 48 dp targets.
+load-more and 48 dp targets. The friends screen is `FriendsScreen`:
+`FriendsScreen_<state>` records content, requests, the badge, a busy row,
+refreshing, loading, both empty tabs, disabled and error, and
+`FriendsScreenTest` covers the tabs and the badge, row actions, the remove
+confirmation, the kept list and every state's way on.
 See [visual test commands](../design.md#running-the-visual-tests).
 
 ## Not implemented yet

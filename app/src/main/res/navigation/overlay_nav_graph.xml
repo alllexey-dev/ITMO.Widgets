@@ -41,8 +41,7 @@
     <fragment
         android:id="@+id/friends"
         android:name="dev.alllexey.itmowidgets.feature.social.ui.FriendsFragment"
-        android:label="Friends"
-        tools:layout="@layout/fragment_friends" />
+        android:label="Friends" />
 
     <fragment
         android:id="@+id/user_friends"
