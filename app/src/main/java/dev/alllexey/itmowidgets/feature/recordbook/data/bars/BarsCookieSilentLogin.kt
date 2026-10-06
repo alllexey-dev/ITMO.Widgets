@@ -1,13 +1,11 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
-import api.bars.utils.BarsAuthHelper
-import api.bars.utils.BarsSessionCode
-import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmoapi.bars.auth.BarsLogin
+import dev.alllexey.itmoapi.bars.auth.BarsSessionCode
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
 
 /** Result of renewing the BARS session without a WebView. */
 sealed interface BarsCookieRenewal {
@@ -29,19 +27,19 @@ interface BarsBackgroundLogin {
 }
 
 /**
- * Repeats the official ITMO.ID authorization request of the `bars` client with the WebView's ITMO.ID cookies.
- * The library sends the cookies only to that URL, follows no redirects and accepts only the exact callback with
- * the same `state`. `Set-Cookie` of the answer goes back to the WebView's store for the same URL. Codes and
- * cookies are never logged or put into exceptions.
+ * Repeats the official ITMO.ID authorization request of the `bars` client with the WebView's ITMO.ID cookies
+ * ([BarsLogin.requestCodeWithCookies]). The library sends the cookies only to that URL over HTTPS, follows no
+ * redirects, keeps no cookie jar or cache and accepts only the exact callback with the same `state`. `Set-Cookie` of
+ * the answer goes back to the WebView's store for the same URL. Codes and cookies are never logged or put into
+ * exceptions.
  */
 class BarsCookieSilentLogin @Inject constructor(
-    private val auth: BarsAuthHelper,
-    private val cookies: ItmoIdCookies,
-    private val dispatchers: AppDispatchers
+    private val login: BarsLogin,
+    private val cookies: ItmoIdCookies
 ) : BarsBackgroundLogin {
 
     override suspend fun renew(state: String): BarsCookieRenewal {
-        val url = auth.getLoginUrl(state)
+        val url = login.loginUrl(state)
         val header = try {
             cookies.cookieHeader(url)
         } catch (cancel: CancellationException) {
@@ -52,7 +50,7 @@ class BarsCookieSilentLogin @Inject constructor(
         }
         if (header.isNullOrBlank()) return BarsCookieRenewal.SessionEnded
         val answer = try {
-            withContext(dispatchers.io) { auth.requestCodeWithCookies(state, header) }
+            login.requestCodeWithCookies(state, header)
         } catch (cancel: CancellationException) {
             throw cancel
         } catch (failure: Exception) {
@@ -61,7 +59,9 @@ class BarsCookieSilentLogin @Inject constructor(
         }
         storeCookies(url, answer.setCookies)
         return when (answer.outcome) {
-            BarsSessionCode.Outcome.CODE -> BarsCookieRenewal.Code(answer.code)
+            // The library sets a code for CODE only; a missing one is a rejected answer, not an ended session.
+            BarsSessionCode.Outcome.CODE ->
+                answer.code?.let(BarsCookieRenewal::Code) ?: BarsCookieRenewal.Failed(AppError.Unknown())
             BarsSessionCode.Outcome.LOGIN_REQUIRED -> BarsCookieRenewal.SessionEnded
             BarsSessionCode.Outcome.REJECTED, BarsSessionCode.Outcome.HTTP_ERROR ->
                 BarsCookieRenewal.Failed(AppError.Unknown())

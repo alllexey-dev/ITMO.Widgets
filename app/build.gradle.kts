@@ -156,6 +156,8 @@ dependencies {
     implementation(libs.my.itmo.api)
     // MyItmoApi 2.x beside 1.x (KM-10a1): auth and the token storage moved; 1.x serves the unswapped areas until KM-10i.
     implementation(libs.my.itmo.api.kmp)
+    // The BARS engine of di/RecordbookModule (KM-10b2): OkHttp with the BARS timeouts, apart from MyITMO's engine.
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.androidx.navigation.ui)
     implementation(libs.androidx.datastore.preferences)
     // Storage foundation (KM-04): okio files, DataStore by okio path, the common lock of AtomicTextFile.

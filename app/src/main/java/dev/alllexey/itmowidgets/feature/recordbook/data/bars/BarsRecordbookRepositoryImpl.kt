@@ -30,7 +30,7 @@ class BarsRecordbookRepositoryImpl @Inject constructor(
         coroutineScope {
             references.map { reference ->
                 async {
-                    val journal = execute { api.getStudentJournal(reference.planId, reference.type, reference.identifier) }
+                    val journal = execute { getStudentJournal(reference.planId, reference.type, reference.identifier) }
                     val subject = mapper.subject(journal, reference, owner.toString())
                     // A journal whose controls do not map still lists its subject.
                     runCatching { mapper.controls(journal, reference, owner.toString()) }.getOrNull()
@@ -43,7 +43,7 @@ class BarsRecordbookRepositoryImpl @Inject constructor(
 
     override suspend fun getSubject(journal: BarsJournalReference): AppResult<BarsSubjectDetails> = client.account {
         selectPeriod("${journal.yearStart}/${journal.yearStart + 1}", journal.semester == 1)
-        val response = execute { client.bars.api.getStudentJournal(journal.planId, journal.type, journal.identifier) }
+        val response = execute { getStudentJournal(journal.planId, journal.type, journal.identifier) }
         BarsSubjectDetails(mapper.subject(response, journal, owner.toString()), mapper.controls(response, journal, owner.toString()))
             .also { controls[journal] = it.controls }
     }

@@ -1,60 +1,42 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
-import api.bars.Bars
+import dev.alllexey.itmoapi.bars.model.Term
+import dev.alllexey.itmoapi.bars.model.User
+import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import api.bars.BarsApi
-import api.bars.model.Term
-import api.bars.model.User
-import api.bars.utils.BarsApiException
-import api.bars.utils.BarsCodeSupplier
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import retrofit2.Call
+import dev.alllexey.itmoapi.bars.BarsClient as LibraryBarsClient
 
 /**
- * App-side seam over the library client: binds the session to the signed-in ISU, serializes
- * period selection, and turns library failures into [AppError]. Silent renewal goes through the
- * library's [BarsCodeSupplier]: screens ([account]) renew through the headless WebView flow, the
- * background ([backgroundAccount]) through ITMO.ID cookies without a WebView. Only one block runs
- * at a time, so the supplier's mode belongs to the block that holds the lock. Every successful
- * answer is reported to [BarsSessionListener] after the lock is released.
+ * App-side seam over the library client: binds the session to the signed-in ISU, serializes period selection, and
+ * turns library failures into [AppError]. The library client is built over [OwnerBoundBarsStorage] and [BarsRenewal]
+ * (see `RecordbookModule`): screens ([account]) renew through the headless WebView flow, the background
+ * ([backgroundAccount]) through ITMO.ID cookies. Only one block runs at a time, so the renewal mode belongs to the
+ * block that holds the lock. The library's locks are not reentrant: a block never nests period changes. Every
+ * successful answer is reported to [BarsSessionListener] after the lock is released.
  */
 @Singleton
 class BarsClient @Inject constructor(
-    val bars: Bars,
+    private val bars: LibraryBarsClient,
+    private val renewal: BarsRenewal,
     private val storage: OwnerBoundBarsStorage,
     private val currentUser: CurrentUserProvider,
-    silentLogin: BarsSilentLogin,
-    backgroundLogin: BarsBackgroundLogin,
     private val listener: BarsSessionListener,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
 ) {
     private val mutex = Mutex()
-
-    @Volatile private var cookieRenewal = false
-
-    init {
-        bars.codeSupplier = BarsCodeSupplier { state ->
-            if (cookieRenewal) {
-                codeOf(runBlocking { backgroundLogin.renew(state) })
-            } else {
-                runBlocking { silentLogin.authorizationCode(state) }
-            }
-        }
-    }
 
     suspend fun <T> account(block: suspend Account.() -> T): AppResult<T> = safe {
         mutex.withLock {
@@ -79,19 +61,16 @@ class BarsClient @Inject constructor(
             if (withContext(dispatchers.io) { storage.getAuthorization() } == null) {
                 BarsBackground.NoSession
             } else {
-                cookieRenewal = true
-                try {
+                renewal.throughCookies {
                     val account = Account(owner)
                     account.open()
                     BarsBackground.Success(account.block())
-                } finally {
-                    cookieRenewal = false
                 }
             }
         }
     } catch (cancel: CancellationException) {
         throw cancel
-    } catch (_: SessionEndedSignal) {
+    } catch (_: BarsSessionEnded) {
         BarsBackground.SessionEnded
     } catch (failure: BarsFailure) {
         BarsBackground.Failure(failure.error)
@@ -103,9 +82,8 @@ class BarsClient @Inject constructor(
     suspend fun login(code: String): AppResult<Unit> = safe {
         mutex.withLock {
             val owner = owner()
-            val header = io { bars.authHelper.exchange(code) }
-            storage.setAuthorization(header)
-            val user = io { bars.execute(bars.api.getCurrentUser()) }
+            io { bars.login(code) }
+            val user = io { bars.getCurrentUser() }
             if (user.login != owner.toString()) {
                 storage.clear()
                 fail(AppError.Forbidden)
@@ -114,14 +92,12 @@ class BarsClient @Inject constructor(
     }.also { if (it is AppResult.Success) listener.onBarsAnswered() }
 
     inner class Account(val owner: Int) {
-        val api: BarsApi get() = bars.api
-
         /** Server-side selection as of the last read; period changes update it. */
         lateinit var user: User
             private set
 
         internal suspend fun open() {
-            user = execute { bars.api.getCurrentUser() }
+            user = execute { getCurrentUser() }
             if (user.login != owner.toString()) {
                 storage.clear()
                 fail(AppError.Unauthorized)
@@ -129,7 +105,7 @@ class BarsClient @Inject constructor(
         }
 
         /** Calls inside one account block may run concurrently; the library shares one renewal between them. */
-        suspend fun <T> execute(call: () -> Call<T>): T = io { bars.execute(call()) }.also { checkOwner() }
+        suspend fun <T> execute(call: suspend LibraryBarsClient.() -> T): T = io { bars.call() }.also { checkOwner() }
 
         suspend fun selectPeriod(studyYear: String, autumn: Boolean) {
             user = io { bars.selectPeriod(studyYear, if (autumn) Term.AUTUMN else Term.SPRING) }
@@ -149,36 +125,27 @@ class BarsClient @Inject constructor(
         return owner
     }
 
-    private suspend fun <T> io(block: () -> T): T = withContext(dispatchers.io) {
-        try { block() } catch (failure: BarsApiException) { fail(failure.toAppError()) }
+    private suspend fun <T> io(block: suspend () -> T): T = withContext(dispatchers.io) {
+        try { block() } catch (failure: MyItmoException) { fail(failure.toAppError()) }
     }
 
     private suspend fun <T> safe(block: suspend () -> T): AppResult<T> =
         appResultOf({ failure -> (failure as? BarsFailure)?.error ?: failure.unexpectedError() }) { block() }
 
-    /** Leaves the library's renewal untouched: the saved header stays, and [backgroundAccount] reports the end. */
-    private class SessionEndedSignal : RuntimeException()
-
-    private fun codeOf(renewal: BarsCookieRenewal): String = when (renewal) {
-        is BarsCookieRenewal.Code -> renewal.code
-        BarsCookieRenewal.SessionEnded -> throw SessionEndedSignal()
-        is BarsCookieRenewal.Failed -> throw BarsApiException(
-            "Renewal failed", if (renewal.error == AppError.Network) IOException() else null
-        )
-    }
-
-    private class BarsFailure(val error: AppError) : RuntimeException()
     private fun fail(error: AppError): Nothing = throw BarsFailure(error)
-    private fun BarsApiException.toAppError(): AppError = when (httpCode) {
-        401 -> AppError.Unauthorized
-        403, 423 -> AppError.Forbidden
-        404 -> AppError.NotFound
-        null -> unexpectedError()
-        else -> AppError.Unknown()
+
+    private fun MyItmoException.toAppError(): AppError = when (this) {
+        is MyItmoException.Auth -> if (status == 401) AppError.Unauthorized else AppError.Forbidden
+        is MyItmoException.Http -> when (status) {
+            403, 423 -> AppError.Forbidden
+            404 -> AppError.NotFound
+            else -> AppError.Unknown()
+        }
+        else -> unexpectedError()
     }
 
     // Never retain exceptions containing URLs, OAuth codes or response bodies in diagnostics.
-    private fun Exception.unexpectedError(): AppError =
+    private fun Throwable.unexpectedError(): AppError =
         if (isCausedByNetworkFailure()) AppError.Network else AppError.Unknown()
 }
 

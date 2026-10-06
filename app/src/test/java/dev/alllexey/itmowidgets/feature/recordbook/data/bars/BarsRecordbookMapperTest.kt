@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
-import api.bars.model.StudentJournal
-import com.google.gson.Gson
+import dev.alllexey.itmoapi.bars.model.StudentJournal
+import dev.alllexey.itmoapi.core.ItmoApiJson
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
@@ -21,10 +21,13 @@ class BarsRecordbookMapperTest {
         regular: String = "[${mark(6, 7.5)}]", total: String = "17.5", finalMark: String? = mark(9, 10.0),
         additional: String? = null, approvals: String = "[${approval(1, "Неуд., FX")},${approval(2, "Хор., B")}]",
         plan: String = "[${checkpoint(6)}]", owner: String = "123", year: String = "2025/2026", planId: Long = 8, courseProject: Boolean = false
-    ): StudentJournal = Gson().fromJson("""{"students":[{"student_login":"$owner","marks":{"regular":$regular,"total":$total,
+    ): StudentJournal = decode("""{"students":[{"student_login":"$owner","marks":{"regular":$regular,"total":$total,
         ${finalMark?.let { "\"final\":$it," } ?: ""}${additional?.let { "\"additional\":$it," } ?: ""}"active_approvals":$approvals}}],
         "headers":{"plan":{"id":$planId,"year":"$year","discipline":{"id":90,"name":" Предмет "},"regular_checkpoints":$plan,
-        "final_checkpoint":${checkpoint(9, name = null, type = "Экзамен")},"has_course_project":$courseProject},"type":"flow","identifier":"7"}}""", StudentJournal::class.java)
+        "final_checkpoint":${checkpoint(9, name = null, type = "Экзамен")},"has_course_project":$courseProject},"type":"flow","identifier":"7"}}""")
+
+    /** The library's own decoding of a BARS answer. */
+    private fun decode(json: String): StudentJournal = ItmoApiJson.decodeFromString(StudentJournal.serializer(), json)
 
     @Test fun `maps own scores and latest valid non-course approval independent of order`() {
         val s = mapper.subject(journal(), ref, "123")
@@ -89,8 +92,8 @@ class BarsRecordbookMapperTest {
         assertEquals(RecordbookRate.InProgress, subject.normalizedRate)
     }
     @Test fun `missing mandatory total is not deserialized as a successful zero`() {
-        val j = Gson().fromJson("""{"students":[{"student_login":"123","marks":{"regular":[],"active_approvals":[]}}],
-            "headers":{"plan":{"id":8,"year":"2025/2026","discipline":{"id":90,"name":"П"},"regular_checkpoints":[],"has_course_project":false},"type":"flow","identifier":"7"}}""", StudentJournal::class.java)
+        val j = decode("""{"students":[{"student_login":"123","marks":{"regular":[],"active_approvals":[]}}],
+            "headers":{"plan":{"id":8,"year":"2025/2026","discipline":{"id":90,"name":"П"},"regular_checkpoints":[],"has_course_project":false},"type":"flow","identifier":"7"}}""")
         assertNull(j.students.single().marks.total)
         assertThrows(IllegalStateException::class.java) { mapper.subject(j, ref, "123") }
     }

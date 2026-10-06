@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
-import api.bars.model.Term
+import dev.alllexey.itmoapi.bars.model.Term
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
@@ -47,7 +47,7 @@ class BarsMarkReader @Inject constructor(private val client: BarsClient) : BarsM
     }
 
     private suspend fun BarsClient.Account.journals(half: StudyHalf): BarsMarkRead.Journals {
-        val previousYear: String? = user.selectedYear
+        val previousYear = user.selectedYear
         val previousAutumn = user.selectedTerm == Term.AUTUMN.wireValue
         val autumn = half.half == 1
         val read = try {
@@ -58,7 +58,7 @@ class BarsMarkReader @Inject constructor(private val client: BarsClient) : BarsM
         } catch (failure: Exception) {
             Result.failure(failure)
         }
-        if (previousYear != null && STUDY_YEAR.matches(previousYear) &&
+        if (STUDY_YEAR.matches(previousYear) &&
             (previousYear != half.studyYear || previousAutumn != autumn)
         ) {
             try {
@@ -76,7 +76,7 @@ class BarsMarkReader @Inject constructor(private val client: BarsClient) : BarsM
         val plans = coroutineScope {
             references.map { reference ->
                 async {
-                    val journal = execute { api.getStudentJournal(reference.planId, reference.type, reference.identifier) }
+                    val journal = execute { getStudentJournal(reference.planId, reference.type, reference.identifier) }
                     try {
                         val subject = mapper.subject(journal, reference, owner.toString())
                         BarsPlanMarks.of(subject, mapper.controls(journal, reference, owner.toString()))

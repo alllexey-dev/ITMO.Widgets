@@ -1,8 +1,6 @@
 package dev.alllexey.itmowidgets.di
 
 import android.content.Context
-import api.bars.Bars
-import api.bars.utils.BarsAuthHelper
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -10,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
@@ -29,9 +28,11 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingReposi
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsBackgroundLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsCookieSilentLogin
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsHttp
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkReader
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRenewal
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
@@ -51,10 +52,13 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepo
 import dev.alllexey.itmowidgets.feature.recordbook.work.AndroidMarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.work.MARKS_SPEC
 import dev.alllexey.itmowidgets.feature.recordbook.work.WorkManagerBarsSessionProbe
+import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.okhttp.OkHttp
 import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
-import okhttp3.OkHttpClient
+import okhttp3.CookieJar
+import dev.alllexey.itmoapi.bars.BarsClient as LibraryBarsClient
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -153,21 +157,41 @@ abstract class RecordbookModule {
     abstract fun bindBarsCacheCleaner(impl: BarsRecordbookRepositoryImpl): SessionDataCleaner
 
     companion object {
-        /** Library client with the app's encrypted, owner-bound session; no shared cookie jar with MyITMO. */
+        /**
+         * The BARS engine, apart from MyITMO's: the ADR 0012 policy of MyItmoApi's `defaultEngine()` (no cookie jar,
+         * cache or redirects) with the BARS timeouts. Neither client closes it; it lives as long as the process.
+         */
         @Provides
         @Singleton
-        fun bars(storage: OwnerBoundBarsStorage): Bars = Bars().apply {
-            this.storage = storage
-            okHttpClient = okHttpClient.newBuilder()
-                .connectTimeout(20, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build()
+        @BarsHttp
+        fun barsEngine(): HttpClientEngine = OkHttp.create {
+            config {
+                followRedirects(false)
+                followSslRedirects(false)
+                cookieJar(CookieJar.NO_COOKIES)
+                cache(null)
+                connectTimeout(20, TimeUnit.SECONDS)
+                readTimeout(30, TimeUnit.SECONDS)
+            }
         }
+
+        /** Library client with the app's encrypted, owner-bound session and its renewal; one per process. */
+        @Provides
+        @Singleton
+        fun bars(
+            @BarsHttp engine: HttpClientEngine,
+            storage: OwnerBoundBarsStorage,
+            renewal: BarsRenewal
+        ): LibraryBarsClient = LibraryBarsClient(engine, storage = storage, codeSupplier = renewal)
 
         @Provides
         fun marksScheduler(@ApplicationContext context: Context): MarksScheduler =
             object : MarksScheduler, CheckScheduler by PeriodicCheckScheduler(context, MARKS_SPEC) {}
 
+        /** The ITMO.ID sign-in of the `bars` client: URL, callback checks and the cookie replay. */
         @Provides
-        fun barsAuthHelper(bars: Bars): BarsAuthHelper = bars.authHelper
+        @Singleton
+        fun barsLogin(@BarsHttp engine: HttpClientEngine): BarsLogin = BarsLogin(engine)
 
         @Provides
         @Singleton
