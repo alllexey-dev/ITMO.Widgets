@@ -311,11 +311,11 @@ The widget extension links no Kotlin (its limit is about 30 MB, SP-16a): each wi
 timeline request and makes no network call. The app's writers reload a widget's kind when its files change.
 
 QR widget (`Extensions/Widgets/Qr/`, kind `dev.alllexey.itmowidgets.widget.qr`, small, `StaticConfiguration`).
-Android keeps the widget options global, so they come from `qr-pass-v1.json`, not from a per-widget configuration.
+Android keeps the widget options global, so they come from qr-pass-v1.json, not from a per-widget configuration.
 
 | State | When | Shows | Tap |
 |---|---|---|---|
-| Signed out | no `session-v1.json` (or no container) | QR symbol, `schedule_widget_signed_out` | the QR pass in the app |
+| Signed out | no session-v1.json (or no container) | QR symbol, `schedule_widget_signed_out` | the QR pass in the app |
 | Spoiler | a valid pass, no reveal running | noise, `ios_widget_qr_reveal` | `RevealQrIntent`: the code for 30 s |
 | Revealed | a reveal running, or the spoiler option off | the code, dark on white in both themes; in the demo with `demo_entered` | the QR pass in the app |
 | Expired | signed in, no pass or past its `expiresAt` | refresh symbol, `ios_widget_qr_expired` | the QR pass in the app |
