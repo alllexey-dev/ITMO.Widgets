@@ -20,3 +20,6 @@ Files 2.2's Gson stores wrote, read by the JVM golden tests of the stores that m
 | `subject_links/cache-format1.json` | SP-08 variant, hand-derived from `cache-sp08.json`: `"format":1` and a `scopes` entry of an unknown shape |
 | `teacher_levels/levels.json` | G-04 capture, `androidTest/assets/upgrade-2.2/files/teacher_levels/levels.json` |
 | `teacher_levels/levels-sp08.json` | SP-08 fixture (2.2 on the host JVM): one `level` absent, `VERY_NEGATIVE` |
+| `schedule_snapshot/schedule_snapshot.json` | G-04 capture, `androidTest/assets/upgrade-2.2/no_backup/widgets/schedule_snapshot.json` |
+| `schedule_snapshot/schedule_snapshot-sp08.json` | SP-08 fixture `no_backup/widgets/schedule_snapshot.json` (2.2 on the host JVM): an `officialFallback`, a pending sport row with no teacher, room or building, `fullTextSize` absent |
+| `schedule_snapshot/schedule_snapshot-v2.json` | hand-written, the shape no capture has: `schedule_snapshot-sp08.json` as this build writes it, `formatVersion` 2 first |
