@@ -11,6 +11,7 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
+import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
@@ -28,8 +29,6 @@ import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
-import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
-import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
@@ -95,6 +94,8 @@ interface CoreBridgeEntryPoint {
     fun friendsApi(): FriendsApi
     fun subjectLinksApi(): SubjectLinksApi
     fun teacherReviewsApi(): TeacherReviewsApi
+    /** Core 2.0's sport area, as [usersApi] over the one `BackendClient`. */
+    fun sportApi(): SportApi
 
     fun backendIdentitySync(): BackendIdentitySync
     fun backendDeviceSession(): BackendDeviceSession
@@ -119,12 +120,6 @@ interface CoreBridgeEntryPoint {
     /** Unscoped in Hilt: the export keeps no state, so every reader gets a new one. */
     fun scheduleIcsExport(): ScheduleIcsExport
 
-    /** Sport scores as other features read them; unscoped in Hilt but stateless, so one instance serves Koin. */
-    fun sportScoreRepository(): SportScoreRepository
-    // The schedule contracts Koin reads from Hilt (L10 LS-2a): the pending sport rows; calendar sync is bridged
-    // above, the schedule preferences come from Koin's `settingsDataModule`, the schedule data from Koin's
-    // `scheduleDataModule` (KM-11a2).
-    fun pendingSportBookingsRepository(): PendingSportBookingsRepository
     /** The scope that outlives screens, for work that must finish after the caller is gone. */
     @ApplicationScope
     fun applicationScope(): CoroutineScope
@@ -168,6 +163,7 @@ val coreBridgeModule = module {
     single<FriendsApi> { CoreBridgeEntryPoint.from(androidContext()).friendsApi() }
     single<SubjectLinksApi> { CoreBridgeEntryPoint.from(androidContext()).subjectLinksApi() }
     single<TeacherReviewsApi> { CoreBridgeEntryPoint.from(androidContext()).teacherReviewsApi() }
+    single<SportApi> { CoreBridgeEntryPoint.from(androidContext()).sportApi() }
     single<BackendIdentitySync> { CoreBridgeEntryPoint.from(androidContext()).backendIdentitySync() }
     single<BackendDeviceSession> { CoreBridgeEntryPoint.from(androidContext()).backendDeviceSession() }
     single<FcmTokenSync> { CoreBridgeEntryPoint.from(androidContext()).fcmTokenSync() }
@@ -179,10 +175,6 @@ val coreBridgeModule = module {
     single<CustomSpoilerRepository> { CoreBridgeEntryPoint.from(androidContext()).customSpoilerRepository() }
     single<CalendarSync> { CoreBridgeEntryPoint.from(androidContext()).coreCalendarSync() }
     factory<ScheduleIcsExport> { CoreBridgeEntryPoint.from(androidContext()).scheduleIcsExport() }
-    single<SportScoreRepository> { CoreBridgeEntryPoint.from(androidContext()).sportScoreRepository() }
-    single<PendingSportBookingsRepository> {
-        CoreBridgeEntryPoint.from(androidContext()).pendingSportBookingsRepository()
-    }
     // Unqualified in Koin: the application scope is the only CoroutineScope of the graph; a second one fails the
     // start under allowOverride(false).
     single<CoroutineScope> { CoreBridgeEntryPoint.from(androidContext()).applicationScope() }

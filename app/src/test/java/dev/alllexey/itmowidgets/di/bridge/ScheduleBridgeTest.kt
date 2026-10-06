@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
+import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
@@ -29,6 +30,8 @@ import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesEntryPoint
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesTestEntryPoint
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetEntryPoint
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
+import dev.alllexey.itmowidgets.feature.social.di.socialModule
+import dev.alllexey.itmowidgets.feature.sport.di.sportModule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
@@ -95,12 +98,24 @@ class ScheduleBridgeTest {
         assertNotNull(koin.get<ScheduleChangesScheduler>())
     }
 
-    /** The screens read the opt-in and the schedule preferences, which `settingsDataModule` constructs since KM-11e. */
+    /**
+     * The screens read the opt-in and the schedule preferences, which `settingsDataModule` constructs since KM-11e, and
+     * the pending sport rows, which `sportModule` constructs since KM-11c (with the friend list it reads).
+     */
     @Test
     fun `the schedule modules pass the graph check against the release bridges`() {
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
-            listOf(authDataModule, settingsDataModule, reviewsModule, scheduleModule, scheduleDataModule),
+            listOf(
+                authDataModule,
+                settingsDataModule,
+                reviewsModule,
+                socialModule,
+                friendSelectorModule,
+                sportModule,
+                scheduleModule,
+                scheduleDataModule,
+            ),
         )
     }
 

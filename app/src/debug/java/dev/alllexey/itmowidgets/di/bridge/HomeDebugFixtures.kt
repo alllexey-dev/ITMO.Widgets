@@ -16,6 +16,8 @@ import dev.alllexey.itmowidgets.feature.schedule.di.scheduleCardsQualifier
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleChangesCardsQualifier
 import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
 import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
+import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
+import dev.alllexey.itmowidgets.feature.sport.di.sportCardsQualifier
 import kotlin.time.Clock
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -24,7 +26,8 @@ import org.koin.dsl.module
  * The home feed's fixture in Koin: a debug host replaces the feed's sources, the card preferences, the hint store and
  * the wall clock with its own while it lives, so `HomeFragment` obtains its ViewModel exactly as in release. The fake
  * source stands in for the Hilt-built sources; the hint cards, which read the device, and the Koin-built sources of
- * other features (social's friend requests, the schedule's two cards, the recordbook's new marks) contribute nothing.
+ * other features (social's friend requests, the schedule's two cards, the recordbook's new marks, sport's score and
+ * queues) contribute nothing.
  *
  * Koin is process-wide: a host calls [load] in `onCreate` before `super.onCreate()` and [unload] in `onDestroy`, or
  * later tests in the same process would get the fake. Main thread only, like the host callbacks.
@@ -52,6 +55,7 @@ object HomeDebugFixtures {
             factory<HomeCardSource>(qualifier = scheduleCardsQualifier) { CompositeHomeCardSource(emptyList()) }
             factory<HomeCardSource>(qualifier = scheduleChangesCardsQualifier) { CompositeHomeCardSource(emptyList()) }
             factory<HomeCardSource>(qualifier = marksCardsQualifier) { CompositeHomeCardSource(emptyList()) }
+            factory<HomeCardSource>(qualifier = sportCardsQualifier) { CompositeHomeCardSource(emptyList()) }
             factory<HomeCardPreferences> { fakes.preferences() }
             factory<HomeHintStore> { fakes.hintStore() }
             single<Clock> { clock }
@@ -82,6 +86,7 @@ object HomeDebugFixtures {
             koin.get<ScheduleChangesHomeCardSource>(), scheduleChangesCardsQualifier, allowOverride = true
         )
         koin.declare<HomeCardSource>(koin.get<MarksHomeCardSource>(), marksCardsQualifier, allowOverride = true)
+        koin.declare<HomeCardSource>(koin.get<SportHomeCardSource>(), sportCardsQualifier, allowOverride = true)
         current = null
     }
 }

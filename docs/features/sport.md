@@ -133,11 +133,25 @@ the viewer's queues and friends, which only the sport tab refreshes.
 
 ## Push handling
 
-`SportSignPushHandler` (free and auto instances) books each lesson from the push
-through `SportActionRepository.signIn`, then marks the queue satisfied or
-cancels it on a definite MyITMO rejection. "No free places" keeps the queue
-waiting silently; network and auth failures only log. See
-[`notifications.md`](notifications.md).
+The booking decision is shared: `SportSignPushBooker` (`commonMain`,
+`feature/sport/data/push/`) takes a free or auto queue push
+(`PendingSportBooking.QueueKind`) and, for each lesson, skips a malformed,
+unnamed, repeated or already ended one, books it through
+`SportActionRepository.signIn` and classifies MyITMO's answer
+(`SportSignOutcome`). A booking is reported, marked satisfied on Backend and
+refreshes the schedule widgets; a definite MyITMO rejection is reported and
+cancels the queue entry; "no free places" keeps the queue waiting silently;
+network, auth and other failures only log, and Backend retries later. Then the
+bookings and the pending queues refresh. The demo session and a missing opt-in
+book nothing. Each report is a `SportSignNotice`; `toAppNotification()` turns
+it into the `sport` channel notification with the `notification_sport_*` texts
+and the Moscow start, opening the sport tab.
+
+On Android, `SportSignPushHandler` (`app/`, free and auto instances, Hilt
+`@IntoSet` of `FcmPayloadHandler`, run by `FcmMessageWorker`) is the adapter:
+it calls the booker, which Koin builds and `SportBridge` hands to Hilt, and posts
+each notice through `AppNotifier`. The iOS notification service calls the same
+booker (L18 IO-12a). See [`notifications.md`](notifications.md).
 
 ## Tests
 

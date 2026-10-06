@@ -19,6 +19,8 @@ import dev.alllexey.itmowidgets.feature.schedule.di.scheduleCardsQualifier
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleChangesCardsQualifier
 import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
 import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
+import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
+import dev.alllexey.itmowidgets.feature.sport.di.sportCardsQualifier
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -56,6 +58,7 @@ class HomeDebugFixturesTest {
         val schedule = koin.get<ScheduleHomeCardSource>()
         val changes = koin.get<ScheduleChangesHomeCardSource>()
         val marks = koin.get<MarksHomeCardSource>()
+        val sport = koin.get<SportHomeCardSource>()
 
         val fixture = HomeDebugFixtures.load(application, Fakes, EpochClock)
         val sources = koin.getAll<HomeCardSource>()
@@ -75,6 +78,7 @@ class HomeDebugFixturesTest {
         assertSame(schedule, koin.get<HomeCardSource>(scheduleCardsQualifier))
         assertSame(changes, koin.get<HomeCardSource>(scheduleChangesCardsQualifier))
         assertSame(marks, koin.get<HomeCardSource>(marksCardsQualifier))
+        assertSame(sport, koin.get<HomeCardSource>(sportCardsQualifier))
         assertSame(releasePreferences, koin.get<HomeCardPreferences>())
         assertSame(releaseHintStore, koin.get<HomeHintStore>())
         assertSame(CoreBridgeEntryPoint.from(application).clock(), koin.get<Clock>())

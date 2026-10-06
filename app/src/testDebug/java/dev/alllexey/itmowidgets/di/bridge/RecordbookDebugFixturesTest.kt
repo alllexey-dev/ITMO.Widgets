@@ -38,6 +38,7 @@ import dev.alllexey.itmowidgets.feature.resources.data.SubjectLinksRepositoryImp
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScoreRepositoryImpl
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -99,6 +100,7 @@ class RecordbookDebugFixturesTest {
         assertSame(bindingsBefore, koin.get<SubjectBindingStore>())
         assertSame(koin.get<DataStoreSubjectBindingStore>(), koin.get<SubjectBindingStore>())
         assertNotSame(Fakes.sport, koin.get<SportScoreRepository>())
+        assertSame(koin.get<SportScoreRepositoryImpl>(), koin.get<SportScoreRepository>())
         assertSame(koin.get<SubjectLessonsGatewayImpl>(), koin.get<SubjectLessonsGateway>())
         assertSame(koin.get<ScheduleRepositoryImpl>(), koin.get<ScheduleRefreshGateway>())
         assertSame(core.academicTimeProvider(), koin.get<AcademicTimeProvider>())
