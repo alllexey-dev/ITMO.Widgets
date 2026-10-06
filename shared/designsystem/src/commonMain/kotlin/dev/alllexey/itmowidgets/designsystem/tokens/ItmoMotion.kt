@@ -53,8 +53,8 @@ data class ItmoMotion(
 }
 
 /**
- * True when the user turned animations off (Android's animator duration scale 0); a kit animation then shows its
- * end state at once. iOS reports false until the iOS host reads Reduce Motion.
+ * True when the user turned animations off (Android's animator duration scale 0, iOS's Reduce Motion); a kit
+ * animation then shows its end state at once.
  */
 @Composable
 expect fun rememberReducedMotion(): Boolean

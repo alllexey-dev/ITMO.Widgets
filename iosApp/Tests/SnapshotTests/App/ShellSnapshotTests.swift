@@ -4,9 +4,10 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// The shell on fixtures (IO-06b) in all four appearances: the home stack with the demo banner, the QR pass pushed
-/// over home, the signed-out gate and the damaged-link sheet. The tab bar is system chrome drawn with materials a
-/// layer render misses, so it is left to `ShellUITests` screenshots and the stacks are rendered without it.
+/// The shell on fixtures (IO-06b) in all four appearances: the home stack with the demo banner, the signed-out gate
+/// and the damaged-link sheet. The tab bar is system chrome drawn with materials a layer render misses, so it is left
+/// to `ShellUITests` screenshots and the stacks are rendered without it; so is the QR pass, a Compose screen whose
+/// Metal layer a snapshot misses (`QrPassUITests`).
 @MainActor
 final class ShellSnapshotTests: XCTestCase {
     /// A full screen at the matrix width: the banner sits at the bottom.
@@ -18,12 +19,6 @@ final class ShellSnapshotTests: XCTestCase {
 
     func testScheduleRoot() {
         assertAppearances(of: stack(.schedule, mountedRouter(), isDemo: false), named: "schedule", height: screenHeight)
-    }
-
-    func testQrPassOverHome() {
-        let router = mountedRouter()
-        router.open(AppRoutes.QrPass.shared)
-        assertAppearances(of: stack(.home, router, isDemo: false), named: "qr-pass", height: screenHeight)
     }
 
     func testSignedOutGate() {

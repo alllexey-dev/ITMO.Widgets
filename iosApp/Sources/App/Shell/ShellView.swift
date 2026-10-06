@@ -43,15 +43,17 @@ struct ShellStack: View {
     let leaveDemo: () -> Void
 
     var body: some View {
-        NavigationStack(path: path) {
-            FixtureRootScreen(tab: tab, router: router)
-                .shellChrome(.compose)
-                .navigationDestination(for: ShellDestination.self) { destination in
-                    Routes.view(for: destination)
-                        .shellChrome(destination.chrome)
-                }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        // The banner sits under the stack, not in a `safeAreaInset`: the inset never reaches the screens a stack
+        // pushes, so the end of a pushed Compose screen would scroll behind the banner (IO-21).
+        VStack(spacing: 0) {
+            NavigationStack(path: path) {
+                FixtureRootScreen(tab: tab, router: router)
+                    .shellChrome(.compose)
+                    .navigationDestination(for: ShellDestination.self) { destination in
+                        Routes.view(for: destination)
+                            .shellChrome(destination.chrome)
+                    }
+            }
             if isDemo {
                 ItmoDemoBanner(signIn: leaveDemo)
             }

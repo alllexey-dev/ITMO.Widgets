@@ -1,7 +1,7 @@
 import XCTest
 
 /// The shell on fixtures (IO-06b): tabs in Android's order, `itmowidgets://route/<id>` URLs, the session gate, the
-/// demo banner, and the edge swipe back from a screen that hides the navigation bar.
+/// demo banner, and the edge swipe back from a screen that hides the navigation bar (the Compose QR pass, IO-21).
 final class ShellUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
@@ -36,7 +36,7 @@ final class ShellUITests: XCTestCase {
 
         XCTAssertTrue(element(app, "qr.pass").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "qr-pass")
-        element(app, "topBar.back").tap()
+        app.buttons[QrPassUITests.backLabel].tap()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: stepTimeout))
     }
 
