@@ -16,6 +16,11 @@ val keystoreProperties = Properties().apply {
     if (file.exists()) file.inputStream().use(::load)
 }
 
+// Android Test Orchestrator with clearPackageData (TC-14) for the platform list only: `scripts/verify.sh ui @platform`
+// and the nightly managed-device job pass -Pitmo.orchestrator=true. The View suites share TestSession and the real
+// Hilt graph across tests, so they keep the plain runner until their ports delete them.
+val orchestrated = providers.gradleProperty("itmo.orchestrator").map(String::toBoolean).getOrElse(false)
+
 android {
     namespace = "dev.alllexey.itmowidgets"
 
@@ -28,6 +33,23 @@ android {
         // ActivityScenario.launchActivityForResult waits the full lifecycle timeout (45 s) on
         // close; observed transitions on the emulator stay under 2 s.
         testInstrumentationRunnerArguments["activityLifecycleChangeTimeoutMillis"] = "5000"
+        if (orchestrated) testInstrumentationRunnerArguments["clearPackageData"] = "true"
+    }
+
+    testOptions {
+        if (orchestrated) execution = "ANDROIDX_TEST_ORCHESTRATOR"
+        // CI only (android-nightly.yml through `verify.sh ui @platform --managed-device`): a local run would create
+        // an AVD. The full AOSP image, not ATD: QrTileFlowTest needs SystemUI's quick settings tile host, which the
+        // ATD image lacks (the tile is never added there). No listed platform test needs Play services.
+        managedDevices {
+            localDevices {
+                create("ciDevice") {
+                    device = "Pixel 2"
+                    apiLevel = 36
+                    systemImageSource = "aosp"
+                }
+            }
+        }
     }
 
     signingConfigs {
@@ -163,8 +185,6 @@ dependencies {
     "playImplementation"(libs.play.app.update.ktx)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
-    // Konsist 0.17.3 brings a 2.0.21 parser that misreads Kotlin 2.4 syntax.
-    testRuntimeOnly(libs.konsist.kotlin.compiler.embeddable)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.okhttp.mockwebserver)
@@ -177,6 +197,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.monitor)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.espresso.core)
+    if (orchestrated) androidTestUtil(libs.androidx.test.orchestrator)
 }
 
 // AtomicTextFileTest runs the real android.util.AtomicFile on SDK 29 (`.bak`) as well as the default SDK 35 (`.new`).
