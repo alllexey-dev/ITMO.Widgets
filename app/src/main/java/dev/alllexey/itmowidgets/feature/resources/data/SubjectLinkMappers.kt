@@ -1,11 +1,11 @@
 package dev.alllexey.itmowidgets.feature.resources.data
 
+import dev.alllexey.itmowidgets.client.common.ReportReason
+import dev.alllexey.itmowidgets.client.links.SaveSubjectLinkRequest
+import dev.alllexey.itmowidgets.client.links.SubjectLinksResponse
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.model.resources.ReportReason
-import dev.alllexey.itmowidgets.core.model.resources.SaveSubjectLinkRequest
-import dev.alllexey.itmowidgets.core.model.resources.SubjectLinksResponse
 import dev.alllexey.itmowidgets.core.model.toUserSummary
 import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
@@ -16,14 +16,15 @@ import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
-import kotlin.time.toKotlinInstant
-import dev.alllexey.itmowidgets.core.model.resources.LinkAudience as WireAudience
-import dev.alllexey.itmowidgets.core.model.resources.LinkCategory as WireCategory
-import dev.alllexey.itmowidgets.core.model.resources.LinkVisibility as WireVisibility
-import dev.alllexey.itmowidgets.core.model.resources.SubjectLink as WireLink
-import dev.alllexey.itmowidgets.core.model.resources.UserRestriction as WireRestriction
+import dev.alllexey.itmowidgets.client.links.LinkAudience as WireAudience
+import dev.alllexey.itmowidgets.client.links.LinkCategory as WireCategory
+import dev.alllexey.itmowidgets.client.links.LinkVisibility as WireVisibility
+import dev.alllexey.itmowidgets.client.links.RestrictionCapability as WireCapability
+import dev.alllexey.itmowidgets.client.links.SubjectLink as WireLink
+import dev.alllexey.itmowidgets.client.links.SubjectLinkStatus as WireStatus
+import dev.alllexey.itmowidgets.client.links.UserRestriction as WireRestriction
 
-// Core 1.x answers into the stored rows: the one place that changes when the wire types do.
+// Core 2.0 answers into the stored rows: the one place that changes when the wire types do.
 
 internal fun SubjectLinksResponse.toStored() = StoredLinksAnswer(
     mine = mine.map { it.toStored() },
@@ -39,21 +40,33 @@ internal fun WireLink.toStored() = StoredLink(
     subjectId = subjectId,
     subjectName = subjectName.trim(),
     periodKey = periodKey,
-    category = LinkCategory.valueOf(category.name),
+    category = category.toModel(),
     url = url,
     title = title?.trim()?.takeIf { it.isNotEmpty() },
     visibility = LinkVisibility.valueOf(visibility.name),
     flowId = flowId,
     audienceLabel = audienceLabel?.trim()?.takeIf { it.isNotEmpty() },
-    status = SubjectLinkStatus.valueOf(status.name),
+    status = status.toModel(),
     reviewNote = reviewNote?.trim()?.takeIf { it.isNotEmpty() },
     score = score,
     myVote = myVote,
     isMine = isMine,
     reportedByMe = reportedByMe,
     author = author?.toUserSummary()?.toStored(),
-    updatedAt = updatedAt.toInstant().toKotlinInstant(),
+    updatedAt = updatedAt,
 )
+
+/** A category added by a newer Backend is shown as "other". */
+private fun WireCategory.toModel(): LinkCategory = when (this) {
+    WireCategory.UNKNOWN -> LinkCategory.OTHER
+    else -> LinkCategory.valueOf(name)
+}
+
+/** A state added by a newer Backend shows no badge, as a published link does. */
+private fun WireStatus.toModel(): SubjectLinkStatus = when (this) {
+    WireStatus.UNKNOWN -> SubjectLinkStatus.PUBLISHED
+    else -> SubjectLinkStatus.valueOf(name)
+}
 
 internal fun WireAudience.toStored() = StoredAudience(flowId, label.trim(), typeId, depth)
 
@@ -62,7 +75,11 @@ internal fun StoredLinkRequest.toWire() = SaveSubjectLinkRequest(
 )
 
 internal fun ResourceReportReason.toWire() = ReportReason.valueOf(name)
-internal fun WireRestriction.toModel() = UserRestriction(id.toString(), RestrictionCapability.valueOf(capability.name), reason, expiresAt?.toInstant()?.toKotlinInstant())
+
+/** Core decodes a capability added by a newer Backend as ALL, so an unknown one blocks every action. */
+internal fun WireRestriction.toModel() = UserRestriction(id.toString(), capability.toModel(), reason, expiresAt)
+
+private fun WireCapability.toModel(): RestrictionCapability = RestrictionCapability.valueOf(name)
 
 // Stored rows into the domain.
 
