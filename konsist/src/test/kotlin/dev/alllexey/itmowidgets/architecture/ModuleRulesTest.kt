@@ -51,10 +51,15 @@ class ModuleRulesTest {
             .let { assertEquals("Koin-constructed types bound by Hilt too", emptyList<String>(), it) }
     }
 
-    /** Primary and `bind<T>()` types of every Koin module outside the bridges, by fully qualified name. */
+    /**
+     * Primary and `bind<T>()` types of every Koin module outside the bridges, by fully qualified name. An iOS source
+     * set's module (`iosCoreModule`) builds the iOS graph only, where Koin is the one graph; on Android the same core
+     * types stay Hilt's, so it is not a second door.
+     */
     private fun koinConstructedTypes(): Set<String> = productionFiles
         .filter { file -> file.imports.any { it.name in KOIN_MODULE_BUILDERS } }
         .filterNot { file -> file.packagee?.name.orEmpty().let { it == DI_BRIDGE || it.startsWith("$DI_BRIDGE.") } }
+        .filterNot { file -> IOS_SOURCE_SET.containsMatchIn(file.projectPath) }
         .flatMap { file ->
             KOIN_DEFINITION.findAll(file.text)
                 .map { match -> match.groupValues.drop(1).first(String::isNotEmpty) }
@@ -108,6 +113,9 @@ class ModuleRulesTest {
         val SOURCE_ROOT = Regex("""^.*/src/[^/]+/(kotlin|java)/?""")
 
         val KOIN_MODULE_BUILDERS = setOf("org.koin.dsl.module", "org.koin.dsl.lazyModule")
+
+        /** `iosMain` and the per-target `ios*Main` sets: code that never runs on Android. */
+        val IOS_SOURCE_SET = Regex("""/src/ios\w*Main/""")
         val KOIN_DEFINITION = Regex(
             """\b(?:single|factory|scoped|viewModel|worker)(?:<([\w.]+)|Of\(::([\w.]+))|\bbind<([\w.]+)>"""
         )
