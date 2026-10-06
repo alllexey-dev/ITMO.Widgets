@@ -4,8 +4,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
+import dev.alllexey.itmowidgets.feature.schedule.data.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.schedule.data.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult

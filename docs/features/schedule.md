@@ -26,6 +26,23 @@ or a `.ics` file ([calendar](#calendar)).
   hydrated, so `loadInitialSchedule` publishes `Content(loadingMore = true)` at
   once and only a screen with nothing cached shows the skeleton
   (`schedule_skeleton`) until the cache flow answers.
+- The schedule data lives in `commonMain` of `:shared:feature-schedule` and is
+  constructed by Koin (`scheduleDataModule`), one instance of each per
+  process: the cache and remote sources, `ScheduleRepositoryImpl` (also the
+  `ScheduleRefreshGateway`), `LessonFriendsRepositoryImpl`, the subject and
+  teacher lesson gateways, `ScheduleChangesRepositoryImpl`,
+  `DefaultScheduleChangeTracking`, `ScheduleChangesCheck`, both home card
+  sources, `ScheduleWidgetDataProvider` and `DemoSchedule`. The platform
+  supplies Core 2.0's `ScheduleApi`, the change notification
+  (`ScheduleChangeNotifier`), the check's scheduler
+  (`ScheduleChangesScheduler`) and `AppNotifier`; on Android they are Hilt's and
+  reach Koin through `di/bridge/ScheduleBridge.kt` and `CoreBridge`, and the
+  same bridge hands Koin's change tracking, change check, widget data provider
+  and preview scenario to the Hilt-built workers, widget and debug tools. Only
+  the phone calendar sync, the `.ics` export and the widget snapshot file
+  (`ScheduleWidgetSnapshotStoreImpl`) stay in `:app`. The three Koin cleaners
+  (the cache, the change history, the teacher weeks) join sign-out's set
+  through `SessionCleanersBridge`.
 
 ## Lessons with a teacher
 

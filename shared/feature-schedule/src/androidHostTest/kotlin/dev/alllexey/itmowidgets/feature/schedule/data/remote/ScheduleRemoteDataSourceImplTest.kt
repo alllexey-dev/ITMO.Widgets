@@ -2,14 +2,14 @@ package dev.alllexey.itmowidgets.feature.schedule.data.remote
 
 import dev.alllexey.itmowidgets.client.schedule.LessonDto
 import dev.alllexey.itmowidgets.client.schedule.LessonSyncRequest
-import dev.alllexey.itmowidgets.core.network.Core2Harness
-import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.errorEnvelope
-import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.session
-import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.feature.schedule.data.Core2Harness
+import dev.alllexey.itmowidgets.feature.schedule.data.Core2Harness.Companion.errorEnvelope
+import dev.alllexey.itmowidgets.feature.schedule.data.Core2Harness.Companion.session
+import dev.alllexey.itmowidgets.feature.schedule.data.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.schedule.data.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule

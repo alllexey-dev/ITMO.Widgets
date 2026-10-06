@@ -76,7 +76,7 @@ class SportBridgeTest {
 
     @Test
     fun `the sport module passes the graph check against the release bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(sportModule))
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(sportModule) + scheduleDataGraph)
     }
 
     private fun identity(context: Context): SportSessionBindingsEntryPoint =

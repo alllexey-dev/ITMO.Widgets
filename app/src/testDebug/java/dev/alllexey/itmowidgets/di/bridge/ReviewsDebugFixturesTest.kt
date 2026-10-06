@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
+import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -41,7 +42,7 @@ class ReviewsDebugFixturesTest {
 
         ReviewsDebugFixtures.unload(application, fixture)
         assertSame(ReviewsBridgeEntryPoint.from(application).teacherReviewsRepository(), koin.get<TeacherReviewsRepository>())
-        assertSame(CoreBridgeEntryPoint.from(application).teacherLessonsGateway(), koin.get<TeacherLessonsGateway>())
+        assertSame(koin.get<TeacherLessonsGatewayImpl>(), koin.get<TeacherLessonsGateway>())
     }
 
     @Test

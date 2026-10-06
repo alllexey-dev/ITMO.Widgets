@@ -1,10 +1,10 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
-import dev.alllexey.itmowidgets.core.testing.ClockAcademicTime
+import dev.alllexey.itmowidgets.feature.schedule.data.ClockAcademicTime
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
+import dev.alllexey.itmowidgets.feature.schedule.data.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.schedule.data.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -16,22 +16,23 @@ import dev.alllexey.itmowidgets.feature.schedule.data.directoriesAt
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.requestedRange
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.scheduleMyItmoClient
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
+import dev.alllexey.itmowidgets.testkit.FakeClock
 import java.io.File
 import java.io.IOException
 import java.net.UnknownHostException
-import java.time.Clock
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -63,7 +64,7 @@ class ScheduleChangesRepositoryImplTest {
         failure?.let { throw it }
         status to (body ?: """{"code":0,"data":[${days.joinToString(",")}],"message":null}""")
     }
-    private val clock = MutableClock(Instant.parse("2026-09-07T09:00:00Z"))
+    private val clock = FakeClock(Instant.parse("2026-09-07T09:00:00Z"))
     private val notifier = RecordingAppNotifier()
     private val store get() = ScheduleChangesFileStore(directoriesAt(temporary.root))
     private val file get() = File(folder, "state.json")
@@ -100,19 +101,19 @@ class ScheduleChangesRepositoryImplTest {
         days = WEEK
         val repository = repository()
         repository.check()
-        clock.advance(Duration.ofMinutes(5))
+        clock.advanceBy(5.minutes)
         days = listOf(day("2026-09-07", MONDAY), day("2026-09-10", lesson(2, start = "10:00")))
 
         assertEquals(AppResult.Success(ScheduleCheckResult.Compared(2)), repository.check())
 
-        val millis = clock.millis()
+        val millis = clock.now().toEpochMilliseconds()
         val changes = repository.observeChanges().first()
         assertEquals(listOf("$millis-0", "$millis-1"), changes.map { it.id })
         assertEquals(listOf(ScheduleChangeKind.UPDATED, ScheduleChangeKind.CANCELLED), changes.map { it.kind })
         assertEquals(setOf(ScheduleChangeField.TIME), changes[0].fields)
-        assertEquals(kotlinx.datetime.LocalDate.parse("2026-09-10"), changes[0].after!!.date)
-        assertEquals(kotlinx.datetime.LocalDate.parse("2026-09-09"), changes[1].before!!.date)
-        assertTrue(changes.all { !it.read && !it.notified && it.detectedAt == kotlin.time.Instant.fromEpochMilliseconds(millis) })
+        assertEquals(LocalDate.parse("2026-09-10"), changes[0].after!!.date)
+        assertEquals(LocalDate.parse("2026-09-09"), changes[1].before!!.date)
+        assertTrue(changes.all { !it.read && !it.notified && it.detectedAt == Instant.fromEpochMilliseconds(millis) })
         assertEquals("Физика 2", changes[0].subjectName)
         assertEquals("Поток 2", changes[0].flowName)
     }
@@ -211,7 +212,7 @@ class ScheduleChangesRepositoryImplTest {
         days = WEEK
         val repository = repository()
         repository.check()
-        clock.advance(Duration.ofDays(1))
+        clock.advanceBy(1.days)
         days = WEEK.drop(1)
 
         assertEquals(AppResult.Success(ScheduleCheckResult.Compared(0)), repository.check())
@@ -234,10 +235,10 @@ class ScheduleChangesRepositoryImplTest {
 
     @Test
     fun `changes older than thirty days are hidden and dropped on the next write`() = runTest {
-        val now = clock.millis()
+        val now = clock.now().toEpochMilliseconds()
         store.write(StoredScheduleChanges(changes = listOf(
-            storedChange("old", now - Duration.ofDays(31).toMillis()),
-            storedChange("new", now - Duration.ofDays(1).toMillis())
+            storedChange("old", now - 31.days.inWholeMilliseconds),
+            storedChange("new", now - 1.days.inWholeMilliseconds)
         )))
         val repository = repository()
 
@@ -249,7 +250,7 @@ class ScheduleChangesRepositoryImplTest {
 
     @Test
     fun `only the five hundred newest changes are kept`() = runTest {
-        val now = clock.millis()
+        val now = clock.now().toEpochMilliseconds()
         store.write(StoredScheduleChanges(changes = (0 until 520).map { storedChange("$it", now - it * 60_000L) }.reversed()))
         val repository = repository()
 
@@ -356,17 +357,10 @@ class ScheduleChangesRepositoryImplTest {
         )
     )
 
-    private class MutableClock(private var now: Instant) : Clock() {
-        fun advance(duration: Duration) { now = now.plus(duration) }
-        override fun getZone(): ZoneId = ZoneOffset.UTC
-        override fun withZone(zone: ZoneId?): Clock = this
-        override fun instant(): Instant = now
-    }
-
     private companion object {
         const val WAIT_SECONDS = 10L
 
-        fun date(offset: Int): String = LocalDate.parse("2026-09-07").plusDays(offset.toLong()).toString()
+        fun date(offset: Int): String = LocalDate.parse("2026-09-07").plus(offset, DateTimeUnit.DAY).toString()
 
         fun day(date: String, vararg lessons: String) =
             """{"day_number":1,"week_number":1,"date":"$date","lessons":[${lessons.joinToString(",")}]}"""

@@ -5,7 +5,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
@@ -23,7 +25,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DateTimeUnit
@@ -41,7 +45,7 @@ class ScheduleWidgetDataProviderTest {
     private val tokens = FakeSessionTokenStore()
     private val demo = FakeDemoMode()
     private val provider = ScheduleWidgetDataProvider(
-        official, stores.scheduleChecks, stores.widgetSettings, DefaultBackendGate(stores.servicesOptIn, demo), Time, ScheduleWidgetSelector(), pending, tokens
+        official, stores.scheduleChecks, stores.widgetSettings, StoredOptInGate(stores.servicesOptIn, demo), Time, ScheduleWidgetSelector(), pending, tokens
     )
 
     @Test
@@ -235,6 +239,15 @@ class ScheduleWidgetDataProviderTest {
         override suspend fun getPendingBookings(): AppResult<List<PendingSportBooking>> {
             calls += "snapshot"; reads++; return value
         }
+    }
+
+    /** The app's `DefaultBackendGate` over the stored opt-in, which this test switches through [stores]. */
+    private class StoredOptInGate(private val optIn: ServicesOptInPreferences, private val demo: DemoMode) : BackendGate {
+        override suspend fun isConnected(): Boolean = demo.isActive() || isOptedIn()
+        override fun observeConnected(): Flow<Boolean> =
+            combine(demo.observeActive(), optIn.observeCustomServicesEnabled()) { demo, optedIn -> demo || optedIn }
+        override suspend fun mayCallBackend(): Boolean = !demo.isActive() && isOptedIn()
+        override suspend fun isOptedIn(): Boolean = optIn.getCustomServicesEnabled()
     }
 
     private class MemoryPreferences : DataStore<Preferences> {

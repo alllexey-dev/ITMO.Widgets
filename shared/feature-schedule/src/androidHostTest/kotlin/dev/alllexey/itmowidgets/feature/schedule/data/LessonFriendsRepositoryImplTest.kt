@@ -11,13 +11,13 @@ import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.network.Core2Harness
-import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.errorEnvelope
-import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.session
+import dev.alllexey.itmowidgets.feature.schedule.data.Core2Harness
+import dev.alllexey.itmowidgets.feature.schedule.data.Core2Harness.Companion.errorEnvelope
+import dev.alllexey.itmowidgets.feature.schedule.data.Core2Harness.Companion.session
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.schedule.data.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.testkit.respondJson
 import io.ktor.client.engine.mock.MockRequestHandleScope

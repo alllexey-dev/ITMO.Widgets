@@ -1,13 +1,19 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
 import dev.alllexey.itmoapi.core.MyItmoException
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.requestedRange
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.scheduleMyItmoClient
+import dev.alllexey.itmowidgets.feature.schedule.data.remote.unreachableScheduleMyItmoClient
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -54,5 +60,20 @@ class MyItmoOwnScheduleSourceTest {
             assertTrue(error is MyItmoException.Api)
         }
         assertEquals(2, requests.size)
+    }
+
+    /** The demo schedule is read from the demo set; My ITMO is never asked. */
+    @Test
+    fun `the export source reads the demo schedule`() = runTest {
+        val time = FixedAcademicTime()
+        val monday = time.today().minus(time.today().dayOfWeek.isoDayNumber - 1L, DateTimeUnit.DAY)
+        val demo = MyItmoOwnScheduleSource(
+            unreachableScheduleMyItmoClient(), time, FakeDemoMode(active = true), mainDispatcherRule.appDispatchers
+        )
+
+        val days = demo.read(monday, monday.plus(40, DateTimeUnit.DAY))
+
+        assertEquals(41, days.size)
+        assertTrue(days.sumOf { it.lessons.size } > 20)
     }
 }

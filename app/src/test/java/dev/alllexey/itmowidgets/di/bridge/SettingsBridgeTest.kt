@@ -6,13 +6,11 @@ import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
-import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.WidgetAppearanceRepositoryImpl
-import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
@@ -85,7 +83,7 @@ class SettingsBridgeTest {
     fun `the settings modules pass the graph check against the release bridges`() {
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
-            listOf(authDataModule, onboardingDataModule, settingsDataModule, settingsModule),
+            listOf(onboardingDataModule, settingsModule) + scheduleDataGraph,
         )
     }
 

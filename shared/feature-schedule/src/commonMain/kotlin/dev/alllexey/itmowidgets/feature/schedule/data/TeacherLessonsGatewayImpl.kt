@@ -4,7 +4,6 @@ import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
@@ -12,9 +11,9 @@ import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.StudyWeeks
-import java.util.concurrent.atomic.AtomicLong
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.incrementAndFetch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -31,8 +30,8 @@ import kotlinx.datetime.minus
  * Asks for every week of [StudyWeeks.sampled] at once. Weeks that ended before today never change: they are kept on
  * disk until the session ends and come without a request; the current week is read every time.
  */
-@Singleton
-class TeacherLessonsGatewayImpl @Inject constructor(
+@OptIn(ExperimentalAtomicApi::class)
+class TeacherLessonsGatewayImpl(
     private val myItmo: MyItmoClient,
     private val store: TeacherWeeksFileStore,
     private val time: AcademicTimeProvider,
@@ -43,7 +42,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
     private val cacheLock = Mutex()
     /** The stored finished weeks, read from disk once per session; null until then. */
     private var finished: Map<LocalDate, List<WeekLesson>>? = null
-    private val generation = AtomicLong()
+    private val generation = AtomicLong(0L)
 
     override fun taughtBy(teacherIsu: Int): Flow<AppResult<TeacherLessons>> = channelFlow {
         val today = time.today()
@@ -55,7 +54,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
             send(AppResult.Success(TeacherLessons(lessons.mapTo(linkedSetOf()) { it.flowId }, lessons.map { it.subjectName }.distinct())))
             return@channelFlow
         }
-        val started = generation.get()
+        val started = generation.load()
         val weeks = StudyWeeks.sampled(today)
         val past = weeks.filter { it.endInclusive < today }.mapTo(hashSetOf()) { it.start }
         val arrived = finishedWeeks().filterKeys { it in past }.toMutableMap()
@@ -82,7 +81,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
     }
 
     override suspend fun clearSessionData() {
-        generation.incrementAndGet()
+        generation.incrementAndFetch()
         cacheLock.withLock {
             finished = null
             withContext(dispatchers.io) { store.clear() }
@@ -95,7 +94,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
     private suspend fun remember(started: Long, monday: LocalDate, lessons: List<WeekLesson>, sampled: Set<LocalDate>) {
         cacheLock.withLock {
             // An answer requested for the previous account must not fill the next account's cache.
-            if (generation.get() != started) return
+            if (generation.load() != started) return
             val next = (loaded() + (monday to lessons)).filterKeys { it in sampled }
             finished = next
             try {

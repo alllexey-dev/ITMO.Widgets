@@ -9,11 +9,10 @@ import dev.alllexey.itmowidgets.core.work.outcomeOf
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigests
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
 /** One background run: check the own schedule, then deliver what waits, even when the check failed. */
-class ScheduleChangesCheck @Inject constructor(
+class ScheduleChangesCheck(
     private val sessionTokens: SessionTokenStore,
     private val scheduleChecks: ScheduleCheckPreferences,
     private val repository: ScheduleChangesRepository,

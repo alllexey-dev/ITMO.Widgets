@@ -10,15 +10,12 @@ import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
-import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
-import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
-import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
-import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
@@ -109,22 +106,19 @@ class KoinStartTest {
         assertSame(hilt.backendIdentitySync(), koin.get<BackendIdentitySync>())
         assertSame(hilt.backendDeviceSession(), koin.get<BackendDeviceSession>())
         assertSame(hilt.fcmTokenSync(), koin.get<FcmTokenSync>())
+        assertSame(hilt.appNotifier(), koin.get<AppNotifier>())
         assertSame(hilt.sessionTokenStore(), koin.get<SessionTokenStore>())
         assertSame(hilt.sessionLifecycleEffects(), koin.get<SessionLifecycleEffects>())
         assertSame(hilt.demoPreferences(), koin.get<DemoPreferences>())
         assertSame(hilt.utilityStorage(), koin.get<UtilityStorage>())
         assertSame(hilt.customSpoilerRepository(), koin.get<CustomSpoilerRepository>())
-        assertSame(hilt.scheduleChangeTracking(), koin.get<ScheduleChangeTracking>())
         assertSame(hilt.markTracking(), koin.get<MarkTracking>())
         assertSame(hilt.coreCalendarSync(), koin.get<CalendarSync>())
         // Unscoped in Hilt, a factory in Koin: the same implementation, a new instance each time.
         assertEquals(hilt.scheduleIcsExport()::class, koin.get<ScheduleIcsExport>()::class)
-        assertSame(hilt.subjectLessonsGateway(), koin.get<SubjectLessonsGateway>())
-        assertSame(hilt.scheduleRefreshGateway(), koin.get<ScheduleRefreshGateway>())
         // Unscoped in Hilt: Koin keeps the first instance it gets and hands out that one.
         assertSame(koin.get<SportScoreRepository>(), koin.get<SportScoreRepository>())
         assertSame(hilt.pendingSportBookingsRepository(), koin.get<PendingSportBookingsRepository>())
-        assertSame(hilt.teacherLessonsGateway(), koin.get<TeacherLessonsGateway>())
         assertSame(hilt.applicationScope(), koin.get<CoroutineScope>())
         assertSame(hilt.scheduleWidgetRefreshRequester(), koin.get<ScheduleWidgetRefreshRequester>())
     }

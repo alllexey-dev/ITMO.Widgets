@@ -7,8 +7,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -18,8 +16,7 @@ import kotlinx.coroutines.flow.flow
  * Unread changes of lessons still ahead, from the local store only. The minute ticker drops a change once its lesson
  * is over; the check itself runs in the background, so [refresh] has nothing to ask.
  */
-@Singleton
-class ScheduleChangesHomeCardSource @Inject constructor(
+class ScheduleChangesHomeCardSource(
     private val repository: ScheduleChangesRepository,
     private val timeProvider: AcademicTimeProvider
 ) : HomeCardSource {

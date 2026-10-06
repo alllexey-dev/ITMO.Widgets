@@ -1,11 +1,11 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.repository
 
-import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
+import dev.alllexey.itmowidgets.feature.schedule.data.toAppError
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -16,11 +16,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class ScheduleRepositoryImpl @Inject constructor(
+class ScheduleRepositoryImpl(
     private val local: ScheduleLocalDataSource,
     private val remote: ScheduleRemoteDataSource,
     private val customServices: CustomServicesRepository

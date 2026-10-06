@@ -18,7 +18,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSel
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimeline
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineEntry
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
@@ -30,7 +29,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
-class ScheduleWidgetDataProvider @Inject constructor(
+class ScheduleWidgetDataProvider(
     private val repository: ScheduleRepository,
     private val scheduleChecks: ScheduleCheckPreferences,
     private val widgetSettings: WidgetSettingsPreferences,

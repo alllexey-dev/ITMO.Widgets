@@ -13,6 +13,10 @@ import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
 import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
 import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
+import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleChangesHomeCardSource
+import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleCardsQualifier
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleChangesCardsQualifier
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -47,6 +51,8 @@ class HomeDebugFixturesTest {
         val releaseHintStore = koin.get<HomeHintStore>()
         val hints = koin.get<HintHomeCardSource>()
         val social = koin.get<SocialHomeCardSource>()
+        val schedule = koin.get<ScheduleHomeCardSource>()
+        val changes = koin.get<ScheduleChangesHomeCardSource>()
 
         val fixture = HomeDebugFixtures.load(application, Fakes, EpochClock)
         val sources = koin.getAll<HomeCardSource>()
@@ -63,6 +69,8 @@ class HomeDebugFixturesTest {
         assertSame(hints, koin.get<HintHomeCardSource>())
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === hints })
         assertSame(social, koin.get<HomeCardSource>(socialCardsQualifier))
+        assertSame(schedule, koin.get<HomeCardSource>(scheduleCardsQualifier))
+        assertSame(changes, koin.get<HomeCardSource>(scheduleChangesCardsQualifier))
         assertSame(releasePreferences, koin.get<HomeCardPreferences>())
         assertSame(releaseHintStore, koin.get<HomeHintStore>())
         assertSame(CoreBridgeEntryPoint.from(application).clock(), koin.get<Clock>())
