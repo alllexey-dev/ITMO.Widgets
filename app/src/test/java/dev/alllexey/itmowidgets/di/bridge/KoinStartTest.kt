@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
@@ -26,7 +27,6 @@ import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
@@ -106,6 +106,7 @@ class KoinStartTest {
         assertSame(hilt.sportSignSelectorPreferences(), koin.get<SportSignSelectorPreferences>())
         assertSame(hilt.markSourcePreferences(), koin.get<MarkSourcePreferences>())
         assertSame(hilt.usersApi(), koin.get<UsersApi>())
+        assertSame(hilt.friendsApi(), koin.get<FriendsApi>())
         assertSame(hilt.backendIdentitySync(), koin.get<BackendIdentitySync>())
         assertSame(hilt.backendDeviceSession(), koin.get<BackendDeviceSession>())
         assertSame(hilt.fcmTokenSync(), koin.get<FcmTokenSync>())
@@ -124,7 +125,6 @@ class KoinStartTest {
         assertSame(hilt.teacherLessonsGateway(), koin.get<TeacherLessonsGateway>())
         assertSame(hilt.applicationScope(), koin.get<CoroutineScope>())
         assertSame(hilt.scheduleWidgetRefreshRequester(), koin.get<ScheduleWidgetRefreshRequester>())
-        assertSame(hilt.widgetAppearanceRepository(), koin.get<WidgetAppearanceRepository>())
     }
 
     @Test

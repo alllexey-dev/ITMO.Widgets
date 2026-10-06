@@ -1,43 +1,29 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
-import dagger.hilt.EntryPoint
+import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
-import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
-import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
-import org.koin.android.ext.koin.androidContext
-import org.koin.dsl.module
 
 /**
- * Hilt to Koin for the social data, which stays on Hilt until KM-11d. Hilt constructs each `@Singleton`, so the
- * screens, the session cleaners, the home card, the push handler and sport's friends share one instance (one graph per
- * binding). The teacher reviews come from `ReviewsBridge`, the current user from `CoreBridge`.
+ * Koin to Hilt for the social data, which `socialModule` and `friendSelectorModule` construct: the friendship push
+ * handler still injects [SocialRepository] from Hilt, sport's `SportDataRepositoryImpl` [FriendRepository]. Unscoped on purpose: Koin owns the lifetime and returns its single
+ * every time, so the screens, the home card, the session cleaners and these readers share one repository.
+ * `ensureStarted`, because an FCM message can arrive before `Application.onCreate()` finishes.
  */
-@EntryPoint
+@Module
 @InstallIn(SingletonComponent::class)
-interface SocialBridgeEntryPoint {
-    fun socialRepository(): SocialRepository
-    fun peopleSearchRepository(): PeopleSearchRepository
-    fun friendRepository(): FriendRepository
-    fun personRepository(): PersonRepository
-    fun friendSelectionHistory(): FriendSelectionHistory
+object SocialBridge {
 
-    companion object {
-        fun from(context: Context): SocialBridgeEntryPoint =
-            EntryPointAccessors.fromApplication(context.applicationContext, SocialBridgeEntryPoint::class.java)
-    }
-}
+    @Provides
+    fun socialRepository(@ApplicationContext context: Context): SocialRepository =
+        KoinStarter.ensureStarted(context).get()
 
-/** Lazy singles: Koin starts before Hilt builds its component, so each one reads Hilt on first use. */
-val socialBridgeModule = module {
-    single<SocialRepository> { SocialBridgeEntryPoint.from(androidContext()).socialRepository() }
-    single<PeopleSearchRepository> { SocialBridgeEntryPoint.from(androidContext()).peopleSearchRepository() }
-    single<FriendRepository> { SocialBridgeEntryPoint.from(androidContext()).friendRepository() }
-    single<PersonRepository> { SocialBridgeEntryPoint.from(androidContext()).personRepository() }
-    single<FriendSelectionHistory> { SocialBridgeEntryPoint.from(androidContext()).friendSelectionHistory() }
+    @Provides
+    fun friendRepository(@ApplicationContext context: Context): FriendRepository =
+        KoinStarter.ensureStarted(context).get()
 }

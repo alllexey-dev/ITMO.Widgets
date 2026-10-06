@@ -35,14 +35,26 @@ current study groups in `UserData`, as described in
 - `core/friend/FriendRepository` is a facade over `SocialRepository` for the
   schedule picker, exposing friends as plain `UserSummary` values.
 
-`SocialRepositoryImpl` and `TeacherReviewsRepositoryImpl` are singletons: the
-screens and `SessionDataCleaner` use the same instance. `cachedProfile`,
-`cachedUserFriends` and `cachedReviews` are unavailable while the opt-in is off
-or unknown. Disabling it clears the caches, changes friends and requests to
-`LoadState.Disabled` and clears the own Backend profile. A short atomic
-publication check compares a local generation; a late response from before
-disabling or sign-out cannot refill the cleared cache, even after re-enabling.
-Stale opt-in reads cannot clear or revive a newer connection either.
+The social and picker data live in `:shared:feature-social` `commonMain`
+(`feature/social/data`, `feature/friendselector/data`) and Koin constructs them
+in `socialModule` and `friendSelectorModule`: one `SocialRepositoryImpl` serves
+the screens, the friend-requests home card (`HomeCardSource` under the
+`social` qualifier), the picker and the session cleaners (`social`, `person`
+and `friend-history`, reaching sign-out through `di/bridge/SessionCleanersBridge.kt`).
+`MeViewModel` reads the same Koin single. Android code still on Hilt
+(`FriendshipPushHandler`, `SportDataRepositoryImpl`) reads `SocialRepository`
+and `FriendRepository` through `di/bridge/SocialBridge.kt`, which forwards the
+same Koin singles.
+`TeacherReviewsRepositoryImpl` is a Hilt singleton reached through
+`ReviewsBridge`. `cachedProfile`, `cachedUserFriends` and `cachedReviews` are
+unavailable while the opt-in is off or unknown. Disabling it clears the caches,
+changes friends and requests to `LoadState.Disabled` and clears the own Backend
+profile. `SocialRepositoryImpl` keeps the lists, the caches, the opt-in and a
+request generation in one immutable snapshot that changes only through
+`MutableStateFlow.update`, so the non-suspend reads need no lock; a late
+response from before disabling or sign-out cannot refill the cleared cache,
+even after re-enabling. Stale opt-in reads cannot clear or revive a newer
+connection either. `PersonRepositoryImpl` keeps its cache the same way.
 
 `RelationshipState` is viewer-relative: `NONE`, `OUTGOING`, `INCOMING`,
 `FRIENDS`, `BLOCKED` (reserved, never produced yet). `UserSummary.sharing`

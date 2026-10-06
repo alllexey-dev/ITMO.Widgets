@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
@@ -30,7 +31,6 @@ import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
@@ -90,8 +90,9 @@ interface CoreBridgeEntryPoint {
     fun sportSignSelectorPreferences(): SportSignSelectorPreferences
     fun markSourcePreferences(): MarkSourcePreferences
 
-    /** Core 2.0's users area; unscoped in Hilt over the one `BackendClient`, so every call returns the same API. */
+    /** Core 2.0's users and friends areas; unscoped in Hilt over the one `BackendClient`, so each returns the same API. */
     fun usersApi(): UsersApi
+    fun friendsApi(): FriendsApi
 
     fun backendIdentitySync(): BackendIdentitySync
     fun backendDeviceSession(): BackendDeviceSession
@@ -123,8 +124,6 @@ interface CoreBridgeEntryPoint {
 
     /** The schedule's widget refresh after a sport booking changes it; the refresh gateway is bridged above. */
     fun scheduleWidgetRefreshRequester(): ScheduleWidgetRefreshRequester
-    /** The schedule and QR widget appearance; every write refreshes the pinned widgets. */
-    fun widgetAppearanceRepository(): WidgetAppearanceRepository
 
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
@@ -161,6 +160,7 @@ val coreBridgeModule = module {
     single<SportSignSelectorPreferences> { CoreBridgeEntryPoint.from(androidContext()).sportSignSelectorPreferences() }
     single<MarkSourcePreferences> { CoreBridgeEntryPoint.from(androidContext()).markSourcePreferences() }
     single<UsersApi> { CoreBridgeEntryPoint.from(androidContext()).usersApi() }
+    single<FriendsApi> { CoreBridgeEntryPoint.from(androidContext()).friendsApi() }
     single<BackendIdentitySync> { CoreBridgeEntryPoint.from(androidContext()).backendIdentitySync() }
     single<BackendDeviceSession> { CoreBridgeEntryPoint.from(androidContext()).backendDeviceSession() }
     single<FcmTokenSync> { CoreBridgeEntryPoint.from(androidContext()).fcmTokenSync() }
@@ -183,5 +183,4 @@ val coreBridgeModule = module {
     single<ScheduleWidgetRefreshRequester> {
         CoreBridgeEntryPoint.from(androidContext()).scheduleWidgetRefreshRequester()
     }
-    single<WidgetAppearanceRepository> { CoreBridgeEntryPoint.from(androidContext()).widgetAppearanceRepository() }
 }

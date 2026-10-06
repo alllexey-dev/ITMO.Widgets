@@ -4,7 +4,6 @@ import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
@@ -17,27 +16,24 @@ import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import java.io.IOException
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.fail
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
-import org.junit.Rule
-import org.junit.Test
+import kotlinx.io.IOException
 
 /** The directory profile through `PersonRepositoryImpl` and the 2.x client, with a MockEngine for my.itmo.ru. */
 class PersonRepositoryImplTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
-    private val dispatchers = mainDispatcherRule.appDispatchers
     private val requests = mutableListOf<HttpRequestData>()
 
     @Test
-    fun `a found person is mapped without contacts and cached after one request with the stored token`() = runTest {
+    fun aFoundPersonIsMappedWithoutContactsAndCachedAfterOneRequestWithTheStoredToken() = runTest {
         val repository = repository { respondJson(PersonalityFixtures.PERSON) }
 
         val result = repository.person(PersonalityFixtures.PERSON_ISU)
@@ -54,7 +50,7 @@ class PersonRepositoryImplTest {
     }
 
     @Test
-    fun `student, employee and service profiles keep only presentation facts`() = runTest {
+    fun studentEmployeeAndServiceProfilesKeepOnlyPresentationFacts() = runTest {
         val bodies = mapOf(
             PersonalityFixtures.STUDENT_ISU to PersonalityFixtures.STUDENT,
             PersonalityFixtures.EMPLOYEE_ISU to PersonalityFixtures.EMPLOYEE,
@@ -80,7 +76,7 @@ class PersonRepositoryImplTest {
     }
 
     @Test
-    fun `facts are trimmed and blank or repeated ones are dropped`() = runTest {
+    fun factsAreTrimmedAndBlankOrRepeatedOnesAreDropped() = runTest {
         val repository = repository {
             respondJson(
                 """{"error_code":0,"result":{"isu":100001,"fio":" Тестовая Персона ","photo":" https://example.test/photo ",
@@ -109,7 +105,7 @@ class PersonRepositoryImplTest {
     }
 
     @Test
-    fun `null lists and blank optional values become empty presentation facts`() = runTest {
+    fun nullListsAndBlankOptionalValuesBecomeEmptyPresentationFacts() = runTest {
         val repository = repository {
             respondJson("""{"error_code":0,"result":{"isu":100001,"fio":null,"photo":" ","positions":null,"rooms":null,"education":null}}""")
         }
@@ -118,7 +114,7 @@ class PersonRepositoryImplTest {
     }
 
     @Test
-    fun `courses accept only positive integers`() = runTest {
+    fun coursesAcceptOnlyPositiveIntegers() = runTest {
         for (course in listOf("abc", "0", "-2", "2.5", "2147483648", "")) {
             val repository = repository {
                 respondJson("""{"error_code":0,"result":{"isu":100001,"education":[{"group":"T100","course":"$course"}]}}""")
@@ -126,12 +122,12 @@ class PersonRepositoryImplTest {
 
             val person = (repository.person(100001) as AppResult.Success).value
 
-            assertNull(course, person.education.single().course)
+            assertNull(person.education.single().course, course)
         }
     }
 
     @Test
-    fun `the observed bad request with error code one hundred means not found`() = runTest {
+    fun theObservedBadRequestWithErrorCodeOneHundredMeansNotFound() = runTest {
         val repository = repository { respondJson(PersonalityFixtures.MISSING_PERSON, HttpStatusCode.BadRequest) }
 
         assertEquals(AppResult.Failure(AppError.NotFound), repository.person(100001))
@@ -139,52 +135,52 @@ class PersonRepositoryImplTest {
     }
 
     @Test
-    fun `any other bad request stays an error`() = runTest {
+    fun anyOtherBadRequestStaysAnError() = runTest {
         val bodies = listOf("""{"error_code":101,"result":null}""", """{"result":null}""", "not json", "")
         for (body in bodies) {
             val repository = repository { respondJson(body, HttpStatusCode.BadRequest) }
 
             val result = repository.person(100001) as AppResult.Failure
 
-            assertTrue(body, result.error is AppError.Unknown)
+            assertIs<AppError.Unknown>(result.error, body)
         }
     }
 
     @Test
-    fun `error code one hundred in a successful HTTP answer stays an error`() = runTest {
+    fun errorCodeOneHundredInASuccessfulHTTPAnswerStaysAnError() = runTest {
         val repository = repository { respondJson(PersonalityFixtures.MISSING_PERSON) }
 
         assertTrue((repository.person(100001) as AppResult.Failure).error is AppError.Unknown)
     }
 
     @Test
-    fun `a 404 means not found whatever its body`() = runTest {
+    fun a404MeansNotFoundWhateverItsBody() = runTest {
         for (body in listOf(PersonalityFixtures.MISSING_PERSON, "<html>Not Found</html>")) {
             val repository = repository { respond(body, HttpStatusCode.NotFound) }
 
-            assertEquals(body, AppResult.Failure(AppError.NotFound), repository.person(100001))
+            assertEquals(AppResult.Failure(AppError.NotFound), repository.person(100001), body)
         }
     }
 
     @Test
-    fun `a successful answer without a result or for another ISU means not found`() = runTest {
+    fun aSuccessfulAnswerWithoutAResultOrForAnotherISUMeansNotFound() = runTest {
         for (body in listOf("""{"error_code":0,"result":null}""", """{"error_code":0}""", """{"error_code":0,"result":{"isu":100002}}""")) {
             val repository = repository { respondJson(body) }
 
-            assertEquals(body, AppResult.Failure(AppError.NotFound), repository.person(100001))
+            assertEquals(AppResult.Failure(AppError.NotFound), repository.person(100001), body)
             assertNull(repository.cachedPerson(100001))
         }
     }
 
     @Test
-    fun `service profile isu one is not treated as missing`() = runTest {
+    fun serviceProfileIsuOneIsNotTreatedAsMissing() = runTest {
         val repository = repository { respondJson("""{"error_code":0,"result":{"isu":1,"fio":"Служебная запись"}}""") }
 
         assertEquals(1, (repository.person(1) as AppResult.Success).value.isu)
     }
 
     @Test
-    fun `failures keep the cached person and clearing forgets it`() = runTest {
+    fun failuresKeepTheCachedPersonAndClearingForgetsIt() = runTest {
         val answers = ArrayDeque(listOf(
             HttpStatusCode.OK to PersonalityFixtures.PERSON,
             HttpStatusCode.BadRequest to PersonalityFixtures.MISSING_PERSON,
@@ -208,14 +204,14 @@ class PersonRepositoryImplTest {
     }
 
     @Test
-    fun `a network failure maps to network without being treated as missing`() = runTest {
+    fun aNetworkFailureMapsToNetworkWithoutBeingTreatedAsMissing() = runTest {
         val repository = repository { throw IOException("Synthetic offline response") }
 
         assertEquals(AppResult.Failure(AppError.Network), repository.person(100001))
     }
 
     @Test
-    fun `cancellation is rethrown instead of converted to an app error`() = runTest {
+    fun cancellationIsRethrownInsteadOfConvertedToAnAppError() = runTest {
         val repository = repository { throw CancellationException("Synthetic cancellation") }
 
         try {
@@ -227,8 +223,8 @@ class PersonRepositoryImplTest {
     }
 
     @Test
-    fun `the demo person costs no request`() = runTest {
-        val repository = PersonRepositoryImpl(unreachablePersonalitiesClient(), FakeDemoMode(active = true), dispatchers)
+    fun theDemoPersonCostsNoRequest() = runTest {
+        val repository = PersonRepositoryImpl(unreachablePersonalitiesClient(), FakeDemoMode(active = true), testAppDispatchers())
 
         val person = (repository.person(DemoPeople.MARIA.isu) as AppResult.Success).value
 
@@ -236,6 +232,6 @@ class PersonRepositoryImplTest {
         assertEquals(AppResult.Failure(AppError.NotFound), repository.person(1))
     }
 
-    private fun repository(answer: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) =
-        PersonRepositoryImpl(personalitiesClient(requests, answer), noDemo(), dispatchers)
+    private fun TestScope.repository(answer: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) =
+        PersonRepositoryImpl(personalitiesClient(requests, answer), noDemo(), testAppDispatchers())
 }

@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.feature.home.data.HintHomeCardSource
 import dev.alllexey.itmowidgets.feature.home.di.hintCardsQualifier
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
+import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
+import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
 import kotlin.time.Clock
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -15,7 +17,8 @@ import org.koin.dsl.module
 /**
  * The home feed's fixture in Koin: a debug host replaces the feed's sources, the card preferences, the hint store and
  * the wall clock with its own while it lives, so `HomeFragment` obtains its ViewModel exactly as in release. The fake
- * source stands in for the Hilt-built sources; the hint cards, which read the device, contribute nothing.
+ * source stands in for the Hilt-built sources; the hint cards, which read the device, and the Koin-built sources of
+ * other features (social's friend requests) contribute nothing.
  *
  * Koin is process-wide: a host calls [load] in `onCreate` before `super.onCreate()` and [unload] in `onDestroy`, or
  * later tests in the same process would get the fake. Main thread only, like the host callbacks.
@@ -39,6 +42,7 @@ object HomeDebugFixtures {
         val fixture = module {
             factory<HomeCardSource>(qualifier = hiltCardsQualifier) { fakes.source() }
             factory<HomeCardSource>(qualifier = hintCardsQualifier) { CompositeHomeCardSource(emptyList()) }
+            factory<HomeCardSource>(qualifier = socialCardsQualifier) { CompositeHomeCardSource(emptyList()) }
             factory<HomeCardPreferences> { fakes.preferences() }
             factory<HomeHintStore> { fakes.hintStore() }
             single<Clock> { clock }
@@ -63,6 +67,7 @@ object HomeDebugFixtures {
         koin.declare<HomeHintStore>(koin.get<DataStoreHomeHintStore>(), allowOverride = true)
         // After the stores: a hint source first built here must read the release hint store.
         koin.declare<HomeCardSource>(koin.get<HintHomeCardSource>(), hintCardsQualifier, allowOverride = true)
+        koin.declare<HomeCardSource>(koin.get<SocialHomeCardSource>(), socialCardsQualifier, allowOverride = true)
         current = null
     }
 }

@@ -5,7 +5,6 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.personalities.PersonalityMin
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
@@ -14,13 +13,12 @@ import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 /**
  * MyITMO owns the name search; Backend only says who is registered. Phone and
  * e-mail fields of the directory response are dropped at this boundary.
  */
-class PeopleSearchRepositoryImpl @Inject constructor(
+class PeopleSearchRepositoryImpl(
     private val client: MyItmoClient,
     private val social: SocialRepository,
     private val demo: DemoMode,

@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleChangesHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
 import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
+import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
 import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -31,7 +32,8 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
  * The home feed sees every feature's source exactly once while the sources sit in two graphs: Hilt's `@IntoSet`
- * set behind the composite, and the qualified sources a lane has already moved to Koin (home's hints).
+ * set behind the composite, and the qualified sources a lane has already moved to Koin (home's hints, social's
+ * friend requests).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -81,6 +83,17 @@ class HomeSourcesGraphTest {
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === hints })
         assertTrue(HomeBridgeEntryPoint.from(application).homeCardSources().none { it is HintHomeCardSource })
         assertTrue(koin.get<HomeHintStatus>() is AndroidHomeHintStatus)
+    }
+
+    @Test
+    fun `the friend-requests source is one Koin single outside the Hilt set`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+
+        val social = koin.get<SocialHomeCardSource>()
+        assertSame(social, koin.get<HomeCardSource>(socialCardsQualifier))
+        assertEquals(1, koin.getAll<HomeCardSource>().count { it === social })
+        assertTrue(HomeBridgeEntryPoint.from(application).homeCardSources().none { it is SocialHomeCardSource })
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */

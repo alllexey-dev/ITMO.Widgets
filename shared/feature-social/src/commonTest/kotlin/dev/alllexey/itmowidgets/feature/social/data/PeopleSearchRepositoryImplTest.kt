@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.testkit.respondJson
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -21,27 +20,23 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
-import java.io.IOException
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
+import kotlinx.io.IOException
 
 /** The directory search through `PeopleSearchRepositoryImpl` and the 2.x client, with a MockEngine for my.itmo.ru. */
 class PeopleSearchRepositoryImplTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
-    private val dispatchers = mainDispatcherRule.appDispatchers
     private val requests = mutableListOf<HttpRequestData>()
 
     @Test
-    fun `the fixture page is asked by 20 and keeps only name, photo and registration`() = runTest {
+    fun theFixturePageIsAskedBy20AndKeepsOnlyNamePhotoAndRegistration() = runTest {
         val social = FakeSocial(registered = listOf(123456))
         val repository = repository(social) { respondJson(PersonalityFixtures.SEARCH) }
 
@@ -57,14 +52,14 @@ class PeopleSearchRepositoryImplTest {
         assertEquals("Тестовый Студент", person.name)
         assertEquals("https://example.test/student.jpg", person.pictureUrl)
         assertEquals(RelationshipState.NONE, person.registered?.relationship)
-        assertTrue(page.toString(), "student@example.test" !in page.toString())
+        assertTrue("student@example.test" !in page.toString(), page.toString())
         assertEquals(31, page.total)
         assertEquals(1, page.nextOffset)
         assertEquals(listOf(listOf(123456)), social.lookups)
     }
 
     @Test
-    fun `hits without an ISU or a name are skipped and the offset counts every hit`() = runTest {
+    fun hitsWithoutAnISUOrANameAreSkippedAndTheOffsetCountsEveryHit() = runTest {
         val social = FakeSocial(registered = listOf(100002))
         val repository = repository(social) {
             respondJson(
@@ -91,7 +86,7 @@ class PeopleSearchRepositoryImplTest {
     }
 
     @Test
-    fun `the last page and an empty page have no next offset`() = runTest {
+    fun theLastPageAndAnEmptyPageHaveNoNextOffset() = runTest {
         val answers = ArrayDeque(listOf(
             """{"error_code":0,"result":{"count":21,"data":[{"id":100009,"fio":"Последний"}]}}""",
             PersonalityFixtures.SEARCH_EMPTY,
@@ -107,7 +102,7 @@ class PeopleSearchRepositoryImplTest {
     }
 
     @Test
-    fun `a blank query does not reach the network`() = runTest {
+    fun aBlankQueryDoesNotReachTheNetwork() = runTest {
         val social = FakeSocial()
         val repository = repository(social) { throw AssertionError("A blank query was sent") }
 
@@ -117,7 +112,7 @@ class PeopleSearchRepositoryImplTest {
     }
 
     @Test
-    fun `directory failures stay typed and skip the lookup`() = runTest {
+    fun directoryFailuresStayTypedAndSkipTheLookup() = runTest {
         val cases = listOf(
             failure(AppError.Unauthorized) { respondJson("""{"error_code":401,"result":null}""") },
             failure(null) { respond("<html>Bad Gateway</html>", HttpStatusCode.BadGateway) },
@@ -127,13 +122,13 @@ class PeopleSearchRepositoryImplTest {
             val social = FakeSocial()
             val error = (repository(social) { answer() }.search("а") as AppResult.Failure).error
 
-            if (expected == null) assertTrue(error.toString(), error is AppError.Unknown) else assertEquals(expected, error)
+            if (expected == null) assertTrue(error is AppError.Unknown, error.toString()) else assertEquals(expected, error)
             assertEquals(emptyList<List<Int>>(), social.lookups)
         }
     }
 
     @Test
-    fun `a lookup failure fails the page`() = runTest {
+    fun aLookupFailureFailsThePage() = runTest {
         val repository = repository(FakeSocial(lookupError = AppError.CustomServicesDisabled)) {
             respondJson(PersonalityFixtures.SEARCH)
         }
@@ -142,8 +137,8 @@ class PeopleSearchRepositoryImplTest {
     }
 
     @Test
-    fun `the demo directory costs no request`() = runTest {
-        val repository = PeopleSearchRepositoryImpl(unreachablePersonalitiesClient(), FakeSocial(), FakeDemoMode(active = true), dispatchers)
+    fun theDemoDirectoryCostsNoRequest() = runTest {
+        val repository = PeopleSearchRepositoryImpl(unreachablePersonalitiesClient(), FakeSocial(), FakeDemoMode(active = true), testAppDispatchers())
 
         val page = (repository.search("иван") as AppResult.Success).value
 
@@ -153,8 +148,8 @@ class PeopleSearchRepositoryImplTest {
 
     private fun failure(expected: AppError?, answer: MockRequestHandleScope.() -> HttpResponseData) = answer to expected
 
-    private fun repository(social: SocialRepository, answer: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) =
-        PeopleSearchRepositoryImpl(personalitiesClient(requests, answer), social, noDemo(), dispatchers)
+    private fun TestScope.repository(social: SocialRepository, answer: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) =
+        PeopleSearchRepositoryImpl(personalitiesClient(requests, answer), social, noDemo(), testAppDispatchers())
 
     private class FakeSocial(
         private val registered: List<Int> = emptyList(),

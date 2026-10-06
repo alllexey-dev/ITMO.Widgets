@@ -4,16 +4,13 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
 
-@Singleton
-class DataStoreFriendSelectionHistory @Inject constructor(
-    @param:AppPreferences private val dataStore: DataStore<Preferences>
+/** The picker's recent friends in the one `app_preferences` DataStore, under the 2.2 key and format. */
+class DataStoreFriendSelectionHistory(
+    private val dataStore: DataStore<Preferences>
 ) : FriendSelectionHistory, SessionDataCleaner {
 
     override suspend fun getRecentIsu(): List<Int> {

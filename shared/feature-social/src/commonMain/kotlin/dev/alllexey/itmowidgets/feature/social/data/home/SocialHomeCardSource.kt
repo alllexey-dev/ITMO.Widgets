@@ -7,15 +7,12 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /** Incoming friend requests; nothing without the opt-in or without requests. */
-@Singleton
-class SocialHomeCardSource @Inject constructor(
+class SocialHomeCardSource(
     private val social: SocialRepository,
     private val services: CustomServicesRepository
 ) : HomeCardSource {

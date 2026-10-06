@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -12,9 +13,14 @@ import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
+import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
+import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
+import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -53,20 +59,44 @@ class SocialDebugFixturesTest {
         assertSame(social, koin.get<SocialRepository>())
         assertSame(reviews, koin.get<TeacherReviewsRepository>())
         assertSame(Visitor, koin.get<CurrentUserProvider>())
-        val bridged = SocialBridgeEntryPoint.from(application)
-        assertSame(bridged.personRepository(), koin.get<PersonRepository>())
+        assertSame(koin.get<PersonRepositoryImpl>(), koin.get<PersonRepository>())
 
         SocialDebugFixtures.unload(application, fixture)
-        assertSame(bridged.socialRepository(), koin.get<SocialRepository>())
-        assertSame(bridged.peopleSearchRepository(), koin.get<PeopleSearchRepository>())
-        assertSame(bridged.friendRepository(), koin.get<FriendRepository>())
-        assertSame(bridged.personRepository(), koin.get<PersonRepository>())
-        assertSame(bridged.friendSelectionHistory(), koin.get<FriendSelectionHistory>())
+        assertSame(koin.get<SocialRepositoryImpl>(), koin.get<SocialRepository>())
+        assertSame(koin.get<PeopleSearchRepositoryImpl>(), koin.get<PeopleSearchRepository>())
+        assertSame(koin.get<FriendRepositoryImpl>(), koin.get<FriendRepository>())
+        assertSame(koin.get<PersonRepositoryImpl>(), koin.get<PersonRepository>())
+        assertSame(koin.get<DataStoreFriendSelectionHistory>(), koin.get<FriendSelectionHistory>())
         assertSame(
             ReviewsBridgeEntryPoint.from(application).teacherReviewsRepository(),
             koin.get<TeacherReviewsRepository>(),
         )
         assertSame(CoreBridgeEntryPoint.from(application).currentUserProvider(), koin.get<CurrentUserProvider>())
+    }
+
+    @Test
+    fun `unloading points every overridden port back at the single the screens already shared`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+        val social = koin.get<SocialRepository>()
+        val friends = koin.get<FriendRepository>()
+        val history = koin.get<FriendSelectionHistory>()
+
+        val fixture = SocialDebugFixtures.load(
+            application,
+            SocialDebugFixtures.Fakes(
+                social = { FakeSocialRepository() },
+                friends = { error("not read") },
+                history = { error("not read") },
+            ),
+        )
+        SocialDebugFixtures.unload(application, fixture)
+
+        assertSame(social, koin.get<SocialRepository>())
+        assertSame(friends, koin.get<FriendRepository>())
+        assertSame(history, koin.get<FriendSelectionHistory>())
+        val hilt = EntryPointAccessors.fromApplication(application, SocialHiltBindingsEntryPoint::class.java)
+        assertSame(social, hilt.socialRepository())
     }
 
     @Test

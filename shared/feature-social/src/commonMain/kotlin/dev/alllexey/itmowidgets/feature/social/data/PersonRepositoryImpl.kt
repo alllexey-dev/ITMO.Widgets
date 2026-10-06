@@ -4,7 +4,6 @@ import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
@@ -12,29 +11,28 @@ import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
-import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * A MyITMO directory profile through MyItmoApi 2.x. The person is missing on the observed HTTP 400 with
  * `error_code=100`, on HTTP 404, on a successful answer without a result and on a result for another ISU;
- * every other failure, another 400 among them, stays an error.
+ * every other failure, another 400 among them, stays an error. The cache is one immutable map that changes only
+ * through `update {}`, so the non-suspend [cachedPerson] needs no lock.
  */
-@Singleton
-class PersonRepositoryImpl @Inject constructor(
+class PersonRepositoryImpl(
     private val client: MyItmoClient,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers,
 ) : PersonRepository, SessionDataCleaner {
-    private val cache = ConcurrentHashMap<Int, Person>()
+    private val cache = MutableStateFlow<Map<Int, Person>>(emptyMap())
 
-    override fun cachedPerson(isu: Int): Person? = cache[isu]
+    override fun cachedPerson(isu: Int): Person? = cache.value[isu]
 
     override suspend fun person(isu: Int): AppResult<Person> {
         if (demo.isActive()) {
-            return DemoSocial.person(isu)?.let { person -> AppResult.Success(person.also { cache[isu] = it }) }
+            return DemoSocial.person(isu)?.let { person -> AppResult.Success(person.also { remember(isu, it) }) }
                 ?: AppResult.Failure(AppError.NotFound)
         }
         return try {
@@ -43,7 +41,7 @@ class PersonRepositoryImpl @Inject constructor(
                     ?.takeIf { it.isu == isu.toLong() }
                     ?: return@withContext AppResult.Failure(AppError.NotFound)
                 val person = personality.toPerson(isu)
-                cache[isu] = person
+                remember(isu, person)
                 AppResult.Success(person)
             }
         } catch (cancellation: CancellationException) {
@@ -56,7 +54,11 @@ class PersonRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearSessionData() {
-        cache.clear()
+        cache.update { emptyMap() }
+    }
+
+    private fun remember(isu: Int, person: Person) {
+        cache.update { it + (isu to person) }
     }
 
     private fun MyItmoException.Api.meansMissingPerson(): Boolean =

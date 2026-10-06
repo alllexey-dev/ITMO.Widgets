@@ -7,6 +7,8 @@ import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
+import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
+import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -36,9 +38,16 @@ class AccountKoinGraphTest {
         )
     }
 
+    /**
+     * Onboarding and Me read the services opt-in, which `settingsDataModule` constructs since KM-11e, and Me reads
+     * `SocialRepository`, which `socialModule` constructs since KM-11d.
+     */
     @Test
     fun `the auth, onboarding and Me modules pass the graph check against the release bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(authModule, onboardingModule, meModule))
+        KoinGraphCheck.assertValid(
+            KoinModules.bridges,
+            listOf(settingsDataModule, socialModule, authModule, onboardingModule, meModule),
+        )
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */

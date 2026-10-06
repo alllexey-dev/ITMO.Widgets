@@ -4,12 +4,23 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
+import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
+import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
+import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
+import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
+import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -30,22 +41,39 @@ class SocialBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the social repositories resolve in Koin to the instances Hilt builds`() {
-        val application = bootApplication()
-        val hilt = SocialBridgeEntryPoint.from(application)
+    fun `each social port is the one single its Koin module builds`() {
+        bootApplication()
         val koin = GlobalContext.get()
 
-        assertSame(hilt.socialRepository(), koin.get<SocialRepository>())
-        assertSame(hilt.peopleSearchRepository(), koin.get<PeopleSearchRepository>())
-        assertSame(hilt.friendRepository(), koin.get<FriendRepository>())
-        assertSame(hilt.personRepository(), koin.get<PersonRepository>())
-        assertSame(hilt.friendSelectionHistory(), koin.get<FriendSelectionHistory>())
+        assertSame(koin.get<SocialRepositoryImpl>(), koin.get<SocialRepository>())
+        assertSame(koin.get<PersonRepositoryImpl>(), koin.get<PersonRepository>())
+        assertSame(koin.get<PeopleSearchRepositoryImpl>(), koin.get<PeopleSearchRepository>())
+        assertSame(koin.get<FriendRepositoryImpl>(), koin.get<FriendRepository>())
+        assertSame(koin.get<DataStoreFriendSelectionHistory>(), koin.get<FriendSelectionHistory>())
         assertSame(koin.get<SocialRepository>(), koin.get<SocialRepository>())
     }
 
     @Test
+    fun `the cleaners and the home card forward to the same singles`() {
+        bootApplication()
+        val koin = GlobalContext.get()
+        val cleaners = koin.getAll<SessionDataCleaner>()
+        val cards = koin.getAll<HomeCardSource>()
+
+        assertEquals(1, cleaners.count { it === koin.get<SocialRepositoryImpl>() })
+        assertEquals(1, cleaners.count { it === koin.get<PersonRepositoryImpl>() })
+        assertEquals(1, cleaners.count { it === koin.get<DataStoreFriendSelectionHistory>() })
+        assertSame(koin.get<SocialHomeCardSource>(), koin.get<HomeCardSource>(socialCardsQualifier))
+        assertEquals(1, cards.count { it === koin.get<SocialHomeCardSource>() })
+    }
+
+    /** The repository reads the services opt-in, which `settingsDataModule` constructs since KM-11e. */
+    @Test
     fun `the social and picker modules resolve against the bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(socialModule, friendSelectorModule))
+        KoinGraphCheck.assertValid(
+            KoinModules.bridges,
+            listOf(settingsDataModule, socialModule, friendSelectorModule),
+        )
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
