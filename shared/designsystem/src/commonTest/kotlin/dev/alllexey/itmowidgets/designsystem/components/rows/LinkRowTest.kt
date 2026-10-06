@@ -13,6 +13,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertHeightIsEqualTo
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -25,7 +27,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
 import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupItem
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.IosMetrics
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
@@ -42,7 +46,8 @@ class LinkRowTest {
         var opened = 0
         var actions = 0
         setContent {
-            ItmoTheme {
+            // Material's 56 dp row; the iOS one is checked by iosRowsAreUikitCellsWith44PtVoteTargets.
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
                 LinkRow(
                     TITLE,
                     onClick = { opened++ },
@@ -61,6 +66,37 @@ class LinkRowTest {
 
         assertEquals(1, opened)
         assertEquals(1, actions)
+    }
+
+    @Test
+    fun iosRowsAreUikitCellsWith44PtVoteTargets() = runComposeUiTest {
+        var opened = 0
+        val votes = mutableListOf<Vote>()
+        setContent {
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Ios) {
+                Column {
+                    LinkRow(
+                        TITLE,
+                        onClick = { opened++ },
+                        modifier = Modifier.connectedGroupItem(GroupPosition.First),
+                        icon = ColorPainter(Color.Black),
+                        caption = CAPTION,
+                        votes = { VotePill(2, myVote = null, SCORE, onVote = { votes += it }, VoteLabels(UP, DOWN)) },
+                    )
+                    LinkRow(OTHER, onClick = {}, modifier = Modifier.connectedGroupItem(GroupPosition.Last))
+                }
+            }
+        }
+
+        onNodeWithText(OTHER).assertHeightIsAtLeast(IosMetrics.rowMinHeight)
+        val first = onNodeWithText(TITLE).assertHeightIsAtLeast(IosMetrics.rowMinHeight).getBoundsInRoot()
+        assertEquals(first.bottom, onNodeWithText(OTHER).getBoundsInRoot().top, "the rows of an inset group touch")
+        onNodeWithText(TITLE).performClick()
+        onNodeWithContentDescription(UP).assertWidthIsEqualTo(44.dp).assertHeightIsEqualTo(44.dp).performClick()
+
+        assertEquals(1, opened)
+        assertEquals(listOf(Vote.Up), votes)
+        assertTouchTargets(ItmoPlatformStyle.Ios.minTouchTarget)
     }
 
     @Test
@@ -150,6 +186,7 @@ class LinkRowTest {
 
     private companion object {
         const val TITLE = "Баллы потока"
+        const val OTHER = "Чат потока"
         const val CAPTION = "docs.google.com"
         const val OWN = "моя"
         const val ACTIONS = "Действия со ссылкой"

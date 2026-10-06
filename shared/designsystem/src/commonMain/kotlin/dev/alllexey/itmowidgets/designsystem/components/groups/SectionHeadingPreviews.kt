@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 @Preview
 @Composable
 private fun SectionHeadingPreview() = ItmoPreview {
-    Column(Modifier.padding(horizontal = ItmoTheme.spacing.screenMargin)) {
+    Column(Modifier.groupPreviewBackdrop().padding(horizontal = ItmoTheme.spacing.screenMargin)) {
         SectionHeading("Пары", spacing = SectionHeadingSpacing.First)
         SectionHeading("Преподаватели")
         SectionHeading(PreviewFixtures.LongSubjectName, spacing = SectionHeadingSpacing.Sheet)
@@ -23,7 +23,7 @@ private fun SectionHeadingPreview() = ItmoPreview {
 @Preview
 @Composable
 private fun SectionHeadingSubheadingPreview() = ItmoPreview {
-    Column(Modifier.padding(horizontal = ItmoTheme.spacing.screenMargin)) {
+    Column(Modifier.groupPreviewBackdrop().padding(horizontal = ItmoTheme.spacing.screenMargin)) {
         SectionSubheading("Лабораторные", value = "30 / 48")
         SectionSubheading(
             PreviewFixtures.LongSubjectName,

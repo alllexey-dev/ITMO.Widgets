@@ -21,7 +21,13 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.components.controls.RecordingHaptics
+import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
+import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupItem
 import dev.alllexey.itmowidgets.designsystem.components.settings.SelectionMode
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoHapticEvent
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
+import dev.alllexey.itmowidgets.designsystem.platform.LocalItmoHaptics
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -139,6 +145,53 @@ class UserRowTest {
 
         assertNoTextOverflow(allowed = hasText(LONG_SUBTITLE))
         assertTouchTargets()
+    }
+
+    @Test
+    fun iosRowsKeepTheirSemanticsAndPlayThePickHaptics() = runComposeUiTest {
+        val haptics = RecordingHaptics()
+        var opened = 0
+        var picks = 0
+        setContent {
+            CompositionLocalProvider(LocalItmoHaptics provides haptics) {
+                ItmoTheme(platformStyle = ItmoPlatformStyle.Ios) {
+                    Column {
+                        UserRow(
+                            NAME,
+                            pictureUrl = null,
+                            Modifier.connectedGroupItem(GroupPosition.First),
+                            subtitle = GROUP,
+                            onClick = { opened++ },
+                        )
+                        UserSelectionRow(
+                            OTHER,
+                            pictureUrl = null,
+                            selected = false,
+                            onSelect = { picks++ },
+                            Modifier.connectedGroupItem(GroupPosition.Middle),
+                        )
+                        UserSelectionRow(
+                            CLOSED,
+                            pictureUrl = null,
+                            selected = true,
+                            onSelect = null,
+                            Modifier.connectedGroupItem(GroupPosition.Last),
+                        )
+                    }
+                }
+            }
+        }
+
+        onNodeWithText(NAME).assertHasClickAction().performClick()
+        onNodeWithText(OTHER)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox))
+            .performClick()
+        onNodeWithText(CLOSED).assertHasNoClickAction()
+
+        assertEquals(1, opened)
+        assertEquals(1, picks)
+        assertEquals(listOf(ItmoHapticEvent.Toggle), haptics.events)
+        assertTouchTargets(ItmoPlatformStyle.Ios.minTouchTarget)
     }
 
     private companion object {

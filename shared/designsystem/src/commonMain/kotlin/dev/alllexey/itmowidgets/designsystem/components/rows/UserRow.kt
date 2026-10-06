@@ -22,8 +22,14 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
+import dev.alllexey.itmowidgets.designsystem.components.groups.IosCheckmark
+import dev.alllexey.itmowidgets.designsystem.components.groups.IosDisclosure
+import dev.alllexey.itmowidgets.designsystem.components.groups.IosListRow
 import dev.alllexey.itmowidgets.designsystem.components.settings.SelectionMode
+import dev.alllexey.itmowidgets.designsystem.components.settings.rememberSelectionFeedback
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.IosMetrics
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
@@ -40,6 +46,10 @@ class UserRowAction(
  * that wraps, a one-line [subtitle] and an optional [status] in `bodySmall`, then the row's actions: a text button
  * for [secondaryAction] and a tonal one for [primaryAction], both inert while [busy]. With [onClick] the whole row
  * opens the person; a row that opens and has no actions ends in a chevron. TalkBack reads the row once.
+ *
+ * Under the iOS style it is a cell of an inset group: the second lines in subheadline `secondaryLabel`, the
+ * disclosure indicator, the separator under it inset to the name, the pressed cell instead of a ripple; the avatar
+ * and the buttons keep their size.
  */
 @Composable
 fun UserRow(
@@ -71,7 +81,7 @@ fun UserRow(
  * A person the user picks from a list, such as friends to share with: the whole row is the target, a check in
  * `primary` shows the selection, and TalkBack reads the row once with its selected state ([mode] decides radio button
  * or checkbox). A closed row ([onSelect] null, a private profile) is neither a target nor selected and never shows the
- * check.
+ * check. Under the iOS style the check is UIKit's checkmark accessory and a pick plays the selection or toggle haptic.
  */
 @Composable
 fun UserSelectionRow(
@@ -84,10 +94,11 @@ fun UserSelectionRow(
     status: String? = null,
     mode: SelectionMode = SelectionMode.Multiple,
 ) {
+    val pick = rememberSelectionFeedback(onSelect, mode)
     val interaction = when {
-        onSelect == null -> Modifier.semantics(mergeDescendants = true) {}
-        mode == SelectionMode.Single -> Modifier.selectable(selected, role = Role.RadioButton, onClick = onSelect)
-        else -> Modifier.toggleable(selected, role = Role.Checkbox, onValueChange = { onSelect() })
+        pick == null -> Modifier.semantics(mergeDescendants = true) {}
+        mode == SelectionMode.Single -> Modifier.selectable(selected, role = Role.RadioButton, onClick = pick)
+        else -> Modifier.toggleable(selected, role = Role.Checkbox, onValueChange = { pick() })
     }
     UserRowLayout(name, pictureUrl, subtitle, status, modifier.then(interaction)) {
         if (onSelect != null) TrailingIcon(Modifier.alpha(if (selected) 1f else 0f), check = true)
@@ -103,6 +114,10 @@ private fun UserRowLayout(
     modifier: Modifier,
     trailing: @Composable () -> Unit,
 ) {
+    if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
+        IosUserRowLayout(name, pictureUrl, subtitle, status, modifier, trailing)
+        return
+    }
     Row(
         modifier
             .fillMaxWidth()
@@ -141,12 +156,57 @@ private fun UserRowLayout(
 }
 
 @Composable
+private fun IosUserRowLayout(
+    name: String,
+    pictureUrl: String?,
+    subtitle: String?,
+    status: String?,
+    modifier: Modifier,
+    trailing: @Composable () -> Unit,
+) {
+    val secondary = ItmoTheme.iosColors.secondaryLabel
+    IosListRow(separatorInset = IosMetrics.rowHorizontalPadding + AvatarSize + ItmoTheme.spacing.content) {
+        Row(
+            modifier
+                .fillMaxWidth()
+                .heightIn(min = IosMetrics.rowMinHeight)
+                .padding(horizontal = IosMetrics.rowHorizontalPadding, vertical = ItmoTheme.spacing.compact),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Avatar(name, pictureUrl, size = AvatarSize)
+            Column(
+                Modifier
+                    .weight(1f)
+                    .padding(start = ItmoTheme.spacing.content, end = ItmoTheme.spacing.compact),
+            ) {
+                Text(name, color = ItmoTheme.colorScheme.onSurface, style = ItmoTheme.typography.titleMedium)
+                if (!subtitle.isNullOrEmpty()) {
+                    Text(
+                        subtitle,
+                        color = secondary,
+                        style = ItmoTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (status != null) Text(status, color = secondary, style = ItmoTheme.typography.bodyMedium)
+            }
+            trailing()
+        }
+    }
+}
+
+@Composable
 private fun ActionButton(action: UserRowAction, style: ProgressButtonStyle, enabled: Boolean) {
     ProgressButton(action.label, action.onClick, style = style, enabled = enabled)
 }
 
 @Composable
 private fun TrailingIcon(modifier: Modifier, check: Boolean = false) {
+    if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
+        if (check) IosCheckmark(visible = true, modifier) else IosDisclosure(modifier)
+        return
+    }
     Icon(
         painterResource(if (check) Res.drawable.ic_check else Res.drawable.ic_chevron_right),
         contentDescription = null,

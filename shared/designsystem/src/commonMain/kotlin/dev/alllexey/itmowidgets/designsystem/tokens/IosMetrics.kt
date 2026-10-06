@@ -37,6 +37,41 @@ object IosMetrics {
     /** A separator's thickness: `_UITableViewCellSeparatorView`'s height, three device pixels at 3x. */
     val separatorThickness: Dp = 1.dp
 
+    /**
+     * The space above a section header's text in an inset-grouped list: the label's y in the header view
+     * (`UIListContentConfiguration.groupedHeader()`, 17 pt semibold in `secondaryLabel`, DS-IOS-03).
+     */
+    val sectionHeaderTop: Dp = 28.67.dp
+
+    /** The space between a section header's text and its group: the header view's bottom less the label's. */
+    val sectionHeaderBottom: Dp = 6.33.dp
+
+    /**
+     * The space between a group and its footer's text: the label's y in the footer view
+     * (`UIListContentConfiguration.groupedFooter()`, 13 pt regular in `secondaryLabel`).
+     */
+    val sectionFooterTop: Dp = 7.67.dp
+
+    /** The disclosure indicator (`accessoryType = .disclosureIndicator`): its image view's frame, 10.33 x 14. */
+    val disclosureWidth: Dp = 10.33.dp
+    val disclosureHeight: Dp = 14.dp
+
+    /** The disclosure indicator's distance from the cell's trailing edge: the accessory's frame in the cell. */
+    val disclosureTrailingInset: Dp = 20.dp
+
+    /** The checkmark (`accessoryType = .checkmark`), in the tint: its image view's frame, 19 x 17.33. */
+    val checkmarkWidth: Dp = 19.dp
+    val checkmarkHeight: Dp = 17.33.dp
+
+    /** The checkmark's distance from the cell's trailing edge: the accessory's frame in the cell. */
+    val checkmarkTrailingInset: Dp = 22.5.dp
+
+    /**
+     * The gap between a row's text and its accessory or trailing value: `valueCell()`'s
+     * `textToSecondaryTextHorizontalPadding` and the content view's end before an accessory (both 8).
+     */
+    val accessoryGap: Dp = 8.dp
+
     /** The top corners of a sheet, medium and large detent: `UIDropShadowView.cornerConfiguration`, `.fixed(38)`. */
     val sheetRadius: Dp = 38.dp
 

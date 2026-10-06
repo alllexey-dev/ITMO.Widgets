@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import dev.alllexey.itmowidgets.designsystem.components.groups.groupPreviewBackdrop
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -17,7 +18,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 private fun SettingsGroupCompactPreview() = ItmoPreview {
     Column(
-        Modifier.padding(ItmoTheme.spacing.screenMargin),
+        Modifier.groupPreviewBackdrop().padding(ItmoTheme.spacing.screenMargin),
         verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.group),
     ) {
         SettingsGroup(
@@ -52,7 +53,7 @@ private fun SettingsGroupCompactPreview() = ItmoPreview {
 @Preview
 @Composable
 private fun SettingsGroupDefaultPreview() = ItmoPreview {
-    Column(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
+    Column(Modifier.groupPreviewBackdrop().padding(ItmoTheme.spacing.screenMargin)) {
         SettingsGroup(title = "Профиль", density = SettingsDensity.Default) {
             row { SettingsNavigationRow("Друзья", onClick = {}, value = "12") }
             row { SettingsToggleRow("Показывать расписание", checked = false, onCheckedChange = {}) }
@@ -64,7 +65,7 @@ private fun SettingsGroupDefaultPreview() = ItmoPreview {
 @Preview
 @Composable
 private fun SettingsGroupDisabledPreview() = ItmoPreview {
-    Column(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
+    Column(Modifier.groupPreviewBackdrop().padding(ItmoTheme.spacing.screenMargin)) {
         SettingsGroup(title = "Спорт") {
             row {
                 SettingsToggleRow(
@@ -83,7 +84,7 @@ private fun SettingsGroupDisabledPreview() = ItmoPreview {
 @Preview
 @Composable
 private fun SettingsGroupLongTextPreview() = ItmoPreview {
-    Column(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
+    Column(Modifier.groupPreviewBackdrop().padding(ItmoTheme.spacing.screenMargin)) {
         SettingsGroup(
             title = PreviewFixtures.LongSubjectName,
             footer = { SettingsGroupFooter(PreviewFixtures.LongSubjectName) },
@@ -111,7 +112,7 @@ private fun SettingsGroupLongTextPreview() = ItmoPreview {
 @Composable
 private fun SettingsSelectionPreview() = ItmoPreview {
     Column(
-        Modifier.padding(ItmoTheme.spacing.screenMargin),
+        Modifier.groupPreviewBackdrop().padding(ItmoTheme.spacing.screenMargin),
         verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.group),
     ) {
         SettingsGroup(title = "Строка в таблице") {
@@ -136,6 +137,32 @@ private fun SettingsSelectionPreview() = ItmoPreview {
                     mode = SelectionMode.Multiple,
                 )
             }
+        }
+    }
+}
+
+/**
+ * The section of IO-06a's SwiftUI `Form` reference (`DesignSystemSnapshotTests.testFormToggleAndValueRows`) at its
+ * 320 pt width, without the row symbols the settings rows do not draw: the iOS baselines sit beside that snapshot.
+ */
+@Preview(widthDp = 320)
+@Composable
+private fun SettingsGroupFormPreview() = ItmoPreview {
+    Column(Modifier.groupPreviewBackdrop().padding(ItmoTheme.spacing.screenMargin)) {
+        SettingsGroup(
+            title = "Уведомления",
+            footer = { SettingsGroupFooter("Приходят, даже когда приложение закрыто.") },
+        ) {
+            row {
+                SettingsToggleRow(
+                    "Изменения в расписании",
+                    checked = true,
+                    onCheckedChange = {},
+                    description = "Новые, отменённые и перенесённые пары",
+                )
+            }
+            row { SettingsToggleRow("Новые баллы", checked = false, onCheckedChange = {}) }
+            row { SettingsInfoRow("Тема", value = "Как в системе") }
         }
     }
 }

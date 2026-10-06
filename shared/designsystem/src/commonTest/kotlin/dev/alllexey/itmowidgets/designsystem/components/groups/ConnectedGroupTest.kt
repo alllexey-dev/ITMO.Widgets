@@ -22,6 +22,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.IosMetrics
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
@@ -76,7 +77,8 @@ class ConnectedGroupTest {
     fun theActionRowIsOneTargetWithSilentIcons() = runComposeUiTest {
         var clicks = 0
         setContent {
-            ItmoTheme {
+            // Material's 56 dp row; iosGroupsAreInsetGroupsOfTouchingCells checks the iOS one.
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
                 GroupActionRow(
                     ALL_LINKS,
                     ColorPainter(Color.Black),
@@ -91,6 +93,42 @@ class ConnectedGroupTest {
         assertEquals(1, clicks)
         onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription)).assertCountEquals(0)
         assertTouchTargets()
+    }
+
+    @Test
+    fun iosGroupsAreInsetGroupsOfTouchingCells() = runComposeUiTest {
+        var clicks = 0
+        setContent {
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Ios) {
+                Column {
+                    SectionHeading(SECTION)
+                    GroupPosition.entries.drop(1).forEach { position ->
+                        Box(
+                            Modifier.fillMaxWidth().connectedGroupItem(position).height(ROW_HEIGHT).testTag(position.name),
+                        )
+                    }
+                    GroupActionRow(
+                        ALL_LINKS,
+                        ColorPainter(Color.Black),
+                        onClick = { clicks++ },
+                        modifier = Modifier.connectedGroupItem(GroupPosition.Single),
+                    )
+                }
+            }
+        }
+
+        val first = onNodeWithTag(GroupPosition.First.name).getBoundsInRoot()
+        val middle = onNodeWithTag(GroupPosition.Middle.name).getBoundsInRoot()
+        val last = onNodeWithTag(GroupPosition.Last.name).getBoundsInRoot()
+        assertEquals(first.bottom, middle.top, "the cells of an inset group touch")
+        assertEquals(middle.bottom, last.top)
+        onNodeWithText(SECTION).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        assertEquals(IosMetrics.rowHorizontalPadding, onNodeWithText(SECTION).getBoundsInRoot().left)
+        onNodeWithText(ALL_LINKS).assertHeightIsAtLeast(IosMetrics.rowMinHeight).performClick()
+
+        assertEquals(1, clicks)
+        onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription)).assertCountEquals(0)
+        assertTouchTargets(ItmoPlatformStyle.Ios.minTouchTarget)
     }
 
     private companion object {
