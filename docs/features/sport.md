@@ -29,6 +29,13 @@ custom-services gate.
 | `core/sport/SportScoreRepository` | period-specific score summaries shared with the recordbook |
 | `core/sport/PendingSportBookingsRepository` | read-only projection of own active queues for the schedule and widgets |
 
+Sign-out runs the session cleaners of `SportDataRepositoryImpl` and
+`SportBookingRepositoryImpl`: score and attempts return to `Loading`, a failed
+load included, own queue entries to `Disabled` and the confirmed bookings to an
+empty list, and a response of the previous session is dropped. `Loading` makes
+the next entry of «Мой спорт» load again, so another account or the demo never
+sees the previous session's data or its expired session.
+
 `SportBookingDelegate` performs an action, then requests a schedule-widget
 refresh through `ScheduleWidgetRefreshRequester` and refreshes the screens.
 MyITMO often answers the first fetch with the state from before the change, so

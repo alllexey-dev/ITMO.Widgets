@@ -49,17 +49,17 @@ internal class FakeSportBookingRepository : SportBookingRepository {
 }
 
 internal class FakeSportDataRepository : SportDataRepository {
-    val score = MutableSharedFlow<AppResult<SportScore>>(replay = 1)
-    val attempts = MutableSharedFlow<AppResult<SportAttempts>>(replay = 1)
+    val score = MutableSharedFlow<LoadState<SportScore>>(replay = 1)
+    val attempts = MutableSharedFlow<LoadState<SportAttempts>>(replay = 1)
     var gate: CompletableDeferred<Unit> = CompletableDeferred(Unit)
     var limitsRefreshCount = 0
     var entriesRefreshCount = 0
     var limits = SportAutoSignLimits(3, 2, Instant.parse("2026-08-01T00:00:00+03:00"))
     var entries: List<SportQueueEntry> = emptyList()
 
-    override fun observeSportScore(): Flow<AppResult<SportScore>> = score
+    override fun observeSportScore(): Flow<LoadState<SportScore>> = score
     override suspend fun refreshSportScore() = gate.await()
-    override fun observeSportAttempts(): Flow<AppResult<SportAttempts>> = attempts
+    override fun observeSportAttempts(): Flow<LoadState<SportAttempts>> = attempts
     override suspend fun refreshSportAttempts() = gate.await()
     override fun observeSportAutoSignLimits(): Flow<LoadState<SportAutoSignLimits>> =
         flow { emit(LoadState.Content(limits)) }

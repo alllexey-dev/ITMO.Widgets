@@ -56,8 +56,8 @@ class SportMyViewModelTest {
     )
 
     private suspend fun emitSnapshot() {
-        data.attempts.emit(AppResult.Success(SportAttempts(total = 3, used = 1, free = 2, canSignIn = true)))
-        data.score.emit(AppResult.Success(SportScore(attendances = 40, other = 10, attendancesData = emptyList())))
+        data.attempts.emit(LoadState.Content(SportAttempts(total = 3, used = 1, free = 2, canSignIn = true)))
+        data.score.emit(LoadState.Content(SportScore(attendances = 40, other = 10, attendancesData = emptyList())))
         bookings.merged.emit(LoadState.Content(listOf(SportCardFixtures.booking(7))))
     }
 
@@ -114,7 +114,7 @@ class SportMyViewModelTest {
         advanceUntilIdle()
         val content = viewModel.uiState.value as SportMyUiState.Content
 
-        data.score.emit(AppResult.Failure(AppError.Network))
+        data.score.emit(LoadState.Error(AppError.Network))
         advanceUntilIdle()
 
         val after = viewModel.uiState.value as SportMyUiState.Content
@@ -125,10 +125,25 @@ class SportMyViewModelTest {
     }
 
     @Test
+    fun aClearedSessionDropsTheContentOfThePreviousOne() = runTest(main.dispatcher) {
+        emitSnapshot()
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value is SportMyUiState.Content)
+
+        data.attempts.emit(LoadState.Loading)
+        data.score.emit(LoadState.Loading)
+        bookings.merged.emit(LoadState.Content(emptyList()))
+        advanceUntilIdle()
+
+        assertEquals(SportMyUiState.Loading, viewModel.uiState.value)
+    }
+
+    @Test
     fun aFailedSourceBeforeAnyContentIsAnError() = runTest(main.dispatcher) {
         val viewModel = viewModel()
-        data.score.emit(AppResult.Failure(AppError.Network))
-        data.attempts.emit(AppResult.Failure(AppError.Network))
+        data.score.emit(LoadState.Error(AppError.Network))
+        data.attempts.emit(LoadState.Error(AppError.Network))
         bookings.merged.emit(LoadState.Error(AppError.Network))
         advanceUntilIdle()
         assertEquals(SportMyUiState.Error(AppError.Network), viewModel.uiState.value)
@@ -156,8 +171,8 @@ class SportMyViewModelTest {
     @Test
     fun aRetryOverAnErrorShowsProgressAndReachesTheRepositories() = runTest(main.dispatcher) {
         val viewModel = viewModel()
-        data.score.emit(AppResult.Failure(AppError.Network))
-        data.attempts.emit(AppResult.Failure(AppError.Network))
+        data.score.emit(LoadState.Error(AppError.Network))
+        data.attempts.emit(LoadState.Error(AppError.Network))
         bookings.merged.emit(LoadState.Error(AppError.Network))
         advanceUntilIdle()
         assertEquals(SportMyUiState.Error(AppError.Network), viewModel.uiState.value)
