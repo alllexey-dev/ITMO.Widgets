@@ -16,6 +16,8 @@ kotlin {
             api(libs.androidx.datastore.preferences.core)
             // JsonElement is the payload type of FcmPayloadHandler (L07 KM-05d).
             api(libs.kotlinx.serialization.json)
+            // AppRoute extends NavKey; only the runtime publishes iOS klibs, navigation3-ui stays in :app (L17 SH-1a2).
+            api(libs.androidx.navigation3.runtime)
             // StringResource and PluralStringResource are in UiText's public signature (L07 KM-07).
             api(libs.compose.components.resources)
             // MyItmoClientFactory builds the MyItmoApi 2.x client from an engine, a TokenStorage and a Clock, so the
