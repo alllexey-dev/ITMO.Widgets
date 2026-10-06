@@ -10,9 +10,21 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
+            // The links sheets' ViewModels are KMP ViewModels that :app obtains through Koin (L15 LX-2b, recipe koin-module).
+            api(libs.jetbrains.lifecycle.viewmodel)
+            api(libs.koin.core)
+            api(libs.koin.core.viewmodel)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
         }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.koin.test)
+        }
     }
+}
+
+// :app reads these files as Android resources until --retire (scripts/strings-move.py, L05 KM-09b).
+itmowidgetsStrings {
+    androidExport("values/strings_resources.xml")
 }

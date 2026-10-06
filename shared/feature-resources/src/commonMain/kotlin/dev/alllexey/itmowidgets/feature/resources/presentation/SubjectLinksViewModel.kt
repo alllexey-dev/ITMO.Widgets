@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.resources.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.presentation.BusyKeys
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
@@ -20,7 +19,6 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.core.result.AppResult
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,8 +28,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 /** The «Все ссылки» sheet of one subject period; the actions sheet and the report dialog act through it too. */
-@HiltViewModel
-class SubjectLinksViewModel @Inject constructor(
+class SubjectLinksViewModel(
     handle: SavedStateHandle,
     private val repository: SubjectLinksRepository,
 ) : ViewModel() {

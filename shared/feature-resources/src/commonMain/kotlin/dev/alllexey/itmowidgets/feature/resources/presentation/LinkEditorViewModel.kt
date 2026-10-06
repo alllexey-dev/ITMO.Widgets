@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.resources.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
@@ -15,7 +14,6 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.url.StrictUri
 import dev.alllexey.itmowidgets.feature.resources.domain.guessCategory
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,8 +23,7 @@ import kotlinx.coroutines.launch
 import kotlin.uuid.Uuid
 
 /** Adds a link, or edits the viewer's own link given by [SubjectLinksArgs.LINK_ID]. */
-@HiltViewModel
-class LinkEditorViewModel @Inject constructor(
+class LinkEditorViewModel(
     handle: SavedStateHandle,
     private val repository: SubjectLinksRepository,
 ) : ViewModel() {

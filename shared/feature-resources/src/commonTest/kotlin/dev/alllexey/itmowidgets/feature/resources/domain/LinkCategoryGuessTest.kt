@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.feature.resources.domain
 
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class LinkCategoryGuessTest {
-    @Test fun `known sites give their category`() {
+    @Test fun knownSitesGiveTheirCategory() {
         val expected = mapOf(
             "https://docs.google.com/spreadsheets/d/abc/edit#gid=0" to LinkCategory.SCORES,
             "https://docs.google.com/forms/d/e/abc/viewform" to LinkCategory.QUEUE,
@@ -24,14 +24,14 @@ class LinkCategoryGuessTest {
             "https://chat.whatsapp.com/abc" to LinkCategory.CHAT,
         )
 
-        expected.forEach { (url, category) -> assertEquals(url, category, guessCategory(url)) }
+        expected.forEach { (url, category) -> assertEquals(category, guessCategory(url), url) }
     }
 
-    @Test fun `a link typed without a scheme is still recognised`() {
+    @Test fun aLinkTypedWithoutASchemeIsStillRecognised() {
         assertEquals(LinkCategory.TASKS, guessCategory("github.com/itmo/labs"))
     }
 
-    @Test fun `other sites and other pages of known hosts give nothing`() {
+    @Test fun otherSitesAndOtherPagesOfKnownHostsGiveNothing() {
         listOf(
             "https://docs.google.com/document/d/abc",
             "https://vk.com/club1",
@@ -39,6 +39,6 @@ class LinkCategoryGuessTest {
             "https://notgithub.com/repo",
             "not a link",
             "",
-        ).forEach { assertNull(it, guessCategory(it)) }
+        ).forEach { assertNull(guessCategory(it), it) }
     }
 }

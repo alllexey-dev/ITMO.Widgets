@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -27,13 +26,14 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import dev.alllexey.itmowidgets.core.ui.openLink
 import dev.alllexey.itmowidgets.core.ui.expandToContent
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** All links of one subject period: sections by category, chats, links of past years and «Добавить ссылку». */
 @AndroidEntryPoint
 class SubjectLinksBottomSheet : BottomSheetDialogFragment() {
     private var _binding: SheetSubjectLinksBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: SubjectLinksViewModel by viewModels()
+    private val viewModel: SubjectLinksViewModel by viewModel()
     private lateinit var adapter: SubjectLinksAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.di.bridge
 
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
+import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
 import org.koin.core.module.Module
 
 /**
@@ -25,6 +26,7 @@ object KoinModules {
     val constructed: List<Module> = listOf(
         qrModule,
         homeModule,
+        resourcesModule,
     )
 
     val all: List<Module> get() = bridges + constructed
