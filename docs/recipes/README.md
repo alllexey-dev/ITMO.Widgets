@@ -9,6 +9,10 @@ worked, the traps and the files to copy. One line per recipe.
 - [Screen in a shared module](shared-module-screen.md): a stateless CMP
   screen in `shared/feature-<x>`, its route, ViewModel and Koin module,
   strings, icons, previews, goldens, host tests and the Android and iOS hosts.
+- [Endpoint end to end](endpoint-end-to-end.md): a Backend route from the
+  privacy boundary through fixtures, Core 2.0 and the gated repository to the
+  screen, and a MyITMO endpoint from MyItmoApi through the pin to the data
+  source.
 - [Feature module generator](../../scripts/new-feature-module.sh): renders
   the QR pilot's module shape from `templates/feature-module/` into
   `shared/feature-<x>`, adding only missing files; its self-test
