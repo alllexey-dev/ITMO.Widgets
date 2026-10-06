@@ -130,10 +130,10 @@ Feature doc: [Sport](sport.md).
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
 | `feature/sport/ui/common/SportFragment.kt` | Fragment | — (pages own theirs) | `navigation_sport`, `AppRoot.SPORT` | — | — |
-| `feature/sport/ui/my/SportMyFragment.kt` | Fragment | `SportMyViewModel` (Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportScoreCollapsePreviewActivity.kt` | `feature/sport/cards/SportCardsVisualTest.kt` (cards), `core/ui/DesignComponentsVisualTest.kt` (layout) |
-| `feature/sport/ui/sign/SportSignFragment.kt` | Fragment | `SportSignViewModel` (Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportCardsPreviewActivity.kt` (cards) | `feature/sport/cards/SportCardsVisualTest.kt` (cards), `core/ui/DesignComponentsVisualTest.kt` (layout) |
+| `feature/sport/ui/my/SportMyFragment.kt` | Fragment | `SportMyViewModel` (Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportScoreCollapsePreviewActivity.kt` | `feature/sport/cards/SportBookingCardsVisualTest.kt` (cards), `core/ui/DesignComponentsVisualTest.kt` (layout) |
+| `feature/sport/ui/sign/SportSignFragment.kt` | Fragment | `SportSignViewModel` (Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportCardsPreviewActivity.kt` (cards) | `feature/sport/cards/SportLessonCardsVisualTest.kt` (cards), `core/ui/DesignComponentsVisualTest.kt` (layout) |
 | `feature/sport/ui/user/UserSportFragment.kt` | Fragment | `UserSportViewModel` | `user_sport`, `AppScreen.USER_SPORT` | — | — |
-| `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt` | bottom sheet | — | `SportMyFragment`, `SportSignFragment`; `MainNavigationCoordinator.openSportDetails` for a schedule row that is a known booking | `feature/sport/ui/SportCardsPreviewActivity.kt` | `feature/sport/cards/SportCardsVisualTest.kt` |
+| `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt` | bottom sheet | — | `SportMyFragment`, `SportSignFragment`; `MainNavigationCoordinator.openSportDetails` for a schedule row that is a known booking | `feature/sport/ui/SportCardsPreviewActivity.kt` | `feature/sport/cards/SportDetailsSheetVisualTest.kt` |
 
 ## Subject links
 

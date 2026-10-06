@@ -5,6 +5,10 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.viewpager2.widget.ViewPager2
@@ -170,11 +174,16 @@ class DemoModeFlowTest {
         eventually {
             TestUi.instrumentation.runOnMainSync {
                 val views = activity.window.decorView.descendants().filter { it.isShown }.toList()
-                val states = views.filter { it.id == R.id.state_container }
+                val composed = views.filterIsInstance<ViewRootForTest>()
+                    .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }
+                val states = views.filter { it.id == R.id.state_container } +
+                    composed.filter { it.config.getOrNull(SemanticsProperties.TestTag) == CONTENT_STATE_TAG }
                 assertTrue("$name shows a state instead of content", states.isEmpty())
-                val texts = views.filterIsInstance<TextView>().filter { it.text.isNotBlank() }
-                assertTrue("$name has too little content", texts.size >= MIN_TEXTS)
-                val failures = texts.map { it.text.toString() }.filter { text -> errorTexts.any { it in text } }
+                val texts = views.filterIsInstance<TextView>().map { it.text.toString() } +
+                    composed.flatMap { node -> node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } }
+                val shownTexts = texts.filter { it.isNotBlank() }
+                assertTrue("$name has too little content", shownTexts.size >= MIN_TEXTS)
+                val failures = shownTexts.filter { text -> errorTexts.any { it in text } }
                 assertTrue("$name shows an error: $failures", failures.isEmpty())
             }
         }
@@ -195,6 +204,9 @@ class DemoModeFlowTest {
         if (this@descendants is ViewGroup) for (index in 0 until childCount) yieldAll(getChildAt(index).descendants())
     }
 
+    /** A Compose screen's semantics nodes, the unmerged tree, so every text counts once. */
+    private fun SemanticsNode.descendants(): List<SemanticsNode> = listOf(this) + children.flatMap { it.descendants() }
+
     private fun settle() = TestUi.settle(SETTLE_MILLIS)
 
     private fun eventually(assertion: () -> Unit) =
@@ -206,5 +218,11 @@ class DemoModeFlowTest {
         const val SETTLE_MILLIS = 700L
         const val MIN_TEXTS = 6
         const val DIRECTORY = "demo-check"
+
+        /**
+         * The test tag of DS-03a's `ContentState`, the Compose counterpart of `R.id.state_container` (the tag itself
+         * is L08's hand-in to `ContentState`).
+         */
+        const val CONTENT_STATE_TAG = "ContentState"
     }
 }

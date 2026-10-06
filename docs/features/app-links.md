@@ -119,7 +119,7 @@ to the latest GitHub release.
 - Instrumented: `MainActivityDeepLinkTest` (profile, sport and predicted links,
   the malformed dialog, waiting for sign-in, Recents), `ShareTextTest`,
   `UserProfileVisualTest.shareButtonOnlyWithAPage`,
-  `SportCardsVisualTest.shareActionForUpcomingLessonsBookingsAndPredictions`.
+  `SportDetailsSheetVisualTest.shareActionForUpcomingLessonsBookingsAndPredictions`.
 
 ## Manual check
 

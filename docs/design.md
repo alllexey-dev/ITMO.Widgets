@@ -634,7 +634,7 @@ settings, and restore them if a separate test explicitly changes them.
   the block `changes_card` (divider, `Изменения`, `было → стало` lines) in
   `res/layout/fragment_lesson_details.xml` and the informational `flow_fact` row
   between teacher and place in `res/layout/view_details_header.xml`.
-- Visual tests: `feature/sport/cards/SportCardsVisualTest.kt`,
+- Visual tests: `feature/sport/cards/SportDetailsSheetVisualTest.kt`,
   `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
   `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`,
   `feature/reviews/ReviewEditorVisualTest.kt`, `feature/schedule/ScheduleChangesVisualTest.kt`,
