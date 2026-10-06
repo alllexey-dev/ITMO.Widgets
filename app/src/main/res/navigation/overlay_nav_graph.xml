@@ -108,7 +108,6 @@
     <fragment
         android:id="@+id/my_itmo_web"
         android:name="dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebFragment"
-        android:label="@string/my_itmo_web_title"
-        tools:layout="@layout/fragment_my_itmo_web" />
+        android:label="@string/my_itmo_web_title" />
 
 </navigation>

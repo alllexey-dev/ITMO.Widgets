@@ -1,24 +1,23 @@
 package dev.alllexey.itmowidgets.feature.home
 
 import android.os.SystemClock
-import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebView
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.google.android.material.appbar.MaterialToolbar
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.web.data.WebSessionDataCleaner
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
+import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebFragment
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebPreviewFragment
+import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebTestTags
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.testing.toSettingsNavigation
@@ -55,7 +54,7 @@ class HomeWebVisualTest {
                     scenario.onActivity {
                         assertEquals(R.id.my_itmo_web, it.navigation.overlayHost!!.navController.currentDestination!!.id)
                         assertTrue(it.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment is MyItmoWebPreviewFragment)
-                        assertEquals(View.VISIBLE, root(it).findViewById<View>(R.id.loading).visibility)
+                        assertNotNull(HomeSemantics.node(root(it), MyItmoWebTestTags.LOADING))
                     }
                     capture("web-loading-$index")
                     gate.countDown()
@@ -77,18 +76,18 @@ class HomeWebVisualTest {
                     scenario.recreate()
                     await(scenario) { contentReady(it) }
                     scenario.onActivity { assertEquals(MyItmoWebPolicy.HOME_URL, browser(it).url) }
-                    scenario.onActivity { assertTrue(root(it).findViewById<MaterialToolbar>(R.id.toolbar).menu.performIdentifierAction(R.id.web_reload, 0)) }
+                    scenario.onActivity { HomeSemantics.click(root(it), MyItmoWebTestTags.RELOAD) }
                     await(scenario) { contentReady(it) }
                     MyItmoWebPreviewFragment.failMainFrame = true
                     scenario.onActivity { browser(it).loadUrl("https://my.itmo.ru/test/failure-$index") }
-                    await(scenario) { root(it).findViewById<View>(R.id.state_container).visibility == View.VISIBLE }
+                    await(scenario) { HomeSemantics.node(root(it), MyItmoWebTestTags.STATE_CONTAINER) != null && !browser(it).isShown }
                     capture("web-error-$index")
                     MyItmoWebPreviewFragment.failMainFrame = false
-                    scenario.onActivity { root(it).findViewById<View>(R.id.state_action).performClick() }
+                    scenario.onActivity { clickRetry(it) }
                     await(scenario) { contentReady(it) }
                     clickNext(scenario)
                     await(scenario) { browser(it).url?.endsWith("/test/second") == true && contentReady(it) }
-                    onView(withContentDescription(R.string.common_close)).perform(click())
+                    scenario.onActivity { HomeSemantics.click(root(it), MyItmoWebTestTags.CLOSE) }
                     settle()
                     scenario.onActivity {
                         assertNull(it.navigation.overlayHost)
@@ -143,10 +142,22 @@ class HomeWebVisualTest {
 
     private fun root(activity: SettingsNavigationTestActivity) =
         activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment!!.requireView()
-    private fun browser(activity: SettingsNavigationTestActivity) = root(activity).findViewById<WebView>(R.id.web_view)
+    private fun fragment(activity: SettingsNavigationTestActivity) =
+        activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment as MyItmoWebFragment
+    private fun browser(activity: SettingsNavigationTestActivity): WebView = fragment(activity).browser!!
     private fun contentReady(activity: SettingsNavigationTestActivity) = browser(activity).progress == 100 &&
-        root(activity).findViewById<View>(R.id.state_container).visibility == View.GONE &&
-        root(activity).findViewById<View>(R.id.loading).visibility == View.INVISIBLE && browser(activity).isShown
+        HomeSemantics.node(root(activity), MyItmoWebTestTags.STATE_CONTAINER) == null &&
+        HomeSemantics.node(root(activity), MyItmoWebTestTags.LOADING) == null && browser(activity).isShown
+
+    /** «Повторить», the error page's only click target (`state_action` of the XML screen). */
+    private fun clickRetry(activity: SettingsNavigationTestActivity) {
+        val page = HomeSemantics.node(root(activity), MyItmoWebTestTags.STATE_CONTAINER)!!
+        val retry = generateSequence(listOf(page)) { level -> level.flatMap { it.children }.ifEmpty { null } }
+            .flatten()
+            .mapNotNull { it.config.getOrNull(SemanticsActions.OnClick) }
+            .single()
+        assertTrue(retry.action?.invoke() == true)
+    }
 
     private fun await(scenario: ActivityScenario<SettingsNavigationTestActivity>, predicate: (SettingsNavigationTestActivity) -> Boolean) {
         repeat(100) {

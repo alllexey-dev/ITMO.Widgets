@@ -1,6 +1,7 @@
 <resources>
     <string name="my_itmo_web_reload">Обновить страницу</string>
     <string name="my_itmo_web_external">Открыть в браузере</string>
+    <string name="my_itmo_web_more">Ещё</string>
     <string name="my_itmo_web_error_title">Не удалось открыть My ITMO</string>
     <string name="my_itmo_web_error_description">Проверьте подключение к интернету и попробуйте ещё раз</string>
 </resources>

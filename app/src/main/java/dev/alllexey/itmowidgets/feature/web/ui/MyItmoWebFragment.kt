@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.web.ui
 
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.http.SslError
@@ -19,46 +20,72 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
+import androidx.annotation.VisibleForTesting
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import com.google.android.material.snackbar.Snackbar
+import androidx.lifecycle.lifecycleScope
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
-import dev.alllexey.itmowidgets.databinding.FragmentMyItmoWebBinding
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
+import kotlinx.coroutines.launch
 
-/** Official browser session only: no native token injection, JavaScript bridge or console logging. */
+/**
+ * The overlay destination `my_itmo_web`: `MyItmoWebScreen` from `:shared:feature-account` around one WebView per view,
+ * built in the `AndroidView` factory and destroyed when the composition releases it. The WebView is the state, so this
+ * Fragment derives the screen's [MyItmoWebState] from its callbacks and keeps no ViewModel.
+ *
+ * Official browser session only: no native token injection, JavaScript bridge or console logging.
+ */
 open class MyItmoWebFragment : Fragment() {
-    private var _binding: FragmentMyItmoWebBinding? = null
-    private val binding get() = _binding!!
+    private var web: WebView? = null
     private var browserState: Bundle? = null
     private var browserBack: OnBackPressedCallback? = null
     private var failed = false
     private var lastTrustedUrl = MyItmoWebPolicy.HOME_URL
+    private var screenState by mutableStateOf(MyItmoWebState.Loading)
+    private val snackbars = SnackbarHostState()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentMyItmoWebBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+    /** The page's WebView while the view shows it, for instrumented tests. */
+    @get:VisibleForTesting
+    val browser: WebView? get() = web
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        itmoComposeView {
+            MyItmoWebScreen(
+                state = screenState,
+                onClose = { browserBack?.isEnabled = false; closeScreen() },
+                onReload = ::loadPage,
+                onOpenExternal = { openExternal(MyItmoWebPolicy.HOME_URL) },
+                onRetry = ::loadPage,
+                browser = { modifier ->
+                    AndroidView(
+                        factory = ::createBrowser,
+                        modifier = modifier,
+                        onRelease = ::releaseBrowser,
+                        // The error page covers the slot, but only a hidden view keeps its touches and TalkBack away.
+                        update = { it.isVisible = screenState != MyItmoWebState.Failed },
+                    )
+                },
+                snackbarHostState = snackbars,
+            )
+        }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.toolbar.setNavigationOnClickListener { browserBack?.isEnabled = false; closeScreen() }
-        binding.toolbar.setOnMenuItemClickListener {
-            when (it.itemId) {
-                R.id.web_reload -> { loadPage(); true }
-                R.id.web_external -> { openExternal(MyItmoWebPolicy.HOME_URL); true }
-                else -> false
-            }
-        }
-        binding.stateAction.setOnClickListener { loadPage() }
-        configureBrowser()
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (binding.webView.canGoBack()) {
+                val page = web
+                if (page != null && page.canGoBack()) {
                     failed = false
-                    binding.webView.goBack()
+                    page.goBack()
                 } else {
                     isEnabled = false
                     requireActivity().onBackPressedDispatcher.onBackPressed()
@@ -69,20 +96,29 @@ open class MyItmoWebFragment : Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
         lastTrustedUrl = savedInstanceState?.getString(STATE_URL)?.takeIf(MyItmoWebPolicy::isInternal) ?: lastTrustedUrl
         failed = savedInstanceState?.getBoolean(STATE_ERROR) ?: failed
-        val savedBrowser = savedInstanceState?.getBundle(STATE_BROWSER) ?: browserState
-        if (failed) showError()
-        else if (savedBrowser == null || binding.webView.restoreState(savedBrowser) == null) loadPage()
+        savedInstanceState?.getBundle(STATE_BROWSER)?.let { browserState = it }
+        // Set before the first composition, so creating the browser changes no state the screen has already read.
+        screenState = if (failed) MyItmoWebState.Failed else MyItmoWebState.Loading
+    }
+
+    private fun createBrowser(context: Context): WebView = WebView(context).also { page ->
+        web = page
+        configureBrowser(page)
+        onBrowserCreated(page)
+        val saved = browserState
+        if (!failed && (saved == null || page.restoreState(saved) == null)) loadPage()
     }
 
     private fun loadPage() {
+        val page = web ?: return
         failed = false
-        showLoading()
-        if (binding.webView.url == lastTrustedUrl) binding.webView.reload()
-        else binding.webView.loadUrl(lastTrustedUrl)
+        screenState = MyItmoWebState.Loading
+        if (page.url == lastTrustedUrl) page.reload()
+        else page.loadUrl(lastTrustedUrl)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun configureBrowser() = with(binding.webView) {
+    private fun configureBrowser(page: WebView) = with(page) {
         setBackgroundColor(requireContext().color.surface)
         settings.apply {
             javaScriptEnabled = true
@@ -109,98 +145,100 @@ open class MyItmoWebFragment : Fragment() {
                 }
 
             override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
-                if (_binding?.webView !== view) return
+                if (web !== view) return
                 if (url == null || !MyItmoWebPolicy.isInternal(url)) {
                     view.stopLoading()
                     showError()
                     return
                 }
                 lastTrustedUrl = url
-                binding.toolbar.subtitle = url.toUri().host
                 // WebView can deliver HTTP failure before onPageStarted. Only an explicit
                 // retry or Back clears that failure; a late callback must not hide the error.
-                if (!failed) showLoading()
+                if (!failed) screenState = MyItmoWebState.Loading
             }
 
             override fun onPageFinished(view: WebView, url: String?) {
-                if (_binding?.webView !== view || failed) return
-                binding.loading.visibility = View.INVISIBLE
-                binding.webView.isVisible = true
+                if (web !== view || failed) return
+                screenState = MyItmoWebState.Shown
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                if (_binding?.webView === view && request.isForMainFrame) showError()
+                if (web === view && request.isForMainFrame) showError()
             }
 
             override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
-                if (_binding?.webView === view && request.isForMainFrame) showError()
+                if (web === view && request.isForMainFrame) showError()
             }
 
             override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
                 handler.cancel()
-                if (_binding?.webView === view) showError()
+                if (web === view) showError()
             }
         }
         webChromeClient = object : WebChromeClient() {
             override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean = true
 
             override fun onProgressChanged(view: WebView, newProgress: Int) {
-                if (_binding?.webView === view && !failed) {
-                    binding.loading.visibility = if (newProgress < 100) View.VISIBLE else View.INVISIBLE
+                if (web === view && !failed) {
+                    screenState = if (newProgress < 100) MyItmoWebState.Loading else MyItmoWebState.Shown
                 }
             }
         }
     }
 
+    /** Debug hosts adjust the browser before its first load. */
+    protected open fun onBrowserCreated(page: WebView) = Unit
+
     /** Debug hosts replace transport with synthetic HTML while retaining the real browser lifecycle. */
     protected open fun interceptRequest(request: WebResourceRequest): WebResourceResponse? = null
 
-    private fun showLoading() = with(binding) {
-        loading.visibility = View.VISIBLE
-        stateContainer.isVisible = false
-        webView.isVisible = true
-    }
-
     private fun showError() {
         failed = true
-        _binding?.apply {
-            loading.visibility = View.INVISIBLE
-            webView.isVisible = false
-            stateContainer.isVisible = true
-        }
+        screenState = MyItmoWebState.Failed
     }
 
     private fun openExternal(url: String) {
         try {
             startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
         } catch (_: ActivityNotFoundException) {
-            _binding?.let { Snackbar.make(it.root, R.string.link_open_failed, Snackbar.LENGTH_LONG).show() }
+            if (view == null) return
+            viewLifecycleOwner.lifecycleScope.launch {
+                snackbars.showSnackbar(getString(R.string.link_open_failed), duration = SnackbarDuration.Long)
+            }
         }
     }
 
-    override fun onResume() { super.onResume(); binding.webView.onResume() }
-    override fun onPause() { binding.webView.onPause(); super.onPause() }
+    override fun onResume() { super.onResume(); web?.onResume() }
+    override fun onPause() { web?.onPause(); super.onPause() }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        _binding?.webView?.let { web -> browserState = Bundle().also { web.saveState(it) } }
+        web?.let { page -> browserState = Bundle().also { page.saveState(it) } }
         outState.putBundle(STATE_BROWSER, browserState)
         outState.putString(STATE_URL, lastTrustedUrl)
         outState.putBoolean(STATE_ERROR, failed)
         super.onSaveInstanceState(outState)
     }
 
+    /**
+     * Saves the history and destroys [page] once: when the composition disposes the slot (the view lifecycle's
+     * ON_DESTROY, before [onDestroyView]), or in [onDestroyView] if it has not. Never on a recomposition.
+     */
+    private fun releaseBrowser(page: WebView) {
+        if (web !== page) return
+        web = null
+        browserState = Bundle().also { page.saveState(it) }
+        page.stopLoading()
+        page.webViewClient = WebViewClient()
+        page.webChromeClient = null
+        (page.parent as? ViewGroup)?.removeView(page)
+        page.removeAllViews()
+        page.destroy()
+    }
+
     override fun onDestroyView() {
-        val web = binding.webView
-        browserState = Bundle().also { web.saveState(it) }
-        web.stopLoading()
-        web.webViewClient = WebViewClient()
-        web.webChromeClient = null
-        (web.parent as? ViewGroup)?.removeView(web)
-        web.removeAllViews()
-        web.destroy()
+        web?.let(::releaseBrowser)
         browserBack?.remove()
         browserBack = null
-        _binding = null
         super.onDestroyView()
     }
 

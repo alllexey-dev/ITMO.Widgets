@@ -35,5 +35,4 @@ itmowidgetsStrings {
     androidExport("values/strings_onboarding.xml")
     androidExport("values/strings_weblogin.xml")
     androidExport("values/strings_update.xml")
-    androidExport("values/strings_web.xml")
 }

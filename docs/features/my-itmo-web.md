@@ -13,18 +13,32 @@ logs no console output. Sign-in to the app itself is a separate WebView, see
 demo session refuses it in `MainActivity` with the toast «Недоступно в демо».
 The fragment has no ViewModel: the WebView is its state.
 
-- Toolbar «My ITMO» with «Закрыть», the current host as the subtitle, and the
-  menu items «Обновить страницу» (reloads the last trusted page) and «Открыть в
-  браузере» (opens `https://my.itmo.ru/` outside the app).
-- A 4 dp indeterminate progress line under the toolbar shows while a page
-  loads; when hidden it is `INVISIBLE`, so the page never jumps.
-- Error state «Не удалось открыть My ITMO» / «Проверьте подключение к интернету
-  и попробуйте ещё раз» with «Повторить», which loads the last trusted page.
+The screen is `MyItmoWebScreen` in `:shared:feature-account`
+(`feature/web/ui/`), stateless, with the browser as a slot
+(`browser: @Composable (Modifier) -> Unit`). The Fragment hosts it through
+`itmoComposeView` and fills the slot with an `AndroidView` WebView; it derives
+the screen's `MyItmoWebState` from the WebView callbacks:
+
+- `Loading`: a page loads; the 4 dp indeterminate progress line runs under
+  the top bar over the visible page.
+- `Shown`: the page is loaded; the line's 4 dp stay empty, so the page never
+  jumps.
+- `Failed`: the error page «Не удалось открыть My ITMO» / «Проверьте
+  подключение к интернету и попробуйте ещё раз» with «Повторить», which loads
+  the last trusted page, covers the browser; the Fragment also hides the
+  WebView, so it takes no touches and TalkBack does not read it.
+
+- Top bar «My ITMO» with «Закрыть», «Обновить страницу» (reloads the last
+  trusted page) and the overflow «Ещё» with «Открыть в браузере» (opens
+  `https://my.itmo.ru/` outside the app). The bar shows no subtitle.
 - Back goes through the web history first and leaves the screen when there is
-  none; the toolbar close leaves at once.
-- Recreation restores the web history (`WebView.saveState`), the last trusted
-  URL and the error flag; a restored error stays an error until a
-  retry or Back.
+  none; the close button leaves at once.
+- One WebView per Fragment view: built in the `AndroidView` factory, kept in
+  every state (the slot is never removed from composition), destroyed when the
+  composition releases it or in `onDestroyView`. Recreation restores the web
+  history (`WebView.saveState` under `my_itmo_browser`), the last trusted URL
+  (`my_itmo_url`) and the error flag (`my_itmo_error`); a restored error stays
+  an error until a retry or Back.
 
 ## Navigation policy
 
@@ -57,9 +71,15 @@ session, and the app's refresh token never reaches the website.
 ## Debug host and tests
 
 `MyItmoWebPreviewFragment` (debug source set) overrides
-`interceptRequest` to answer every request with synthetic HTML, keeping the
-real WebView lifecycle; it runs in `SettingsNavigationTestActivity`. No request
-reaches My ITMO or Backend.
+`onBrowserCreated` (no HTTP cache) and `interceptRequest` to answer every
+request with synthetic HTML, keeping the real WebView lifecycle; it runs in
+`SettingsNavigationTestActivity`. No request reaches My ITMO or Backend.
 
-- JVM: `MyItmoWebPolicyTest`.
-- Instrumented: `HomeWebVisualTest`.
+- JVM: `MyItmoWebPolicyTest`; `MyItmoWebScreenTest` (the slot stays composed
+  at one size in every state, the line and the error page, the callbacks).
+- Goldens: the `MyItmoWebScreen` previews `loading`, `shown` and `error` in
+  four appearances, with a placeholder in the browser slot, in
+  `AccountScreenshotTest`.
+- Instrumented: `HomeWebVisualTest` reads the screen through the test tags of
+  `MyItmoWebTestTags` (`loading`, `state_container`, `web_reload`,
+  `web_close`) and the WebView through `MyItmoWebFragment.browser`.
