@@ -2,8 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import dev.alllexey.itmoapi.bars.BarsCodeSupplier
 import dev.alllexey.itmowidgets.core.result.AppError
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlin.concurrent.Volatile
 
 /**
  * The library's [BarsCodeSupplier]: screens renew an expired session through the headless WebView flow, background
@@ -11,8 +10,7 @@ import javax.inject.Singleton
  * mode belongs to the block that holds the client's lock. The library calls this inside its session lock, so it never
  * calls back into the library client.
  */
-@Singleton
-class BarsRenewal @Inject constructor(
+class BarsRenewal(
     private val silentLogin: BarsSilentLogin,
     private val backgroundLogin: BarsBackgroundLogin
 ) : BarsCodeSupplier {

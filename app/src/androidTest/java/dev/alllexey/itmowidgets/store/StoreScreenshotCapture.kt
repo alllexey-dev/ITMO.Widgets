@@ -34,6 +34,7 @@ import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlinx.datetime.toKotlinLocalDate
 import org.hamcrest.Matchers.`is`
 import org.junit.After
 import org.junit.Assert.assertTrue
@@ -65,7 +66,7 @@ class StoreScreenshotCapture {
     fun captureStoreScreenshots() {
         if (!Screenshots.enabled) return
         val today = LocalDate.now(ZoneId.of("Europe/Moscow"))
-        val period = DemoRecordbook.programs(today).single().periods.single { it.actual }
+        val period = DemoRecordbook.programs(today.toKotlinLocalDate()).single().periods.single { it.actual }
 
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             lateinit var activity: MainActivity

@@ -1,29 +1,32 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
-import dev.alllexey.itmowidgets.feature.recordbook.CountingBarsSessionListener
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
-import org.junit.Rule
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 /** The app's BARS seam over the real MyItmoApi 2.x client on a MockEngine ([BarsTestServer]). */
 class BarsClientTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+    private val dispatchers = main.dispatcher.let { AppDispatchers(io = it, default = it, main = it) }
 
-    private val dispatchers = mainDispatcherRule.appDispatchers
+    @Before fun installMain() = main.install()
+
+    @After fun resetMain() = main.reset()
 
     private val old = OLD_HEADER
     private val memory = MemoryBarsTokens()
@@ -70,7 +73,7 @@ class BarsClientTest {
         assertEquals(0, silentLogin.requests)
     }
 
-    @Test fun `token file is account-bound and cleared`() {
+    @Test fun `token file is account-bound and cleared`() = runTest {
         store.install(123, old)
         assertEquals(old, store.load(123))
         assertNull(store.load(999))

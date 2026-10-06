@@ -25,6 +25,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.testing.Screenshots
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlinx.datetime.toKotlinLocalDate
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
@@ -105,7 +106,7 @@ class DemoModeFlowTest {
     fun everyMainScreenOfTheDemoHasContentAndWritesAreRefused() {
         runBlocking { dependencies.session().startDemo() }
         val today = LocalDate.now(ZoneId.of("Europe/Moscow"))
-        val period = DemoRecordbook.programs(today).single().periods.single { it.actual }
+        val period = DemoRecordbook.programs(today.toKotlinLocalDate()).single().periods.single { it.actual }
         val algorithms = DemoStudy.ALGORITHMS
         val scope = ResourceScope.periodKey(period.studyYear, period.semesterInCourse)
 

@@ -4,7 +4,6 @@ import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmoapi.bars.auth.BarsSessionCode
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 
 /** Result of renewing the BARS session without a WebView. */
@@ -33,7 +32,7 @@ interface BarsBackgroundLogin {
  * the answer goes back to the WebView's store for the same URL. Codes and cookies are never logged or put into
  * exceptions.
  */
-class BarsCookieSilentLogin @Inject constructor(
+class BarsCookieSilentLogin(
     private val login: BarsLogin,
     private val cookies: ItmoIdCookies
 ) : BarsBackgroundLogin {

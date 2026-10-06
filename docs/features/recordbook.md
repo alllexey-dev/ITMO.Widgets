@@ -229,12 +229,26 @@ teachers, PE and sport stay MyITMO.
 
 Session: the BARS token lives 30 minutes, has no refresh and cannot be exchanged
 from a MyITMO token. BARS goes through MyItmoApi 2.x: the library's
-`dev.alllexey.itmoapi.bars.BarsClient` (one per process, built in
-`di/RecordbookModule.kt` over `OwnerBoundBarsStorage` and `BarsRenewal`) and
-`BarsLogin` for the ITMO.ID side (`loginUrl`, `isCallback`, `isAllowedPage`,
-`extractCode`, `requestCodeWithCookies`). Both run on a Ktor OkHttp engine of
-their own (`@BarsHttp`: connect 20 s, read 30 s, no cookie jar, cache or
-redirects), never MyITMO's. The ITMO.ID session in the app's WebView lives
+`dev.alllexey.itmoapi.bars.BarsClient` (built by the app's `BarsClient` over
+`OwnerBoundBarsStorage` and `BarsRenewal`) and `BarsLogin` for the ITMO.ID side
+(`loginUrl`, `isCallback`, `isAllowedPage`, `extractCode`,
+`requestCodeWithCookies`). Both run on a Ktor OkHttp engine of their own
+(`@BarsHttp` in `di/RecordbookModule.kt`: connect 20 s, read 30 s, no cookie jar,
+cache or redirects), never MyITMO's.
+
+The MyITMO and BARS data (`RecordbookRepositoryImpl`, `BarsClient`,
+`BarsRenewal`, `BarsTokenStore`, `OwnerBoundBarsStorage`,
+`BarsCookieSilentLogin`, `BarsMarkReader`, the BARS, session and switch
+repositories, `DemoRecordbook`) lives in `commonMain` of
+`:shared:feature-recordbook` and is constructed by Koin (`recordbookModule`),
+one instance of each per process. The platform supplies the engine,
+`BarsLogin`, the WebView ports `ItmoIdCookies` (`WebViewItmoIdCookies`) and
+`BarsSilentLogin` (`BarsWebSilentLogin`) and `BarsSessionListener`; on Android
+they are Hilt's and reach Koin through `di/bridge/RecordbookBridge.kt`, which
+also hands Koin's `BarsClient`, `RecordbookRepository`,
+`BarsPreferenceRepository` and `BarsMarkSource` to the Hilt-built mark
+tracking. The three cleaners of that data join sign-out's set through
+`SessionCleanersBridge`. The ITMO.ID session in the app's WebView lives
 about 90 days, so `BarsWebSilentLogin` renews the token by loading the official
 OIDC URL in a hidden WebView and intercepting only the exact callback with a
 checked `state`; the library retries once on 401 through the suspend
@@ -245,8 +259,9 @@ maps `MyItmoException` to `AppError` (`Auth` 401 `Unauthorized`, `Auth` 403 and
 `Http` 423 `Forbidden`, `Http` 404 `NotFound`, `Network` `Network`, anything
 else a retriable `Unknown`). `OwnerBoundBarsStorage` is the library's suspend
 `BarsStorage` and the only writer of `bars_tokens.enc`, whose content
-(`<isu>\n<header>` through `TokenCipher`, checked with
-`BarsClient.isValidAuthorization`) is the one 2.2 wrote. The library's locks are not reentrant, so a block never nests
+(`<isu>\n<header>`, checked with `BarsClient.isValidAuthorization`) goes
+through `SecureStore` under that name: on Android the `noBackupFilesDir` file
+sealed by the Keystore `TokenCipher`, byte for byte the one 2.2 wrote. The library's locks are not reentrant, so a block never nests
 period changes. `BarsSessionRepositoryImpl` serves the interactive sign-in
 from `BarsLogin` and exchanges the code through `BarsClient.login`.
 `BarsPreferenceRepositoryImpl` is the session cleaner for both the token and

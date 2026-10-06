@@ -13,37 +13,21 @@ import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
 import dev.alllexey.itmowidgets.core.work.CheckScheduler
 import dev.alllexey.itmowidgets.core.work.PeriodicCheckScheduler
-import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
-import dev.alllexey.itmowidgets.feature.recordbook.data.BarsSessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
-import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsBackgroundLogin
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsCookieSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsHttp
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkReader
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkSource
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRenewal
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebViewItmoIdCookies
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
@@ -54,21 +38,19 @@ import dev.alllexey.itmowidgets.feature.recordbook.work.MARKS_SPEC
 import dev.alllexey.itmowidgets.feature.recordbook.work.WorkManagerBarsSessionProbe
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
-import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import okhttp3.CookieJar
-import dev.alllexey.itmoapi.bars.BarsClient as LibraryBarsClient
 
+/**
+ * The recordbook's Android bindings: the BARS engine and its ITMO.ID sign-in, the WebView sign-in and cookies, the marks
+ * worker's scheduler and
+ * notifier, and the recordbook data still built by Hilt (mark tracking, sheet scores, subject bindings; KM-11b2 moves
+ * them). The MyITMO and BARS data is Koin's (`recordbookModule`); `di/bridge/RecordbookBridge.kt` connects both graphs.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RecordbookModule {
-
-    @Binds
-    @Singleton
-    abstract fun bindRecordbookRepository(
-        impl: RecordbookRepositoryImpl
-    ): RecordbookRepository
 
     @Binds
     @Singleton
@@ -83,25 +65,10 @@ abstract class RecordbookModule {
     ): SessionDataCleaner
 
     @Binds
-    @Singleton
-    abstract fun bindBarsRepository(impl: BarsRecordbookRepositoryImpl): BarsRecordbookRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindBarsPreference(impl: BarsPreferenceRepositoryImpl): BarsPreferenceRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindBarsSession(impl: BarsSessionRepositoryImpl): BarsSessionRepository
-
-    @Binds
     abstract fun bindBarsSilentLogin(impl: BarsWebSilentLogin): BarsSilentLogin
 
     @Binds
     abstract fun bindItmoIdCookies(impl: WebViewItmoIdCookies): ItmoIdCookies
-
-    @Binds
-    abstract fun bindBarsBackgroundLogin(impl: BarsCookieSilentLogin): BarsBackgroundLogin
 
     @Binds
     abstract fun bindBarsSessionProbe(impl: WorkManagerBarsSessionProbe): BarsSessionProbe
@@ -128,9 +95,6 @@ abstract class RecordbookModule {
     abstract fun bindMarksHomeCards(impl: MarksHomeCardSource): HomeCardSource
 
     @Binds
-    abstract fun bindBarsMarkSource(impl: BarsMarkReader): BarsMarkSource
-
-    @Binds
     abstract fun bindMarksNotifier(impl: AndroidMarksNotifier): MarksNotifier
 
     @Binds
@@ -143,18 +107,6 @@ abstract class RecordbookModule {
     @Binds
     @IntoSet
     abstract fun bindMarksBackgroundCheck(impl: DefaultMarkTracking): BackgroundCheck
-
-    @Binds
-    @IntoSet
-    abstract fun bindRecordbookCleaner(impl: BarsPreferenceRepositoryImpl): SessionDataCleaner
-
-    @Binds
-    @IntoSet
-    abstract fun bindRecordbookCacheCleaner(impl: RecordbookRepositoryImpl): SessionDataCleaner
-
-    @Binds
-    @IntoSet
-    abstract fun bindBarsCacheCleaner(impl: BarsRecordbookRepositoryImpl): SessionDataCleaner
 
     companion object {
         /**
@@ -175,27 +127,16 @@ abstract class RecordbookModule {
             }
         }
 
-        /** Library client with the app's encrypted, owner-bound session and its renewal; one per process. */
-        @Provides
-        @Singleton
-        fun bars(
-            @BarsHttp engine: HttpClientEngine,
-            storage: OwnerBoundBarsStorage,
-            renewal: BarsRenewal
-        ): LibraryBarsClient = LibraryBarsClient(engine, storage = storage, codeSupplier = renewal)
-
         @Provides
         fun marksScheduler(@ApplicationContext context: Context): MarksScheduler =
             object : MarksScheduler, CheckScheduler by PeriodicCheckScheduler(context, MARKS_SPEC) {}
 
-        /** The ITMO.ID sign-in of the `bars` client: URL, callback checks and the cookie replay. */
+        /**
+         * The ITMO.ID sign-in of the `bars` client: URL, callback checks and the cookie replay. Built here over the
+         * engine; `recordbookModule` takes this one instance through `RecordbookBridge`.
+         */
         @Provides
         @Singleton
         fun barsLogin(@BarsHttp engine: HttpClientEngine): BarsLogin = BarsLogin(engine)
-
-        @Provides
-        @Singleton
-        fun barsTokens(@ApplicationContext context: Context, cipher: TokenCipher): BarsTokenStore =
-            BarsTokenStore(File(context.noBackupFilesDir, "bars_tokens.enc"), cipher)
     }
 }

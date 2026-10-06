@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import dev.alllexey.itmoapi.bars.BarsCodeSupplier
 import dev.alllexey.itmoapi.bars.BarsConfiguration
-import dev.alllexey.itmowidgets.core.storage.TokenCipher
+import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.testkit.bodyText
 import dev.alllexey.itmowidgets.testkit.respondJson
 import io.ktor.client.engine.mock.MockEngine
@@ -22,16 +22,40 @@ import dev.alllexey.itmoapi.bars.BarsClient as LibraryBarsClient
 internal const val OLD_HEADER = "Bearer synthetic-old-credential"
 internal const val FRESH_HEADER = "Bearer synthetic-fresh-credential"
 
-/** In-memory `bars_tokens.enc` behind the real [BarsTokenStore] with a reversible stand-in cipher. */
-internal class MemoryBarsTokens : BarsTokenPersistence {
+/**
+ * In-memory `bars_tokens.enc` behind the real [BarsTokenStore]: a [SecureStore] that keeps the one session name sealed
+ * by a reversible stand-in for the Keystore cipher, so [value] is what would be on disk.
+ */
+internal class MemoryBarsTokens : SecureStore {
     var value: String? = null
-    override fun read() = value
-    override fun write(value: String?) { this.value = value }
 
-    val store = BarsTokenStore(this, object : TokenCipher {
-        override fun encrypt(value: String) = Base64.getEncoder().encodeToString(value.toByteArray())
-        override fun decrypt(value: String) = String(Base64.getDecoder().decode(value))
-    })
+    override fun read(name: String): String? =
+        value?.let { String(Base64.getDecoder().decode(it)) }.also { require(name == SESSION_NAME) }
+
+    override fun write(name: String, value: String) {
+        require(name == SESSION_NAME)
+        this.value = Base64.getEncoder().encodeToString(value.toByteArray())
+    }
+
+    override fun delete(name: String) {
+        require(name == SESSION_NAME)
+        value = null
+    }
+
+    val store = BarsTokenStore(this)
+
+    private companion object {
+        const val SESSION_NAME = "bars_tokens.enc"
+    }
+}
+
+/** Counts successful BARS answers reported by the client. */
+internal class CountingBarsSessionListener : BarsSessionListener {
+    var answers = 0
+
+    override suspend fun onBarsAnswered() {
+        answers++
+    }
 }
 
 /**
@@ -55,7 +79,7 @@ internal class BarsTestServer {
 
     val engine = MockEngine { request -> answer(request) }
 
-    /** The library client as `RecordbookModule` builds it, over this server. */
+    /** The library client as `BarsClient` builds it over the platform's engine, here this server. */
     fun library(storage: OwnerBoundBarsStorage, renewal: BarsCodeSupplier) =
         LibraryBarsClient(engine, BarsConfiguration(), storage, renewal)
 

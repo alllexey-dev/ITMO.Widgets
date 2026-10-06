@@ -16,15 +16,15 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.Month
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import kotlin.time.toKotlinInstant
-import kotlinx.datetime.toKotlinLocalDate
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 
 /**
  * Anna's recordbook: the current semester in progress with control points, the first year's closed semesters, the
@@ -34,7 +34,7 @@ object DemoRecordbook {
 
     fun programs(today: LocalDate): List<RecordbookProgram> {
         val current = currentSemester(today)
-        val yearStart = StudyHalf.of(today.toKotlinLocalDate()).yearStart
+        val yearStart = StudyHalf.of(today).yearStart
         val periods = (current downTo 1).map { semester ->
             val course = (semester + 1) / 2
             val start = yearStart - (COURSE - course)
@@ -43,7 +43,7 @@ object DemoRecordbook {
         return listOf(RecordbookProgram(DemoStudy.PROGRAM_ID, DemoStudy.PROGRAM_NAME, periods))
     }
 
-    fun subjects(programId: Long, semester: Int, today: LocalDate, zone: ZoneId): List<RecordbookSubject>? {
+    fun subjects(programId: Long, semester: Int, today: LocalDate, zone: TimeZone): List<RecordbookSubject>? {
         if (programId != DemoStudy.PROGRAM_ID) return null
         val current = currentSemester(today)
         return when {
@@ -54,7 +54,7 @@ object DemoRecordbook {
         }
     }
 
-    fun controls(entryId: Long, now: OffsetDateTime): List<RecordbookControl>? {
+    fun controls(entryId: Long, now: Instant): List<RecordbookControl>? {
         val subject = DemoStudy.CURRENT.firstOrNull { entryId / 10 == it.id } ?: return null
         return CONTROLS[subject].orEmpty().mapIndexed { index, control ->
             RecordbookControl(
@@ -64,7 +64,7 @@ object DemoRecordbook {
                 minimum = control.minimum,
                 maximum = control.maximum,
                 required = true,
-                date = control.daysAgo?.let { now.minusDays(it).toInstant().toKotlinInstant() },
+                date = control.daysAgo?.let { now - it.days },
                 teacherName = subject.teacher.name.takeIf { control.parent != null || control.score != null },
                 parentId = control.parent?.let { entryId * 100 + it }
             )
@@ -73,7 +73,7 @@ object DemoRecordbook {
 
     /** The own total from the stream's sheet of points, connected for algorithms. */
     fun sheetScores(today: LocalDate, now: Instant): List<SheetScore> {
-        val half = StudyHalf.of(today.toKotlinLocalDate())
+        val half = StudyHalf.of(today)
         val subject = DemoStudy.ALGORITHMS
         return listOf(
             SheetScore(
@@ -89,18 +89,18 @@ object DemoRecordbook {
                 baseline = "64",
                 tracked = true,
                 status = SheetStatus.OK,
-                updatedAt = now.minus(Duration.ofHours(2)).toKotlinInstant(),
-                connectedAt = now.minus(Duration.ofDays(12)).toKotlinInstant()
+                updatedAt = now - 2.hours,
+                connectedAt = now - 12.days
             )
         )
     }
 
     /** Subjects with new marks: the database checkpoint and the discrete math colloquium. */
     fun news(today: LocalDate, now: Instant): List<MarkNews> {
-        val half = StudyHalf.of(today.toKotlinLocalDate())
+        val half = StudyHalf.of(today)
         return listOf(DemoStudy.DATABASES to 5L, DemoStudy.DISCRETE to 29L).map { (subject, hoursAgo) ->
             val key = subjectNameKey(subject.name)
-            MarkNews(MarkNews.idOf(half, key), half, key, subject.name, now.minus(Duration.ofHours(hoursAgo)).toKotlinInstant(), notified = true)
+            MarkNews(MarkNews.idOf(half, key), half, key, subject.name, now - hoursAgo.hours, notified = true)
         }
     }
 
@@ -111,8 +111,8 @@ object DemoRecordbook {
         return MarkSubjectTarget(DemoStudy.PROGRAM_ID, semester, period.studyYear, entryId(subject, semester), bars = null)
     }
 
-    private fun currentSubjects(semester: Int, examDay: LocalDate, zone: ZoneId): List<RecordbookSubject> {
-        fun exam(daysAfter: Long) = examDay.plusDays(daysAfter).atTime(LocalTime.of(10, 0)).atZone(zone).toOffsetDateTime()
+    private fun currentSubjects(semester: Int, examDay: LocalDate, zone: TimeZone): List<RecordbookSubject> {
+        fun exam(daysAfter: Int) = examDay.plus(DatePeriod(days = daysAfter)).atTime(10, 0).toInstant(zone)
         return listOf(
             current(DemoStudy.MATH, semester, EXAM, 54.5, exam(0)),
             current(DemoStudy.DISCRETE, semester, EXAM, 49.0, exam(4)),
@@ -134,7 +134,7 @@ object DemoRecordbook {
         )
     }
 
-    private fun current(subject: DemoSubject, semester: Int, controlType: String, score: Double, exam: OffsetDateTime?) =
+    private fun current(subject: DemoSubject, semester: Int, controlType: String, score: Double, exam: Instant?) =
         RecordbookSubject(
             name = subject.name,
             disciplineId = subject.id,
@@ -143,7 +143,7 @@ object DemoRecordbook {
             score = score,
             rate = null,
             attempt = null,
-            examDate = exam?.toInstant()?.toKotlinInstant(),
+            examDate = exam,
             hasDetails = true,
             teacherName = subject.teacher.name
         )
@@ -151,12 +151,12 @@ object DemoRecordbook {
     private fun entryId(subject: DemoSubject, semester: Int): Long = subject.id * 10 + semester
 
     /** Autumn: 3rd semester, spring: 4th — Anna is in her second year. */
-    private fun currentSemester(today: LocalDate): Int = COURSE * 2 - if (StudyHalf.of(today.toKotlinLocalDate()).half == 1) 1 else 0
+    private fun currentSemester(today: LocalDate): Int = COURSE * 2 - if (StudyHalf.of(today).half == 1) 1 else 0
 
     /** The first exam of the half-year's session: mid-January or mid-June. */
     private fun examDay(today: LocalDate): LocalDate {
-        val half = StudyHalf.of(today.toKotlinLocalDate())
-        return if (half.half == 1) LocalDate.of(half.yearStart + 1, Month.JANUARY, 12) else LocalDate.of(half.yearStart + 1, Month.JUNE, 15)
+        val half = StudyHalf.of(today)
+        return if (half.half == 1) LocalDate(half.yearStart + 1, 1, 12) else LocalDate(half.yearStart + 1, 6, 15)
     }
 
     private data class ClosedSubject(val id: Long, val name: String, val controlType: String, val score: Double?, val rate: String, val teacher: String) {

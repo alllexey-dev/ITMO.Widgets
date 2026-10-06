@@ -23,9 +23,9 @@ import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
+import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
-import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.preferencesDataStoreFile
@@ -38,7 +38,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -134,7 +133,7 @@ object AppPreferencesUpgrade {
             assertEquals(2001L, it.get(1001))
             assertEquals(2002L, it.get(1002))
         }
-        val unusedBarsTokens = BarsTokenStore(File(fixture.cacheDir, "unused_bars_tokens.enc"), NoCipher)
+        val unusedBarsTokens = BarsTokenStore(NoSecrets)
         val barsPreference = BarsPreferenceRepositoryImpl(
             unusedBarsTokens,
             preferences,
@@ -219,8 +218,9 @@ object AppPreferencesUpgrade {
         stringPreferencesKey("recent_schedule_friends") to "100003,100002"
     )
 
-    private object NoCipher : TokenCipher {
-        override fun encrypt(value: String) = error("BARS tokens are not written here")
-        override fun decrypt(value: String) = error("BARS tokens are not read here")
+    private object NoSecrets : SecureStore {
+        override fun read(name: String) = error("BARS tokens are not read here")
+        override fun write(name: String, value: String) = error("BARS tokens are not written here")
+        override fun delete(name: String) = error("BARS tokens are not deleted here")
     }
 }

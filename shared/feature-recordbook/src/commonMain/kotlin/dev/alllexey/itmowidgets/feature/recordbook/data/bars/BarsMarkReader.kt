@@ -6,7 +6,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.of
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -36,7 +35,7 @@ interface BarsMarkSource {
  * does not change the result. Any failed request fails the whole read: a partial answer is never a snapshot. A network
  * failure of any request (the period, the disciplines, any journal) is [BarsMarkRead.Failure] with [AppError.Network].
  */
-class BarsMarkReader @Inject constructor(private val client: BarsClient) : BarsMarkSource {
+class BarsMarkReader(private val client: BarsClient) : BarsMarkSource {
     private val mapper = BarsRecordbookMapper()
 
     override suspend fun read(half: StudyHalf): BarsMarkRead = when (val result = client.backgroundAccount { journals(half) }) {

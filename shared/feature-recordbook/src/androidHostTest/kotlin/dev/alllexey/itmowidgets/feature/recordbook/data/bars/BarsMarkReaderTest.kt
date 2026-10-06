@@ -1,26 +1,29 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
-import dev.alllexey.itmowidgets.feature.recordbook.CountingBarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheckpointMark
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Rule
+import org.junit.Before
 import org.junit.Test
 
 /** Background reads of the own journals over the real MyItmoApi 2.x client on a MockEngine ([BarsTestServer]). */
 class BarsMarkReaderTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+    private val dispatchers = main.dispatcher.let { AppDispatchers(io = it, default = it, main = it) }
 
-    private val dispatchers = mainDispatcherRule.appDispatchers
+    @Before fun installMain() = main.install()
+
+    @After fun resetMain() = main.reset()
 
     private val old = OLD_HEADER
     private val store = MemoryBarsTokens().store
