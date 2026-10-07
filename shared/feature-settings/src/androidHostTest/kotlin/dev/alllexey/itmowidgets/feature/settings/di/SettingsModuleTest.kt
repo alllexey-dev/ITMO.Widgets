@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
@@ -61,6 +62,7 @@ class SettingsModuleTest {
                 ScheduleIcsExport::class,
                 AcademicTimeProvider::class,
                 SavedStateHandle::class,
+                PlatformCapabilities::class,
             ),
         )
     }

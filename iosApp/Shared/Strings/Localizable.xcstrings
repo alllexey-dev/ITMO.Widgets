@@ -25,6 +25,18 @@
         }
       }
     },
+    "ios_background_refresh_open_settings" : {
+      "comment" : "Generated from strings_ios_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки"
+          }
+        }
+      }
+    },
     "ios_background_refresh_restricted" : {
       "comment" : "Generated from strings_ios.xml",
       "extractionState" : "manual",
@@ -61,6 +73,18 @@
         }
       }
     },
+    "ios_diagnostics_share" : {
+      "comment" : "Generated from strings_ios_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться"
+          }
+        }
+      }
+    },
     "ios_onboarding_notifications_configure" : {
       "comment" : "Generated from strings_ios_onboarding.xml",
       "extractionState" : "manual",
@@ -93,6 +117,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Как добавить виджет"
+          }
+        }
+      }
+    },
+    "ios_settings_notifications_allowed" : {
+      "comment" : "Generated from strings_ios_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешены в iOS"
+          }
+        }
+      }
+    },
+    "ios_settings_notifications_blocked" : {
+      "comment" : "Generated from strings_ios_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запрещены в iOS"
           }
         }
       }

@@ -2,6 +2,8 @@
 
 package dev.alllexey.itmowidgets.ios.di
 
+import dev.alllexey.itmowidgets.core.diagnostics.IosAppDiagnostics
+import dev.alllexey.itmowidgets.core.diagnostics.IosCrashHook
 import dev.alllexey.itmowidgets.ios.IosPlatform
 import kotlin.concurrent.Volatile
 import kotlin.reflect.KClass
@@ -14,8 +16,8 @@ import org.koin.core.context.startKoin
 
 /**
  * Starts the app's Koin graph over [IosKoinModules] with [platform]; the first call of `App.init` after the app
- * locale. A later call keeps the running graph and its platform (the hosted tests run inside the started app) and
- * returns false. Call it on the main thread.
+ * locale. From then on a Kotlin crash lands in the error journal ([IosCrashHook]). A later call keeps the running
+ * graph and its platform (the hosted tests run inside the started app) and returns false. Call it on the main thread.
  */
 fun startKoinIos(platform: IosPlatform): Boolean = IosKoin.start(platform)
 
@@ -44,10 +46,12 @@ object IosKoin {
 
     internal fun start(platform: IosPlatform): Boolean {
         if (started != null) return false
-        started = startKoin {
+        val koin = startKoin {
             allowOverride(false)
             modules(IosKoinModules.all(platform))
         }.koin
+        started = koin
+        IosCrashHook.install(koin.get<IosAppDiagnostics>())
         return true
     }
 

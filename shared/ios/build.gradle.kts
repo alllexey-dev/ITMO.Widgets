@@ -24,6 +24,8 @@ kotlin {
             export(project(":shared:core"))
             // The sign-in and first-run ViewModels SwiftUI owns (IO-07b).
             export(project(":shared:feature-account"))
+            // IO-08a: SettingsViewModel, DiagnosticsViewModel and the settings page model in Swift.
+            export(project(":shared:feature-settings"))
         }
     }
 
@@ -38,7 +40,7 @@ kotlin {
             implementation(project(":shared:feature-sport"))
             implementation(project(":shared:feature-recordbook"))
             implementation(project(":shared:feature-social"))
-            implementation(project(":shared:feature-settings"))
+            api(project(":shared:feature-settings"))
             implementation(project(":shared:feature-resources"))
             implementation(project(":shared:feature-reviews"))
             api(project(":shared:feature-account"))

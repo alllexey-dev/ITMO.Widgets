@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.systemAppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
@@ -16,10 +17,13 @@ import dev.alllexey.itmowidgets.core.network.BackendClientFactory
 import dev.alllexey.itmowidgets.core.network.BackendOrigin
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.network.darwinHttpEngine
+import dev.alllexey.itmowidgets.core.platform.AppBundleVersion
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.platform.IosPlatformActions
+import dev.alllexey.itmowidgets.core.platform.IosPlatformCapabilities
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.IosBackendGate
 import dev.alllexey.itmowidgets.core.session.AppGroupSessionDataCleaner
@@ -33,15 +37,19 @@ import dev.alllexey.itmowidgets.core.session.myItmoRefreshGuard
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.FileCrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.IosAppDirectories
 import dev.alllexey.itmowidgets.core.storage.KeychainSecureStore
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
+import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.storage.WidgetReloader
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
@@ -54,7 +62,6 @@ import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.datetime.TimeZone
-import platform.Foundation.NSBundle
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -64,20 +71,31 @@ import org.koin.dsl.module
 
 /**
  * The core bindings of the iOS app process, what `:app`'s Hilt modules and `CoreBridge` give Android: storage, the
- * session, both network clients over one Darwin engine, time, dispatchers, logs, the Backend gate, platform actions
- * and the session cleaners. Koin is the only graph on iOS, so each type is defined here once.
+ * session, both network clients over one Darwin engine and Core 2.0's users API, time, dispatchers, logs with the
+ * crash journal, the Backend gate, platform actions and capabilities, and the session cleaners. Koin is the only graph
+ * on iOS, so each type is defined here once.
  *
  * Not here (one graph per binding): `DemoMode` and `SessionRepository` come from the account module (KM-11h1, loaded
  * by IO-21); ports still in `:app` (`AppNotifier`, `FcmTokenSync`) are bound by the card that needs them.
  *
- * [backendOrigin] is the build's Backend, from the app's Info.plist ([BackendOrigin]).
+ * [backendOrigin] is the build's Backend, from the app's Info.plist ([BackendOrigin]); [appVersion] its marketing
+ * version ([AppBundleVersion]).
  */
-fun iosCoreModule(host: IosCoreHost, backendOrigin: String = BackendOrigin.fromMainBundle()): Module = module {
+fun iosCoreModule(
+    host: IosCoreHost,
+    backendOrigin: String = BackendOrigin.fromMainBundle(),
+    appVersion: String = AppBundleVersion.fromMainBundle()
+): Module = module {
     single<WidgetReloader> { host }
     single<PlatformActions> { IosPlatformActions(host) }
+    single<PlatformCapabilities> { IosPlatformCapabilities }
 
     single<AppLog> { OsLogAppLog() }
-    singleOf(::IosAppDiagnostics) { bind<AppDiagnostics>() }
+    // The crash journal file: the app's own, never backed up (IosCrashHook writes it as the process ends).
+    single {
+        val crashFile = get<AppDirectories>().noBackup / IosAppDiagnostics.CRASH_FILE
+        IosAppDiagnostics(get(), get(), AtomicTextFile(crashFile))
+    } binds arrayOf(AppDiagnostics::class)
     single<Clock> { Clock.System }
     single<AppDispatchers> { systemAppDispatchers() }
     single<AcademicTimeProvider> {
@@ -103,9 +121,11 @@ fun iosCoreModule(host: IosCoreHost, backendOrigin: String = BackendOrigin.fromM
     singleOf(::QrSettingsPreferences)
     singleOf(::DeviceHintPreferences)
     singleOf(::HomeLayoutPreferences)
-    // The widget appearance (KM-11e's settings data) and the first-run flag (IO-07b).
+    singleOf(::ScheduleCheckPreferences)
     singleOf(::WidgetSettingsPreferences)
-    single { UtilityStorage(get(), appVersionName()) }
+    singleOf(::SportSignSelectorPreferences)
+    singleOf(::MarkSourcePreferences)
+    single { UtilityStorage(get(), appVersion) }
     singleOf(::IosBackendGate) { bind<BackendGate>() }
 
     // The session: one Keychain item that both MyItmoApi and the session read; the client's TokenManager is its
@@ -121,16 +141,13 @@ fun iosCoreModule(host: IosCoreHost, backendOrigin: String = BackendOrigin.fromM
         )
     }
     single<BackendClient> { BackendClientFactory.create(backendOrigin, get<MyItmoClient>().tokens, get()) }
+    single<UsersApi> { get<BackendClient>().users }
 
     // An open set: each contribution is qualified (recipe koin-module).
     single<SessionDataCleaner>(named("keychain")) { KeychainSessionDataCleaner(get(), get()) }
     single<SessionDataCleaner>(named("app-group")) { AppGroupSessionDataCleaner(get(), get()) }
     single<SessionDataCleaner>(named("website-data")) { WebsiteDataSessionDataCleaner(host, get()) }
 }
-
-/** The app's marketing version (`CFBundleShortVersionString`), what `BuildConfig.VERSION_NAME` is on Android. */
-private fun appVersionName(): String =
-    NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String ?: ""
 
 /** As Android's `TimeModule`. */
 private const val ACADEMIC_TIME_ZONE = "Europe/Moscow"

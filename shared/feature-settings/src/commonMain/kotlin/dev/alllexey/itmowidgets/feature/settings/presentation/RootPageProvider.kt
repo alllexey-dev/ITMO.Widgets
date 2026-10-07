@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
@@ -15,8 +16,13 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_short_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_disabled
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_enabled
 
-/** The catalogue: one row per detail page, plus the notification permission. */
-class RootPageProvider() : SettingsPageProvider {
+/**
+ * The catalogue: one row per detail page, plus the notification permission. The recordbook page holds only the mark
+ * checks, so it is listed where the platform offers mark tracking.
+ */
+class RootPageProvider(
+    private val capabilities: PlatformCapabilities = EveryPlatformCapability
+) : SettingsPageProvider {
 
     override val pages = setOf(SettingsPage.ROOT)
 
@@ -64,10 +70,10 @@ class RootPageProvider() : SettingsPageProvider {
         ),
         SettingSection(
             title = UiText.Res(CoreRes.string.me_group_app),
-            items = listOf(
+            items = listOfNotNull(
                 SettingRows.navigation(SettingsPage.HOME),
                 SettingRows.navigation(SettingsPage.SCHEDULE),
-                SettingRows.navigation(SettingsPage.RECORDBOOK),
+                SettingRows.navigation(SettingsPage.RECORDBOOK).takeIf { capabilities.marks },
                 SettingRows.navigation(SettingsPage.SPORT),
                 SettingRows.navigation(SettingsPage.MAINTENANCE)
             )

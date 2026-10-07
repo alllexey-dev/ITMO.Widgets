@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsIosModule
+import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import dev.alllexey.itmowidgets.ios.IosPlatform
 import org.koin.core.module.Module
 
@@ -25,7 +26,9 @@ object IosKoinModules {
         authDataModule, accountIosModule,
         // The QR pass screen and the App Group snapshot of the QR widget (IO-21).
         qrModule, qrIosModule,
-        // The sign-in and first-run screens, the first-run flag and the settings data they write (IO-07b).
-        authModule, onboardingDataModule, onboardingModule, settingsDataModule, settingsIosModule,
+        // The sign-in and first-run screens with the first-run flag (IO-07b).
+        authModule, onboardingDataModule, onboardingModule,
+        // The SwiftUI settings and diagnostics over the shared pages (IO-08a); IO-07b's screens write the same data.
+        settingsDataModule, settingsModule, settingsIosModule,
     )
 }

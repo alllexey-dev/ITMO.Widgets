@@ -5,8 +5,12 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
+import dev.alllexey.itmowidgets.core.diagnostics.IosAppDiagnostics
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
+import dev.alllexey.itmowidgets.core.platform.IosPlatformCapabilities
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.KeychainSessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.KeychainTokenStorage
@@ -78,6 +82,8 @@ class IosCoreModuleTest {
         assertSame(storage, koin.get<TokenStorage>())
         assertSame(storage, koin.get<SessionTokenStore>())
         assertSame(koin.get<KeychainSecureStore>(), koin.get<SecureStore>())
+        assertSame(koin.get<IosAppDiagnostics>(), koin.get<AppDiagnostics>())
+        assertEquals(IosPlatformCapabilities, koin.get<PlatformCapabilities>())
         koin.close()
     }
 

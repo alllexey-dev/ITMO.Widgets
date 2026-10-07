@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy only the iOS settings and diagnostics show (IO-08a, ADR 0028): exported to Localizable.xcstrings, never to
+     Android. The Background App Refresh row reuses ios_background_refresh_* from strings_ios.xml. -->
+<resources>
+    <!-- The notification row: the shared values name Android. -->
+    <string name="ios_settings_notifications_allowed">Разрешены в iOS</string>
+    <string name="ios_settings_notifications_blocked">Запрещены в iOS</string>
+    <!-- The one-time hint when a background check is turned on with Background App Refresh off. -->
+    <string name="ios_background_refresh_open_settings">Открыть настройки</string>
+    <!-- Diagnostics: the share sheet holds copying too. -->
+    <string name="ios_diagnostics_share">Поделиться</string>
+</resources>
