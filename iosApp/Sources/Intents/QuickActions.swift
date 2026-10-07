@@ -21,8 +21,17 @@ enum QuickActions {
 }
 
 /// Receives the quick action that launched the app (`connectionOptions`) and installs `QuickActionSceneDelegate` for
-/// the ones that arrive while it runs. SwiftUI keeps managing the window.
+/// the ones that arrive while it runs; runs the push plumbing's launch step (`PushLaunch`). SwiftUI keeps managing the
+/// window.
 final class ITMOWidgetsAppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        PushLaunch.prepare()
+        return true
+    }
+
     func application(
         _ application: UIApplication,
         configurationForConnecting connectingSceneSession: UISceneSession,

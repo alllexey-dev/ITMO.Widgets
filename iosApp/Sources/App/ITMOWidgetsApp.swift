@@ -2,12 +2,14 @@ import Shared
 import SwiftUI
 
 /// The app entry point: the SwiftUI shell (`ShellView`) gated on the shared session (IO-07a), or in a Debug build on
-/// a fixture session from the launch arguments (`ShellFixtures`). Every `itmowidgets://route/<id>` URL, App Intent and
-/// quick action goes to the router. `init` sets the app locale, starts the Kotlin graph, connects the router to
-/// `RouteInbox`, builds the shell's session, then starts the shared one.
+/// a fixture session from the launch arguments (`ShellFixtures`). Every `itmowidgets://route/<id>` URL, App Intent,
+/// quick action and notification tap (`NotificationTaps`) goes to the router; each return to the foreground refreshes
+/// the push registration (`PushRefresh`, IO-13a). `init` sets the app locale, starts the Kotlin graph, connects the
+/// router to `RouteInbox`, builds the shell's session, then starts the shared one.
 @main
 struct ITMOWidgetsApp: App {
     @UIApplicationDelegateAdaptor(ITMOWidgetsAppDelegate.self) private var appDelegate
+    @Environment(\.scenePhase) private var scenePhase
     @State private var router: AppRouter
     @State private var session: ShellSession
 
@@ -27,6 +29,12 @@ struct ITMOWidgetsApp: App {
                 .onOpenURL { url in
                     router.open(url: url)
                 }
+                .task {
+                    NotificationTaps.shared.attach { [router] route in router.open(entry: route) }
+                }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await PushRefresh.run() } }
         }
     }
 

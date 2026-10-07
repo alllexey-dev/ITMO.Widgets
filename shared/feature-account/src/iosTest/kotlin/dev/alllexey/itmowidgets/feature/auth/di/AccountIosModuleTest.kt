@@ -5,8 +5,11 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
+import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
+import dev.alllexey.itmowidgets.core.notification.PushDeviceRegistration
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
+import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionSnapshot
@@ -37,8 +40,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import okio.FileSystem
@@ -95,6 +100,10 @@ class AccountIosModuleTest {
         assertIs<SessionRepositoryImpl>(koin.get<SessionRepository>())
         // The Keychain, the App Group container and WebKit's data (IO-04b); features loaded later add theirs.
         assertEquals(3, koin.get<SessionDataCleaners>().current().size)
+        // One push registration answers the session's token sync and device session (IO-13a).
+        val registration = koin.get<PushDeviceRegistration>()
+        assertSame<Any>(registration, koin.get<FcmTokenSync>())
+        assertSame<Any>(registration, koin.get<BackendDeviceSession>())
         assertEquals(emptyList(), requests)
         koin.close()
     }
@@ -128,7 +137,7 @@ class AccountIosModuleTest {
     ) {
         val session = FakeSessionRepository(SessionState.Initializing)
         val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = {}))
-        SessionSnapshotSync(session, writer, log).launchIn(backgroundScope)
+        SessionSnapshotSync(session, MutableStateFlow(false), writer, log).launchIn(backgroundScope)
         assertNull(writer.read())
 
         session.mutableState.value = SessionState.SignedIn(DemoPeople.ME, demo = true)
@@ -144,6 +153,24 @@ class AccountIosModuleTest {
         assertEquals(SessionSnapshot(isu = DemoPeople.ME.isu, demo = true, alertsAllowed = false), writer.read())
 
         session.mutableState.value = SessionState.SignedIn(CurrentUser(isu = ISU, name = null, pictureUrl = null))
+        assertEquals(SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false), writer.read())
+    }
+
+    @Test
+    fun theSessionSnapshotFollowsTheAlertsAnswer() = runTest(UnconfinedTestDispatcher()) {
+        val session = FakeSessionRepository(SessionState.Initializing)
+        val alerts = MutableStateFlow(false)
+        val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = {}))
+        SessionSnapshotSync(session, alerts, writer, log).launchIn(backgroundScope)
+
+        // Signed out: no file, whatever the answer.
+        alerts.value = true
+        assertNull(writer.read())
+
+        session.mutableState.value = SessionState.SignedIn(CurrentUser(isu = ISU, name = null, pictureUrl = null))
+        assertEquals(SessionSnapshot(isu = ISU, demo = false, alertsAllowed = true), writer.read())
+
+        alerts.value = false
         assertEquals(SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false), writer.read())
     }
 
