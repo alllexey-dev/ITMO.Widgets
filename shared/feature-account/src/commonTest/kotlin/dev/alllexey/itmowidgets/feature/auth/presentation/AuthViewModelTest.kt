@@ -17,6 +17,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -26,6 +28,7 @@ import kotlinx.coroutines.test.runTest
 class AuthViewModelTest {
 
     private val main = TestMainDispatcher()
+    private val time = TestTimeSource()
 
     @BeforeTest
     fun setUp() = main.install()
@@ -36,9 +39,7 @@ class AuthViewModelTest {
     @Test
     fun showsAuthContentImmediatelyWhileSignOutCleanupIsRunning() =
         runTest(main.dispatcher) {
-            val viewModel = AuthViewModel(
-                FakeSessionRepository(SessionState.SigningOut)
-            )
+            val viewModel = AuthViewModel(FakeSessionRepository(SessionState.SigningOut), time)
 
             assertFalse(viewModel.uiState.value.initializing)
             assertTrue(viewModel.uiState.value.sessionTransitionInProgress)
@@ -52,7 +53,7 @@ class AuthViewModelTest {
     @Test
     fun followsTheSessionItObserves() = runTest(main.dispatcher) {
         val repository = FakeSessionRepository(SessionState.Initializing)
-        val viewModel = AuthViewModel(repository)
+        val viewModel = AuthViewModel(repository, time)
         assertTrue(viewModel.uiState.value.initializing)
 
         repository.mutableState.value = SessionState.ReauthenticationRequired
@@ -66,9 +67,9 @@ class AuthViewModelTest {
     @Test
     fun logoTapsDuringASignOutNeverStartTheDemo() = runTest(main.dispatcher) {
         val repository = FakeSessionRepository(SessionState.SigningOut)
-        val viewModel = AuthViewModel(repository)
+        val viewModel = AuthViewModel(repository, time)
 
-        repeat(5) { viewModel.onLogoTap(atMillis = 1_000L + it * 300L) }
+        repeat(5) { tapLogo(viewModel) }
         advanceUntilIdle()
 
         assertEquals(0, repository.demoStarts)
@@ -78,12 +79,12 @@ class AuthViewModelTest {
     fun theFifthQuickTapOnTheLogoStartsTheDemoOnce() =
         runTest(main.dispatcher) {
             val repository = FakeSessionRepository(SessionState.SignedOut)
-            val viewModel = AuthViewModel(repository)
-            repeat(4) { viewModel.onLogoTap(atMillis = 1_000L + it * 300L) }
+            val viewModel = AuthViewModel(repository, time)
+            repeat(4) { tapLogo(viewModel) }
             advanceUntilIdle()
             assertEquals(0, repository.demoStarts)
 
-            viewModel.onLogoTap(atMillis = 2_200L)
+            tapLogo(viewModel)
             advanceUntilIdle()
 
             assertEquals(1, repository.demoStarts)
@@ -92,12 +93,12 @@ class AuthViewModelTest {
 
     @Test
     fun aDemoStartedWhileNobodyCollectsReachesTheNextCollector() = runTest(main.dispatcher) {
-        val viewModel = AuthViewModel(FakeSessionRepository(SessionState.SignedOut))
+        val viewModel = AuthViewModel(FakeSessionRepository(SessionState.SignedOut), time)
         val first = backgroundScope.launch { viewModel.events.collect {} }
         runCurrent()
         first.cancel()
 
-        repeat(5) { viewModel.onLogoTap(atMillis = 1_000L + it * 300L) }
+        repeat(5) { tapLogo(viewModel) }
         advanceUntilIdle()
 
         assertEquals(AuthEvent.DemoStarted, viewModel.events.first())
@@ -107,7 +108,7 @@ class AuthViewModelTest {
     fun eachFailureOfTheRefreshTokenSignInHasItsOwnText() = runTest(main.dispatcher) {
         val failures = listOf(AppError.Network, AppError.Unauthorized, AppError.Unknown(IllegalStateException()))
         val texts = failures.map { error ->
-            val viewModel = AuthViewModel(FailingSession(error))
+            val viewModel = AuthViewModel(FailingSession(error), time)
             viewModel.signInWithRefreshToken("synthetic-refresh-token")
             advanceUntilIdle()
             assertFalse(viewModel.uiState.value.manualLoginInProgress)
@@ -122,6 +123,25 @@ class AuthViewModelTest {
             ),
             texts,
         )
+    }
+
+    /** One tap on the logo, 300 ms after the previous one. */
+    private fun tapLogo(viewModel: AuthViewModel) {
+        time += 300.milliseconds
+        viewModel.onLogoTap()
+    }
+
+    @Test
+    fun aSlowFifthTapDoesNotStartTheDemo() = runTest(main.dispatcher) {
+        val repository = FakeSessionRepository(SessionState.SignedOut)
+        val viewModel = AuthViewModel(repository, time)
+        repeat(4) { tapLogo(viewModel) }
+
+        time += 1_600.milliseconds
+        viewModel.onLogoTap()
+        advanceUntilIdle()
+
+        assertEquals(0, repository.demoStarts)
     }
 
     /** A signed-out session whose refresh-token sign-in fails with [error]. */

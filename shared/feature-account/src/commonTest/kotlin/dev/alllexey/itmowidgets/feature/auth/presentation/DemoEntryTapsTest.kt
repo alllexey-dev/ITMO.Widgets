@@ -4,37 +4,56 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TestTimeSource
 
 class DemoEntryTapsTest {
 
+    private val time = TestTimeSource()
+    private val taps = DemoEntryTaps(time)
+
     @Test
     fun fiveTapsWithinSixSecondsOpenTheDemo() {
-        val taps = DemoEntryTaps()
-
-        val results = (0 until 5).map { taps.tap(atMillis = 10_000L + it * 1_500L) }
+        val results = (0 until 5).map {
+            if (it > 0) time += 1_500.milliseconds
+            taps.tap()
+        }
 
         assertEquals(listOf(false, false, false, false, true), results)
     }
 
     @Test
     fun aPauseLongerThanTheIntervalStartsTheCountOver() {
-        val taps = DemoEntryTaps()
-        repeat(4) { taps.tap(atMillis = it * 500L) }
+        repeat(4) {
+            taps.tap()
+            time += 500.milliseconds
+        }
 
-        assertFalse(taps.tap(atMillis = 1_500L + 1_600L))
-        repeat(3) { assertFalse(taps.tap(atMillis = 3_100L + (it + 1) * 500L)) }
-        assertTrue(taps.tap(atMillis = 3_100L + 4 * 500L))
+        time += 1_100.milliseconds
+        assertFalse(taps.tap())
+        repeat(3) {
+            time += 500.milliseconds
+            assertFalse(taps.tap())
+        }
+        time += 500.milliseconds
+        assertTrue(taps.tap())
     }
 
     @Test
     fun theCountStartsFromZeroAfterASuccess() {
-        val taps = DemoEntryTaps()
-        repeat(4) { taps.tap(atMillis = it * 100L) }
-        assertTrue(taps.tap(atMillis = 400L))
+        repeat(4) {
+            taps.tap()
+            time += 100.milliseconds
+        }
+        assertTrue(taps.tap())
 
-        val next = (1..4).map { taps.tap(atMillis = 400L + it * 100L) }
+        val next = (1..4).map {
+            time += 100.milliseconds
+            taps.tap()
+        }
 
         assertEquals(listOf(false, false, false, false), next)
-        assertTrue(taps.tap(atMillis = 900L))
+        time += 100.milliseconds
+        assertTrue(taps.tap())
     }
 }

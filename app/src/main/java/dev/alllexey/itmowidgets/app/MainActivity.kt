@@ -74,6 +74,9 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private lateinit var navigation: MainNavigationCoordinator
     private val routes = MainRouteQueue()
 
+    /** True while [revealResolvedGraph] executes the graph's transactions; see there. */
+    private var executingGraphTransactions = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState != null) {
@@ -392,7 +395,17 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     }
 
     private fun revealResolvedGraph() {
-        navigation.rootHost.childFragmentManager.executePendingTransactions()
+        // A Compose screen these transactions create (the sign-in screen after a sign-out) reads its strings through
+        // compose resources' runBlocking, which runs the main thread's queued coroutine work, such as the next session
+        // state, and with it this method, while the transactions still execute. The outer call finishes them.
+        if (!executingGraphTransactions) {
+            executingGraphTransactions = true
+            try {
+                navigation.rootHost.childFragmentManager.executePendingTransactions()
+            } finally {
+                executingGraphTransactions = false
+            }
+        }
         binding.sessionProgress.isVisible = false
         binding.navHostFragment.isVisible = true
     }

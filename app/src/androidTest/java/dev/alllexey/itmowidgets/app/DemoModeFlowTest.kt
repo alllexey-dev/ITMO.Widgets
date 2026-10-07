@@ -21,6 +21,8 @@ import dev.alllexey.itmowidgets.core.navigation.toBundle
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
+import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.testing.Screenshots
 import java.time.LocalDate
@@ -74,11 +76,15 @@ class DemoModeFlowTest {
     @Test
     fun fiveLogoTapsOpenTheDemoThatSurvivesRecreationAndEndsWithSignIn() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            lateinit var activity: MainActivity
             lateinit var decorView: View
-            scenario.onActivity { decorView = it.window.decorView }
-            eventually { onView(withId(R.id.auth_logo)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed())) }
+            scenario.onActivity {
+                activity = it
+                decorView = it.window.decorView
+            }
+            eventually { assertTrue("The sign-in screen shows", AuthSemantics.isShown(activity)) }
 
-            repeat(5) { onView(withId(R.id.auth_logo)).perform(click()) }
+            repeat(5) { AuthSemantics.tap(activity, AuthTestTags.LOGO) }
 
             eventually {
                 onView(withId(R.id.bottom_nav_view)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed()))
@@ -88,7 +94,10 @@ class DemoModeFlowTest {
             assertTrue(runBlocking { dependencies.demoPreferences().getDemoActive() })
 
             scenario.recreate()
-            scenario.onActivity { decorView = it.window.decorView }
+            scenario.onActivity {
+                activity = it
+                decorView = it.window.decorView
+            }
             eventually {
                 onView(withId(R.id.demo_banner)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed()))
                 onView(withId(R.id.navigation_schedule)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed()))
@@ -96,7 +105,7 @@ class DemoModeFlowTest {
 
             onView(withId(R.id.demo_banner_sign_in)).perform(click())
 
-            eventually { onView(withId(R.id.auth_logo)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed())) }
+            eventually { assertTrue("The sign-in screen shows", AuthSemantics.isShown(activity)) }
             assertEquals(SessionState.SignedOut, dependencies.session().state.value)
             assertFalse(runBlocking { dependencies.demoPreferences().getDemoActive() })
         }

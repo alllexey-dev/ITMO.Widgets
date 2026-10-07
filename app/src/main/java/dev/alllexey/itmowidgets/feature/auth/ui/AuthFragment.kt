@@ -4,37 +4,27 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.view.isVisible
-import androidx.core.widget.ImageViewCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.databinding.DialogAuthRefreshTokenBinding
-import dev.alllexey.itmowidgets.databinding.FragmentAuthBinding
-import dev.alllexey.itmowidgets.feature.auth.presentation.AuthEvent
-import dev.alllexey.itmowidgets.feature.auth.presentation.AuthUiState
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
-import dev.alllexey.itmowidgets.core.ui.resolve
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/**
+ * The sign-in screen (`auth`, the main graph's start), kept by name. The screen is `AuthRoute` from
+ * `:shared:feature-account`; its ViewModel is Koin's, in this Fragment's store. This host keeps what only Android
+ * does: [LoginActivity] for a result, and the haptic and toast that confirm the hidden demo entry.
+ */
 @AndroidEntryPoint
 class AuthFragment : Fragment() {
 
-    private var _binding: FragmentAuthBinding? = null
-    private val binding get() = _binding!!
-
+    // The same instance AuthRoute's koinViewModel() finds in this Fragment's store.
     private val viewModel: AuthViewModel by viewModel()
 
     private val loginLauncher = registerForActivityResult(
@@ -45,99 +35,22 @@ class AuthFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentAuthBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        ImageViewCompat.setImageTintList(binding.authLogo, null)
-        binding.itmoIdLoginButton.setOnClickListener {
-            viewModel.clearError()
-            loginLauncher.launch(Intent(requireContext(), LoginActivity::class.java))
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        itmoComposeView {
+            AuthRoute(
+                onSignInWithItmoId = { loginLauncher.launch(Intent(requireContext(), LoginActivity::class.java)) },
+                onDemoStarted = ::confirmDemo,
+                viewModel = viewModel,
+            )
         }
-        binding.refreshTokenLoginButton.setOnClickListener {
-            showRefreshTokenDialog()
+
+    private fun confirmDemo(message: String) {
+        val confirm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            HapticFeedbackConstants.CONFIRM
+        } else {
+            HapticFeedbackConstants.VIRTUAL_KEY
         }
-        // The hidden demo entry; the logo stays decorative for accessibility services.
-        binding.authLogo.setOnClickListener { viewModel.onLogoTap(SystemClock.uptimeMillis()) }
-
-        viewModel.uiState
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach(::render)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.events
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach(::onEvent)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    private fun onEvent(event: AuthEvent) {
-        when (event) {
-            AuthEvent.DemoStarted -> {
-                val confirm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    HapticFeedbackConstants.CONFIRM
-                } else {
-                    HapticFeedbackConstants.VIRTUAL_KEY
-                }
-                _binding?.root?.performHapticFeedback(confirm)
-                Toast.makeText(requireContext().applicationContext, R.string.demo_entered, Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun showRefreshTokenDialog() {
-        val dialogBinding = DialogAuthRefreshTokenBinding.inflate(layoutInflater)
-        val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.auth_manual_dialog_title)
-            .setMessage(R.string.auth_manual_dialog_description)
-            .setView(dialogBinding.root)
-            .setNegativeButton(R.string.common_cancel, null)
-            .setPositiveButton(R.string.auth_sign_in, null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val token = dialogBinding.refreshTokenInput.text?.toString().orEmpty()
-                if (token.isBlank()) {
-                    dialogBinding.refreshTokenLayout.error =
-                        getString(R.string.auth_manual_token_required)
-                    return@setOnClickListener
-                }
-                dialogBinding.refreshTokenInput.text?.clear()
-                dialog.dismiss()
-                viewModel.signInWithRefreshToken(token)
-            }
-        }
-        dialog.setOnDismissListener {
-            dialogBinding.refreshTokenInput.text?.clear()
-        }
-        dialog.show()
-    }
-
-    private fun render(state: AuthUiState) {
-        val loginEnabled = !state.manualLoginInProgress &&
-            !state.sessionTransitionInProgress
-        binding.authProgress.isVisible = state.initializing
-        binding.authContent.isVisible = !state.initializing
-        // The feature lines stay; only an expired session needs a line explaining itself.
-        binding.authReauthNotice.isVisible = state.reauthenticationRequired
-        binding.itmoIdLoginButton.isEnabled = loginEnabled
-        binding.refreshTokenLoginButton.isEnabled = loginEnabled
-        binding.manualLoginProgress.isVisible = state.manualLoginInProgress ||
-            state.sessionTransitionInProgress
-        binding.authError.isVisible = state.error != null
-        binding.authError.text = state.error?.resolve(requireContext())
+        view?.performHapticFeedback(confirm)
+        Toast.makeText(requireContext().applicationContext, message, Toast.LENGTH_SHORT).show()
     }
 }

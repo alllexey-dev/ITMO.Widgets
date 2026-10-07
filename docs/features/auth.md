@@ -13,6 +13,14 @@ sign-in in [First-run flow](onboarding.md).
 `ReauthenticationRequired`: it dismisses overlays, hides the bottom bar and
 resets the graph unless `auth` is already shown.
 
+The screen is Compose in `:shared:feature-account`
+(`feature/auth/ui/AuthScreen.kt`, stateless, and `AuthRoute.kt`, which takes
+`AuthViewModel` from Koin). `AuthFragment` hosts the route in
+`itmoComposeView`, launches `LoginActivity` for a result and plays the demo
+confirmation (see [Demo session](demo.md)). Test tags keep the old view ids
+(`AuthTestTags`: `auth_logo`, `auth_content`, `auth_unofficial_notice`,
+`itmo_id_login_button`, ...).
+
 `AuthUiState` follows `SessionRepository.state`:
 
 - `Initializing`: only the progress with «Проверяем сессию».
@@ -31,7 +39,13 @@ resets the graph unless `auth` is already shown.
 ## ITMO.ID page
 
 «Войти через ITMO.ID» starts `LoginActivity` for a result (title «Вход через
-ITMO.ID», close in the toolbar, pull to reload). Every fresh open clears the
+ITMO.ID», close in the top bar, pull to reload). Its chrome is the shared
+`LoginScreen` (`feature/auth/ui/LoginScreen.kt`) with a browser slot; the
+activity fills the slot with an `AndroidView` of a `SwipeRefreshLayout` around
+the WebView, built in code because Compose's pull-to-refresh cannot see a
+WebView's scroll, and destroys the WebView once, on release or in
+`onDestroy`. The error covers the slot and the activity hides the WebView
+while it shows. Every fresh open clears the
 WebView history, cache, `WebStorage` and all cookies, then loads
 `https://my.itmo.ru/`. The WebView runs JavaScript and DOM storage; file and
 content access, pop-up windows, mixed content, the HTTP cache and third-party
@@ -60,6 +74,8 @@ cookies are off.
 способ — на случай, когда вход через ITMO.ID не работает. Токен останется на
 устройстве.», the field «Refresh token» and «Отмена» / «Войти». An empty field
 shows «Вставьте Refresh token»; the field is cleared on submit and on dismiss.
+The dialog is the kit `ConfirmDialog`; the token is held with `remember` only,
+never in saved instance state, and the dialog does not survive recreation.
 `DefaultRefreshTokenAuthenticator` refreshes the trimmed token through a fresh
 MyItmoApi `MyItmo` client off the main thread.
 
@@ -98,5 +114,10 @@ cipher prefix `v1:`, and the DataStore file `app_preferences`, which holds
 ## Tests
 
 JVM: `ItmoAuthUrlPolicyTest`, `AuthViewModelTest`, `DemoEntryTapsTest`,
-`SessionRepositoryImplTest`. `LoginActivity` has a layout-only capture in
-`DesignComponentsVisualTest`; the sign-in screen has no visual test.
+`SessionRepositoryImplTest`; host tests `AuthScreenTest` (states, 48 dp
+targets, the logo without a click action, the token dialog, font 1.3 at
+320 dp) and `LoginScreenTest` (the browser slot stays composed at one size).
+Goldens `AuthScreen_{initial,reauthentication,signing-in,error,token-dialog}`
+and `LoginScreen_error` in all four appearances under
+`shared/feature-account/screenshots/`. Instrumented: `DemoModeFlowTest` and
+`MainActivitySessionRoutingTest` find the screen by its test tags.

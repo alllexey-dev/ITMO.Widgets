@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.auth.data.SessionTransitions
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
 import dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginViewModel
+import kotlin.time.TimeSource
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -25,8 +26,12 @@ val authDataModule = module {
     singleOf(::SessionRepositoryImpl) { bind<SessionRepository>() }
 }
 
-/** The sign-in screens; the session comes from [authDataModule]. */
+/**
+ * The sign-in screens; the session comes from [authDataModule]. The demo entry times the logo taps on the monotonic
+ * `TimeSource.Monotonic`, bound here so that no screen reads a system clock.
+ */
 val authModule = module {
+    single<TimeSource> { TimeSource.Monotonic }
     viewModelOf(::AuthViewModel)
     viewModelOf(::InteractiveLoginViewModel)
 }

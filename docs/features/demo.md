@@ -10,14 +10,17 @@ entry and for gating in the repositories are in decision
 
 Five taps on the logo of the sign-in screen (`auth_logo`), each at most 1.5 s
 after the previous one (`DemoEntryTaps`, `REQUIRED_TAPS = 5`,
-`MAX_INTERVAL_MILLIS = 1_500`). `AuthFragment` passes the time of every tap from
-`SystemClock.uptimeMillis()` to `AuthViewModel.onLogoTap`; taps during a sign-in
-or a session change are ignored. On success the screen confirms with
+`MAX_INTERVAL = 1.5 s`). Every tap calls `AuthViewModel.onLogoTap()`;
+`DemoEntryTaps` times the taps on the injected `kotlin.time.TimeSource`, which
+`authModule` binds to `TimeSource.Monotonic` (tests use `TestTimeSource`). Taps
+during a sign-in or a session change are ignored. On success the route hands
+`Демо-режим` to the host: `AuthFragment` confirms with
 `HapticFeedbackConstants.CONFIRM` (`VIRTUAL_KEY` below Android 11) and the toast
 `Демо-режим`, then `SessionRepository.startDemo()` replaces the screen.
 
-The logo stays decorative for accessibility services
-(`importantForAccessibility="no"`): there is no focus stop and no hint. The
+The logo stays decorative for accessibility services: it takes taps through a
+plain pointer handler (`detectTapGestures`), not a click, and has no content
+description, so there is no focus stop and no hint. The
 reviewer finds the entry in the access instructions of the Play listing.
 
 ## Session

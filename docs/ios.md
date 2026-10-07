@@ -303,11 +303,11 @@ notification service find the same expired token only the first refreshes. A val
 (signed out); a Keychain failure is thrown and drops nothing.
 
 Sign-in (IO-07a, IO-07b, SP-21 path (a)). The signed-out gate is `AuthScreen` (`Sources/Features/Auth/`), Android's
-`AuthFragment` in SwiftUI over the shared `AuthViewModel`: Android's `auth_logo` (bundled by path from
-`app/src/main/res/drawable-nodpi`, no copy), the app name, the three feature lines, `auth_login_itmo_id`, which opens
-`ItmoSignInScreen` as a full-screen cover, and `auth_login_refresh_token`, an alert with a secure field that calls
-`signInWithRefreshToken`. Five taps on the logo, each within 1.5 s (`DemoEntryTaps`, times from
-`ProcessInfo.systemUptime`), start the demo with a success haptic and a VoiceOver announcement of `demo_entered`;
+`AuthFragment` in SwiftUI over the shared `AuthViewModel`: the shared `auth_logo` (bundled by path from
+`shared/feature-account/src/commonMain/composeResources/drawable`, no copy), the app name, the three feature lines,
+`auth_login_itmo_id`, which opens `ItmoSignInScreen` as a full-screen cover, and `auth_login_refresh_token`, an alert with a secure field that calls
+`signInWithRefreshToken`. Five taps on the logo, each within 1.5 s (`DemoEntryTaps`, timed on the shared
+`TimeSource.Monotonic`), start the demo with a success haptic and a VoiceOver announcement of `demo_entered`;
 the logo stays hidden from VoiceOver, as on Android.
 
 `ItmoSignInScreen` is Android's `LoginActivity`: my.itmo.ru in a `WKWebView` on `WKWebsiteDataStore.default()` under
