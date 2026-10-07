@@ -33,6 +33,7 @@ import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import android.view.View
+import dev.alllexey.itmowidgets.feature.settings.ui.SettingsTestTags
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
@@ -220,7 +221,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
                             // starts the enter on the next frame with the host already destroyed and detached.
                             if (!f.isAdded) return
                             val content = f.childFragmentManager.primaryNavigationFragment?.view
-                            overlayEnteredReady += content?.findViewById<View>(R.id.settings_scroll)?.visibility == View.VISIBLE
+                            overlayEnteredReady += content?.hasSemanticsTag(SettingsTestTags.SCROLL) == true
                         }
                     })
                 }
@@ -237,7 +238,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
                 if (f !is SettingsFragment) return
                 val page = SettingsPage.fromArgument(f.arguments?.getString(SettingsPage.ARGUMENT))
                 v.viewTreeObserver.addOnPreDrawListener {
-                    if (page != SettingsPage.PRIVACY && v.findViewById<View>(R.id.settings_progress).visibility == View.VISIBLE) {
+                    if (page != SettingsPage.PRIVACY && v.hasSemanticsTag(SettingsTestTags.PROGRESS)) {
                         offlineLoadingFrames += page
                     }
                     true
@@ -245,7 +246,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
                 (f.enterTransition as? Transition)?.addListener(object : TransitionListenerAdapter() {
                     override fun onTransitionStart(transition: Transition) {
                         val contentReady = if (page == SettingsPage.PRIVACY) true else {
-                            v.findViewById<View>(R.id.settings_scroll).visibility == View.VISIBLE &&
+                            v.hasSemanticsTag(SettingsTestTags.SCROLL) &&
                                 (page != SettingsPage.QR_WIDGET || v.findViewById<ImageView>(R.id.qr_code_image)?.drawable != null)
                         }
                         entered += page to contentReady

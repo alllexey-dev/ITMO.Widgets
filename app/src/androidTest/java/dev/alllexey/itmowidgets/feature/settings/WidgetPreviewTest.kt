@@ -11,10 +11,8 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ListView
-import android.widget.ScrollView
 import android.widget.TextView
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -35,7 +33,6 @@ import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
-import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrPreviewBitmapCache
@@ -58,7 +55,6 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.RecordbookPageProv
 import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SchedulePageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.ServicesPageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
@@ -66,30 +62,35 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SportPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetsPageProvider
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
-import dev.alllexey.itmowidgets.feature.settings.ui.SettingsRenderer
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.testing.toSettingsPreview
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
-import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import java.io.File
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.viewinterop.AndroidView
+import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
+import dev.alllexey.itmowidgets.designsystem.theme.ColorSource
+import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.settings.ui.SettingsActions
+import dev.alllexey.itmowidgets.feature.settings.ui.SettingsScreen
+import dev.alllexey.itmowidgets.feature.settings.ui.SettingsTestTags
 
 @RunWith(AndroidJUnit4::class)
 class WidgetPreviewTest {
@@ -279,19 +280,18 @@ class WidgetPreviewTest {
                 withScreen(page, spec) { screen ->
                     screen.scenario.onActivity { activity ->
                         val root = screen.preview.view
-                        val scroll = activity.findViewById<ScrollView>(R.id.settings_scroll)
-                        assertTrue("Controls must retain usable height", scroll.height >= 160 * activity.resources.displayMetrics.density)
+                        val scroll = checkNotNull(SettingsSemantics.node(screen.composeView, SettingsTestTags.SCROLL))
+                        assertTrue("Controls must retain usable height", scroll.size.height >= 160 * activity.resources.displayMetrics.density)
                         if (page != SettingsPage.QR_WIDGET) {
                             val button = root.findViewById<View>(R.id.preview_time)
                             assertTrue(button.height >= 48 * activity.resources.displayMetrics.density)
                         }
                         val before = IntArray(2).also(root::getLocationOnScreen)
-                        scroll.fullScroll(View.FOCUS_DOWN)
+                        SettingsSemantics.scrollBy(screen.composeView, SettingsTestTags.SCROLL, FAR)
                         assertArrayEquals(before, IntArray(2).also(root::getLocationOnScreen))
-                        scroll.scrollTo(0, 0)
                     }
                     settle()
-                    screen.scenario.onActivity { it.findViewById<ScrollView>(R.id.settings_scroll).scrollTo(0, 0) }
+                    screen.scenario.onActivity { SettingsSemantics.scrollBy(screen.composeView, SettingsTestTags.SCROLL, -FAR) }
                     screen.capture("${page.name.lowercase()}-${spec.name}")
                 }
             }
@@ -310,7 +310,7 @@ class WidgetPreviewTest {
         ActivityScenario.launch<SettingsPreviewActivity>(intent).use { scenario ->
             val screen = Screen(scenario)
             try {
-                scenario.onActivity { screen.attach(it, page) }
+                scenario.onActivity { screen.attach(it, page, spec) }
                 settle()
                 block(screen)
             } finally {
@@ -325,13 +325,16 @@ class WidgetPreviewTest {
     private inner class Screen(val scenario: ActivityScenario<SettingsPreviewActivity>) {
         val files = File(context.cacheDir, "widget-preview-${System.nanoTime()}").apply { mkdirs() }
         lateinit var preview: WidgetPreview
+        lateinit var composeView: ComposeView
         lateinit var vm: SettingsViewModel
         lateinit var factory: DefaultWidgetPreviewFactory
         lateinit var images: QrPreviewBitmapCache
         lateinit var spoilers: CustomSpoilerManager
         private lateinit var activity: SettingsPreviewActivity
 
-        fun attach(activity: SettingsPreviewActivity, page: SettingsPage) {
+        private var boundSettings: WidgetPreviewSettings? = null
+
+        fun attach(activity: SettingsPreviewActivity, page: SettingsPage, spec: Appearances.Spec) {
             this.activity = activity
             val repository = PreviewRepository()
             vm = ViewModelProvider(activity, object : ViewModelProvider.Factory {
@@ -373,10 +376,6 @@ class WidgetPreviewTest {
                     )
                 } as T
             })[SettingsViewModel::class.java]
-            activity.findViewById<TextView>(R.id.settings_title).text = page.title.resolve(activity)
-            activity.findViewById<View>(R.id.settings_scroll).visibility = View.VISIBLE
-            val renderer = SettingsRenderer(activity.sectionsContainer, vm::onToggleChanged, {}, {}, {})
-            vm.uiState.map { it.sections }.distinctUntilChanged().onEach(renderer::render).launchIn(activity.lifecycleScope)
             val isolated = object : ContextWrapper(activity) { override fun getFilesDir() = files }
             spoilers = CustomSpoilerManager(isolated)
             images = QrPreviewBitmapCache(QrCodeGenerator(), QrBitmapRenderer(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)), spoilers, DeviceDispatchers)
@@ -385,25 +384,45 @@ class WidgetPreviewTest {
                 QrColorResolver(activity, PreviewQrPreferences),
                 SchedulePreviewScenario(ScheduleWidgetSelector())
             )
-            vm.uiState.map { it.previewSettings }.distinctUntilChanged().filterNotNull().onEach { settings ->
-                if (!::preview.isInitialized) {
-                    preview = factory.create(activity, activity.lifecycleScope, settings)
-                    activity.findViewById<FrameLayout>(R.id.widget_preview_container).apply {
-                        addView(preview.view)
-                        visibility = View.VISIBLE
+            // The page as SettingsFragment hosts it: SettingsScreen with the factory's View in the preview slot.
+            val colors = spec.colorSeed?.let(ColorSource::Seed) ?: ColorSource.Platform
+            composeView = ComposeView(activity).apply {
+                setContent {
+                    ItmoTheme(colorSource = colors) {
+                        val state by vm.uiState.collectAsState()
+                        SettingsScreen(
+                            state,
+                            SettingsActions(onToggle = vm::onToggleChanged),
+                            widgetPreview = { settings ->
+                                AndroidView(
+                                    factory = { obtainPreview(settings).view },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    update = { bindPreview(settings) },
+                                )
+                            },
+                        )
                     }
                 }
-                preview.bind(settings)
-            }.launchIn(activity.lifecycleScope)
+            }
+            activity.showContent(composeView)
         }
 
-        fun toggle(id: SettingRowId) {
-            val item = vm.uiState.value.sections.flatMap { it.items }.filterIsInstance<SettingItem.Toggle>().first { it.id == id }
-            val title = item.title.resolve(activity)
-            val text = activity.sectionsContainer.descendants().filterIsInstance<TextView>()
-                .first { it.id == R.id.setting_title && it.text == title }
-            (text.parent.parent as View).performClick()
+        private fun obtainPreview(settings: WidgetPreviewSettings): WidgetPreview {
+            if (!::preview.isInitialized) {
+                preview = factory.create(activity, activity.lifecycleScope, settings)
+                bindPreview(settings)
+            }
+            return preview
         }
+
+        private fun bindPreview(settings: WidgetPreviewSettings) {
+            if (!::preview.isInitialized || settings == boundSettings) return
+            boundSettings = settings
+            preview.bind(settings)
+        }
+
+        /** Flips the switch through its row's semantics: the whole row is the target. */
+        fun toggle(id: SettingRowId) = SettingsSemantics.click(composeView, id)
 
         fun close() { if (::preview.isInitialized) preview.close() }
 
@@ -462,6 +481,9 @@ class WidgetPreviewTest {
 
     private companion object {
         const val SCREENSHOTS = "widget-preview-screenshots"
+
+        /** Farther than any settings page scrolls. */
+        const val FAR = 100_000f
     }
 }
 

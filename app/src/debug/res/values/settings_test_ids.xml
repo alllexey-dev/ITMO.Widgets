@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The scroll column of SettingsPreviewActivity; SelectionRowsTest reads it until L13 and L11 retire that test. -->
+<resources>
+    <item name="settings_scroll" type="id" />
+</resources>

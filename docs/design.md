@@ -361,7 +361,7 @@ A port uses the kit and grows it instead of drawing its own variant.
 | `GroupActionRow` | The last row of a group that leads further | `item_group_action_row.xml` |
 | `LinkRow`, `VotePill` | A link with its own badge or the vote pill | `item_subject_link.xml`, `core/ui/SubjectLinkRow.kt`, `view_link_vote_pill.xml` |
 | `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | the user row of the XML social lists; rows with `bindSelectionAccessibility` |
-| `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | `Card.SettingsGroup` and the rows of `feature/settings/ui/SettingsRenderer.kt` |
+| `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | `Card.SettingsGroup` and `item_setting_row.xml`, `item_setting_toggle.xml`, `item_setting_divider.xml` |
 | `DetailsHeader` | The head of every details sheet | `view_details_header.xml`, `core/ui/DetailsHeader.kt` |
 | `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | the handle and header of each sheet layout |
 | `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link | `MaterialAlertDialogBuilder` dialogs |
@@ -562,7 +562,7 @@ settings, and restore them if a separate test explicitly changes them.
 - Schedule day: `res/layout/item_day_schedule.xml`, `feature/schedule/ui/DayScheduleAdapter.kt`.
 - Sport cards: `res/layout/item_sport_booking.xml`, the `Запись` lesson card `SportLessonCard` in
   `:shared:feature-sport`, details sheet `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt`.
-- Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsRenderer.kt`.
+- Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsScreen.kt` in `:shared:feature-settings`.
 - System surfaces: the quick-settings tile icon `res/drawable/ic_tile_qr.xml`
   (Material Symbols `qr_code`, white, no theme tint: SystemUI colours tile icons
   and resolves no app theme attributes); the shortcut icons

@@ -7,17 +7,3 @@ IcsExportSheet_empty
 IcsExportSheet_failed
 IcsExportSheet_preparing
 IcsExportSheet_ready
-SettingsScreen_compact-schedule-widget
-SettingsScreen_full-schedule-widget
-SettingsScreen_home
-SettingsScreen_maintenance
-SettingsScreen_privacy
-SettingsScreen_privacy-disabled
-SettingsScreen_privacy-error
-SettingsScreen_privacy-loading
-SettingsScreen_qr-widget
-SettingsScreen_recordbook
-SettingsScreen_root
-SettingsScreen_schedule
-SettingsScreen_services
-SettingsScreen_sport
