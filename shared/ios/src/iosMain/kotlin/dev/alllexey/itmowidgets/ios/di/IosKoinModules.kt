@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookIosModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
+import dev.alllexey.itmowidgets.feature.schedule.widget.scheduleWidgetIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
@@ -34,5 +35,7 @@ object IosKoinModules {
         settingsDataModule, settingsModule, settingsIosModule,
         // The recordbook graph with the BARS session on WebKit and the Keychain (IO-09d1); no screen yet (IO-09d2).
         recordbookModule, recordbookIosModule(platform),
+        // The schedule widgets' App Group timeline and the schedule widget refresh port (IO-10b).
+        scheduleWidgetIosModule,
     )
 }

@@ -79,6 +79,10 @@ targets:
       - path: Extensions/Widgets
       # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20).
       - path: Shared
+      # The design tokens and their SwiftUI colours (IO-06a) for the schedule widgets' surfaces and lesson types
+      # (IO-10b): the app's files by path, so a token regeneration reaches the widgets too.
+      - path: Sources/DesignSystem/Tokens.generated.swift
+      - path: Sources/DesignSystem/ItmoTheme.swift
     configFiles:
       Debug: Config/Widgets.xcconfig
       Release: Config/Widgets.xcconfig
@@ -107,6 +111,9 @@ targets:
     platform: iOS
     sources:
       - path: Tests/UnitTests
+      # LS-3's reference timeline, which ScheduleTimelineTests decodes (IO-10b): the Kotlin fixture by path, never a copy.
+      - path: ../shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json
+        buildPhase: resources
     configFiles:
       Debug: Config/UnitTests.xcconfig
       Release: Config/UnitTests.xcconfig

@@ -21,12 +21,14 @@ final class SnapshotReaderTests: XCTestCase {
         XCTAssertNil(SessionFile.read(fromContainer: container))
         XCTAssertNil(QrPassSnapshot.read(fromContainer: container))
         XCTAssertNil(QrWidgetReveal.read(fromContainer: container))
+        XCTAssertNil(LessonTimeline.read(fromContainer: container))
     }
 
     func testNoContainerReadsAsNothing() {
         XCTAssertNil(SessionFile.read(fromContainer: nil))
         XCTAssertNil(QrPassSnapshot.read(fromContainer: nil))
         XCTAssertNil(QrWidgetReveal.read(fromContainer: nil))
+        XCTAssertNil(LessonTimeline.read(fromContainer: nil))
     }
 
     // MARK: Corrupt files
@@ -36,9 +38,11 @@ final class SnapshotReaderTests: XCTestCase {
             try write(corrupt, to: SessionFile.fileName)
             try write(corrupt, to: QrPassSnapshot.fileName)
             try write(corrupt, to: QrWidgetReveal.fileName)
+            try write(corrupt, to: LessonTimeline.fileName)
             XCTAssertNil(SessionFile.read(fromContainer: container), corrupt)
             XCTAssertNil(QrPassSnapshot.read(fromContainer: container), corrupt)
             XCTAssertNil(QrWidgetReveal.read(fromContainer: container), corrupt)
+            XCTAssertNil(LessonTimeline.read(fromContainer: container), corrupt)
         }
     }
 
@@ -56,10 +60,12 @@ final class SnapshotReaderTests: XCTestCase {
         try write(#"{"version": 2, "value": {"isu": 1, "demo": false, "alertsAllowed": true}}"#, to: SessionFile.fileName)
         try write(#"{"version": 2, "value": {"revealedUntil": "2026-09-01T08:00:00Z"}}"#, to: QrWidgetReveal.fileName)
         try write(#"{"version": 2, "value": {"rows": 21}}"#, to: QrPassSnapshot.fileName)
+        try write(#"{"version": 2, "value": {"entries": []}}"#, to: LessonTimeline.fileName)
 
         XCTAssertNil(SessionFile.read(fromContainer: container))
         XCTAssertNil(QrWidgetReveal.read(fromContainer: container))
         XCTAssertNil(QrPassSnapshot.read(fromContainer: container))
+        XCTAssertNil(LessonTimeline.read(fromContainer: container))
     }
 
     // MARK: Files of this version
@@ -84,6 +90,15 @@ final class SnapshotReaderTests: XCTestCase {
         let text = try String(contentsOf: container.appendingPathComponent("qr-widget-v1.json"), encoding: .utf8)
         XCTAssertTrue(text.contains(#""version":1"#), text)
         XCTAssertTrue(text.contains(#""revealedUntil":"2026-09-01T08:01:00.250Z""#), text)
+    }
+
+    func testTheScheduleTimelineReadsFromTheContainer() throws {
+        let fixture = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "schedule-widget-timeline-v1", withExtension: "json"))
+        let value = try String(contentsOf: fixture, encoding: .utf8)
+        try write(#"{"version": 1, "value": \#(value)}"#, to: "schedule-timeline-v1.json")
+
+        let timeline = try XCTUnwrap(LessonTimeline.read(fromContainer: container))
+        XCTAssertEqual(timeline.entries.count, 10)
     }
 
     func testTheSpoilerOptionDefaultsToOnAndFollowsTheFile() throws {
