@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// The app's root: the session gate (the ITMO.ID sign-in page while signed out), then the tab bar with one
-/// `NavigationStack` per tab, the demo banner above the tab bar while the demo session is open, and the shell's sheets.
+/// The app's root: the session gate (the sign-in screen while signed out, the first-run flow before the tabs of a
+/// new account), then the tab bar with one `NavigationStack` per tab, the demo banner above the tab bar while the demo
+/// session is open, and the shell's sheets.
 struct ShellView: View {
     @Bindable var router: AppRouter
     let session: ShellSession
@@ -9,7 +10,10 @@ struct ShellView: View {
     var body: some View {
         content
             .onChange(of: session.state, initial: true) { _, state in
-                router.sessionChanged(state.sessionState, onboarding: state.onboarding)
+                router.sessionChanged(state.sessionState, onboarding: session.onboarding)
+            }
+            .onChange(of: session.onboarding) { _, onboarding in
+                router.sessionChanged(session.state.sessionState, onboarding: onboarding)
             }
             .task { await session.follow() }
             .sheet(item: $router.sheet) { sheet in
@@ -19,23 +23,25 @@ struct ShellView: View {
 
     @ViewBuilder
     private var content: some View {
-        switch session.state {
+        switch session.surface {
         case .loading:
             ItmoLoadingView()
                 .frame(maxHeight: .infinity)
                 .accessibilityIdentifier("shell.gate.loading")
-        case .signedOut:
-            if let gateway = session.gateway {
-                ItmoSignInScreen(gateway: gateway)
+        case .auth:
+            if session.gateway != nil {
+                AuthScreen()
             } else {
                 FixtureSignInGate(signIn: session.signIn)
             }
-        case .demo, .signedIn:
+        case .onboarding:
+            OnboardingScreen(finished: session.onboardingFinished)
+        case let .tabs(demo):
             ShellTabs(selection: $router.selectedTab) { tab in
                 ShellStack(
                     tab: tab,
                     router: router,
-                    isDemo: session.state == .demo,
+                    isDemo: demo,
                     leaveDemo: { session.signOut() },
                     signOut: { session.signOut() }
                 )

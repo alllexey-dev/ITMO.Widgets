@@ -3,8 +3,9 @@
 The iOS client is a SwiftUI shell around the shared Compose Multiplatform screens, with WidgetKit extensions and a
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
 umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with placeholder roots, gated on
-the shared session with the ITMO.ID sign-in page (see Shell and routes, Sign-in), the QR pass is its first Compose
-screen, the widget bundle is empty and the notification service passes notifications through unchanged.
+the shared session with the sign-in screen and the first-run flow (see Shell and routes, Sign-in), the QR pass is
+its first Compose screen, the widget bundle is empty and the notification service passes notifications through
+unchanged.
 
 ## Prerequisites
 
@@ -135,14 +136,16 @@ placeholders, and the me root holds the sign-out (Android's confirmation, `Sessi
   tab bar only, with no swipe between them (owner decision 2026-10-06; IO-SW1 dropped, see design.md "Tab swipe").
 - Stacks and sheets. Each tab has one `NavigationStack` whose path the router holds; sheets open at the medium
   detent and drag to large.
-- Session gate. `ShellSession` maps `SessionRepository.state` through `SessionGateway`: `Initializing` and
-  `SigningOut` show the loading gate, `SignedOut` and `ReauthenticationRequired` the sign-in page (see Sign-in), a
-  signed-in session the tabs, the demo one with the demo banner (`ItmoDemoBanner`) above the tab bar, below the
-  tab's stack. The banner's sign-in is `SessionRepository.signOut()`, which leaves the demo for the sign-in page as
-  on Android. A Debug build launched with `-itmoShellSession loading|signed-out|demo|signed-in` runs a fixture
-  session instead, whose signed-out gate signs in with one tap; UI tests pass it through
+- Session gate. `ShellSession` maps `SessionRepository.state` and `OnboardingGateViewModel`'s flag through
+  `SessionGateway` onto `ShellGate.surface`, as Android's shell: `Initializing` and `SigningOut` show the loading
+  gate, `SignedOut` and `ReauthenticationRequired` the sign-in screen (see Sign-in), a signed-in session the
+  first-run flow while the flag is `Required` (the loading gate while it is still unread) and the tabs after it, the
+  demo session the tabs at once with the demo banner (`ItmoDemoBanner`) above the tab bar, below the tab's stack.
+  The banner's sign-in is `SessionRepository.signOut()`, which leaves the demo for the sign-in screen as on Android.
+  A Debug build launched with `-itmoShellSession loading|signed-out|demo|signed-in` runs a fixture session instead,
+  whose signed-out gate signs in with one tap and whose flow counts as passed; UI tests pass it through
   `XCUIApplication.itmo(session:)`, and the scheme's test action passes `signed-in` to the host app of the hosted
-  tests, so they never open the ITMO.ID page.
+  tests, so they never open the sign-in screen.
 - Chrome rule (the owner may veto at T12). A CMP route draws its own DS-03 top bar and hides the SwiftUI navigation
   bar (`shellChrome(.compose)`); a SwiftUI screen keeps the native bar (`.native`). Hiding the bar turns UIKit's
   edge swipe back off, so the compose chrome turns it on again for the stack above its root;
@@ -256,19 +259,40 @@ inside `FileCrossProcessLock("myitmo-refresh")` and re-reads the item once it ho
 notification service find the same expired token only the first refreshes. A value that does not parse is dropped
 (signed out); a Keychain failure is thrown and drops nothing.
 
-Sign-in (IO-07a, SP-21 path (a)). The signed-out gate is `ItmoSignInScreen` (`Sources/Features/Auth/`): my.itmo.ru
-in a `WKWebView` on `WKWebsiteDataStore.default()`, where the user types the credentials on ITMO.ID's own pages.
-Android's `app/src/main/assets/token_refresh_interceptor.js` is bundled by path (`project.yml`, no copy) and runs
-at document start in the main frame, after a bridge script that defines `window.ItmoAuthBridge` only on
+Sign-in (IO-07a, IO-07b, SP-21 path (a)). The signed-out gate is `AuthScreen` (`Sources/Features/Auth/`), Android's
+`AuthFragment` in SwiftUI over the shared `AuthViewModel`: Android's `auth_logo` (bundled by path from
+`app/src/main/res/drawable-nodpi`, no copy), the app name, the three feature lines, `auth_login_itmo_id`, which opens
+`ItmoSignInScreen` as a full-screen cover, and `auth_login_refresh_token`, an alert with a secure field that calls
+`signInWithRefreshToken`. Five taps on the logo, each within 1.5 s (`DemoEntryTaps`, times from
+`ProcessInfo.systemUptime`), start the demo with a success haptic and a VoiceOver announcement of `demo_entered`;
+the logo stays hidden from VoiceOver, as on Android.
+
+`ItmoSignInScreen` is Android's `LoginActivity`: my.itmo.ru in a `WKWebView` on `WKWebsiteDataStore.default()` under
+a close button and `auth_web_title`, where the user types the credentials on ITMO.ID's own pages. Its page state is
+the shared `InteractiveLoginViewModel` (`ItmoSignInModel` forwards the browser's reports to it and counts the
+reloads). Android's `app/src/main/assets/token_refresh_interceptor.js` is bundled by path (`project.yml`, no copy)
+and runs at document start in the main frame, after a bridge script that defines `window.ItmoAuthBridge` only on
 `https://my.itmo.ru/login/callback`; its `postTokens` goes to the `postTokens` script message handler, which takes a
-string from the main frame of `https://my.itmo.ru` only, and the model hands it to
-`SessionRepository.completeItmoIdLogin` only while the page is the callback (`ItmoAuthUrls.isTokenCallback`,
-Android's `ItmoAuthUrlPolicy`), one hand-over at a time. The main frame stays on https pages
-(`HttpsNavigationPolicy`, as on Android, for VK and other providers); no new windows. A failed page or sign-in shows
-an error with a retry (`auth_web_error`, Android's `auth_error_*` mapping); a retry reloads the sign-in page. The
-website data is not cleared before the page loads, unlike Android: sign-out has cleared it, and an expired session
-keeps ITMO.ID's SSO cookies for the re-sign-in. Path (b) (own PKCE with `decidePolicyFor`, SP-21's recommendation)
-needs the code exchange in shared Kotlin first; IO-07b moves the page onto `InteractiveLoginViewModel`.
+string from the main frame of `https://my.itmo.ru` only, and the ViewModel hands it to
+`SessionRepository.completeItmoIdLogin` only while the page is the callback (`ItmoAuthUrlPolicy.isTokenCallback`),
+one hand-over at a time; `Completed` closes the cover. The main frame stays on https pages (`HttpsNavigationPolicy`,
+as on Android, for VK and other providers); no new windows. A failed page or sign-in shows an error with a retry
+(`auth_web_error`, Android's `auth_error_*` mapping); a retry reloads the sign-in page. The website data is not
+cleared before the page loads, unlike Android: sign-out has cleared it, and an expired session keeps ITMO.ID's SSO
+cookies for the re-sign-in. Path (b) (own PKCE with `decidePolicyFor`, SP-21's recommendation) needs the code
+exchange in shared Kotlin first.
+
+First-run flow (IO-07b). `OnboardingScreen` (`Sources/Features/Onboarding/`) is Android's flow in SwiftUI over the
+shared `OnboardingViewModel`, which gets a fresh `SavedStateHandle` as a Koin parameter (`OnboardingIosParameters`):
+`ScreenViewModelStore` has no saved-state registry, so a relaunch starts at the first step. The steps and their order
+are Android's; a widget step shows how to add the widget (`ios_onboarding_widget_howto_*`; iOS lets no app place one,
+so `pinSupported` is false) beside its appearance rows from `WidgetAppearanceRepository`, without the custom spoiler
+image row; the services step is the shared opt-in; the notifications step asks with
+`UNUserNotificationCenter.requestAuthorization` and then opens the app's notification settings
+(`ios_onboarding_notifications_configure` once allowed). The answer is the step's status; IO-13a feeds it into
+`alertsAllowed`. A back button above the step replaces Android's system back. A Debug build launched with
+`-itmoOnboarding` shows the flow over the demo session, which otherwise skips it, until the flow ends (UI tests,
+`XCUIApplication.itmoOnboarding()`); finishing it there stores the flag as a real account would.
 
 Sign-out. Three `SessionDataCleaner`s run with the shared ones: the Keychain (every item of the service), the App
 Group container (every file but the `locks` directory) and WebKit's website data, which Swift removes through
@@ -293,8 +317,15 @@ the Darwin engine, `MyItmoClient`, Core 2.0's `BackendClient`, `PlatformActions`
   it.
 - Launch. `App.init` starts the graph, builds the shell's session, then calls `SessionRepository.initialize()`. A
   Debug build launched with `-itmoDemo` first opens the demo session unless `DemoMode` is already on
-  (`startDemo()`), so the gate never passes the sign-in page; every UI test passes it through
-  `XCUIApplication.itmo()`, until IO-07b's five taps.
+  (`startDemo()`), so the gate never passes the sign-in screen; most UI tests pass it through
+  `XCUIApplication.itmo()`. One launched with `-itmoSignedOut` signs out first (the demo or a stored session), so it
+  opens on the sign-in screen (`XCUIApplication.itmoSignedOut()`, the five taps' UI test).
+- The first-run flow and the sign-in screens. `authModule`, `onboardingDataModule` and `onboardingModule` of
+  `:shared:feature-account`, and `settingsDataModule` of `:shared:feature-settings` for the opt-in and the widget
+  appearance the flow writes, on `settingsIosModule` (`shared/feature-settings/src/iosMain/.../settings/di/`):
+  `WidgetRefreshRequester` reloads the timelines of every widget kind, and `CustomSpoilerRepository` has no image on
+  iOS. `iosCoreModule` adds `WidgetSettingsPreferences` and `UtilityStorage` (the first-run flag; the version is
+  `CFBundleShortVersionString`). `Shared` exports `:shared:feature-account`, whose ViewModels SwiftUI owns.
 - `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
   controller for the share sheet.
 - Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`; dev

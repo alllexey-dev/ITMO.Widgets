@@ -113,7 +113,7 @@ final class ShellUITests: XCTestCase {
     }
 
     /// The shared session (IO-07a): the me root's sign-out ends the demo through `SessionRepository`, and the gate
-    /// shows the ITMO.ID sign-in page instead of the tabs.
+    /// shows the sign-in screen instead of the tabs (IO-07b).
     func testSignOutOfTheSharedDemoOpensTheSignInPage() {
         let app = XCUIApplication.itmo()
         app.launch()
@@ -127,7 +127,7 @@ final class ShellUITests: XCTestCase {
         attachScreenshot(named: "sign-out-confirm")
         confirm.tap()
 
-        XCTAssertTrue(element(app, "auth.signIn").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "auth.screen").waitForExistence(timeout: stepTimeout))
         XCTAssertFalse(app.tabBars.firstMatch.exists)
         XCTAssertFalse(element(app, "kit.demoBanner").exists)
     }

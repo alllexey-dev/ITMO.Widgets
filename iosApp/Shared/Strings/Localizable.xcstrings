@@ -61,6 +61,42 @@
         }
       }
     },
+    "ios_onboarding_notifications_configure" : {
+      "comment" : "Generated from strings_ios_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настроить в iOS"
+          }
+        }
+      }
+    },
+    "ios_onboarding_widget_howto_text" : {
+      "comment" : "Generated from strings_ios_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удерживайте пустое место на экране «Домой», нажмите «Изменить», затем «Добавить виджет» и выберите ITMO.Widgets."
+          }
+        }
+      }
+    },
+    "ios_onboarding_widget_howto_title" : {
+      "comment" : "Generated from strings_ios_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как добавить виджет"
+          }
+        }
+      }
+    },
     "ios_widget_qr_expired" : {
       "comment" : "Generated from strings_ios.xml",
       "extractionState" : "manual",

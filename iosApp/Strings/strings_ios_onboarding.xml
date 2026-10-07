@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy only the iOS sign-in and first-run screens show (IO-07b, ADR 0028): exported to Localizable.xcstrings. -->
+<resources>
+    <!-- A widget step: iOS lets no app place a widget, so the step explains how instead of a pin button. -->
+    <string name="ios_onboarding_widget_howto_title">Как добавить виджет</string>
+    <string name="ios_onboarding_widget_howto_text">Удерживайте пустое место на экране «Домой», нажмите «Изменить», затем «Добавить виджет» и выберите ITMO.Widgets.</string>
+    <!-- The notifications step once allowed: opens the app's notification settings. -->
+    <string name="ios_onboarding_notifications_configure">Настроить в iOS</string>
+</resources>

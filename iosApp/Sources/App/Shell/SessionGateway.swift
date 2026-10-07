@@ -1,23 +1,27 @@
 import Shared
 
-/// What the shell and the sign-in page need from the shared `SessionRepository` (KM-11h1). A Swift protocol, so the
-/// hosted tests drive the gate and the sign-in with a fake instead of a Kotlin session.
+/// What the shell's gate needs from the shared session (KM-11h1): the `SessionRepository` states, the first-run flag
+/// as `OnboardingGateViewModel` answers it (IO-07b) and the sign-out. A Swift protocol, so the hosted tests drive the
+/// gate with a fake instead of a Kotlin session.
 @MainActor
 protocol SessionGateway: AnyObject {
     /// The session states, the current one first, until the caller stops iterating.
     func states() -> AsyncStream<SessionState>
 
-    /// Hands the ITMO.ID token response the callback page posted to the session.
-    func completeItmoIdLogin(tokenResponseJson: String) async -> AppResult
+    /// The first-run flag, the current one first, until the caller stops iterating; `unknown` until a signed-in
+    /// session has read it.
+    func onboardingStates() -> AsyncStream<OnboardingStatus>
 
     /// Ends the session, the demo included; every `SessionDataCleaner` runs once, inside the repository.
     func signOut() async
 }
 
-/// The app's gateway over the graph's `SessionRepository`.
+/// The app's gateway over the graph's `SessionRepository` and an `OnboardingGateViewModel` it keeps for the app's
+/// lifetime, as Android's activity keeps its gate.
 @MainActor
 final class SharedSessionGateway: SessionGateway {
     private let repository: SessionRepository
+    private let store = ScreenViewModelStore()
 
     init(repository: SessionRepository) {
         self.repository = repository
@@ -32,27 +36,47 @@ final class SharedSessionGateway: SessionGateway {
     }
 
     func states() -> AsyncStream<SessionState> {
-        let flow = repository.state
-        return AsyncStream { continuation in
+        Self.stream(of: repository.state) { $0 }
+    }
+
+    func onboardingStates() -> AsyncStream<OnboardingStatus> {
+        guard let gate = store.resolve(type: OnboardingGateViewModel.self) as? OnboardingGateViewModel else {
+            preconditionFailure("Koin resolved no OnboardingGateViewModel")
+        }
+        return Self.stream(of: gate.uiState, OnboardingStatus.init)
+    }
+
+    func signOut() async {
+        try? await repository.signOut()
+    }
+
+    deinit {
+        store.clear()
+    }
+
+    private static func stream<Value, Element>(
+        of flow: SkieSwiftStateFlow<Value>,
+        _ transform: @escaping (Value) -> Element
+    ) -> AsyncStream<Element> {
+        AsyncStream { continuation in
             let task = Task { @MainActor in
-                for await state in flow {
-                    continuation.yield(state)
+                for await value in flow {
+                    continuation.yield(transform(value))
                 }
                 continuation.finish()
             }
             continuation.onTermination = { _ in task.cancel() }
         }
     }
+}
 
-    func completeItmoIdLogin(tokenResponseJson: String) async -> AppResult {
-        do {
-            return try await repository.completeItmoIdLogin(tokenResponseJson: tokenResponseJson)
-        } catch {
-            return AppResultFailure(error: AppErrorUnknown(cause: nil))
+extension OnboardingStatus {
+    /// Android's `OnboardingGate.status` (`ShellHost`): the frame before the flag is read stays unknown.
+    init(_ gate: OnboardingGate) {
+        switch gate {
+        case .unknown: self = .unknown
+        case .required: self = .required
+        case .passed: self = .passed
         }
-    }
-
-    func signOut() async {
-        try? await repository.signOut()
     }
 }

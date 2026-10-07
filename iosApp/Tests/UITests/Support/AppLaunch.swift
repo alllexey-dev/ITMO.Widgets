@@ -11,6 +11,18 @@ extension XCUIApplication {
         return app
     }
 
+    /// The app on the shared session, signed out first (`-itmoSignedOut`, IO-07b): the sign-in screen, never the demo.
+    static func itmoSignedOut() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-itmoSignedOut"]
+        return app
+    }
+
+    /// The shared demo session with the first-run flow over it until the flow ends (`-itmoOnboarding`, IO-07b).
+    static func itmoOnboarding() -> XCUIApplication {
+        itmo(arguments: ["-itmoOnboarding"])
+    }
+
     /// The app on a fixture session of the shell (`ShellFixtures.sessionArgument`, IO-06b).
     static func itmo(session: ShellFixtureSession, arguments: [String] = []) -> XCUIApplication {
         itmo(arguments: ["-itmoShellSession", session.rawValue] + arguments)
