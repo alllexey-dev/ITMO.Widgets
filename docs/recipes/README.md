@@ -9,6 +9,10 @@ worked, the traps and the files to copy. One line per recipe.
 - [Screen in a shared module](shared-module-screen.md): a stateless CMP
   screen in `shared/feature-<x>`, its route, ViewModel and Koin module,
   strings, icons, previews, goldens, host tests and the Android and iOS hosts.
+- [iOS host](ios-host.md): a shared feature on iOS: its CMP route in the
+  SwiftUI `NavigationStack`, SwiftUI screens over a shared ViewModel, the Koin
+  start, the App Group snapshot of a widget, the Control, App Shortcuts and
+  quick actions, and strings from the `.xcstrings` tables.
 - [Endpoint end to end](endpoint-end-to-end.md): a Backend route from the
   privacy boundary through fixtures, Core 2.0 and the gated repository to the
   screen, and a MyITMO endpoint from MyItmoApi through the pin to the data
