@@ -730,7 +730,12 @@ settings, and restore them if a separate test explicitly changes them.
   and accessibility action when the identifier is absent).
 - Avatar image failure: `core/ui/AvatarView.kt` keeps current initials ready and
   guards the posted Glide fallback against a newer binding or successful load.
-- Friend picker: `res/layout/dialog_friend_selector.xml`.
+- Friend picker: Compose in `:shared:feature-social`
+  (`feature/friendselector/ui/FriendSelectorSheetContent.kt`) on the kit sheet host,
+  `FriendSelectorDialogFragment` at 90 % height. Rows are the kit's `UserSelectionRow`
+  with `onOpen` (a closed schedule ends in a lock and opens the profile, a long
+  press opens it from any row); the chosen row lies on `colorSecondaryContainer`;
+  the scope is `ItmoButtonGroup`.
 - Home feed: Compose in `:shared:feature-home`
   (`feature/home/ui/HomeScreen.kt`, each card in its feature's `ui/home`), see
   [Home and quick actions](features/home.md#feed). The schedule changes and
@@ -753,4 +758,4 @@ settings, and restore them if a separate test explicitly changes them.
   `feature/schedule/ui/details/LessonDetailsSections.kt` of `:shared:feature-schedule` and
   the informational flow row between teacher and place of the kit's `DetailsHeader`.
 - Visual tests: `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
-  `feature/friendselector/SelectionRowsTest.kt`, `feature/reviews/ReviewEditorVisualTest.kt`.
+  `feature/reviews/ReviewEditorVisualTest.kt`.

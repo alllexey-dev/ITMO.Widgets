@@ -15,10 +15,14 @@ import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.components.controls.RecordingHaptics
@@ -122,6 +126,62 @@ class UserRowTest {
             .assertHasNoClickAction()
 
         assertEquals(1, picks)
+        assertTouchTargets()
+    }
+
+    @Test
+    fun rowsThatOpenThePersonPickOnTapOpenOnLongPressAndAClosedOneOpensOnTap() = runComposeUiTest {
+        val events = mutableListOf<String>()
+        setContent {
+            ItmoTheme {
+                Column {
+                    UserSelectionRow(
+                        NAME,
+                        pictureUrl = null,
+                        selected = true,
+                        onSelect = { events += "pick $NAME" },
+                        mode = SelectionMode.Single,
+                        onOpen = { events += "open $NAME" },
+                    )
+                    UserSelectionRow(
+                        OTHER,
+                        pictureUrl = null,
+                        selected = false,
+                        onSelect = { events += "pick $OTHER" },
+                        onOpen = { events += "open $OTHER" },
+                    )
+                    UserSelectionRow(
+                        CLOSED,
+                        pictureUrl = null,
+                        selected = true,
+                        onSelect = null,
+                        status = GROUP,
+                        onOpen = { events += "open $CLOSED" },
+                    )
+                }
+            }
+        }
+
+        onNodeWithText(NAME)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+            .assertIsSelected()
+            .performClick()
+            .performTouchInput { longClick() }
+        onNodeWithText(OTHER)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ToggleableState, ToggleableState.Off))
+            .performClick()
+        onNodeWithText(CLOSED)
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ToggleableState))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Selected))
+            .assertHasClickAction()
+            .performClick()
+            .performTouchInput { longClick() }
+
+        assertEquals(
+            listOf("pick $NAME", "open $NAME", "pick $OTHER", "open $CLOSED", "open $CLOSED"),
+            events,
+        )
         assertTouchTargets()
     }
 

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.designsystem.components.rows
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
@@ -33,6 +37,7 @@ import dev.alllexey.itmowidgets.designsystem.tokens.IosMetrics
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
+import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import org.jetbrains.compose.resources.painterResource
 
 /** A button at the end of a [UserRow]: its [label] (`Принять`, `Отклонить`) and what it does. */
@@ -81,7 +86,9 @@ fun UserRow(
  * A person the user picks from a list, such as friends to share with: the whole row is the target, a check in
  * `primary` shows the selection, and TalkBack reads the row once with its selected state ([mode] decides radio button
  * or checkbox). A closed row ([onSelect] null, a private profile) is neither a target nor selected and never shows the
- * check. Under the iOS style the check is UIKit's checkmark accessory and a pick plays the selection or toggle haptic.
+ * check. With [onOpen] the row also leads to the person (the friend picker's profile): a long press on any row calls
+ * it, and a closed row becomes a target for it that ends in a lock instead of staying inert. Under the iOS style the
+ * check is UIKit's checkmark accessory and a pick plays the selection or toggle haptic.
  */
 @Composable
 fun UserSelectionRow(
@@ -93,16 +100,40 @@ fun UserSelectionRow(
     subtitle: String? = null,
     status: String? = null,
     mode: SelectionMode = SelectionMode.Multiple,
+    onOpen: (() -> Unit)? = null,
 ) {
     val pick = rememberSelectionFeedback(onSelect, mode)
     val interaction = when {
+        onOpen != null -> pickOrOpen(selected, pick, onOpen, mode)
         pick == null -> Modifier.semantics(mergeDescendants = true) {}
         mode == SelectionMode.Single -> Modifier.selectable(selected, role = Role.RadioButton, onClick = pick)
         else -> Modifier.toggleable(selected, role = Role.Checkbox, onValueChange = { pick() })
     }
     UserRowLayout(name, pictureUrl, subtitle, status, modifier.then(interaction)) {
-        if (onSelect != null) TrailingIcon(Modifier.alpha(if (selected) 1f else 0f), check = true)
+        when {
+            onSelect != null -> TrailingIcon(Modifier.alpha(if (selected) 1f else 0f), check = true)
+            onOpen != null -> LockIcon()
+        }
     }
+}
+
+/**
+ * The selection semantics of [UserSelectionRow] on a click that also takes a long press: a pick on tap, [open] on a
+ * long press; a closed row ([pick] null) opens on both.
+ */
+private fun pickOrOpen(selected: Boolean, pick: (() -> Unit)?, open: () -> Unit, mode: SelectionMode): Modifier {
+    if (pick == null) return Modifier.combinedClickable(onLongClick = open, onClick = open)
+    val single = mode == SelectionMode.Single
+    val state = if (single) {
+        Modifier.semantics { this.selected = selected }
+    } else {
+        Modifier.semantics { toggleableState = ToggleableState(selected) }
+    }
+    return state.combinedClickable(
+        role = if (single) Role.RadioButton else Role.Checkbox,
+        onLongClick = open,
+        onClick = pick,
+    )
 }
 
 @Composable
@@ -213,6 +244,17 @@ private fun TrailingIcon(modifier: Modifier, check: Boolean = false) {
         modifier = modifier.size(TrailingIconSize),
         tint = if (check) ItmoTheme.colorScheme.primary else ItmoTheme.colorScheme.onSurfaceVariant,
     )
+}
+
+/** The closed row of a [UserSelectionRow] that leads to the person: `item_friend_selector.xml`'s lock. */
+@Composable
+private fun LockIcon() {
+    val tint = if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
+        ItmoTheme.iosColors.secondaryLabel
+    } else {
+        ItmoTheme.colorScheme.onSurfaceVariant
+    }
+    Icon(painterResource(Res.drawable.ic_lock), contentDescription = null, Modifier.size(TrailingIconSize), tint = tint)
 }
 
 /** `item_user_row.xml`'s 48 dp avatar. */
