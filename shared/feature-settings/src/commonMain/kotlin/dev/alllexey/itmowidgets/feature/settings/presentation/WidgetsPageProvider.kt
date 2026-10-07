@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
@@ -42,10 +43,14 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_title
 import kotlinx.coroutines.CancellationException
 import org.jetbrains.compose.resources.StringResource
 
-/** The compact and full schedule widgets and the QR pass widget with its tile; each page draws its widget above. */
+/**
+ * The compact and full schedule widgets and the QR pass widget with its tile; each page draws its widget above. The
+ * tile, the spoiler animation and the custom spoiler image are listed where the platform offers them.
+ */
 class WidgetsPageProvider(
     private val repository: SettingsRepository,
-    private val tileAccess: QuickSettingsTileAccess
+    private val tileAccess: QuickSettingsTileAccess,
+    private val capabilities: PlatformCapabilities = EveryPlatformCapability
 ) : SettingsPageProvider {
 
     override val pages = setOf(
@@ -231,45 +236,50 @@ class WidgetsPageProvider(
                     )
                 )
             ),
-            SettingSection(
-                title = UiText.Res(Res.string.settings_group_spoiler),
-                items = listOf(
-                    SettingItem.Choice(
-                        id = SettingRowId.QR_ANIMATION,
-                        title = UiText.Res(Res.string.settings_qr_animation_title),
-                        value = qr.animationType.label(),
-                        options = QrAnimationType.entries.map { animation ->
-                            ChoiceOption(animation.name, animation.label())
-                        },
-                        selectedOptionKey = qr.animationType.name,
-                        enabled = qr.spoilerEnabled
-                    ),
-                    SettingItem.Action(
-                        id = SettingRowId.QR_CUSTOM_IMAGE,
-                        title = UiText.Res(CoreRes.string.settings_qr_custom_image_title),
-                        value = UiText.Res(
-                            if (state.hasCustomSpoiler) {
-                                CoreRes.string.settings_qr_custom_image_selected
-                            } else {
-                                CoreRes.string.settings_qr_custom_image_default
-                            }
-                        ),
-                        trailingIcon = AppIcon.CHEVRON_RIGHT,
-                        enabled = qr.spoilerEnabled && !state.imageBusy
-                    ),
-                    SettingItem.Action(
-                        id = SettingRowId.QR_RESET_IMAGE,
-                        title = UiText.Res(Res.string.settings_qr_reset_image_title),
-                        enabled = qr.spoilerEnabled && state.hasCustomSpoiler && !state.imageBusy
-                    )
-                )
-            )
+            spoilerSection(state)
         )
+    }
+
+    /** The spoiler's animation and image; null when the platform offers neither. */
+    private fun spoilerSection(state: SettingsPageState): SettingSection? {
+        val qr = state.local.qrWidget
+        val items = listOfNotNull(
+            SettingItem.Choice(
+                id = SettingRowId.QR_ANIMATION,
+                title = UiText.Res(Res.string.settings_qr_animation_title),
+                value = qr.animationType.label(),
+                options = QrAnimationType.entries.map { animation ->
+                    ChoiceOption(animation.name, animation.label())
+                },
+                selectedOptionKey = qr.animationType.name,
+                enabled = qr.spoilerEnabled
+            ).takeIf { capabilities.qrWidgetAnimation },
+            SettingItem.Action(
+                id = SettingRowId.QR_CUSTOM_IMAGE,
+                title = UiText.Res(CoreRes.string.settings_qr_custom_image_title),
+                value = UiText.Res(
+                    if (state.hasCustomSpoiler) {
+                        CoreRes.string.settings_qr_custom_image_selected
+                    } else {
+                        CoreRes.string.settings_qr_custom_image_default
+                    }
+                ),
+                trailingIcon = AppIcon.CHEVRON_RIGHT,
+                enabled = qr.spoilerEnabled && !state.imageBusy
+            ).takeIf { capabilities.qrCustomSpoiler },
+            SettingItem.Action(
+                id = SettingRowId.QR_RESET_IMAGE,
+                title = UiText.Res(Res.string.settings_qr_reset_image_title),
+                enabled = qr.spoilerEnabled && state.hasCustomSpoiler && !state.imageBusy
+            ).takeIf { capabilities.qrCustomSpoiler }
+        )
+        if (items.isEmpty()) return null
+        return SettingSection(title = UiText.Res(Res.string.settings_group_spoiler), items = items)
     }
 
     /** Android 13+ asks the system to add the tile; the row leaves once the tile is known to be added. */
     private fun qrTileSection(local: LocalSettings): SettingSection? {
-        if (!tileAccess.canRequestAdd() || local.qrTileAdded) return null
+        if (!capabilities.quickSettingsTile || !tileAccess.canRequestAdd() || local.qrTileAdded) return null
         return SettingSection(
             title = null,
             items = listOf(

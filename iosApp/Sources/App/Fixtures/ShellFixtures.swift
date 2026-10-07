@@ -21,7 +21,7 @@ enum ShellFixtures {
 }
 
 /// A tab root: the tab's title in its own top bar and the tab's empty state; home has the entry to the QR pass, me
-/// the sign-out (with Android's confirmation) until the Compose Me tab is hosted.
+/// the settings and the sign-out (with Android's confirmation) until the Compose Me tab is hosted.
 struct FixtureRootScreen: View {
     let tab: ShellTab
     let router: AppRouter
@@ -38,6 +38,13 @@ struct FixtureRootScreen: View {
                 }
                 .padding(.horizontal, ItmoSpacing.screenMargin)
                 .accessibilityIdentifier("home.openQr")
+            }
+            if tab == .me {
+                ItmoProgressButton(title: AppStrings.string("settings_title"), symbol: .settings) {
+                    router.open(AppRoutes.Settings(page: AppRoutes.Settings.companion.ROOT_PAGE))
+                }
+                .padding(.horizontal, ItmoSpacing.screenMargin)
+                .accessibilityIdentifier("me.openSettings")
             }
             if tab == .me, let signOut {
                 ItmoProgressButton(title: AppStrings.string("me_sign_out"), symbol: .logout) {

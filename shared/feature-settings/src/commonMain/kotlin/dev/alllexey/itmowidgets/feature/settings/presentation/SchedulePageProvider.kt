@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
@@ -28,12 +29,14 @@ import kotlinx.coroutines.flow.combine
 
 /**
  * Schedule changes, sport auto sign in the schedule, and the calendar group. Only this page reads the calendar
- * state. It also handles the background work row, which the recordbook page shows too.
+ * state, and only where the platform offers calendar export. It also handles the background work row, which the
+ * recordbook page shows too.
  */
 class SchedulePageProvider(
     private val repository: SettingsRepository,
     private val tracking: ScheduleChangeTracking,
-    private val calendarSync: CalendarSync
+    private val calendarSync: CalendarSync,
+    private val capabilities: PlatformCapabilities = EveryPlatformCapability
 ) : SettingsPageProvider {
 
     override val pages = setOf(SettingsPage.SCHEDULE)
@@ -47,9 +50,13 @@ class SchedulePageProvider(
     )
 
     override fun observeState(page: SettingsPage, state: Flow<SettingsPageState>): Flow<SettingsPageState> =
-        combine(state, calendarSync.observeState()) { pageState, calendar -> pageState.copy(calendar = calendar) }
+        if (capabilities.calendarExport) {
+            combine(state, calendarSync.observeState()) { pageState, calendar -> pageState.copy(calendar = calendar) }
+        } else {
+            state
+        }
 
-    override fun sections(page: SettingsPage, state: SettingsPageState) = listOf(
+    override fun sections(page: SettingsPage, state: SettingsPageState) = listOfNotNull(
         SettingSection(
             title = null,
             items = listOfNotNull(
@@ -81,7 +88,7 @@ class SchedulePageProvider(
             ),
             footer = UiText.Res(Res.string.settings_schedule_footer)
         ),
-        calendarSection(state.calendar)
+        calendarSection(state.calendar).takeIf { capabilities.calendarExport }
     )
 
     override fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) {

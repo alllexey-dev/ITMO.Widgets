@@ -61,8 +61,9 @@ copies and never holds Russian text in Swift.
   `loc-key` only there), `InfoPlist` and `AppShortcuts` rows come from `build-logic/strings/apple-tables.properties`.
   Run it after changing a catalog file and commit the result; never edit a table by hand.
 - iOS-only copy (widget and Control texts, the Background App Refresh row, usage descriptions) lives in
-  `iosApp/Strings/strings_ios.xml`, Android syntax; later cards add `strings_ios_<area>.xml`. An Info.plist value
-  is an `InfoPlist.<key>` row, a shortcut phrase an `AppShortcuts.<phrase>` row.
+  `iosApp/Strings/strings_ios.xml`, Android syntax; later cards add `strings_ios_<area>.xml`
+  (`strings_ios_settings.xml`: the settings texts where the shared ones name Android). An Info.plist value is an
+  `InfoPlist.<key>` row, a shortcut phrase an `AppShortcuts.<phrase>` row.
 - Language. Every bundle has only the `ru` localization (`CFBundleDevelopmentRegion = ru`; XcodeGen also lists
   `Base` in `knownRegions`, which holds no files), so tables, Info.plist values and plural rules are Russian on an
   English iPhone. Compose Multiplatform instead takes plural rules from `NSLocale.preferredLanguages` ("5 пары"):
@@ -128,7 +129,8 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 
 The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Its session gate and demo banner follow
 the shared `SessionRepository` (see Core graph); until the IO-09x cards host the tab roots, the roots are
-placeholders, and the me root holds the sign-out (Android's confirmation, `SessionRepository.signOut()`).
+placeholders, and the me root holds the entry to settings and the sign-out (Android's confirmation,
+`SessionRepository.signOut()`).
 
 - Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
   sport, me. The recordbook is declared but hidden until IO-09d2 (no placeholder reaches App Review); home is
@@ -178,6 +180,35 @@ placeholders, and the me root holds the sign-out (Android's confirmation, `Sessi
 The URL scheme is the build setting `APP_URL_SCHEME` (the app target in `project.yml`), registered in the app's
 Info.plist as `CFBundleURLTypes`. Placed widgets and Controls keep their URLs, so the scheme and the route ids are
 frozen; `StableIdentifiersTests.testRouteUrls` pins them.
+
+## Settings and diagnostics
+
+Settings are SwiftUI screens over the shared page model (IO-08a): `Routes+Settings.swift` maps each
+`AppRoutes.Settings(page)` key to `Features/Settings/SettingsScreen`, which owns the page's `SettingsViewModel`
+(`settingsPageParameters(page:)` hands it the page as Android's navigation argument), and `AppRoutes.Diagnostics` to
+`Features/Diagnostics/DiagnosticsScreen`. Android's Compose pages are not used on iOS. The me root opens the root page.
+
+- Rendering. `SettingsForm` draws the provider's sections in a `Form`, one row type per `SettingItem`: a toggle, a
+  menu picker, a navigation row that pushes the next page's key onto the tab's stack, an action row, a read-only
+  value. Rows carry `settings.row.<SettingRowId.key>`. Nothing renders until the page is `loaded`, so stored values
+  never animate in.
+- Platform rows. The page providers hide what `PlatformCapabilities` does not offer: the recordbook page (mark
+  tracking), the calendar rows, the quick settings tile, the spoiler animation and the custom spoiler image.
+- iOS copy. `SettingsIosCopy` replaces the shared texts that name Android with `strings_ios*.xml` rows: the
+  notification values and the background work row, which is Background App Refresh on iOS
+  (`IosBackgroundWorkAccess` reads `UIApplication.backgroundRefreshStatus`) and opens the app's page in Settings.
+- System state. On appear and on every return to the app the screen reports the notification permission and
+  Background App Refresh to the ViewModel. The notification row asks for the permission while iOS has never asked,
+  then opens the app's notification settings.
+- Not yet real on iOS (`shared/feature-settings/src/iosMain/.../data/IosPendingChecks.kt`): the schedule change
+  switch is stored where the check reads it, but the check runs from IO-14; mark tracking and the calendar sync are
+  stand-ins behind their hidden rows until IO-09d3 and IO-15b. "Пройти знакомство заново" resets the shared flag,
+  which the shell's gate reads (IO-07b). Widget pages draw no preview above their rows.
+- Diagnostics. The journal lists `AppDiagnostics`' records, newest first, with a stack trace folded under its
+  record; the share sheet takes the plain-text journal (and copies it), clearing asks first.
+- Tests. `SnapshotTests/SettingsSnapshotTests` (the root, schedule and QR widget pages from the providers in the
+  app's graph, and every row type with long values), `ITMOWidgetsTests/SettingsTests`, `UITests/SettingsUITests`
+  (a switch survives a relaunch), and `SettingsIosModuleTest` on the simulator.
 
 ## Identifiers
 
@@ -334,8 +365,10 @@ Koin is the only dependency graph on iOS. `iosCoreModule(host)` (`shared/core/sr
 each core type once, what `:app`'s Hilt modules and `CoreBridge` give Android: `AppLog` (`OsLogAppLog`),
 `AppDiagnostics`, the wall `Clock`, `AppDispatchers`, `AcademicTimeProvider` (Moscow time, no debug override),
 `AppDirectories`, the App Group directory and snapshot writer, `SessionSnapshotWriter`, `CrossProcessLock`,
-`SecureStore`, the `app_preferences` DataStore and the core preference stores, `BackendGate`, the session storage,
-the Darwin engine, `MyItmoClient`, Core 2.0's `BackendClient`, `PlatformActions` and the sign-out cleaners.
+`SecureStore`, the `app_preferences` DataStore with the core preference stores and `UtilityStorage` (the bundle's
+`CFBundleShortVersionString` as the app version), `BackendGate`, the session storage, the Darwin engine,
+`MyItmoClient`, Core 2.0's `BackendClient` and its `UsersApi`, `PlatformActions`, `PlatformCapabilities` and the
+sign-out cleaners.
 
 - The session. `authDataModule` (KM-11h1: `SessionRepository`, `DemoMode`) runs on `accountIosModule`
   (`shared/feature-account/src/iosMain/.../auth/di/`), the iOS side of Android's `CoreBridge` and
@@ -360,8 +393,14 @@ the Darwin engine, `MyItmoClient`, Core 2.0's `BackendClient`, `PlatformActions`
   controller for the share sheet.
 - Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`; dev
   (`https://dev.widgets.alllexey.dev`) in every configuration until Backend 1.8.0 is in production (gate R).
-- `AppDiagnostics` keeps this launch's records in memory and writes each to unified logging; an error contributes
-  only its type until the journal's sanitiser is shared (the crash hook and the diagnostics screen are IO-08a's).
+- `AppDiagnostics` (`IosAppDiagnostics`) keeps this launch's records in memory and writes each to unified logging;
+  an error contributes only its type until the journal's sanitiser is shared. `startKoinIos` installs
+  `IosCrashHook` (Kotlin/Native's `setUnhandledExceptionHook`): an uncaught Kotlin exception becomes a crash record
+  with its type and stack frames, written at once to the JSON file diagnostics-crash-v1.json in the no-backup directory, which
+  the next launch shows first and deletes. Swift crashes never pass Kotlin and are not recorded.
+- `PlatformCapabilities` is `IosPlatformCapabilities`: everything off until the IO card that ships a feature turns
+  it on (recordbook IO-09d2, marks IO-09d3, calendar IO-15b, reviews IO-09f); the quick settings tile, Android's
+  battery and Xiaomi screens, the update channel, the animated QR widget and the custom spoiler image stay off.
 - `PlatformActions`: the share sheet (the title is not shown: iOS's sheet has none), links (t.me in Telegram when
   installed), Apple Maps (`maps.apple.com`, the pin or the address) and the app's pages in Settings.
 - `IosCoreGraph` runs the module in a Koin application of its own for hosted tests (`ITMOWidgetsTests/SessionTests`);
@@ -380,8 +419,9 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
 `value`). SKIE's analytics upload is off.
 
 - Exports. A type of an exported module has its own name in Swift (`UiText`, `AppIcon`); any other keeps a module
-  prefix (`Lifecycle_viewmodelViewModel`, typealiased as `SharedViewModel`). Only `:shared:core` is exported; the IO
-  card of a SwiftUI-owned ViewModel exports its feature module. Each export grows the header and the link.
+  prefix (`Lifecycle_viewmodelViewModel`, typealiased as `SharedViewModel`). `:shared:core`,
+  `:shared:feature-account` (IO-07b) and `:shared:feature-settings` (IO-08a) are exported; the IO card of a
+  SwiftUI-owned ViewModel exports its feature module. Each export grows the header and the link.
 - Koin start. `App.init` calls `startKoinIos(platform: AppPlatform())` after the app locale: one global graph over
   `IosKoinModules.all(platform)` (`shared/ios/src/iosMain/.../ios/di/`), `allowOverride(false)`. A second call keeps
   the running graph and returns false. `IosKoin` keeps the graph `startKoin` returned; iOS code never reads Koin's

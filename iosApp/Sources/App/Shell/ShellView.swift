@@ -73,6 +73,8 @@ struct ShellStack: View {
                             .shellChrome(destination.chrome)
                     }
             }
+            // SwiftUI screens open further routes and leave the stack through the router (settings, IO-08a).
+            .environment(router)
             if isDemo {
                 ItmoDemoBanner(signIn: leaveDemo)
             }

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -40,7 +41,8 @@ internal fun createFixture(
     page: SettingsPage = SettingsPage.ROOT,
     backgroundWork: FakeBackgroundWorkAccess = FakeBackgroundWorkAccess(),
     tileAccess: FakeQuickSettingsTileAccess = FakeQuickSettingsTileAccess(),
-    calendarSync: FakeCalendarSync = FakeCalendarSync()
+    calendarSync: FakeCalendarSync = FakeCalendarSync(),
+    capabilities: PlatformCapabilities = EveryPlatformCapability
 ): Fixture {
     val tracking = FakeScheduleChangeTracking(enabled = local.scheduleChangesEnabled)
     val markTracking = FakeMarkTracking()
@@ -53,11 +55,11 @@ internal fun createFixture(
     val refresher = FakeWidgetRefreshRequester()
     val onboarding = FakeOnboardingRepository(completed = true)
     val pages = SettingsPages(
-        root = RootPageProvider(),
+        root = RootPageProvider(capabilities),
         services = ServicesPageProvider(repository, customServicesRepository, refresher),
-        widgets = WidgetsPageProvider(repository, tileAccess),
+        widgets = WidgetsPageProvider(repository, tileAccess, capabilities),
         home = HomePageProvider(repository),
-        schedule = SchedulePageProvider(repository, tracking, calendarSync),
+        schedule = SchedulePageProvider(repository, tracking, calendarSync, capabilities),
         recordbook = RecordbookPageProvider(markTracking),
         sport = SportPageProvider(repository),
         maintenance = MaintenancePageProvider(refresher, onboarding, AppVersion("2.1-test"), RecordingDiagnostics())
