@@ -43,7 +43,6 @@ class DesignComponentsVisualTest {
                     R.layout.fragment_schedule,
                     R.layout.fragment_recordbook,
                     R.layout.fragment_recordbook_subject,
-                    R.layout.fragment_sport_my,
                 )) {
                     val root = activity.layoutInflater.inflate(layout, FrameLayout(activity), false)
                     val refresh = root.descendants().filterIsInstance<SwipeRefreshLayout>().single()
@@ -89,8 +88,6 @@ class DesignComponentsVisualTest {
                 StateLayout("subject", R.layout.fragment_recordbook_subject),
                 StateLayout("schedule", R.layout.fragment_schedule, R.id.schedule_state_container,
                     R.id.schedule_state_title, R.id.schedule_state_description, R.id.schedule_state_action),
-                StateLayout("sport-my", R.layout.fragment_sport_my, R.id.empty_state_layout,
-                    action = R.id.sport_state_retry),
                 StateLayout("sport-inline", R.layout.item_content_state, inline = true)
             )
             for (case in cases) for (error in listOf(false, true)) {
@@ -102,7 +99,6 @@ class DesignComponentsVisualTest {
                     state.findViewById<TextView>(case.title).setText(
                         if (error) R.string.common_load_error_title else when (case.name) {
                             "schedule" -> R.string.schedule_empty_title
-                            "sport-my" -> R.string.sport_bookings_empty_title
                             "sport-inline" -> R.string.sport_lessons_empty_title
                             else -> R.string.recordbook_empty_title
                         }
@@ -110,7 +106,6 @@ class DesignComponentsVisualTest {
                     state.findViewById<TextView>(case.description).setText(
                         if (error) R.string.common_error_network else when (case.name) {
                             "schedule" -> R.string.schedule_empty_description
-                            "sport-my" -> R.string.sport_bookings_empty_description
                             "sport-inline" -> R.string.sport_lessons_empty_description
                             else -> R.string.recordbook_empty_description
                         }
@@ -118,10 +113,6 @@ class DesignComponentsVisualTest {
                     state.findViewById<MaterialButton>(case.action).apply {
                         setText(R.string.common_retry)
                         visibility = if (error) View.VISIBLE else View.GONE
-                    }
-                    if (case.name == "sport-my") {
-                        root.findViewById<View>(R.id.points_card).visibility = if (error) View.GONE else View.VISIBLE
-                        root.findViewById<View>(R.id.button_go_to_schedule).visibility = if (error) View.GONE else View.VISIBLE
                     }
                     if (error) state.descendants().filterIsInstance<ImageView>().first().setImageResource(R.drawable.ic_error)
                     show(activity, root, spec.widthDp, case.inline)

@@ -18,7 +18,6 @@
         <activity android:name=".feature.social.ui.UserProfilePreviewActivity" android:exported="false" />
         <!-- sport -->
         <activity android:name=".feature.sport.ui.SportCardsPreviewActivity" android:exported="false" />
-        <activity android:name=".feature.sport.ui.SportScoreCollapsePreviewActivity" android:exported="false" />
         <!-- weblogin -->
         <activity android:name=".feature.weblogin.ui.WebLoginPreviewActivity" android:exported="false" />
     </application>
