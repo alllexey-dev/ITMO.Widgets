@@ -30,9 +30,10 @@ import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 
 /**
  * An on/off switch. Under Material it is material3's `Switch` as the settings rows draw it today; under the iOS style
- * it is `UISwitch`: a capsule track, `systemGreen` when on, with a white capsule thumb that slides across and a light
- * impact when the user flips it. With [onCheckedChange] null the switch only shows [checked] and the caller's row
- * carries the toggle (and its semantics), as `SettingsToggleRow` does.
+ * it is `UISwitch`: a capsule track in the accent (`colorScheme.primary`, as the SwiftUI screens tint their toggles)
+ * when on, with a white capsule thumb that slides across and a light impact when the user flips it. With
+ * [onCheckedChange] null the switch only shows [checked] and the caller's row carries the toggle (and its semantics),
+ * as `SettingsToggleRow` does.
  */
 @Composable
 fun ItmoSwitch(
@@ -52,6 +53,7 @@ private fun IosSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, m
     val haptics = rememberItmoHaptics()
     val motion = ItmoTheme.motion
     val colors = ItmoTheme.iosColors
+    val accent = ItmoTheme.colorScheme.primary
     val position by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
         animationSpec = if (rememberReducedMotion()) snap() else tween(motion.standardMillis, easing = motion.easing),
@@ -73,7 +75,7 @@ private fun IosSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, m
             .then(toggle)
             .size(IosMetrics.switchWidth, IosMetrics.switchHeight)
             .alpha(if (enabled) 1f else DISABLED_ALPHA)
-            .background(lerp(colors.tertiaryLabel, colors.systemGreen, position), CircleShape),
+            .background(lerp(colors.tertiaryLabel, accent, position), CircleShape),
         contentAlignment = Alignment.CenterStart,
     ) {
         Box(
