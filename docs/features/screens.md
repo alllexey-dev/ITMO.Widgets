@@ -114,11 +114,11 @@ Feature doc: [Schedule](schedule.md).
 
 ## Friend selector
 
-Feature doc: [Schedule](schedule.md) (friends' schedules).
+Feature doc: [Friend selector](friend-selector.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/friendselector/ui/FriendSelectorDialogFragment.kt` | bottom sheet | `FriendSelectorViewModel` | `friend_selector` dialog destination, from `ScheduleFragment` | `app/SettingsNavigationTestActivity.kt` | — |
+| `feature/friendselector/ui/FriendSelectorDialogFragment.kt` hosting `FriendSelectorSheetRoute` (`:shared:feature-social`) | bottom sheet (kit sheet host) | `FriendSelectorViewModel` (Koin) | `friend_selector` dialog destination, from `ScheduleFragment` | `app/SettingsNavigationTestActivity.kt` (`FriendSelectorFixture`) | `SocialScreenshotTest` (`:shared:feature-social`) |
 
 ## Sport
 
@@ -160,8 +160,8 @@ Feature doc: [Social](social.md).
 |---|---|---|---|---|---|
 | `feature/social/ui/FriendsFragment.kt` hosting `FriendsRoute` (`:shared:feature-social`) | Fragment | `FriendsViewModel` (Koin) | `friends`, `AppScreen.FRIENDS` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
 | `feature/social/ui/UserSearchFragment.kt` hosting `UserSearchRoute` (`:shared:feature-social`) | Fragment | `UserSearchViewModel` (Koin) | `user_search`, `AppScreen.USER_SEARCH` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
-| `feature/social/ui/UserProfileFragment.kt` hosting `UserProfileRoute` (`:shared:feature-social`) | Fragment | `UserProfileViewModel` (Koin) | `user_profile`, `AppScreen.USER_PROFILE` | `app/SettingsNavigationTestActivity.kt` | `SocialScreenshotTest` (`:shared:feature-social`) |
-| `feature/social/ui/UserFriendsFragment.kt` hosting `UserFriendsRoute` (`:shared:feature-social`) | Fragment | `UserFriendsViewModel` (Koin) | `user_friends`, `AppScreen.USER_FRIENDS` | `app/SettingsNavigationTestActivity.kt` | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `feature/social/ui/UserProfileFragment.kt` hosting `UserProfileRoute` (`:shared:feature-social`) | Fragment | `UserProfileViewModel` (Koin) | `user_profile`, `AppScreen.USER_PROFILE` | `app/SettingsNavigationTestActivity.kt` (`SocialDebugFixtures`) | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `feature/social/ui/UserFriendsFragment.kt` hosting `UserFriendsRoute` (`:shared:feature-social`) | Fragment | `UserFriendsViewModel` (Koin) | `user_friends`, `AppScreen.USER_FRIENDS` | `app/SettingsNavigationTestActivity.kt` (`SocialDebugFixtures`) | `SocialScreenshotTest` (`:shared:feature-social`) |
 
 ## Profile tab
 

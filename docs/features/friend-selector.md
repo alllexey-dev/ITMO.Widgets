@@ -9,16 +9,23 @@ The schedule side (the FAB, the selected user, the header) is in
 
 ## Entry and result
 
-`FriendSelectorDialogFragment` is a `BottomSheetDialogFragment`, the dialog
-destination `friend_selector` of `main_nav_graph`, opened by the schedule FAB
-with `FriendSelectionContract.ARG_SELECTED_ISU` (the shown user, or
-`NO_USER_ISU` for the own schedule). It opens expanded at 90 % of the screen
-height and never collapses.
+`FriendSelectorDialogFragment` is the dialog destination `friend_selector`
+of `main_nav_graph`, opened by the schedule FAB with
+`FriendSelectionContract.ARG_SELECTED_ISU` (the shown user, or `NO_USER_ISU`
+for the own schedule). It is the design system's sheet host
+(`ItmoBottomSheetFragment` with `SheetHeight.Tall`): expanded at 90 % of the
+screen height, never collapsed. Its body is `FriendSelectorSheetRoute` from
+`:shared:feature-social`, which obtains the Koin `FriendSelectorViewModel`
+(reading the opening ISU from the host's arguments) and renders the stateless
+`FriendSelectorSheetContent`; the iOS app hosts the same route.
 
-Apply delivers one fragment result under `FriendSelectionContract.RESULT_KEY`
-with `RESULT_USE_MY_SCHEDULE`, `RESULT_USER_ISU`, `RESULT_USER_NAME` and
+Apply asks the ViewModel, which records a chosen friend in the history and
+then emits `FriendSelectorEvent.Apply(target)` once (`target` is the person,
+or `null` for the own schedule). The route passes it to the host, which sets
+one fragment result under `FriendSelectionContract.RESULT_KEY` with
+`RESULT_USE_MY_SCHEDULE`, `RESULT_USER_ISU`, `RESULT_USER_NAME` and
 `RESULT_USER_PICTURE_URL`, then dismisses the sheet. Close («Закрыть»)
-delivers nothing.
+delivers nothing. Opening a profile dismisses the sheet first.
 
 ## Sheet
 
@@ -73,7 +80,9 @@ otherwise.
   most five. Later updates refresh names and avatars but never reorder; a
   removed friend or a closed schedule drops out.
 - The pending choice (`pending_friend_isu`) and the chip order
-  (`recent_friend_order`) survive recreation in `SavedStateHandle`.
+  (`recent_friend_order`) survive recreation in `SavedStateHandle`; the typed
+  query is saved by the route and reaches the ViewModel again after process
+  death.
 - Apply runs once: a chosen friend is recorded in the history, then the result
   is sent. A new choice joins the chips on the next opening.
 
@@ -86,13 +95,21 @@ otherwise.
   `app_preferences`: ISUs, newest first, without repeats, at most five. It is a
   `SessionDataCleaner`, so sign-out forgets it.
 - Both live in `:shared:feature-social` `commonMain` and `friendSelectorModule`
-  constructs them; the history's cleaner is bound under the `friend-history`
-  qualifier.
+  constructs them with the ViewModel; the history's cleaner is bound under the
+  `friend-history` qualifier.
 
 ## Tests
 
 - JVM: `FriendSelectorViewModelTest`, `RecentFriendOrderTest`,
-  `DataStoreFriendSelectionHistoryTest` (reads a 2.2 value), `FriendRepositoryImplTest`.
-- Instrumented: `RecentFriendsStabilityTest`, `SelectionRowsTest`. The sheet
-  renders with `FriendSelectorFixture` in `SettingsNavigationTestActivity`
-  (debug); it has no visual test.
+  `DataStoreFriendSelectionHistoryTest` (reads a 2.2 value),
+  `FriendRepositoryImplTest` and `FriendSelectorModuleTest`.
+- `FriendSelectorSheetTest` (`androidHostTest`) covers the chips across a
+  refresh, a choice and recreation, failed and disabled lists, the rows and
+  closed schedules, the chip labels, the scope hint and the query, and long
+  names at a narrow width with a large font.
+- `SocialScreenshotTest` records every state of the sheet
+  (`FriendSelectorSheetContent_<state>`: friends, selection, locked, groups,
+  empty-filter, people, people-idle, people-loading, people-empty,
+  people-error, no-friends, loading, disabled, error) in four appearances.
+- The sheet renders with `FriendSelectorFixture` in
+  `SettingsNavigationTestActivity` (debug).
