@@ -205,7 +205,7 @@ final class RouterTests: XCTestCase {
 
         XCTAssertTrue(router.open(url: try XCTUnwrap(URL(string: "https://dev.widgets.alllexey.dev/u/100001"))))
         XCTAssertEqual(router.selectedTab, .me)
-        XCTAssertEqual(router.path(of: .me), [], "the profile is not on iOS before IO-09e")
+        XCTAssertEqual(router.path(of: .me), [ShellDestination(AppRoutes.UserProfile(isu: 100_001))])
 
         XCTAssertTrue(router.open(url: try XCTUnwrap(URL(string: "https://widgets.alllexey.dev/u/abc"))))
         XCTAssertEqual(router.selectedTab, .home)
@@ -450,10 +450,10 @@ final class RouterTests: XCTestCase {
             (AppRoutes.Diagnostics.shared, .swiftUI),
             (AppRoutes.DebugTools.shared, .notOnIOS),
             (AppRoutes.RecordbookSubject(args: subject), .notOnIOS),
-            (AppRoutes.Friends.shared, .notOnIOS),
-            (AppRoutes.UserFriends(isu: 100_001, name: ""), .notOnIOS),
-            (AppRoutes.UserSearch.shared, .notOnIOS),
-            (AppRoutes.UserProfile(isu: 100_001), .notOnIOS),
+            (AppRoutes.Friends.shared, .compose),
+            (AppRoutes.UserFriends(isu: 100_001, name: ""), .compose),
+            (AppRoutes.UserSearch.shared, .compose),
+            (AppRoutes.UserProfile(isu: 100_001), .compose),
             (AppRoutes.UserSchedule(isu: 100_001, name: ""), .notOnIOS),
             (AppRoutes.UserSport(isu: 100_001, name: ""), .notOnIOS),
             (AppRoutes.ScheduleChanges.shared, .notOnIOS),

@@ -2,9 +2,10 @@
 
 The iOS client is a SwiftUI shell around the shared Compose Multiplatform screens, with WidgetKit extensions and a
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
-umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with the Compose home feed and
-placeholder roots for the other tabs, gated on the shared session with the sign-in screen and the first-run flow (see
-Shell and routes, Sign-in), the QR pass and the home feed are its Compose screens, the widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets;
+umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with the Compose home feed and Me
+tab and placeholder roots for the other tabs, gated on the shared session with the sign-in screen and the first-run
+flow (see Shell and routes, Sign-in), the QR pass, the home feed, the Me tab and the social screens are its Compose
+screens, the widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets;
 App Shortcuts and quick actions in System entries) and the notification service passes notifications through
 unchanged.
 
@@ -129,9 +130,10 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 ## Shell and routes
 
 The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Its session gate and demo banner follow
-the shared `SessionRepository` (see Core graph). The home root is LH-2's Compose feed (`HomeScreen`, IO-09a); until
-the other IO-09x cards host theirs, the other roots are placeholders (`FixtureRootScreen`), and the me root holds the
-entry to settings and the sign-out (Android's confirmation, `SessionRepository.signOut()`).
+the shared `SessionRepository` (see Core graph). The home root is LH-2's Compose feed (`HomeScreen`, IO-09a), the me
+root LA-3's Compose Me tab (`MeTabScreen`, IO-09e) with the entry to settings and the sign-out (the route's
+confirmation, `SessionRepository.signOut()`); until the other IO-09x cards host theirs, the other roots are
+placeholders (`FixtureRootScreen`).
 
 - Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
   sport, me. The recordbook is declared but hidden until IO-09d2 (no placeholder reaches App Review); home is
@@ -187,7 +189,8 @@ frozen; `StableIdentifiersTests.testRouteUrls` pins them.
 Settings are SwiftUI screens over the shared page model (IO-08a): `Routes+Settings.swift` maps each
 `AppRoutes.Settings(page)` key to `Features/Settings/SettingsScreen`, which owns the page's `SettingsViewModel`
 (`settingsPageParameters(page:)` hands it the page as Android's navigation argument), and `AppRoutes.Diagnostics` to
-`Features/Diagnostics/DiagnosticsScreen`. Android's Compose pages are not used on iOS. The me root opens the root page.
+`Features/Diagnostics/DiagnosticsScreen`. Android's Compose pages are not used on iOS. The Me tab's settings row opens
+the root page, its privacy row the privacy page.
 
 - Rendering. `SettingsForm` draws the provider's sections in a `Form`, one row type per `SettingItem`: a toggle, a
   menu picker, a navigation row that pushes the next page's key onto the tab's stack, an action row, a read-only
@@ -386,7 +389,7 @@ opens. `web_login_scan` opens VisionKit's `DataScannerViewController` (QR only) 
 services scanner it needs the camera, so the app's Info.plist has `NSCameraUsageDescription`
 (`ios_web_login_camera_usage` through `InfoPlist.xcstrings`). A refused camera, a device without the scanner (the
 simulator) or a scanner that stops reads as `web_login_scanner_unavailable`, and typing still works. The demo refuses
-the route (`ShellGate`); until the me tab is hosted (IO-09e) it has no entry point. A Debug build launched with
+the route (`ShellGate`), so the Me tab's row says `error_demo_unavailable` there. A Debug build launched with
 `-itmoWebLoginFixture` opens the sheet on the tabs, answers from `WebLoginIosFixture` (code `ABCD2345`, Chrome on
 macOS, no Backend) and hands the fixture's link to the scan button (`UITests/WebLoginUITests`).
 
@@ -424,7 +427,7 @@ service's work with IO-12a.
 
 | Payload type | Opens |
 |---|---|
-| `FRIENDSHIP_EVENT_PAYLOAD` | the me tab with the actor's profile above it (not on iOS before IO-09e) |
+| `FRIENDSHIP_EVENT_PAYLOAD` | the me tab with the actor's profile above it |
 | `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD` | the sport tab with the lesson's request; with several lessons the sport tab |
 | anything else | nothing |
 
@@ -598,6 +601,8 @@ sign-out cleaners.
   on Core 2.0's users area from `iosCoreModule`, and `updateModule` on `updateIosModule`
   (`shared/feature-account/src/iosMain/.../update/di/`): the installed version is `CFBundleShortVersionString`, the
   platform `DevicePlatform.IOS`, so Backend answers the iOS release (`version-info?platform=IOS`, BK-17).
+- The application `CoroutineScope` (as Android's `CoroutinesModule`) and `ShareLinkFactory` over the Backend origin,
+  the site the share links name (as Android's `WIDGETS_BASE_URL`), are core bindings (IO-09e).
 - `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
   controller for the share sheet.
 - Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`; dev
@@ -652,7 +657,9 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
 - Compose screens. Only `shared/ios` builds a `ComposeUIViewController`: `screens/ScreenControllers.kt` wraps the
   content in `ItmoTheme` and the host's `LocalPlatformActions`, and each feature's IO card adds
   `screens/<Feature>Screens.kt` with the factories Swift calls (`qrPassViewController(onBack:)`). A CMP screen's
-  `koinViewModel()` uses the store Compose Multiplatform gives each controller.
+  `koinViewModel()` uses the store Compose Multiplatform gives each controller, whose `SavedStateHandle` is empty: a
+  route whose ViewModel reads its key's arguments gets them from its feature's iOS route, which resolves the Koin
+  definition in that store with a `SavedStateHandle` of the arguments (`UserProfileIosRoute`, IO-09e).
 - Hosting. `ComposeHost { factory() }` (`Sources/Bridge/ComposeHost.swift`) makes the controller once and ignores
   the safe area, so the surface runs under the status bar and the tab bar and Compose's `WindowInsets` report them;
   the factory pads its content by `WindowInsets.safeDrawing` (the kit's top bar draws no insets). A SwiftUI
@@ -660,7 +667,8 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   stack instead of in an inset. A route's Swift screen (`Sources/Features/<Feature>/`) wraps the host with what only UIKit can do:
   the QR pass sets the screen to full brightness while it is visible and the scene is active and restores the
   user's level otherwise (master P8); the home feed opens the widget instruction sheet, asks for notifications and
-  says `error_demo_unavailable` when the router refuses a key in the demo. `onBack` and other callbacks are Swift
+  says `error_demo_unavailable` when the router refuses a key in the demo, as the Me tab and the social screens do
+  (`SocialMessages`, which also puts a copied ISU on the clipboard with `person_isu_copied`). `onBack` and other callbacks are Swift
   closures (`dismiss()`, `router.open(_:)`). Compose maps
   `testTag` to the accessibility identifier, so UI tests find a route's parts by its test tags.
 - `ITMOWidgetsTests/BridgeTests` checks the graph start, a `StateFlow` update re-rendering a hosted SwiftUI view,
