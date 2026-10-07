@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.resources
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.os.Looper
 import android.view.View
 import androidx.fragment.app.DialogFragment
@@ -11,16 +10,12 @@ import androidx.test.core.app.ApplicationProvider
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
-import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
-import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
+import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
-import dev.alllexey.itmowidgets.feature.resources.reference.SubjectLinksReferenceFixtures.SCOPE
-import dev.alllexey.itmowidgets.feature.resources.reference.SubjectLinksReferenceFixtures.fixture
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -53,15 +48,7 @@ class LinkEditorPasteTest {
 
     @Before
     fun setUp() {
-        SubjectLinksPreviewActivity.repository = MemorySubjectLinksRepository().apply {
-            servicesEnabled = true
-            snapshots.value = mapOf(SCOPE.key to fixture())
-        }
-    }
-
-    @After
-    fun tearDown() {
-        SubjectLinksPreviewActivity.repository = MemorySubjectLinksRepository()
+        LinksHostFixtures.install()
     }
 
     @Test
@@ -90,12 +77,11 @@ class LinkEditorPasteTest {
     private fun openWithClipboard(clip: String, linkId: String? = null): LinkEditorUiState {
         val context = ApplicationProvider.getApplicationContext<Context>()
         context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("link", clip))
-        val intent = Intent(context, SubjectLinksPreviewActivity::class.java)
-            .putExtra(SubjectLinksPreviewActivity.EXTRA_SCREEN, SubjectLinksPreviewActivity.SCREEN_EDITOR)
-            .putExtra(SubjectLinksPreviewActivity.EXTRA_LINK_ID, linkId)
-        val controller = Robolectric.buildActivity(SubjectLinksPreviewActivity::class.java, intent).setup()
+        val controller = Robolectric.buildActivity(ReferenceHostActivity::class.java).setup()
         try {
             val activity = controller.get()
+            LinkEditorBottomSheet.newInstance(LinksHostFixtures.ARGS, linkId)
+                .show(activity.supportFragmentManager, LinkEditorBottomSheet.TAG)
             shadowOf(Looper.getMainLooper()).idle()
             val sheet = activity.supportFragmentManager.findFragmentByTag(LinkEditorBottomSheet.TAG) as DialogFragment
             // Robolectric keeps the focus on the activity when a dialog shows; the sheet's window gets it by hand.

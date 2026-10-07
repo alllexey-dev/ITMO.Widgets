@@ -760,4 +760,5 @@ settings, and restore them if a separate test explicitly changes them.
   the `Изменения` block (divider, heading, `было → стало` lines) in
   `feature/schedule/ui/details/LessonDetailsSections.kt` of `:shared:feature-schedule` and
   the informational flow row between teacher and place of the kit's `DetailsHeader`.
-- Visual tests: `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`.
+- Visual tests: `feature/recordbook/RecordbookVisualTest.kt`; the links sheets are JVM tests and the
+  `:shared:feature-resources` goldens.
