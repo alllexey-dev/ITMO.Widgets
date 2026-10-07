@@ -46,7 +46,8 @@ Those surfaces may read the shared `domain` (`QrCodeRepository`,
 `QrWidgetState`) and pure helpers such as the module matrix of
 `QrCodeGenerator`, which `QrToolkit` draws into a bitmap; never the shared
 screen, route or ViewModel. iOS gives them their
-own equivalents (WidgetKit, Controls) in Swift, see [the iOS app](../ios.md).
+own equivalents (WidgetKit, Controls) in Swift, see [iOS host](ios-host.md)
+and [the iOS app](../ios.md).
 
 ## Module and source sets
 
@@ -187,7 +188,8 @@ The same route serves every host; only the host changes.
 - **iOS.** A `ComposeUIViewController { <Name>Route(...) }` from `iosMain`
   embedded in the SwiftUI app; the ViewModel comes from the Koin graph the iOS
   app starts, and the lifecycle from the controller's `LocalLifecycleOwner`.
-  Navigation lambdas call back into Swift.
+  Navigation lambdas call back into Swift. The factory, the Swift host, the
+  widget snapshot and the system entries are [iOS host](ios-host.md).
 
 ## Rules
 
