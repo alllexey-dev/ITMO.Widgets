@@ -177,7 +177,7 @@ Feature doc: [Web sign-in](web-login.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/weblogin/ui/WebLoginBottomSheet.kt` | bottom sheet | `WebLoginViewModel` | `AppNavigator.openWebLogin` | `feature/weblogin/ui/WebLoginPreviewActivity.kt` | `feature/weblogin/WebLoginVisualTest.kt` |
+| `feature/weblogin/ui/WebLoginBottomSheet.kt` hosting `WebLoginSheetRoute` (`:shared:feature-account`) | bottom sheet | `WebLoginViewModel` (Koin) | `AppNavigator.openWebLogin` | — | `AccountScreenshotTest`, `WebLoginSheetTest` (`:shared:feature-account`) |
 
 ## Settings
 

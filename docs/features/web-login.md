@@ -21,14 +21,26 @@ only fail.
 
 The row calls `AppNavigator.openWebLogin()`, which shows `WebLoginBottomSheet`
 on the Activity's FragmentManager, once (a second tap while it is open or after
-the state is saved does nothing). The sheet opens expanded to its content through
-`core/ui/BottomSheets.kt` `expandToContent()` and re-measures only when the step
-changes, not on every keystroke.
+the state is saved does nothing). The sheet is an `ItmoBottomSheetFragment`
+(`SheetSpec(textInput = true)`): it opens expanded to its content, up to 90 % of
+the screen, without a collapsed step, and the window resizes for the keyboard so
+the field stays above it. It expands to its content again through
+`core/ui/BottomSheets.kt` `expandToContent()` when the step changes, not on every
+keystroke.
+
+The body is `WebLoginSheetRoute` in `:shared:feature-account`
+(`feature/weblogin/ui/`): it collects `WebLoginViewModel.uiState` and draws the
+stateless `WebLoginSheetContent(state, actions)` on the kit's `SheetScaffold`.
+The Fragment passes its own Koin ViewModel to the route and keeps the effects
+that need Android: the QR scanner (`onScan`) and closing (`onClose`).
 
 ## Reading the code
 
 The sheet has one field, `Код с сайта`, a `Сканировать QR` button and
-`Продолжить`. `Продолжить` and the keyboard's Go action submit the field.
+`Продолжить`. `Продолжить` and the keyboard's Go action submit the field. The
+field follows the state: when the view model changes the code (a scanned code,
+the normalized code while it is checked) the field shows it with the cursor at
+the end; a keystroke the state has not caught up with yet is never overwritten.
 
 The scanner is Google's code scanner (`play-services-code-scanner` 16.1.0),
 limited to QR codes. It runs inside Play services, so the app needs no camera
@@ -79,11 +91,16 @@ arguments first, so the format takes localized names.
 
 | State | Sheet |
 |---|---|
-| `Input(code, error)` | Field, `Сканировать QR`, `Продолжить` (enabled when the field is not blank); `error` under the field |
+| `Input(code, error)` | `Сканировать QR`, the field, `Продолжить` (enabled when the field is not blank); `error` under the field with the error icon |
 | `Checking(code)` | Same, disabled, progress inside `Продолжить` |
 | `Confirm(code, preview, browser, requestedAt, approving)` | Browser card (`Chrome на macOS`, `Запрошен в 12:04` in the academic clock's zone), `Подтверждайте только свой вход`, `Войти`, `Отмена` |
-| `Done` | `Готово — вернитесь в браузер`, `Закрыть` |
-| `Error(text, code)` | Error icon, text, `Повторить` |
+| `Done` | Compact content state: check icon, `Готово — вернитесь в браузер`, `Закрыть` |
+| `Error(text, code)` | Compact content state: error icon, text, `Повторить` |
+
+The outcome of `Done` and `Error` is a polite live region, so TalkBack reads it
+when it appears. Every state, every error row below and the longest browser name
+have a `WebLoginSheetContent_<state>` golden in light, dark and the two narrow
+appearances (font 1.3 at 320 dp).
 
 The field value lives in `SavedStateHandle`, so it survives recreation. `Отмена`
 returns to the field with the code. While `Войти` is in flight both buttons are
@@ -139,6 +156,13 @@ the app.
   (gate, error codes, blank User-Agent), `WebLoginViewModelTest` (every state
   and error path), `MeViewModelTest` (row visibility), `MeScreenTest` (the row
   and its divider only with the connection).
-- Instrumented: `WebLoginVisualTest` on the `WebLoginPreviewActivity` debug
-  host with a fixture repository: the approve flow, wrong and expired codes, a
-  large font on a narrow screen.
+- Host (Robolectric, `:shared:feature-account`): `WebLoginSheetTest` drives
+  `WebLoginSheetRoute` over the real `WebLoginViewModel` and a synthetic
+  repository at 320 dp and font 1.3: the approve flow with the progress and the
+  normalized code, wrong and expired codes, the longest browser name, a scanner
+  that cannot start, a scanned link and another QR, both buttons disabled while
+  approving, and 48 dp targets without clipped text in every state.
+- Screenshots: `AccountScreenshotTest` renders `WebLoginSheetPreviews.kt`
+  (`WebLoginSheetContent_*` in `shared/feature-account/screenshots/`).
+- The Play services scanner and the sheet's height stay in `WebLoginBottomSheet`
+  and are not covered on the JVM.
