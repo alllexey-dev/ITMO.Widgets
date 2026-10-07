@@ -72,6 +72,15 @@ final class StableIdentifiersTests: XCTestCase {
         )
     }
 
+    /// The lesson and the day widget keep their kinds, the app's writer reloads them by name and writes the timeline
+    /// file they read; a tap opens the schedule tab (IO-10b).
+    func testScheduleWidgets() {
+        XCTAssertEqual(SingleLessonWidget.kind, "dev.alllexey.itmowidgets.widget.single-lesson")
+        XCTAssertEqual(DayScheduleWidget.kind, "dev.alllexey.itmowidgets.widget.day-schedule")
+        XCTAssertEqual(LessonWidgetRoute.scheduleURL, RouteURL.url(id: "schedule"))
+        XCTAssertEqual(LessonTimeline.fileName, "schedule-timeline-v1.json")
+    }
+
     /// `$(AppIdentifierPrefix)` is the team ID plus a dot on a device, `FAKETEAMID.` on the simulator and empty for
     /// a team-less device build (SP-23), so only the suffix is stable.
     private func assertKeychainGroup(_ group: String?, file: StaticString = #filePath, line: UInt = #line) {

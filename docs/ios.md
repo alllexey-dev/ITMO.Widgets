@@ -4,8 +4,9 @@ The iOS client is a SwiftUI shell around the shared Compose Multiplatform screen
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
 umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with placeholder roots, gated on
 the shared session with the sign-in screen and the first-run flow (see Shell and routes, Sign-in), the QR pass is
-its first Compose screen, the widget bundle holds the QR widget and the QR Control (see Widgets; App Shortcuts and
-quick actions in System entries) and the notification service passes notifications through unchanged.
+its first Compose screen, the widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets;
+App Shortcuts and quick actions in System entries) and the notification service passes notifications through
+unchanged.
 
 ## Prerequisites
 
@@ -266,6 +267,7 @@ container, logs one warning per process and carries on; the extensions then see 
 | session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension (`SessionFile.swift` in `iosApp/Shared/WidgetSnapshots/`), notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` false until IO-13a |
 | qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool?}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`); `spoiler` is the global QR widget option, absent (as the writer leaves it today) means on, the Android default |
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension, on a tap on the spoiler | widget extension (`QrWidgetReveal.swift`) | `{"revealedUntil": ISO 8601}`: the tap's time plus 30 s, Android's auto-hide delay; one file for every placed QR widget; never read by the app |
+| schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`, iosMain) on the session, the schedule widget options, every return to the foreground, a changed cached schedule and `ScheduleWidgetRefreshRequester` (sport); reloads `dev.alllexey.itmowidgets.widget.single-lesson` and `.day-schedule` | widget extension (`LessonTimeline.swift`) | LS-3's `ScheduleWidgetTimeline` from `ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow (academic zone): `{"version": 1, "generatedAt", "validUntil", "entries": [{"validFrom", "snapshot"}]}`, the snapshot in the keys of Android's widget snapshot, nulls omitted, defaults written; rooms and buildings are already the short titles Android's widget shows; an unavailable schedule keeps the previous file; the envelope around `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json` is what the writer writes for it (`ScheduleTimelineWriterTest`, `ScheduleTimelineTests`) |
 | `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | each card that adds a snapshot adds its row |
 
 - Snapshots hold `{"version": N, "value": ...}`. A write goes to a temporary file of its own and is renamed over
@@ -396,6 +398,37 @@ Android keeps the widget options global, so they come from qr-pass-v1.json, not 
   v2.4; the spoiler option has no iOS setting yet, so the spoiler is always on.
 - `SnapshotTests/WidgetSnapshotTests` holds each state at the small family size (170 x 170 pt on the pinned
   iPhone, `WidgetSizes`) in the four appearances; `ITMOWidgetsTests/QrWidgetTimelineTests` the timeline.
+
+Schedule widgets (`Extensions/Widgets/Schedule/`, `StaticConfiguration`, options from the timeline file). The lesson
+widget (kind `dev.alllexey.itmowidgets.widget.single-lesson`: small, medium, Lock Screen `accessoryRectangular` and
+`accessoryInline`) shows the current or next lesson: type and marker, time, subject, place and teacher, now or next
+and how many follow. The day widget (kind `dev.alllexey.itmowidgets.widget.day-schedule`: medium, large) shows the
+day's rows, tomorrow's once today is over when that option is on. A tap opens `itmowidgets://route/schedule`.
+
+| State | When | Shows |
+|---|---|---|
+| Signed out | no session-v1.json, or the snapshot's signed-out kind | sign-in symbol, `schedule_widget_signed_out` |
+| Demo | the demo session (no ITMO.ID token, so no schedule, docs/features/demo.md) | `demo_entered`, `schedule_widget_open_app_hint` |
+| Unavailable | signed in, no timeline or past its `validUntil` | refresh symbol, `schedule_widget_error`, `schedule_widget_open_app_hint` |
+| Lessons | the timeline's entry of the moment | Android's texts by key; completed rows faded, pending sport rows with an outlined marker |
+| No lessons | `EMPTY_TODAY`, `NO_MORE_TODAY`, `EMPTY_TODAY_AND_TOMORROW` | the catalog message |
+
+- `LessonWidgetTimeline` makes one entry per `validFrom` after now, the unavailable state at `validUntil`, and asks
+  `.after(validUntil)` (within an hour without a timeline). Swift takes no time-zone or academic decision; the day
+  header's date is the file's calendar day.
+- WidgetKit cannot scroll: the day widget shows the rows that fit its family and text size, dropping completed
+  lessons first, then rows from the end (`DayScheduleRows`).
+- The widget extension compiles the design tokens (`Tokens.generated.swift`, `ItmoTheme.swift`) by path for the
+  surface, text and lesson type colours.
+- Degradation: no seven-minute pending sport refresh (WidgetKit allows about 40 to 70 reloads a day); a pending row
+  stays until the app writes again or its entry ends.
+- The writer starts with the graph (`scheduleWidgetIosModule`) and resolves the provider and the cached schedule at
+  each write, so until the schedule data graph and the pending sport rows are in the iOS graph (IO-09b, IO-09c) a
+  write logs why it could not load and the widgets stay unavailable.
+- `ITMOWidgetsTests/ScheduleTimelineTests` decodes LS-3's fixture and picks Kotlin's `entryAt` entry at sampled
+  instants; `SnapshotTests/WidgetSnapshotTests` holds lesson, break, pending sport, empty, tomorrow, signed out,
+  demo and unavailable states, light and dark (AX1 for the small and the large family), long names at the narrowest
+  medium size (321 pt, `WidgetSizes.narrowMedium`).
 
 ## System entries
 
