@@ -90,7 +90,7 @@ abstract class PreviewScreenshotTest {
             val style = case.appearance.platformStyle
             compose.onRoot().checkRoboAccessibility(
                 roborazziATFAccessibilityCheckOptions = RoborazziATFAccessibilityCheckOptions(
-                    checker = atfChecker(style),
+                    checker = atfChecker(style, suite.touchTargetsExempt(case)),
                     failureLevel = CheckLevel.Error,
                 ),
             )
@@ -98,9 +98,12 @@ abstract class PreviewScreenshotTest {
         }
     }
 
-    /** ATF's latest checks; under the iOS style without its 48 dp touch-target check, replaced by the style's own. */
-    private fun atfChecker(style: ItmoPlatformStyle): RoborazziATFAccessibilityChecker {
-        if (style == ItmoPlatformStyle.Material) {
+    /**
+     * ATF's latest checks; without its 48 dp touch-target check under the iOS style (replaced by the style's own) and
+     * for a narrow capture the suite exempts ([PreviewScreenshots.narrowTouchTargetExemptions]).
+     */
+    private fun atfChecker(style: ItmoPlatformStyle, touchTargetsExempt: Boolean): RoborazziATFAccessibilityChecker {
+        if (style == ItmoPlatformStyle.Material && !touchTargetsExempt) {
             return RoborazziATFAccessibilityChecker(preset = AccessibilityCheckPreset.LATEST)
         }
         val checks = AccessibilityCheckPreset.getAccessibilityHierarchyChecksForPreset(AccessibilityCheckPreset.LATEST)
