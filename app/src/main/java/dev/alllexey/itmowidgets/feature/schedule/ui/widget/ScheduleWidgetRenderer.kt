@@ -40,7 +40,7 @@ object ScheduleWidgetRenderer {
     ) {
         val views = singleLessonViews(context, snapshot)
         views.setOnClickPendingIntent(
-            R.id.lesson_widget_root,
+            android.R.id.background,
             openSchedulePendingIntent(context, appWidgetId)
         )
         appWidgetManager.updateAppWidget(appWidgetId, views)

@@ -3,15 +3,17 @@
      Keep it in step with that layout; WidgetPreviewImageCapture draws both for comparison. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background_rounded"
+    android:clipToOutline="true"
     android:gravity="center_vertical"
     android:minHeight="56dp"
     android:orientation="vertical"
     android:paddingHorizontal="12dp"
     android:paddingVertical="8dp"
-    tools:ignore="HardcodedText,UseAppTint">
+    tools:ignore="HardcodedText,UnusedAttribute,UseAppTint">
 
     <LinearLayout
         android:layout_width="match_parent"

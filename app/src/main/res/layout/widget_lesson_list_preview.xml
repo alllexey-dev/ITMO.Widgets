@@ -3,12 +3,14 @@
      and the end marker, filled with the settings preview scenario. WidgetPreviewImageCapture draws both. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background_rounded"
+    android:clipToOutline="true"
     android:orientation="vertical"
     android:padding="4dp"
-    tools:ignore="HardcodedText,UseAppTint">
+    tools:ignore="HardcodedText,UnusedAttribute,UseAppTint">
 
     <LinearLayout
         android:layout_width="match_parent"
