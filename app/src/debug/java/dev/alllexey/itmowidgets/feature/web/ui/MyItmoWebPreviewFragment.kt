@@ -1,12 +1,9 @@
 package dev.alllexey.itmowidgets.feature.web.ui
 
-import android.os.Bundle
-import android.view.View
-import android.webkit.WebSettings
-import android.webkit.WebView
-import dev.alllexey.itmowidgets.R
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
+import android.webkit.WebView
 import dev.alllexey.itmowidgets.BuildConfig
 import java.io.ByteArrayInputStream
 import java.util.concurrent.CountDownLatch
@@ -15,9 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /** Synthetic transport only; every request is intercepted so no fixture reaches an external service. */
 class MyItmoWebPreviewFragment : MyItmoWebFragment() {
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        view.findViewById<WebView>(R.id.web_view).settings.cacheMode = WebSettings.LOAD_NO_CACHE
-        super.onViewCreated(view, savedInstanceState)
+    override fun onBrowserCreated(page: WebView) {
+        page.settings.cacheMode = WebSettings.LOAD_NO_CACHE
     }
 
     override fun interceptRequest(request: WebResourceRequest): WebResourceResponse {

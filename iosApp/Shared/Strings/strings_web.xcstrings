@@ -37,6 +37,18 @@
         }
       }
     },
+    "my_itmo_web_more" : {
+      "comment" : "Generated from strings_web.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ещё"
+          }
+        }
+      }
+    },
     "my_itmo_web_reload" : {
       "comment" : "Generated from strings_web.xml",
       "extractionState" : "manual",

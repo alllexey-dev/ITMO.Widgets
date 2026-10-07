@@ -8,7 +8,6 @@ AuthScreen_reauthentication
 AuthScreen_signing-in
 AuthScreen_token-dialog
 LoginScreen_error
-MyItmoWebScreen_error
 WebLoginSheetContent_approving
 WebLoginSheetContent_checking
 WebLoginSheetContent_confirm

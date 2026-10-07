@@ -85,11 +85,11 @@ Feature docs: [QR pass](qr.md), [Widgets](widgets.md).
 
 ## My ITMO web
 
-Feature doc: [Home and quick actions](home.md).
+Feature docs: [My ITMO in the app](my-itmo-web.md), [Home and quick actions](home.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/web/ui/MyItmoWebFragment.kt` | Fragment | — | `my_itmo_web`, `AppScreen.MY_ITMO_WEB` | `feature/web/ui/MyItmoWebPreviewFragment.kt` in `app/SettingsNavigationTestActivity.kt` | `feature/home/HomeWebVisualTest.kt` |
+| `feature/web/ui/MyItmoWebFragment.kt` hosting `MyItmoWebScreen` (`:shared:feature-account`) around an `AndroidView` WebView | Fragment | — | `my_itmo_web`, `AppScreen.MY_ITMO_WEB` | `feature/web/ui/MyItmoWebPreviewFragment.kt` in `app/SettingsNavigationTestActivity.kt` | `AccountScreenshotTest` (`:shared:feature-account`), `feature/home/HomeWebVisualTest.kt` |
 
 ## Recordbook
 
