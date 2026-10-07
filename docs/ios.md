@@ -376,6 +376,28 @@ widgets would read a container the app no longer writes (`ITMOWidgetsTests/Widge
 cleaner takes `bars_tokens.enc` and `itmo_id_cookies` with the session; the recordbook's own cleaners run as on
 Android.
 
+Web sign-in (IO-08b). `WebLoginSheet` (`Sources/Features/WebLogin/`) is Android's `WebLoginBottomSheet` in SwiftUI
+over the shared `WebLoginViewModel` (a fresh `SavedStateHandle` as its Koin parameter, `WebLoginIosParameters`), the
+shell sheet of `AppRoutes.WebLogin` (`ShellSheet.webLogin`); a Universal Link's `code` is checked as soon as it
+opens. `web_login_scan` opens VisionKit's `DataScannerViewController` (QR only) full screen; unlike Android's Play
+services scanner it needs the camera, so the app's Info.plist has `NSCameraUsageDescription`
+(`ios_web_login_camera_usage` through `InfoPlist.xcstrings`). A refused camera, a device without the scanner (the
+simulator) or a scanner that stops reads as `web_login_scanner_unavailable`, and typing still works. The demo refuses
+the route (`ShellGate`); until the me tab is hosted (IO-09e) it has no entry point. A Debug build launched with
+`-itmoWebLoginFixture` opens the sheet on the tabs, answers from `WebLoginIosFixture` (code `ABCD2345`, Chrome on
+macOS, no Backend) and hands the fixture's link to the scan button (`UITests/WebLoginUITests`).
+
+My ITMO web (IO-08b). `MyItmoWebScreen` (`Sources/Features/MyItmoWeb/`) is a SwiftUI screen under the native bar on
+the tab's stack: `my.itmo.ru` in a `WKWebView` on `WKWebsiteDataStore.default()`, every navigation decided by the
+shared `MyItmoWebPolicy`, no token injection; see [My ITMO in the app](features/my-itmo-web.md#ios).
+
+Update offer (IO-08b). `AppUpdateOffer` (`Sources/Features/Update/`) runs the shared `AppUpdateGateViewModel` once per
+process on the tabs of a real session (`ShellGate.checksForUpdate`), and a newer iOS release opens `AppUpdateScreen`
+over the shared `AppUpdateViewModel` as a sheet. The only channel is the App Store page
+`https://apps.apple.com/app/id$(APP_STORE_ID)` (`AppStoreListing`; `APP_STORE_ID` in `Base.xcconfig`, `AppStoreID` in
+the app's Info.plist): while the ID is empty, until the App Store record exists (T13), the offer never checks or shows.
+No GitHub or Play channel.
+
 ## Widgets
 
 The widget extension links no Kotlin (its limit is about 30 MB, SP-16a): each widget reads App Group files on every
@@ -489,6 +511,10 @@ sign-out cleaners.
   `WidgetRefreshRequester` reloads the timelines of every widget kind, and `CustomSpoilerRepository` has no image on
   iOS. `iosCoreModule` adds `WidgetSettingsPreferences` and `UtilityStorage` (the first-run flag; the version is
   `CFBundleShortVersionString`). `Shared` exports `:shared:feature-account`, whose ViewModels SwiftUI owns.
+- The web sign-in and the update offer. `webLoginDataModule` and `webLoginModule` of `:shared:feature-account`
+  on Core 2.0's users area from `iosCoreModule`, and `updateModule` on `updateIosModule`
+  (`shared/feature-account/src/iosMain/.../update/di/`): the installed version is `CFBundleShortVersionString`, the
+  platform `DevicePlatform.IOS`, so Backend answers the iOS release (`version-info?platform=IOS`, BK-17).
 - `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
   controller for the share sheet.
 - Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`; dev

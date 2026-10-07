@@ -42,10 +42,18 @@ struct ShellDestination: Hashable {
 }
 
 /// A sheet above the shell.
-enum ShellSheet: String, Identifiable {
+enum ShellSheet: Hashable, Identifiable {
     case linkUnavailable
+    /// The web sign-in (IO-08b); `code` is a Universal Link's, checked as soon as the sheet opens.
+    case webLogin(code: String?)
 
-    var id: String { rawValue }
+    /// Also the sheet's accessibility identifier, `shell.sheet.<id>`.
+    var id: String {
+        switch self {
+        case .linkUnavailable: "linkUnavailable"
+        case .webLogin: "webLogin"
+        }
+    }
 }
 
 /// What an in-app `open` did.

@@ -1,3 +1,4 @@
+import Shared
 import SwiftUI
 
 /// The app's root: the session gate (the sign-in screen while signed out, the first-run flow before the tabs of a
@@ -6,6 +7,7 @@ import SwiftUI
 struct ShellView: View {
     @Bindable var router: AppRouter
     let session: ShellSession
+    @State private var updateOffer = AppUpdateOffer()
 
     var body: some View {
         content
@@ -48,7 +50,17 @@ struct ShellView: View {
             }
             .onAppear { router.shellMounted(true) }
             .onDisappear { router.shellMounted(false) }
+            .appUpdateOffer(updateOffer, checks: checksForUpdate)
+            .webLoginFixtureEntry(router: router)
         }
+    }
+}
+
+extension ShellView {
+    /// Android's `ShellGate.checksForUpdate`: the tabs of a real session, never the demo or a fixture session.
+    private var checksForUpdate: Bool {
+        session.gateway != nil
+            && ShellGate.shared.checksForUpdate(session: session.state.sessionState, onboarding: session.onboarding)
     }
 }
 
@@ -86,22 +98,26 @@ struct ShellStack: View {
     }
 }
 
-/// A shell sheet: half height first, full height on a drag.
+/// A shell sheet: half height first, full height on a drag. The web sign-in brings its own stack (`WebLoginSheet`).
 struct ShellSheetView: View {
     let sheet: ShellSheet
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        switch sheet {
+        case .linkUnavailable: messageSheet
+        case let .webLogin(code): WebLoginSheet(code: code)
+        }
+    }
+
+    private var messageSheet: some View {
         NavigationStack {
             ScrollView {
-                switch sheet {
-                case .linkUnavailable:
-                    ItmoEmptyView(
-                        symbol: .error,
-                        title: AppStrings.string("app_link_unavailable_title"),
-                        description: AppStrings.string("app_link_unavailable_text")
-                    )
-                }
+                ItmoEmptyView(
+                    symbol: .error,
+                    title: AppStrings.string("app_link_unavailable_title"),
+                    description: AppStrings.string("app_link_unavailable_text")
+                )
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -117,6 +133,6 @@ struct ShellSheetView: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-        .accessibilityIdentifier("shell.sheet.\(sheet.rawValue)")
+        .accessibilityIdentifier("shell.sheet.\(sheet.id)")
     }
 }

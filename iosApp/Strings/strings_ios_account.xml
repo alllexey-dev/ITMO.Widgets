@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy only the iOS web sign-in shows (IO-08b, ADR 0028): exported to Localizable.xcstrings. -->
+<resources>
+    <!-- NSCameraUsageDescription (InfoPlist row): iOS asks before the first scan; Android's Play services scanner needs no permission. -->
+    <string name="ios_web_login_camera_usage">Камера нужна, чтобы сканировать QR для входа на сайт</string>
+    <!-- Under the camera of the scanner. -->
+    <string name="ios_web_login_scan_hint">Наведите камеру на QR на странице входа</string>
+</resources>

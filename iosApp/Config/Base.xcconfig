@@ -11,6 +11,11 @@ KEYCHAIN_GROUP = $(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared
 // reading `//` as a comment.
 BACKEND_BASE_URL = https:/$()/dev.widgets.alllexey.dev
 
+// The App Store record of the app, AppStoreID in the app's Info.plist (L18 IO-08b): the update offer opens
+// https://apps.apple.com/app/id$(APP_STORE_ID) and offers nothing while it is empty. Empty until the record exists
+// (gate T13).
+APP_STORE_ID =
+
 MARKETING_VERSION = 2.3.0
 CURRENT_PROJECT_VERSION = 1
 IPHONEOS_DEPLOYMENT_TARGET = 18.0
