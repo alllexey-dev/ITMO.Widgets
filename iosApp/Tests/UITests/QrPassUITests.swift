@@ -20,7 +20,7 @@ final class QrPassUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
 
-        element(app, "home.openQr").tap()
+        element(app, "home_qr_fab").tap()
 
         XCTAssertTrue(element(app, "qr.pass").waitForExistence(timeout: stepTimeout))
         let image = element(app, "qr_pass_image")

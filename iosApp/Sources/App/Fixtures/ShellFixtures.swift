@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Fixture mode of the shell (IO-06b): placeholder roots, and in a Debug build a fixture session gate and demo
 /// banner without Kotlin. The placeholders stand in for the CMP screens the feature cards host (IO-09x; the QR pass is
-/// CMP since IO-21), so they draw their own top bar under the compose chrome.
+/// CMP since IO-21, the home feed since IO-09a), so they draw their own top bar under the compose chrome.
 enum ShellFixtures {
     /// The launch argument that picks a fixture session instead of the shared one:
     /// `-itmoShellSession loading|signed-out|demo|signed-in`.
@@ -20,8 +20,8 @@ enum ShellFixtures {
     }
 }
 
-/// A tab root: the tab's title in its own top bar and the tab's empty state; home has the entry to the QR pass, me
-/// the settings and the sign-out (with Android's confirmation) until the Compose Me tab is hosted.
+/// A tab root: the tab's title in its own top bar and the tab's empty state; me has the settings and the sign-out
+/// (with Android's confirmation) until the Compose Me tab is hosted.
 struct FixtureRootScreen: View {
     let tab: ShellTab
     let router: AppRouter
@@ -32,13 +32,6 @@ struct FixtureRootScreen: View {
     var body: some View {
         FixtureComposeScreen(title: tab.title) {
             ItmoEmptyView(symbol: tab.symbol, title: tab.title)
-            if tab == .home {
-                ItmoProgressButton(title: AppStrings.string("home_open_qr"), symbol: .qrCode) {
-                    router.open(AppRoutes.QrPass.shared)
-                }
-                .padding(.horizontal, ItmoSpacing.screenMargin)
-                .accessibilityIdentifier("home.openQr")
-            }
             if tab == .me {
                 ItmoProgressButton(title: AppStrings.string("settings_title"), symbol: .settings) {
                     router.open(AppRoutes.Settings(page: AppRoutes.Settings.companion.ROOT_PAGE))

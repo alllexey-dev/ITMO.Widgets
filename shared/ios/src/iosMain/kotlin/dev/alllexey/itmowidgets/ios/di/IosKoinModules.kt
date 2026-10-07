@@ -4,6 +4,9 @@ import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
+import dev.alllexey.itmowidgets.feature.home.data.PlacedWidgetKinds
+import dev.alllexey.itmowidgets.feature.home.di.homeIosModule
+import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
@@ -43,5 +46,7 @@ object IosKoinModules {
         scheduleWidgetIosModule,
         // The web sign-in sheet and the update offer on their iOS ports (IO-08b).
         webLoginDataModule, webLoginModule, updateModule, updateIosModule,
+        // The home feed with the hints over WidgetKit and UNUserNotificationCenter (IO-09a).
+        homeModule, homeIosModule(PlacedWidgetKinds { completion -> platform.installedWidgetKinds(completion) }),
     )
 }

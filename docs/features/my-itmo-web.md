@@ -90,8 +90,8 @@ request with synthetic HTML, keeping the real WebView lifecycle; it runs in
 the route `AppRoutes.MyItmoWeb`: a SwiftUI screen pushed on the tab's stack
 under the native bar, not the Compose `MyItmoWebScreen` (it has no iOS browser
 slot). The demo session refuses it before the route map (`ShellGate`), as on
-Android. Until the home tab is hosted on iOS (IO-09) the route has no entry
-point.
+Android. The home tab's My ITMO button opens it, as on Android; in the demo
+it says «Недоступно в демо».
 
 - Bar: «My ITMO», «Обновить страницу» and the menu «Ещё» with «Открыть в
   браузере» (`https://my.itmo.ru/` in Safari). The system back button replaces
