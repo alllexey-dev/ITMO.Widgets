@@ -13,9 +13,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getBoundsInRoot
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -32,6 +30,7 @@ import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateViewModel
 import dev.alllexey.itmowidgets.feature.update.ui.preview.AppUpdatePreviewData
 import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
+import dev.alllexey.itmowidgets.testkit.awaitText
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -157,10 +156,10 @@ class AppUpdateScreenTest {
         }
 
         onNodeWithTag(AppUpdateTestTags.UPDATE).performScrollTo().performClick()
-        waitUntil { onAllNodes(hasText(OPEN_FAILED)).fetchSemanticsNodes().isNotEmpty() }
+        val snackbar = awaitText(OPEN_FAILED)
 
         assertEquals(listOf(true), requests)
-        onNodeWithText(OPEN_FAILED).assertExists()
+        snackbar.assertExists()
     }
 
     private companion object {

@@ -29,6 +29,7 @@ import dev.alllexey.itmowidgets.shared.feature.sport.sport_sign_success
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
+import dev.alllexey.itmowidgets.testkit.awaitResource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -181,10 +182,9 @@ class SportSignDialogsTest {
                 snackbars.showSportSignMessage(SportSignEvent.ShowToast(UiText.Res(Res.string.sport_sign_success)))
             }
         }
-        // getString loads on the resources' own scope, which Compose idling does not track.
-        waitUntil("a snackbar is shown", RESOURCE_LOAD_TIMEOUT_MS) { snackbars.currentSnackbarData != null }
+        val message = awaitResource("a snackbar is shown") { snackbars.currentSnackbarData?.visuals?.message }
 
-        assertEquals("Записали", snackbars.currentSnackbarData?.visuals?.message)
+        assertEquals("Записали", message)
     }
 
     private fun ComposeUiTest.showDialogs(
@@ -212,7 +212,6 @@ class SportSignDialogsTest {
     private companion object {
         const val CONFIRM = "Автозапись"
         const val BACK = "Назад"
-        const val RESOURCE_LOAD_TIMEOUT_MS = 5_000L
         val FreeSign: SportSignCommand = SportSignCommand.CreateFreeSign(7)
         val AutoSign: SportSignCommand = SportSignCommand.CreateAutoSign(8)
         val LeaveQueue: SportSignCommand = SportSignCommand.CancelAutoSign(9)
