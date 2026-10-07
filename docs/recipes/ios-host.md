@@ -275,7 +275,15 @@ The Android catalog is the only source of copy; Swift holds no Russian
 - XCUITest does not drive Siri, Control Center or the springboard: unit-test
   each `perform()` and check those surfaces once by hand on the simulator.
 - Record the app's footprint in "Memory" of [the iOS app](../ios.md#memory)
-  when the route is the first of its kind.
+  when the route is the first of its kind or moves the figure by more than
+  10 %, measured with the route open:
+
+```bash
+udid=$(scripts/ios/test.sh sim); xcrun simctl boot "$udid" 2> /dev/null
+xcrun simctl launch "$udid" dev.alllexey.itmowidgets -itmoDemo
+xcrun simctl openurl "$udid" itmowidgets://route/<id>
+pid=$(pgrep -f 'ITMOWidgets.app/ITMOWidgets$'); footprint -p "$pid" | grep 'phys_footprint:'
+```
 
 ## Traps
 
