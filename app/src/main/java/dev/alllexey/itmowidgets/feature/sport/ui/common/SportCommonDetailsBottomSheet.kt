@@ -21,7 +21,9 @@ import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.time.javaZone
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.ui.color
+import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.ConditionTone
@@ -45,7 +47,6 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTi
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportShareTarget
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
-import dev.alllexey.itmowidgets.feature.sport.ui.sign.titleRes
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
@@ -101,7 +102,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         header.bind(
             DetailsHeaderContent(
                 title = item.sectionName,
-                kind = item.kind?.let { getString(it.titleRes()) },
+                kind = item.kind?.let { UiText.Res(it.titleResource()).resolve(requireContext()) },
                 date = timing.start.date.toJavaLocalDate(),
                 start = timing.start.time.toJavaLocalTime(),
                 end = timing.end.time.toJavaLocalTime(),

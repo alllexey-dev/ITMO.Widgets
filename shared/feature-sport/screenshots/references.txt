@@ -4,6 +4,5 @@ SportDetailsSheetContent_lesson
 SportDetailsSheetContent_prediction
 SportDetailsSheetContent_queue
 SportMyScreen_content
-SportSignScreen_content
 UserSportScreen_content
 UserSportScreen_empty

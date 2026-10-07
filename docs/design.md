@@ -560,8 +560,8 @@ settings, and restore them if a separate test explicitly changes them.
 ## Reference implementations
 
 - Schedule day: `res/layout/item_day_schedule.xml`, `feature/schedule/ui/DayScheduleAdapter.kt`.
-- Sport cards: `res/layout/item_sport_lesson.xml`, `res/layout/item_sport_booking.xml`,
-  details sheet `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt`.
+- Sport cards: `res/layout/item_sport_booking.xml`, the `Запись` lesson card `SportLessonCard` in
+  `:shared:feature-sport`, details sheet `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt`.
 - Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsRenderer.kt`.
 - System surfaces: the quick-settings tile icon `res/drawable/ic_tile_qr.xml`
   (Material Symbols `qr_code`, white, no theme tint: SystemUI colours tile icons

@@ -55,7 +55,6 @@ class DesignCardResourcesTest {
     @Test
     fun `approved cards consume shared variants without local appearance overrides`() {
         val layouts = mapOf(
-            "item_sport_lesson" to "Content.Outlined",
             "item_sport_booking" to "Content.Outlined",
             "item_recordbook_subject" to "Content",
             "item_recordbook_note" to "Content",
@@ -81,8 +80,7 @@ class DesignCardResourcesTest {
     fun `schedule days retain wider spacing than compact sport rows`() {
         mapOf(
             "item_day_schedule" to "8dp",
-            "item_sport_booking" to "4dp",
-            "item_sport_lesson" to "4dp"
+            "item_sport_booking" to "4dp"
         ).forEach { (layout, halfGap) ->
             val row = document("layout/$layout.xml")
             assertEquals(layout, "16dp", resolve(row.getAttribute("android:paddingHorizontal")))

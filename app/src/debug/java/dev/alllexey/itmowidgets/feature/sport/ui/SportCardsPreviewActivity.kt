@@ -4,9 +4,15 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -23,15 +29,19 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
+import dev.alllexey.itmowidgets.designsystem.host.ItmoComposeHost
+import dev.alllexey.itmowidgets.designsystem.theme.ColorSource
+import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.sport.ui.my.SportBookingAdapter
 import dev.alllexey.itmowidgets.feature.sport.ui.my.SportBookingListener
-import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonItem
-import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonsAdapter
-import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportSignActionsListener
+import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonActions
+import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonList
+import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonListState
 import java.time.LocalDate
 import java.util.Locale
 import kotlinx.datetime.TimeZone
@@ -39,14 +49,18 @@ import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toKotlinLocalDate
 
-/** Isolated real adapters and details sheet, with synthetic test inputs and no network actions. */
+/**
+ * Isolated real booking adapter, `Запись` lesson list (Compose) and details sheet, with synthetic test inputs and no
+ * network actions.
+ */
 @AndroidEntryPoint
-class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, SportSignActionsListener, AppNavigator by NoOpAppNavigator {
+class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, AppNavigator by NoOpAppNavigator {
     lateinit var list: RecyclerView
+    lateinit var lessonList: ComposeView
     var actionCount = 0
     var lastAction: String? = null
     val bookingAdapter = SportBookingAdapter(FixedTime, this)
-    val lessonAdapter = SportLessonsAdapter(this, FixedTime)
+    private var lessons by mutableStateOf<List<SportLesson>>(emptyList())
     val openedScreens = mutableListOf<Pair<AppScreen, Bundle?>>()
 
     override fun attachBaseContext(newBase: Context) {
@@ -93,10 +107,16 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
             layoutManager = LinearLayoutManager(this@SportCardsPreviewActivity)
             clipToPadding = false
         }
-        frame.addView(list, FrameLayout.LayoutParams(
-            if (appearance.widthDp > 0) (appearance.widthDp * resources.displayMetrics.density).toInt() else -1,
-            -1, Gravity.CENTER_HORIZONTAL
-        ))
+        lessonList = ComposeView(this).apply {
+            visibility = View.GONE
+            setContent { LessonList() }
+        }
+        for (child in listOf(list, lessonList)) {
+            frame.addView(child, FrameLayout.LayoutParams(
+                if (appearance.widthDp > 0) (appearance.widthDp * resources.displayMetrics.density).toInt() else -1,
+                -1, Gravity.CENTER_HORIZONTAL
+            ))
+        }
         setContentView(frame)
         WindowCompat.getInsetsController(window, frame).apply {
             isAppearanceLightStatusBars = !appearance.dark
@@ -122,13 +142,37 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
     }
 
     fun showBookings(items: List<SportBooking>) {
+        lessonList.visibility = View.GONE
+        list.visibility = View.VISIBLE
         list.adapter = bookingAdapter
         bookingAdapter.submitList(items)
     }
 
-    fun showLessons(items: List<SportLessonItem>) {
-        list.adapter = lessonAdapter
-        lessonAdapter.submitList(items)
+    /** The `Запись` cards of [items] as the page lists them, on [FixedTime]. */
+    fun showLessons(items: List<SportLesson>) {
+        list.visibility = View.GONE
+        lessonList.visibility = View.VISIBLE
+        lessons = items
+    }
+
+    @Composable
+    private fun LessonList() = ItmoComposeHost.locals {
+        ItmoTheme(colorSource = appearance.colorSeed?.let(ColorSource::Seed) ?: ColorSource.Platform) {
+            SportLessonList(
+                state = SportLessonListState.Lessons(lessons),
+                time = FixedTime,
+                actions = SportLessonActions(onOpen = ::showDetails, onAction = { _, action -> action(action.actionName()) }),
+                onRetry = {},
+            )
+        }
+    }
+
+    private fun SportBookingAction.actionName(): String = when (this) {
+        SportBookingAction.SIGN -> "sign"
+        SportBookingAction.CANCEL -> "unsign"
+        SportBookingAction.AUTO -> "auto"
+        SportBookingAction.CANCEL_AUTO -> "unauto"
+        SportBookingAction.NONE -> "none"
     }
 
     fun showDetails(item: SportCommon) {
@@ -139,11 +183,6 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
     override fun onUnSign(booking: SportBooking) = action("cancel")
     override fun onLocationClick(booking: SportBooking) = action("map")
     override fun onBookingClick(booking: SportBooking) = showDetails(booking)
-    override fun onSignUpClick(lesson: SportLesson) = action("sign")
-    override fun onUnSignClick(lesson: SportLesson) = action("unsign")
-    override fun onAutoSignClick(lesson: SportLesson) = action("auto")
-    override fun onUnAutoSignClick(lesson: SportLesson) = action("unauto")
-    override fun onLessonClick(lesson: SportLesson) = showDetails(lesson)
 
     object FixedTime : AcademicTimeProvider {
         override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")

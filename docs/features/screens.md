@@ -3,7 +3,7 @@
 Every UI host of the Android application: 26 Fragments, 12 bottom sheets, 2
 dialogs and 3 activities, 43 in total, plus the overlay host
 `AppOverlayHostFragment` and `SpoilerCropActivity`, which extends CanHub's
-`CropImageActivity`. 34 `@HiltViewModel` classes and 18 `*VisualTest.kt` files
+`CropImageActivity`. 34 `@HiltViewModel` classes and 16 `*VisualTest.kt` files
 back them. Each feature has its own section; a change to a screen updates only
 the rows of its section.
 
@@ -34,7 +34,7 @@ grep -rE 'class [A-Za-z0-9_]+[^:]*: *BottomSheetDialogFragment\(' app/src/main/j
 grep -rE 'class [A-Za-z0-9_]+[^:]*: *DialogFragment\(' app/src/main/java | wc -l            # 2
 grep -rE 'class [A-Za-z0-9_]+[^:]*: *AppCompatActivity\(' app/src/main/java | wc -l         # 3
 grep -r '@HiltViewModel' app/src/main/java | wc -l                                        # 34
-find app/src -name '*VisualTest.kt' | wc -l                                               # 18
+find app/src -name '*VisualTest.kt' | wc -l                                               # 16
 ```
 
 ## App shell
@@ -131,7 +131,7 @@ Feature doc: [Sport](sport.md).
 |---|---|---|---|---|---|
 | `feature/sport/ui/common/SportFragment.kt` | Fragment | — (pages own theirs) | `navigation_sport`, `AppRoot.SPORT` | — | — |
 | `feature/sport/ui/my/SportMyFragment.kt` | Fragment | `SportMyViewModel` (Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportScoreCollapsePreviewActivity.kt` | `feature/sport/cards/SportBookingCardsVisualTest.kt` (cards), `core/ui/DesignComponentsVisualTest.kt` (layout) |
-| `feature/sport/ui/sign/SportSignFragment.kt` | Fragment | `SportSignViewModel` (Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportCardsPreviewActivity.kt` (cards) | `feature/sport/cards/SportLessonCardsVisualTest.kt` (cards), `core/ui/DesignComponentsVisualTest.kt` (layout) |
+| `feature/sport/ui/sign/SportSignFragment.kt` hosting `SportSignRoute` (`:shared:feature-sport`) | Fragment | `SportSignViewModel` (Koin, Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportCardsPreviewActivity.kt` (lesson list) | `SportScreenshotTest` (`:shared:feature-sport`) |
 | `feature/sport/ui/user/UserSportFragment.kt` | Fragment | `UserSportViewModel` | `user_sport`, `AppScreen.USER_SPORT` | — | — |
 | `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt` | bottom sheet | — | `SportMyFragment`, `SportSignFragment`; `MainNavigationCoordinator.openSportDetails` for a schedule row that is a known booking | `feature/sport/ui/SportCardsPreviewActivity.kt` | `feature/sport/cards/SportDetailsSheetVisualTest.kt` |
 

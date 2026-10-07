@@ -42,7 +42,6 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
-import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonItem
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.time.LocalDate
@@ -192,7 +191,7 @@ class SiteScreenshotCapture {
         SportCardsPreviewActivity.appearance = PreviewAppearance(dark = night)
         try {
             ActivityScenario.launch(SportCardsPreviewActivity::class.java).use { scenario ->
-                scenario.onActivity { it.showLessons(catalog().map { lesson -> SportLessonItem(lesson) }) }
+                scenario.onActivity { it.showLessons(catalog()) }
                 settle()
                 capture("sport-catalog")
                 scenario.onActivity { it.showBookings(bookings()) }
