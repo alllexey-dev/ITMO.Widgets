@@ -682,10 +682,11 @@ settings, and restore them if a separate test explicitly changes them.
   `bodySmall`, the value in `titleSmall` at the end, `ic_check` in `primary`
   and `selected` for the current total; the whole row is the target), hosted
   by `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt`.
-- The `.ics` sheet: `res/layout/sheet_ics_export.xml` (handle, title,
+- The `.ics` sheet: `IcsExportSheetContent` (`:shared:feature-settings`,
+  `feature/settings/ui/ics`) (handle, title,
   subtitle, one area of at least 288 dp for the ranges, loading, the file,
-  an empty range and failures) with `res/layout/item_ics_range.xml` (a
-  connected-group row: title `bodyLarge`, days `bodySmall`, chevron),
+  an empty range and failures; the ranges are connected-group rows: title
+  `bodyLarge`, days `bodySmall`, chevron), hosted by
   `feature/settings/ui/IcsExportBottomSheet.kt`.
 - Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt` (connected
   groups per category), `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`,

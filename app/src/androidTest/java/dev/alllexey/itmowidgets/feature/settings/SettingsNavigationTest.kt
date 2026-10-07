@@ -14,11 +14,9 @@ import android.widget.ImageView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.lifecycle.Lifecycle
-import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -31,7 +29,9 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.IcsRangeKind
 import dev.alllexey.itmowidgets.feature.settings.ui.IcsExportBottomSheet
+import dev.alllexey.itmowidgets.feature.settings.ui.ics.IcsExportTestTags
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -43,7 +43,6 @@ import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
-import dev.alllexey.itmowidgets.testing.ViewChecks
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -383,36 +382,32 @@ class SettingsNavigationTest {
                     openPage(scenario, SettingsPage.SCHEDULE)
                     clickRow(scenario, SettingRowId.ICS_EXPORT)
                     settle()
-                    for (text in listOf("Неделя", "2–8 октября", "2 недели", "2–15 октября", "До конца семестра", "до 31 января", "Свои даты", "Выбрать в календаре")) {
-                        onView(withText(text)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    }
+                    assertSheetTexts(scenario, "Неделя", "2–8 октября", "2 недели", "2–15 октября", "До конца семестра", "до 31 января", "Свои даты", "Выбрать в календаре")
                     var areaHeight = 0
                     scenario.onActivity { activity ->
-                        val sheet = icsSheet(activity)
-                        val area = sheet.requireView().findViewById<View>(R.id.content)
-                        areaHeight = area.height
-                        ViewChecks.assertTextFits(sheet.requireView() as ViewGroup)
-                        ViewChecks.assertTouchTargets(sheet.requireView().findViewById(R.id.ranges), requireWidth = false)
+                        val root = sheetRoot(activity)
+                        areaHeight = sheetAreaHeight(activity)
+                        SettingsSemantics.assertTextFits(root)
+                        val minimum = 48 * root.resources.displayMetrics.density - 1
+                        for (kind in IcsRangeKind.entries) {
+                            val row = checkNotNull(SettingsSemantics.node(root, IcsExportTestTags.range(kind))) { "No $kind row" }
+                            assertTrue("$kind is ${row.size.height} px high", row.size.height >= minimum)
+                        }
                     }
                     Screenshots.capture("calendar-export-screenshots", "ics-sheet-choose-${spec.name}") { settle() }
 
-                    onView(withText("Неделя")).inRoot(isDialog()).perform(click())
+                    clickSheet(scenario, "Неделя")
                     settle()
-                    onView(withText(R.string.ics_preparing)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    scenario.onActivity { activity ->
-                        assertEquals(areaHeight, icsSheet(activity).requireView().findViewById<View>(R.id.content).height)
-                    }
+                    assertSheetTexts(scenario, string(R.string.ics_preparing))
+                    scenario.onActivity { activity -> assertEquals(areaHeight, sheetAreaHeight(activity)) }
                     Screenshots.capture("calendar-export-screenshots", "ics-sheet-preparing-${spec.name}") { settle() }
 
                     export.gate!!.complete(Unit)
                     settle()
-                    onView(withText("23 пары, 2–8 октября")).inRoot(isDialog()).check(matches(isDisplayed()))
-                    onView(withText(R.string.ics_send)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    onView(withText(R.string.ics_ready_hint)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    assertSheetTexts(scenario, "23 пары, 2–8 октября", string(R.string.ics_send), string(R.string.ics_ready_hint))
                     scenario.onActivity { activity ->
-                        val sheet = icsSheet(activity)
-                        assertEquals(areaHeight, sheet.requireView().findViewById<View>(R.id.content).height)
-                        ViewChecks.assertTextFits(sheet.requireView() as ViewGroup)
+                        assertEquals(areaHeight, sheetAreaHeight(activity))
+                        SettingsSemantics.assertTextFits(sheetRoot(activity))
                     }
                     Screenshots.capture("calendar-export-screenshots", "ics-sheet-ready-${spec.name}") { settle() }
                 }
@@ -423,23 +418,23 @@ class SettingsNavigationTest {
                     openPage(scenario, SettingsPage.SCHEDULE)
                     clickRow(scenario, SettingRowId.ICS_EXPORT)
                     settle()
-                    onView(withText("2 недели")).inRoot(isDialog()).perform(click())
+                    clickSheet(scenario, "2 недели")
                     settle()
-                    onView(withText(R.string.ics_empty)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    assertSheetTexts(scenario, string(R.string.ics_empty))
                     Screenshots.capture("calendar-export-screenshots", "ics-sheet-empty-${spec.name}") { settle() }
-                    onView(withText(R.string.ics_pick_other)).inRoot(isDialog()).perform(click())
+                    clickSheet(scenario, string(R.string.ics_pick_other))
                     settle()
-                    onView(withText("Неделя")).inRoot(isDialog()).check(matches(isDisplayed()))
+                    assertSheetTexts(scenario, "Неделя")
 
                     export.result = AppResult.Failure(AppError.Network)
-                    onView(withText("Неделя")).inRoot(isDialog()).perform(click())
+                    clickSheet(scenario, "Неделя")
                     settle()
-                    onView(withText(R.string.common_error_network)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    assertSheetTexts(scenario, string(R.string.common_error_network))
                     Screenshots.capture("calendar-export-screenshots", "ics-sheet-error-${spec.name}") { settle() }
                     export.result = AppResult.Success(file)
-                    onView(withText(R.string.common_retry)).inRoot(isDialog()).perform(click())
+                    clickSheet(scenario, string(R.string.common_retry))
                     settle()
-                    onView(withText(R.string.ics_send)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    assertSheetTexts(scenario, string(R.string.ics_send))
                 }
 
                 // The permission dialog, as asked and after a refusal for good.
@@ -650,6 +645,33 @@ class SettingsNavigationTest {
 
     private fun icsSheet(activity: SettingsNavigationTestActivity): IcsExportBottomSheet =
         settingsFragment(activity).childFragmentManager.findFragmentByTag(IcsExportBottomSheet.TAG) as IcsExportBottomSheet
+
+    /** The sheet's `ComposeView`, read through its semantics as [SettingsSemantics] reads the page. Main thread only. */
+    private fun sheetRoot(activity: SettingsNavigationTestActivity): ViewGroup = icsSheet(activity).requireView() as ViewGroup
+
+    /** The one area every state of the sheet takes. */
+    private fun sheetAreaHeight(activity: SettingsNavigationTestActivity): Int =
+        checkNotNull(SettingsSemantics.node(sheetRoot(activity), IcsExportTestTags.AREA)) { "No sheet area" }.size.height
+
+    /** The sheet shows every one of [texts]; the hidden states say nothing, so only the shown one counts. */
+    private fun assertSheetTexts(scenario: ActivityScenario<SettingsNavigationTestActivity>, vararg texts: String) {
+        scenario.onActivity { activity ->
+            val shown = SettingsSemantics.nodes(sheetRoot(activity)).flatMap { SettingsSemantics.texts(it) }.toSet()
+            texts.forEach { text -> assertTrue("No $text in the sheet: $shown", text in shown) }
+        }
+    }
+
+    /** Clicks the topmost target of the sheet that shows [text]: a range row or a button. */
+    private fun clickSheet(scenario: ActivityScenario<SettingsNavigationTestActivity>, text: String) {
+        scenario.onActivity { activity ->
+            val node = checkNotNull(
+                SettingsSemantics.nodes(sheetRoot(activity)).firstOrNull { node ->
+                    node.config.getOrNull(SemanticsActions.OnClick) != null && text in SettingsSemantics.texts(node)
+                },
+            ) { "No $text to click in the sheet" }
+            assertTrue("$text did not click", node.config[SemanticsActions.OnClick].action?.invoke() == true)
+        }
+    }
 
     private fun calendarSwitchOn(activity: SettingsNavigationTestActivity): Boolean =
         SettingsSemantics.isOn(checkNotNull(SettingsSemantics.row(settingsRoot(activity), SettingRowId.CALENDAR_SYNC)))
