@@ -42,7 +42,9 @@ import dev.alllexey.itmowidgets.core.storage.KeychainSecureStore
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
+import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.storage.WidgetReloader
+import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.preferencesDataStoreFile
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.DefaultAcademicTimeProvider
@@ -52,6 +54,7 @@ import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.datetime.TimeZone
+import platform.Foundation.NSBundle
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -100,6 +103,9 @@ fun iosCoreModule(host: IosCoreHost, backendOrigin: String = BackendOrigin.fromM
     singleOf(::QrSettingsPreferences)
     singleOf(::DeviceHintPreferences)
     singleOf(::HomeLayoutPreferences)
+    // The widget appearance (KM-11e's settings data) and the first-run flag (IO-07b).
+    singleOf(::WidgetSettingsPreferences)
+    single { UtilityStorage(get(), appVersionName()) }
     singleOf(::IosBackendGate) { bind<BackendGate>() }
 
     // The session: one Keychain item that both MyItmoApi and the session read; the client's TokenManager is its
@@ -121,6 +127,10 @@ fun iosCoreModule(host: IosCoreHost, backendOrigin: String = BackendOrigin.fromM
     single<SessionDataCleaner>(named("app-group")) { AppGroupSessionDataCleaner(get(), get()) }
     single<SessionDataCleaner>(named("website-data")) { WebsiteDataSessionDataCleaner(host, get()) }
 }
+
+/** The app's marketing version (`CFBundleShortVersionString`), what `BuildConfig.VERSION_NAME` is on Android. */
+private fun appVersionName(): String =
+    NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String ?: ""
 
 /** As Android's `TimeModule`. */
 private const val ACADEMIC_TIME_ZONE = "Europe/Moscow"

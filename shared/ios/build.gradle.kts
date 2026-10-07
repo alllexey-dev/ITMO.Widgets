@@ -22,6 +22,8 @@ kotlin {
             // ports Swift implements; the IO card of a SwiftUI-owned ViewModel exports its feature module. Every
             // export grows the header and the link (recipe ios-swiftui-screen).
             export(project(":shared:core"))
+            // The sign-in and first-run ViewModels SwiftUI owns (IO-07b).
+            export(project(":shared:feature-account"))
         }
     }
 
@@ -39,7 +41,7 @@ kotlin {
             implementation(project(":shared:feature-settings"))
             implementation(project(":shared:feature-resources"))
             implementation(project(":shared:feature-reviews"))
-            implementation(project(":shared:feature-account"))
+            api(project(":shared:feature-account"))
             // The composition probe of IosStrings and the screen hosts (screens/).
             implementation(libs.compose.runtime)
             implementation(libs.compose.ui)

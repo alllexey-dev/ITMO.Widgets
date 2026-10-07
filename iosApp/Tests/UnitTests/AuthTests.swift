@@ -3,14 +3,17 @@ import Shared
 import WebKit
 import XCTest
 
-/// The pilot sign-in (IO-07a): the bundled interceptor's bridge and the `postTokens` message handler in a real
-/// `WKWebView` hand the callback page's token response to the session, other pages and origins hand nothing, the
-/// model maps failures as Android does, and the shell's gate follows the session states. A fake gateway stands in
-/// for `SessionRepository`; pages are local HTML on an https base URL, so nothing reaches the network. Every token is
-/// synthetic.
+/// The sign-in (IO-07a, on `InteractiveLoginViewModel` since IO-07b): the bundled interceptor's bridge and the
+/// `postTokens` message handler in a real `WKWebView` hand the callback page's token response to the shared
+/// ViewModel and through it to `SessionRepository`, other pages and origins hand nothing, and the shell's gate follows
+/// the session states and the first-run flag. The page model runs on the app's graph; a token response it cannot
+/// parse fails before anything is stored, so the hand-over shows as `auth_error_invalid_credentials`. A fake gateway
+/// stands in for the session of the gate. Pages are local HTML on an https base URL, so nothing reaches the network.
+/// Every token is synthetic.
 @MainActor
 final class AuthTests: XCTestCase {
-    private let tokenResponse = #"{"access_token":"synthetic-access","refresh_token":"synthetic-refresh","id_token":"synthetic-id"}"#
+    /// Not an ITMO.ID token response: `completeItmoIdLogin` rejects it without storing anything.
+    private let tokenResponse = #"{"synthetic":"not-a-token-response"}"#
     private var gateway: FakeSessionGateway!
     private var model: ItmoSignInModel!
     private var browser: ItmoSignInBrowser!
@@ -18,7 +21,7 @@ final class AuthTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         gateway = FakeSessionGateway()
-        model = ItmoSignInModel(gateway: gateway)
+        model = ItmoSignInModel()
         browser = ItmoSignInBrowser(model: model)
     }
 
@@ -38,13 +41,13 @@ final class AuthTests: XCTestCase {
         XCTAssertTrue(source.contains("https://id.itmo.ru/auth/realms/itmo/protocol/openid-connect/token"))
     }
 
-    func testCallbackPageTokensReachCompleteItmoIdLogin() async throws {
+    func testCallbackPageTokensReachTheSession() async throws {
         try await load(page: "https://my.itmo.ru/login/callback?state=synthetic", script: postThroughBridge)
 
-        await waitUntil { self.gateway.postedTokens.count == 1 }
-        XCTAssertEqual(gateway.postedTokens, [tokenResponse])
-        XCTAssertTrue(model.isCompleting, "a successful sign-in keeps the cover until the gate leaves the page")
-        XCTAssertNil(model.errorKey)
+        await waitUntil { self.model.state.error != nil }
+        XCTAssertEqual(errorKey, "auth_error_invalid_credentials")
+        XCTAssertFalse(model.state.completingLogin)
+        XCTAssertTrue(model.state.showsError)
     }
 
     func testBridgeExistsOnlyOnTheCallbackPage() async throws {
@@ -57,18 +60,19 @@ final class AuthTests: XCTestCase {
         // Messages arrive in order, so the page's load message proves its token message was handled.
         try await load(page: "https://my.itmo.ru/login", script: postDirectly)
 
-        XCTAssertFalse(model.isCompleting)
-        XCTAssertEqual(gateway.postedTokens, [])
+        XCTAssertFalse(model.state.completingLogin)
+        XCTAssertNil(model.state.error)
     }
 
     func testTokensFromAnotherOriginAreIgnored() async throws {
         try await load(page: "https://id.itmo.ru/login/callback", script: postDirectly)
 
-        XCTAssertFalse(model.isCompleting)
-        XCTAssertEqual(gateway.postedTokens, [])
+        XCTAssertFalse(model.state.completingLogin)
+        XCTAssertNil(model.state.error)
     }
 
     func testOnlyHttpsPagesMayLoadInTheMainFrame() {
+        XCTAssertEqual(ItmoAuthUrls.login.absoluteString, "https://my.itmo.ru/")
         XCTAssertTrue(ItmoAuthUrls.isNavigable(URL(string: "https://id.itmo.ru/auth")))
         XCTAssertTrue(ItmoAuthUrls.isNavigable(URL(string: "https://oauth.vk.com/authorize")))
         XCTAssertFalse(ItmoAuthUrls.isNavigable(URL(string: "http://my.itmo.ru/")))
@@ -83,53 +87,25 @@ final class AuthTests: XCTestCase {
 
     // MARK: Model
 
-    func testFailedSignInShowsAndroidsErrorAndAllowsAnother() async {
-        let callback = URL(string: "https://my.itmo.ru/login/callback")
-        gateway.result = AppResultFailure(error: AppErrorNetwork.shared)
-
-        await model.tokensPosted(pageURL: callback, tokenResponseJson: tokenResponse)?.value
-
-        XCTAssertFalse(model.isCompleting)
-        XCTAssertEqual(model.errorKey, "auth_error_network")
-        XCTAssertTrue(model.showsError)
-
-        gateway.result = AppResultFailure(error: AppErrorUnauthorized.shared)
-        await model.tokensPosted(pageURL: callback, tokenResponseJson: tokenResponse)?.value
-        XCTAssertEqual(model.errorKey, "auth_error_invalid_credentials")
-
-        gateway.result = AppResultFailure(error: AppErrorUnknown(cause: nil))
-        await model.tokensPosted(pageURL: callback, tokenResponseJson: tokenResponse)?.value
-        XCTAssertEqual(model.errorKey, "auth_error_unknown")
-        XCTAssertEqual(gateway.postedTokens.count, 3)
-
-        let generation = model.loadGeneration
-        model.retry()
-        XCTAssertFalse(model.showsError)
-        XCTAssertEqual(model.page, .loading)
-        XCTAssertEqual(model.loadGeneration, generation + 1)
-    }
-
-    func testOneHandOverAtATime() async {
-        let callback = URL(string: "https://my.itmo.ru/login/callback")
-        let first = model.tokensPosted(pageURL: callback, tokenResponseJson: tokenResponse)
-
-        XCTAssertNotNil(first)
-        XCTAssertNil(model.tokensPosted(pageURL: callback, tokenResponseJson: tokenResponse))
-        await first?.value
-        XCTAssertEqual(gateway.postedTokens.count, 1)
-    }
-
-    func testFailedPageStaysFailedUntilRetry() {
+    func testFailedPageStaysFailedUntilRetryWhichLoadsACleanPage() {
         model.mainFrameFailed()
         model.pageStarted()
         model.pageFinished()
-        XCTAssertEqual(model.page, .failed)
-        XCTAssertEqual(model.errorTitleKey, "auth_web_error")
+        XCTAssertEqual(model.state.page, .failed)
+        XCTAssertEqual(model.errorTitle, AppStrings.string("auth_web_error"))
 
+        let generation = model.loadGeneration
         model.retry()
+        XCTAssertEqual(model.loadGeneration, generation + 1)
+        XCTAssertEqual(model.state.page, .loading)
         model.pageFinished()
-        XCTAssertEqual(model.page, .shown)
-        XCTAssertFalse(model.showsError)
+        XCTAssertEqual(model.state.page, .shown)
+        XCTAssertFalse(model.state.showsError)
+    }
+
+    func testTokensWithoutAPageAreIgnored() {
+        model.tokensPosted(pageURL: nil, tokenResponseJson: tokenResponse)
+        XCTAssertFalse(model.state.completingLogin)
     }
 
     // MARK: Gate
@@ -155,6 +131,52 @@ final class AuthTests: XCTestCase {
         }
     }
 
+    func testGateShowsTheFirstRunFlowOnlyToANewAccount() async {
+        let session = ShellSession(gateway: gateway)
+        let follow = Task { await session.follow() }
+        defer { follow.cancel() }
+        await waitUntil { self.gateway.isObserved }
+
+        gateway.emit(SessionStateSignedIn(user: nil, demo: false))
+        await waitUntil { session.state == .signedIn }
+        XCTAssertEqual(session.surface, .loading, "the flag is not read yet: nothing is guessed")
+
+        let steps: [(OnboardingStatus, ShellSurfaceKind)] = [
+            (.required, .onboarding),
+            (.passed, .tabs(demo: false)),
+        ]
+        for (status, expected) in steps {
+            gateway.emit(status)
+            await waitUntil { session.surface == expected }
+        }
+
+        gateway.emit(.required)
+        gateway.emit(SessionStateSignedIn(user: nil, demo: true))
+        await waitUntil { session.onboarding == .required && session.state == .demo }
+        XCTAssertEqual(session.surface, .tabs(demo: true), "the demo skips the flow without passing it")
+
+        gateway.emit(SessionStateSignedOut.shared)
+        await waitUntil { session.surface == .auth }
+    }
+
+    func testOnboardingPreviewShowsTheFlowOverTheDemoUntilItEnds() async {
+        let session = ShellSession(gateway: gateway, previewsOnboarding: true)
+        let follow = Task { await session.follow() }
+        defer { follow.cancel() }
+        await waitUntil { self.gateway.isObserved }
+
+        gateway.emit(SessionStateSignedIn(user: nil, demo: true))
+        await waitUntil { session.surface == .onboarding }
+        session.onboardingFinished()
+        XCTAssertEqual(session.surface, .tabs(demo: true))
+    }
+
+    func testGateFlagMapsAsAndroidsShell() {
+        XCTAssertEqual(OnboardingStatus(OnboardingGate.unknown), .unknown)
+        XCTAssertEqual(OnboardingStatus(OnboardingGate.required), .required)
+        XCTAssertEqual(OnboardingStatus(OnboardingGate.passed), .passed)
+    }
+
     func testSignOutGoesThroughTheRepositoryOnce() async {
         let session = ShellSession(gateway: gateway)
 
@@ -163,12 +185,13 @@ final class AuthTests: XCTestCase {
         XCTAssertEqual(gateway.signOutCalls, 1)
         XCTAssertEqual(session.state, .loading, "the gate waits for the repository's states")
         session.signIn()
-        XCTAssertEqual(session.state, .loading, "the shared session signs in only on the ITMO.ID page")
+        XCTAssertEqual(session.state, .loading, "the shared session signs in only on the sign-in screen")
     }
 
     func testFixtureSessionChangesWithoutARepository() async {
         let session = ShellSession(state: .demo)
         await session.follow()
+        XCTAssertEqual(session.surface, .tabs(demo: true))
         XCTAssertNil(session.signOut())
         XCTAssertEqual(session.state, .signedOut)
         session.signIn()
@@ -176,6 +199,10 @@ final class AuthTests: XCTestCase {
     }
 
     // MARK: Helpers
+
+    private var errorKey: String? {
+        (model.state.error as? UiTextRes)?.resource.key
+    }
 
     private var postThroughBridge: String {
         "window.ItmoAuthBridge.postTokens('\(tokenResponse)');"
@@ -213,15 +240,14 @@ final class AuthTests: XCTestCase {
     }
 }
 
-/// `SessionRepository` as the shell and the sign-in page see it, driven by the test.
+/// `SessionRepository` and the first-run flag as the shell sees them, driven by the test.
 @MainActor
 private final class FakeSessionGateway: SessionGateway {
-    var result: AppResult = AppResultSuccess<AnyObject>(value: nil)
-    private(set) var postedTokens: [String] = []
     private(set) var signOutCalls = 0
     private var continuation: AsyncStream<SessionState>.Continuation?
+    private var onboardingContinuation: AsyncStream<OnboardingStatus>.Continuation?
 
-    var isObserved: Bool { continuation != nil }
+    var isObserved: Bool { continuation != nil && onboardingContinuation != nil }
 
     func states() -> AsyncStream<SessionState> {
         let (stream, continuation) = AsyncStream<SessionState>.makeStream()
@@ -229,13 +255,18 @@ private final class FakeSessionGateway: SessionGateway {
         return stream
     }
 
+    func onboardingStates() -> AsyncStream<OnboardingStatus> {
+        let (stream, continuation) = AsyncStream<OnboardingStatus>.makeStream()
+        onboardingContinuation = continuation
+        return stream
+    }
+
     func emit(_ state: SessionState) {
         continuation?.yield(state)
     }
 
-    func completeItmoIdLogin(tokenResponseJson: String) async -> AppResult {
-        postedTokens.append(tokenResponseJson)
-        return result
+    func emit(_ status: OnboardingStatus) {
+        onboardingContinuation?.yield(status)
     }
 
     func signOut() async {
