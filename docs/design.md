@@ -691,31 +691,29 @@ settings, and restore them if a separate test explicitly changes them.
 - Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt` (connected
   groups per category), `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`,
   `res/layout/item_subject_link.xml`.
-- Person profile: `res/layout/fragment_user_profile.xml`,
-  `feature/social/ui/UserProfileAdapter.kt`: the hero `res/layout/item_profile_header.xml`
+- Person profile: Compose in `:shared:feature-social`
+  (`feature/social/ui/profile/UserProfileScreen.kt`): the hero `ProfileHero.kt`
   (`Card.Hero`: avatar, name, one short line, the ISU number with a copy symbol
-  in a 48 dp target, the friendship badge or status and buttons in
-  `core/ui/ButtonRow`, side by side or stacked at full width when the labels do
-  not fit, as `Принять заявку` and `Отклонить` at 1.3 on 320 dp), fact sections
-  `res/layout/item_profile_facts.xml` with rows `item_profile_fact.xml`, the
-  `ITMO.Widgets` group `res/layout/item_profile_sharing.xml` with rows
-  `item_profile_entry.xml`, and the reviews heading `res/layout/item_profile_section.xml`.
+  in a 48 dp target, the friendship badge or status and buttons in the kit's
+  `ButtonRow`, side by side or stacked at full width when the labels do not
+  fit, as `Принять заявку` and `Отклонить` at 1.3 on 320 dp), and in
+  `ProfileSections.kt` the fact sections as connected groups of informational
+  rows, the `ITMO.Widgets` group with its entries, and the reviews heading.
 - Teacher reviews: the own review as a group of its own, the others as one
-  connected group, `res/layout/item_teacher_review.xml` (`subject, date` with
+  connected group, `feature/social/ui/reviews/TeacherReviewRow.kt` (`subject, date` with
   `⋮`; the full text; a footer: on the left who wrote it in `bodyMedium`, a
   named author or the source as a link, otherwise `Анонимный отзыв`, and under
   it the verification in `bodySmall`, `Вёл у автора` with a 16 dp `ic_check` in
-  `colorPrimary` or a muted `Не подтверждён`; on the right the vote pill
-  `view_link_vote_pill.xml` centred on that column; 12 dp under the footer,
-  16 dp under a row that ends with its text), `res/layout/item_own_teacher_review.xml` (`мой`,
+  `colorPrimary` or a muted `Не подтверждён`; on the right the kit's vote pill
+  centred on that column; 12 dp under the footer,
+  16 dp under a row that ends with its text), `OwnTeacherReviewRow.kt` (`мой`,
   a status pill as a 12 % wash of its tone: content-based palettes make
-  `…Container` colours too dark for the tone as text), bound in `feature/social/ui/ReviewViews.kt`.
-- AI summary: `res/layout/item_teacher_summary.xml` (`Card.Content.Tonal`, a
+  `…Container` colours too dark for the tone as text).
+- AI summary: `feature/social/ui/reviews/TeacherSummaryCard.kt` (`Card.Content.Tonal`, a
   header with `auto_awesome` and a muted `ИИ`, the tone row with the dot, pros
-  and cons as icon rows `view_summary_point.xml`, tag chips
-  `item_summary_tag_chip.xml` and five scales `view_summary_scale.xml`
+  and cons as icon rows, tag chips and five scales
   collapsed behind the text button `Подробнее`/`Свернуть` whose 48 dp target
-  reaches into the card padding), bound in `feature/social/ui/SummaryViews.kt`.
+  reaches into the card padding).
 - Tone dot: `res/drawable/bg_teacher_level_dot.xml` tinted by
   `core/ui/TeacherLevelTone.kt` (`ImageView.bindLevel`), in the lesson sheet's
   teacher fact (`fact_mark` in `res/layout/item_sport_detail_fact.xml`) and the
@@ -755,5 +753,4 @@ settings, and restore them if a separate test explicitly changes them.
   `feature/schedule/ui/details/LessonDetailsSections.kt` of `:shared:feature-schedule` and
   the informational flow row between teacher and place of the kit's `DetailsHeader`.
 - Visual tests: `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
-  `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`,
-  `feature/reviews/ReviewEditorVisualTest.kt`.
+  `feature/friendselector/SelectionRowsTest.kt`, `feature/reviews/ReviewEditorVisualTest.kt`.

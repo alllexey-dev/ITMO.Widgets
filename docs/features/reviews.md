@@ -113,7 +113,7 @@ of a teacher with fewer reviews is simply `null`, and until Backend builds a new
 summary the previous one is shown with its own count, which may differ from
 `Отзывы · N`.
 
-The card (`item_teacher_summary.xml`, `Widget.ItmoWidgets.Card.Content.Tonal`, `colorSurfaceContainerLow`)
+The card (`TeacherSummaryCard` in `:shared:feature-social`, a tonal content card on `surfaceContainerLow`)
 comes first in the section, right under the heading and before the own review,
 with the usual 8 dp gap after it. Its texts are plain, with links switched off.
 From top to bottom:
@@ -127,7 +127,7 @@ From top to bottom:
 - the description;
 - pros and cons as rows with `add` and `remove` icons, each block read as
   `Плюсы: …` or `Минусы: …` and hidden when empty;
-- tag chips (`item_summary_tag_chip.xml`, 28 dp, not clickable), hidden
+- tag chips (28 dp, not clickable), hidden
   without tags: `Автомат`, `Много лаб`, `Много домашки`, `Частые контрольные`,
   `Строгий на защите`, `Мягкий на защите`, `Сложный экзамен`, `Лёгкий экзамен`,
   `Спрашивает теорию`, `Жёсткие дедлайны`, `Гибкие дедлайны`,
@@ -193,7 +193,7 @@ above the first of them. The rows sit on `colorSurfaceContainerLow`. Nothing
 ends flush with a row's edge: a footer row keeps 12 dp under it, a row that
 ends with its text or a rejection reason 16 dp.
 
-The own review (`item_own_teacher_review.xml`):
+The own review (`OwnTeacherReviewRow`):
 
 - the `мой` badge and a status pill while it is not public: `На проверке` in
   `colorTertiary`, `Отклонён` or `Скрыт` in `colorError`, each on a 12 % wash of
@@ -205,7 +205,7 @@ The own review (`item_own_teacher_review.xml`):
   у вас` or a muted `Не подтверждён` on the left, the read-only score in the
   vote pill on the right.
 
-Every other review is a row in three zones (`item_teacher_review.xml`):
+Every other review is a row in three zones (`TeacherReviewRow`):
 
 - the caption `<subject>, <date>` in at most two lines with `⋮` at the end;
 - the full text, never truncated;
@@ -306,13 +306,14 @@ the forms, restoration, suggestions growing with the history, saving with
 partial flows and validation; `ProfileReviewsTest`,
 `UserProfileStateTest` and `UserProfileViewModelTest` the section, `Написать`,
 votes, deletion, updates, the summary and its collapsed scales kept in the saved
-state. `UserProfileVisualTest` (with
-`UserProfilePreviewActivity`) and `ReviewEditorVisualTest` (with
-`ReviewEditorPreviewActivity`, debug only) cover the reviews group with the
-own review first, statuses, votes in the pill, reports, author navigation, long names, 20
-recycled reviews, the summary card in every state (tone, low confidence, empty
-blocks, long texts at 320 dp and font 1.3, every tone, collapsed and expanded
-scales across recreation, a late answer), the editor and the report dialog in
-the full appearance matrix. `LessonDetailsVisualTest` and
+state. In `:shared:feature-social`, `TeacherReviewRowTest`,
+`TeacherSummaryCardTest`, `UserProfileScreenTest` and `UserProfileRouteTest`
+cover the reviews group with the own review first, statuses, votes in the
+pill, reports, author navigation, deletion after `Удалить отзыв?`, a late
+answer and the summary card (tone, low confidence, empty blocks, the scales
+toggle); `SocialScreenshotTest` records the rows, the summary card (collapsed,
+expanded, sparse, long texts) and the profile in four appearances.
+`ReviewEditorVisualTest` (with `ReviewEditorPreviewActivity`, debug only)
+covers the editor and the report dialog in the full appearance matrix. `LessonDetailsVisualTest` and
 `RecordbookVisualTest` cover the tone dots. Use the [visual test commands](../design.md#running-the-visual-tests)
 and inspect the saved PNGs.

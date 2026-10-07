@@ -1,9 +1,12 @@
 package dev.alllexey.itmowidgets.feature.social.ui.profile
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertHasClickAction
@@ -11,6 +14,7 @@ import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -18,10 +22,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.testing.ownReview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.social.presentation.ProfileFactKind
 import dev.alllexey.itmowidgets.feature.social.presentation.SocialBlock
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
@@ -228,6 +235,56 @@ class UserProfileScreenTest {
         assertEquals(3, list.layoutInfo.totalItemsCount)
     }
 
+    @Test
+    fun theReviewsListTheSummaryTheOwnReviewThenTheOthersAndWritingFollowsTheRight() = runComposeUiTest {
+        var reviews by mutableStateOf(P.teacherReviews.copy(mine = ownReview(), canWrite = true, knownTeacher = true))
+        val list = LazyListState()
+        var writes = 0
+        setContent {
+            ItmoTheme {
+                // Tall enough for every item, so the list composes the whole page.
+                Box(Modifier.requiredHeight(TALL_PAGE)) {
+                    UserProfileScreen(P.page(P.teacher, null, reviews), UserProfileActions(onWriteReview = { writes++ }), listState = list)
+                }
+            }
+        }
+
+        assertEquals(
+            listOf("hero", "facts:POSITION", "facts:ROOM", "reviews:heading", "reviews:summary", "reviews:own") +
+                P.teacherReviews.reviews.map { "review:${it.id}" },
+            list.layoutInfo.visibleItemsInfo.map { it.key },
+        )
+        onNodeWithContentDescription("Отзывы, 4").assertExists()
+        // An own review takes the place of writing a new one.
+        onNodeWithTag(UserProfileTestTags.WRITE_REVIEW).assertDoesNotExist()
+
+        reviews = reviews.copy(mine = null)
+        waitForIdle()
+        onNodeWithTag(UserProfileTestTags.WRITE_REVIEW).performClick()
+        assertEquals(1, writes)
+
+        reviews = reviews.copy(canWrite = false)
+        waitForIdle()
+        onNodeWithTag(UserProfileTestTags.WRITE_REVIEW).assertDoesNotExist()
+    }
+
+    @Test
+    fun lateReviewsAppendUnderThePageWithoutMovingIt() = runComposeUiTest {
+        var page by mutableStateOf(P.page(P.teacher, null))
+        setContent { ItmoTheme { UserProfileScreen(page, UserProfileActions()) } }
+
+        val hero = onNodeWithTag(UserProfileTestTags.HERO).getUnclippedBoundsInRoot()
+        val positions = onNodeWithTag(UserProfileTestTags.facts(ProfileFactKind.POSITION)).getUnclippedBoundsInRoot()
+        onNodeWithTag(UserProfileTestTags.REVIEWS).assertDoesNotExist()
+
+        page = P.page(P.teacher, null, P.teacherReviews)
+        waitForIdle()
+        assertEquals(hero, onNodeWithTag(UserProfileTestTags.HERO).getUnclippedBoundsInRoot())
+        assertEquals(positions, onNodeWithTag(UserProfileTestTags.facts(ProfileFactKind.POSITION)).getUnclippedBoundsInRoot())
+        scrollTo(UserProfileTestTags.REVIEWS)
+        onNodeWithContentDescription("Отзывы, 3").assertExists()
+    }
+
     private fun ComposeUiTest.scrollTo(tag: String) {
         onNodeWithTag(UserProfileTestTags.LIST).performScrollToNode(hasTestTag(tag))
     }
@@ -245,6 +302,7 @@ class UserProfileScreenTest {
     )
 
     private companion object {
+        val TALL_PAGE = 4000.dp
         val FriendshipCases = listOf(
             FriendshipCase(RelationshipState.NONE, "Добавить в друзья"),
             FriendshipCase(RelationshipState.OUTGOING, "Отменить заявку", status = "Заявка отправлена"),

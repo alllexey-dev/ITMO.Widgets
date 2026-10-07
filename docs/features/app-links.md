@@ -116,10 +116,11 @@ to the latest GitHub release.
 - JVM: `AppLinksTest`, `ShareLinkFactoryTest`, `MainActivityIntentRoutingTest`,
   `SportSignViewModelTest` (shared, hidden, ended and missing lessons;
   predictions, real repeats and a missing prototype; a request before the
-  catalog answers), `SportSessionPresentationTest` (prototype id, shared date).
+  catalog answers), `SportSessionPresentationTest` (prototype id, shared date),
+  `UserProfileScreenTest.theStatesOfferRetryOnlyForAFailureAndShareOnlyForAPage`
+  (`:shared:feature-social`).
 - Instrumented: `MainActivityDeepLinkTest` (profile, sport and predicted links,
   the malformed dialog, waiting for sign-in, Recents), `ShareTextTest`,
-  `UserProfileVisualTest.shareButtonOnlyWithAPage`,
   `SportDetailsSheetVisualTest.shareActionForUpcomingLessonsBookingsAndPredictions`.
 
 ## Manual check
