@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookIosModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
-import dev.alllexey.itmowidgets.feature.schedule.widget.scheduleWidgetIosModule
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleWidgetIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule

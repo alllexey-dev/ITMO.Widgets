@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.schedule.widget
+package dev.alllexey.itmowidgets.feature.schedule.di
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
@@ -9,6 +9,8 @@ import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.widget.ScheduleTimelineTriggers
+import dev.alllexey.itmowidgets.feature.schedule.widget.ScheduleTimelineWriter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
