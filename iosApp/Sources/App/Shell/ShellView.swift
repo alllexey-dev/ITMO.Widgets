@@ -78,7 +78,7 @@ struct ShellStack: View {
         // pushes, so the end of a pushed Compose screen would scroll behind the banner (IO-21).
         VStack(spacing: 0) {
             NavigationStack(path: path) {
-                FixtureRootScreen(tab: tab, router: router, signOut: signOut)
+                root
                     .shellChrome(.compose)
                     .navigationDestination(for: ShellDestination.self) { destination in
                         Routes.view(for: destination)
@@ -90,6 +90,17 @@ struct ShellStack: View {
             if isDemo {
                 ItmoDemoBanner(signIn: leaveDemo)
             }
+        }
+    }
+
+    /// The tab's root: the Compose home feed (IO-09a), a fixture root for a tab whose IO card has not hosted it yet.
+    @ViewBuilder
+    private var root: some View {
+        switch tab {
+        case .home:
+            HomeScreen(router: router)
+        case .recordbook, .schedule, .sport, .me:
+            FixtureRootScreen(tab: tab, router: router, signOut: signOut)
         }
     }
 

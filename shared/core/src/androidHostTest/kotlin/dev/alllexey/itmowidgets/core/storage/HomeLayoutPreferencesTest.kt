@@ -38,4 +38,18 @@ class HomeLayoutPreferencesTest {
         assertEquals(setOf("WIDGETS", "SERVICES"), restored.observeDismissedHomeHints().first())
         assertEquals(setOf("SPORT"), restored.observeHiddenHomeCards().first())
     }
+
+    @Test
+    fun `forgetting the closed hints brings them all back and keeps the hidden cards`() = runTest {
+        val preferences = HomeLayoutPreferences(
+            fileDataStore(temporaryFolder.preferencesFile("forget.preferences_pb"), backgroundScope)
+        )
+        preferences.dismissHomeHint("WIDGETS")
+        preferences.setHomeCardHidden("SPORT", true)
+
+        preferences.forgetDismissedHomeHints()
+
+        assertTrue(preferences.observeDismissedHomeHints().first().isEmpty())
+        assertEquals(setOf("SPORT"), preferences.observeHiddenHomeCards().first())
+    }
 }

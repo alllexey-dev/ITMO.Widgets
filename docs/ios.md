@@ -2,9 +2,9 @@
 
 The iOS client is a SwiftUI shell around the shared Compose Multiplatform screens, with WidgetKit extensions and a
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
-umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with placeholder roots, gated on
-the shared session with the sign-in screen and the first-run flow (see Shell and routes, Sign-in), the QR pass is
-its first Compose screen, the widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets;
+umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with the Compose home feed and
+placeholder roots for the other tabs, gated on the shared session with the sign-in screen and the first-run flow (see
+Shell and routes, Sign-in), the QR pass and the home feed are its Compose screens, the widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets;
 App Shortcuts and quick actions in System entries) and the notification service passes notifications through
 unchanged.
 
@@ -129,9 +129,9 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 ## Shell and routes
 
 The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Its session gate and demo banner follow
-the shared `SessionRepository` (see Core graph); until the IO-09x cards host the tab roots, the roots are
-placeholders, and the me root holds the entry to settings and the sign-out (Android's confirmation,
-`SessionRepository.signOut()`).
+the shared `SessionRepository` (see Core graph). The home root is LH-2's Compose feed (`HomeScreen`, IO-09a); until
+the other IO-09x cards host theirs, the other roots are placeholders (`FixtureRootScreen`), and the me root holds the
+entry to settings and the sign-out (Android's confirmation, `SessionRepository.signOut()`).
 
 - Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
   sport, me. The recordbook is declared but hidden until IO-09d2 (no placeholder reaches App Review); home is
@@ -609,7 +609,9 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   `safeAreaInset` never reaches a hosted controller (nor a pushed screen), so the demo banner sits below each tab's
   stack instead of in an inset. A route's Swift screen (`Sources/Features/<Feature>/`) wraps the host with what only UIKit can do:
   the QR pass sets the screen to full brightness while it is visible and the scene is active and restores the
-  user's level otherwise (master P8). `onBack` and other callbacks are Swift closures (`dismiss()`). Compose maps
+  user's level otherwise (master P8); the home feed opens the widget instruction sheet, asks for notifications and
+  says `error_demo_unavailable` when the router refuses a key in the demo. `onBack` and other callbacks are Swift
+  closures (`dismiss()`, `router.open(_:)`). Compose maps
   `testTag` to the accessibility identifier, so UI tests find a route's parts by its test tags.
 - `ITMOWidgetsTests/BridgeTests` checks the graph start, a `StateFlow` update re-rendering a hosted SwiftUI view,
   the ViewModel cleared when the view leaves the hierarchy, and events as Swift enums, over `BridgeProbeViewModel`, a
@@ -625,6 +627,7 @@ stays under its about 30 MB limit by linking no Kotlin; these figures are the ap
 |---|---|---|
 | Launch on home (fixture roots, Koin graph and the shared session started) | 72 MB | IO-21, 2026-10-07 |
 | After visiting the 4 tabs and opening the QR pass (the first Compose screen) | 79 to 87 MB | IO-21, 2026-10-07 |
+| Launch on home (the Compose home feed with its hints, other roots fixtures) | 81 MB | IO-09a, 2026-10-07 |
 
 ## Build and test
 

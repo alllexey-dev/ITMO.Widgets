@@ -172,3 +172,39 @@ web cookies, DOM storage and HTTP cache through `WebSessionDataCleaner`.
 
 Debug visual tests intercept every WebView request with synthetic HTML and never
 send fixture data to MyITMO or Backend. URL policy is separately unit-tested.
+
+## iOS
+
+The iOS app ([iOS app](../ios.md)) shows the same feed on the same shared
+code: `HomeRoute` of `:shared:feature-home` is the root of the home tab's
+stack, hosted by `HomeScreen` (`iosApp/Sources/Features/Home/`) through
+`homeViewController` (`shared/ios`, `screens/HomeScreens.kt`). There is no top
+bar, as on Android; the feed keeps clear of the status bar, the tab bar and
+the demo banner.
+
+- Cards and buttons open the shared keys through the Swift router, as
+  Android's `homeActions` does: the QR button the pass above home, the My ITMO
+  button the website (in the demo «Недоступно в демо», as Android's toast),
+  the sport card the sport tab, a friend row the profile. A key iOS has no
+  screen for yet opens nothing.
+- Sources and renderers come from the Koin modules iOS loads: the hints with
+  this feature (`homeModule`, `homeIosModule`), the schedule, sport and friend
+  cards with their features' iOS cards. `offeredBy` keeps only the renderers
+  of kinds `PlatformCapabilities` offers, so the new-marks card stays out of
+  the feed until mark tracking and the recordbook ship on iOS.
+- Hints. `IosHomeHintStatus`: the widget hint shows until any widget of the
+  app is placed (WidgetKit's current configurations through `IosPlatform`);
+  iOS lets no app place one, so «Добавить» opens a sheet with «Как добавить
+  виджет» and the steps of the first-run flow. The notification hint shows
+  until iOS allows alerts (provisional and ephemeral too); «Включить» asks
+  iOS once, then opens the app's notification settings. The services hint
+  opens the services page of the settings. The hints are re-checked whenever
+  the app becomes active again; closed hints are kept in the same
+  `home_dismissed_hints`.
+- Tests: `HomeIosModuleTest` (the graph resolves with no request),
+  `IosHomeHintStatusTest`, `HomeCardCapabilitiesTest`
+  (`scripts/ios/test.sh kn :shared:feature-home`); `HomeUITests` on the demo
+  session (the feed, a closed hint after a relaunch, the instruction sheet,
+  the QR and My ITMO buttons, AX1). A Debug launch with
+  `-itmoForgetHomeHints` brings the closed hints back
+  (`HomeLayoutPreferences.forgetDismissedHomeHints`).

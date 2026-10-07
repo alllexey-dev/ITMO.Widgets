@@ -16,6 +16,11 @@ class HomeLayoutPreferences(dataStore: DataStore<Preferences>) : DataStorePrefer
         dataStore.edit { it[HOME_DISMISSED_HINTS] = it[HOME_DISMISSED_HINTS].orEmpty() + name }
     }
 
+    /** Brings every closed hint back; the iOS UI tests start from it (`-itmoForgetHomeHints`, Debug only). */
+    suspend fun forgetDismissedHomeHints() {
+        dataStore.edit { it.remove(HOME_DISMISSED_HINTS) }
+    }
+
     /** Names of the home card kinds hidden in settings; absent means shown. */
     fun observeHiddenHomeCards(): Flow<Set<String>> = observe { it[HOME_HIDDEN_CARDS].orEmpty() }
 

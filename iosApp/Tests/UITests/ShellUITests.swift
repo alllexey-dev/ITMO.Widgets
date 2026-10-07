@@ -71,7 +71,7 @@ final class ShellUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
 
-        element(app, "home.openQr").tap()
+        element(app, "home_qr_fab").tap()
         let pass = element(app, "qr.pass")
         XCTAssertTrue(pass.waitForExistence(timeout: stepTimeout))
         XCTAssertFalse(app.navigationBars.firstMatch.exists, "a compose route hides the navigation bar")
