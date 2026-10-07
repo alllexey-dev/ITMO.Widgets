@@ -41,7 +41,6 @@ class DesignComponentsVisualTest {
                 // One layout per line, so each port deletes only its own.
                 for (layout in listOf(
                     R.layout.fragment_schedule,
-                    R.layout.fragment_recordbook,
                     R.layout.fragment_recordbook_subject,
                 )) {
                     val root = activity.layoutInflater.inflate(layout, FrameLayout(activity), false)
@@ -84,7 +83,6 @@ class DesignComponentsVisualTest {
     fun errorAndEmptyStatesFitFullScreenAndInlineLayouts() {
         Appearances.default.forEachIndexed { index, spec -> preview(spec) { scenario ->
             val cases = listOf(
-                StateLayout("recordbook", R.layout.fragment_recordbook),
                 StateLayout("subject", R.layout.fragment_recordbook_subject),
                 StateLayout("schedule", R.layout.fragment_schedule, R.id.schedule_state_container,
                     R.id.schedule_state_title, R.id.schedule_state_description, R.id.schedule_state_action),

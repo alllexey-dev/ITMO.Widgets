@@ -18,8 +18,7 @@
     <fragment
         android:id="@+id/navigation_recordbook"
         android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookFragment"
-        android:label="Record book"
-        tools:layout="@layout/fragment_recordbook" />
+        android:label="Record book" />
 
     <fragment
         android:id="@+id/navigation_schedule"

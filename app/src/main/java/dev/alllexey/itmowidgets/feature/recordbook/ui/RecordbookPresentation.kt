@@ -14,13 +14,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroupKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookGradeScale
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookAttentionReason
-import java.text.NumberFormat
-import java.util.Locale
 
 fun RecordbookSubject.displayRate(context: Context): String = if (absent) context.getString(R.string.recordbook_absent) else when (val value = normalizedRate) {
     RecordbookRate.Credit -> context.getString(R.string.recordbook_rate_credit)
@@ -28,37 +24,10 @@ fun RecordbookSubject.displayRate(context: Context): String = if (absent) contex
     is RecordbookRate.Grade -> value.code
 }
 
-val RecordbookSubject.compactGradeCode: String?
-    get() = (normalizedRate as? RecordbookRate.Grade)?.code?.takeIf { it.matches(Regex("[2345][A-FX]{0,2}")) }
-
-fun RecordbookSubject.assessmentLabel(context: Context): String = buildList {
-    add(controlType)
-    // «Без оценки» says nothing next to the points; only an uncoded result such as a no-show reason is added.
-    if (normalizedRate is RecordbookRate.Grade && compactGradeCode == null) add(displayRate(context))
-}.filter(String::isNotBlank).distinct().joinToString(" · ")
-
-fun formatRecordbookNumber(value: Double): String = NumberFormat.getNumberInstance(Locale.forLanguageTag("ru")).apply {
-    maximumFractionDigits = 1
-}.format(value)
-
 fun RecordbookSubjectStatus.progressColor(context: Context): Int = when (this) {
     RecordbookSubjectStatus.PASSED -> ContextCompat.getColor(context, R.color.recordbook_passed)
     RecordbookSubjectStatus.ATTENTION -> context.color.resolve(androidx.appcompat.R.attr.colorError)
     RecordbookSubjectStatus.IN_PROGRESS -> context.color.primary
-}
-
-fun RecordbookSportState.compactText(context: Context): String = when (this) {
-    is RecordbookSportState.Content -> context.getString(R.string.recordbook_sport_source)
-    RecordbookSportState.Unavailable -> context.getString(R.string.recordbook_sport_unavailable)
-    RecordbookSportState.Error -> context.getString(R.string.recordbook_sport_error)
-}
-
-fun RecordbookAttentionReason.text(context: Context): String = when (this) {
-    RecordbookAttentionReason.Failed -> context.getString(R.string.recordbook_reason_failed)
-    RecordbookAttentionReason.Absent -> context.getString(R.string.recordbook_absent)
-    is RecordbookAttentionReason.BelowMinimum -> context.getString(R.string.recordbook_reason_below_minimum, controlName)
-    is RecordbookAttentionReason.SportShort ->
-        context.resources.getQuantityString(R.plurals.recordbook_reason_sport, remaining, remaining)
 }
 
 /** «до 4C ещё 3» or «до зачёта ещё 8»; whole points are shown without a fraction. */

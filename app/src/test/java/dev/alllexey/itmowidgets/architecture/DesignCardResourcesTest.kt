@@ -56,9 +56,7 @@ class DesignCardResourcesTest {
     fun `approved cards consume shared variants without local appearance overrides`() {
         val layouts = mapOf(
             "item_sport_booking" to "Content.Outlined",
-            "item_recordbook_subject" to "Content",
             "item_recordbook_note" to "Content",
-            "item_recordbook_summary" to "CompactSummary",
             "item_subject_hero" to "Hero",
             "item_recordbook_sport" to "Summary",
             "item_day_schedule" to "ScheduleDay"

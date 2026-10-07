@@ -1,25 +1,23 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
 import android.view.View
-import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.toBundle
-import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNews
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity.MemorySheetScores
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalTime as KotlinLocalTime
 import kotlinx.datetime.plus
-import com.google.android.material.R as MaterialR
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
@@ -106,11 +104,6 @@ object RecordbookPreviewFixtures {
      * or the view models change this file, never those tests.
      */
     enum class Scene {
-        /** The list in the middle of the semester: BARS chip on, new-mark dots, a sheet total, sport attention. */
-        LIST_CONTENT,
-        LIST_EMPTY,
-        LIST_ERROR,
-        PERIOD_SHEET,
         SUBJECT_SESSION,
         SUBJECT_CREDIT,
         SUBJECT_SPORT,
@@ -125,18 +118,11 @@ object RecordbookPreviewFixtures {
             reset()
             RecordbookPreviewFixtures.install(if (this == SUBJECT_SESSION) Phase.SESSION else Phase.MIDDLE)
             when (this) {
-                LIST_CONTENT -> {
-                    barsOn()
-                    RecordbookPreviewActivity.MemoryMarkTracking.news.value = listOf(newMark(MATH), newMark(DESIGN))
-                    MemorySheetScores.scores.value = listOf(sheetScore(value = "41,5").copy(scope = HISTORY_SCOPE))
-                }
-                LIST_EMPTY -> RecordbookPreviewActivity.repository = Periods(AppResult.Success(emptyList()))
-                LIST_ERROR -> RecordbookPreviewActivity.repository = Periods(AppResult.Failure(AppError.Network))
                 SUBJECT_BARS -> barsOn()
                 SUBJECT_SHEET -> MemorySheetScores.scores.value = listOf(sheetScore())
                 SUBJECT_BINDING -> RecordbookPreviewActivity.lessonsGateway =
                     RecordbookPreviewActivity.MemoryLessons(lessons(Phase.MIDDLE.today) + algorithmsLesson())
-                PERIOD_SHEET, SUBJECT_SESSION, SUBJECT_CREDIT, SUBJECT_SPORT -> Unit
+                SUBJECT_SESSION, SUBJECT_CREDIT, SUBJECT_SPORT -> Unit
             }
         }
 
@@ -144,11 +130,8 @@ object RecordbookPreviewFixtures {
             val list = activity.supportFragmentManager.findFragmentByTag(RecordbookPreviewActivity.ROOT_TAG) ?: return false
             // The subject page replaces the list, whose view is then gone.
             val opened = activity.supportFragmentManager.findFragmentByTag(SUBJECT_TAG) != null
-            if (!opened && (!list.settled() || this == LIST_CONTENT && !list.barsApplied())) return false
+            if (!opened && !list.listSettled()) return false
             return when (this) {
-                LIST_CONTENT, LIST_EMPTY, LIST_ERROR -> true
-                PERIOD_SHEET -> activity.sheet(PERIOD_TAG) { list.requireView().findViewById<View>(R.id.period_button).performClick() }
-                    ?.let { it.dialog?.isShowing == true } == true
                 SUBJECT_SESSION -> activity.subject(ALGORITHMS_ID)
                 SUBJECT_CREDIT -> activity.subject(LANGUAGE_ID)
                 SUBJECT_SPORT -> activity.subject(PE_ID)
@@ -158,14 +141,10 @@ object RecordbookPreviewFixtures {
             }
         }
 
-        /** The window content, or the sheet surface for the period sheet. */
-        fun view(activity: RecordbookPreviewActivity): View = when (this) {
-            PERIOD_SHEET -> activity.sheetSurface(PERIOD_TAG)
-            else -> activity.findViewById(android.R.id.content)
-        }
+        /** The window content. */
+        fun view(activity: RecordbookPreviewActivity): View = activity.findViewById(android.R.id.content)
     }
 
-    private const val PERIOD_TAG = "RecordbookPeriodBottomSheet"
     /** The tag the host replaces the list with on [RecordbookPreviewActivity.openScreen]. */
     private const val SUBJECT_TAG = "detail"
     private const val ALGORITHMS_ID = 2L
@@ -173,24 +152,12 @@ object RecordbookPreviewFixtures {
     private const val DESIGN_ID = 4L
     private const val LANGUAGE_ID = 5L
     private const val DESIGN = "Проектирование и разработка распределённых информационных систем"
-    private val HISTORY_SCOPE = ResourceScope(6, "История", "2025-2")
-    private val SPRING = StudyHalf(2025, 2)
     private val MATH_JOURNAL = BarsJournalReference(7, "flow", "6", 2025, 2)
     private val DESIGN_JOURNAL = BarsJournalReference(8, "flow", "7", 2025, 2)
 
     private fun barsOn() {
         RecordbookPreviewActivity.bars = Bars
         RecordbookPreviewActivity.barsEnabled = true
-    }
-
-    private fun newMark(name: String) = subjectNameKey(name).let { key ->
-        MarkNews(MarkNews.idOf(SPRING, key), SPRING, key, name, Instant.parse("2026-06-01T09:00:00Z"), notified = true)
-    }
-
-    /** The periods of [Recordbook] with one fixed answer for the subjects of any of them. */
-    private class Periods(private val subjects: AppResult<List<RecordbookSubject>>) :
-        RecordbookRepository by Recordbook(Phase.MIDDLE) {
-        override suspend fun getSubjects(programId: Long, semester: Int) = subjects
     }
 
     /** BARS journals of the math and design subjects; design carries a two-module control tree. */
@@ -225,23 +192,15 @@ object RecordbookPreviewFixtures {
         subjectName = DemoStudy.ALGORITHMS.name, flowId = 5550L, teacherIsu = 300003L, teacherFio = "Лаборант Лев Львович",
         room = "1506", building = "Кронверкский проспект, 49", formatId = 1)
 
+    /** The list has loaded: its ViewModel left the first load (the Compose screen draws what it holds). */
+    private fun Fragment.listSettled(): Boolean =
+        view != null && getViewModel<RecordbookViewModel>().uiState.value !is RecordbookUiState.Loading
+
     /** Loaded: no indicator, and the content or the state area is up. */
     private fun Fragment.settled(): Boolean {
         val root = view ?: return false
         val visible = { id: Int -> root.findViewById<View>(id)?.visibility == View.VISIBLE }
         return !visible(R.id.loading) && (visible(R.id.swipe_refresh_layout) || visible(R.id.state_container))
-    }
-
-    /** BARS answered: subjects without a journal say so. */
-    private fun Fragment.barsApplied(): Boolean {
-        val missing = getString(R.string.recordbook_bars_missing)
-        return requireView().findViewById<View>(R.id.main_recycler_view).texts().any { missing in it }
-    }
-
-    private fun View.texts(): Sequence<String> = when (this) {
-        is android.widget.TextView -> sequenceOf(text.toString())
-        is android.view.ViewGroup -> (0 until childCount).asSequence().flatMap { getChildAt(it).texts() }
-        else -> emptySequence()
     }
 
     /** Opens the subject page once; true when it has loaded. */
@@ -263,17 +222,6 @@ object RecordbookPreviewFixtures {
         list.scrollToPosition(last)
         return findViewById<View>(R.id.confirm)?.visibility == View.VISIBLE
     }
-
-    /** Opens the sheet [tag] once through [open]; the sheet once it exists. */
-    private fun RecordbookPreviewActivity.sheet(tag: String, open: () -> Unit): DialogFragment? {
-        val sheet = supportFragmentManager.findFragmentByTag(tag) as DialogFragment?
-        if (sheet == null) open()
-        return sheet
-    }
-
-    private fun RecordbookPreviewActivity.sheetSurface(tag: String): View =
-        checkNotNull((supportFragmentManager.findFragmentByTag(tag) as DialogFragment).dialog)
-            .findViewById(MaterialR.id.design_bottom_sheet)
 
     class Recordbook(private val phase: Phase) : RecordbookRepository {
         override suspend fun getPrograms() = AppResult.Success(listOf(RecordbookProgram(1, "Программная инженерия", listOf(

@@ -3,178 +3,66 @@ package dev.alllexey.itmowidgets.feature.recordbook.ui
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.toBundle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
-import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
-import dev.alllexey.itmowidgets.databinding.FragmentRecordbookBinding
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelection
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/**
+ * The recordbook tab (`navigation_recordbook`), kept by name for the main graph and the notifications. The screen is
+ * `RecordbookRoute` from `:shared:feature-recordbook`; this host opens the period picker and the subject page, takes
+ * the picked period back and returns from the BARS sign-in with a refresh.
+ */
 @AndroidEntryPoint
 class RecordbookFragment : Fragment() {
-    private var _binding: FragmentRecordbookBinding? = null
-    private val binding get() = _binding!!
+    /** The route's ViewModel: `koinViewModel()` in this Fragment's ComposeView resolves the same instance. */
     private val viewModel: RecordbookViewModel by viewModel()
-    private lateinit var adapter: RecordbookAdapter
-    private var lastRefreshError: AppError? = null
-    private var lastBarsError: AppError? = null
-    private var errorSnackbar: Snackbar? = null
-    private var selection: RecordbookSelection? = null
-    private var renderingBars = false
     private val barsLogin = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == Activity.RESULT_OK) viewModel.refresh(RefreshMode.Force)
     }
-    private var scrollState: Parcelable? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentRecordbookBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        itmoComposeView {
+            RecordbookRoute(
+                onOpenPeriods = { programs, selection ->
+                    RecordbookPeriodBottomSheet.show(parentFragmentManager, programs, selection)
+                },
+                onOpenSubject = ::openSubject,
+                onBarsLogin = { barsLogin.launch(Intent(requireContext(), BarsLoginActivity::class.java)) },
+                viewModel = viewModel,
+            )
+        }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        @Suppress("DEPRECATION")
-        if (savedInstanceState != null) scrollState = savedInstanceState.getParcelable("recordbook_scroll")
-        adapter = RecordbookAdapter(::openSubject)
-        binding.mainRecyclerView.adapter = adapter
-        binding.mainRecyclerView.itemAnimator = null
-        binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh(RefreshMode.Pull) })
-        binding.stateAction.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
-        binding.barsChip.setOnCheckedChangeListener { _, checked -> if (!renderingBars) viewModel.setBarsEnabled(checked) }
         parentFragmentManager.setFragmentResultListener(RecordbookPeriodBottomSheet.RESULT_KEY, viewLifecycleOwner) { _, result ->
-            viewModel.selectPeriod(result.getLong(RecordbookPeriodBottomSheet.RESULT_PROGRAM_ID), result.getInt(RecordbookPeriodBottomSheet.RESULT_SEMESTER))
+            viewModel.selectPeriod(
+                result.getLong(RecordbookPeriodBottomSheet.RESULT_PROGRAM_ID),
+                result.getInt(RecordbookPeriodBottomSheet.RESULT_SEMESTER)
+            )
         }
-        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
+        // The route starts the load too; starting it here does not wait for the first composition frame, as the
+        // View host did not (a second Silent refresh does nothing).
         viewModel.refresh(RefreshMode.Silent)
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putParcelable("recordbook_scroll", _binding?.mainRecyclerView?.layoutManager?.onSaveInstanceState() ?: scrollState)
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onDestroyView() {
-        scrollState = binding.mainRecyclerView.layoutManager?.onSaveInstanceState()
-        binding.mainRecyclerView.adapter = null
-        errorSnackbar?.dismiss()
-        errorSnackbar = null
-        lastRefreshError = null
-        lastBarsError = null
-        _binding = null
-        super.onDestroyView()
-    }
-
-    private fun render(state: RecordbookUiState) {
-        renderingBars = true
-        binding.barsChip.isChecked = state.barsEnabled
-        renderingBars = false
-        if (state !is RecordbookUiState.Content) binding.loading.isVisible = state is RecordbookUiState.Loading
-        val refreshError = (state as? RecordbookUiState.Content)?.refreshError
-        val barsError = (state as? RecordbookUiState.Content)?.barsError
-        if (refreshError != lastRefreshError || barsError != lastBarsError) {
-            errorSnackbar?.dismiss()
-            errorSnackbar = refreshError?.let {
-                Snackbar.make(binding.root, getString(R.string.recordbook_refresh_error, getString(it.messageRes())), Snackbar.LENGTH_LONG)
-                    .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }.also(Snackbar::show)
-            } ?: barsError?.let { error ->
-                recordbookBarsSnackbar(binding.root, error, { viewModel.refresh(RefreshMode.Force) }) {
-                    barsLogin.launch(Intent(requireContext(), BarsLoginActivity::class.java))
-                }
-            }
-            lastRefreshError = refreshError
-            lastBarsError = barsError
-        }
-        binding.swipeRefreshLayout.isRefreshing = (state as? RecordbookUiState.Content)?.refreshing == true
-        when (state) {
-            is RecordbookUiState.Loading -> {
-                renderPeriod(state.programs, state.selection)
-                binding.swipeRefreshLayout.isVisible = false
-                binding.stateContainer.isVisible = false
-            }
-            is RecordbookUiState.Content -> {
-                renderPeriod(state.programs, state.selection)
-                val currentBinding = binding
-                adapter.submitData(state) {
-                    if (_binding !== currentBinding || viewModel.uiState.value != state) return@submitData
-                    currentBinding.loading.isVisible = false
-                    currentBinding.swipeRefreshLayout.isVisible = state.subjects.isNotEmpty()
-                    currentBinding.stateContainer.isVisible = state.subjects.isEmpty()
-                    scrollState?.let { currentBinding.mainRecyclerView.layoutManager?.onRestoreInstanceState(it) }
-                    scrollState = null
-                }
-                renderEmptyText()
-            }
-            is RecordbookUiState.Error -> {
-                renderPeriod(state.programs, state.selection)
-                binding.swipeRefreshLayout.isVisible = false
-                binding.stateContainer.isVisible = true
-                binding.stateIcon.setImageResource(R.drawable.ic_error)
-                binding.stateTitle.setText(R.string.common_load_error_title)
-                binding.stateDescription.setText(state.error.messageRes())
-                binding.stateAction.isVisible = true
-            }
-            is RecordbookUiState.Empty -> {
-                renderPeriod(emptyList(), null)
-                binding.swipeRefreshLayout.isVisible = false
-                binding.stateContainer.isVisible = true
-                renderEmptyText()
-            }
-        }
-    }
-
-    private fun renderEmptyText() {
-        binding.stateIcon.setImageResource(R.drawable.ic_menu_book)
-        binding.stateTitle.setText(R.string.recordbook_empty_title)
-        binding.stateDescription.setText(R.string.recordbook_empty_description)
-        binding.stateAction.isVisible = true
-    }
-
-    private fun renderPeriod(programs: List<RecordbookProgram>, selected: RecordbookSelection?) {
-        if (selection != null && selected != selection) {
-            scrollState = null
-            binding.mainRecyclerView.scrollToPosition(0)
-        }
-        selection = selected
-        binding.periodButton.isEnabled = selected != null
-        binding.periodButton.text = selected?.let { getString(R.string.recordbook_period_value, it.period.course, it.period.semester) }
-            ?: getString(R.string.recordbook_period_title)
-        binding.periodYear.text = selected?.period?.studyYear ?: " "
-        binding.periodButton.setOnClickListener {
-            selected?.let { RecordbookPeriodBottomSheet.show(parentFragmentManager, programs, it) }
-        }
-    }
-
-    private fun openSubject(subject: RecordbookSubject) {
-        val selected = selection ?: return
+    private fun openSubject(selection: RecordbookSelection, subject: RecordbookSubject) {
         val arguments = RecordbookSubjectArgs(
             entryId = subject.entryId,
-            programId = selected.program.id,
-            semester = selected.period.semester,
-            studyYear = selected.period.studyYear,
+            programId = selection.program.id,
+            semester = selection.period.semester,
+            studyYear = selection.period.studyYear,
             barsPlan = subject.barsJournal?.planId,
             barsType = subject.barsJournal?.type,
             barsIdentifier = subject.barsJournal?.identifier
