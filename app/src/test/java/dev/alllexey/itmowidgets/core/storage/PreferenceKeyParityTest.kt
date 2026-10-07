@@ -17,13 +17,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 40 key names
- * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user.
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 43 key names
+ * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The three
+ * `push_registered_*` keys are written only by iOS (IO-13a), whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 40 key names, each declared once`() {
+    fun `the app preferences keep their 43 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules (KM-06 moved core's there).
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -34,7 +35,7 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(40, declared.map { it.name }.toSet().size)
+        assertEquals(43, declared.map { it.name }.toSet().size)
     }
 
     @Test
@@ -129,6 +130,9 @@ class PreferenceKeyParityTest {
             Key("UtilityStorage.kt", "string", "skipped_version"),
             Key("UtilityStorage.kt", "long", "version_notification_timestamp"),
             Key("UtilityStorage.kt", "boolean", "onboarding_completed"),
+            Key("PushRegistrationPreferences.kt", "string", "push_registered_token"),
+            Key("PushRegistrationPreferences.kt", "int", "push_registered_owner"),
+            Key("PushRegistrationPreferences.kt", "boolean", "push_registered_alerts"),
             Key("DataStoreSubjectBindingStore.kt", "string", "subject_bindings"),
             Key("BarsPreferenceRepositoryImpl.kt", "boolean", "recordbook_bars"),
             Key("DataStoreFriendSelectionHistory.kt", "string", "recent_schedule_friends"),
