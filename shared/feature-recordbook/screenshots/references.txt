@@ -10,6 +10,3 @@ RecordbookSubjectScreen_credit
 RecordbookSubjectScreen_session
 RecordbookSubjectScreen_sheet
 RecordbookSubjectScreen_sport
-SheetScoresSheet_failure
-SheetScoresSheet_pick-row
-SheetScoresSheet_pick-total

@@ -784,12 +784,13 @@ Unit, in `shared/feature-recordbook/src/androidHostTest`: `CsvGridTest`,
 production Ktor configuration on a `MockEngine`: cookies, redirects, timeouts,
 the limit), `SheetScoresFileStoreTest`, `SheetScoresRepositoryImplTest`
 (MockWebServer over the OkHttp engine),
-`SheetScoresViewModelTest`; the sheet cases of `MarkTrackingRepositoryImplTest`,
+`SheetScoresViewModelTest`, `SheetScoresSheetTest` (the Compose sheet:
+every failure in one area, the row, tab and total picks, the name search) and
+the `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`; the sheet cases of `MarkTrackingRepositoryImplTest`,
 `MarksCheckTest`, `DefaultMarkTrackingTest`, `MarkNewsRulesTest`,
 `RecordbookSubjectViewModelTest`, `RecordbookViewModelTest` and
 `RecordbookDisplayedScoreTest`; `GoogleSheetUrlTest` in `:shared:core`.
-Instrumented: `SheetScoresVisualTest`, the sheet
-cases of `RecordbookVisualTest` and
+Instrumented: the sheet cases of `RecordbookVisualTest` and
 `SubjectLinksVisualTest.actionsSheetOffersMyScoresOnlyForAGoogleSheet`. No real
 sheet is opened; names and ISUs are made up.
 
@@ -798,7 +799,6 @@ sheet is opened; names and ISUs are made up.
 ```bash
 ./gradlew :app:testGithubDebugUnitTest
 ./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.RecordbookVisualTest,dev.alllexey.itmowidgets.feature.recordbook.RecordbookBarsVisualTest
-./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.SheetScoresVisualTest
 ./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.work.MarksWorkTest,dev.alllexey.itmowidgets.feature.recordbook.MarksNotificationTest
 ```
 
@@ -819,7 +819,7 @@ a vote from the page, chats with the own one marked `моя`,
 `Добавить ссылку` without links, expanded groups, two lessons and `Все пары`,
 a past period with its own link and PE without links, the dot of unread marks until the subject
 opens, and the sheet total in every state, the connect hint and the list
-fallback; `SheetScoresVisualTest` covers the connection sheet. Add
+fallback; the connection sheet is covered on the JVM (`SheetScoresSheetTest`). Add
 `-Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full` and
 `-Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true` for all
 four appearances and the PNGs (see

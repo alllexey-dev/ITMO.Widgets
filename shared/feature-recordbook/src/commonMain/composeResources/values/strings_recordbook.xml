@@ -58,6 +58,8 @@
     <string name="sheet_scores_pick_tab">Выберите лист</string>
     <string name="sheet_scores_pick_total">Выберите итог</string>
     <string name="sheet_scores_search_hint">Поиск по фамилии</string>
+    <!-- The clear button of the name search (TalkBack), the text the View field's clear_text icon read -->
+    <string name="sheet_scores_search_clear">Очистить текст</string>
     <string name="sheet_scores_search_empty">Никого не нашлось</string>
     <string name="sheet_scores_no_values">В строке нет значений</string>
     <string name="sheet_scores_column">Столбец %1$s</string>

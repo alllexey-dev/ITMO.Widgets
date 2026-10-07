@@ -596,12 +596,13 @@ settings, and restore them if a separate test explicitly changes them.
   glyph in line with the card's content edge; failures in `colorError`), or the
   text button `Мои баллы из таблицы` with `ic_table` in its place, bound in
   `feature/recordbook/ui/SubjectHubAdapter.kt`.
-- The «Мои баллы» sheet: `res/layout/sheet_scores_setup.xml` (handle, title,
+- The «Мои баллы» sheet: `SheetScoresSheet` of `:shared:feature-recordbook`
+  (`ui/sheets/SheetScoresSheet.kt`) on the kit's `SheetScaffold` (handle, title,
   subject, one bounded area of at least 288 dp for loading, failures and the
-  choices) with `res/layout/item_sheet_scores_option.xml` (title `bodyLarge`,
-  caption `bodySmall`, value `titleSmall` at the end, `ic_check` in
-  `colorPrimary` and `selected` for the current total; the whole row is the
-  target), `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt`.
+  choices; choice rows with the title in `bodyLarge`, the caption in
+  `bodySmall`, the value in `titleSmall` at the end, `ic_check` in `primary`
+  and `selected` for the current total; the whole row is the target), hosted
+  by `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt`.
 - The `.ics` sheet: `res/layout/sheet_ics_export.xml` (handle, title,
   subtitle, one area of at least 288 dp for the ranges, loading, the file,
   an empty range and failures) with `res/layout/item_ics_range.xml` (a
@@ -675,5 +676,4 @@ settings, and restore them if a separate test explicitly changes them.
   between teacher and place in `res/layout/view_details_header.xml`.
 - Visual tests: `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
   `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`,
-  `feature/reviews/ReviewEditorVisualTest.kt`,
-  `feature/recordbook/SheetScoresVisualTest.kt`.
+  `feature/reviews/ReviewEditorVisualTest.kt`.
