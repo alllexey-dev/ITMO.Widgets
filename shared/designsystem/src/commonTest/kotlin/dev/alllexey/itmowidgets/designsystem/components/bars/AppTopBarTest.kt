@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.designsystem.components.bars
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -98,7 +99,11 @@ class AppTopBarTest {
 
     @Test
     fun theMaterialBackIsTheBackArrowAction() = runComposeUiTest {
-        setContent { ItmoTheme { AppTopBar(title = TITLE, navigation = { AppTopBarBack(BACK, onClick = {}, title = PREVIOUS) }) } }
+        setContent {
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+                AppTopBar(title = TITLE, navigation = { AppTopBarBack(BACK, onClick = {}, title = PREVIOUS) })
+            }
+        }
 
         onNodeWithContentDescription(BACK).assertIsDisplayed()
         onNodeWithText(PREVIOUS).assertDoesNotExist()
@@ -131,7 +136,17 @@ class AppTopBarTest {
 
     @Test
     fun withoutASubtitleTheMaterialTitleStillTakesTwoLines() = runComposeUiTest {
-        setContent { ItmoTheme { AppTopBar(title = LONG, navigation = { AppTopBarAction(Icon, BACK, onClick = {}) }) } }
+        // Material and phone-wide on every platform: a simulator test defaults to the iOS style, whose title keeps to
+        // one line, in a 1024 pt window, where even this title fits one line (Robolectric's is 320 dp).
+        setContent {
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+                AppTopBar(
+                    title = LONG,
+                    modifier = Modifier.width(PhoneWidth),
+                    navigation = { AppTopBarAction(Icon, BACK, onClick = {}) },
+                )
+            }
+        }
 
         assertEquals(2, onNodeWithText(LONG).lineCount())
     }
@@ -153,5 +168,6 @@ class AppTopBarTest {
         const val BAR = "bar"
         val Icon = ColorPainter(Color.Black)
         val Tolerance = 1.dp
+        val PhoneWidth = 320.dp
     }
 }
