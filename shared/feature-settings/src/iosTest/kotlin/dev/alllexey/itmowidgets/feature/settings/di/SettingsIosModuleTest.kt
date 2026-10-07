@@ -8,12 +8,14 @@ import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.platform.IosPlatformCapabilities
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.feature.settings.data.IosWidgetRefreshRequester
@@ -132,8 +134,8 @@ class SettingsIosModuleTest {
     }.koin
 
     /**
-     * The account module's types (`accountIosModule`, `authDataModule`) and the onboarding flag, the app's directories
-     * under [root], and no main queue (the test blocks it).
+     * The account module's types (`accountIosModule`, `authDataModule`), the onboarding flag, the recordbook graph's
+     * mark tracking (`recordbookModule`), the app's directories under [root], and no main queue (the test blocks it).
      */
     private fun standIns(): Module = module {
         single<DemoMode> { FakeDemoMode(active = true) }
@@ -152,6 +154,7 @@ class SettingsIosModuleTest {
         single<FcmTokenSync> { FcmTokenSync { } }
         single<SessionRepository> { FakeSessionRepository(SessionState.SignedOut) }
         single<OnboardingRepository> { FakeOnboardingRepository(completed = true) }
+        single<MarkTracking> { FakeMarkTracking() }
         single<AppDirectories> {
             object : AppDirectories {
                 override val files = root / "files"

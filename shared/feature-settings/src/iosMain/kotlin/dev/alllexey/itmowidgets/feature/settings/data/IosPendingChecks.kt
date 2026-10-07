@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
-import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
@@ -21,22 +20,6 @@ class StoredScheduleChangeTracking(private val preferences: ScheduleCheckPrefere
     override fun observeEnabled(): Flow<Boolean> = preferences.observeScheduleChangesEnabled()
 
     override suspend fun setEnabled(enabled: Boolean) = preferences.setScheduleChangesEnabled(enabled)
-
-    override suspend fun syncWork() = Unit
-
-    override fun stopWork() = Unit
-
-    override fun checkNow() = Unit
-}
-
-/** Mark tracking until IO-09d3; its settings page is hidden by `PlatformCapabilities.marks` until then. */
-object UnavailableMarkTracking : MarkTracking {
-
-    override suspend fun setMyItmoEnabled(enabled: Boolean) = Unit
-
-    override suspend fun setBarsEnabled(enabled: Boolean) = Unit
-
-    override suspend fun setSheetsEnabled(enabled: Boolean) = Unit
 
     override suspend fun syncWork() = Unit
 

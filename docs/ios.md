@@ -201,8 +201,9 @@ Settings are SwiftUI screens over the shared page model (IO-08a): `Routes+Settin
   Background App Refresh to the ViewModel. The notification row asks for the permission while iOS has never asked,
   then opens the app's notification settings.
 - Not yet real on iOS (`shared/feature-settings/src/iosMain/.../data/IosPendingChecks.kt`): the schedule change
-  switch is stored where the check reads it, but the check runs from IO-14; mark tracking and the calendar sync are
-  stand-ins behind their hidden rows until IO-09d3 and IO-15b. "Пройти знакомство заново" resets the shared flag,
+  switch is stored where the check reads it, but the check runs from IO-14; the calendar sync is a stand-in behind
+  its hidden rows until IO-15b. Mark tracking is the recordbook graph's (IO-09d1), which schedules nothing until
+  IO-09d3, behind its hidden page. "Пройти знакомство заново" resets the shared flag,
   which the shell's gate reads (IO-07b). Widget pages draw no preview above their rows.
 - Diagnostics. The journal lists `AppDiagnostics`' records, newest first, with a stack trace folded under its
   record; the share sheet takes the plain-text journal (and copies it), clearing asks first.
@@ -288,6 +289,8 @@ entitlements, so Keychain tests are the hosted `ITMOWidgetsTests/KeychainTests`.
 | Item (account) | Written by | Read by |
 |---|---|---|
 | `myitmo_tokens` | `KeychainTokenStorage` (sign-in, and MyItmoApi's `TokenManager` on refresh) | app, notification service |
+| `bars_tokens.enc` | `BarsTokenStore` (`"<isu>\n<header>"`, the BARS sign-in and every renewal) | app |
+| `itmo_id_cookies` | `KeychainItmoIdCookies` (the `id.itmo.ru` cookies of WebKit, merged with each replay's `Set-Cookie`) | app |
 
 Each card that stores a secret adds its row. Values are never logged.
 
@@ -334,13 +337,42 @@ image row; the services step is the shared opt-in; the notifications step asks w
 `-itmoOnboarding` shows the flow over the demo session, which otherwise skips it, until the flow ends (UI tests,
 `XCUIApplication.itmoOnboarding()`); finishing it there stores the flag as a real account would.
 
+BARS session (IO-09d1, SP-21). `recordbookModule` runs on `recordbookIosModule`
+(`shared/feature-recordbook/src/iosMain/`): one `BarsClient`, `BarsTokenStore` and `OwnerBoundBarsStorage` per
+process, BARS on a Darwin engine of its own (no cookies, cache or redirects, never the MyITMO engine), and ITMO.ID's
+`bars` sign-in (`BarsLogin`) over it.
+
+- Cookies. `KeychainItmoIdCookies` is the iOS `ItmoIdCookies`: the `id.itmo.ru` cookies (WebKit's domain match also
+  returns `.itmo.ru` analytics cookies, which stay out) in the `itmo_id_cookies` item as
+  `{"version": 1, "cookies": [...]}`; a higher version or a value that does not parse reads as no cookies.
+  `ItmoIdCookieExport` replaces the copy with WebKit's cookies after every WebView session: an interactive ITMO.ID
+  sign-in (the session turns signed in from signed out or a required re-sign-in, never on launch or in the demo), the
+  BARS sign-in sheet and each hidden renewal. The background replay (`BarsCookieSilentLogin`, common) sends the copy
+  as the `Cookie` header of the authorization URL only, matched by domain, path, `Secure` and expiry as RFC 6265
+  does, and merges the answer's `Set-Cookie` back, the last of a name winning.
+- Foreground renewal. `WebViewBarsSilentLogin` asks Swift's `HiddenBarsBrowser` (`Sources/Features/Bars/`, through
+  `IosPlatform`'s `BarsWebHost`) for a `WKWebView` that is never shown, on `WKWebsiteDataStore.default()`: Kotlin's
+  `BarsWebNavigation` lets ITMO.ID pages load, cancels the exact BARS callback and hands it over, and stops on any
+  other page; a page that finishes loading is a sign-in form, so no code; 20 s at most. Only the callback with the
+  same `state` yields a code.
+- Sign-in sheet. `BarsLoginSheet` is Android's `BarsLoginActivity` over the shared `BarsLoginViewModel`, whose
+  `SavedStateHandle` is a Koin parameter (`BarsLoginParameters.fresh()`), so each sheet keeps one `state`. A retry
+  also clears WebKit's cookies, as Android clears `CookieManager`. No screen opens it until the recordbook reaches
+  iOS (IO-09d2); in a Debug build `-itmoBarsLogin` presents it, and `-itmoBarsRenew foreground|background` replaces
+  the saved header with one BARS rejects and renews it through the hidden view or the cookie copy
+  (`BarsSessionCheck`, which logs only the header's length and expiry).
+- Until the mark check runs on iOS (IO-09d3, IO-14) the marks scheduler and `AppNotifier` do nothing; a BARS answer
+  still turns "Оценки БАРС" on.
+
 Sign-out. Three `SessionDataCleaner`s run with the shared ones, on sign-out and before every sign-in or demo start:
 the Keychain (every item of the service), the App Group container and WebKit's website data, which Swift removes
 through `IosCoreHost.clearWebsiteData` (`WKWebsiteDataStore`, as Android clears its WebView data). The App Group
 cleaner removes the app's files (snapshots and a writer's leftover `.tmp` file) and keeps `locks`, `Library` and
 every other hidden file: the system's .com.apple.mobile_container_manager.metadata.plist is the container's
 record, and without it the system drops the container as stale and gives the next process a new, empty one, so the
-widgets would read a container the app no longer writes (`ITMOWidgetsTests/WidgetSnapshotsTests`).
+widgets would read a container the app no longer writes (`ITMOWidgetsTests/WidgetSnapshotsTests`). The Keychain
+cleaner takes `bars_tokens.enc` and `itmo_id_cookies` with the session; the recordbook's own cleaners run as on
+Android.
 
 ## Widgets
 
@@ -411,8 +443,8 @@ sign-out cleaners.
   demo), every `SessionDataCleaner` of the graph (`getAll()`, read on each transition), and `SessionSnapshotSync`,
   which writes session-v1.json for every signed-in state. The lifecycle effects do nothing yet (no background
   work, notifications or widgets to stop); push token sync and device registration are no-ops until IO-13a, the
-  Backend identity upload until an iOS card turns custom services on. `AppNotifier` is bound by the card that needs
-  it.
+  Backend identity upload until an iOS card turns custom services on. `AppNotifier` does nothing until IO-14 binds
+  the notifier (`recordbookIosModule` holds the placeholder).
 - Launch. `App.init` starts the graph, builds the shell's session, then calls `SessionRepository.initialize()`. A
   Debug build launched with `-itmoDemo` first opens the demo session unless `DemoMode` is already on
   (`startDemo()`), so the gate never passes the sign-in screen; most UI tests pass it through
@@ -455,16 +487,18 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
 
 - Exports. A type of an exported module has its own name in Swift (`UiText`, `AppIcon`); any other keeps a module
   prefix (`Lifecycle_viewmodelViewModel`, typealiased as `SharedViewModel`). `:shared:core`,
-  `:shared:feature-account` (IO-07b) and `:shared:feature-settings` (IO-08a) are exported; the IO card of a
-  SwiftUI-owned ViewModel exports its feature module. Each export grows the header and the link.
+  `:shared:feature-account` (IO-07b), `:shared:feature-settings` (IO-08a) and `:shared:feature-recordbook` (IO-09d1:
+  `BarsLoginViewModel`, the BARS WebKit ports) are exported; the IO card of a SwiftUI-owned ViewModel exports its
+  feature module. Each export grows the header and the link.
 - Koin start. `App.init` calls `startKoinIos(platform: AppPlatform())` after the app locale: one global graph over
   `IosKoinModules.all(platform)` (`shared/ios/src/iosMain/.../ios/di/`), `allowOverride(false)`. A second call keeps
   the running graph and returns false. `IosKoin` keeps the graph `startKoin` returned; iOS code never reads Koin's
   global context. Each feature adds one line to `IosKoinModules`; its bindings live in
   `shared/feature-<x>/src/iosMain/.../di/<Area>IosModule.kt`.
 - `IosPlatform` is the Kotlin interface Swift implements once, `iosApp/Sources/Bridge/AppPlatform.swift`: the core
-  graph's `IosCoreHost` (WidgetKit reloads, the top view controller, WebKit clearing) and `installedWidgetKinds`
-  (WidgetKit's current configurations).
+  graph's `IosCoreHost` (WidgetKit reloads, the top view controller, WebKit clearing), the BARS session's
+  `BarsWebHost` (WebKit's cookies, the hidden BARS view) and `installedWidgetKinds` (WidgetKit's current
+  configurations).
 - Reading the graph. Koin's `get` is reified, so Swift names the type: `IosKoin.shared.get(protocol: X.self)` for an
   interface, `get(type: X.self)` for a class. A missing definition crashes.
 - SwiftUI-owned ViewModels. `ObservableViewModel<Model, State>` (`iosApp/Sources/Bridge/`) is `@Observable` and owns
