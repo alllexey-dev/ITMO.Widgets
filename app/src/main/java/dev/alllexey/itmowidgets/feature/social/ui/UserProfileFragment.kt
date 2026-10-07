@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.social.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,7 +22,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.openLink
 import dev.alllexey.itmowidgets.core.ui.resolve
-import dev.alllexey.itmowidgets.core.ui.shareText
+import dev.alllexey.itmowidgets.core.ui.shareTextIntent
 import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileExits
@@ -43,8 +44,8 @@ class UserProfileFragment : Fragment() {
             UserProfileRoute(
                 UserProfileExits(
                     onBack = { closeScreen() },
-                    onShare = ::shareProfile,
-                    onCopyIsu = ::copyIsu,
+                    onShare = { requireContext().shareUserProfile(shareLinks, it) },
+                    onCopyIsu = { requireContext().copyPersonIsu(it) },
                     onFriends = { openUserScreen(AppScreen.USER_FRIENDS, it) },
                     onSchedule = { openUserScreen(AppScreen.USER_SCHEDULE, it) },
                     onSport = { openUserScreen(AppScreen.USER_SPORT, it) },
@@ -63,17 +64,24 @@ class UserProfileFragment : Fragment() {
         ))
     }
 
-    private fun shareProfile(page: UserProfileUiState.Content) {
-        val name = page.displayName.resolve(requireContext())
-        shareText(getString(R.string.share_profile_title), getString(R.string.share_profile_text, name, shareLinks.profile(page.isu)))
-    }
+}
 
-    /** The number goes to the clipboard; Android 13 and newer confirm a copy themselves. */
-    private fun copyIsu(isu: Int) {
-        requireContext().copyToClipboard(getString(R.string.person_isu_label), isu.toString()) {
-            Toast.makeText(requireContext(), R.string.person_isu_copied, Toast.LENGTH_SHORT).show()
-        }
-    }
+/** Shares [page]'s profile link under its name; the Compose shell's profile entry calls it too. */
+fun Context.shareUserProfile(shareLinks: ShareLinkFactory, page: UserProfileUiState.Content) {
+    val name = page.displayName.resolve(this)
+    val text = getString(R.string.share_profile_text, name, shareLinks.profile(page.isu))
+    startActivity(shareTextIntent(getString(R.string.share_profile_title), text))
+}
 
-    private fun UserProfileUiState.Content.reviewArgs() = TeacherReviewArgs(isu, name)
+/** The teacher the review editor and the report dialog of this page are about. */
+fun UserProfileUiState.Content.reviewArgs() = TeacherReviewArgs(isu, name)
+
+/**
+ * Puts a person's ISU number on the clipboard; Android 13 and newer confirm a copy themselves. The Compose shell's
+ * profile entry calls it too.
+ */
+fun Context.copyPersonIsu(isu: Int) {
+    copyToClipboard(getString(R.string.person_isu_label), isu.toString()) {
+        Toast.makeText(this, R.string.person_isu_copied, Toast.LENGTH_SHORT).show()
+    }
 }

@@ -166,6 +166,7 @@ class AccountEntriesTest {
                     single { ShareLinkFactory("https://widgets.alllexey.dev") }
                     single<UpdateAction> { NoUpdateAction }
                 },
+                socialTestModule(),
             )
         }.koin
     }

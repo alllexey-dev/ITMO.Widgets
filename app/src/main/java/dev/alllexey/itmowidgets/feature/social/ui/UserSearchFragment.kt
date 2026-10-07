@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.social.ui
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -26,16 +27,17 @@ class UserSearchFragment : Fragment() {
         itmoComposeView {
             UserSearchRoute(
                 onOpenProfile = { openUserProfile(it) },
-                onInvite = ::shareInvitation,
+                onInvite = { requireContext().shareSocialInvitation() },
                 onBack = { closeScreen() },
             )
         }
+}
 
-    private fun shareInvitation() {
-        val text = getString(R.string.user_search_invite_text, BuildConfig.DOWNLOAD_URL)
-        val intent = Intent(Intent.ACTION_SEND)
-            .setType("text/plain")
-            .putExtra(Intent.EXTRA_TEXT, text)
-        startActivity(Intent.createChooser(intent, getString(R.string.user_search_invite_chooser)))
-    }
+/** Shares the invitation with the download link of this distribution; the Compose shell's search entry calls it too. */
+fun Context.shareSocialInvitation() {
+    val text = getString(R.string.user_search_invite_text, BuildConfig.DOWNLOAD_URL)
+    val intent = Intent(Intent.ACTION_SEND)
+        .setType("text/plain")
+        .putExtra(Intent.EXTRA_TEXT, text)
+    startActivity(Intent.createChooser(intent, getString(R.string.user_search_invite_chooser)))
 }
