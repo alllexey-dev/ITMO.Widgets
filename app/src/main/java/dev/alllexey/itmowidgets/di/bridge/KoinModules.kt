@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.sport.di.sportModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
+import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import org.koin.core.module.Module
 
@@ -42,7 +43,6 @@ object KoinModules {
         sportBridgeModule,
         accountAuthBridgeModule,
         shellBridgeModule,
-        accountWebLoginBridgeModule,
         accountUpdateBridgeModule,
     )
 
@@ -65,6 +65,7 @@ object KoinModules {
         onboardingModule,
         meModule,
         reviewsModule,
+        webLoginDataModule,
         webLoginModule,
         updateModule,
     )

@@ -1,51 +1,40 @@
 package dev.alllexey.itmowidgets.feature.update.data
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
-import dev.alllexey.itmowidgets.core.network.Core2Harness
-import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.contractFixture
-import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.errorEnvelope
-import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.session
+import dev.alllexey.itmowidgets.client.AccessTokenSource
+import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.device.DevicePlatform
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
+import dev.alllexey.itmowidgets.testkit.FakeClock
 import dev.alllexey.itmowidgets.testkit.respondJson
+import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import java.io.IOException
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import kotlin.time.Clock
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Instant
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
+import kotlinx.io.IOException
 
-/** The update offer over Core 2.0 and MockEngine. */
+/** The update offer over the real Core 2.0 client and a MockEngine. */
 class AppUpdateRepositoryImplTest {
-
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
-    private val dispatchers = mainDispatcherRule.appDispatchers
 
     private val now: Instant = Instant.parse("2026-09-15T10:00:00Z")
 
     @Test
-    fun `reports a newer release with its note`() = runTest {
+    fun reportsANewerReleaseWithItsNote() = runTest {
         val fixture = createRepository(versionInfo(latest = "2.2", note = " Новые виджеты "))
 
         val update = fixture.repository.loadUpdate()
@@ -57,32 +46,34 @@ class AppUpdateRepositoryImplTest {
     }
 
     @Test
-    fun `asks Backend for the Android versions`() = runTest {
-        val fixture = createRepository(answer = { respondJson(contractFixture("http/app/appVersionInfo.json")) })
+    fun asksBackendForTheVersionsOfTheSuppliedPlatform() = runTest {
+        for (platform in listOf(DevicePlatform.ANDROID, DevicePlatform.IOS)) {
+            val fixture = createRepository(platform = platform, answer = { respondJson(VERSION_INFO_FIXTURE) })
 
-        assertEquals(AppVersionName("2.2"), fixture.repository.loadUpdate()?.latest)
+            assertEquals(AppVersionName("2.2"), fixture.repository.loadUpdate()?.latest)
 
-        val request = fixture.harness.requests.single()
-        assertEquals(HttpMethod.Get, request.method)
-        assertEquals("/api/app/version-info", request.url.encodedPath)
-        assertEquals("ANDROID", request.url.parameters["platform"])
+            val request = fixture.harness.requests.single()
+            assertEquals(HttpMethod.Get, request.method)
+            assertEquals("/api/app/version-info", request.url.encodedPath)
+            assertEquals(platform.name, request.url.parameters["platform"])
+        }
     }
 
     @Test
-    fun `stays silent when the installed build is current or ahead`() = runTest {
+    fun staysSilentWhenTheInstalledBuildIsCurrentOrAhead() = runTest {
         assertNull(createRepository(versionInfo(latest = "2.1")).repository.loadUpdate())
         assertNull(createRepository(versionInfo(latest = "2.0.9")).repository.loadUpdate())
     }
 
     @Test
-    fun `marks a build the backend no longer supports`() = runTest {
+    fun marksABuildTheBackendNoLongerSupports() = runTest {
         val fixture = createRepository(versionInfo(latest = "2.2", min = "2.2"))
 
         assertEquals(true, fixture.repository.loadUpdate()?.unsupported)
     }
 
     @Test
-    fun `never reaches the backend without the opt-in`() = runTest {
+    fun neverReachesTheBackendWithoutTheOptIn() = runTest {
         val fixture = createRepository(customServicesEnabled = false)
 
         assertNull(fixture.repository.loadUpdate())
@@ -90,7 +81,7 @@ class AppUpdateRepositoryImplTest {
     }
 
     @Test
-    fun `the demo session offers nothing and sends nothing, even with the stored opt-in`() = runTest {
+    fun theDemoSessionOffersNothingAndSendsNothingEvenWithTheStoredOptIn() = runTest {
         val fixture = createRepository(demo = FakeDemoMode(active = true))
 
         assertNull(fixture.repository.loadUpdate())
@@ -98,7 +89,7 @@ class AppUpdateRepositoryImplTest {
     }
 
     @Test
-    fun `a failed check offers nothing instead of failing the caller`() = runTest {
+    fun aFailedCheckOffersNothingAndLeavesOneWarning() = runTest {
         val failures = listOf<suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData>(
             { throw IOException("offline") },
             { respondJson(errorEnvelope("unauthorized"), HttpStatusCode.Unauthorized) },
@@ -110,12 +101,12 @@ class AppUpdateRepositoryImplTest {
 
             assertNull(fixture.repository.loadUpdate())
             assertEquals(1, fixture.harness.requests.size)
-            assertEquals(1, fixture.diagnostics.messages.size)
+            assertEquals(listOf("WARNING:AppUpdate:Failed to read the latest app version"), fixture.diagnostics.messages)
         }
     }
 
     @Test
-    fun `remembers when the offer was shown and which release was skipped`() = runTest {
+    fun remembersWhenTheOfferWasShownAndWhichReleaseWasSkipped() = runTest {
         val fixture = createRepository()
 
         assertEquals(Instant.fromEpochMilliseconds(0), fixture.repository.reminder().notifiedAt)
@@ -129,29 +120,29 @@ class AppUpdateRepositoryImplTest {
         assertEquals(AppVersionName("2.2"), fixture.repository.reminder().skippedVersion)
     }
 
-    private fun createRepository(
+    private fun TestScope.createRepository(
         versionInfo: String = versionInfo(),
         customServicesEnabled: Boolean = true,
         demo: FakeDemoMode = FakeDemoMode(),
+        platform: DevicePlatform = DevicePlatform.ANDROID,
         answer: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData = { respondJson(versionInfo) }
     ): Fixture {
-        val harness = Core2Harness(session(), backend = answer)
+        val harness = BackendHarness(answer)
         val diagnostics = RecordingDiagnostics()
-        val storage = UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = INSTALLED_VERSION)
+        val dispatcher = StandardTestDispatcher(testScheduler)
         return Fixture(
             harness = harness,
             diagnostics = diagnostics,
             repository = AppUpdateRepositoryImpl(
                 app = harness.client.app,
                 backend = FakeBackendGate(customServicesEnabled, demo),
-                utilityStorage = storage,
+                utilityStorage = UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = INSTALLED_VERSION),
                 installedVersion = AppVersionName(INSTALLED_VERSION),
-                clock = object : Clock {
-                    override fun now(): Instant = now
-                },
+                platform = platform,
+                clock = FakeClock(now),
                 diagnostics = diagnostics,
                 demo = demo,
-                dispatchers = dispatchers
+                dispatchers = AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher)
             )
         )
     }
@@ -163,25 +154,30 @@ class AppUpdateRepositoryImplTest {
     ) = """{"success":true,"data":{"minVersion":"$min","latestVersion":"$latest","note":"$note"},"error":null}"""
 
     private class Fixture(
-        val harness: Core2Harness,
+        val harness: BackendHarness,
         val diagnostics: RecordingDiagnostics,
         val repository: AppUpdateRepositoryImpl
     )
 
-    private class InMemoryPreferencesDataStore : DataStore<Preferences> {
-        private val state = MutableStateFlow<Preferences>(emptyPreferences())
-        private val mutex = Mutex()
-
-        override val data: Flow<Preferences> = state.asStateFlow()
-
-        override suspend fun updateData(
-            transform: suspend (t: Preferences) -> Preferences
-        ): Preferences = mutex.withLock {
-            transform(state.value).also { state.value = it }
-        }
+    /** The Core 2.0 client over one MockEngine with the stored access token; [requests] records every request. */
+    private class BackendHarness(backend: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) {
+        val requests = mutableListOf<HttpRequestData>()
+        val client = BackendClient(
+            "https://backend.test",
+            AccessTokenSource { "stored-access" },
+            MockEngine { request -> requests += request; backend(request) },
+        )
     }
 
     private companion object {
         const val INSTALLED_VERSION = "2.1"
+
+        /** Backend's contract fixture `http/app/appVersionInfo.json` of `:shared:backend-client`. */
+        const val VERSION_INFO_FIXTURE = """{"success":true,"data":{"minVersion":"2.1","latestVersion":"2.2",""" +
+            """"note":"Синтетическая заметка о версии"},"error":null}"""
+
+        /** Backend's error envelope (`GlobalExceptionHandler`) with a synthetic message. */
+        fun errorEnvelope(code: String): String =
+            """{"success":false,"data":null,"error":{"message":"synthetic message","code":"$code"}}"""
     }
 }
