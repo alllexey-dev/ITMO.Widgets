@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
-import dev.alllexey.itmowidgets.di.bridge.CoreBridgeEntryPoint
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.recordbook.work.MarksTestEntryPoint
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesTestEntryPoint
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -22,7 +22,8 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 /**
  * The Hilt set of background checks the Application and the session effects iterate. A test `@EntryPoint` would only
  * join a `@HiltAndroidTest` component, so the set is read from the Application's injected field and the single
- * bindings from the app's own entry points (`CalendarSync` is bound to the `@Singleton` `DefaultCalendarSync`).
+ * bindings from the app's own entry points; the calendar sync is Koin's one `DefaultCalendarSync`, which
+ * `ScheduleBridge` hands to the Hilt set.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -38,7 +39,7 @@ class BackgroundCheckGraphTest {
         val checks = application.backgroundChecks.toList()
         val expected = listOf(
             entryPoint<ScheduleChangesTestEntryPoint>(application).scheduleChangeTracking(),
-            CoreBridgeEntryPoint.from(application).coreCalendarSync(),
+            GlobalContext.get().get<DefaultCalendarSync>(),
             entryPoint<MarksTestEntryPoint>(application).marksTracking()
         )
 

@@ -16,10 +16,10 @@ import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
-import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -114,8 +114,9 @@ interface CoreBridgeEntryPoint {
     fun utilityStorage(): UtilityStorage
 
     fun customSpoilerRepository(): CustomSpoilerRepository
-    /** The same `@Singleton` that `ScheduleBridgeEntryPoint.defaultCalendarSync()` hands the worker. */
-    fun coreCalendarSync(): CalendarSync
+
+    /** The known buildings from `res/raw/itmo_buildings.json`; the calendar sync gives events their addresses. */
+    fun buildingDirectory(): BuildingDirectory
 
     /** Unscoped in Hilt: the export keeps no state, so every reader gets a new one. */
     fun scheduleIcsExport(): ScheduleIcsExport
@@ -173,7 +174,7 @@ val coreBridgeModule = module {
     single<DemoPreferences> { CoreBridgeEntryPoint.from(androidContext()).demoPreferences() }
     single<UtilityStorage> { CoreBridgeEntryPoint.from(androidContext()).utilityStorage() }
     single<CustomSpoilerRepository> { CoreBridgeEntryPoint.from(androidContext()).customSpoilerRepository() }
-    single<CalendarSync> { CoreBridgeEntryPoint.from(androidContext()).coreCalendarSync() }
+    single<BuildingDirectory> { CoreBridgeEntryPoint.from(androidContext()).buildingDirectory() }
     factory<ScheduleIcsExport> { CoreBridgeEntryPoint.from(androidContext()).scheduleIcsExport() }
     // Unqualified in Koin: the application scope is the only CoroutineScope of the graph; a second one fails the
     // start under allowOverride(false).

@@ -12,7 +12,7 @@ import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
-/** The phone's calendars in memory: [events] per calendar id; [access] off makes every call throw. */
+/** The phone's calendars in memory: [events] per calendar id; [access] off makes every call throw, as Android does. */
 class FakePhoneCalendars : PhoneCalendars {
     var access = true
     /** Ids of calendars that exist and accept events; the own one is added by [createOwn]. */
@@ -108,7 +108,7 @@ class FakePhoneCalendars : PhoneCalendars {
     }
 
     private fun <T> checked(block: () -> T): T {
-        if (!access) throw SecurityException("No calendar permission")
+        if (!access) throw IllegalStateException("No calendar permission")
         return block()
     }
 }

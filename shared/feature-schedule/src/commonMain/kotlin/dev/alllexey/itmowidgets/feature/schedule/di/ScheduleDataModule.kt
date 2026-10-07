@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.di
 
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
@@ -11,6 +12,10 @@ import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImp
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherWeeksFileStore
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleChangeTracking
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesCheck
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesFileStore
@@ -25,6 +30,8 @@ import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleReposit
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -42,15 +49,16 @@ val scheduleChangesCardsQualifier: Qualifier = named("schedule-changes")
 /**
  * The schedule data. Koin is the only graph for these types: one `ScheduleRepositoryImpl` serves the screens, the
  * home card, the widget, the subject page (`SubjectLessonsGateway`, `ScheduleRefreshGateway`) and sign-out; one
- * `ScheduleChangesRepositoryImpl` the change history, its home card, the background check and sign-out. Hilt-built
- * Android code (the workers, the widget entry point, the debug tools) takes them through the app's `ScheduleBridge`;
- * the calendar sync and the widget snapshot file stay in `:app`.
+ * `ScheduleChangesRepositoryImpl` the change history, its home card, the background check and sign-out; one
+ * `CalendarSyncRepositoryImpl` and one `DefaultCalendarSync` the phone calendar sync. Hilt-built Android code (the
+ * workers, the widget entry point, the debug tools) takes them through the app's `ScheduleBridge`; the `.ics` export
+ * and the widget snapshot file stay in `:app`.
  *
- * From the platform: Core 2.0's `ScheduleApi`, the `ScheduleChangeNotifier` and `ScheduleChangesScheduler` (the
- * app's `ScheduleBridge` on Android, L18's module on iOS), `AppNotifier`, `MyItmoClient` and the other core contracts
- * (`CoreBridge`), `DemoMode` and the session token store, the services opt-in and the schedule preferences
- * (`settingsDataModule`), the pending sport rows (whichever graph sport owns). The selectors come from
- * [scheduleModule].
+ * From the platform: Core 2.0's `ScheduleApi`, the `ScheduleChangeNotifier` and `ScheduleChangesScheduler`, the
+ * phone's `PhoneCalendars` and the `CalendarSyncScheduler` (the app's `ScheduleBridge` on Android, L18's module on
+ * iOS), `AppNotifier`, `MyItmoClient`, `BuildingDirectory` and the other core contracts (`CoreBridge`), `DemoMode`
+ * and the session token store, the services opt-in and the schedule preferences (`settingsDataModule`), the pending
+ * sport rows (whichever graph sport owns). The selectors come from [scheduleModule].
  */
 val scheduleDataModule = module {
     // The stores have an internal test constructor beside the public one, so their references would be ambiguous.
@@ -81,6 +89,13 @@ val scheduleDataModule = module {
     single<HomeCardSource>(qualifier = scheduleCardsQualifier) { get<ScheduleHomeCardSource>() }
     singleOf(::ScheduleChangesHomeCardSource)
     single<HomeCardSource>(qualifier = scheduleChangesCardsQualifier) { get<ScheduleChangesHomeCardSource>() }
+
+    // The phone calendar sync (L18 IO-15a): the platform supplies `PhoneCalendars` and `CalendarSyncScheduler`.
+    factory { CalendarSyncFileStore(get<AppDirectories>()) }
+    factoryOf(::MyItmoOwnScheduleSource) { bind<OwnScheduleSource>() }
+    singleOf(::CalendarSyncRepositoryImpl) { bind<CalendarSyncRepository>() }
+    single<SessionDataCleaner>(named("calendar-sync")) { get<CalendarSyncRepositoryImpl>() }
+    singleOf(::DefaultCalendarSync) { bind<CalendarSync>() }
 
     // Stateless: each widget update (Android) or timeline write (iOS, L18 IO-10b) gets its own.
     factoryOf(::ScheduleWidgetDataProvider)

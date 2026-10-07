@@ -12,6 +12,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.AndroidPhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
@@ -64,7 +65,9 @@ class CalendarSyncProviderTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val resolver get() = context.contentResolver
     private val calendars = AndroidPhoneCalendars(context, Time)
-    private val folder = File(context.cacheDir, "calendar_sync_test")
+    /** The test's own `filesDir`; the store keeps its file in `calendar_sync` under it. */
+    private val root = File(context.cacheDir, "calendar_sync_test")
+    private val folder = File(root, "calendar_sync")
     private var days: List<DaySchedule> = emptyList()
     private var otherCalendar: Long? = null
 
@@ -72,7 +75,7 @@ class CalendarSyncProviderTest {
     fun grantAndClean() {
         val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
         AndroidPhoneCalendars.PERMISSIONS.forEach { automation.grantRuntimePermission(context.packageName, it) }
-        folder.deleteRecursively()
+        root.deleteRecursively()
         calendars.findOwn()?.let(calendars::deleteOwn)
     }
 
@@ -82,7 +85,7 @@ class CalendarSyncProviderTest {
         otherCalendar?.let { id ->
             resolver.delete(syncAdapter(ContentUris.withAppendedId(Calendars.CONTENT_URI, id), OTHER_ACCOUNT), null, null)
         }
-        folder.deleteRecursively()
+        root.deleteRecursively()
     }
 
     @Test
@@ -162,7 +165,7 @@ class CalendarSyncProviderTest {
         val foreign = insertForeignEvent(other)
         val written = listOf(event("lesson-1", 10), event("lesson-2", 11)).map { SyncedEvent(calendars.insert(other, it), it) }
         written.forEach { asAdapter(it.eventId, ContentValues().apply { put(Events._SYNC_ID, "server-${it.eventId}") }) }
-        val store = CalendarSyncFileStore(folder.toOkioPath())
+        val store = store()
         folder.mkdirs()
         store.write(
             StoredCalendarSync(
@@ -207,7 +210,7 @@ class CalendarSyncProviderTest {
         days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime(11, 40))))
         enabled().sync()
         val own = calendars.findOwn()!!
-        val store = CalendarSyncFileStore(folder.toOkioPath())
+        val store = store()
         // The file forgets the ids, as after a process death between an insert and its write.
         store.write(store.read()!!.copy(events = emptyList()))
 
@@ -233,7 +236,7 @@ class CalendarSyncProviderTest {
         assertNull(calendars.findOwn())
         assertTrue(events(own).isEmpty())
         assertFalse(repository.isEnabled())
-        assertTrue(CalendarSyncFileStore(folder.toOkioPath()).read()!!.events.isEmpty())
+        assertTrue(store().read()!!.events.isEmpty())
     }
 
     @Test
@@ -260,12 +263,18 @@ class CalendarSyncProviderTest {
         assertNull(calendars.findOwn())
     }
 
+    private fun store() = CalendarSyncFileStore(object : AppDirectories {
+        override val files = root.toOkioPath()
+        override val cache = root.toOkioPath() / "cache"
+        override val noBackup = root.toOkioPath() / "no_backup"
+    })
+
     private suspend fun enabled() = repository().also { assertEquals(CalendarSyncResult.DONE, it.enable()) }
 
     private fun repository() = CalendarSyncRepositoryImpl(
         calendars,
         OwnScheduleSource { _, _ -> days },
-        CalendarSyncFileStore(folder.toOkioPath()),
+        store(),
         Time,
         BuildingDirectory(emptyList()),
         DeviceDispatchers

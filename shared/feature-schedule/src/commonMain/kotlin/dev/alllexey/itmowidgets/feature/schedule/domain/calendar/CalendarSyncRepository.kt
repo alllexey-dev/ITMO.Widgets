@@ -4,45 +4,8 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
-
-/**
- * The phone's calendars as the app sees them. Calls throw `SecurityException` without the calendar permission;
- * the caller owns IO dispatch.
- */
-interface PhoneCalendars {
-    fun hasAccess(): Boolean
-
-    /** Whether calendar [id] still exists; the app's own one, or one a previous build wrote to. */
-    fun exists(id: Long): Boolean
-
-    /** The app's own local calendar, if it exists. */
-    fun findOwn(): Long?
-
-    fun createOwn(): Long
-
-    /** Deletes the app's own calendar [id] with every event in it; any other calendar is left alone. */
-    fun deleteOwn(id: Long)
-
-    /** Inserts [event] with the app's tag in its description and the local markers. */
-    fun insert(calendarId: Long, event: CalendarEvent): Long
-
-    /** False when the event no longer exists. */
-    fun update(eventId: Long, event: CalendarEvent): Boolean
-
-    fun delete(eventId: Long)
-
-    /**
-     * Live events of [calendarId] starting in [from]..[to] that carry the app's tag or marker, whether or not their ids
-     * are stored: the sweep that finds events whose id was lost or that Google's sync wrote back.
-     */
-    fun marked(calendarId: Long, from: Instant, to: Instant): List<MarkedEvent>
-}
-
-/** An event of the phone's calendar with the app's marker. */
-data class MarkedEvent(val eventId: Long, val key: String?, val end: Instant)
 
 /** The own personal schedule straight from My ITMO, without the schedule cache and without Backend. */
 fun interface OwnScheduleSource {

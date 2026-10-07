@@ -14,7 +14,9 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherWeeksFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.WeekLesson
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.StoredCalendarSync
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.StoredScheduleChanges
@@ -37,8 +39,8 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * Sign-out on the real graph after KM-11a2: Hilt's `Set<SessionDataCleaner>` holds Koin's three schedule cleaners
- * (through `SessionCleanersBridge`) and Hilt's two once each, and running it forgets every schedule store.
+ * Sign-out on the real graph after KM-11a2 and IO-15a: Hilt's `Set<SessionDataCleaner>` holds Koin's four schedule
+ * cleaners (through `SessionCleanersBridge`) and Hilt's one once each, and running it forgets every schedule store.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -58,12 +60,12 @@ class ScheduleSessionBridgeTest {
         assertEquals(1, cleaners.count { it === koin.get<ScheduleChangesRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<TeacherLessonsGatewayImpl>() })
         assertEquals(1, cleaners.count { it is ScheduleWidgetSnapshotStoreImpl })
-        assertEquals(1, cleaners.count { it is CalendarSyncRepositoryImpl })
+        assertEquals(1, cleaners.count { it === koin.get<CalendarSyncRepositoryImpl>() })
         assertEquals(5, cleaners.count(::isScheduleCleaner))
     }
 
     @Test
-    fun `sign-out clears the schedule cache, the change history and the teacher weeks`() = runBlocking {
+    fun `sign-out clears the schedule cache, the change history, the teacher weeks and the calendar sync`() = runBlocking {
         val application = bootApplication()
         val koin = GlobalContext.get()
         val schedule = koin.get<ScheduleRepositoryImpl>()
@@ -74,6 +76,7 @@ class ScheduleSessionBridgeTest {
         assertEquals(AppResult.Success(Unit), schedule.refreshSchedule(null, today, today))
         ScheduleChangesFileStore(directories).write(StoredScheduleChanges())
         TeacherWeeksFileStore(directories).write(mapOf(LocalDate(2026, 9, 7) to listOf(WeekLesson(1, 2, "Физика"))))
+        CalendarSyncFileStore(directories).write(StoredCalendarSync())
         assertNotNull(schedule.peekScheduleForRange(null, today, today))
 
         cleaners(application).forEach { it.clearSessionData() }
@@ -81,6 +84,7 @@ class ScheduleSessionBridgeTest {
         assertNull(schedule.peekScheduleForRange(null, today, today))
         assertNull(ScheduleChangesFileStore(directories).read())
         assertTrue(TeacherWeeksFileStore(directories).read().isEmpty())
+        assertNull(CalendarSyncFileStore(directories).read())
     }
 
     private fun isScheduleCleaner(cleaner: SessionDataCleaner): Boolean =

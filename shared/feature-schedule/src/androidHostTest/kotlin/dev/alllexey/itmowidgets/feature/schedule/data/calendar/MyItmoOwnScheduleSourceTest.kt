@@ -3,8 +3,8 @@ package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
+import dev.alllexey.itmowidgets.feature.schedule.data.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.requestedRange
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.scheduleMyItmoClient
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.unreachableScheduleMyItmoClient

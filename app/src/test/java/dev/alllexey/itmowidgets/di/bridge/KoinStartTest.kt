@@ -13,9 +13,9 @@ import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
-import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -115,7 +115,7 @@ class KoinStartTest {
         assertSame(hilt.demoPreferences(), koin.get<DemoPreferences>())
         assertSame(hilt.utilityStorage(), koin.get<UtilityStorage>())
         assertSame(hilt.customSpoilerRepository(), koin.get<CustomSpoilerRepository>())
-        assertSame(hilt.coreCalendarSync(), koin.get<CalendarSync>())
+        assertSame(hilt.buildingDirectory(), koin.get<BuildingDirectory>())
         // Unscoped in Hilt, a factory in Koin: the same implementation, a new instance each time.
         assertEquals(hilt.scheduleIcsExport()::class, koin.get<ScheduleIcsExport>()::class)
         assertSame(hilt.applicationScope(), koin.get<CoroutineScope>())
