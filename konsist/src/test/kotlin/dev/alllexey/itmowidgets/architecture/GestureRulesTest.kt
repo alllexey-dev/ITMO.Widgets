@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.architecture.ArchitectureScope.testFiles
 import org.junit.Test
 
 /**
- * The horizontal swipe between the bottom tabs (ADR 0020 amendment, design.md "Tab swipe"): inner horizontal content
+ * The horizontal swipe between the bottom tabs (design.md "Tab swipe"): inner horizontal content
  * hands the swipe over through the design system's gesture modifiers, and the system's back edges stay the system's.
  */
 class GestureRulesTest {
@@ -29,6 +29,23 @@ class GestureRulesTest {
             .filter { file -> SCANNED_MODULES.any { file.projectPath.startsWith(it) } }
             .requireAtLeast(MIN_DOMAIN_FILES, "app and shared files")
             .assertFalse { GESTURE_EXCLUSION.containsMatchIn(it.text) }
+    }
+
+    @Test
+    fun `only the tab pager maps a tab to a page`() {
+        // Routes, widgets, shortcuts and links name an AppTab; the page index of a tab exists in the tab pager only.
+        val tabCode = productionFiles
+            .filter { SHARED_COMMON_MAIN.containsMatchIn(it.projectPath) || it.projectPath.startsWith(APP_MAIN) }
+            .filter { APP_TAB.containsMatchIn(it.text) }
+            .requireAtLeast(MIN_TAB_FILES, "files that name AppTab")
+            .filterNot { it.projectPath in TAB_PAGER_FILES }
+        tabCode.assertFalse { TAB_INDEX.containsMatchIn(it.text) }
+
+        val shellFiles = productionFiles
+            .filter { it.projectPath.startsWith(APP_SHELL) }
+            .requireAtLeast(MIN_SHELL_FILES, "app shell files")
+            .filterNot { it.projectPath in TAB_PAGER_FILES }
+        shellFiles.assertFalse { PAGER_READ.containsMatchIn(it.text) }
     }
 
     /**
@@ -60,6 +77,18 @@ class GestureRulesTest {
         val HORIZONTAL_SCROLLER =
             Regex("""\b(HorizontalPager|LazyHorizontalGrid)\s*\(|\bLazyRow\s*[({]|\.horizontalScroll\s*\(""")
         val TAB_SWIPE_MODIFIER = Regex("""\btabSwipe(Handover|Blocked)\s*\(""")
+
+        const val APP_SHELL = "/app/src/main/java/dev/alllexey/itmowidgets/app/shell/"
+        const val MIN_TAB_FILES = 5
+        const val MIN_SHELL_FILES = 5
+        val TAB_PAGER_FILES = listOf("${APP_SHELL}TabPages.kt", "${APP_SHELL}TabPager.kt")
+        val APP_TAB = Regex("""\bAppTab\b""")
+
+        /** A tab's ordinal or its index among the entries. */
+        val TAB_INDEX = Regex("""\.ordinal\b|\bAppTab\.entries\.indexOf\b""")
+
+        /** The pager state and its page reads. */
+        val PAGER_READ = Regex("""\bPagerState\b|\.(currentPage|settledPage|targetPage|currentPageOffsetFraction)\b""")
 
         /** The View flag, its setter and the Compose modifier. */
         val GESTURE_EXCLUSION = Regex("""(?i)systemGestureExclusion""")

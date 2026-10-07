@@ -47,6 +47,7 @@ import androidx.navigation3.runtime.NavEntry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppTab
+import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.designsystem.components.navigation.ItmoNavigationBar
 import dev.alllexey.itmowidgets.designsystem.components.navigation.ItmoNavigationBarItem
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -71,6 +72,7 @@ import org.jetbrains.compose.resources.painterResource
 object ShellTags {
     const val TAB_LAYER = "shell:tabs"
     const val TAB_CONTENT = "shell:tab_content"
+    const val TAB_PAGER = "shell:tab_pager"
     const val BAR = "shell:bar"
     const val DEMO_BANNER = "shell:demo_banner"
     const val OVERLAY_LAYER = "shell:overlays"
@@ -82,15 +84,16 @@ object ShellTags {
 }
 
 /**
- * The layers under the sheets and dialogs: the selected tab's root above the demo banner and the bar, and the overlay
- * screens full window above them, sliding in from the end in the standard 220 ms (`AppOverlayHostFragment`). While an
- * overlay covers it, the tab layer keeps its size, takes no touches and is hidden from TalkBack. Back pops the top
- * overlay with the predictive gesture, then leads a tab other than the start one to the start tab; on the start tab
- * with nothing above it the system handles Back (leaves the app).
+ * The layers under the sheets and dialogs: the tab roots in the [TabPager] above the demo banner and the bar, and the
+ * overlay screens full window above them, sliding in from the end in the standard 220 ms (`AppOverlayHostFragment`).
+ * While an overlay covers it, the tab layer keeps its size, takes no touches and is hidden from TalkBack. Back pops the
+ * top overlay with the predictive gesture, then leads a tab other than the start one to the start tab; on the start
+ * tab with nothing above it the system handles Back (leaves the app). The tabs also switch by a swipe on a tab root
+ * while nothing is open above it ([TabPages.swipeEnabled]).
  */
 @Composable
 internal fun ShellLayers(
-    tabRoot: NavEntry<AppRoute>,
+    tabRoots: (AppTab) -> NavEntry<AppRoute>,
     overlays: List<NavEntry<AppRoute>>,
     navigator: Nav3AppNavigator,
     demoBanner: Boolean,
@@ -127,25 +130,27 @@ internal fun ShellLayers(
 
     Box(Modifier.fillMaxSize()) {
         TabLayer(
-            tab = state.tab,
-            onSelect = navigator::select,
+            navigator = navigator,
             covered = overlays.isNotEmpty(),
             demoBanner = demoBanner,
             onDemoSignIn = onDemoSignIn,
-        ) { tabRoot.Content() }
+        ) { tab -> tabRoots(tab).Content() }
         OverlayLayer(overlays) { key -> if (key == backingKey) backProgress else 0f }
     }
 }
 
 @Composable
 private fun TabLayer(
-    tab: AppTab,
-    onSelect: (AppTab) -> Unit,
+    navigator: Nav3AppNavigator,
     covered: Boolean,
     demoBanner: Boolean,
     onDemoSignIn: () -> Unit,
-    content: @Composable () -> Unit,
+    page: @Composable (AppTab) -> Unit,
 ) {
+    val selected = navigator.tab
+    val exploring = rememberTouchExploration()
+    val swipeEnabled = TabPages.swipeEnabled(ShellSurface.Tabs(demoBanner), navigator.state, exploring)
+    val pages = rememberTabPagerState(selected, exploring)
     val hidden = if (covered) Modifier.clearAndSetSemantics { hideFromAccessibility() } else Modifier
     Column(Modifier.fillMaxSize().testTag(ShellTags.TAB_LAYER).then(hidden)) {
         Box(
@@ -155,9 +160,19 @@ private fun TabLayer(
                 // The bar below pads itself by the navigation bar; the tab's content must not pad again.
                 .consumeWindowInsets(WindowInsets.navigationBars)
                 .testTag(ShellTags.TAB_CONTENT),
-        ) { content() }
+        ) {
+            TabPager(
+                state = pages,
+                selected = selected,
+                swipeEnabled = swipeEnabled,
+                touchExploration = exploring,
+                onSwipe = navigator::swipeTo,
+                modifier = Modifier.fillMaxSize(),
+                page = page,
+            )
+        }
         if (demoBanner) DemoBanner(onDemoSignIn)
-        ShellNavigationBar(tab, onSelect)
+        ShellNavigationBar(pages.barTab(selected), navigator::select)
     }
 }
 

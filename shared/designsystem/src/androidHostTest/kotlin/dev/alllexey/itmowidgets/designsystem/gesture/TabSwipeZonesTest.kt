@@ -27,7 +27,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The zones the modifiers keep in [LocalTabSwipeRegistry], as the iOS shell reads them before its pan begins. */
+/** The zones the modifiers keep in [LocalTabSwipeRegistry], as a shell outside nested scrolling would read them. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w360dp-h640dp")
 class TabSwipeZonesTest {

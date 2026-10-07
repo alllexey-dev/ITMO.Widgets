@@ -76,7 +76,8 @@ internal fun ShellContent(
             ShellSurface.Progress -> GateProgress()
             ShellSurface.Auth, ShellSurface.Onboarding -> gate.single().Content()
             is ShellSurface.Tabs -> ShellDisplay(
-                tabRoot = tabRoots.getValue(state.tab),
+                tabRoots = tabRoots,
+                selected = state.tab,
                 contextual = contextual,
                 navigator = navigator,
                 demoBanner = surface.demoBanner,
@@ -87,27 +88,34 @@ internal fun ShellContent(
     }
 }
 
+/**
+ * The selected tab's root and the contextual stack in one `NavDisplay`. The shell's own scene is the tab-root scene:
+ * it shows every tab's root, each decorated in its own stack above, in the [TabPager], and the overlay screens above
+ * them.
+ */
 @Composable
 private fun ShellDisplay(
-    tabRoot: NavEntry<AppRoute>,
+    tabRoots: Map<AppTab, NavEntry<AppRoute>>,
+    selected: AppTab,
     contextual: List<NavEntry<AppRoute>>,
     navigator: Nav3AppNavigator,
     demoBanner: Boolean,
     onDemoSignIn: () -> Unit,
     modifier: Modifier,
 ) {
+    val roots by rememberUpdatedState(tabRoots)
     val banner by rememberUpdatedState(demoBanner)
     val signIn by rememberUpdatedState(onDemoSignIn)
     val shellScenes = remember(navigator) {
         ShellSceneStrategy<AppRoute> { entries ->
-            ShellLayers(entries.first(), entries.drop(1), navigator, banner, signIn)
+            ShellLayers({ tab -> roots.getValue(tab) }, entries.drop(1), navigator, banner, signIn)
         }
     }
     val sceneStrategies = remember(shellScenes) {
         listOf(DialogSceneStrategy<AppRoute>(), BottomSheetSceneStrategy(), shellScenes)
     }
     NavDisplay(
-        entries = listOf(tabRoot) + contextual,
+        entries = listOf(tabRoots.getValue(selected)) + contextual,
         modifier = modifier,
         sceneStrategies = sceneStrategies,
         onBack = { navigator.back() },

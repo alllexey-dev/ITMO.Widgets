@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.testing
 
 import android.view.View
+import android.view.accessibility.AccessibilityManager
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -14,6 +15,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.app.shell.ShellHost
+import dev.alllexey.itmowidgets.app.shell.TabPages
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
@@ -26,13 +28,15 @@ import dev.alllexey.itmowidgets.core.navigation.from
 
 /**
  * What `MainActivity` shows, in the shell's own values (SH-1a2): the [surface], the selected [tab] (null off the
- * tabs), the [overlays] bottom to top and the top sheet or dialog ([floating]).
+ * tabs), the [overlays] bottom to top and the top sheet or dialog ([floating]). [swipeEnabled]: a horizontal swipe on
+ * the tab content switches the tab now (SH-SW1); never in the legacy shell, which has no swipe.
  */
 data class ShellView(
     val surface: ShellSurface,
     val tab: AppTab?,
     val overlays: List<AppRoute>,
     val floating: AppRoute?,
+    val swipeEnabled: Boolean = false,
 ) {
     /** The key class name of [floating], the same in both shells ([ShellProbe.LegacyKey.name] in the legacy one). */
     val floatingName: String?
@@ -71,16 +75,19 @@ object ShellProbe {
     }
 
     /** Call on the main thread. */
-    fun read(activity: MainActivity): ShellView = ShellHost.of(activity)?.let(::nav3) ?: legacy(activity)
+    fun read(activity: MainActivity): ShellView =
+        ShellHost.of(activity)?.let { nav3(activity, it) } ?: legacy(activity)
 
-    private fun nav3(host: ShellHost): ShellView {
+    private fun nav3(activity: MainActivity, host: ShellHost): ShellView {
         val (surface, stack) = host.snapshot
         val tabs = surface is ShellSurface.Tabs
+        val exploring = activity.getSystemService(AccessibilityManager::class.java).isTouchExplorationEnabled
         return ShellView(
             surface = surface,
             tab = stack.tab.takeIf { tabs },
             overlays = if (tabs) stack.overlays else emptyList(),
             floating = if (tabs) stack.floating.lastOrNull() else null,
+            swipeEnabled = TabPages.swipeEnabled(surface, stack, exploring),
         )
     }
 

@@ -48,6 +48,14 @@ class Nav3AppNavigator(initial: ShellBackStack = ShellBackStack()) {
     }
 
     /**
+     * A tab swipe settled on [tab]: selects it unless it is already the selected tab, so a swipe never acts as a
+     * reselect. The swipe is off while anything is open above the tab root, so there is nothing to close.
+     */
+    fun swipeTo(tab: AppTab) {
+        if (tab != state.tab) select(tab)
+    }
+
+    /**
      * Opens [route] in its layer. A second tap on what is already the top overlay opens nothing; a sheet or dialog
      * of a class or group already shown is refused by the back stack.
      */

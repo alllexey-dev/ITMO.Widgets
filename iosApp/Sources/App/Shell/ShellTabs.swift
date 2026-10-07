@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The tab container, the only type that knows how tabs are switched. IO-SW1 swaps its `TabView` for a
-/// `UITabBarController` representable (swipe between tabs) without touching the stacks or the router.
+/// The tab container, the only type that knows how tabs are switched: by the native tab bar only, with no swipe
+/// between tabs (design.md "Tab swipe").
 struct ShellTabs<Root: View>: View {
     @Binding var selection: ShellTab
     var tabs: [ShellTab] = ShellTab.visible
