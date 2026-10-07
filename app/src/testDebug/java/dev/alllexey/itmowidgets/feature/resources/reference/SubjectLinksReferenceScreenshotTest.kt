@@ -7,7 +7,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
-import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import dev.alllexey.itmowidgets.R
@@ -17,10 +16,8 @@ import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
 import dev.alllexey.itmowidgets.feature.resources.reference.SubjectLinksReferenceFixtures.SCOPE
-import dev.alllexey.itmowidgets.feature.resources.reference.SubjectLinksReferenceFixtures.SHEET_URL
 import dev.alllexey.itmowidgets.feature.resources.reference.SubjectLinksReferenceFixtures.fixture
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
-import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.ReportLinkDialogFragment
 import java.time.Duration
 import org.junit.After
@@ -36,8 +33,8 @@ import org.robolectric.util.ReflectionHelpers
 import com.google.android.material.R as MaterialR
 
 /**
- * XML references of the links surfaces under the names of their future CMP content: the link editor, the actions
- * sheet and the report dialog (LX-3b ported the "Все ссылки" sheet), through [SubjectLinksPreviewActivity] over a
+ * XML references of the links surfaces under the names of their future CMP content: the actions sheet and the report
+ * dialog (LX-3b ported the "Все ссылки" sheet, LX-3c the link editor), through [SubjectLinksPreviewActivity] over a
  * fresh [MemorySubjectLinksRepository] per launch. The harness launches the host without extras, so it opens the links
  * sheet; other surfaces are opened over it through the host's navigator on the first poll. Each port deletes its own
  * test here and its lines in `shared/feature-resources/screenshots/references.txt`.
@@ -61,36 +58,6 @@ class SubjectLinksReferenceScreenshotTest {
     @After
     fun resetHost() {
         SubjectLinksPreviewActivity.repository = MemorySubjectLinksRepository()
-    }
-
-    @Test
-    fun linkEditorSheet() {
-        fun editor(name: String, linkId: String? = null, configure: (MemorySubjectLinksRepository) -> Unit, ready: (View) -> Boolean) =
-            references.sheet(name, LinkEditorBottomSheet.TAG, configure, open = { it.openLinkEditor(ARGS, linkId) }, ready)
-        val all: (MemorySubjectLinksRepository) -> Unit = { it.snapshots.value = mapOf(SCOPE.key to fixture()) }
-
-        editor("LinkEditorSheetContent_new", configure = all) { sheet ->
-            sheet.type(R.id.url, SHEET_URL)
-            sheet.findViewById<TextInputLayout>(R.id.name_layout).hint == "Таблица баллов"
-        }
-        editor("LinkEditorSheetContent_edit", linkId = "own-scores", configure = all) { sheet ->
-            sheet.findViewById<TextView>(R.id.url).text.isNotEmpty()
-        }
-        editor("LinkEditorSheetContent_offline", configure = {
-            it.servicesEnabled = false
-            it.snapshots.value = mapOf(SCOPE.key to fixture().copy(shared = emptyList(), previous = emptyList(),
-                audiences = emptyList(), servicesEnabled = false))
-        }) { sheet ->
-            sheet.type(R.id.url, "https://t.me/synthetic_chat")
-            sheet.findViewById<View>(R.id.connection_hint).isShown && sheet.findViewById<View>(R.id.save_button).isEnabled
-        }
-        editor("LinkEditorSheetContent_url-error", configure = all) { sheet ->
-            if (sheet.type(R.id.url, "http://example.org/notes")) {
-                sheet.findViewById<View>(R.id.category_notes).performClick()
-                sheet.findViewById<View>(R.id.save_button).performClick()
-            }
-            sheet.findViewById<TextInputLayout>(R.id.url_layout).error != null
-        }
     }
 
     @Test
@@ -161,14 +128,6 @@ class SubjectLinksReferenceScreenshotTest {
         if (opened === activity) return
         opened = activity
         open(activity)
-    }
-
-    /** Types [text] into the field once; true when it typed. */
-    private fun View.type(field: Int, text: String): Boolean {
-        val view = findViewById<TextView>(field)
-        if (view.text.isNotEmpty()) return false
-        view.text = text
-        return true
     }
 
     /** Once [reached], lets animations (chip scroll, ripples, fades) end before the capture. */
