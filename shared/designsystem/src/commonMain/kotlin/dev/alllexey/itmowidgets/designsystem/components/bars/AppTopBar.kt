@@ -44,12 +44,14 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The small top bar of a contextual screen: an optional navigation button (back or close), a concise title of up to
- * two lines and trailing actions, on `surface`. It draws no window insets; the host pads the system bars, or the
- * caller adds `windowInsetsPadding` to [modifier].
+ * two lines and trailing actions, on `surface`. An optional [subtitle] (the My ITMO page's host, as the toolbar
+ * subtitle showed it in 2.2) takes one ellipsized line under the title, which then keeps to one line. It draws no
+ * window insets; the host pads the system bars, or the caller adds `windowInsetsPadding` to [modifier].
  *
- * Under the iOS style it is the inline navigation bar: the title centred in one line of headline, the navigation
- * button leading and the actions trailing in the tint, no tonal elevation, and a hairline separator when
- * [scrolledUnder] says content scrolls beneath it (Material's bar ignores it). The swipe-back gesture stays the host's.
+ * Under the iOS style it is the inline navigation bar: the title centred in one line of headline (the subtitle centred
+ * under it), the navigation button leading and the actions trailing in the tint, no tonal elevation, and a hairline
+ * separator when [scrolledUnder] says content scrolls beneath it (Material's bar ignores it). The swipe-back gesture
+ * stays the host's.
  */
 @Composable
 fun AppTopBar(
@@ -58,10 +60,11 @@ fun AppTopBar(
     navigation: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
     scrolledUnder: Boolean = false,
+    subtitle: String? = null,
 ) {
     when (ItmoTheme.platformStyle) {
-        ItmoPlatformStyle.Material -> MaterialTopBar(title, modifier, navigation, actions)
-        ItmoPlatformStyle.Ios -> IosTopBar(title, modifier, navigation, actions, scrolledUnder)
+        ItmoPlatformStyle.Material -> MaterialTopBar(title, subtitle, modifier, navigation, actions)
+        ItmoPlatformStyle.Ios -> IosTopBar(title, subtitle, modifier, navigation, actions, scrolledUnder)
     }
 }
 
@@ -149,6 +152,7 @@ fun AppTopBarBack(
 @Composable
 private fun MaterialTopBar(
     title: String,
+    subtitle: String?,
     modifier: Modifier,
     navigation: (@Composable () -> Unit)?,
     actions: @Composable RowScope.() -> Unit,
@@ -161,17 +165,24 @@ private fun MaterialTopBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             navigation?.invoke()
-            Text(
-                title,
+            Column(
                 Modifier
                     .weight(1f)
-                    .padding(start = if (navigation == null) TitleEdgeInset else TitleNavigationGap, end = TitleEdgeInset)
-                    .semantics { heading() },
-                color = ItmoTheme.colorScheme.onSurface,
-                style = ItmoTheme.typography.titleLarge,
-                maxLines = TITLE_MAX_LINES,
-                overflow = TextOverflow.Ellipsis,
-            )
+                    .padding(
+                        start = if (navigation == null) TitleEdgeInset else TitleNavigationGap,
+                        end = TitleEdgeInset,
+                    ),
+            ) {
+                Text(
+                    title,
+                    Modifier.semantics { heading() },
+                    color = ItmoTheme.colorScheme.onSurface,
+                    style = ItmoTheme.typography.titleLarge,
+                    maxLines = if (subtitle == null) TITLE_MAX_LINES else 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (subtitle != null) Subtitle(subtitle)
+            }
             actions()
         }
     }
@@ -184,6 +195,7 @@ private fun MaterialTopBar(
 @Composable
 private fun IosTopBar(
     title: String,
+    subtitle: String?,
     modifier: Modifier,
     navigation: (@Composable () -> Unit)?,
     actions: @Composable RowScope.() -> Unit,
@@ -199,14 +211,17 @@ private fun IosTopBar(
                 { navigation?.invoke() },
                 { Row(verticalAlignment = Alignment.CenterVertically) { actions() } },
                 {
-                    Text(
-                        title,
-                        Modifier.semantics { heading() },
-                        color = ItmoTheme.colorScheme.onSurface,
-                        style = ItmoTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            title,
+                            Modifier.semantics { heading() },
+                            color = ItmoTheme.colorScheme.onSurface,
+                            style = ItmoTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (subtitle != null) Subtitle(subtitle)
+                    }
                 },
             ),
             modifier = Modifier
@@ -237,6 +252,18 @@ private fun IosTopBar(
             )
         }
     }
+}
+
+/** The one line under the title: `TextAppearance.Material3.BodySmall` in `colorOnSurfaceVariant`, as in 2.2. */
+@Composable
+private fun Subtitle(text: String) {
+    Text(
+        text,
+        color = ItmoTheme.colorScheme.onSurfaceVariant,
+        style = ItmoTheme.typography.bodySmall,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 /**

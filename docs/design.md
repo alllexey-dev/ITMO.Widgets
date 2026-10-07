@@ -346,7 +346,7 @@ A port uses the kit and grows it instead of drawing its own variant.
 
 | Component | Use | Replaces |
 |---|---|---|
-| `AppTopBar`, `AppTopBarAction` | Contextual screen: back or close, a title of up to two lines, trailing actions | `MaterialToolbar` and the hand-built contextual headers |
+| `AppTopBar`, `AppTopBarAction` | Contextual screen: back or close, a title of up to two lines (one over an optional one-line subtitle, such as the My ITMO page's host), trailing actions | `MaterialToolbar` and the hand-built contextual headers |
 | `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs; the FILL 1 icon and the label on the selected tab | `BottomNavigationView` (`Widget.ItmoWidgets.BottomNavigationView`) |
 | `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | `Widget.ItmoWidgets.ContentState.*` layouts |
 | `Skeleton` | First load without a cache, list or cards | `core/ui/SkeletonView.kt` |

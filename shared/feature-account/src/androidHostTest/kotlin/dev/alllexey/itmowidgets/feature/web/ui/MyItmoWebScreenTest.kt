@@ -8,6 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -31,7 +33,7 @@ class MyItmoWebScreenTest {
         var released = 0
         setContent {
             ItmoTheme {
-                MyItmoWebScreen(state, {}, {}, {}, {}, browser = { modifier ->
+                MyItmoWebScreen(state, HOST, {}, {}, {}, {}, browser = { modifier ->
                     DisposableEffect(Unit) {
                         created++
                         onDispose { released++ }
@@ -65,6 +67,7 @@ class MyItmoWebScreenTest {
             ItmoTheme {
                 MyItmoWebScreen(
                     MyItmoWebState.Failed,
+                    host = HOST,
                     onClose = { calls += "close" },
                     onReload = { calls += "reload" },
                     onOpenExternal = { calls += "external" },
@@ -76,7 +79,7 @@ class MyItmoWebScreenTest {
 
         onNodeWithTag(MyItmoWebTestTags.CLOSE).performClick()
         onNodeWithTag(MyItmoWebTestTags.RELOAD).performClick()
-        onNodeWithText("Повторить").performClick()
+        onNodeWithTag(MyItmoWebTestTags.STATE_ACTION).assert(hasText("Повторить")).performClick()
         onNodeWithText("Открыть в браузере").assertDoesNotExist()
         onNodeWithTag(MyItmoWebTestTags.MORE).performClick()
         onNodeWithText("Открыть в браузере").performClick()
@@ -87,17 +90,33 @@ class MyItmoWebScreenTest {
     }
 
     @Test
-    fun theErrorPageReadsTheXmlTexts() = runComposeUiTest {
+    fun withoutAHostTheBarShowsTheTitleAlone() = runComposeUiTest {
         setContent {
-            ItmoTheme { MyItmoWebScreen(MyItmoWebState.Failed, {}, {}, {}, {}, browser = { modifier -> Box(modifier) }) }
+            ItmoTheme {
+                MyItmoWebScreen(MyItmoWebState.Shown, null, {}, {}, {}, {}, browser = { modifier -> Box(modifier) })
+            }
         }
 
         onNodeWithText("My ITMO").assertExists()
+        onNodeWithText(HOST).assertDoesNotExist()
+    }
+
+    @Test
+    fun theErrorPageReadsTheXmlTexts() = runComposeUiTest {
+        setContent {
+            ItmoTheme {
+                MyItmoWebScreen(MyItmoWebState.Failed, HOST, {}, {}, {}, {}, browser = { modifier -> Box(modifier) })
+            }
+        }
+
+        onNodeWithText("My ITMO").assertExists()
+        onNodeWithText(HOST).assertExists()
         onNodeWithText("Не удалось открыть My ITMO").assertExists()
         onNodeWithText("Проверьте подключение к интернету и попробуйте ещё раз").assertExists()
     }
 
     private companion object {
         const val BROWSER = "browser"
+        const val HOST = "id.itmo.ru"
     }
 }

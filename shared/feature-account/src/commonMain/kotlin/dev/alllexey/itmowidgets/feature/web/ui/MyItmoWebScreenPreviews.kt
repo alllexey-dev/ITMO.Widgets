@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 private fun MyItmoWebPreview(state: MyItmoWebState) = ItmoPreview {
     MyItmoWebScreen(
         state = state,
+        host = "my.itmo.ru",
         onClose = {},
         onReload = {},
         onOpenExternal = {},
