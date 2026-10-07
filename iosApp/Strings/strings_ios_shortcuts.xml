@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy only the iOS App Shortcuts and the QR Control show (IO-11, ADR 0028): exported to Localizable.xcstrings.
+     The phrases also feed AppShortcuts.xcstrings through build-logic/strings/apple-tables.properties; Siri and
+     Spotlight require ${applicationName} exactly once in each. -->
+<resources>
+    <!-- The intent behind the Control; hidden from Shortcuts, named in the Control's settings. -->
+    <string name="ios_intent_open_route_title">Открыть раздел</string>
+    <string name="ios_intent_route_parameter">Раздел</string>
+    <!-- Siri and Spotlight phrases of the QR pass shortcut. -->
+    <string name="ios_shortcut_qr_phrase_open">Открой QR-пропуск в ${applicationName}</string>
+    <string name="ios_shortcut_qr_phrase_show">Покажи пропуск ${applicationName}</string>
+    <!-- Siri and Spotlight phrases of the today shortcut. -->
+    <string name="ios_shortcut_today_phrase_schedule">Расписание на сегодня в ${applicationName}</string>
+    <string name="ios_shortcut_today_phrase_lessons">Какие пары сегодня в ${applicationName}</string>
+</resources>

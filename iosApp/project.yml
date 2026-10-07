@@ -90,10 +90,12 @@ targets:
     platform: iOS
     sources:
       - path: Extensions/NotificationService
-      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20); no widget intents.
+      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20); no intents, so no
+      # App Shortcut phrases either (IO-11).
       - path: Shared
         excludes:
           - "Intents/**"
+          - "Strings/AppShortcuts.xcstrings"
     configFiles:
       Debug: Config/NotificationService.xcconfig
       Release: Config/NotificationService.xcconfig

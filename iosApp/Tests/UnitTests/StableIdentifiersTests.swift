@@ -61,6 +61,17 @@ final class StableIdentifiersTests: XCTestCase {
         )
     }
 
+    /// Placed Controls keep their kind; quick actions are `<bundle ID>.<route id>`, Android's shortcut ids (IO-11).
+    func testControlAndQuickActions() throws {
+        XCTAssertEqual(QrControl.kind, "dev.alllexey.itmowidgets.control.qr")
+        XCTAssertEqual(IntentRoute.allCases.map(\.rawValue), ["qr_pass", "today"])
+        let items = try XCTUnwrap(Bundle.main.infoDictionary?["UIApplicationShortcutItems"] as? [[String: Any]])
+        XCTAssertEqual(
+            items.compactMap { $0["UIApplicationShortcutItemType"] as? String },
+            ["dev.alllexey.itmowidgets.qr_pass", "dev.alllexey.itmowidgets.today"]
+        )
+    }
+
     /// `$(AppIdentifierPrefix)` is the team ID plus a dot on a device, `FAKETEAMID.` on the simulator and empty for
     /// a team-less device build (SP-23), so only the suffix is stable.
     private func assertKeychainGroup(_ group: String?, file: StaticString = #filePath, line: UInt = #line) {

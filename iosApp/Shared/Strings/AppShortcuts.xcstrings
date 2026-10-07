@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "Lessons today in ${applicationName}" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml (ios_shortcut_today_phrase_lessons)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Какие пары сегодня в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Open the QR pass in ${applicationName}" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml (ios_shortcut_qr_phrase_open)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открой QR-пропуск в ${applicationName}"
+          }
+        }
+      }
+    },
+    "Show the pass of ${applicationName}" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml (ios_shortcut_qr_phrase_show)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покажи пропуск ${applicationName}"
+          }
+        }
+      }
+    },
+    "Today in ${applicationName}" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml (ios_shortcut_today_phrase_schedule)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание на сегодня в ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

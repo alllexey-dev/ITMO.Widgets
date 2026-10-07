@@ -4,8 +4,8 @@ The iOS client is a SwiftUI shell around the shared Compose Multiplatform screen
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
 umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with placeholder roots, gated on
 the shared session with the sign-in screen and the first-run flow (see Shell and routes, Sign-in), the QR pass is
-its first Compose screen, the widget bundle holds the QR widget (see Widgets) and the notification service passes
-notifications through unchanged.
+its first Compose screen, the widget bundle holds the QR widget and the QR Control (see Widgets; App Shortcuts and
+quick actions in System entries) and the notification service passes notifications through unchanged.
 
 ## Prerequisites
 
@@ -37,10 +37,10 @@ xcodegen --version
 | `iosApp/project.yml` | XcodeGen spec: targets, the Kotlin Run Script, the `ITMOWidgets` scheme. The generated `.xcodeproj` is ignored |
 | `iosApp/Config/` | `Base.xcconfig` (identifiers, versions, signing defaults) and one xcconfig per target |
 | `iosApp/Resources/` | `Info/` plists and the entitlements of each target, unsigned and `.signed` |
-| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `Bridge/` holds the Kotlin side's Swift glue (Swift bridge), `Features/<Feature>/` the Swift screen of each route (the QR pass's host) |
-| `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin); `<Widget>/` per widget. The app target compiles these sources too, without `WidgetsBundle.swift`, so the hosted tests reach them |
+| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `Bridge/` holds the Kotlin side's Swift glue (Swift bridge), `Features/<Feature>/` the Swift screen of each route (the QR pass's host), `Intents/` the App Shortcuts and the quick actions (System entries) |
+| `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin); `<Widget>/` per widget, `Controls/` the Controls. The app target compiles these sources too, without `WidgetsBundle.swift`, so the hosted tests reach them |
 | `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin) |
-| `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images, `WidgetSnapshots/` (readers of the App Group snapshots), `Intents/` (App Intents of widget buttons; not in the notification service) |
+| `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images, `WidgetSnapshots/` (readers of the App Group snapshots), `Intents/` (App Intents of widget buttons and Controls, `RouteInbox`; not in the notification service) |
 | `iosApp/Strings/` | `strings_ios*.xml`: catalog files with copy only iOS shows |
 | `iosApp/Tests/UnitTests/` | `ITMOWidgetsTests`, hosted in the app; `Fixtures/` holds the App Group JSON the Kotlin writers' tests produce |
 | `iosApp/Tests/SnapshotTests/` | `SnapshotTests`, hosted in the app: SwiftUI and widget entry view snapshots (swift-snapshot-testing), references in `__Snapshots__/` |
@@ -174,7 +174,7 @@ placeholders, and the me root holds the entry to settings and the sign-out (Andr
 |---|---|---|
 | `schedule`, `home`, `sport`, `me` | `itmowidgets://route/<root>` | that root as it is |
 | `qr_pass` | `itmowidgets://route/qr_pass` | the QR pass above home (QR widget, Control, quick action) |
-| `today` | `itmowidgets://route/today` | the schedule root on today (quick action) |
+| `today` | `itmowidgets://route/today` | the schedule root on today (App Shortcut, quick action) |
 | any other id | `itmowidgets://route/<id>` | the damaged-link sheet above home (`app_link_unavailable_*`) |
 
 The URL scheme is the build setting `APP_URL_SCHEME` (the app target in `project.yml`), registered in the app's
@@ -225,6 +225,8 @@ exists in the build.
 | Marketing version | 2.3.0 for all three bundles |
 | URL scheme and route ids | `itmowidgets://route/<id>`, ids in Shell and routes |
 | Widget kinds | `dev.alllexey.itmowidgets.widget.qr` |
+| Control kinds | `dev.alllexey.itmowidgets.control.qr` |
+| Quick action types | `dev.alllexey.itmowidgets.qr_pass`, `dev.alllexey.itmowidgets.today` (`$(PRODUCT_BUNDLE_IDENTIFIER).<route id>`) |
 | App Group file names | `<name>-v<N>.json`, listed in Data sharing |
 
 The App Group and Keychain group are build settings (`APP_GROUP_ID`, `KEYCHAIN_GROUP` in `Base.xcconfig`). Xcode
@@ -362,6 +364,35 @@ Android keeps the widget options global, so they come from qr-pass-v1.json, not 
   v2.4; the spoiler option has no iOS setting yet, so the spoiler is always on.
 - `SnapshotTests/WidgetSnapshotTests` holds each state at the small family size (170 x 170 pt on the pinned
   iPhone, `WidgetSizes`) in the four appearances; `ITMOWidgetsTests/QrWidgetTimelineTests` the timeline.
+
+## System entries
+
+The Control, the App Shortcuts and the quick actions open the app on a route id (`IntentRoute`: `qr_pass`,
+`today`, Android's shortcut ids). Each hands the id to `RouteInbox` (`Shared/Intents/`), which the app connects to
+`AppRouter.open(id:)` in `App.init`; an id that arrives first waits there. From the router on, the route runs as
+any URL does (Shell and routes): it waits for a ready session and the tab bar, then runs once.
+
+| Entry | Where | Opens |
+|---|---|---|
+| QR Control (`QrControl`, kind `dev.alllexey.itmowidgets.control.qr`) | Control Center, Lock Screen, Action button | `OpenRouteIntent(route: .qrPass)`: the QR pass above home |
+| App Shortcut `shortcut_qr_short` (`OpenQrPassIntent`) | Siri, Spotlight, Shortcuts | the QR pass above home |
+| App Shortcut `shortcut_today_short` (`OpenTodayIntent`) | Siri, Spotlight, Shortcuts | the schedule root on today |
+| Quick action `shortcut_qr_long` (type `<bundle ID>.qr_pass`, symbol `qrcode`) | the app icon's menu | the QR pass above home |
+| Quick action `shortcut_today_long` (type `<bundle ID>.today`, symbol `calendar`) | the app icon's menu | the schedule root on today |
+
+- The Control's `OpenRouteIntent` is an `OpenIntent` compiled into the app and the widget extension, so the system
+  runs `perform()` in the app after bringing it forward; the extension never routes. Like Android's tile it cannot
+  draw the code. It is hidden from Shortcuts, which lists the App Shortcuts instead.
+- `ITMOWidgetsShortcuts` (`Sources/Intents/`) declares the App Shortcuts; their intents set `openAppWhenRun`. Each
+  phrase is an ASCII key of `AppShortcuts.xcstrings` with `${applicationName}` once; the Russian texts are
+  `ios_shortcut_*` in `iosApp/Strings/strings_ios_shortcuts.xml`, mapped by `AppShortcuts.<phrase>` rows.
+- Quick actions are static `UIApplicationShortcutItems` in the app's Info.plist; the title is a catalog key that
+  `InfoPlist.xcstrings` resolves (`InfoPlist.shortcut_*_long` rows). `ITMOWidgetsAppDelegate` takes the one that
+  launched the app from the connection options and installs `QuickActionSceneDelegate` for the ones chosen while
+  it runs; SwiftUI keeps the window.
+- Tests: `ITMOWidgetsTests/IntentsTests` runs each intent's `perform()` and the quick-action handler with a
+  synthetic `UIApplicationShortcutItem` against a router; XCUITest does not drive Siri, Control Center or the
+  springboard reliably, so these surfaces are checked by hand on the simulator.
 
 ## Core graph
 
