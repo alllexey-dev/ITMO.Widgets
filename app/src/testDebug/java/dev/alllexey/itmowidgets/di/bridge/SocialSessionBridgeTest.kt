@@ -78,6 +78,9 @@ class SocialSessionBridgeTest {
         val social = koin.get<SocialRepositoryImpl>()
         val people = koin.get<PersonRepositoryImpl>()
         val history = koin.get<DataStoreFriendSelectionHistory>()
+        // Disabled: the opt-in follower has read the stored state. DataStore 1.2.1 can lose a write made while a new
+        // collector's first read is in flight (seen on Linux), and the follower would never see the demo session.
+        withTimeout(TIMEOUT_MS) { social.observeFriends().first { it == LoadState.Disabled } }
         // The demo session fills the caches without Backend or My ITMO.
         DemoPreferences(dataStore).setDemoActive(true)
         withTimeout(TIMEOUT_MS) { while (social.currentFriends == null) { social.refresh(); delay(10) } }

@@ -181,7 +181,8 @@ class SportSignDialogsTest {
                 snackbars.showSportSignMessage(SportSignEvent.ShowToast(UiText.Res(Res.string.sport_sign_success)))
             }
         }
-        waitForIdle()
+        // getString loads on the resources' own scope, which Compose idling does not track.
+        waitUntil("a snackbar is shown", RESOURCE_LOAD_TIMEOUT_MS) { snackbars.currentSnackbarData != null }
 
         assertEquals("Записали", snackbars.currentSnackbarData?.visuals?.message)
     }
@@ -211,6 +212,7 @@ class SportSignDialogsTest {
     private companion object {
         const val CONFIRM = "Автозапись"
         const val BACK = "Назад"
+        const val RESOURCE_LOAD_TIMEOUT_MS = 5_000L
         val FreeSign: SportSignCommand = SportSignCommand.CreateFreeSign(7)
         val AutoSign: SportSignCommand = SportSignCommand.CreateAutoSign(8)
         val LeaveQueue: SportSignCommand = SportSignCommand.CancelAutoSign(9)
