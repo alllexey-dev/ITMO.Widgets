@@ -3,7 +3,7 @@ import XCTest
 /// The me tab and the social screens on the shared demo session (IO-09e): LA-3's Compose Me tab as the root of the me
 /// stack, people search with Compose's text field on the system keyboard, the person profile with the demo's refusal
 /// of a friendship action and no reviews section while iOS does not offer reviews (IO-09f), the friends list and a
-/// user's friends, and the Me tab at the accessibility text size AX1. Compose maps `testTag` to the accessibility
+/// user's friends, the home feed's friend-requests card, and the Me tab at the accessibility text size AX1. Compose maps `testTag` to the accessibility
 /// identifier (`MeTestTags`, `UserSearchTestTags`, `UserListTestTags`, `UserProfileTestTags`); the texts are Russian
 /// on an English iPhone. The ISUs are the demo set's (`DemoPeople`).
 final class SocialUITests: XCTestCase {
@@ -98,6 +98,25 @@ final class SocialUITests: XCTestCase {
         attachScreenshot(named: "user-friends")
         app.buttons[QrPassUITests.backLabel].tap()
         XCTAssertTrue(element(app, "social.profile").waitForExistence(timeout: stepTimeout))
+    }
+
+    /// The friend-requests card of the home feed (`socialModule`'s source and renderer, loaded with this card) opens
+    /// the requester's profile and all requests on the home stack, as Android's `homeActions`.
+    func testHomeFriendRequestsCardOpensTheProfileAndTheFriends() {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
+        let card = element(app, "home_card_friend_requests")
+        XCTAssertTrue(card.waitForExistence(timeout: stepTimeout), "the demo's incoming request shows on home")
+        attachScreenshot(named: "home-requests")
+
+        element(app, "home_friend_row").tap()
+        XCTAssertTrue(element(app, "social.profile").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "user_profile_primary").waitForExistence(timeout: stepTimeout))
+        app.buttons[QrPassUITests.backLabel].tap()
+
+        element(app, "home_friends_all").tap()
+        XCTAssertTrue(element(app, "social.friends").waitForExistence(timeout: stepTimeout))
     }
 
     func testMeTabAtAccessibilityTextSize() {
