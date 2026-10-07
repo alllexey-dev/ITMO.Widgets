@@ -21,23 +21,22 @@ import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepos
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.IcsFileExport
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
-import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.work.AndroidScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.work.CALENDAR_SYNC_SPEC
 import dev.alllexey.itmowidgets.feature.schedule.work.SCHEDULE_CHANGES_SPEC
 import javax.inject.Singleton
 
 /**
- * The schedule's Android side: the widget snapshot file, the phone calendar sync, the change notification and the
- * WorkManager schedulers. The schedule data lives in Koin (`scheduleDataModule`); `ScheduleBridge` hands it to the
- * Hilt readers here (the workers, the widget, the debug tools) and the notifier and the scheduler to Koin.
+ * The schedule's Android side: the phone calendar sync, the change notification and the WorkManager schedulers. The
+ * schedule data lives in Koin (`scheduleDataModule`), the widget snapshot file too (`di/ComponentBindingsModule.kt`);
+ * `ScheduleBridge` hands them to the Hilt readers (the session effects, the debug tools) and the notifier, the
+ * scheduler and the calendar sync to Koin.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -52,19 +51,6 @@ abstract class ScheduleModule {
     abstract fun bindScheduleChangeNotifier(
         impl: AndroidScheduleChangeNotifier
     ): ScheduleChangeNotifier
-
-    @Binds
-    @Singleton
-    abstract fun bindScheduleWidgetSnapshotStore(
-        impl: ScheduleWidgetSnapshotStoreImpl
-    ): ScheduleWidgetSnapshotStore
-
-    @Binds
-    @IntoSet
-    @Singleton
-    abstract fun bindScheduleWidgetSnapshotCleaner(
-        impl: ScheduleWidgetSnapshotStoreImpl
-    ): SessionDataCleaner
 
     @Binds
     abstract fun bindPhoneCalendars(

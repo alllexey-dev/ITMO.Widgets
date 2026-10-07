@@ -16,9 +16,8 @@ import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.text.UiText
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonElement
-import javax.inject.Inject
 
-class FriendshipPushHandler @Inject constructor(
+class FriendshipPushHandler(
     private val notifier: AppNotifier,
     private val social: SocialRepository,
     private val services: CustomServicesRepository,

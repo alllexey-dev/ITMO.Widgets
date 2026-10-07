@@ -2,13 +2,17 @@ package dev.alllexey.itmowidgets.core.notification
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
-import javax.inject.Inject
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import org.koin.core.Koin
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-@AndroidEntryPoint
-class MyFirebaseMessagingService : FirebaseMessagingService() {
-    @Inject lateinit var log: AppLog
+class MyFirebaseMessagingService : FirebaseMessagingService(), KoinComponent {
+    private val log: AppLog by inject()
+
+    /** Through the one idempotent starter, as every Android component; see [KoinStarter]. */
+    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
 
     override fun onNewToken(token: String) {
         // Fetch the current SDK token in persistent work rather than persisting a stale callback.

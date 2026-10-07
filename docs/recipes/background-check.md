@@ -9,7 +9,7 @@ examples below; the [notifications](../features/notifications.md) and
 
 | Check | Files | Shape |
 |---|---|---|
-| QR widget refresh | `feature/qr/work/QrWidgetWork.kt`, `feature/qr/work/QrWidgetUpdateWorker.kt`, `feature/qr/work/QrWidgetEntryPoint.kt` | one-off `REPLACE`, rate limited on `SystemClock.elapsedRealtime()`, no network constraint on purpose: offline the worker still shows the cached pass |
+| QR widget refresh | `feature/qr/work/QrWidgetWork.kt`, `feature/qr/work/QrWidgetUpdateWorker.kt` | one-off `REPLACE`, rate limited on `SystemClock.elapsedRealtime()`, no network constraint on purpose: offline the worker still shows the cached pass |
 | Marks | `feature/recordbook/work/MarksWorker.kt` (with `MARKS_SPEC`), `feature/recordbook/data/marks/MarksCheck.kt`, `feature/recordbook/data/marks/DefaultMarkTracking.kt` | periodic 3 h plus a one-off, `CONNECTED`, exponential backoff |
 | Schedule changes | `feature/schedule/work/ScheduleChangesWorker.kt` (with `SCHEDULE_CHANGES_SPEC`), `feature/schedule/data/changes/ScheduleChangesCheck.kt`, `feature/schedule/data/changes/DefaultScheduleChangeTracking.kt` | periodic 2 h plus a one-off, `CONNECTED`, exponential backoff |
 

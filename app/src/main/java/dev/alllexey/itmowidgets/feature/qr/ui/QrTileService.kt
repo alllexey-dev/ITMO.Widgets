@@ -9,26 +9,29 @@ import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.annotation.RequiresApi
-import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.ui.navigation.AppEntryIntentFactory
 import dev.alllexey.itmowidgets.core.ui.withAppLocale
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileController
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileState
-import javax.inject.Inject
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import org.koin.core.Koin
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /** The «QR-пропуск» quick-settings tile: a tap opens the pass through the same route as the shortcut. */
-@AndroidEntryPoint
-class QrTileService : TileService(), QrTileHost {
+class QrTileService : TileService(), QrTileHost, KoinComponent {
 
-    @Inject
-    lateinit var controller: QrTileController
+    private val controller: QrTileController by inject()
 
     private val scope = MainScope()
+
+    /** Through the one idempotent starter, as every Android component; see [KoinStarter]. */
+    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
 
     override fun onStartListening() {
         super.onStartListening()

@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
@@ -14,7 +13,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
-import dev.alllexey.itmowidgets.feature.recordbook.work.MarksEntryPoint
 import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
 import io.ktor.client.engine.HttpClientEngine
 import org.junit.Assert.assertEquals
@@ -56,7 +54,7 @@ class RecordbookBridgeTest {
 
     /** The sport scores come from `sportModule` since KM-11c, with the opt-in and the friend list it reads. */
     @Test
-    fun `Hilt takes the mark tracking switches and the marks check from Koin`() {
+    fun `Hilt takes the mark tracking switches from Koin`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
         val tracking = koin.get<DefaultMarkTracking>()
@@ -64,10 +62,8 @@ class RecordbookBridgeTest {
         assertSame(tracking, koin.get<MarkTracking>())
         assertSame(tracking, RecordbookBridge.markTracking(application))
         assertSame(tracking, RecordbookBridge.marksBackgroundCheck(application))
-        // Stateless and unscoped, as Hilt built it: the worker gets a new check from Koin on every run.
-        val check = EntryPointAccessors.fromApplication(application, MarksEntryPoint::class.java).marksCheck()
-        assertEquals(MarksCheck::class, check::class)
-        assertNotSame(check, koin.get<MarksCheck>())
+        // Stateless and unscoped: the worker gets a new check from Koin on every run.
+        assertNotSame(koin.get<MarksCheck>(), koin.get<MarksCheck>())
     }
 
     @Test

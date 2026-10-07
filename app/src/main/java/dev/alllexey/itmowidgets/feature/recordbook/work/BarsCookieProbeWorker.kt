@@ -10,11 +10,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmoapi.bars.RuntimeBarsStorage
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmoapi.bars.auth.BarsSessionCode
@@ -22,35 +18,32 @@ import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsHttp
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
 import io.ktor.client.engine.HttpClientEngine
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import org.koin.core.Koin
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import dev.alllexey.itmoapi.bars.BarsClient as LibraryBarsClient
-
-/** Workers are built by WorkManager; see `QrWidgetEntryPoint` for why this is not `@HiltWorker`. */
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface BarsCookieProbeEntryPoint {
-    fun probeCookies(): ItmoIdCookies
-    fun probeLogin(): BarsLogin
-    @BarsHttp fun probeEngine(): HttpClientEngine
-    fun probeLog(): AppLog
-}
 
 /**
  * Read-only probe of the cookie renewal: one ITMO.ID request with the WebView's cookies and, on a code, one
  * exchange. `Set-Cookie` is not written back, the BARS header is not saved, and the log line holds only the
  * outcome, counts and the process age.
  */
-class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params), KoinComponent {
+
+    /** WorkManager can run a worker before `Application.onCreate()` has started Koin. */
+    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
+
     override suspend fun doWork(): Result {
         if (!BuildConfig.DEBUG) return Result.success()
-        val dependencies = EntryPointAccessors.fromApplication(applicationContext, BarsCookieProbeEntryPoint::class.java)
         val line = try {
-            probe(dependencies.probeLogin(), dependencies.probeEngine(), dependencies.probeCookies())
+            probe(get<BarsLogin>(), get<HttpClientEngine>(barsEngineQualifier), get<ItmoIdCookies>())
         } catch (cancel: CancellationException) {
             throw cancel
         } catch (failure: Exception) {
@@ -61,7 +54,7 @@ class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : Corout
             }
             "outcome=ERROR step=$step type=${failure.javaClass.simpleName} http=$http cause=${failure.cause?.javaClass?.simpleName}"
         }
-        dependencies.probeLog().info(TAG, line)
+        get<AppLog>().info(TAG, line)
         return Result.success()
     }
 

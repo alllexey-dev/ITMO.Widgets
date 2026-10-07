@@ -11,8 +11,6 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleStoreJson
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -46,8 +44,7 @@ internal object ScheduleWidgetSnapshotJson {
     }
 }
 
-@Singleton
-class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
+class ScheduleWidgetSnapshotStoreImpl(
     directories: AppDirectories,
     private val scheduleChecks: ScheduleCheckPreferences,
     private val backend: BackendGate,

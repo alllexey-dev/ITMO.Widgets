@@ -9,14 +9,14 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.services.BackendGate
-import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.SessionTokenStore
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import kotlinx.coroutines.CancellationException
+import org.koin.core.Koin
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /** Persistent work owns network processing beyond Firebase's short callback lifetime. */
 object FcmWork {
@@ -46,36 +46,38 @@ object FcmWork {
     }
 }
 
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface FcmWorkerEntryPoint {
-    fun dispatcher(): FcmPayloadDispatcher
-    fun tokenSync(): FcmTokenSync
-    fun sessionTokens(): SessionTokenStore
-    fun backendGate(): BackendGate
-    fun currentUser(): CurrentUserProvider
-}
+class FcmMessageWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params), KoinComponent {
+    private val currentUser: CurrentUserProvider by inject()
+    private val sessionTokens: SessionTokenStore by inject()
+    private val backendGate: BackendGate by inject()
+    private val dispatcher: FcmPayloadDispatcher by inject()
 
-class FcmMessageWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    /** WorkManager can run a worker before `Application.onCreate()` has started Koin. */
+    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
+
     override suspend fun doWork(): Result {
-        val dependencies = EntryPointAccessors.fromApplication(applicationContext, FcmWorkerEntryPoint::class.java)
         if (!FcmDeliveryGuard.canDeliver(
-                inputData.getInt(FcmWork.RECIPIENT, 0), dependencies.currentUser().getCurrentUser()?.isu,
-                dependencies.sessionTokens().hasRefreshToken(),
-                dependencies.backendGate().isOptedIn()
+                inputData.getInt(FcmWork.RECIPIENT, 0), currentUser.getCurrentUser()?.isu,
+                sessionTokens.hasRefreshToken(),
+                backendGate.isOptedIn()
             )
         ) return Result.success()
         val json = inputData.getString(FcmWork.PAYLOAD) ?: return Result.success()
-        dependencies.dispatcher().dispatch(json)
+        dispatcher.dispatch(json)
         // Booking retries are reserved by Backend, never blindly replay a complete push.
         return Result.success()
     }
 }
 
-class FcmTokenWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class FcmTokenWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params), KoinComponent {
+    private val tokenSync: FcmTokenSync by inject()
+
+    /** WorkManager can run a worker before `Application.onCreate()` has started Koin. */
+    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
+
     override suspend fun doWork(): Result {
         return try {
-            EntryPointAccessors.fromApplication(applicationContext, FcmWorkerEntryPoint::class.java).tokenSync().sync()
+            tokenSync.sync()
             Result.success()
         } catch (cancelled: CancellationException) {
             throw cancelled

@@ -14,7 +14,6 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportScoreOverridePoints
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportScoreOverrideSource
-import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushBooker
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -49,10 +48,9 @@ val sportBridgeModule = module {
 
 /**
  * Koin to Hilt for what `sportModule` constructs and Hilt-built code still injects: the bookings holder
- * (`MainActivity`, until L17 moves the sport block), the pending queues (the schedule's home card and widget), the
- * score as other features read it and the push booking decision (the FCM handlers in `SportModule`). Unscoped on
- * purpose: Koin owns the lifetime and returns its single every time. `ensureStarted`, because a worker or a widget
- * broadcast can run before `Application.onCreate()`.
+ * (`MainActivity`, until L17 moves the sport block), the pending queues (the schedule's home card and widget) and the
+ * score as other features read it. Unscoped on purpose: Koin owns the lifetime and returns its single every time.
+ * `ensureStarted`, because Hilt can build a reader before `Application.onCreate()` has started Koin.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -68,9 +66,5 @@ object SportKoinBridgeModule {
 
     @Provides
     fun sportScoreRepository(@ApplicationContext context: Context): SportScoreRepository =
-        KoinStarter.ensureStarted(context).get()
-
-    @Provides
-    fun sportSignPushBooker(@ApplicationContext context: Context): SportSignPushBooker =
         KoinStarter.ensureStarted(context).get()
 }

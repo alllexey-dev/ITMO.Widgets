@@ -3,8 +3,16 @@ package dev.alllexey.itmowidgets.feature.qr.work
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
+import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
+import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
 import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrCodeWidgetProvider
+import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrWidgetImages
+import org.koin.core.Koin
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Refreshes the pass and redraws every widget instance.
@@ -15,13 +23,15 @@ import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrCodeWidgetProvider
 class QrWidgetUpdateWorker(
     appContext: Context,
     workerParams: WorkerParameters
-) : CoroutineWorker(appContext, workerParams) {
+) : CoroutineWorker(appContext, workerParams), KoinComponent {
 
-    private val dependencies = QrWidgetEntryPoint.from(appContext)
-    private val repository = dependencies.qrCodeRepository()
-    private val stateStore = dependencies.qrWidgetStateStore()
-    private val images = dependencies.qrWidgetImages()
-    private val appearance = dependencies.qrAppearancePreferences()
+    private val repository: QrCodeRepository by inject()
+    private val stateStore: QrWidgetStateStore by inject()
+    private val images: QrWidgetImages by inject()
+    private val appearance: QrAppearancePreferences by inject()
+
+    /** WorkManager can run a worker before `Application.onCreate()` has started Koin. */
+    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
 
     override suspend fun doWork(): Result {
         val appWidgetIds = QrCodeWidgetProvider.widgetIds(applicationContext)

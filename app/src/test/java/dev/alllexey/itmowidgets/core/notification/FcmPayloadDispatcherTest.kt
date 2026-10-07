@@ -27,7 +27,7 @@ class FcmPayloadDispatcherTest {
             override val type = name
             override suspend fun handle(payload: JsonElement) { received += name + payload.jsonObject["id"]!!.jsonPrimitive.int }
         }
-        val dispatcher = FcmPayloadDispatcher(setOf(handler("first"), handler("second")), RecordingDiagnostics())
+        val dispatcher = FcmPayloadDispatcher(listOf(handler("first"), handler("second")), RecordingDiagnostics())
         for (wire in listOf("{", "null", "{}", "[]", "", "{\"type\":\"first\"}",
             "{\"type\":\"first\",\"payload\":null}", "{\"type\":\"first\",\"payload\":[1]}",
             "{\"type\":\"third\",\"payload\":{}}")) {
@@ -106,7 +106,7 @@ class FcmPayloadDispatcherTest {
                 handled = true
             }
         }
-        val dispatcher = FcmPayloadDispatcher(setOf(handler), RecordingDiagnostics())
+        val dispatcher = FcmPayloadDispatcher(listOf(handler), RecordingDiagnostics())
         val wire = """{"type":"type","payload":{}}"""
         dispatcher.dispatch(wire)
         fail = false
@@ -117,7 +117,7 @@ class FcmPayloadDispatcherTest {
             override suspend fun handle(payload: JsonElement) { throw CancellationException() }
         }
         try {
-            FcmPayloadDispatcher(setOf(cancelled), RecordingDiagnostics()).dispatch(wire)
+            FcmPayloadDispatcher(listOf(cancelled), RecordingDiagnostics()).dispatch(wire)
             fail("Cancellation must propagate")
         } catch (_: CancellationException) { }
     }
@@ -128,11 +128,11 @@ class FcmPayloadDispatcherTest {
 
     private class RecordingHandlers(vararg types: String) {
         val received = mutableListOf<Pair<String, JsonElement>>()
-        val handlers: Set<FcmPayloadHandler> = types.map { name ->
+        val handlers: List<FcmPayloadHandler> = types.map { name ->
             object : FcmPayloadHandler {
                 override val type = name
                 override suspend fun handle(payload: JsonElement) { received += name to payload }
             }
-        }.toSet()
+        }
     }
 }

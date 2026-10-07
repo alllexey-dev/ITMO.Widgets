@@ -9,12 +9,12 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
+import org.koin.core.Koin
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * A failed identity upload leaves the user nameless for everyone else until the
@@ -33,15 +33,13 @@ object IdentitySyncWork {
     }
 }
 
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface IdentitySyncEntryPoint {
-    fun identitySync(): BackendIdentitySync
-}
+class IdentitySyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params), KoinComponent {
+    private val sync: BackendIdentitySync by inject()
 
-class IdentitySyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    /** WorkManager can run a worker before `Application.onCreate()` has started Koin. */
+    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
+
     override suspend fun doWork(): Result {
-        val sync = EntryPointAccessors.fromApplication(applicationContext, IdentitySyncEntryPoint::class.java).identitySync()
         return try {
             when {
                 sync.sync(scheduleRetry = false) -> Result.success()

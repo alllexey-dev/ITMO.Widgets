@@ -9,7 +9,8 @@ import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
-import dev.alllexey.itmowidgets.feature.qr.work.QrWidgetEntryPoint
+import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrWidgetImages
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -30,24 +31,32 @@ class QrBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the widget reads the one repository Koin builds`() {
+    fun `Hilt's readers get the one repository Koin builds`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
-        val widget = QrWidgetEntryPoint.from(application)
 
         assertSame(koin.get<QrCodeRepositoryImpl>(), koin.get<QrCodeRepository>())
-        assertSame(koin.get<QrCodeRepository>(), widget.qrCodeRepository())
-        assertSame(widget.qrCodeRepository(), widget.qrCodeRepository())
+        assertSame(koin.get<QrCodeRepository>(), QrBridge.qrCodeRepository(application))
+        assertSame(QrBridge.qrCodeRepository(application), QrBridge.qrCodeRepository(application))
     }
 
     @Test
-    fun `the widget reads the state store and the colour setting Koin builds`() {
+    fun `Hilt's readers get the state store and the colour setting Koin builds`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
-        val widget = QrWidgetEntryPoint.from(application)
 
-        assertSame(koin.get<QrWidgetStateStore>(), widget.qrWidgetStateStore())
-        assertSame(koin.get<QrAppearancePreferences>(), widget.qrAppearancePreferences())
+        assertSame(koin.get<QrWidgetStateStore>(), QrBridge.qrWidgetStateStore(application))
+        assertSame(koin.get<QrAppearancePreferences>(), QrBridge.qrAppearancePreferences(application))
+    }
+
+    @Test
+    fun `the widget gets its bitmaps from Hilt through Koin`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+
+        // Unscoped in Hilt and stateless: the same implementation, Koin keeps its first instance.
+        assertEquals(QrBridgeEntryPoint.from(application).qrWidgetImages()::class, koin.get<QrWidgetImages>()::class)
+        assertSame(koin.get<QrWidgetImages>(), koin.get<QrWidgetImages>())
     }
 
     @Test
