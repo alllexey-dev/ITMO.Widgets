@@ -10,7 +10,6 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
-import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -26,6 +25,8 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.toBundle
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
+import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.home.HomeSemantics
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
@@ -133,8 +134,8 @@ class StoreScreenshotCapture {
 
     private fun enterDemo(activity: MainActivity) {
         val decorView = activity.window.decorView
-        eventually { onView(withId(R.id.auth_logo)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed())) }
-        repeat(DEMO_TAPS) { onView(withId(R.id.auth_logo)).perform(click()) }
+        eventually { assertTrue("The sign-in screen shows", AuthSemantics.isShown(activity)) }
+        repeat(DEMO_TAPS) { AuthSemantics.tap(activity, AuthTestTags.LOGO) }
         eventually { onView(withId(R.id.demo_banner)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed())) }
         // The «Демо-режим» toast must be gone before the first frame.
         TestUi.settle(TOAST_MILLIS)

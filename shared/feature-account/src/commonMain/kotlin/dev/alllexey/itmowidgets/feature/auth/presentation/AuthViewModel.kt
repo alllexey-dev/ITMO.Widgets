@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.shared.feature.account.Res
 import dev.alllexey.itmowidgets.shared.feature.account.auth_error_invalid_credentials
 import dev.alllexey.itmowidgets.shared.feature.account.auth_error_network
 import dev.alllexey.itmowidgets.shared.feature.account.auth_error_unknown
+import kotlin.time.TimeSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,12 +22,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** [timeSource] times the logo taps of the demo entry; it must be monotonic (`TimeSource.Monotonic`). */
 class AuthViewModel(
-    private val sessionRepository: SessionRepository
+    private val sessionRepository: SessionRepository,
+    timeSource: TimeSource,
 ) : ViewModel() {
 
     private val manualLogin = MutableStateFlow(ManualLogin())
-    private val demoTaps = DemoEntryTaps()
+    private val demoTaps = DemoEntryTaps(timeSource)
     private val eventQueue = EventQueue<AuthEvent>()
 
     val uiState: StateFlow<AuthUiState> = combine(sessionRepository.state, manualLogin, ::toUiState)
@@ -48,9 +51,9 @@ class AuthViewModel(
         }
     }
 
-    /** [atMillis] is a monotonic time of the tap on the logo. */
-    fun onLogoTap(atMillis: Long) {
-        if (!demoTaps.tap(atMillis)) return
+    /** One tap on the logo; the fifth quick one starts the demo (`DemoEntryTaps`). */
+    fun onLogoTap() {
+        if (!demoTaps.tap()) return
         if (manualLogin.value.inProgress || sessionRepository.state.value is SessionState.SigningOut) return
         viewModelScope.launch {
             // The confirmation goes first: the demo session replaces this screen.

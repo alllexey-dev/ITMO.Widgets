@@ -49,12 +49,12 @@ Feature doc: [Architecture](../architecture.md).
 
 ## Sign-in
 
-Feature doc: the sign-in gate is part of [First-run flow](onboarding.md).
+Feature doc: [Sign-in](auth.md); the hidden demo entry in [Demo session](demo.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/auth/ui/AuthFragment.kt` | Fragment | `AuthViewModel` | `auth`, start destination of `main_nav_graph` | — | — |
-| `feature/auth/ui/LoginActivity.kt` | Activity | `InteractiveLoginViewModel` | started by `AuthFragment` | — | `core/ui/DesignComponentsVisualTest.kt` (layout) |
+| `feature/auth/ui/AuthFragment.kt` hosting `AuthRoute` (`:shared:feature-account`) | Fragment | `AuthViewModel` (Koin) | `auth`, start destination of `main_nav_graph` | — | `AccountScreenshotTest` (`:shared:feature-account`), `app/DemoModeFlowTest.kt`, `app/MainActivitySessionRoutingTest.kt` |
+| `feature/auth/ui/LoginActivity.kt` hosting `LoginScreen` (`:shared:feature-account`) around an `AndroidView` `SwipeRefreshLayout` and WebView | Activity | `InteractiveLoginViewModel` (Koin) | started by `AuthFragment` | — | `AccountScreenshotTest` (`:shared:feature-account`, error state) |
 
 ## Onboarding
 

@@ -18,10 +18,11 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
+import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
-import dev.alllexey.itmowidgets.testing.ViewChecks
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -66,22 +67,21 @@ class MainActivitySessionRoutingTest {
         TestSession.signOut()
 
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            lateinit var decorView: View
-            scenario.onActivity { activity -> decorView = activity.window.decorView }
+            lateinit var activity: MainActivity
+            scenario.onActivity { activity = it }
 
             eventually {
-                onView(withId(R.id.auth_unofficial_notice))
-                    .inRoot(withDecorView(`is`(decorView)))
-                    .check(matches(isDisplayed()))
-                    .check(matches(withText(R.string.app_unofficial_notice)))
+                val notice = AuthSemantics.node(activity, AuthTestTags.UNOFFICIAL_NOTICE)
+                assertEquals(
+                    activity.getString(R.string.app_unofficial_notice),
+                    notice?.config?.getOrNull(SemanticsProperties.Text)?.joinToString { it.text },
+                )
             }
-            scenario.onActivity { activity ->
-                val content = activity.findViewById<View>(R.id.auth_content)
-                val notice = activity.findViewById<View>(R.id.auth_unofficial_notice)
-                val signIn = activity.findViewById<View>(R.id.itmo_id_login_button)
-                assertTrue("The notice sits under the sign-in buttons", notice.top > signIn.bottom)
-                ViewChecks.assertTextFits(content)
-            }
+            val content = AuthSemantics.bounds(activity, AuthTestTags.CONTENT)
+            val notice = AuthSemantics.bounds(activity, AuthTestTags.UNOFFICIAL_NOTICE)
+            val signIn = AuthSemantics.bounds(activity, AuthTestTags.ITMO_ID_LOGIN)
+            assertTrue("The notice sits under the sign-in buttons", notice.top > signIn.bottom)
+            assertTrue("The notice stays inside the screen", content.contains(notice))
         }
     }
 

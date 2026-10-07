@@ -37,8 +37,8 @@ targets:
       # The sign-in page's token interceptor (IO-07a, SP-21 path (a)): Android's asset by path, never a copy.
       - path: ../app/src/main/assets/token_refresh_interceptor.js
         buildPhase: resources
-      # The sign-in screen's logo (IO-07b): Android's drawable by path, never a copy.
-      - path: ../app/src/main/res/drawable-nodpi/auth_logo.webp
+      # The sign-in screen's logo (IO-07b): the shared module's drawable by path, never a copy.
+      - path: ../shared/feature-account/src/commonMain/composeResources/drawable/auth_logo.webp
         buildPhase: resources
       # The widget sources without their @main bundle, so the hosted tests reach the timelines and entry views
       # (recipe ios-snapshot-test); the app never registers them.

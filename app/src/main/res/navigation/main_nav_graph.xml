@@ -8,8 +8,7 @@
     <fragment
         android:id="@+id/auth"
         android:name="dev.alllexey.itmowidgets.feature.auth.ui.AuthFragment"
-        android:label="@string/auth_title"
-        tools:layout="@layout/fragment_auth" />
+        android:label="@string/auth_title" />
 
     <fragment
         android:id="@+id/onboarding"

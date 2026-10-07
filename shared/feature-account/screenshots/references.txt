@@ -2,12 +2,6 @@
 # The port that adds the preview re-records the files and deletes its line and the reference test.
 AppUpdateScreen_supported
 AppUpdateScreen_unsupported
-AuthScreen_error
-AuthScreen_initial
-AuthScreen_reauthentication
-AuthScreen_signing-in
-AuthScreen_token-dialog
-LoginScreen_error
 WebLoginSheetContent_approving
 WebLoginSheetContent_checking
 WebLoginSheetContent_confirm

@@ -14,7 +14,7 @@ struct AuthScreen: View {
     var body: some View {
         AuthContent(
             state: model.state,
-            logoTapped: { model.viewModel.onLogoTap(atMillis: Self.uptimeMillis()) },
+            logoTapped: { model.viewModel.onLogoTap() },
             signIn: {
                 model.viewModel.clearError()
                 showsSignInPage = true
@@ -54,11 +54,6 @@ struct AuthScreen: View {
         } message: {
             Text(verbatim: AppStrings.string("auth_manual_dialog_description"))
         }
-    }
-
-    /// A monotonic time for `DemoEntryTaps`, as Android's `SystemClock.uptimeMillis()`.
-    private static func uptimeMillis() -> Int64 {
-        Int64(ProcessInfo.processInfo.systemUptime * 1000)
     }
 }
 
@@ -193,7 +188,8 @@ struct AuthFeatureRow: View {
     }
 }
 
-/// Android's `auth_logo`, bundled by path from `app/src/main/res/drawable-nodpi` (`project.yml`, no copy).
+/// The shared `auth_logo`, bundled by path from `:shared:feature-account`'s `composeResources/drawable` (`project.yml`,
+/// no copy).
 private struct AuthLogo: View {
     private static let image = Bundle.main.path(forResource: "auth_logo", ofType: "webp")
         .flatMap(UIImage.init(contentsOfFile:))
