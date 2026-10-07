@@ -6,16 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.view.View
 import android.widget.TextView
-import androidx.core.view.drawToBitmap
 import androidx.fragment.app.DialogFragment
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.chip.ChipGroup
-import com.google.android.material.color.MaterialColors
 import com.google.android.material.radiobutton.MaterialRadioButton
-import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.textfield.TextInputLayout
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
@@ -36,7 +32,6 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
-import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.toSubjectLinks
 import dev.alllexey.itmowidgets.testing.Screenshots
@@ -55,113 +50,6 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SubjectLinksVisualTest {
-
-    @Test fun sheetListsEveryCategoryThenChatsThenPastYears() {
-        Appearances.default.forEachIndexed { index, spec ->
-            withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS) { scenario, _ ->
-                settle()
-                val headers = mutableListOf<String>()
-                visitRows(scenario) { row ->
-                    assertTextFits(row)
-                    if (row is TextView) headers += row.text.toString() else assertTouchTargets(row)
-                }
-                assertEquals(listOf("Таблица баллов", "Очередь на сдачу", "Материалы курса", "Задания", "Записи лекций",
-                    "Конспекты", "К экзамену", "Другое", "Чаты", "С прошлых лет"), headers)
-                screenshot("links-$index")
-            }
-        }
-    }
-
-    @Test fun arrowsChangeTheScoreAndTheSameArrowTakesTheVoteBack() {
-        withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS) { scenario, repository ->
-            settle()
-            val position = positionOf(scenario, "Задания потока")
-            fun row(activity: SubjectLinksPreviewActivity): View =
-                checkNotNull(sheetList(activity).findViewHolderForAdapterPosition(position)).itemView
-            fun assertScore(score: Int, vote: Int) = TestUi.eventually(idleBetween = true) {
-                scenario.onActivity { activity ->
-                    val view = row(activity)
-                    // A negative score is written with a typographic minus.
-                    assertEquals(score.toString().replace('-', '−'), view.findViewById<TextView>(R.id.score).text.toString())
-                    assertEquals(vote > 0, view.findViewById<View>(R.id.vote_up).isSelected)
-                    assertEquals(vote < 0, view.findViewById<View>(R.id.vote_down).isSelected)
-                }
-                assertEquals(vote, repository.peek(SCOPE).shared.first { it.id == "tasks-flow" }.myVote)
-            }
-
-            assertScore(0, 0)
-            scenario.onActivity { row(it).findViewById<View>(R.id.vote_up).performClick() }
-            assertScore(1, 1)
-            screenshot("vote-up")
-            scenario.onActivity { row(it).findViewById<View>(R.id.vote_up).performClick() }
-            assertScore(0, 0)
-            scenario.onActivity { row(it).findViewById<View>(R.id.vote_down).performClick() }
-            assertScore(-1, -1)
-        }
-    }
-
-    @Test fun aVoteKeepsTheRowInItsPlace() {
-        // «Старая таблица» ties the first row at 8 and stays second by age; one vote up would rank it first.
-        withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS, configure = {
-            it.snapshots.value = mapOf(SCOPE.key to fixture().let { snapshot ->
-                snapshot.copy(shared = snapshot.shared.map { link -> if (link.id == "scores-old") link.copy(score = 8) else link })
-            })
-        }) { scenario, repository ->
-            settle()
-            fun scores(): List<Pair<String, String>> {
-                val rows = mutableListOf<Pair<String, String>>()
-                var inScores = false
-                visitRows(scenario) { row ->
-                    if (row is TextView) inScores = row.text.toString() == "Таблица баллов"
-                    else if (inScores) rows += row.findViewById<TextView>(R.id.title).text.toString() to
-                        row.findViewById<TextView>(R.id.score).let { if (it.isShown) it.text.toString() else "" }
-                }
-                return rows
-            }
-            assertEquals(listOf("Баллы всего потока" to "8", "Старая таблица" to "8", "Баллы нашей группы" to ""), scores())
-            val position = positionOf(scenario, "Старая таблица")
-            scenario.onActivity {
-                checkNotNull(sheetList(it).findViewHolderForAdapterPosition(position)).itemView.findViewById<View>(R.id.vote_up).performClick()
-            }
-            TestUi.eventually(idleBetween = true) { assertEquals(9, repository.peek(SCOPE).shared.first { it.id == "scores-old" }.score) }
-            settle()
-            assertEquals(listOf("Баллы всего потока" to "8", "Старая таблица" to "9", "Баллы нашей группы" to ""), scores())
-            scenario.onActivity { sheetList(it).scrollToPosition(0) }
-            settle()
-            screenshot("vote-keeps-place")
-        }
-    }
-
-    @Test fun ownLinksRankAmongOthersWithTheBadgeOnOneGroupSurface() {
-        Appearances.default.forEachIndexed { index, spec ->
-            withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS) { scenario, _ ->
-                settle()
-                // Every row of a category sits on the group surface, two tonal steps above the sheet.
-                scenario.onActivity { activity ->
-                    val sheet = sheetList(activity)
-                    assertEquals(MaterialColors.getColor(sheet, com.google.android.material.R.attr.colorSurfaceContainerLow),
-                        sheetSurface(activity))
-                }
-                data class Row(val title: String, val badge: Boolean, val votes: Boolean, val groupSurface: Boolean)
-                val scores = mutableListOf<Row>()
-                var inScores = false
-                visitRows(scenario) { row ->
-                    if (row is TextView) inScores = row.text.toString() == "Таблица баллов"
-                    else if (inScores) scores += Row(row.findViewById<TextView>(R.id.title).text.toString(),
-                        row.findViewById<View>(R.id.own_badge).isShown, row.findViewById<View>(R.id.votes).isShown, row.hasGroupSurface())
-                }
-                assertEquals(listOf(
-                    Row("Баллы всего потока", badge = false, votes = true, groupSurface = true),
-                    Row("Баллы нашей группы", badge = true, votes = false, groupSurface = true),
-                    Row("Старая таблица", badge = false, votes = true, groupSurface = true),
-                ), scores)
-                // «Таблица баллов» is the first section.
-                scenario.onActivity { sheetList(it).scrollToPosition(0) }
-                settle()
-                screenshot("links-own-ranked-$index")
-            }
-        }
-    }
 
     @Test fun actionsSheetVotesForOthersLinkAndStaysOpen() {
         Appearances.default.forEachIndexed { index, spec ->
@@ -411,43 +299,6 @@ class SubjectLinksVisualTest {
         }
     }
 
-    @Test fun ownRowsSayTheirReviewStateAndOthersShowVotesWithoutArrowsUnderARestriction() {
-        Appearances.default.forEachIndexed { index, spec ->
-            withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS, configure = {
-                it.snapshots.value = mapOf(SCOPE.key to fixture())
-                it.restrictions.value = listOf(UserRestriction("r", RestrictionCapability.VOTE, "Правила", null))
-            }) { scenario, _ ->
-                settle()
-                var rejected = false
-                var others = 0
-                visitRows(scenario) { row ->
-                    if (row is TextView) {
-                        // Headings carry no « · » and no icon; the accent tells them apart from the rows.
-                        assertEquals(MaterialColors.getColor(row, androidx.appcompat.R.attr.colorPrimary), row.currentTextColor)
-                        return@visitRows
-                    }
-                    val meta = row.findViewById<TextView>(R.id.meta).text.toString()
-                    assertFalse(meta, meta.contains("·"))
-                    if (row.findViewById<TextView>(R.id.title).text.startsWith("Полный конспект")) {
-                        rejected = true
-                        assertTrue(row.findViewById<View>(R.id.own_badge).isShown)
-                        assertTrue(meta.endsWith("отклонена"))
-                    }
-                    if (row.findViewById<View>(R.id.votes).isShown) {
-                        others++
-                        assertFalse(row.findViewById<View>(R.id.vote_up).isShown || row.findViewById<View>(R.id.vote_down).isShown)
-                        assertTrue(row.findViewById<View>(R.id.score).isShown)
-                    }
-                }
-                assertTrue(rejected)
-                assertEquals(11, others)
-                scenario.onActivity { sheetList(it).scrollToPosition(0) }
-                settle()
-                screenshot("links-restricted-$index")
-            }
-        }
-    }
-
     @Test fun othersLinkOffersPinningAndReporting() {
         withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "materials-all") { scenario, repository ->
             settle()
@@ -464,18 +315,8 @@ class SubjectLinksVisualTest {
         }
     }
 
-    @Test fun longTitlesFitAtLargeFontOnANarrowScreen() {
+    @Test fun editorFitsAtLargeFontOnANarrowScreen() {
         val narrow = Appearances.all.first { it.widthDp == 320 && !it.dark }.toSubjectLinks()
-        withPreview(narrow, SubjectLinksPreviewActivity.SCREEN_LINKS) { scenario, _ ->
-            settle()
-            var longTitle = false
-            visitRows(scenario) { row ->
-                assertTextFits(row, checkEdges = true)
-                longTitle = longTitle || row.findViewById<TextView>(R.id.title)?.text?.startsWith("Полный конспект") == true
-            }
-            assertTrue(longTitle)
-            screenshot("links-narrow")
-        }
         withPreview(narrow, SubjectLinksPreviewActivity.SCREEN_EDITOR, linkId = "own-rejected") { scenario, _ ->
             settle()
             screenshot("editor-narrow")
@@ -514,40 +355,8 @@ class SubjectLinksVisualTest {
         }
     }
 
-    /** Scrolls through the whole list, handing every bound row to [block] on the main thread. */
-    private fun visitRows(scenario: ActivityScenario<SubjectLinksPreviewActivity>, block: (View) -> Unit) {
-        var count = 0
-        scenario.onActivity { count = checkNotNull(sheetList(it).adapter).itemCount }
-        assertTrue(count > 0)
-        for (position in 0 until count) {
-            scenario.onActivity { sheetList(it).scrollToPosition(position) }
-            TestUi.eventually(idleBetween = true) {
-                scenario.onActivity { assertNotNull(sheetList(it).findViewHolderForAdapterPosition(position)) }
-            }
-            scenario.onActivity { block(checkNotNull(sheetList(it).findViewHolderForAdapterPosition(position)).itemView) }
-        }
-    }
-
-    private fun positionOf(scenario: ActivityScenario<SubjectLinksPreviewActivity>, title: String): Int {
-        var found = -1
-        var position = 0
-        visitRows(scenario) { row ->
-            if (row !is TextView && row.findViewById<TextView>(R.id.title).text.toString() == title) found = position
-            position++
-        }
-        assertTrue("No row $title", found >= 0)
-        scenario.onActivity { sheetList(it).scrollToPosition(found) }
-        TestUi.eventually(idleBetween = true) {
-            scenario.onActivity { assertNotNull(sheetList(it).findViewHolderForAdapterPosition(found)) }
-        }
-        return found
-    }
-
     private fun sheetView(activity: SubjectLinksPreviewActivity, tag: String): View =
         checkNotNull((activity.supportFragmentManager.findFragmentByTag(tag) as DialogFragment).dialog).window!!.decorView
-
-    private fun sheetList(activity: SubjectLinksPreviewActivity): RecyclerView =
-        sheetView(activity, SubjectLinksBottomSheet.TAG).findViewById(R.id.recycler_view)
 
     private fun editor(activity: SubjectLinksPreviewActivity) = sheetView(activity, LinkEditorBottomSheet.TAG)
 
@@ -566,21 +375,6 @@ class SubjectLinksVisualTest {
     private fun visibleActions(sheet: View): List<Int> =
         listOf(R.id.action_open, R.id.action_pin, R.id.action_edit, R.id.action_delete, R.id.action_report)
             .filter { sheet.findViewById<View>(it).visibility == View.VISIBLE }
-
-    /** Whether the row paints the connected group's surface: sampled at the trailing edge, clear of the content. */
-    private fun View.hasGroupSurface(): Boolean {
-        val bitmap = drawToBitmap()
-        val pixel = bitmap.getPixel(width - (2 * resources.displayMetrics.density).toInt(), height / 2)
-        bitmap.recycle()
-        return pixel == MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainerHigh)
-    }
-
-    /** The fill of the links sheet itself, as the bottom sheet behaviour paints it. */
-    private fun sheetSurface(activity: SubjectLinksPreviewActivity): Int {
-        val sheet = sheetView(activity, SubjectLinksBottomSheet.TAG)
-            .findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-        return checkNotNull((sheet.background as MaterialShapeDrawable).fillColor).defaultColor
-    }
 
     private fun View.topOnScreen(): Int = IntArray(2).also(::getLocationOnScreen)[1]
 

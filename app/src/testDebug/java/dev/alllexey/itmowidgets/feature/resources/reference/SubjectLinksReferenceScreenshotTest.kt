@@ -14,9 +14,6 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
-import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
-import dev.alllexey.itmowidgets.core.resources.UserRestriction
-import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
 import dev.alllexey.itmowidgets.feature.resources.reference.SubjectLinksReferenceFixtures.SCOPE
@@ -25,8 +22,6 @@ import dev.alllexey.itmowidgets.feature.resources.reference.SubjectLinksReferenc
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.ReportLinkDialogFragment
-import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
-import dev.alllexey.itmowidgets.testkit.screenshot.CaptureSize
 import java.time.Duration
 import org.junit.After
 import org.junit.Rule
@@ -41,9 +36,9 @@ import org.robolectric.util.ReflectionHelpers
 import com.google.android.material.R as MaterialR
 
 /**
- * XML references of the links surfaces under the names of their future CMP content: the "Все ссылки" sheet, the
- * link editor, the actions sheet and the report dialog, through [SubjectLinksPreviewActivity] over a fresh
- * [MemorySubjectLinksRepository] per launch. The harness launches the host without extras, so it opens the links
+ * XML references of the links surfaces under the names of their future CMP content: the link editor, the actions
+ * sheet and the report dialog (LX-3b ported the "Все ссылки" sheet), through [SubjectLinksPreviewActivity] over a
+ * fresh [MemorySubjectLinksRepository] per launch. The harness launches the host without extras, so it opens the links
  * sheet; other surfaces are opened over it through the host's navigator on the first poll. Each port deletes its own
  * test here and its lines in `shared/feature-resources/screenshots/references.txt`.
  */
@@ -57,9 +52,6 @@ class SubjectLinksReferenceScreenshotTest {
 
     private val references = XmlReferenceCapture(shots, module = MODULE)
 
-    /** The full list is taller than a phone; a tall window shows every section under the sheet's 90 % cap. */
-    private val tallReferences = XmlReferenceCapture(shots, module = MODULE, size = CaptureSize(heightDp = TALL_HEIGHT_DP))
-
     /** The launch whose surface was already opened; every appearance launches a new host. */
     private var opened: SubjectLinksPreviewActivity? = null
 
@@ -69,21 +61,6 @@ class SubjectLinksReferenceScreenshotTest {
     @After
     fun resetHost() {
         SubjectLinksPreviewActivity.repository = MemorySubjectLinksRepository()
-    }
-
-    @Test
-    fun subjectLinksSheet() {
-        fun links(name: String, configure: (MemorySubjectLinksRepository) -> Unit) =
-            tallReferences.sheet(name, SubjectLinksBottomSheet.TAG, configure, open = {}) { sheet ->
-                !sheet.findViewById<View>(R.id.loading).isShown
-            }
-        links("SubjectLinksSheetContent_content") { it.snapshots.value = mapOf(SCOPE.key to fixture()) }
-        links("SubjectLinksSheetContent_restricted") {
-            it.snapshots.value = mapOf(SCOPE.key to fixture())
-            it.restrictions.value = listOf(UserRestriction("vote", RestrictionCapability.VOTE, "Правила", null))
-        }
-        links("SubjectLinksSheetContent_empty") {}
-        links("SubjectLinksSheetContent_error") { it.failure.value = AppError.Network }
     }
 
     @Test
@@ -226,7 +203,6 @@ class SubjectLinksReferenceScreenshotTest {
 
     private companion object {
         const val MODULE = "feature-resources"
-        const val TALL_HEIGHT_DP = 2000
         val ARGS = SubjectLinksPreviewActivity.ARGS
         val SETTLE: Duration = Duration.ofSeconds(1)
     }

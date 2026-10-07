@@ -9,7 +9,3 @@ LinkEditorSheetContent_new
 LinkEditorSheetContent_offline
 LinkEditorSheetContent_url-error
 ReportLinkDialog_reason
-SubjectLinksSheetContent_content
-SubjectLinksSheetContent_empty
-SubjectLinksSheetContent_error
-SubjectLinksSheetContent_restricted
