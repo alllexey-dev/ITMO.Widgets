@@ -8,6 +8,4 @@ LessonDetailsContent_minimal
 LessonDetailsContent_teacher-level
 PendingSportDetailsContent_predicted
 PendingSportDetailsContent_waiting
-ScheduleChangesScreen_empty
-ScheduleChangesScreen_list
 UserScheduleScreen_content

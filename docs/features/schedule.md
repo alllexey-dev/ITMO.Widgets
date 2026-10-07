@@ -401,20 +401,21 @@ home card.
   or a date (`30 сентября`); a date of another year spells the year out
   (`RelativeDay.OTHER_YEAR`, decided by `ScheduleChangesViewModel` from
   `AcademicTimeProvider`).
-- A row (`item_schedule_change.xml`) has the subject, a `colorPrimary` dot for
+- A row (`ScheduleChangesScreen`) has the subject, a `primary` dot for
   a new change, the main line, one line per changed field and `вид · поток`.
   The main line of an added or cancelled lesson is its summary
   (`Отменена: вт, 8 сентября, 10:00`); an updated lesson with several fields
   has the summary of the first field (`Перенесена на ср, 9 сентября, 10:00`)
   with the `было → стало` lines below; with one field the main line is that
   field's `было → стало` line itself (`Формат: Очный → Дистанционный`) and
-  nothing repeats it. Texts are in `core/ui/ScheduleChangeTexts.kt`.
+  nothing repeats it. Texts are in `core/text/ScheduleChangeTexts.kt` (`:shared:core`).
 - Rows react to nothing. Each is one TalkBack node:
   `Новое. Предмет. Итог. Строки. Мета`.
 - `Loading` keeps the area blank until the local file answers, without a
   skeleton; `Empty` says `Изменений нет` and `За последние 30 дней`. There is
   no error state: the store resets a broken file.
-- While the screen is visible (`onStart` to `onStop`) every unread change is
+- While the screen is visible (started; `ScheduleChangesRoute` reports it from
+  `LifecycleStartEffect`) every unread change is
   marked read (`markAllRead()`, which also removes the notification). The rows
   that were unread when shown keep the dot for the life of the screen; their
   ids are kept in `SavedStateHandle`, so recreation keeps them. A screen hidden
@@ -440,10 +441,12 @@ run, retries and the work, `ScheduleChangesRepositoryImplTest` also a network
 failure that keeps the file;
 `ScheduleChangesViewModelTest`, `ScheduleViewModelTest`,
 `LessonDetailsViewModelTest` and `LessonDetailsMappingTest` the history, the
-marks, the block and the flow. Instrumented: `ScheduleChangesWorkTest` (the
+marks, the block and the flow; `ScheduleChangesScreenTest` and
+`ScheduleChangesRouteTest` (`:shared:feature-schedule`) the history rows and
+the read mark on start, the `ScheduleChangesScreen_*` goldens its look.
+Instrumented: `ScheduleChangesWorkTest` (the
 app's `WorkManager` through the debug `ScheduleChangesTestEntryPoint`),
-`ScheduleChangesNotificationTest`, `ScheduleChangesVisualTest` (with the debug
-`ScheduleChangesPreviewActivity`), `ScheduleCardsVisualTest` and
+`ScheduleChangesNotificationTest`, `ScheduleCardsVisualTest` and
 `LessonDetailsVisualTest` (marks and the block through
 `ScheduleLifecycleTestActivity.changes`). They use synthetic `pairId`s and
 dates and restore the WorkManager state they found.

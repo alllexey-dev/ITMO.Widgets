@@ -98,8 +98,7 @@
     <fragment
         android:id="@+id/schedule_changes"
         android:name="dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesFragment"
-        android:label="@string/schedule_changes_title"
-        tools:layout="@layout/fragment_schedule_changes" />
+        android:label="@string/schedule_changes_title" />
 
     <fragment
         android:id="@+id/qr_pass"

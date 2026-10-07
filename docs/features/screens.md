@@ -111,7 +111,7 @@ Feature doc: [Schedule](schedule.md).
 |---|---|---|---|---|---|
 | `feature/schedule/ui/ScheduleFragment.kt` | Fragment | `ScheduleViewModel` | `navigation_schedule`, `AppRoot.SCHEDULE`; child of `UserScheduleFragment` | `feature/schedule/ui/ScheduleLifecycleTestActivity.kt` | `feature/schedule/ScheduleCardsVisualTest.kt`, `feature/schedule/LessonDetailsVisualTest.kt`, `core/ui/DesignComponentsVisualTest.kt` (layout) |
 | `feature/schedule/ui/UserScheduleFragment.kt` | Fragment | — (hosts `ScheduleFragment`) | `user_schedule`, `AppScreen.USER_SCHEDULE` | — | — |
-| `feature/schedule/ui/changes/ScheduleChangesFragment.kt` | Fragment | `ScheduleChangesViewModel` | `schedule_changes`, `AppScreen.SCHEDULE_CHANGES` | `feature/schedule/ui/changes/ScheduleChangesPreviewActivity.kt` | `feature/schedule/ScheduleChangesVisualTest.kt` |
+| `feature/schedule/ui/changes/ScheduleChangesFragment.kt` hosting `ScheduleChangesRoute` (`:shared:feature-schedule`) | Fragment | `ScheduleChangesViewModel` (Koin) | `schedule_changes`, `AppScreen.SCHEDULE_CHANGES` | — | `ScheduleScreenshotTest` (`:shared:feature-schedule`) |
 | `feature/schedule/ui/details/LessonDetailsBottomSheet.kt` | bottom sheet | `LessonDetailsViewModel` | `AppNavigator.openLessonDetails` | `feature/schedule/ui/ScheduleLifecycleTestActivity.kt` | `feature/schedule/LessonDetailsVisualTest.kt` |
 | `feature/schedule/ui/details/PendingSportDetailsBottomSheet.kt` | bottom sheet | — | `AppNavigator.openPendingSportDetails` | `feature/schedule/ui/ScheduleLifecycleTestActivity.kt` | `feature/schedule/LessonDetailsVisualTest.kt` |
 

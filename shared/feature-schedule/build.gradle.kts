@@ -15,6 +15,9 @@ kotlin {
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
+            // ScheduleChangesRoute (L10 LS-4): koinViewModel() and LifecycleStartEffect; IO-09b hosts the same route on iOS.
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))

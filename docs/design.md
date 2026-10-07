@@ -574,7 +574,7 @@ settings, and restore them if a separate test explicitly changes them.
   The name and the dot `new_mark` for unread marks share a horizontal row
   centred vertically: the name takes the remaining width and wraps, the dot
   (8 dp `shape_circle_filled`, `colorPrimary`, `design_spacing_compact` before
-  it) follows it like the new-change dot of `item_schedule_change.xml`, is set
+  it) follows it like the new-change dot of the schedule changes history, is set
   on every bind and adds `Новое` at the start of the row's TalkBack description.
   A total from a connected sheet stands where the points would be while the
   official points are empty: `sheet_mark` (`ic_table`, 16 dp,
@@ -661,13 +661,14 @@ settings, and restore them if a separate test explicitly changes them.
   `Pill` and a trailing 48 dp close button, then the headline (the subject
   names) wrapping without truncation; the whole card opens the history (the
   recordbook).
-- Schedule changes: the history row `res/layout/item_schedule_change.xml`
-  (`Card.Content`, not clickable: subject with an 8 dp `colorPrimary` dot for a
-  new change, the main line, one `item_schedule_change_line.xml` per changed
-  field so a wrapped field never runs into the next, `вид · поток`; one TalkBack
-  node), day titles `res/layout/item_schedule_change_day.xml`, the screen
-  `res/layout/fragment_schedule_changes.xml` with
-  `feature/schedule/ui/changes/ScheduleChangesAdapter.kt`. On lesson cards the
+- Schedule changes: Compose in `:shared:feature-schedule`
+  (`feature/schedule/ui/changes/ScheduleChangesScreen.kt`). A history row is a
+  `Card.Content` card, not clickable: the subject with an 8 dp `primary` dot for
+  a new change (centred on the subject's first line), the main line, one text
+  per changed field so a wrapped field never runs into the next, `вид · поток`;
+  one TalkBack node. Day titles are `titleSmall` in `onSurfaceVariant` headings
+  above their rows; an empty history is the kit's `ContentState` with
+  `ic_history`. On lesson cards the
   mark `change_indicator` (`ic_edit_calendar`, 16 dp, `colorPrimary`) after the
   video-call icon in `res/layout/item_schedule_lesson.xml`; in the lesson sheet
   the block `changes_card` (divider, `Изменения`, `было → стало` lines) in
@@ -676,5 +677,5 @@ settings, and restore them if a separate test explicitly changes them.
 - Visual tests: `feature/sport/cards/SportDetailsSheetVisualTest.kt`,
   `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
   `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`,
-  `feature/reviews/ReviewEditorVisualTest.kt`, `feature/schedule/ScheduleChangesVisualTest.kt`,
+  `feature/reviews/ReviewEditorVisualTest.kt`,
   `feature/recordbook/SheetScoresVisualTest.kt`.
