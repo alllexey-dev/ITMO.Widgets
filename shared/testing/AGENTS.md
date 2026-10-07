@@ -3,6 +3,10 @@
 ## Owns
 - `commonMain` `testkit`: `FakeClock`, `FakeFiles` (okio fake file system), `MockHttp` (Ktor mock engine),
   `SemanticsChecks`, `TestMainDispatcher` and `HostTestRunner` with its `android` and `ios` actuals.
+- `ResourceWaits` (`awaitText`, `awaitResource`; `awaitText` also for a JUnit4 `ComposeTestRule` in `androidMain`):
+  the one way a host test waits for text from Compose resources' suspend `getString` or `UiText.resolve()`, such as
+  a snackbar after an action. That load runs on a scope Compose idling does not track, so `waitForIdle()` alone
+  can return before the text exists.
 - `androidMain` `testkit/screenshot`: the preview screenshot harness (`PreviewScreenshotTest`, baselines,
   inventory, compare) that every module's `shots` run uses, and the `:app` XML reference captures.
 - `androidHostTest`: `ProbeScreenshotTest`, the harness proof; `screenshots/`: its baseline.
