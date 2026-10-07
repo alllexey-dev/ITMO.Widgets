@@ -130,7 +130,7 @@ Feature doc: [Sport](sport.md).
 | `feature/sport/ui/my/SportMyFragment.kt` | Fragment | `SportMyViewModel` (Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportScoreCollapsePreviewActivity.kt` | `feature/sport/cards/SportBookingCardsVisualTest.kt` (cards), `core/ui/DesignComponentsVisualTest.kt` (layout) |
 | `feature/sport/ui/sign/SportSignFragment.kt` hosting `SportSignRoute` (`:shared:feature-sport`) | Fragment | `SportSignViewModel` (Koin, Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportCardsPreviewActivity.kt` (lesson list) | `SportScreenshotTest` (`:shared:feature-sport`) |
 | `feature/sport/ui/user/UserSportFragment.kt` | Fragment | `UserSportViewModel` | `user_sport`, `AppScreen.USER_SPORT` | — | — |
-| `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt` | bottom sheet | — | `SportMyFragment`, `SportSignFragment`; `MainNavigationCoordinator.openSportDetails` for a schedule row that is a known booking | `feature/sport/ui/SportCardsPreviewActivity.kt` | `feature/sport/cards/SportDetailsSheetVisualTest.kt` |
+| `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt` | bottom sheet | — | `SportMyFragment`, `SportSignFragment`; `MainNavigationCoordinator.openSportDetails` for a schedule row that is a known booking | `feature/sport/ui/SportCardsPreviewActivity.kt` | — (JVM `SportDetailsSheetTest` and the `SportDetailsSheetContent_*` goldens of `:shared:feature-sport`) |
 
 ## Subject links
 
