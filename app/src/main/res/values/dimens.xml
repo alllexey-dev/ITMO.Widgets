@@ -32,8 +32,6 @@
     <dimen name="design_state_icon">64dp</dimen>
     <dimen name="design_state_inline_icon">56dp</dimen>
 
-    <dimen name="friend_picker_selection_stroke">2dp</dimen>
-
     <!-- The four range rows of the .ics sheet; loading, the file and failures keep this height. -->
     <dimen name="ics_export_content_min_height">288dp</dimen>
 </resources>
