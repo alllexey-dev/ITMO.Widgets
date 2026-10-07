@@ -2,49 +2,41 @@ package dev.alllexey.itmowidgets.feature.schedule.ui.details
 
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.core.view.isVisible
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import androidx.annotation.VisibleForTesting
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.navigationArgs
 import dev.alllexey.itmowidgets.core.navigation.putNavigationArgs
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaZone
-import dev.alllexey.itmowidgets.core.ui.ConditionTone
-import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
-import dev.alllexey.itmowidgets.core.ui.alignRailIcon
-import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
 import dev.alllexey.itmowidgets.core.ui.navigation.openRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
-import dev.alllexey.itmowidgets.databinding.FragmentPendingSportDetailsBinding
-import dev.alllexey.itmowidgets.databinding.ItemSportConditionBinding
-import java.time.OffsetDateTime
+import dev.alllexey.itmowidgets.designsystem.host.ItmoBottomSheetFragment
+import dev.alllexey.itmowidgets.designsystem.host.SheetHeight
+import dev.alllexey.itmowidgets.designsystem.host.SheetSpec
 import javax.inject.Inject
 import kotlinx.datetime.TimeZone
 
 /**
- * A queued or predicted sport booking from the schedule, laid out like the sport
- * tab's own details: the shared header, then the booking conditions as one
- * condition card. Managing the queue happens on the sport tab.
+ * A queued or predicted sport booking from the schedule, drawn by `PendingSportDetailsContent` of
+ * `:shared:feature-schedule`: the shared header, then the booking conditions as one condition card. Managing the
+ * queue happens on the sport tab. The Fragment keeps the stable entry points (class name, [TAG], [newInstance], the
+ * argument key) and performs the effects: the `geo:` map, the profile and the sport tab after closing.
  */
 @AndroidEntryPoint
-class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
-    private var _binding: FragmentPendingSportDetailsBinding? = null
-    private val binding get() = _binding!!
+class PendingSportDetailsBottomSheet : ItmoBottomSheetFragment() {
 
     @Inject lateinit var timeProvider: AcademicTimeProvider
 
@@ -52,9 +44,24 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
         requireNotNull(requireArguments().navigationArgs<PendingSportDetailsArgs>(ARG_BOOKING))
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentPendingSportDetailsBinding.inflate(inflater, container, false)
-        return binding.root
+    /** What the body asks of the host; instrumented tests call it to check the effects without the Compose tree. */
+    @VisibleForTesting
+    internal val actions = PendingSportDetailsActions(
+        onMap = ::openMap,
+        onProfile = ::openProfile,
+        onOpenSport = ::openSport,
+        onClose = ::onCloseRequest,
+    )
+
+    override val spec: SheetSpec get() = SPEC
+
+    @Composable
+    override fun SheetContent() {
+        PendingSportDetailsContent(
+            PendingSportDetailsSheetState(booking, timeProvider.timeZone),
+            actions,
+            Modifier.fillMaxSize(),
+        )
     }
 
     override fun onStart() {
@@ -63,74 +70,35 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
             it.backgroundTintList = ColorStateList.valueOf(
                 requireContext().color.resolve(com.google.android.material.R.attr.colorSurfaceContainerLowest)
             )
-            (it.background as? com.google.android.material.shape.MaterialShapeDrawable)?.elevation = 0f
-            it.layoutParams = it.layoutParams.apply { height = (resources.displayMetrics.heightPixels * 0.90f).toInt() }
-            BottomSheetBehavior.from(it).apply {
-                state = BottomSheetBehavior.STATE_EXPANDED
-                skipCollapsed = true
-            }
+            (it.background as? MaterialShapeDrawable)?.elevation = 0f
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?): Unit = with(binding) {
-        toolbar.setNavigationOnClickListener { dismiss() }
-        val zone = timeProvider.javaZone()
-        val start = OffsetDateTime.parse(booking.start).atZoneSameInstant(zone)
-        val end = OffsetDateTime.parse(booking.end).atZoneSameInstant(zone)
-        val teacherIsu = UserScreenArgs.profileIsu(booking.teacherIsu?.toLong())
-        header.bind(
-            DetailsHeaderContent(
-                title = booking.sectionName,
-                kind = getString(if (booking.isPrediction) R.string.schedule_auto_sign_prediction else R.string.schedule_auto_sign_waiting),
-                date = start.toLocalDate(),
-                start = start.toLocalTime(),
-                end = end.toLocalTime(),
-                teacher = booking.teacherFio,
-                location = booking.roomName,
-                mapAvailable = booking.roomName.isNotBlank()
-            ),
-            teacherIsu?.let { isu -> { dismiss(); openUserProfile(isu) } }
-        ) {
-            val opened = MapLauncher.open(requireContext(), MapDestination(label = booking.sectionName, address = booking.roomName))
-            if (!opened) Snackbar.make(root, R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()
-        }
-        bindConditions()
-        openSport.setOnClickListener {
-            dismiss()
-            openRoot(AppRoot.SPORT)
-        }
+    /** The profile is a contextual screen above the tabs; the sheet has nothing to add once it opens. */
+    private fun openProfile(isu: Int) {
+        dismiss()
+        openUserProfile(isu)
     }
 
-    /** One waiting card, the same one the sport tab shows for a queue or a prediction. */
-    private fun bindConditions() = with(binding) {
-        attentionContainer.removeAllViews()
-        val row = ItemSportConditionBinding.inflate(layoutInflater, attentionContainer, false)
-        val tone = ConditionTone.WAITING
-        row.root.setCardBackgroundColor(tone.container(requireContext()))
-        row.conditionTitle.setText(if (booking.isPrediction) R.string.sport_prediction_waiting else R.string.sport_registration_waiting)
-        row.conditionTitle.setTextColor(tone.accent(requireContext()))
-        row.conditionBody.text = getString(
-            when {
-                booking.isPrediction -> R.string.sport_prediction_hint
-                booking.autoSign -> R.string.sport_queue_future_hint
-                else -> R.string.sport_queue_free_hint
-            }
-        )
-        row.conditionBody.setTextColor(requireContext().color.onSurface)
-        row.conditionIcon.setImageResource(R.drawable.ic_schedule)
-        row.conditionIcon.imageTintList = ColorStateList.valueOf(tone.accent(requireContext()))
-        alignRailIcon(row.conditionIcon, row.conditionTitle)
-        attentionContainer.addView(row.root)
+    /** Managing the queue happens on the sport tab. */
+    private fun openSport() {
+        dismiss()
+        openRoot(AppRoot.SPORT)
     }
 
-    override fun onDestroyView() {
-        _binding = null
-        super.onDestroyView()
+    private fun openMap() {
+        val destination = MapDestination(label = booking.sectionName, address = booking.roomName)
+        if (!MapLauncher.open(requireContext(), destination)) {
+            Snackbar.make(requireView(), R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()
+        }
     }
 
     companion object {
         const val TAG = "PendingSportDetailsBottomSheet"
         private const val ARG_BOOKING = "arg_pending_booking"
+
+        /** 90 % of the screen however short the content, as the View sheet opened. */
+        private val SPEC = SheetSpec(height = SheetHeight.Tall)
 
         fun newInstance(booking: PendingSportBooking, zone: TimeZone): PendingSportDetailsBottomSheet =
             newInstance(booking.toDetailsArgs(zone))

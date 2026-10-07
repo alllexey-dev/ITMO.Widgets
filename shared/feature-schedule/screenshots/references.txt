@@ -1,5 +1,3 @@
 # XML references recorded by :app (XmlReferenceCapture) under the name of a future preview.
 # The port that adds the preview re-records the files and deletes its line and the reference test.
-PendingSportDetailsContent_predicted
-PendingSportDetailsContent_waiting
 UserScheduleScreen_content

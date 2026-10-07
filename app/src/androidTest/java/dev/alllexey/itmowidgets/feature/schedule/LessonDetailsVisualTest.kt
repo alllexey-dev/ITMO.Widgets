@@ -1,8 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule
 
 import android.view.View
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -35,7 +33,6 @@ import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Appearances.assertEffective
 import dev.alllexey.itmowidgets.testing.toScheduleLifecycle
 import dev.alllexey.itmowidgets.testing.TestUi
-import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
@@ -58,9 +55,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The real card → sheet path on the lifecycle host and the pending-sport sheet. The lesson sheet's body is Compose
- * (`LessonDetailsSheetTest` and the `LessonDetailsContent_*` goldens); here only the card marks, the opening, recreation
- * and the host's profile hand-off remain until LS-6b.
+ * The real card → sheet path on the lifecycle host and the pending-sport sheet. Both sheet bodies are Compose
+ * (`LessonDetailsSheetTest`, `PendingSportDetailsSheetTest` and their goldens); here only the card marks, the opening,
+ * recreation and the hosts' hand-offs remain until LS-6b.
  */
 @RunWith(AndroidJUnit4::class)
 class LessonDetailsVisualTest {
@@ -125,22 +122,6 @@ class LessonDetailsVisualTest {
     }
 
     @Test
-    fun sportSheetsHaveNoFlowRow() {
-        withSchedule { scenario ->
-            scenario.onActivity {
-                PendingSportDetailsBottomSheet.newInstance(pendingBooking(), MOSCOW).show(it.supportFragmentManager, PendingSportDetailsBottomSheet.TAG)
-            }
-            settle()
-            scenario.onActivity { activity ->
-                val sheet = activity.supportFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) as PendingSportDetailsBottomSheet
-                val root = sheet.requireView()
-                assertEquals(View.VISIBLE, root.findViewById<View>(R.id.teacher_fact).visibility)
-                assertEquals(View.GONE, root.findViewById<View>(R.id.flow_fact).visibility)
-            }
-        }
-    }
-
-    @Test
     fun aLinkedLessonIsMarkedOnTheCardAndOpensItsSheet() {
         val date = LocalDate(2026, 9, 7)
         // An online lesson: no room, no building, MyITMO's "virtual rooms" id that the directory does not know.
@@ -188,6 +169,10 @@ class LessonDetailsVisualTest {
         }
     }
 
+    /**
+     * The body's teacher row and `Открыть в спорте` call the host (PendingSportDetailsSheetTest); the host closes the
+     * sheet before navigating, and the sheet survives recreation.
+     */
     @Test
     fun aPendingSportRowOpensItsOwnSheetWithTheSportHandOff() {
         val booking = pendingBooking()
@@ -201,35 +186,42 @@ class LessonDetailsVisualTest {
                 }
                 settle()
                 scenario.onActivity { activity ->
-                    val sheet = activity.supportFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) as PendingSportDetailsBottomSheet
-                    val root = sheet.requireView()
-                    spec.assertEffective(root, defaultPrimary)
-                    assertEquals("Современные танцы", root.text(R.id.section_name))
-                    assertEquals(activity.getString(R.string.schedule_auto_sign_prediction), root.text(R.id.kind))
-                    assertEquals(activity.getString(R.string.sport_prediction_waiting), root.text(R.id.condition_title))
-                    assertEquals(activity.getString(R.string.sport_prediction_hint), root.text(R.id.condition_body))
-                    assertEquals("16:00–17:30", root.text(R.id.time))
-                    assertEquals("Кронверкский проспект, 49, зал 1", root.fact(R.id.location_fact))
-                    assertEquals(SettingsNavigationTestActivity.LONG_NAME, root.fact(R.id.teacher_fact))
-                    assertTeacherAction(root.findViewById(R.id.teacher_fact))
-                    assertEquals(View.VISIBLE, root.findViewById<View>(R.id.map_button).visibility)
-                    assertEquals(View.VISIBLE, root.findViewById<View>(R.id.open_sport).visibility)
-                    if (spec.widthDp > 0) assertEquals((spec.widthDp * root.resources.displayMetrics.density).toInt(), sheet.dialog!!.window!!.decorView.width)
-                    ViewChecks.assertTextFits(root)
-                    ViewChecks.assertTouchTargets(root)
+                    val sheet = activity.pendingSheet()!!
+                    assertTrue(sheet.isResumed)
+                    if (spec.widthDp > 0) assertEquals((spec.widthDp * activity.resources.displayMetrics.density).toInt(),
+                        sheet.dialog!!.window!!.decorView.width)
                 }
                 frame(scenario, "pending-$index")
-                scenario.onActivity { activity ->
-                    val sheet = activity.supportFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) as PendingSportDetailsBottomSheet
-                    sheet.requireView().findViewById<View>(R.id.teacher_fact).performClick()
-                }
+                scenario.onActivity { it.pendingSheet()!!.actions.onProfile(300002) }
                 settle()
                 scenario.onActivity { activity ->
-                    assertNull(activity.supportFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG))
+                    assertNull(activity.pendingSheet())
                     val navigation = activity.openedScreens.single()
                     assertEquals(AppScreen.USER_PROFILE, navigation.first)
                     assertEquals(300002, navigation.second?.getInt(UserScreenArgs.ISU))
                 }
+            }
+        }
+    }
+
+    @Test
+    fun thePendingSheetSurvivesRecreationAndClosesForTheSportTab() {
+        withSchedule { scenario ->
+            scenario.onActivity {
+                PendingSportDetailsBottomSheet.newInstance(pendingBooking(), MOSCOW).show(it.supportFragmentManager, PendingSportDetailsBottomSheet.TAG)
+            }
+            settle()
+            scenario.recreate()
+            settle()
+            scenario.onActivity { activity ->
+                val sheet = activity.pendingSheet()!!
+                assertTrue(sheet.isResumed)
+                sheet.actions.onOpenSport()
+            }
+            settle()
+            scenario.onActivity { activity ->
+                assertNull(activity.pendingSheet())
+                assertTrue(activity.openedScreens.isEmpty())
             }
         }
     }
@@ -273,7 +265,8 @@ class LessonDetailsVisualTest {
     private fun ScheduleLifecycleTestActivity.sheet() =
         schedule().childFragmentManager.findFragmentByTag(LessonDetailsBottomSheet.TAG) as LessonDetailsBottomSheet
 
-    private fun View.text(id: Int) = findViewById<TextView>(id).text.toString()
+    private fun ScheduleLifecycleTestActivity.pendingSheet() =
+        supportFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) as PendingSportDetailsBottomSheet?
 
     private fun change(
         kind: ScheduleChangeKind,
@@ -298,17 +291,6 @@ class LessonDetailsVisualTest {
         building = building, formatId = formatId, format = format, teacherIsu = null,
         teacherName = "Тестовый преподаватель с длинным именем"
     )
-
-    private fun View.fact(id: Int) = findViewById<View>(id).findViewById<TextView>(R.id.fact_value).text.toString()
-
-    private fun assertTeacherAction(row: View) {
-        assertTrue(row.isClickable)
-        assertTrue(row.isFocusable)
-        assertTrue(row.height >= 48 * row.resources.displayMetrics.density - 1)
-        assertEquals(View.VISIBLE, row.findViewById<View>(R.id.fact_trailing).visibility)
-        assertEquals(row.context.getString(R.string.teacher_open_profile),
-            row.createAccessibilityNodeInfo().actionList.single { it.id == AccessibilityActionCompat.ACTION_CLICK.id }.label)
-    }
 
     private fun frame(scenario: ActivityScenario<ScheduleLifecycleTestActivity>, name: String) {
         TestUi.settle(if (Screenshots.enabled) 500 else 80)
