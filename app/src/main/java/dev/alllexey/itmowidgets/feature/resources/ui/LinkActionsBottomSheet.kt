@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.displayTitle
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.SheetLinkActionsBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
@@ -89,7 +90,7 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
         val pinned = snapshot.pinnedId == link.id
         val previous = snapshot.previous.any { it.id == link.id }
         title.text = link.displayTitle()
-        meta.text = requireContext().linkMeta(link, pinned, previous)
+        meta.text = linkMeta(link, pinned, previous).resolve(requireContext())
         bindVotes(link, state.canVote)
         val note = link.reviewNote.takeIf {
             link.isMine && (link.status == SubjectLinkStatus.REJECTED || link.status == SubjectLinkStatus.HIDDEN)

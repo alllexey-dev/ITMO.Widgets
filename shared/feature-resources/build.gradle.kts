@@ -14,6 +14,8 @@ kotlin {
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
+            // SubjectLinksSheetRoute collects the view model's state and events with the host's lifecycle (L15 LX-3b).
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
