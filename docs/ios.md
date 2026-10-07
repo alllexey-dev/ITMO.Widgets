@@ -264,7 +264,7 @@ container, logs one warning per process and carries on; the extensions then see 
 | File | Written by | Read by | Notes |
 |---|---|---|---|
 | `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted; `myitmo-refresh` guards the token refresh |
-| session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension (`SessionFile.swift` in `iosApp/Shared/WidgetSnapshots/`), notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` false until IO-13a |
+| session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension (`SessionFile.swift` in `iosApp/Shared/WidgetSnapshots/`), notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` is the last notification settings answer (see Notifications) |
 | qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool?}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`); `spoiler` is the global QR widget option, absent (as the writer leaves it today) means on, the Android default |
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension, on a tap on the spoiler | widget extension (`QrWidgetReveal.swift`) | `{"revealedUntil": ISO 8601}`: the tap's time plus 30 s, Android's auto-hide delay; one file for every placed QR widget; never read by the app |
 | schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`, iosMain) on the session, the schedule widget options, every return to the foreground, a changed cached schedule and `ScheduleWidgetRefreshRequester` (sport); reloads `dev.alllexey.itmowidgets.widget.single-lesson` and `.day-schedule` | widget extension (`LessonTimeline.swift`) | LS-3's `ScheduleWidgetTimeline` from `ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow (academic zone): `{"version": 1, "generatedAt", "validUntil", "entries": [{"validFrom", "snapshot"}]}`, the snapshot in the keys of Android's widget snapshot, nulls omitted, defaults written; rooms and buildings are already the short titles Android's widget shows; an unavailable schedule keeps the previous file; the envelope around `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json` is what the writer writes for it (`ScheduleTimelineWriterTest`, `ScheduleTimelineTests`) |
@@ -334,8 +334,8 @@ are Android's; a widget step shows how to add the widget (`ios_onboarding_widget
 so `pinSupported` is false) beside its appearance rows from `WidgetAppearanceRepository`, without the custom spoiler
 image row; the services step is the shared opt-in; the notifications step asks with
 `UNUserNotificationCenter.requestAuthorization` and then opens the app's notification settings
-(`ios_onboarding_notifications_configure` once allowed). The answer is the step's status; IO-13a feeds it into
-`alertsAllowed`. A back button above the step replaces Android's system back. A Debug build launched with
+(`ios_onboarding_notifications_configure` once allowed). The answer is the step's status; the foreground refresh
+after the dialog carries it into `alertsAllowed` (see Notifications). A back button above the step replaces Android's system back. A Debug build launched with
 `-itmoOnboarding` shows the flow over the demo session, which otherwise skips it, until the flow ends (UI tests,
 `XCUIApplication.itmoOnboarding()`); finishing it there stores the flag as a real account would.
 
@@ -397,6 +397,38 @@ over the shared `AppUpdateViewModel` as a sheet. The only channel is the App Sto
 `https://apps.apple.com/app/id$(APP_STORE_ID)` (`AppStoreListing`; `APP_STORE_ID` in `Base.xcconfig`, `AppStoreID` in
 the app's Info.plist): while the ID is empty, until the App Store record exists (T13), the offer never checks or shows.
 No GitHub or Play channel.
+
+## Notifications
+
+Push plumbing before the Apple account (IO-13a); the APNs and FCM token arrive with IO-13b, the notification
+service's work with IO-12a.
+
+- Registration. `PushDeviceRegistration` (`shared/core/src/commonMain/.../core/notification/`) is both the
+  session's `FcmTokenSync` and its `BackendDeviceSession`: it registers the token with `platform = IOS`,
+  `alertsAllowed` and `appVersion` (`CFBundleShortVersionString`) and the device name `Apple <model>` (never the
+  user's own device name). Nothing reaches Backend in the demo, without the opt-in (`BackendGate.mayCallBackend()`),
+  without a signed-in ISU or without a token; `IosPushDevice` has none until Swift passes one to `updateToken`, so
+  today nothing is registered. `PushRegistrationPreferences` keeps what Backend last accepted (token, owner,
+  alerts); sign-out and turning the services off unregister that token and forget it.
+- Foreground refresh. Each return to the foreground (`scenePhase == .active`, so also after the permission dialog)
+  runs `PushForegroundRefresh` (`PushRefresh.run()`): it reads the notification settings (authorized, provisional
+  or ephemeral count as allowed), which session-v1.json's `alertsAllowed` follows, then syncs, which registers
+  again only when the token, the owner or the alerts answer changed. A failure is logged, never thrown into Swift.
+- Taps. `ITMOWidgetsAppDelegate` (`@UIApplicationDelegateAdaptor`; its push part in `PushAppDelegate.swift`) makes
+  `NotificationTaps` the notification center's delegate before launch ends. A tap reads the `data` envelope from `userInfo` (`NotificationTapRoutes`) and hands
+  the route to `AppRouter.open(entry:)`; a tap that launched the app waits until the shell attaches the router. A
+  notification that arrives in the foreground shows as a banner.
+
+| Payload type | Opens |
+|---|---|
+| `FRIENDSHIP_EVENT_PAYLOAD` | the me tab with the actor's profile above it (not on iOS before IO-09e) |
+| `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD` | the sport tab with the lesson's request; with several lessons the sport tab |
+| anything else | nothing |
+
+- A Debug build launched with `-itmoNotificationFixture friendship|sport` asks for permission and posts a local
+  notification shaped like the push two seconds later (`NotificationFixtures`); `NotificationTapUITests` taps its
+  banner. `ITMOWidgetsTests/DeviceRegistrationTests` checks the graph and the tap routes, `PushDeviceRegistrationTest`
+  (`scripts/ios/test.sh kn core`) the Backend cases on a MockEngine.
 
 ## Widgets
 
@@ -497,9 +529,10 @@ sign-out cleaners.
   `AccountAuthBridge`: `DemoPreferences`, the current user from the ID token (`DemoMode`'s fictional user in the
   demo), every `SessionDataCleaner` of the graph (`getAll()`, read on each transition), and `SessionSnapshotSync`,
   which writes session-v1.json for every signed-in state. The lifecycle effects do nothing yet (no background
-  work, notifications or widgets to stop); push token sync and device registration are no-ops until IO-13a, the
-  Backend identity upload until an iOS card turns custom services on. `AppNotifier` does nothing until IO-14 binds
-  the notifier (`recordbookIosModule` holds the placeholder).
+  work, notifications or widgets to stop); push token sync and device registration are one shared
+  `PushDeviceRegistration` (see Notifications), the Backend identity upload a no-op until an iOS card turns custom
+  services on. `AppNotifier` does nothing until IO-14 binds the notifier (`recordbookIosModule` holds the
+  placeholder).
 - Launch. `App.init` starts the graph, builds the shell's session, then calls `SessionRepository.initialize()`. A
   Debug build launched with `-itmoDemo` first opens the demo session unless `DemoMode` is already on
   (`startDemo()`), so the gate never passes the sign-in screen; most UI tests pass it through
