@@ -9,19 +9,17 @@ import android.os.Bundle
 import androidx.core.app.NotificationManagerCompat
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageView
-import android.widget.ListView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.espresso.matcher.RootMatchers.isDialog
-import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
-import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.transition.MaterialSharedAxis
@@ -35,7 +33,6 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.IcsExportBottomSheet
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
-import dev.alllexey.itmowidgets.feature.settings.ui.showCalendarAccessDialog
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
@@ -47,13 +44,18 @@ import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
-import org.hamcrest.Matchers.allOf
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.CopyOnWriteArrayList
 import org.koin.androidx.viewmodel.ext.android.getViewModel
+import androidx.annotation.StringRes
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
@@ -73,25 +75,36 @@ class SettingsNavigationTest {
             assertPrivacyValues(scenario, "Друзья", "Друзья")
 
             clickRow(scenario, SettingRowId.SCHEDULE_SHARING)
+            settle()
             assertAudienceDialog(selectedIndex = 1)
             savePrivacyScreenshot("settings-privacy-dialog-friends")
-            onView(withText(R.string.settings_privacy_all)).inRoot(isDialog()).perform(click())
+            // The open choice survives recreation.
+            scenario.recreate()
+            settle()
+            assertAudienceDialog(selectedIndex = 1)
+            clickDialog(R.string.settings_privacy_all)
             settle()
             assertPrivacyValues(scenario, "Все", "Друзья")
 
             clickRow(scenario, SettingRowId.SPORT_SHARING)
+            settle()
             assertAudienceDialog(selectedIndex = 1)
-            onView(withText(R.string.settings_privacy_nobody)).inRoot(isDialog()).perform(click())
+            clickDialog(R.string.settings_privacy_nobody)
             settle()
             assertPrivacyValues(scenario, "Все", "Никто")
             savePrivacyScreenshot("settings-privacy-dialog-selection-saved")
 
             clickRow(scenario, SettingRowId.SCHEDULE_SHARING)
+            settle()
             assertAudienceDialog(selectedIndex = 0)
-            onView(withText(R.string.common_cancel)).inRoot(isDialog()).perform(click())
+            clickDialog(R.string.common_cancel)
+            settle()
             clickRow(scenario, SettingRowId.SPORT_SHARING)
+            settle()
             assertAudienceDialog(selectedIndex = 2)
-            onView(withText(R.string.common_cancel)).inRoot(isDialog()).perform(click())
+            clickDialog(R.string.common_cancel)
+            settle()
+            assertNoDialog()
             assertPrivacyValues(scenario, "Все", "Никто")
         }
     }
@@ -265,20 +278,20 @@ class SettingsNavigationTest {
                     openPage(scenario, SettingsPage.SCHEDULE)
                     clickRow(scenario, SettingRowId.SCHEDULE_CHANGES)
                     settle()
-                    onView(hintMessage()).check(doesNotExist())
+                    assertNoDialog()
                     clickRow(scenario, SettingRowId.SCHEDULE_CHANGES)
                     settle()
                     assertBackgroundWorkDialog()
                     Screenshots.capture("settings-screenshots", "settings-background-work-dialog-${spec.name}") { settle() }
-                    onView(withText(R.string.background_work_later)).inRoot(isDialog()).perform(click())
+                    clickDialog(R.string.background_work_later)
                     settle()
-                    onView(hintMessage()).check(doesNotExist())
+                    assertNoDialog()
 
                     clickRow(scenario, SettingRowId.SCHEDULE_CHANGES)
                     settle()
                     clickRow(scenario, SettingRowId.SCHEDULE_CHANGES)
                     settle()
-                    onView(hintMessage()).check(doesNotExist())
+                    assertNoDialog()
                     scenario.onActivity { activity -> assertNotNull(backgroundWorkRow(settingsRoot(activity))) }
                 }
             }
@@ -433,14 +446,14 @@ class SettingsNavigationTest {
                 ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
                     openPage(scenario, SettingsPage.SCHEDULE)
                     for (locked in listOf(false, true)) {
-                        scenario.onActivity { activity -> settingsFragment(activity).showCalendarAccessDialog(locked, {}, {}) }
+                        scenario.onActivity { activity -> settingsFragment(activity).showCalendarAccessDialog(locked) }
                         settle()
-                        onView(withText(R.string.calendar_access_rationale)).inRoot(isDialog()).check(matches(isDisplayed()))
                         val action = if (locked) R.string.calendar_access_open_settings else R.string.calendar_access_allow
-                        onView(withText(action)).inRoot(isDialog()).check(matches(isDisplayed()))
+                        assertDialogTexts(R.string.calendar_access_title, R.string.calendar_access_rationale, action)
                         Screenshots.capture("calendar-export-screenshots", "calendar-access-${if (locked) "locked" else "ask"}-${spec.name}") { settle() }
-                        onView(withText(R.string.calendar_access_later)).inRoot(isDialog()).perform(click())
+                        clickDialog(R.string.calendar_access_later)
                         settle()
+                        assertNoDialog()
                     }
                 }
             }
@@ -662,22 +675,70 @@ class SettingsNavigationTest {
     private fun firstSwitchTop(root: ViewGroup): Float =
         SettingsSemantics.rows(root).first(SettingsSemantics::isSwitch).boundsInWindow.top
 
-    /** The dialog's message; the row under it carries a shorter hint as its description. */
-    private fun hintMessage() = allOf(withId(android.R.id.message), withText(R.string.background_work_dialog_message))
-
+    /** The hint with its message fitting and both buttons at least 48 dp high. */
     private fun assertBackgroundWorkDialog() {
-        onView(withText(R.string.settings_background_work_title)).inRoot(isDialog()).check(matches(isDisplayed()))
-        onView(hintMessage()).inRoot(isDialog()).check { view, error ->
-            if (error != null) throw error
-            ViewChecks.assertTextFits(view.rootView)
-        }
-        for (button in listOf(R.string.background_work_allow, R.string.background_work_later)) {
-            onView(withText(button)).inRoot(isDialog()).check { view, error ->
-                if (error != null) throw error
-                assertTrue(view.isShown && view.height >= 48 * view.resources.displayMetrics.density - 1)
+        assertDialogTexts(R.string.settings_background_work_title, R.string.background_work_dialog_message)
+        onDialog { root ->
+            SettingsSemantics.assertTextFits(root)
+            for (button in listOf(R.string.background_work_allow, R.string.background_work_later)) {
+                // The layout keeps the 48 dp touch target around the 40 dp button it draws.
+                val height = dialogButton(root, button).layoutInfo.height
+                assertTrue("${string(button)} is $height px high", height >= 48 * root.resources.displayMetrics.density - 1)
             }
         }
     }
+
+    /** The Compose dialog over the page shows every one of [texts]. */
+    private fun assertDialogTexts(@StringRes vararg texts: Int) {
+        onDialog { root ->
+            val shown = SettingsSemantics.nodes(root).flatMap { SettingsSemantics.texts(it) }.toSet()
+            texts.forEach { text -> assertTrue("No ${string(text)} in the dialog", string(text) in shown) }
+        }
+    }
+
+    private fun clickDialog(@StringRes label: Int) {
+        onDialog { root ->
+            val node = dialogButton(root, label)
+            assertTrue("${string(label)} did not click", node.config[SemanticsActions.OnClick].action?.invoke() == true)
+        }
+    }
+
+    /** The topmost clickable node of the dialog showing [label]: a button or a choice row. */
+    private fun dialogButton(root: ViewGroup, @StringRes label: Int): SemanticsNode =
+        checkNotNull(
+            SettingsSemantics.nodes(root).firstOrNull { node ->
+                node.config.getOrNull(SemanticsActions.OnClick) != null && string(label) in SettingsSemantics.texts(node)
+            },
+        ) { "No ${string(label)} to click in the dialog" }
+
+    private fun assertNoDialog() {
+        onFocusedWindow { root -> assertNull("A dialog is still shown", root) }
+    }
+
+    /** Runs [block] on the main thread with the Compose dialog over the page; fails when none is shown. */
+    private fun onDialog(block: (ViewGroup) -> Unit) {
+        onFocusedWindow { root -> block(checkNotNull(root) { "No dialog is shown" }) }
+    }
+
+    /**
+     * The focused window's `ComposeView` host as [SettingsSemantics] reads it when the window is a dialog, null when
+     * it is the activity: the kit's dialogs are windows of their own, outside the page's semantics.
+     */
+    private fun onFocusedWindow(block: (ViewGroup?) -> Unit) {
+        onView(isRoot()).check { root, error ->
+            if (error != null) throw error
+            val type = (root.layoutParams as? WindowManager.LayoutParams)?.type
+            block(if (type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION) null else checkNotNull(composeHost(root)))
+        }
+    }
+
+    private fun composeHost(view: View): ViewGroup? {
+        if (view !is ViewGroup) return null
+        if (view.childCount > 0 && view.getChildAt(0) is ViewRootForTest) return view
+        return (0 until view.childCount).firstNotNullOfOrNull { composeHost(view.getChildAt(it)) }
+    }
+
+    private fun string(@StringRes id: Int): String = InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
 
     private fun assertRecordbookPage(activity: SettingsNavigationTestActivity, fontScale: Float, barsShown: Boolean) {
         val root = settingsRoot(activity)
@@ -701,13 +762,15 @@ class SettingsNavigationTest {
         SettingsSemantics.assertTouchTargets(root)
     }
 
+    /** The three audiences as radio rows, the current one selected. */
     private fun assertAudienceDialog(selectedIndex: Int) {
-        onView(isAssignableFrom(ListView::class.java)).inRoot(isDialog()).check { view, error ->
-            if (error != null) throw error
-            val list = view as ListView
-            assertEquals(listOf("Все", "Друзья", "Никто"), (0 until list.adapter.count).map { list.adapter.getItem(it).toString() })
-            assertEquals(ListView.CHOICE_MODE_SINGLE, list.choiceMode)
-            assertEquals(selectedIndex, list.checkedItemPosition)
+        onDialog { root ->
+            val options = SettingsSemantics.nodes(root)
+                .filter { it.config.getOrNull(SemanticsProperties.Role) == Role.RadioButton }
+                .sortedBy { it.boundsInWindow.top }
+                .toList()
+            assertEquals(listOf("Все", "Друзья", "Никто"), options.map { SettingsSemantics.texts(it).single() })
+            assertEquals(selectedIndex, options.indexOfFirst { it.config.getOrNull(SemanticsProperties.Selected) == true })
         }
     }
 

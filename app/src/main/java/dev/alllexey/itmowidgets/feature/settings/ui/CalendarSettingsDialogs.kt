@@ -5,12 +5,9 @@ import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import com.google.android.material.color.MaterialColors
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import java.time.Instant
@@ -58,33 +55,6 @@ internal fun Fragment.canOpenIcs(file: IcsFile): Boolean =
 
 internal fun Fragment.openIcs(file: IcsFile) {
     startSafely(viewIntent(file.uri.toUri()))
-}
-
-/**
- * Why the app asks for the calendar: «Разрешить» asks Android, or, after a refusal for good ([locked]), «Открыть
- * настройки» opens the app's system page. «Не сейчас» and dismissing call [onCancel].
- */
-internal fun Fragment.showCalendarAccessDialog(locked: Boolean, onAllow: () -> Unit, onCancel: () -> Unit) {
-    val context = requireContext()
-    // The Material 3 hero-icon dialog: the icon above a centred title, in the secondary colour.
-    val icon = checkNotNull(AppCompatResources.getDrawable(context, R.drawable.ic_calendar_add)).mutate().apply {
-        setTint(MaterialColors.getColor(context, com.google.android.material.R.attr.colorSecondary, 0))
-    }
-    MaterialAlertDialogBuilder(context, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog_Centered)
-        .setIcon(icon)
-        .setTitle(R.string.calendar_access_title)
-        .setMessage(R.string.calendar_access_rationale)
-        .setNegativeButton(R.string.calendar_access_later) { _, _ -> onCancel() }
-        .setPositiveButton(if (locked) R.string.calendar_access_open_settings else R.string.calendar_access_allow) { _, _ ->
-            if (locked) {
-                onCancel()
-                openAppSettings()
-            } else {
-                onAllow()
-            }
-        }
-        .setOnCancelListener { onCancel() }
-        .show()
 }
 
 /** The app's page in Android settings, where a permission refused for good can be given. */

@@ -20,7 +20,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
@@ -46,8 +45,6 @@ import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
@@ -61,9 +58,10 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 /**
  * Every settings page (`@id/settings` with its `settings_page` argument): `SettingsScreen` from
  * `:shared:feature-settings` over the Koin `SettingsViewModel`, with the page's widget preview, a View of
- * [WidgetPreviewFactory], in the screen's slot. The host keeps what only Android does: the dialogs, the permission
- * and result launchers, system pages, navigation between pages and the postponed enter until the first rows and the
- * preview are ready.
+ * [WidgetPreviewFactory], in the screen's slot. The host keeps what only Android does: the permission and result
+ * launchers, system pages, navigation between pages and the postponed enter until the first rows and the preview are
+ * ready. The screen draws the page's dialogs; the host opens the background work and calendar ones from its events and
+ * permission results and keeps the shown one in its saved state.
  */
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
@@ -78,11 +76,17 @@ class SettingsFragment : Fragment() {
 
     private val actions = SettingsActions(
         onBack = { closeScreen() },
-        onToggle = ::onToggleChanged,
-        onChoice = ::showChoiceDialog,
+        onToggle = { id, checked -> viewModel.onToggleChanged(id, checked) },
+        onChoice = { id, optionKey -> viewModel.onChoiceChanged(id, optionKey) },
         onNavigate = { page -> findNavController().navigate(R.id.settings, bundleOf(SettingsPage.ARGUMENT to page.name)) },
         onAction = { id -> viewModel.onAction(id) },
+        onAllowBackgroundWork = { requireActivity().openBackgroundWorkSettings() },
+        onAllowCalendarAccess = { askCalendarAccess() },
+        onOpenAppSettings = { openAppSettings() },
     )
+
+    /** Restored in [onCreate]: a permission result can open a dialog before the page is first composed. */
+    private var dialogs = SettingsDialogState()
 
     private val spoilerImagePicker = SpoilerImagePicker(this) { result ->
         when (result) {
@@ -113,7 +117,7 @@ class SettingsFragment : Fragment() {
             }
             // A refusal without a dialog means the permission is locked; only the app's system page can undo that.
             if (!shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)) {
-                showCalendarAccessDialog(locked = true, onAllow = {}, onCancel = {})
+                showCalendarAccessDialog(locked = true)
             } else {
                 Snackbar.make(requireView(), R.string.calendar_access_denied, Snackbar.LENGTH_SHORT).show()
             }
@@ -122,6 +126,7 @@ class SettingsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pendingCalendarAccess = savedInstanceState?.getBoolean(PENDING_CALENDAR_ACCESS) ?: false
+        dialogs = SettingsDialogState.restore(savedInstanceState?.getString(DIALOG))
         enterTransition = if (arguments?.getBoolean(ScreenTransitionHost.ARG_OVERLAY_ROOT) == true) null
         else SettingsLevelMotion.transition(forward = true)
         exitTransition = SettingsLevelMotion.transition(forward = true)
@@ -151,6 +156,7 @@ class SettingsFragment : Fragment() {
                     update = { bindPreview(settings) },
                 )
             },
+            dialogs = dialogs,
         )
     }.apply {
         // The page slides as one surface in the shared-axis transitions.
@@ -200,7 +206,7 @@ class SettingsFragment : Fragment() {
                     // The root gate already switched to the flow; the overlay just has to leave.
                     SettingsEvent.CloseOverlays -> dismissOverlays()
                     SettingsEvent.OpenBackgroundWorkSettings -> requireActivity().openBackgroundWorkSettings()
-                    SettingsEvent.ShowBackgroundWorkHint -> showBackgroundWorkHint()
+                    SettingsEvent.ShowBackgroundWorkHint -> dialogs.show(SettingsDialog.BackgroundWorkHint)
                     SettingsEvent.RequestQrTile -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         requireActivity().requestAddQrTile(viewModel::onQrTileResult)
                     }
@@ -288,54 +294,13 @@ class SettingsFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBundle(PREVIEW_STATE, widgetPreview?.saveState() ?: previewState)
         outState.putBoolean(PENDING_CALENDAR_ACCESS, pendingCalendarAccess)
+        outState.putString(DIALOG, dialogs.save())
         super.onSaveInstanceState(outState)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         releasePreview()
-    }
-
-    private fun onToggleChanged(id: SettingRowId, checked: Boolean) {
-        if (id != SettingRowId.CUSTOM_SERVICES || !checked) {
-            viewModel.onToggleChanged(id, checked)
-            return
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.settings_custom_services_consent_title)
-            .setMessage(R.string.settings_custom_services_consent_message)
-            .setNegativeButton(R.string.common_cancel, null)
-            .setPositiveButton(R.string.settings_custom_services_enable) { _, _ ->
-                viewModel.onToggleChanged(id, true)
-            }
-            .show()
-    }
-
-    private fun showBackgroundWorkHint() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.settings_background_work_title)
-            .setMessage(R.string.background_work_dialog_message)
-            .setNegativeButton(R.string.background_work_later, null)
-            .setPositiveButton(R.string.background_work_allow) { _, _ -> requireActivity().openBackgroundWorkSettings() }
-            .show()
-    }
-
-    private fun showChoiceDialog(item: SettingItem.Choice) {
-        val labels = item.options
-            .map { option -> option.label.resolve(requireContext()) }
-            .toTypedArray()
-        val selectedIndex = item.options.indexOfFirst { option ->
-            option.key == item.selectedOptionKey
-        }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(item.title.resolve(requireContext()))
-            .setSingleChoiceItems(labels, selectedIndex) { dialog, index ->
-                viewModel.onChoiceChanged(item.id, item.options[index].key)
-                dialog.dismiss()
-            }
-            .setNegativeButton(R.string.common_cancel, null)
-            .show()
     }
 
     private fun chooseCustomSpoiler() {
@@ -357,20 +322,30 @@ class SettingsFragment : Fragment() {
             viewModel.onCalendarAccessGranted()
             return
         }
-        val ask = {
-            pendingCalendarAccess = true
-            calendarPermissionLauncher.launch(CALENDAR_PERMISSIONS)
-        }
         if (!shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)) {
-            ask()
+            askCalendarAccess()
             return
         }
-        showCalendarAccessDialog(locked = false, onAllow = ask, onCancel = {})
+        showCalendarAccessDialog(locked = false)
+    }
+
+    private fun askCalendarAccess() {
+        pendingCalendarAccess = true
+        calendarPermissionLauncher.launch(CALENDAR_PERMISSIONS)
+    }
+
+    /**
+     * Why the app asks for the calendar: «Разрешить» asks Android, or, after a refusal for good ([locked]), «Открыть
+     * настройки» opens the app's system page; «Не сейчас» and dismissing do nothing.
+     */
+    internal fun showCalendarAccessDialog(locked: Boolean) {
+        dialogs.show(SettingsDialog.CalendarAccess(locked))
     }
 
     private companion object {
         const val PREVIEW_STATE = "widget_preview_state"
         const val PENDING_CALENDAR_ACCESS = "pending_calendar_access"
+        const val DIALOG = "settings_dialog"
         val CALENDAR_PERMISSIONS = arrayOf(
             android.Manifest.permission.READ_CALENDAR,
             android.Manifest.permission.WRITE_CALENDAR
