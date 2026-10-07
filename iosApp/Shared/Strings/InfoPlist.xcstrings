@@ -13,6 +13,18 @@
         }
       }
     },
+    "NSCameraUsageDescription" : {
+      "comment" : "Generated from strings_ios_account.xml (ios_web_login_camera_usage)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Камера нужна, чтобы сканировать QR для входа на сайт"
+          }
+        }
+      }
+    },
     "shortcut_qr_long" : {
       "comment" : "Generated from strings_platform.xml (shortcut_qr_long)",
       "extractionState" : "manual",

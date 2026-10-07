@@ -284,7 +284,8 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.open(AppRoutes.WebLogin(code: nil)), .refusedInDemo)
 
         router.sessionChanged(signedIn, onboarding: .passed)
-        XCTAssertEqual(router.open(AppRoutes.MyItmoWeb.shared), .notOnIOS)
+        XCTAssertEqual(router.open(AppRoutes.MyItmoWeb.shared), .opened)
+        XCTAssertEqual(router.open(AppRoutes.IcsExport.shared), .notOnIOS)
     }
 
     func testResultReturnsToItsOpenerOnce() {
@@ -457,11 +458,11 @@ final class RouterTests: XCTestCase {
             (AppRoutes.UserSport(isu: 100_001, name: ""), .notOnIOS),
             (AppRoutes.ScheduleChanges.shared, .notOnIOS),
             (AppRoutes.QrPass.shared, .compose),
-            (AppRoutes.MyItmoWeb.shared, .notOnIOS),
+            (AppRoutes.MyItmoWeb.shared, .swiftUI),
             (period, .notOnIOS),
             (AppRoutes.FriendSelector(selectedIsu: 0), .notOnIOS),
             (AppRoutes.SheetScores(args: scores), .notOnIOS),
-            (AppRoutes.WebLogin(code: nil), .notOnIOS),
+            (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),
             (AppRoutes.ReviewEditor(args: teacher), .notOnIOS),
             (AppRoutes.SubjectLinks(args: links), .notOnIOS),
             (AppRoutes.LinkEditor(args: links, linkId: nil), .notOnIOS),

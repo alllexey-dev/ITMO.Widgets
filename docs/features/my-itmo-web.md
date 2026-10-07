@@ -83,3 +83,35 @@ request with synthetic HTML, keeping the real WebView lifecycle; it runs in
 - Instrumented: `HomeWebVisualTest` reads the screen through the test tags of
   `MyItmoWebTestTags` (`loading`, `state_container`, `web_reload`,
   `web_close`) and the WebView through `MyItmoWebFragment.browser`.
+
+## iOS
+
+`MyItmoWebScreen` (`iosApp/Sources/Features/MyItmoWeb/`) is the iOS screen of
+the route `AppRoutes.MyItmoWeb`: a SwiftUI screen pushed on the tab's stack
+under the native bar, not the Compose `MyItmoWebScreen` (it has no iOS browser
+slot). The demo session refuses it before the route map (`ShellGate`), as on
+Android. Until the home tab is hosted on iOS (IO-09) the route has no entry
+point.
+
+- Bar: «My ITMO», «Обновить страницу» and the menu «Ещё» with «Открыть в
+  браузере» (`https://my.itmo.ru/` in Safari). The system back button replaces
+  the close button; the edge swipe inside the page goes back in its history.
+- States: the same three as Android (`MyItmoWebLoad`). The 4 pt progress line
+  follows WebKit's load progress and keeps its height while hidden; the error
+  page covers the browser, which then takes no touches and is hidden from
+  VoiceOver. «Повторить» and «Обновить страницу» load the last trusted page.
+- `MyItmoWebBrowser` runs one `WKWebView` on `WKWebsiteDataStore.default()`,
+  the store the ITMO.ID sign-in uses; sign-out clears it
+  (`IosCoreHost.clearWebsiteData`). No token injection, no script bridge, no
+  console logging; automatic windows are off and a `target="_blank"` page
+  loads in the same browser.
+- Every navigation goes through `MyItmoWebPolicy` (`MyItmoWebDecision`):
+  `INTERNAL` loads inside, `EXTERNAL` (a main frame the user tapped:
+  `WKNavigationType.linkActivated`) opens outside the app, `BLOCKED` is
+  cancelled and a blocked main frame shows the error. A main frame that answers
+  HTTP 400 or above, fails to load or starts outside the official origins
+  shows the error too.
+- Tests: `ITMOWidgetsTests/AccountTests` (the decisions for official pages,
+  tapped and redirected pages, frames and other schemes; the route and its
+  chrome), `SnapshotTests/AccountSnapshotTests` (loading and error around a
+  stand-in browser).

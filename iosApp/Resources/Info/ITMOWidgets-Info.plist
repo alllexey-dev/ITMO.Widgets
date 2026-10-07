@@ -24,6 +24,10 @@
 	<string>$(KEYCHAIN_GROUP)</string>
 	<key>BackendBaseURL</key>
 	<string>$(BACKEND_BASE_URL)</string>
+	<key>AppStoreID</key>
+	<string>$(APP_STORE_ID)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Камера нужна, чтобы сканировать QR для входа на сайт</string>
 	<key>CFBundleDisplayName</key>
 	<string>ITMO.Widgets</string>
 	<key>LSRequiresIPhoneOS</key>

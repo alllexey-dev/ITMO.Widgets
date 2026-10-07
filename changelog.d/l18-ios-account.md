@@ -13,3 +13,12 @@
 - Signing in, starting the demo or signing out on iOS no longer deletes the
   App Group container's own record, so the QR widget sees the session and the
   pass the app writes instead of «Войдите в приложение».
+- «Вход на сайт» works on iOS over the shared `WebLoginViewModel`: the QR is
+  read by the system scanner (VisionKit, after iOS asks for the camera) or the
+  code typed from the screen, then the browser card and «Войти».
+- My ITMO opens on iOS in the app's browser on the sign-in's website data:
+  only `my.itmo.ru` and `id.itmo.ru` stay inside, a tapped link to another
+  site opens in Safari, anything else shows «Не удалось открыть My ITMO».
+- The iOS app offers a newer iOS release from Backend («Вышла новая версия»)
+  with «Скачать» to its App Store page; with no App Store ID in the build
+  (until the App Store record exists) it never checks or offers.

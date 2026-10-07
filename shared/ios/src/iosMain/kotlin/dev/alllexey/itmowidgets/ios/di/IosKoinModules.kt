@@ -14,6 +14,10 @@ import dev.alllexey.itmowidgets.feature.schedule.di.scheduleWidgetIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
+import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
+import dev.alllexey.itmowidgets.feature.update.di.updateModule
+import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
+import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import dev.alllexey.itmowidgets.ios.IosPlatform
 import org.koin.core.module.Module
 
@@ -37,5 +41,7 @@ object IosKoinModules {
         recordbookModule, recordbookIosModule(platform),
         // The schedule widgets' App Group timeline and the schedule widget refresh port (IO-10b).
         scheduleWidgetIosModule,
+        // The web sign-in sheet and the update offer on their iOS ports (IO-08b).
+        webLoginDataModule, webLoginModule, updateModule, updateIosModule,
     )
 }

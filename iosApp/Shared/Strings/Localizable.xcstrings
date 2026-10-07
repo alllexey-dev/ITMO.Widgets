@@ -217,6 +217,30 @@
         }
       }
     },
+    "ios_web_login_camera_usage" : {
+      "comment" : "Generated from strings_ios_account.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Камера нужна, чтобы сканировать QR для входа на сайт"
+          }
+        }
+      }
+    },
+    "ios_web_login_scan_hint" : {
+      "comment" : "Generated from strings_ios_account.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наведите камеру на QR на странице входа"
+          }
+        }
+      }
+    },
     "ios_widget_qr_expired" : {
       "comment" : "Generated from strings_ios.xml",
       "extractionState" : "manual",

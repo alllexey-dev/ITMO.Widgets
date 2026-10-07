@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.auth.di
 
+import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
@@ -18,6 +19,14 @@ import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
+import dev.alllexey.itmowidgets.feature.update.di.AppUpdateIosParameters
+import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
+import dev.alllexey.itmowidgets.feature.update.di.updateModule
+import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
+import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
+import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
+import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
+import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
@@ -37,11 +46,15 @@ import okio.Path
 import org.koin.core.Koin
 import org.koin.core.annotation.KoinInternalApi
 import org.koin.core.module.Module
+import org.koin.core.parameter.parametersOf
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import platform.UIKit.UIViewController
 
-/** The shared session on its iOS ports, as `IosKoinModules` loads it: the core module, [authDataModule] and ours. */
+/**
+ * The shared session on its iOS ports, as `IosKoinModules` loads it: the core module, [authDataModule] and ours, with
+ * the web sign-in and the update offer on theirs (IO-08b).
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AccountIosModuleTest {
 
@@ -70,10 +83,14 @@ class AccountIosModuleTest {
     @OptIn(KoinInternalApi::class)
     @Test
     fun everyDefinitionResolvesAndTheSessionReadsEveryCleanerOfTheGraph() {
-        val koin = graph(iosCoreModule(FakeHost(), ORIGIN), authDataModule, accountIosModule, testDevice())
+        val koin = accountGraph()
         val definitions = koin.instanceRegistry.instances.values.map { it.beanDefinition }.distinct()
 
-        definitions.forEach { definition -> koin.get<Any>(definition.primaryType, definition.qualifier) }
+        // The update screen's arguments satisfy both ViewModels that take a SavedStateHandle; the rest ignore them.
+        val parameters = AppUpdateIosParameters.viewModel(SAMPLE_UPDATE).toTypedArray()
+        definitions.forEach { definition ->
+            koin.get<Any>(definition.primaryType, definition.qualifier) { parametersOf(*parameters) }
+        }
 
         assertIs<SessionRepositoryImpl>(koin.get<SessionRepository>())
         // The Keychain, the App Group container and WebKit's data (IO-04b); features loaded later add theirs.
@@ -81,6 +98,29 @@ class AccountIosModuleTest {
         assertEquals(emptyList(), requests)
         koin.close()
     }
+
+    @Test
+    fun theUpdateCheckAsksForTheIosRelease() {
+        val koin = accountGraph()
+
+        assertEquals(DevicePlatform.IOS, koin.get<DevicePlatform>())
+        koin.close()
+    }
+
+    @Test
+    fun theUpdateCheckSendsNothingWithoutTheOptIn() = runTest(UnconfinedTestDispatcher()) {
+        val koin = accountGraph()
+
+        assertNull(koin.get<PendingAppUpdate>().invoke())
+        assertEquals(emptyList(), requests)
+        koin.close()
+    }
+
+    private fun accountGraph(): Koin = graph(
+        iosCoreModule(FakeHost(), ORIGIN), authDataModule, accountIosModule,
+        webLoginDataModule, webLoginModule, updateModule, updateIosModule,
+        testDevice(),
+    )
 
     @Test
     fun theSessionSnapshotFollowsEverySignedInSessionAndIsWrittenAgainAfterASignOut() = runTest(
@@ -137,5 +177,6 @@ class AccountIosModuleTest {
     private companion object {
         const val ORIGIN = "https://dev.widgets.alllexey.dev"
         const val ISU = 123456
+        val SAMPLE_UPDATE = AppUpdate(AppVersionName("2.3.0"), AppVersionName("2.4.0"), note = "", unsupported = false)
     }
 }
