@@ -28,6 +28,7 @@ fun shellEntries(debugTools: Boolean = BuildConfig.DEBUG): EntryRegistry = entry
         }
     }
     homeEntries()
+    socialEntries()
     accountEntries(debugTools)
 }
 
