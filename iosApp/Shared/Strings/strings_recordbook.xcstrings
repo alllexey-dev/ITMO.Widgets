@@ -853,6 +853,18 @@
         }
       }
     },
+    "sheet_scores_search_clear" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить текст"
+          }
+        }
+      }
+    },
     "sheet_scores_search_empty" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",

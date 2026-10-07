@@ -34,9 +34,6 @@
 
     <dimen name="friend_picker_selection_stroke">2dp</dimen>
 
-    <!-- The «Мои баллы» sheet: loading, failures and choices share this height; values stay short. -->
-    <dimen name="sheet_scores_content_min_height">288dp</dimen>
     <!-- The four range rows of the .ics sheet; loading, the file and failures keep this height. -->
     <dimen name="ics_export_content_min_height">288dp</dimen>
-    <dimen name="sheet_scores_value_max_width">120dp</dimen>
 </resources>
