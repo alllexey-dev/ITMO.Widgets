@@ -47,7 +47,7 @@ xcodegen --version
 | `iosApp/Tests/SnapshotTests/` | `SnapshotTests`, hosted in the app: SwiftUI and widget entry view snapshots (swift-snapshot-testing), references in `__Snapshots__/` |
 | `iosApp/Tests/UITests/` | `UITests` (XCUITest): smoke tests and review screenshots |
 | `shared/ios/` | the umbrella framework `Shared` (static, with SKIE) over every shared module; it exports `:shared:core`; the Koin start, `IosPlatform`, the ViewModel store and the Compose screen hosts |
-| `scripts/ios/` | `env.sh` (pins), `test.sh` (build and test), `check-*.sh` (source checks), `screenshots.sh` (review screenshots) |
+| `scripts/ios/` | `env.sh` (pins), `test.sh` (build and test), `check-*.sh` (source checks), `screenshots.sh` (review screenshots), `archive.sh` (device archives, Release) |
 
 Targets use directory globs: a new Swift file in a target directory needs no `project.yml` edit. Only the app links
 `Shared`; the extensions stay Swift-only (memory limits, ADR 0023).
@@ -655,6 +655,52 @@ and every push to `v2.3/next` and `master`, and on `workflow_dispatch`.
 Measured on the first runs (no caches yet): the job takes 18.5 to 20 minutes, `test.sh --ci` 1076 to 1157 s, with
 a peak of 6.3 to 6.4 GB used of 7 GB. If the build runs out of memory, split it into a framework job and an
 `xcodebuild` job.
+
+## Release
+
+How iOS ships in v2.3 depends on when the paid Apple Developer account arrives (gate T13). One case applies:
+
+| Case | When | What ships | Build |
+|---|---|---|---|
+| F0 | T13 by about 2026-11-10 | MVP and stretch on TestFlight external at T16; App Store submission after Android GA, on the owner's word | `archive.sh --signed --upload` |
+| F1 | T13 by about 2026-12-01 | MVP on TestFlight internal at T16, external about a week later; the NSE may slip to 2.3.1 | `archive.sh --signed --upload` |
+| F2 | T13 later, account expected | Android ships on time; iOS stays simulator-verified and CI-built on `master`; TestFlight 2.3.x 1 to 2 weeks after T13 | `test.sh --ci` (CI), then as F1 |
+| F3 | no account in sight at T16 | on the owner's approval, an "iOS developer preview": the unsigned `.ipa` on a GitHub prerelease for self-signing with a free Apple ID (AltStore, SideStore; re-signed every 7 days), no push and no NSE | `archive.sh --unsigned` |
+
+```bash
+scripts/ios/archive.sh --unsigned          # F3: iosApp/build/archive/ITMOWidgets-2.3.0-<build>-unsigned.ipa
+scripts/ios/archive.sh --signed            # after T13: a signed archive and an App Store .ipa in archive/export/
+scripts/ios/archive.sh --signed --upload   # the integrator only, on the owner's word: to App Store Connect
+```
+
+- Everything goes to `iosApp/build/archive/` (ignored): the `.xcarchive`, the `.ipa`, for F3 the staging
+  directory `iosApp/build/archive/unsigned`. The script never publishes; a GitHub prerelease of the F3 `.ipa`
+  and every upload are the owner's word, each time.
+- Versions: `MARKETING_VERSION` 2.3.0 from `Base.xcconfig`; the build number (`CURRENT_PROJECT_VERSION`, the
+  committed value 1 is for simulator builds) is `git rev-list --count HEAD` of the archived commit, monotonic along
+  `v2.3/next` and `master`. A signed build refuses uncommitted changes; an unsigned one of a dirty tree carries
+  `-dirty` in its file name.
+- The archive is the `ITMOWidgets` scheme, Release, `generic/platform=iOS`, run by `xcodebuild` inside the `kn`
+  slot; the Run Script builds the iosArm64 Kotlin framework in Release. That link runs out of the Gradle daemon's
+  4 GB heap, so the script runs the Kotlin/Native compiler in a process of its own with 8 GB
+  (`kotlin.native.disableCompilerDaemon`, `kotlin.native.jvmArgs`, passed as `ORG_GRADLE_PROJECT_` variables
+  through `xcodebuild` to the Run Script). An unsigned archive with the iosArm64 klibs already built takes about
+  6 minutes.
+- F3 package (SP-23). `CODE_SIGNING_ALLOWED=NO` archives without signatures, so the bundles carry no entitlements,
+  and Xcode cannot ad-hoc sign a device build with entitlements itself. The script removes the notification
+  service (no push on a free team, and a third App ID), expands the unsigned entitlements of the widget and the app
+  with the `AppGroupID` and `KeychainGroup` of the built Info.plist (a team-less device build has an empty
+  `$(AppIdentifierPrefix)`), signs ad hoc (`codesign -s -`) the nested code, the widget, then the app, and zips
+  the `Payload` directory. AltStore and SideStore re-sign from the entitlements they find, so this is what keeps
+  the App Group. App and widget use 2 of the free account's App IDs and 1 active-app slot.
+- F3 widget data. The script prints whether the widgets get real data: yes when app and widget request one App
+  Group. AltStore renames it to `<group>.<TEAMID>` and lists it under `ALTAppGroups`, which `AppGroupDirectory` and
+  `AppGroupSnapshot` try after `AppGroupID` (Data sharing). Before an F3 prerelease the owner's free-team device
+  session confirms it (SideStore issue 1437 reports a failure); if no container resolves there, the widgets stay
+  in the signed-out state and the prerelease notes say so.
+- Signed (after T13): needs the ignored `iosApp/Config/Signing.local.xcconfig` (Identifiers), archives with
+  automatic signing and `-allowProvisioningUpdates`, keeps the notification service, and exports with method
+  `app-store-connect`; `--upload` sends the export to App Store Connect instead of writing the `.ipa`.
 
 ## Visual verification
 
