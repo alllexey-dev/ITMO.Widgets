@@ -143,7 +143,7 @@ private fun teacherLevelColor(level: TeacherLevel): Color = with(ItmoTheme.exten
     }
 }
 
-/** `changes_card`: "было -> стало" per changed field of the latest change of this occurrence. */
+/** `changes_card`: `было -> стало` per changed field of the latest change of this occurrence. */
 @Composable
 internal fun LessonChangeSection(change: ScheduleChange) {
     LessonSection(stringResource(Res.string.schedule_lesson_details_changes), Modifier.testTag(LessonDetailsTestTags.CHANGES)) {

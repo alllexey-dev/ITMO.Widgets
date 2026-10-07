@@ -91,7 +91,7 @@ internal class LessonDetailsLongFlowPreview {
     )
 }
 
-/** Time and room changed at once: one "было -> стало" line per field. */
+/** Time and room changed at once: one `было -> стало` line per field. */
 internal class LessonDetailsChangePreview {
     @Preview(name = "change", heightDp = SHEET_HEIGHT)
     @Composable
