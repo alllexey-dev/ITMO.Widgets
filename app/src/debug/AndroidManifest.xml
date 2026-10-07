@@ -19,8 +19,6 @@
         <!-- sport -->
         <activity android:name=".feature.sport.ui.SportCardsPreviewActivity" android:exported="false" />
         <activity android:name=".feature.sport.ui.SportScoreCollapsePreviewActivity" android:exported="false" />
-        <!-- update -->
-        <activity android:name=".feature.update.ui.AppUpdatePreviewActivity" android:exported="false" />
         <!-- weblogin -->
         <activity android:name=".feature.weblogin.ui.WebLoginPreviewActivity" android:exported="false" />
     </application>

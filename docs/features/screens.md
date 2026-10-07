@@ -195,7 +195,7 @@ Feature doc: [Update offer](update.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/update/ui/AppUpdateFragment.kt` | Fragment | `AppUpdateViewModel` | `app_update`, `AppScreen.APP_UPDATE` | `feature/update/ui/AppUpdatePreviewActivity.kt` | `feature/update/AppUpdateVisualTest.kt` |
+| `feature/update/ui/AppUpdateFragment.kt` hosting `AppUpdateRoute` (`:shared:feature-account`) | Fragment | `AppUpdateViewModel` (Koin) | `app_update`, `AppScreen.APP_UPDATE` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
 
 ## Debug tools
 
