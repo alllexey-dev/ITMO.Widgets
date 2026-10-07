@@ -11,3 +11,5 @@
   tabs.
 - Another user's sport offers «Открыть на карте» for a booking whose place has
   an address.
+- Signing out also forgets the auto-sign limits, the queue list and friends'
+  bookings of the sport tab, so the next account never sees them.
