@@ -40,6 +40,11 @@ targets:
       # The sign-in screen's logo (IO-07b): Android's drawable by path, never a copy.
       - path: ../app/src/main/res/drawable-nodpi/auth_logo.webp
         buildPhase: resources
+      # The widget sources without their @main bundle, so the hosted tests reach the timelines and entry views
+      # (recipe ios-snapshot-test); the app never registers them.
+      - path: Extensions/Widgets
+        excludes:
+          - WidgetsBundle.swift
     configFiles:
       Debug: Config/App.xcconfig
       Release: Config/App.xcconfig
@@ -85,8 +90,10 @@ targets:
     platform: iOS
     sources:
       - path: Extensions/NotificationService
-      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20).
+      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20); no widget intents.
       - path: Shared
+        excludes:
+          - "Intents/**"
     configFiles:
       Debug: Config/NotificationService.xcconfig
       Release: Config/NotificationService.xcconfig

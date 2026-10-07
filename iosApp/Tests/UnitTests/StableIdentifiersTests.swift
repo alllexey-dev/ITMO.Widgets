@@ -51,6 +51,16 @@ final class StableIdentifiersTests: XCTestCase {
         )
     }
 
+    /// Placed widgets keep their kind and URL; the extensions find their App Group files by name (IO-10a).
+    func testQrWidget() {
+        XCTAssertEqual(QrWidget.kind, "dev.alllexey.itmowidgets.widget.qr")
+        XCTAssertEqual(QrWidget.passURL, RouteURL.url(id: "qr_pass"))
+        XCTAssertEqual(
+            [SessionFile.fileName, QrPassSnapshot.fileName, QrWidgetReveal.fileName],
+            ["session-v1.json", "qr-pass-v1.json", "qr-widget-v1.json"]
+        )
+    }
+
     /// `$(AppIdentifierPrefix)` is the team ID plus a dot on a device, `FAKETEAMID.` on the simulator and empty for
     /// a team-less device build (SP-23), so only the suffix is stable.
     private func assertKeychainGroup(_ group: String?, file: StaticString = #filePath, line: UInt = #line) {

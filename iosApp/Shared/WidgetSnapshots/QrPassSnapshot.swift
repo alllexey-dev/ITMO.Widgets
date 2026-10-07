@@ -13,9 +13,12 @@ struct QrPassSnapshot: Equatable {
     let demo: Bool
     /// Rows from the top, modules from the left; `true` is dark.
     let matrix: [[Bool]]
+    /// The global "hide the code behind a spoiler" option of the QR widget (Android keeps widget options global).
+    /// Optional in the file; absent means on, the Android default.
+    var spoiler: Bool = true
 
     /// The file name in the App Group container.
-    static let fileName = "qr-pass-v\(version).json"
+    static let fileName = AppGroupSnapshot.fileName("qr-pass", version: version)
 
     /// The highest snapshot version this build reads.
     static let version = 1
@@ -23,52 +26,33 @@ struct QrPassSnapshot: Equatable {
     /// The snapshot in `data`, or nil when it is corrupt, not square, or written by a newer version: the reader then
     /// shows its placeholder (ADR 0027).
     static func decode(_ data: Data) -> QrPassSnapshot? {
-        guard let envelope = try? JSONDecoder().decode(Envelope.self, from: data), envelope.version <= version,
-              let value = envelope.value,
-              let generatedAt = parseInstant(value.generatedAt),
-              let expiresAt = parseInstant(value.expiresAt)
-        else { return nil }
+        AppGroupSnapshot.decode(Value.self, from: data, maxVersion: version).flatMap(snapshot)
+    }
+
+    /// The snapshot in the App Group `container`, or nil when it is missing or unreadable (signed out).
+    static func read(fromContainer container: URL?) -> QrPassSnapshot? {
+        AppGroupSnapshot.read(Value.self, file: fileName, maxVersion: version, in: container).flatMap(snapshot)
+    }
+
+    private static func snapshot(_ value: Value) -> QrPassSnapshot? {
         let matrix = value.matrix.map { row in row.map { $0 == "1" } }
         guard !matrix.isEmpty, matrix.allSatisfy({ $0.count == matrix.count }),
               value.matrix.allSatisfy({ row in row.allSatisfy { $0 == "0" || $0 == "1" } })
         else { return nil }
-        return QrPassSnapshot(generatedAt: generatedAt, expiresAt: expiresAt, demo: value.demo, matrix: matrix)
-    }
-
-    /// The snapshot in the App Group `container`, or nil when it is missing or unreadable (signed out).
-    static func read(fromContainer container: URL) -> QrPassSnapshot? {
-        guard let data = try? Data(contentsOf: container.appendingPathComponent(fileName)) else { return nil }
-        return decode(data)
-    }
-
-    /// Kotlin's `Instant.toString()`: ISO 8601 in UTC, with a fraction of a second only when there is one.
-    private static func parseInstant(_ text: String) -> Date? {
-        let fractional = ISO8601DateFormatter()
-        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return fractional.date(from: text) ?? ISO8601DateFormatter().date(from: text)
-    }
-
-    private struct Envelope: Decodable {
-        let version: Int
-        /// Optional, so a newer version with another shape still yields its `version` and is rejected, not misread.
-        let value: Value?
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            version = try container.decode(Int.self, forKey: .version)
-            value = try? container.decode(Value.self, forKey: .value)
-        }
-
-        private enum CodingKeys: String, CodingKey {
-            case version
-            case value
-        }
+        return QrPassSnapshot(
+            generatedAt: value.generatedAt,
+            expiresAt: value.expiresAt,
+            demo: value.demo,
+            matrix: matrix,
+            spoiler: value.spoiler ?? true
+        )
     }
 
     private struct Value: Decodable {
-        let generatedAt: String
-        let expiresAt: String
+        let generatedAt: Date
+        let expiresAt: Date
         let demo: Bool
         let matrix: [String]
+        let spoiler: Bool?
     }
 }
