@@ -21,10 +21,15 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -63,6 +68,7 @@ import org.robolectric.annotation.Config
  * `SettingsScreen` against the rules of the View renderer it replaced (the 13 cases of `SettingsRendererTest`): the
  * whole row is the target, unknown and disabled rows cannot change, restoring state emits no user action, rows keep
  * their identity across updates, the scroll position survives recreation, and long text fits at 320 dp and font 1.3.
+ * Its dialogs keep the View dialogs' copy and buttons, survive recreation and never move a switch off its state.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp")
@@ -72,12 +78,12 @@ class SettingsScreenTest {
     val compose = createComposeRule()
 
     private val toggles = mutableListOf<Pair<SettingRowId, Boolean>>()
-    private val choices = mutableListOf<SettingItem.Choice>()
+    private val choices = mutableListOf<Pair<SettingRowId, String>>()
     private val pages = mutableListOf<SettingsPage>()
     private val commands = mutableListOf<SettingRowId>()
     private val actions = SettingsActions(
         onToggle = { id, checked -> toggles += id to checked },
-        onChoice = { choices += it },
+        onChoice = { id, key -> choices += id to key },
         onNavigate = { pages += it },
         onAction = { commands += it },
     )
@@ -114,7 +120,11 @@ class SettingsScreenTest {
         compose.onNodeWithText("Новая подсказка").assertExists()
         compose.onNodeWithTag(SettingRowId.QR_ANIMATION.key).assert(hasText("Круг"))
         compose.onNodeWithTag(SettingRowId.QR_ANIMATION.key).performClick()
-        assertEquals(listOf(updated), choices)
+        // The dialog shows the latest row: its options with the current one marked.
+        compose.onNode(dialogOption("Круг")).assertIsSelected()
+        compose.onNode(dialogOption("Плавное исчезновение")).assertIsNotSelected().performClick()
+        compose.onNode(isDialog()).assertDoesNotExist()
+        assertEquals(listOf(SettingRowId.QR_ANIMATION to "fade"), choices)
         assertTrue(toggles.isEmpty())
     }
 
@@ -175,6 +185,7 @@ class SettingsScreenTest {
             compose.onNodeWithTag(id.key).assertIsNotEnabled().performClick()
         }
         assertEquals(1, pages.size)
+        compose.onNode(isDialog()).assertDoesNotExist()
         assertTrue(choices.isEmpty())
         assertTrue(commands.isEmpty())
     }
@@ -337,15 +348,19 @@ class SettingsScreenTest {
         compose.onNodeWithTag(SettingRowId.SCHEDULE_SHARING.key).assert(hasText("Друзья"))
         compose.onNodeWithTag(SettingRowId.SPORT_SHARING.key).assert(hasText("Друзья"))
 
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_SHARING.key).performClick()
-        val opened = choices.single()
-        assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), opened.options.map(ChoiceOption::key))
+        val options = SettingsPreviewData.Privacy.sections.flatMap { it.items }
+            .filterIsInstance<SettingItem.Choice>().first { it.id == SettingRowId.SCHEDULE_SHARING }.options
+        assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), options.map(ChoiceOption::key))
         assertEquals(
             listOf(Res.string.settings_privacy_all, Res.string.settings_privacy_friends, Res.string.settings_privacy_nobody)
                 .map { UiText.Res(it) },
-            opened.options.map(ChoiceOption::label),
+            options.map(ChoiceOption::label),
         )
-        assertEquals("FRIENDS", opened.selectedOptionKey)
+        compose.onNodeWithTag(SettingRowId.SCHEDULE_SHARING.key).performClick()
+        compose.onNode(dialogOption("Друзья")).assertIsSelected()
+        compose.onNode(dialogOption("Все")).assertIsNotSelected()
+        compose.onNode(dialogOption("Никто")).assertIsNotSelected().performClick()
+        assertEquals(listOf(SettingRowId.SCHEDULE_SHARING to "NOBODY"), choices)
 
         update(
             SettingsPreviewData.Privacy.copy(
@@ -360,6 +375,77 @@ class SettingsScreenTest {
         compose.onNodeWithTag(SettingRowId.SPORT_SHARING.key).assertIsNotEnabled().performClick()
         assertEquals(1, choices.size)
         compose.onNodeWithTag(SettingRowId.SCHEDULE_SHARING.key).assert(hasText("Друзья"))
+    }
+
+    @Test
+    fun `turning the custom services on asks first and a cancel leaves the switch at its state`() {
+        val services = SettingItem.Toggle(SettingRowId.CUSTOM_SERVICES, text("Подключение"), checked = false)
+        show(page(SettingSection(null, listOf(services))))
+
+        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).performClick()
+        compose.onNode(isDialog()).assertExists()
+        compose.onNodeWithText(CONSENT_TITLE).assertExists()
+        compose.onNode(dialogButton(CANCEL)).performClick()
+        compose.onNode(isDialog()).assertDoesNotExist()
+        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).assertIsOff()
+        assertTrue(toggles.isEmpty())
+
+        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).performClick()
+        compose.onNode(dialogButton(CONSENT_ENABLE)).performClick()
+        compose.onNode(isDialog()).assertDoesNotExist()
+        assertEquals(listOf(SettingRowId.CUSTOM_SERVICES to true), toggles)
+        // Until the state says otherwise, a refused or failed opt-in still shows the switch off.
+        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).assertIsOff()
+
+        update(page(SettingSection(null, listOf(services.copy(checked = true)))))
+        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).performClick()
+        compose.onNode(isDialog()).assertDoesNotExist()
+        assertEquals(SettingRowId.CUSTOM_SERVICES to false, toggles.last())
+    }
+
+    @Test
+    fun `the host dialogs hand their buttons to the host once and dismiss does nothing`() {
+        val calls = mutableListOf<String>()
+        val hostActions = actions.copy(
+            onAllowBackgroundWork = { calls += "background" },
+            onAllowCalendarAccess = { calls += "calendar" },
+            onOpenAppSettings = { calls += "app-settings" },
+        )
+        val dialogs = SettingsDialogState()
+        state = SettingsPreviewData.Schedule
+        compose.setContent { Themed { SettingsScreen(state, hostActions, widgetPreview = {}, dialogs = dialogs) } }
+
+        for ((dialog, button) in listOf(
+            SettingsDialog.BackgroundWorkHint to "Разрешить",
+            SettingsDialog.CalendarAccess(locked = false) to "Разрешить",
+            SettingsDialog.CalendarAccess(locked = true) to "Открыть настройки",
+        )) {
+            compose.runOnIdle { dialogs.show(dialog) }
+            compose.onNode(dialogButton(LATER)).performClick()
+            compose.onNode(isDialog()).assertDoesNotExist()
+            compose.runOnIdle { dialogs.show(dialog) }
+            compose.onNode(dialogButton(button)).performClick()
+            compose.onNode(isDialog()).assertDoesNotExist()
+        }
+
+        assertEquals(listOf("background", "calendar", "app-settings"), calls)
+        assertTrue(toggles.isEmpty())
+    }
+
+    @Test
+    fun `an open choice survives recreation and shows the current value`() {
+        val restoration = StateRestorationTester(compose)
+        state = SettingsPreviewData.Privacy
+        restoration.setContent { Themed { SettingsScreen(state, actions, widgetPreview = {}) } }
+        compose.onNodeWithTag(SettingRowId.SPORT_SHARING.key).performClick()
+        compose.onNode(dialogOption("Друзья")).assertIsSelected()
+
+        restoration.emulateSavedInstanceStateRestore()
+
+        compose.onNode(dialogOption("Друзья")).assertIsSelected()
+        compose.onNode(dialogButton(CANCEL)).performClick()
+        compose.onNode(isDialog()).assertDoesNotExist()
+        assertTrue(choices.isEmpty())
     }
 
     @Test
@@ -420,6 +506,12 @@ class SettingsScreenTest {
         compose.waitForIdle()
     }
 
+    /** A radio row of the open dialog. */
+    private fun dialogOption(label: String) =
+        hasText(label) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton) and hasAnyAncestor(isDialog())
+
+    private fun dialogButton(label: String) = hasText(label) and hasClickAction() and hasAnyAncestor(isDialog())
+
     private fun nodeId(id: SettingRowId): Int = compose.onNodeWithTag(id.key).fetchSemanticsNode().id
 
     /** The value sits below its title in the same row, never over it; the first row with [value] is [title]'s. */
@@ -464,6 +556,10 @@ class SettingsScreenTest {
         const val LONG_VALUE = "Плавное исчезновение пользовательского изображения"
         const val LONG_TOGGLE = "Показывать расписание следующего дня после окончания сегодняшних занятий"
         const val UNKNOWN = "Не загрузилось"
+        const val CANCEL = "Отмена"
+        const val LATER = "Не сейчас"
+        const val CONSENT_TITLE = "Подключиться к ITMO.Widgets?"
+        const val CONSENT_ENABLE = "Подключиться"
         const val LARGE_FONT = 1.3f
         const val SCROLLED_PX = 420f
         const val PREVIEW = "preview:"

@@ -49,15 +49,22 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * What a settings page asks its host to do. The host owns the dialogs (a choice, the services consent) and the
- * navigation between pages; a row's own command goes to [onAction].
+ * What a settings page asks its host to do: leave, change a row, open another page, run a row's own command
+ * ([onAction]) or the button of a host dialog. The screen opens its dialogs itself, so a choice arrives as the picked
+ * option and turning the custom services on arrives only after the consent.
  */
 data class SettingsActions(
     val onBack: () -> Unit = {},
     val onToggle: (id: SettingRowId, checked: Boolean) -> Unit = { _, _ -> },
-    val onChoice: (item: SettingItem.Choice) -> Unit = {},
+    val onChoice: (id: SettingRowId, optionKey: String) -> Unit = { _, _ -> },
     val onNavigate: (page: SettingsPage) -> Unit = {},
     val onAction: (id: SettingRowId) -> Unit = {},
+    /** «Разрешить» of the background work hint: the system page that lifts the restriction. */
+    val onAllowBackgroundWork: () -> Unit = {},
+    /** «Разрешить» of the calendar rationale: the system permission dialog. */
+    val onAllowCalendarAccess: () -> Unit = {},
+    /** «Открыть настройки» of the locked calendar rationale: the app's system page. */
+    val onOpenAppSettings: () -> Unit = {},
 )
 
 /**
@@ -76,7 +83,9 @@ object SettingsTestTags {
  * One settings page: the top bar with the page title, the widget the page configures (drawn by the host through
  * [widgetPreview], above the scrolling rows and never scrolled), and the page's [SettingSection]s as compact settings
  * groups. Only privacy shows a progress while Backend has not answered; every other page enters with its rows.
- * Stateless: a switch shows what [state] says, so a refused change never needs undoing on screen.
+ * Stateless: a switch shows what [state] says, so a refused, cancelled or failed change never needs undoing on
+ * screen. The page's one dialog is [dialogs]: a choice row and turning the custom services on open theirs, the host
+ * opens the background work and calendar ones.
  */
 @Composable
 fun SettingsScreen(
@@ -85,6 +94,7 @@ fun SettingsScreen(
     widgetPreview: @Composable (WidgetPreviewSettings) -> Unit,
     modifier: Modifier = Modifier,
     scrollState: ScrollState = rememberScrollState(),
+    dialogs: SettingsDialogState = rememberSettingsDialogState(),
 ) {
     Column(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
         AppTopBar(
@@ -109,15 +119,21 @@ fun SettingsScreen(
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when {
                 // The scroll column appears only with rows, so a restored position is not clamped to an empty page.
-                state.sections.isNotEmpty() -> SettingsSections(state.sections, actions, scrollState)
+                state.sections.isNotEmpty() -> SettingsSections(state.sections, actions, dialogs, scrollState)
                 state.page == SettingsPage.PRIVACY && state.loaded -> PrivacyProgress(Modifier.align(Alignment.Center))
             }
         }
     }
+    SettingsDialogs(dialogs, state.sections, actions)
 }
 
 @Composable
-private fun SettingsSections(sections: List<SettingSection>, actions: SettingsActions, scrollState: ScrollState) {
+private fun SettingsSections(
+    sections: List<SettingSection>,
+    actions: SettingsActions,
+    dialogs: SettingsDialogState,
+    scrollState: ScrollState,
+) {
     Column(
         Modifier
             .fillMaxSize()
@@ -136,7 +152,7 @@ private fun SettingsSections(sections: List<SettingSection>, actions: SettingsAc
                     { SettingsGroupFooter(footer.asString(), Modifier.testTag(SettingsTestTags.FOOTER)) }
                 },
             ) {
-                section.items.forEach { item -> row(item.id) { SettingRow(item, actions) } }
+                section.items.forEach { item -> row(item.id) { SettingRow(item, actions, dialogs) } }
             }
         }
     }
@@ -154,13 +170,20 @@ private fun SettingSection.topSpacing(first: Boolean): Dp? = when {
 }
 
 @Composable
-private fun SettingRow(item: SettingItem, actions: SettingsActions) {
+private fun SettingRow(item: SettingItem, actions: SettingsActions, dialogs: SettingsDialogState) {
     val tag = Modifier.testTag(item.id.key)
     when (item) {
         is SettingItem.Toggle -> SettingsToggleRow(
             title = item.title.asString(),
             checked = item.checked.takeIf { item.stateKnown },
-            onCheckedChange = { checked -> actions.onToggle(item.id, checked) },
+            onCheckedChange = { checked ->
+                // The services reach Backend, so they are turned on only after the consent; off needs none.
+                if (item.id == SettingRowId.CUSTOM_SERVICES && checked) {
+                    dialogs.show(SettingsDialog.CustomServicesConsent)
+                } else {
+                    actions.onToggle(item.id, checked)
+                }
+            },
             modifier = tag,
             description = item.description?.asString(),
             enabled = item.enabled,
@@ -168,7 +191,7 @@ private fun SettingRow(item: SettingItem, actions: SettingsActions) {
         is SettingItem.Choice -> SettingsChoiceRow(
             title = item.title.asString(),
             value = item.value.asString(),
-            onClick = { actions.onChoice(item) },
+            onClick = { dialogs.show(SettingsDialog.Choice(item.id)) },
             modifier = tag,
             description = item.description?.asString(),
             enabled = item.enabled,
