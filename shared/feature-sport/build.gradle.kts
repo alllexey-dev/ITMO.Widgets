@@ -15,6 +15,10 @@ kotlin {
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
+            // The sign page's route (LP-5c on): koinViewModel() and lifecycle-aware collection; the iOS shell hosts
+            // the same route.
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))

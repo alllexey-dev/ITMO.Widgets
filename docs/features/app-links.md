@@ -62,7 +62,8 @@ all lessons, ignoring filters (`findLinked` in
   error is the usual snackbar.
 
 When found, the lesson's day is selected and its card opens as on a tap; the
-card's actions go to `SportSignFragment`, which falls back to
+card's actions go through `SportSignFragment` to `SportSignRoute`
+(`SportSheetAction.outcome`), which falls back to
 `SportSignViewModel.linkedLesson` when filters hide the lesson from the list.
 Both dialogs are `MaterialAlertDialog`s with a title, a text and `Понятно`.
 

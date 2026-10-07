@@ -10,7 +10,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.color.MaterialColors
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
@@ -21,12 +20,9 @@ import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorAdapter
 import dev.alllexey.itmowidgets.feature.friendselector.ui.RecentFriendAdapter
 import dev.alllexey.itmowidgets.feature.friendselector.ui.RecentFriendItem
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
-import dev.alllexey.itmowidgets.feature.sport.ui.sign.MultiSelectSearchableAdapter
-import dev.alllexey.itmowidgets.feature.sport.ui.sign.SelectableItem
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Screenshots
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -115,31 +111,6 @@ class SelectionRowsTest {
     }
 
     @Test
-    fun sportFilterSelectionSurvivesFilteringAndRecycledRowsClearTheSelection() = preview { scenario ->
-        scenario.onActivity { activity ->
-            val items = listOf(SelectableItem("Плавание"), SelectableItem("Танцы"))
-            val adapter = MultiSelectSearchableAdapter(items)
-            val holder = adapter.onCreateViewHolder(activity.sectionsContainer, 0)
-            activity.sectionsContainer.addView(holder.itemView)
-            adapter.onBindViewHolder(holder, 0)
-            assertChoice(holder.itemView, checked = false, multiple = true)
-
-            holder.itemView.performClick()
-            assertChoice(holder.itemView, checked = true, multiple = true)
-            assertTrue(holder.itemView.findViewById<MaterialCheckBox>(R.id.item_checkbox).isChecked)
-            assertEquals(listOf(items.first()), adapter.getSelectedItems())
-
-            adapter.filter("Танцы")
-            adapter.onBindViewHolder(holder, 0)
-            assertChoice(holder.itemView, checked = false, multiple = true)
-            assertFalse(holder.itemView.findViewById<MaterialCheckBox>(R.id.item_checkbox).isChecked)
-            adapter.filter(null)
-            adapter.onBindViewHolder(holder, 0)
-            assertChoice(holder.itemView, checked = true, multiple = true)
-        }
-    }
-
-    @Test
     fun longNamesAndFilterTargetsFitNarrowLightDarkAndDynamicPalettes() {
         for (spec in Appearances.default) {
             preview(spec.fontScale, spec.dark, spec.colorSeed) { scenario ->
@@ -151,10 +122,6 @@ class SelectionRowsTest {
                         friendHolder.bind(person)
                         activity.sectionsContainer.addView(friendHolder.itemView)
                     }
-                    val filterAdapter = MultiSelectSearchableAdapter(listOf(SelectableItem(LONG_SPORT)))
-                    val filterHolder = filterAdapter.onCreateViewHolder(activity.sectionsContainer, 0)
-                    filterAdapter.onBindViewHolder(filterHolder, 0)
-                    activity.sectionsContainer.addView(filterHolder.itemView)
                 }
                 InstrumentationRegistry.getInstrumentation().waitForIdleSync()
                 scenario.onActivity { activity ->
@@ -166,7 +133,7 @@ class SelectionRowsTest {
                     }
                     val texts = (0 until container.childCount).flatMap { index ->
                         val row = container.getChildAt(index)
-                        listOf(R.id.name, R.id.sharing_status, R.id.item_name_text_view)
+                        listOf(R.id.name, R.id.sharing_status)
                             .mapNotNull { row.findViewById<TextView>(it) }
                             .filter { it.visibility == View.VISIBLE }
                     }
@@ -183,18 +150,13 @@ class SelectionRowsTest {
                     val topSpace = group.top - content.paddingTop
                     val bottomSpace = content.height - content.paddingBottom - group.bottom
                     assertTrue(kotlin.math.abs(topSpace - bottomSpace) <= 1)
-                    val filterTitle = container.findViewById<TextView>(R.id.item_name_text_view)
-                    assertEquals(
-                        MaterialColors.getColor(filterTitle, com.google.android.material.R.attr.colorOnSurface),
-                        filterTitle.currentTextColor
-                    )
                 }
                 screenshot("selection-${spec.name}")
             }
         }
     }
 
-    private fun assertChoice(row: View, checked: Boolean, selectable: Boolean = true, multiple: Boolean = false) {
+    private fun assertChoice(row: View, checked: Boolean, selectable: Boolean = true) {
         val info = row.createAccessibilityNodeInfo()
         assertEquals(selectable, info.isCheckable)
         assertEquals(checked, info.isChecked)
@@ -204,7 +166,6 @@ class SelectionRowsTest {
             when {
                 row is MaterialCardView -> "androidx.cardview.widget.CardView"
                 !selectable -> "android.view.View"
-                multiple -> "android.widget.CheckBox"
                 else -> "android.widget.RadioButton"
             },
             info.className.toString()
@@ -250,8 +211,4 @@ class SelectionRowsTest {
         groups = listOf(UserGroup("P3100", 1, "Факультет")),
         sharing = UserSharing(sport = true, schedule = true)
     )
-
-    private companion object {
-        const val LONG_SPORT = "Современные танцы и общая физическая подготовка"
-    }
 }

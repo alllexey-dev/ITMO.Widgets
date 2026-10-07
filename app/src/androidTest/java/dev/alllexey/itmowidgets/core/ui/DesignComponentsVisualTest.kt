@@ -44,7 +44,6 @@ class DesignComponentsVisualTest {
                     R.layout.fragment_recordbook,
                     R.layout.fragment_recordbook_subject,
                     R.layout.fragment_sport_my,
-                    R.layout.fragment_sport_sign,
                 )) {
                     val root = activity.layoutInflater.inflate(layout, FrameLayout(activity), false)
                     val refresh = root.descendants().filterIsInstance<SwipeRefreshLayout>().single()
