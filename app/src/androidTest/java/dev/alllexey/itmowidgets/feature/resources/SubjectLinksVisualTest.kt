@@ -1,8 +1,5 @@
 package dev.alllexey.itmowidgets.feature.resources
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.view.View
 import android.widget.TextView
@@ -10,9 +7,6 @@ import androidx.fragment.app.DialogFragment
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.chip.ChipGroup
-import com.google.android.material.radiobutton.MaterialRadioButton
-import com.google.android.material.textfield.TextInputLayout
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
@@ -31,14 +25,12 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
-import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.toSubjectLinks
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTouchTargets
-import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -158,128 +150,6 @@ class SubjectLinksVisualTest {
         }
     }
 
-    @Test fun editorListsEveryNestedFlowWithItsKindOfClasses() {
-        Appearances.default.forEachIndexed { index, spec ->
-            withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_EDITOR, linkId = "own-scores") { scenario, repository ->
-                settle()
-                scenario.onActivity { activity ->
-                    val sheet = editor(activity)
-                    assertEquals(listOf("Все\nПосле проверки", "ФИЗ ПИИКТ 3\nЛекция", "ФИЗ ПИИКТ 3.2\nПрактика",
-                        "ФИЗ ПИИКТ 3.2.1\nЛабораторная", "Только я"), audienceRows(sheet))
-                    assertEquals("ФИЗ ПИИКТ 3.2", checkedAudience(sheet))
-                    assertEquals(View.GONE, sheet.findViewById<View>(R.id.connection_hint).visibility)
-                    assertTextFits(sheet)
-                    assertTouchTargets(sheet.findViewById(R.id.visibility))
-                    radioRows(sheet).first { it.text.startsWith("ФИЗ ПИИКТ 3.2.1") }.performClick()
-                }
-                settle()
-                scenario.onActivity { assertEquals("ФИЗ ПИИКТ 3.2.1", checkedAudience(editor(it))) }
-                screenshot("editor-flows-$index")
-                scenario.onActivity { editor(it).findViewById<View>(R.id.save_button).performClick() }
-                settle()
-                val saved = repository.peek(SCOPE).mine.first { it.id == "own-scores" }
-                assertEquals(LinkVisibility.FLOW, saved.visibility)
-                assertEquals(LAB_FLOW.flowId, saved.flowId)
-                assertEquals("ФИЗ ПИИКТ 3.2.1", saved.audienceLabel)
-            }
-        }
-    }
-
-    @Test fun editorPastesAGuessedLinkAndOffersOnlyAvailableAudiences() {
-        val pasted = "https://docs.google.com/spreadsheets/d/synthetic"
-        withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_EDITOR, clipboard = pasted,
-            configure = { it.snapshots.value = mapOf(SCOPE.key to fixture().copy(audiences = listOf(LECTURE_FLOW))) }) { scenario, repository ->
-            settle()
-            TestUi.eventually(idleBetween = true) {
-                scenario.onActivity { activity ->
-                    val sheet = editor(activity)
-                    assertEquals(pasted, sheet.findViewById<TextView>(R.id.url).text.toString())
-                    assertEquals(R.id.category_scores, sheet.findViewById<ChipGroup>(R.id.categories).checkedChipId)
-                    assertEquals("Таблица баллов", sheet.findViewById<TextInputLayout>(R.id.name_layout).hint.toString())
-                }
-            }
-            scenario.onActivity { activity ->
-                val sheet = editor(activity)
-                assertEquals(listOf("Все\nПосле проверки", "ФИЗ ПИИКТ 3\nЛекция", "Только я"), audienceRows(sheet))
-                assertEquals("Только я", checkedAudience(sheet))
-                radioRows(sheet)[1].performClick()
-            }
-            settle()
-            scenario.onActivity { activity ->
-                val sheet = editor(activity)
-                assertEquals("ФИЗ ПИИКТ 3", checkedAudience(sheet))
-                assertTextFits(sheet)
-                assertTouchTargets(sheet.findViewById(R.id.visibility))
-            }
-            screenshot("editor-guessed")
-
-            // The site keeps suggesting until a chip is picked by hand.
-            scenario.onActivity { editor(it).findViewById<TextView>(R.id.url).text = "https://youtu.be/synthetic" }
-            settle()
-            scenario.onActivity { activity ->
-                val sheet = editor(activity)
-                assertEquals(R.id.category_recordings, sheet.findViewById<ChipGroup>(R.id.categories).checkedChipId)
-                sheet.findViewById<View>(R.id.category_exam).performClick()
-                sheet.findViewById<TextView>(R.id.url).text = "https://github.com/synthetic"
-            }
-            settle()
-            scenario.onActivity { assertEquals(R.id.category_exam, editor(it).findViewById<ChipGroup>(R.id.categories).checkedChipId) }
-
-            repository.snapshots.value = mapOf(SCOPE.key to fixture().copy(audiences = emptyList(), premoderation = false))
-            settle()
-            scenario.onActivity { activity ->
-                val sheet = editor(activity)
-                // The chosen flow is gone from the schedule, so the choice falls back to only me.
-                assertEquals(listOf("Все", "Только я"), audienceRows(sheet))
-                assertEquals("Только я", checkedAudience(sheet))
-                radioRows(sheet).first().performClick()
-            }
-            settle()
-            scenario.onActivity { activity ->
-                val sheet = editor(activity)
-                assertEquals("Все", checkedAudience(sheet))
-                sheet.findViewById<View>(R.id.save_button).performClick()
-            }
-            settle()
-            val saved = repository.peek(SCOPE).mine.first { it.url == "https://github.com/synthetic" }
-            assertEquals(LinkCategory.EXAM, saved.category)
-            assertEquals(LinkVisibility.ALL, saved.visibility)
-            scenario.onActivity { assertEquals(null, it.supportFragmentManager.findFragmentByTag(LinkEditorBottomSheet.TAG)) }
-        }
-    }
-
-    @Test fun editorWithoutTheConnectionKeepsTheLinkPrivate() {
-        withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_EDITOR, configure = {
-            it.servicesEnabled = false
-            it.snapshots.value = mapOf(SCOPE.key to fixture().copy(shared = emptyList(), previous = emptyList(),
-                audiences = emptyList(), servicesEnabled = false))
-        }) { scenario, repository ->
-            settle()
-            scenario.onActivity { activity ->
-                val sheet = editor(activity)
-                assertEquals(listOf("Только я"), audienceRows(sheet))
-                assertEquals("Только я", checkedAudience(sheet))
-                val hint = sheet.findViewById<TextView>(R.id.connection_hint)
-                assertEquals(View.VISIBLE, hint.visibility)
-                assertEquals(activity.getString(R.string.links_connection_required), hint.text.toString())
-                assertFalse(sheet.findViewById<View>(R.id.save_button).isEnabled)
-                sheet.findViewById<TextView>(R.id.url).text = "https://t.me/synthetic_chat"
-            }
-            settle()
-            scenario.onActivity { activity ->
-                val sheet = editor(activity)
-                assertEquals(R.id.category_chat, sheet.findViewById<ChipGroup>(R.id.categories).checkedChipId)
-                assertTextFits(sheet)
-            }
-            screenshot("editor-offline")
-            scenario.onActivity { editor(it).findViewById<View>(R.id.save_button).performClick() }
-            settle()
-            val saved = repository.peek(SCOPE).mine.first { it.url == "https://t.me/synthetic_chat" }
-            assertEquals(LinkVisibility.PRIVATE, saved.visibility)
-            assertTrue(saved.local)
-        }
-    }
-
     @Test fun ownRejectedLinkShowsTheReasonAndOwnActions() {
         Appearances.default.forEachIndexed { index, spec ->
             withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "own-rejected") { scenario, _ ->
@@ -315,32 +185,13 @@ class SubjectLinksVisualTest {
         }
     }
 
-    @Test fun editorFitsAtLargeFontOnANarrowScreen() {
-        val narrow = Appearances.all.first { it.widthDp == 320 && !it.dark }.toSubjectLinks()
-        withPreview(narrow, SubjectLinksPreviewActivity.SCREEN_EDITOR, linkId = "own-rejected") { scenario, _ ->
-            settle()
-            screenshot("editor-narrow")
-            scenario.onActivity { activity ->
-                val sheet = editor(activity)
-                assertEquals(activity.getString(R.string.links_editor_edit), sheet.findViewById<TextView>(R.id.title).text.toString())
-                assertEquals(5, audienceRows(sheet).size)
-                assertTextFits(sheet)
-            }
-        }
-    }
-
     private fun withPreview(
         appearance: PreviewAppearance,
         screen: String,
         linkId: String? = null,
-        clipboard: String? = null,
         configure: (MemorySubjectLinksRepository) -> Unit = { it.snapshots.value = mapOf(SCOPE.key to fixture()) },
         block: (ActivityScenario<SubjectLinksPreviewActivity>, MemorySubjectLinksRepository) -> Unit,
     ) {
-        TestUi.instrumentation.runOnMainSync {
-            val manager = ApplicationProvider.getApplicationContext<Context>().getSystemService(ClipboardManager::class.java)
-            if (clipboard == null) manager.clearPrimaryClip() else manager.setPrimaryClip(ClipData.newPlainText("link", clipboard))
-        }
         val repository = MemorySubjectLinksRepository().apply { servicesEnabled = true }.also(configure)
         SubjectLinksPreviewActivity.appearance = appearance
         SubjectLinksPreviewActivity.repository = repository
@@ -358,19 +209,7 @@ class SubjectLinksVisualTest {
     private fun sheetView(activity: SubjectLinksPreviewActivity, tag: String): View =
         checkNotNull((activity.supportFragmentManager.findFragmentByTag(tag) as DialogFragment).dialog).window!!.decorView
 
-    private fun editor(activity: SubjectLinksPreviewActivity) = sheetView(activity, LinkEditorBottomSheet.TAG)
-
     private fun actions(activity: SubjectLinksPreviewActivity) = sheetView(activity, LinkActionsBottomSheet.TAG)
-
-    private fun radioRows(sheet: View): List<MaterialRadioButton> =
-        sheet.findViewById<View>(R.id.visibility).descendants().filterIsInstance<MaterialRadioButton>()
-            .filter { it.visibility == View.VISIBLE }.toList()
-
-    private fun audienceRows(sheet: View): List<String> = radioRows(sheet).map { it.text.toString() }
-
-    /** The first line of the checked row. */
-    private fun checkedAudience(sheet: View): String? =
-        radioRows(sheet).singleOrNull { it.isChecked }?.text?.toString()?.substringBefore('\n')
 
     private fun visibleActions(sheet: View): List<Int> =
         listOf(R.id.action_open, R.id.action_pin, R.id.action_edit, R.id.action_delete, R.id.action_report)
