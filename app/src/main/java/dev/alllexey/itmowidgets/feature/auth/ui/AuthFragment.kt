@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.auth.ui
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -44,13 +45,19 @@ class AuthFragment : Fragment() {
             )
         }
 
-    private fun confirmDemo(message: String) {
-        val confirm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            HapticFeedbackConstants.CONFIRM
-        } else {
-            HapticFeedbackConstants.VIRTUAL_KEY
-        }
-        view?.performHapticFeedback(confirm)
-        Toast.makeText(requireContext().applicationContext, message, Toast.LENGTH_SHORT).show()
+    private fun confirmDemo(message: String) = confirmDemoEntry(requireContext(), view, message)
+}
+
+/**
+ * Confirms the hidden demo entry the Android way: a haptic on [view] and a toast with [message]. Both hosts of
+ * `AuthRoute` call it (this Fragment and the Compose shell's auth entry).
+ */
+fun confirmDemoEntry(context: Context, view: View?, message: String) {
+    val confirm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        HapticFeedbackConstants.CONFIRM
+    } else {
+        HapticFeedbackConstants.VIRTUAL_KEY
     }
+    view?.performHapticFeedback(confirm)
+    Toast.makeText(context.applicationContext, message, Toast.LENGTH_SHORT).show()
 }

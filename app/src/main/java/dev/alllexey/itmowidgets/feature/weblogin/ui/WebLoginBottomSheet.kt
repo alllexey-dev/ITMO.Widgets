@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.weblogin.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.compose.runtime.Composable
@@ -45,17 +46,7 @@ class WebLoginBottomSheet : ItmoBottomSheetFragment() {
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    /**
-     * Google's scanner runs in Play services and needs no camera permission. Its answer may come
-     * after this view is gone, so the view model is captured up front.
-     */
-    private fun scan() {
-        val model = viewModel
-        val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
-        GmsBarcodeScanning.getClient(requireContext(), options).startScan()
-            .addOnSuccessListener { barcode -> model.onScanned(barcode.rawValue.orEmpty()) }
-            .addOnFailureListener { model.onScannerUnavailable() }
-    }
+    private fun scan() = scanWebLoginCode(requireContext(), viewModel)
 
     companion object {
         const val TAG = "WebLoginBottomSheet"
@@ -63,4 +54,16 @@ class WebLoginBottomSheet : ItmoBottomSheetFragment() {
         /** As tall as the step, up to 90 % of the screen; the keyboard lifts the sheet over the field. */
         private val SPEC = SheetSpec(textInput = true)
     }
+}
+
+/**
+ * Google's scanner runs in Play services and needs no camera permission. Its answer may come after the sheet is
+ * gone, so [model] is captured up front. Both hosts of `WebLoginSheetRoute` call it (this sheet and the Compose
+ * shell's web sign-in entry).
+ */
+fun scanWebLoginCode(context: Context, model: WebLoginViewModel) {
+    val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
+    GmsBarcodeScanning.getClient(context, options).startScan()
+        .addOnSuccessListener { barcode -> model.onScanned(barcode.rawValue.orEmpty()) }
+        .addOnFailureListener { model.onScannerUnavailable() }
 }

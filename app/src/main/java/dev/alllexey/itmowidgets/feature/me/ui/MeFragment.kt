@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.me.ui
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -18,7 +19,7 @@ import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openWebLogin
-import dev.alllexey.itmowidgets.core.ui.shareText
+import dev.alllexey.itmowidgets.core.ui.shareTextIntent
 import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import javax.inject.Inject
 
@@ -40,14 +41,8 @@ class MeFragment : Fragment() {
         onOpenWebLogin = { openWebLogin() },
         onOpenSettings = { openScreen(AppScreen.SETTINGS) },
         onOpenDebugTools = { openScreen(AppScreen.DEBUG_TOOLS) },
-        onShareProfile = { name, isu -> shareOwnProfile(name, isu) },
-        onOpenProjectLink = { link ->
-            when (link) {
-                MeProjectLink.GITHUB -> openLink(ProjectLinks.GITHUB_URL)
-                // The native client handles tg:// itself; the web page is only a fallback.
-                MeProjectLink.TELEGRAM -> openLink(ProjectLinks.TELEGRAM_DEEPLINK, ProjectLinks.TELEGRAM_URL)
-            }
-        },
+        onShareProfile = { name, isu -> requireContext().shareOwnProfile(shareLinks, name, isu) },
+        onOpenProjectLink = { link -> requireContext().openProjectLink(link) },
     )
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
@@ -57,27 +52,6 @@ class MeFragment : Fragment() {
             // The tab stays one stationary surface under an overlay's back gesture.
             isTransitionGroup = true
         }
-
-    /** Shares the name and ISU the profile header shows. */
-    private fun shareOwnProfile(name: String, isu: Int) {
-        shareText(
-            getString(R.string.share_profile_title),
-            getString(R.string.share_profile_text, name, shareLinks.profile(isu)),
-        )
-    }
-
-    /** Opens the first of [urls] some app handles; false when none does. */
-    private fun openLink(vararg urls: String): Boolean {
-        for (url in urls) {
-            try {
-                startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
-                return true
-            } catch (_: ActivityNotFoundException) {
-                continue
-            }
-        }
-        return false
-    }
 
     companion object {
         /** Mirrors the settings graph argument; features must not import each other. */
@@ -92,4 +66,37 @@ class MeFragment : Fragment() {
         @Volatile
         var releaseLook = false
     }
+}
+
+/**
+ * Shares the name and ISU the profile header shows, with the App Link of [shareLinks]. Both hosts of `MeRoute` call
+ * it (this Fragment and the Compose shell's Me tab root).
+ */
+fun Context.shareOwnProfile(shareLinks: ShareLinkFactory, name: String, isu: Int) {
+    startActivity(
+        shareTextIntent(
+            getString(R.string.share_profile_title),
+            getString(R.string.share_profile_text, name, shareLinks.profile(isu)),
+        )
+    )
+}
+
+/** Opens a project page; false when no app could, which `MeRoute` reports. Both hosts of `MeRoute` call it. */
+fun Context.openProjectLink(link: MeProjectLink): Boolean = when (link) {
+    MeProjectLink.GITHUB -> openFirstLink(ProjectLinks.GITHUB_URL)
+    // The native client handles tg:// itself; the web page is only a fallback.
+    MeProjectLink.TELEGRAM -> openFirstLink(ProjectLinks.TELEGRAM_DEEPLINK, ProjectLinks.TELEGRAM_URL)
+}
+
+/** Opens the first of [urls] some app handles; false when none does. */
+private fun Context.openFirstLink(vararg urls: String): Boolean {
+    for (url in urls) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+            return true
+        } catch (_: ActivityNotFoundException) {
+            continue
+        }
+    }
+    return false
 }
