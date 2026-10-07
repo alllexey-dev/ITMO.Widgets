@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
+import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
 import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
@@ -80,12 +81,15 @@ class SettingsBridgeTest {
         }
     }
 
-    /** The recordbook page reads the marks switches, which `recordbookModule` constructs since KM-11b2. */
+    /**
+     * The recordbook page reads the marks switches, which `recordbookModule` constructs since KM-11b2; that module reads
+     * the subject links of `resourcesModule` since KM-11f.
+     */
     @Test
     fun `the settings modules pass the graph check against the release bridges`() {
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
-            listOf(onboardingDataModule, settingsModule, recordbookModule) + scheduleDataGraph,
+            listOf(onboardingDataModule, settingsModule, resourcesModule, recordbookModule) + scheduleDataGraph,
         )
     }
 
