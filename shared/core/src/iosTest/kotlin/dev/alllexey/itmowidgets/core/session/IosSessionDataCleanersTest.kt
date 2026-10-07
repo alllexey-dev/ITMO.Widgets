@@ -38,10 +38,30 @@ class IosSessionDataCleanersTest {
         FileSystem.SYSTEM.write(directory.file("qr-pass-v1.json")) { writeUtf8("{}") }
         FileSystem.SYSTEM.createDirectories(directory.root / "later-card")
 
+        FileSystem.SYSTEM.write(directory.file(".qr-pass-v1.json.k3x9.tmp")) { writeUtf8("{") }
+
         AppGroupSessionDataCleaner(directory, dispatchers).clearSessionData()
 
         assertEquals(listOf(directory.locks), FileSystem.SYSTEM.list(directory.root))
         assertTrue(FileSystem.SYSTEM.exists(directory.locks / "$MY_ITMO_REFRESH_LOCK.lock"))
+    }
+
+    @Test
+    fun theAppGroupCleanerKeepsTheContainersOwnEntries() = runTest(dispatcher) {
+        // What the system puts in every App Group container; without the metadata it drops the container as stale.
+        val metadata = directory.file(".com.apple.mobile_container_manager.metadata.plist")
+        val library = directory.root / "Library"
+        FileSystem.SYSTEM.createDirectories(library / "Caches")
+        FileSystem.SYSTEM.createDirectories(library / "Preferences")
+        FileSystem.SYSTEM.write(metadata) { writeUtf8("<plist/>") }
+        SessionSnapshotWriter(AppGroupSnapshotWriter(directory, WidgetReloader {}))
+            .write(SessionSnapshot(isu = 123456, demo = false, alertsAllowed = true))
+
+        AppGroupSessionDataCleaner(directory, dispatchers).clearSessionData()
+
+        assertEquals(listOf(metadata, library).sorted(), FileSystem.SYSTEM.list(directory.root).sorted())
+        assertTrue(FileSystem.SYSTEM.exists(library / "Caches"))
+        assertTrue(FileSystem.SYSTEM.exists(library / "Preferences"))
     }
 
     @Test

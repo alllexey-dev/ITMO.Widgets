@@ -10,3 +10,6 @@
   `OnboardingViewModel`: each widget step explains how to add the widget («Как
   добавить виджет»; iOS lets no app place one) beside its appearance rows, then
   the services opt-in and the notification question through iOS's own dialog.
+- Signing in, starting the demo or signing out on iOS no longer deletes the
+  App Group container's own record, so the QR widget sees the session and the
+  pass the app writes instead of «Войдите в приложение».
