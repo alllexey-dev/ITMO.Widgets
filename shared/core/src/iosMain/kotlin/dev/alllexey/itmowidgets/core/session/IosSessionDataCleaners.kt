@@ -9,6 +9,7 @@ import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okio.FileSystem
+import okio.Path
 
 /** Every Keychain item of the app: the session, the BARS header and whatever a later card stores. */
 class KeychainSessionDataCleaner(
@@ -20,8 +21,12 @@ class KeychainSessionDataCleaner(
 }
 
 /**
- * Every file in the App Group container (snapshots, `session-v1.json`), so the extensions show nothing of the old
- * account. The `locks` directory stays: another process may hold a lock in it.
+ * Every file the app keeps in the App Group container (snapshots, `session-v1.json`, a writer's leftover temporary
+ * file), so the extensions show nothing of the old account. Stays:
+ * - `locks`: another process may hold a lock in it;
+ * - the container's own entries, every other hidden file and `Library`: without
+ *   `.com.apple.mobile_container_manager.metadata.plist` the system drops the container as stale and gives the next
+ *   process a new one, so the app and the widgets would each read a container of their own.
  */
 class AppGroupSessionDataCleaner(
     private val directory: AppGroupDirectory,
@@ -31,8 +36,20 @@ class AppGroupSessionDataCleaner(
 
     override suspend fun clearSessionData() = withContext(dispatchers.io) {
         fileSystem.listOrNull(directory.root).orEmpty()
-            .filterNot { it == directory.locks }
+            .filter(::isAppEntry)
             .forEach(fileSystem::deleteRecursively)
+    }
+
+    private fun isAppEntry(entry: Path): Boolean = when {
+        entry == directory.locks -> false
+        entry.name.startsWith(HIDDEN) -> entry.name.endsWith(TEMPORARY)
+        else -> entry.name != SYSTEM_LIBRARY
+    }
+
+    private companion object {
+        const val HIDDEN = "."
+        const val TEMPORARY = ".tmp"
+        const val SYSTEM_LIBRARY = "Library"
     }
 }
 

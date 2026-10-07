@@ -332,9 +332,13 @@ image row; the services step is the shared opt-in; the notifications step asks w
 `-itmoOnboarding` shows the flow over the demo session, which otherwise skips it, until the flow ends (UI tests,
 `XCUIApplication.itmoOnboarding()`); finishing it there stores the flag as a real account would.
 
-Sign-out. Three `SessionDataCleaner`s run with the shared ones: the Keychain (every item of the service), the App
-Group container (every file but the `locks` directory) and WebKit's website data, which Swift removes through
-`IosCoreHost.clearWebsiteData` (`WKWebsiteDataStore`, as Android clears its WebView data).
+Sign-out. Three `SessionDataCleaner`s run with the shared ones, on sign-out and before every sign-in or demo start:
+the Keychain (every item of the service), the App Group container and WebKit's website data, which Swift removes
+through `IosCoreHost.clearWebsiteData` (`WKWebsiteDataStore`, as Android clears its WebView data). The App Group
+cleaner removes the app's files (snapshots and a writer's leftover `.tmp` file) and keeps `locks`, `Library` and
+every other hidden file: the system's .com.apple.mobile_container_manager.metadata.plist is the container's
+record, and without it the system drops the container as stale and gives the next process a new, empty one, so the
+widgets would read a container the app no longer writes (`ITMOWidgetsTests/WidgetSnapshotsTests`).
 
 ## Widgets
 
