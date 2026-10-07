@@ -98,8 +98,8 @@ next ten-minute mark; `DemoContentTest` checks today always has a lesson to sign
 up for.
 
 `SiteScreenshotCapture` (landing screenshots) and the debug `HomeFixture` read
-the same set. `RecordbookPreviewFixtures` and `UserProfilePreviewActivity`
-keep their own edge cases for the visual tests.
+the same set. `RecordbookPreviewFixtures` and the profile previews of
+`:shared:feature-social` keep their own edge cases for the visual tests.
 
 ## Tests
 

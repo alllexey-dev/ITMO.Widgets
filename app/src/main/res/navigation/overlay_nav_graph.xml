@@ -57,8 +57,7 @@
     <fragment
         android:id="@+id/user_profile"
         android:name="dev.alllexey.itmowidgets.feature.social.ui.UserProfileFragment"
-        android:label="User profile"
-        tools:layout="@layout/fragment_user_profile">
+        android:label="User profile">
         <argument
             android:name="user_isu"
             app:argType="integer" />

@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.ui.platform.ComposeView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
@@ -31,6 +31,7 @@ import dev.alllexey.itmowidgets.feature.home.HomeSemantics
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
+import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -115,7 +116,8 @@ class StoreScreenshotCapture {
             }
             // The reviews block with the summary, under the profile header.
             open(scenario) { main ->
-                main.findViewById<RecyclerView>(R.id.profile_list).scrollBy(0, (REVIEWS_SCROLL_DP * main.resources.displayMetrics.density).toInt())
+                val profile = composeRoot(main, UserProfileTestTags.LIST)
+                HomeSemantics.scrollBy(profile, UserProfileTestTags.LIST, REVIEWS_SCROLL_DP * main.resources.displayMetrics.density)
             }
             frame(activity, "08-teacher")
 
@@ -131,6 +133,10 @@ class StoreScreenshotCapture {
             frame(activity, "11-qr", sheet = true)
         }
     }
+
+    /** The `ComposeView` of a Compose screen whose node is tagged [tag], such as the profile list. */
+    private fun composeRoot(activity: MainActivity, tag: String): View =
+        activity.window.decorView.descendants().filterIsInstance<ComposeView>().first { HomeSemantics.node(it, tag) != null }
 
     private fun enterDemo(activity: MainActivity) {
         val decorView = activity.window.decorView

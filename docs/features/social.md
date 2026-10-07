@@ -125,12 +125,12 @@ when either identity source succeeds. Its name and photo come from My ITMO when
 that person exists, otherwise from Backend; a missing photo uses initials rather
 than another source's photo. Empty Backend names use `Context.userDisplayName`.
 
-`UserProfileAdapter` renders one RecyclerView in the language of the subject
+`UserProfileScreen` renders one lazy list in the language of the subject
 page: a result card, then sections whose headings are in `colorPrimary` over
 connected groups ([design](../design.md#connected-groups)); no line is joined
 by « · ». In this order:
 
-1. The hero card (`item_profile_header.xml`, `Card.Hero`): photo or initials,
+1. The hero card (`ProfileHero`, `Card.Hero`): photo or initials,
    the name and one short line: the role of the first position without its
    qualifications (`shortRole`: the first clause before a parenthesis or a
    comma, capitalised, «Преподаватель»), a short department when the position
@@ -216,10 +216,16 @@ reviews one connected group 16 dp further down.
   page shows one `Часть данных не загрузилась` snackbar with `Повторить`,
   after all three requests finish.
 
-A diff commit switches content and placeholders atomically and checks both the
-current binding and render revision. RecyclerView has no item animator and
-uses `PREVENT_WHEN_EMPTY` to restore scroll after view recreation. Review text
-is never truncated; date and source formatting are specified in [reviews](reviews.md).
+The list items have stable keys, so a late part or a vote never moves what is
+already on screen. Review text is never truncated; date and source formatting
+are specified in [reviews](reviews.md).
+
+The screen is `UserProfileRoute` from `:shared:feature-social`, hosted by
+`UserProfileFragment` on Android. The route shows the snackbars and asks
+`Удалить из друзей?` and `Удалить отзыв?` in the kit's confirm dialog; the host
+shares the profile link (`Поделиться` only with a page on screen), copies the
+ISU and opens user screens, the review editor and report, author profiles and
+source links.
 
 ### Entry points
 
@@ -281,10 +287,18 @@ the friends screen, people search and another user's friends use it.
 `ProfileReviewsTest`, `UserProfileStateTest` and `UserProfileViewModelTest`
 cover the source boundary, cache invalidation, the short role and the
 headline, the facts, the reviews section and deterministic
-loading/deadline/action behavior. `UserProfileVisualTest` exercises all
-profile states, the hero with the copied ISU number, the grouped facts, every
-friendship state, delayed parts, recycling, accessibility, photo failure and
-scroll restoration in the full appearance matrix. Another user's friends is
+loading/deadline/action behavior. The person profile is `UserProfileScreen`:
+`UserProfileScreen_<state>` records the teacher with the summary and reviews,
+a friend, the viewer, a page without facts, every friendship state, a request
+in flight, disabled, the skeleton, not found and error, and the review rows and
+the summary card are recorded on their own (`TeacherReviewRow*`,
+`OwnTeacherReviewRow*`, `TeacherSummaryCard*`). `UserProfileScreenTest`,
+`TeacherReviewRowTest` and `TeacherSummaryCardTest` cover the hero, the
+friendship buttons, the sharing rows, every state, the ISU copy, the order of
+the reviews, late reviews, votes, the menus and the summary toggle;
+`UserProfileRouteTest` covers, through the real ViewModel, the partial failure
+snackbar and its retry, a failed action, both confirmations and the exits.
+Another user's friends is
 `UserFriendsScreen` in `:shared:feature-social`: `SocialScreenshotTest` records
 every state (`UserFriendsScreen_<state>`) and `UserList`, and
 `UserFriendsScreenTest` and `UserListTest` cover the states, row taps, actions,

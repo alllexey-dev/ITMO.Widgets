@@ -58,11 +58,8 @@ class DesignCardResourcesTest {
             "item_sport_booking" to "Content.Outlined",
             "item_recordbook_subject" to "Content",
             "item_recordbook_note" to "Content",
-            // The AI summary sits on the quiet surface of the reviews' groups, never told apart by an outline.
-            "item_teacher_summary" to "Content",
             "item_recordbook_summary" to "CompactSummary",
             "item_subject_hero" to "Hero",
-            "item_profile_header" to "Hero",
             "item_recordbook_sport" to "Summary",
             "item_day_schedule" to "ScheduleDay"
         )
@@ -97,8 +94,7 @@ class DesignCardResourcesTest {
         assertEquals("4dp", dimensions.getValue("design_group_radius_inner"))
         assertEquals("2dp", dimensions.getValue("design_group_gap"))
         // Rows of a group are drawn by core/ui/ConnectedGroup.kt, never by a card of their own.
-        listOf("item_recordbook_control", "item_subject_link", "item_group_action_row", "item_subject_teacher", "item_subject_lesson",
-            "item_profile_fact", "item_profile_entry", "item_teacher_review", "item_own_teacher_review")
+        listOf("item_recordbook_control", "item_subject_link", "item_group_action_row", "item_subject_teacher", "item_subject_lesson")
             .forEach { layout -> assertEquals(layout, emptyList<Element>(), elements("layout/$layout.xml", MATERIAL_CARD)) }
     }
 
