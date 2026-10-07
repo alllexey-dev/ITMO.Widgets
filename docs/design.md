@@ -648,13 +648,13 @@ settings, and restore them if a separate test explicitly changes them.
   `res/drawable/ic_shortcut_qr.xml` and `ic_shortcut_today.xml`, adaptive icons
   without a tint (white background like the launcher icon, `qr_code` and
   `schedule` 36 dp in `#4984E2` in the safe zone of the 108 dp foreground).
-- Recordbook row: `res/layout/item_recordbook_subject.xml` (name, metadata, a number
-  with a thin bar or a grade badge), `feature/recordbook/ui/RecordbookAdapter.kt`.
-  The name and the dot `new_mark` for unread marks share a horizontal row
-  centred vertically: the name takes the remaining width and wraps, the dot
-  (8 dp `shape_circle_filled`, `colorPrimary`, `design_spacing_compact` before
-  it) follows it like the new-change dot of the schedule changes history, is set
-  on every bind and adds `Новое` at the start of the row's TalkBack description.
+- Recordbook row: `SubjectRow` in `feature/recordbook/ui/RecordbookScreen.kt` of
+  `:shared:feature-recordbook` (name, metadata, a number with a thin bar or a
+  grade badge). The name and the new-mark dot for unread marks share a
+  horizontal row centred vertically: the name takes the remaining width and
+  wraps, the dot (8 dp, `primary`, `compact` spacing before it) follows it like
+  the new-change dot of the schedule changes history and adds `Новое` at the
+  start of the row's TalkBack description.
   A total from a connected sheet stands where the points would be while the
   official points are empty: `sheet_mark` (`ic_table`, 16 dp,
   `colorOnSurfaceVariant`, 4 dp before the value) and the value (`titleMedium`,

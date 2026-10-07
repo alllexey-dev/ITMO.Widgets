@@ -14,6 +14,10 @@ kotlin {
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
+            // The screens' routes (L12 LR-3 on): koinViewModel() and lifecycle-aware collection; the iOS shell hosts
+            // the same routes.
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
             // SheetHtmlGrid parses the HTML view of a public sheet (L04 TC-11b, moved here by L12 KM-11b2).
             implementation(libs.ksoup)
         }

@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.feature.recordbook.RecordbookSemantics
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
@@ -242,12 +243,8 @@ class SiteScreenshotCapture {
             ActivityScenario.launch(RecordbookPreviewActivity::class.java).use { scenario ->
                 settle()
                 capture("recordbook")
-                scenario.onActivity { activity ->
-                    activity.findViewById<RecyclerView>(R.id.main_recycler_view).children()
-                        .first { it.findViewById<android.widget.TextView>(R.id.name)?.text?.contains("Алгоритмы") == true }
-                        .performClick()
-                }
-                settle()
+                // The list is Compose (LR-3): the row opens by its semantics click.
+                RecordbookSemantics.openSubject(scenario, "Алгоритмы", ::settle)
                 capture("subject-scores")
                 // One page now: the second shot is its lower half with teachers and lessons.
                 scenario.onActivity { activity ->
@@ -291,8 +288,6 @@ class SiteScreenshotCapture {
             for (i in 0 until childCount) yieldAll(getChildAt(i).descendantsOf())
         }
     }
-
-    private fun RecyclerView.children(): List<View> = (0 until childCount).map(::getChildAt)
 
     private fun settle() = TestUi.settle(900)
 

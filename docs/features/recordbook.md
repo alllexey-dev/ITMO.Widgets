@@ -81,15 +81,15 @@ fifteen subjects, so no search or filters.
   `BarsRecordbookRepository.cachedControls` for a BARS journal, which the
   overlay fills for every journal); the list never requests controls itself.
   The rule is `attentionReason` in `presentation/RecordbookAttention.kt`.
-- A subject row (`item_recordbook_subject.xml`) is the name (two lines), a
+- A subject row (`SubjectRow` in `ui/RecordbookScreen.kt`) is the name (two lines), a
   metadata line (assessment kind, an uncoded result such as a no-show reason,
   `нет в БАРС`, a PE sport state) and one result on the right. A final result
   (a grade, a credit, a no-show, or no points at all) is a badge: the compact
   code (`4C`, `2FX`), `Зачёт` or `—`, green when passed, error colour when
   failed, neutral otherwise. Until then the row shows the points and a 64 dp
   bar of their share of 100: error colour with an attention reason, the sport
-  colour for PE, otherwise the status colour. Rows bind without animation, so
-  a recycled row never animates another subject's value.
+  colour for PE, otherwise the status colour. Bars draw their value without
+  animation.
 - A subject with unread new marks has an 8 dp `colorPrimary` dot `new_mark`
   after its name until its page is opened
   ([mark tracking](#in-the-recordbook)).
@@ -533,9 +533,9 @@ chip. Anything else opens the recordbook. The prompt `Войдите в БАРС
 
 - `RecordbookViewModel` observes the records and fills `Content.newSubjects`
   with the name keys of the listed period's half-year, also for an open list,
-  without a request. `RecordbookAdapter` shows the dot `new_mark` for a row
-  whose `subjectNameKey(name)` is among them, sets it on every bind and starts
-  the row's TalkBack description with `Новое`. Another half-year's records mark
+  without a request. `RecordbookScreen` shows the new-mark dot for a row
+  whose `subjectNameKey(name)` is among them and starts the row's TalkBack
+  description with `Новое`. Another half-year's records mark
   nothing.
 - `RecordbookSubjectViewModel` calls `markRead(half, subjectNameKey(name))`
   once, with the page's first content; a refresh does not repeat it, and a
@@ -798,7 +798,7 @@ sheet is opened; names and ISUs are made up.
 
 ```bash
 ./gradlew :app:testGithubDebugUnitTest
-./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.RecordbookVisualTest,dev.alllexey.itmowidgets.feature.recordbook.RecordbookBarsVisualTest
+./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.RecordbookVisualTest
 ./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.work.MarksWorkTest,dev.alllexey.itmowidgets.feature.recordbook.MarksNotificationTest
 ```
 

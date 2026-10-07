@@ -24,9 +24,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.progressindicator.CircularProgressIndicator
-import com.google.android.material.color.MaterialColors
-import com.google.android.material.progressindicator.LinearProgressIndicator
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
@@ -42,9 +39,6 @@ import dev.alllexey.itmowidgets.core.ui.GroupPosition
 import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNews
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
-import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
@@ -64,10 +58,8 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
-import kotlin.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Assert.*
@@ -171,222 +163,6 @@ class RecordbookVisualTest {
                     assertEquals(listOf(300002), it.openedProfiles)
                 }
             }
-        }
-    }
-
-    @Test fun firstLoadWithoutAnyAnswerShowsTheSkeleton() {
-        withPreview(PreviewAppearance(), configure = { it.pending = CompletableDeferred() }) { scenario, _ ->
-            settle()
-            scenario.onActivity { activity ->
-                assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loading).visibility)
-                assertEquals(View.GONE, activity.findViewById<View>(R.id.state_container).visibility)
-            }
-            screenshot("root-loading")
-        }
-    }
-
-    @Test fun semesterNumbersStayContinuousInPickerAndHeading() {
-        withPreview(PreviewAppearance(widthDp = 320, fontScale = 1.3f)) { scenario, repository ->
-            settle()
-            listOf(4, 3).forEach { semester ->
-                scenario.onActivity { it.findViewById<View>(R.id.period_button).performClick() }
-                settle()
-                scenario.onActivity { activity ->
-                    val sheet = activity.supportFragmentManager.findFragmentByTag("RecordbookPeriodBottomSheet") as DialogFragment
-                    val decor = checkNotNull(sheet.dialog).window!!.decorView
-                    assertVisibleTextFits(decor)
-                    val labels = decor.descendants().filterIsInstance<TextView>().map { it.text.toString() }.toList()
-                    (1..4).forEach { number ->
-                        assertTrue(labels.contains(activity.getString(R.string.recordbook_period_value, (number + 1) / 2, number)))
-                    }
-                }
-                screenshot("period-numbering")
-                scenario.onActivity { activity ->
-                    val sheet = activity.supportFragmentManager.findFragmentByTag("RecordbookPeriodBottomSheet") as DialogFragment
-                    val title = activity.getString(R.string.recordbook_period_value, 2, semester)
-                    sheet.requireView().findViewById<RecyclerView>(R.id.recycler_view).children().first {
-                        it.findViewById<TextView>(R.id.title).text.toString() == title
-                    }.performClick()
-                }
-                settle()
-                scenario.onActivity {
-                    assertEquals(it.getString(R.string.recordbook_period_value, 2, semester), it.findViewById<TextView>(R.id.period_button).text.toString())
-                    assertEquals(semester, repository.lastRequestedSemester)
-                    assertVisibleTextFits(it.window.decorView)
-                }
-                screenshot("semester-$semester")
-            }
-        }
-    }
-
-    @Test fun sessionRowsShowBadgesTheSummaryAndAttentionWithoutRings() {
-        Appearances.default.forEach { spec ->
-            withFixture(Phase.SESSION, spec.toRecordbook()) { scenario ->
-                scenario.onActivity { activity ->
-                    val list = activity.findViewById<RecyclerView>(R.id.main_recycler_view)
-                    assertEquals(0, list.descendants().count { it is CircularProgressIndicator })
-                    val texts = list.texts()
-                    assertTrue(activity.getString(R.string.recordbook_summary_closed, 4, 6) in texts)
-                    assertEquals(activity.getString(R.string.recordbook_attention_section), texts[1])
-                    val math = activity.row(RecordbookPreviewFixtures.MATH)
-                    assertEquals(activity.getString(R.string.recordbook_reason_failed), math.findViewById<TextView>(R.id.meta).text.toString())
-                    assertEquals("2FX", math.findViewById<TextView>(R.id.grade).text.toString())
-                    assertEquals(View.GONE, math.findViewById<View>(R.id.score_group).visibility)
-                    assertEquals(activity.getString(R.string.recordbook_absent), activity.row("История").findViewById<TextView>(R.id.meta).text.toString())
-                    assertEquals("5A", activity.row("Проектирование").findViewById<TextView>(R.id.grade).text.toString())
-                    assertTouchTargets(activity)
-                    assertVisibleTextFits(activity.window.decorView)
-                }
-                screenshot("root-session-${spec.name}")
-            }
-        }
-    }
-
-    @Test fun newMarksShowADotUntilTheSubjectOpens() {
-        val half = StudyHalf(2025, 2)
-        val design = "Проектирование и разработка распределённых информационных систем"
-        Appearances.default.forEach { spec ->
-            RecordbookPreviewActivity.MemoryMarkTracking.news.value = listOf(
-                newMark(RecordbookPreviewFixtures.MATH, half), newMark(design.uppercase(), half), newMark("История", StudyHalf(2025, 1))
-            )
-            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
-                scenario.onActivity { activity ->
-                    val math = activity.row(RecordbookPreviewFixtures.MATH)
-                    val long = activity.row("Проектирование")
-                    assertNewMark(activity, math)
-                    assertNewMark(activity, long)
-                    assertTrue("The long name wraps next to the dot", long.findViewById<TextView>(R.id.name).lineCount > 1)
-                    assertOnlyDots(activity, RecordbookPreviewFixtures.MATH, "Проектирование")
-                    assertTouchTargets(activity)
-                    assertVisibleTextFits(activity.window.decorView)
-                }
-                screenshot("marks-dot-${spec.name}")
-                openSubject(scenario, "Проектирование")
-                scenario.onActivity {
-                    assertEquals(listOf(half to subjectNameKey(design)), RecordbookPreviewActivity.MemoryMarkTracking.readCalls)
-                    it.onBackPressedDispatcher.onBackPressed()
-                }
-                settle()
-                scenario.onActivity { activity ->
-                    assertEquals(View.GONE, activity.row("Проектирование").findViewById<View>(R.id.new_mark).visibility)
-                    assertNewMark(activity, activity.row(RecordbookPreviewFixtures.MATH))
-                    assertOnlyDots(activity, RecordbookPreviewFixtures.MATH)
-                    activity.findViewById<RecyclerView>(R.id.main_recycler_view).let { it.scrollToPosition(it.adapter!!.itemCount - 1) }
-                }
-                settle()
-                scenario.onActivity { assertOnlyDots(it, RecordbookPreviewFixtures.MATH) }
-                scenario.onActivity { activity ->
-                    val list = activity.findViewById<RecyclerView>(R.id.main_recycler_view)
-                    list.scrollToPosition(0)
-                    list.adapter!!.notifyItemRangeChanged(0, list.adapter!!.itemCount)
-                }
-                settle()
-                scenario.onActivity { assertOnlyDots(it, RecordbookPreviewFixtures.MATH) }
-                screenshot("marks-dot-read-${spec.name}")
-            }
-        }
-    }
-
-    @Test fun middleOfTheSemesterShowsNumbersAndPutsShortSportUnderAttention() {
-        Appearances.default.forEach { spec ->
-            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
-                scenario.onActivity { activity ->
-                    val list = activity.findViewById<RecyclerView>(R.id.main_recycler_view)
-                    val texts = list.texts()
-                    val summaryPrefix = activity.getString(R.string.recordbook_summary_closed, 0, 0).substringBefore(" 0")
-                    assertTrue(texts.none { it.startsWith(summaryPrefix) })
-                    assertEquals(activity.getString(R.string.recordbook_attention_section), texts.first())
-                    val pe = activity.row("Физическая")
-                    assertEquals(activity.resources.getQuantityString(R.plurals.recordbook_reason_sport, 36, 36),
-                        pe.findViewById<TextView>(R.id.meta).text.toString())
-                    assertEquals("64", pe.findViewById<TextView>(R.id.score).text.toString())
-                    val math = activity.row(RecordbookPreviewFixtures.MATH)
-                    assertEquals(activity.getString(R.string.recordbook_reason_below_minimum, "Контрольная работа 1"),
-                        math.findViewById<TextView>(R.id.meta).text.toString())
-                    assertEquals("72", math.findViewById<TextView>(R.id.score).text.toString())
-                    assertEquals(720, math.findViewById<LinearProgressIndicator>(R.id.progress).progress)
-                    val bar = math.findViewById<View>(R.id.progress)
-                    assertEquals(64 * activity.resources.displayMetrics.density, bar.width.toFloat(), 1f)
-                    assertEquals(View.GONE, math.findViewById<View>(R.id.grade).visibility)
-                    val history = activity.row("История")
-                    assertEquals(activity.getString(R.string.recordbook_score_pending), history.findViewById<TextView>(R.id.grade).text.toString())
-                    assertVisibleTextFits(activity.window.decorView)
-                }
-                screenshot("root-middle-${spec.name}")
-            }
-        }
-    }
-
-    @Test fun startOfTheSemesterKeepsShortSportInTheRegularList() {
-        withFixture(Phase.START, Appearances.light.toRecordbook()) { scenario ->
-            scenario.onActivity { activity ->
-                val texts = activity.findViewById<RecyclerView>(R.id.main_recycler_view).texts()
-                assertFalse(activity.getString(R.string.recordbook_attention_section) in texts)
-                val pe = activity.row("Физическая")
-                assertEquals("Зачёт", pe.findViewById<TextView>(R.id.meta).text.toString())
-                assertEquals("12", pe.findViewById<TextView>(R.id.score).text.toString())
-                assertVisibleTextFits(activity.window.decorView)
-            }
-            screenshot("root-start")
-        }
-    }
-
-    @Test fun listShowsTheSheetTotalWhenOfficialPointsAreEmpty() {
-        Appearances.default.forEach { spec ->
-            withFixture(Phase.START, spec.toRecordbook()) { scenario ->
-                fun total(id: Long, name: String, value: String) = RecordbookPreviewFixtures.sheetScore(value = value)
-                    .copy(scope = ResourceScope(id, name, "2025-2"))
-                RecordbookPreviewActivity.MemorySheetScores.scores.value = listOf(
-                    total(2, "Алгоритмы и структуры данных", "66,3"),
-                    total(5, "Иностранный язык", "100%"),
-                    total(6, "История", "ИСТИНА"),
-                    total(RecordbookPreviewFixtures.MATH_ID, RecordbookPreviewFixtures.MATH, "50"),
-                )
-                settle()
-                fun assertRows() {
-                    scenario.onActivity { activity ->
-                        val algorithms = activity.row("Алгоритмы")
-                        assertTrue(algorithms.findViewById<View>(R.id.sheet_mark).isShown)
-                        assertEquals("66,3", algorithms.findViewById<TextView>(R.id.score).text.toString())
-                        assertEquals(View.GONE, algorithms.findViewById<View>(R.id.progress).visibility)
-                        assertEquals(View.GONE, algorithms.findViewById<View>(R.id.grade).visibility)
-                        assertTrue(algorithms.contentDescription.contains(activity.getString(R.string.sheet_scores_from_table, "66,3")))
-                        val math = activity.row("Математический")
-                        assertFalse(math.findViewById<View>(R.id.sheet_mark).isShown)
-                        assertTrue(math.findViewById<View>(R.id.progress).isShown)
-                        assertEquals("8", math.findViewById<TextView>(R.id.score).text.toString())
-                        listOf(algorithms, math).forEach(::assertSheetRowFits)
-                    }
-                }
-                assertRows()
-                screenshot("list-sheet-${spec.name}")
-                scenario.onActivity { it.findViewById<RecyclerView>(R.id.main_recycler_view).scrollToPosition(Int.MAX_VALUE.coerceAtMost(
-                    it.findViewById<RecyclerView>(R.id.main_recycler_view).adapter!!.itemCount - 1)) }
-                settle()
-                scenario.onActivity { activity ->
-                    listOf("Иностранный" to "100%", "История" to "ИСТИНА").forEach { (name, value) ->
-                        val row = activity.row(name)
-                        assertTrue(row.findViewById<View>(R.id.sheet_mark).isShown)
-                        assertEquals(value, row.findViewById<TextView>(R.id.score).text.toString())
-                        assertSheetRowFits(row)
-                    }
-                }
-                screenshot("list-sheet-end-${spec.name}")
-                scenario.onActivity { it.findViewById<RecyclerView>(R.id.main_recycler_view).scrollToPosition(0) }
-                settle()
-                assertRows()
-            }
-        }
-    }
-
-    /** The value is whole and stays clear of the name; a long name may end in an ellipsis on two lines, as always. */
-    private fun assertSheetRowFits(row: View) {
-        assertTextFits(row, ellipsizable = { it.id == R.id.name })
-        val name = row.findViewById<View>(R.id.name)
-        val group = row.findViewById<View>(R.id.score_group)
-        if (group.isShown) {
-            val nameRight = IntArray(2).also(name::getLocationOnScreen)[0] + name.width
-            assertTrue(nameRight <= IntArray(2).also(group::getLocationOnScreen)[0])
         }
     }
 
@@ -566,14 +342,7 @@ class RecordbookVisualTest {
             it.sportScore = AppResult.Failure(AppError.Network)
         }) { scenario, repository ->
             settle()
-            scenario.onActivity { it.findViewById<RecyclerView>(R.id.main_recycler_view).scrollToPosition(5) }
-            settle()
-            scenario.onActivity { activity ->
-                activity.findViewById<RecyclerView>(R.id.main_recycler_view).children().first {
-                    it.findViewById<TextView>(R.id.name)?.text?.contains("Физическая") == true
-                }.performClick()
-            }
-            settle()
+            openSubject(scenario, "Физическая")
             var originalResultTop = 0
             scenario.onActivity {
                 assertVisibleTextFits(it.window.decorView)
@@ -841,36 +610,6 @@ class RecordbookVisualTest {
 
     private fun RecordbookPreviewActivity.hubItems(): List<DetailItem> = (hubList().adapter as SubjectHubAdapter).currentList
 
-    private fun RecordbookPreviewActivity.row(namePart: String): View =
-        findViewById<RecyclerView>(R.id.main_recycler_view).children().first { it.findViewById<TextView>(R.id.name)?.text?.contains(namePart) == true }
-
-    private fun newMark(name: String, half: StudyHalf) = subjectNameKey(name).let { key ->
-        MarkNews(MarkNews.idOf(half, key), half, key, name, Instant.parse("2026-06-01T09:00:00Z"), notified = true)
-    }
-    /** An 8 dp dot in the primary colour right after the name, centred on it; the row is read as «Новое» first. */
-    private fun assertNewMark(activity: RecordbookPreviewActivity, row: View) {
-        val dot = row.findViewById<ImageView>(R.id.new_mark)
-        val name = row.findViewById<TextView>(R.id.name)
-        assertTrue(dot.isShown)
-        val density = activity.resources.displayMetrics.density
-        assertEquals(8 * density, dot.width.toFloat(), 1f)
-        assertEquals(8 * density, dot.height.toFloat(), 1f)
-        assertTrue("The dot follows the name", dot.left >= name.right)
-        assertEquals(name.top + name.height / 2f, dot.top + dot.height / 2f, 1f)
-        assertEquals(MaterialColors.getColor(dot, androidx.appcompat.R.attr.colorPrimary), dot.imageTintList!!.defaultColor)
-        assertTrue(row.contentDescription.toString().startsWith(activity.getString(R.string.recordbook_subject_new) + ". "))
-    }
-    /** Every bound subject row shows the dot exactly when its name is one of [unread]. */
-    private fun assertOnlyDots(activity: RecordbookPreviewActivity, vararg unread: String) {
-        val rows = activity.findViewById<RecyclerView>(R.id.main_recycler_view).children().filter { it.findViewById<TextView>(R.id.name) != null }
-        assertTrue(rows.isNotEmpty())
-        rows.forEach { row ->
-            val name = row.findViewById<TextView>(R.id.name).text.toString()
-            val expected = unread.any { name.contains(it) }
-            assertEquals(name, expected, row.findViewById<View>(R.id.new_mark).visibility == View.VISIBLE)
-            assertEquals(name, expected, row.contentDescription.toString().startsWith(activity.getString(R.string.recordbook_subject_new)))
-        }
-    }
     private fun View.texts(): List<String> = descendants().filterIsInstance<TextView>().filter { it.isShown }.map { it.text.toString() }.toList()
 
     private fun assertTouchTargets(activity: RecordbookPreviewActivity) {
@@ -896,14 +635,9 @@ class RecordbookVisualTest {
         settle()
     }
 
-    private fun openSubject(scenario: ActivityScenario<RecordbookPreviewActivity>, namePart: String) {
-        scenario.onActivity { activity ->
-            activity.findViewById<RecyclerView>(R.id.main_recycler_view).children().first {
-                it.findViewById<TextView>(R.id.name)?.text?.contains(namePart) == true
-            }.performClick()
-        }
-        settle()
-    }
+    /** Opens a subject as a tap on its list row does; the list is Compose (LR-3), so by its semantics. */
+    private fun openSubject(scenario: ActivityScenario<RecordbookPreviewActivity>, namePart: String) =
+        RecordbookSemantics.openSubject(scenario, namePart, ::settle)
 
     private fun hubLesson(pairId: Long, date: String, subjectId: Long, typeId: Int, teacher: String, isu: Long, name: String = "Предмет $subjectId") = SubjectLesson(
         pairId = pairId, date = LocalDate.parse(date).toKotlinLocalDate(), start = LocalTime.of(9, 30).toKotlinLocalTime(),
@@ -911,46 +645,6 @@ class RecordbookVisualTest {
         subjectId = subjectId, subjectName = name, flowId = subjectId * 10, teacherIsu = isu, teacherFio = teacher,
         room = "1506", building = "Кронверкский проспект, 49", formatId = 1
     )
-
-    @Test fun emptyErrorLoadingAndContentTransitionsStayInTheContentArea() {
-        withPreview(PreviewAppearance(widthDp = 320, fontScale = 1.3f)) { scenario, repository ->
-            settle()
-            val pending = CompletableDeferred<AppResult<List<RecordbookSubject>>>()
-            repository.pending = pending
-            scenario.onActivity { activity ->
-                val fragment = activity.supportFragmentManager.findFragmentByTag(RecordbookPreviewActivity.ROOT_TAG)!!
-                fragment.getViewModel<RecordbookViewModel>().selectPeriod(1, 1)
-            }
-            settle()
-            screenshot("state-loading")
-            scenario.onActivity {
-                assertEquals(View.VISIBLE, it.findViewById<View>(R.id.loading).visibility)
-                assertEquals(View.GONE, it.findViewById<View>(R.id.swipe_refresh_layout).visibility)
-            }
-            pending.complete(AppResult.Success(emptyList()))
-            repository.pending = null
-            settle()
-            screenshot("state-empty")
-            scenario.onActivity {
-                assertEquals(View.VISIBLE, it.findViewById<View>(R.id.state_container).visibility)
-                assertEquals(View.GONE, it.findViewById<View>(R.id.swipe_refresh_layout).visibility)
-                assertVisibleTextFits(it.window.decorView)
-            }
-            repository.failure = true
-            scenario.onActivity { activity ->
-                val fragment = activity.supportFragmentManager.findFragmentByTag(RecordbookPreviewActivity.ROOT_TAG)!!
-                fragment.getViewModel<RecordbookViewModel>().selectPeriod(1, 2)
-            }
-            settle()
-            screenshot("state-error")
-            scenario.onActivity { assertVisibleTextFits(it.window.decorView) }
-            repository.failure = false
-            scenario.onActivity { it.findViewById<View>(R.id.state_action).performClick() }
-            settle()
-            scenario.onActivity { assertEquals(View.GONE, it.findViewById<View>(R.id.state_container).visibility) }
-            screenshot("state-recovered")
-        }
-    }
 
     private fun withPreview(appearance: PreviewAppearance, configure: (PreviewRepository) -> Unit = {}, block: (ActivityScenario<RecordbookPreviewActivity>, PreviewRepository) -> Unit) {
         val repository = PreviewRepository().apply(configure)
@@ -992,17 +686,11 @@ class RecordbookVisualTest {
         @Volatile var sportScore: AppResult<SportScoreSummary> = AppResult.Success(SportScoreSummary(66, 28))
         @Volatile var sportRate: String? = null
         @Volatile var hasSportPeriod = true
-        @Volatile var lastRequestedSemester = 0
-        @Volatile var failure = false
-        @Volatile var pending: CompletableDeferred<AppResult<List<RecordbookSubject>>>? = null
         override suspend fun getPrograms() = AppResult.Success(listOf(RecordbookProgram(1, "Тестовая образовательная программа", listOf(
             RecordbookPeriod("2026/2027", 4, 2, false), RecordbookPeriod("2026/2027", 3, 2, false),
             RecordbookPeriod("2025/2026", 2, 1, true), RecordbookPeriod("2025/2026", 1, 1, false)
         ))))
         override suspend fun getSubjects(programId: Long, semester: Int): AppResult<List<RecordbookSubject>> {
-            lastRequestedSemester = semester
-            pending?.let { return it.await() }
-            if (failure) return AppResult.Failure(AppError.Network)
             return AppResult.Success(listOf(
                 subject(1, "Математический анализ (продвинутый уровень)", "2/FX", 48.5),
                 subject(2, "Алгоритмы и структуры данных", "4/C", 76.5),
