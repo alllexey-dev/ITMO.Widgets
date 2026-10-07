@@ -7,10 +7,14 @@ import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.work.CheckOutcome
+import dev.alllexey.itmowidgets.core.work.RefreshStep
+import dev.alllexey.itmowidgets.core.work.RefreshStepKeys
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.widget.ScheduleTimelineTriggers
 import dev.alllexey.itmowidgets.feature.schedule.widget.ScheduleTimelineWriter
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
@@ -21,6 +25,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
+import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -31,8 +36,8 @@ import platform.UIKit.UIApplicationWillEnterForegroundNotification
 /**
  * The schedule widgets' App Group timeline (IO-10b): [ScheduleTimelineWriter] starts with the graph and writes on the
  * main queue (WidgetKit reloads are asked there) on every trigger for the life of the app process; IO-14's background
- * runner calls its `publish` too. It is also the iOS `ScheduleWidgetRefreshRequester`, which sport asks after a
- * booking.
+ * runner publishes it as its widget snapshot step. It is also the iOS `ScheduleWidgetRefreshRequester`, which sport
+ * asks after a booking.
  *
  * The provider and the cached schedule are resolved at each write from the schedule data graph (`scheduleDataModule`,
  * `scheduleModule`, the pending sport rows); until that graph is loaded a write only logs why it could not load.
@@ -50,6 +55,14 @@ val scheduleWidgetIosModule = module {
             writer.launchIn(CoroutineScope(SupervisorJob() + get<AppDispatchers>().main), triggers())
         }
     } bind ScheduleWidgetRefreshRequester::class
+    // The background runner's first step (IO-14): the timeline again on every wake, launch and foreground.
+    single(named(RefreshStepKeys.WIDGET_SNAPSHOTS)) {
+        val writer = get<ScheduleTimelineWriter>()
+        RefreshStep(RefreshStepKeys.WIDGET_SNAPSHOTS, Duration.ZERO) {
+            writer.publish()
+            CheckOutcome.DONE
+        }
+    }
 }
 
 private fun Scope.triggers(): ScheduleTimelineTriggers {

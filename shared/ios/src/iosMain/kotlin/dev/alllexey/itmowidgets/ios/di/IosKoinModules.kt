@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.ios.di
 
+import dev.alllexey.itmowidgets.core.di.iosBackgroundModule
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
@@ -13,6 +14,7 @@ import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookIosModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleChangesIosModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleWidgetIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsIosModule
@@ -48,5 +50,8 @@ object IosKoinModules {
         webLoginDataModule, webLoginModule, updateModule, updateIosModule,
         // The home feed with the hints over WidgetKit and UNUserNotificationCenter (IO-09a).
         homeModule, homeIosModule(PlacedWidgetKinds { completion -> platform.installedWidgetKinds(completion) }),
+        // The notifier, the app refresh task and the schedule change check's iOS ports and step (IO-14); the runner
+        // is `IosBackgroundRefresh`, started after the graph.
+        iosBackgroundModule, scheduleChangesIosModule,
     )
 }

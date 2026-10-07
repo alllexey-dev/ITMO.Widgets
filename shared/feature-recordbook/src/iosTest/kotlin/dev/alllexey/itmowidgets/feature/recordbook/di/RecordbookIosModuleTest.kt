@@ -3,6 +3,8 @@ package dev.alllexey.itmowidgets.feature.recordbook.di
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
+import dev.alllexey.itmowidgets.core.notification.AppNotification
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.session.CurrentUser
@@ -160,6 +162,8 @@ class RecordbookIosModuleTest {
             }
         }
         single<SecureStore> { secrets }
+        // The app graph's notifier is `iosBackgroundModule`'s (IO-14); this graph posts nothing.
+        single<AppNotifier> { SilentNotifier }
         single<AppDirectories> {
             object : AppDirectories {
                 override val files = root / "files"
@@ -220,4 +224,12 @@ class RecordbookIosModuleTest {
         const val KEYCHAIN_CLEANER = "KeychainSessionDataCleaner"
         val USER = CurrentUser(isu = ISU, name = null, pictureUrl = null)
     }
+}
+
+private object SilentNotifier : AppNotifier {
+    override fun show(notification: AppNotification) = Unit
+
+    override fun cancel(channel: String, id: Int) = Unit
+
+    override fun clear() = Unit
 }

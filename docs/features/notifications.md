@@ -164,3 +164,32 @@ text, the tap intent, replacement, `cancel` and the channel's importance and
 name. `MarksNotificationTest` does the same for the marks digest (three names
 and `… и ещё N`, the public version, the recordbook or subject tap with
 arguments that survive the intent) and the prompt with its sign-in tap.
+
+## iOS
+
+The iOS app ([iOS app](../ios.md#background-refresh)) posts the local
+notifications through the same contract; pushes come with the push card
+(IO-13a).
+
+- `IosAppNotifier` (`shared/core`, iosMain) is the iOS `AppNotifier`: one
+  `UNUserNotificationCenter` request per notification, identifier
+  `<channel>-<id>` (a newer one replaces the shown one, as the tag and id do on
+  Android), thread identifier = the channel id of `AppNotificationChannels`,
+  texts resolved from the catalog by key, no sound when `silent`. iOS has no
+  channels: the user turns the app's notifications on or off as a whole.
+  `publicTitle` is not used: the lock screen follows the user's "Show
+  Previews" setting. Sign-out removes every shown and scheduled notification.
+- The schedule change digest is Android's (`IosScheduleChangeNotifier`):
+  the same title, text and sound rule.
+- Delays. The check runs only when iOS wakes the app for a background refresh
+  (the system picks the moment from how the app is used, often hours apart,
+  never with Background App Refresh off or in Low Power Mode) or when the user
+  opens the app. A change can therefore arrive hours later than on Android.
+  A change found between 00:00 and 06:00 Moscow time is handed to the system
+  at once for 06:00 (a calendar trigger), so it does not wait for the next
+  wake after the quiet hours.
+- A tap opens the app; the notification carries Android's entry action
+  (`ACTION_OPEN_SCHEDULE_CHANGES`) for the route, which the tap handler of
+  IO-13a opens.
+- Until the schedule data reaches the iOS graph (IO-09b) the check finds no
+  data and posts nothing; the marks check joins with IO-09d3.

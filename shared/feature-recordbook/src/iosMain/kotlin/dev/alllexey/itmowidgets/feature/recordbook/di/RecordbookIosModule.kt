@@ -4,8 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.network.darwinHttpEngine
-import dev.alllexey.itmowidgets.core.notification.AppNotification
-import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionCheck
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebHost
@@ -32,8 +30,8 @@ import org.koin.dsl.module
  * keeps the one `BarsClient`, `BarsTokenStore` (`bars_tokens.enc`, a Keychain item through `SecureStore`) and
  * `OwnerBoundBarsStorage` of the process.
  *
- * Until the mark check runs on iOS (IO-09d3, IO-14) nothing is scheduled or notified: a BARS answer still turns
- * "Оценки БАРС" on through `BarsMarksActivation`, which needs both ports.
+ * Until the mark check runs on iOS (IO-09d3) nothing is scheduled: a BARS answer still turns "Оценки БАРС" on through
+ * `BarsMarksActivation`, which needs the scheduler and the graph's notifier (`iosBackgroundModule`, IO-14).
  */
 fun recordbookIosModule(host: BarsWebHost): Module = module {
     single<HttpClientEngine>(barsEngineQualifier) { darwinHttpEngine() }
@@ -48,10 +46,9 @@ fun recordbookIosModule(host: BarsWebHost): Module = module {
     }
     factoryOf(::BarsSessionCheck)
 
-    // IO-09d3 binds the background mark check's scheduler, IO-14 the UNUserNotificationCenter notifier in the core
-    // module; each card removes its line here.
+    // IO-09d3 binds the background mark check's scheduler and removes this line; the notifier is IO-14's
+    // `iosBackgroundModule`.
     single<MarksScheduler> { UnscheduledMarks }
-    single<AppNotifier> { UnpostedNotifications }
 }
 
 /**
@@ -69,12 +66,4 @@ private object UnscheduledMarks : MarksScheduler {
     override fun runOnce() = Unit
 
     override fun cancel() = Unit
-}
-
-private object UnpostedNotifications : AppNotifier {
-    override fun show(notification: AppNotification) = Unit
-
-    override fun cancel(channel: String, id: Int) = Unit
-
-    override fun clear() = Unit
 }
