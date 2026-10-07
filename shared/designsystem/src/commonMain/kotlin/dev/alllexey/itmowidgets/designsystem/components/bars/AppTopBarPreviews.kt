@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
+import dev.alllexey.itmowidgets.shared.designsystem.ic_refresh
 import dev.alllexey.itmowidgets.shared.designsystem.ic_search
 import dev.alllexey.itmowidgets.shared.designsystem.ic_share
 import org.jetbrains.compose.resources.painterResource
@@ -58,5 +59,29 @@ private fun AppTopBarScrolledPreview() = ItmoPreview {
         navigation = { AppTopBarBack("Назад", onClick = {}, title = "Расписание") },
         actions = { AppTopBarTextAction("Готово", onClick = {}) },
         scrolledUnder = true,
+    )
+}
+
+/** The My ITMO page's bar: close, a one-line title over the current host, reload. */
+@Preview
+@Composable
+private fun AppTopBarSubtitlePreview() = ItmoPreview {
+    AppTopBar(
+        title = "My ITMO",
+        subtitle = "my.itmo.ru",
+        navigation = { AppTopBarAction(painterResource(Res.drawable.ic_close), "Закрыть", onClick = {}) },
+        actions = { AppTopBarAction(painterResource(Res.drawable.ic_refresh), "Обновить", onClick = {}) },
+    )
+}
+
+/** A long title and a long subtitle, each kept to one ellipsized line. */
+@Preview
+@Composable
+private fun AppTopBarLongSubtitlePreview() = ItmoPreview {
+    AppTopBar(
+        title = PreviewFixtures.LongSubjectName,
+        subtitle = PreviewFixtures.LongSubjectName,
+        navigation = { AppTopBarBack("Назад", onClick = {}) },
+        actions = { AppTopBarAction(painterResource(Res.drawable.ic_search), "Найти", onClick = {}) },
     )
 }

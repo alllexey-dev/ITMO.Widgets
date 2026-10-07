@@ -62,7 +62,8 @@ enum class MyItmoWebState {
 }
 
 /**
- * The My ITMO page: the top bar (close, reload, «Открыть в браузере» in the overflow), a 4 dp progress line that keeps
+ * The My ITMO page: the top bar (close, the current page's [host] under the title, reload, «Открыть в браузере» in
+ * the overflow), a 4 dp progress line that keeps
  * its height while hidden so the page never jumps, and the platform [browser] below. [browser] is composed in every
  * state, so the host's platform view lives as long as the screen; on [MyItmoWebState.Failed] the error page covers it
  * and the host hides the view itself, since a platform view's touches and accessibility bypass Compose's drawing order
@@ -71,6 +72,7 @@ enum class MyItmoWebState {
 @Composable
 fun MyItmoWebScreen(
     state: MyItmoWebState,
+    host: String?,
     onClose: () -> Unit,
     onReload: () -> Unit,
     onOpenExternal: () -> Unit,
@@ -87,6 +89,7 @@ fun MyItmoWebScreen(
         Column(Modifier.fillMaxSize()) {
             AppTopBar(
                 title = stringResource(CoreRes.string.my_itmo_web_title),
+                subtitle = host,
                 navigation = {
                     AppTopBarAction(
                         painterResource(KitRes.drawable.ic_close),
@@ -122,7 +125,11 @@ fun MyItmoWebScreen(
                             .testTag(MyItmoWebTestTags.STATE_CONTAINER),
                         icon = painterResource(KitRes.drawable.ic_error),
                         description = stringResource(Res.string.my_itmo_web_error_description),
-                        action = ContentStateAction(stringResource(CoreRes.string.common_retry), onRetry),
+                        action = ContentStateAction(
+                            stringResource(CoreRes.string.common_retry),
+                            onRetry,
+                            modifier = Modifier.testTag(MyItmoWebTestTags.STATE_ACTION),
+                        ),
                     )
                 }
             }
@@ -182,6 +189,9 @@ object MyItmoWebTestTags {
 
     /** The error page; its only click target is «Повторить» (`state_action` of the XML screen). */
     const val STATE_CONTAINER = "state_container"
+
+    /** «Повторить» on the error page. */
+    const val STATE_ACTION = "state_action"
 }
 
 /** The XML `LinearProgressIndicator`'s `trackThickness`. */

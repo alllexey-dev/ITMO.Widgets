@@ -1,10 +1,16 @@
 package dev.alllexey.itmowidgets.designsystem.components.bars
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -26,6 +32,7 @@ import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -98,12 +105,51 @@ class AppTopBarTest {
         assertTouchTargets()
     }
 
+    @Test
+    fun theSubtitleIsOneLineUnderAOneLineHeadingInEveryStyle() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
+        setContent {
+            ItmoTheme(platformStyle = style) {
+                AppTopBar(
+                    title = LONG,
+                    subtitle = LONG_HOST,
+                    navigation = { AppTopBarAction(Icon, BACK, onClick = {}) },
+                )
+            }
+        }
+
+        for (value in ItmoPlatformStyle.entries) {
+            style = value
+            waitForIdle()
+            val title = onNodeWithText(LONG).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+            val host = onNodeWithText(LONG_HOST).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Heading))
+            assertEquals(1, title.lineCount(), "$value title lines")
+            assertEquals(1, host.lineCount(), "$value subtitle lines")
+            assertTrue(host.getBoundsInRoot().top >= title.getBoundsInRoot().bottom, "$value subtitle under the title")
+        }
+    }
+
+    @Test
+    fun withoutASubtitleTheMaterialTitleStillTakesTwoLines() = runComposeUiTest {
+        setContent { ItmoTheme { AppTopBar(title = LONG, navigation = { AppTopBarAction(Icon, BACK, onClick = {}) }) } }
+
+        assertEquals(2, onNodeWithText(LONG).lineCount())
+    }
+
+    private fun SemanticsNodeInteraction.lineCount(): Int {
+        val layouts = mutableListOf<TextLayoutResult>()
+        fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        return layouts.single().lineCount
+    }
+
     private companion object {
         const val TITLE = "Друзья"
         const val BACK = "Назад"
         const val SEARCH = "Найти людей"
         const val DONE = "Готово"
         const val PREVIOUS = "Расписание"
+        const val LONG = "Математический анализ и дифференциальные уравнения в частных производных"
+        const val LONG_HOST = "очень-длинное-имя-узла.подразделение.университет-итмо.example.ru"
         const val BAR = "bar"
         val Icon = ColorPainter(Color.Black)
         val Tolerance = 1.dp

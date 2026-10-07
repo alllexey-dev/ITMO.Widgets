@@ -50,7 +50,8 @@ open class MyItmoWebFragment : Fragment() {
     private var browserState: Bundle? = null
     private var browserBack: OnBackPressedCallback? = null
     private var failed = false
-    private var lastTrustedUrl = MyItmoWebPolicy.HOME_URL
+    /** The last official page the browser started; its host is the bar's subtitle, as in 2.2. */
+    private var lastTrustedUrl by mutableStateOf(MyItmoWebPolicy.HOME_URL)
     private var screenState by mutableStateOf(MyItmoWebState.Loading)
     private val snackbars = SnackbarHostState()
 
@@ -62,6 +63,7 @@ open class MyItmoWebFragment : Fragment() {
         itmoComposeView {
             MyItmoWebScreen(
                 state = screenState,
+                host = lastTrustedUrl.toUri().host,
                 onClose = { browserBack?.isEnabled = false; closeScreen() },
                 onReload = ::loadPage,
                 onOpenExternal = { openExternal(MyItmoWebPolicy.HOME_URL) },

@@ -39,12 +39,13 @@ enum class ContentStateSize {
 /** How a [ContentState]'s action looks: tonal for retry and ordinary actions, filled for a primary way out. */
 enum class ContentStateActionStyle { Tonal, Filled }
 
-/** The one action of a [ContentState]. */
+/** The one action of a [ContentState]; [modifier] goes on its button, for example a test tag. */
 @Immutable
 data class ContentStateAction(
     val label: String,
     val onClick: () -> Unit,
     val style: ContentStateActionStyle = ContentStateActionStyle.Tonal,
+    val modifier: Modifier = Modifier,
 )
 
 /**
@@ -115,12 +116,14 @@ private fun ContentStateButton(action: ContentStateAction) {
             ContentStateActionStyle.Tonal -> ProgressButtonStyle.Tonal
             ContentStateActionStyle.Filled -> ProgressButtonStyle.Filled
         }
-        ProgressButton(action.label, action.onClick, style = style)
+        ProgressButton(action.label, action.onClick, action.modifier, style = style)
         return
     }
     when (action.style) {
-        ContentStateActionStyle.Tonal -> FilledTonalButton(onClick = action.onClick) { Text(action.label) }
-        ContentStateActionStyle.Filled -> Button(onClick = action.onClick) { Text(action.label) }
+        ContentStateActionStyle.Tonal ->
+            FilledTonalButton(onClick = action.onClick, modifier = action.modifier) { Text(action.label) }
+        ContentStateActionStyle.Filled ->
+            Button(onClick = action.onClick, modifier = action.modifier) { Text(action.label) }
     }
 }
 
