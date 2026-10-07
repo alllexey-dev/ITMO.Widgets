@@ -34,8 +34,6 @@ object KoinModules {
     /** Types Hilt constructs and Koin only forwards; the graph check takes them as given. */
     val bridges: List<Module> = listOf(
         coreBridgeModule,
-        resourcesBridgeModule,
-        reviewsBridgeModule,
         homeBridgeModule,
         settingsBridgeModule,
         recordbookBridgeModule,

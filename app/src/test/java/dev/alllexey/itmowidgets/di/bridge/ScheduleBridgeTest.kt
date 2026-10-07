@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
+import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
@@ -99,7 +100,7 @@ class ScheduleBridgeTest {
     fun `the schedule modules pass the graph check against the release bridges`() {
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
-            listOf(authDataModule, settingsDataModule, scheduleModule, scheduleDataModule)
+            listOf(authDataModule, settingsDataModule, reviewsModule, scheduleModule, scheduleDataModule),
         )
     }
 

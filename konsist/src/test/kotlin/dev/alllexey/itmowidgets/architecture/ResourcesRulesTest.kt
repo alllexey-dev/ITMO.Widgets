@@ -25,7 +25,10 @@ class ResourcesRulesTest {
         const val FEATURE_PREFIX = "dev.alllexey.itmowidgets.feature."
         const val RESOURCES_PACKAGE = "dev.alllexey.itmowidgets.feature.resources"
 
-        /** The domain, presentation and Koin files LX-2b moved; drops only with the integrator's OK. */
-        const val MIN_COMMON_FILES = 7
+        /**
+         * The domain, presentation and Koin files LX-2b moved and the data KM-11f moved;
+         * drops only with the integrator's OK.
+         */
+        const val MIN_COMMON_FILES = 13
     }
 }

@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
+import dev.alllexey.itmowidgets.feature.resources.data.SubjectLinksRepositoryImpl
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -37,8 +38,9 @@ class ResourcesDebugFixturesTest {
         assertSame(fake, koin.get<SubjectLinksRepository>())
 
         ResourcesDebugFixtures.unload(application, fixture)
+        // The module's own single again, not a second repository beside the one the session cleaner holds.
         assertSame(release, koin.get<SubjectLinksRepository>())
-        assertSame(ResourcesBridgeEntryPoint.from(application).subjectLinksRepository(), koin.get<SubjectLinksRepository>())
+        assertSame(koin.get<SubjectLinksRepositoryImpl>(), koin.get<SubjectLinksRepository>())
     }
 
     @Test

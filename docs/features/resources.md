@@ -168,14 +168,18 @@ next time, and an edit made while the upload was in flight is sent next time.
 ## Storage and synchronization
 
 `core/resources/SubjectLinksRepository` is the port;
-`feature/resources/data/SubjectLinksRepositoryImpl` implements it with Core
+`feature/resources/data/SubjectLinksRepositoryImpl` (in `:shared:feature-resources` `commonMain`, package
+`dev.alllexey.itmowidgets.feature.resources.data`) implements it with Core
 2.0's `SubjectLinksApi` (`BackendClient.links`: `subjectLinks`, `saveSubjectLink`,
 `deleteSubjectLink`, `pinSubjectLink`, `voteSubjectLink`, `reportSubjectLink`,
 `myRestrictions`), the connection gate and an injected wall clock. `DemoMode` is
 checked first and every call passes `BackendGate.mayCallBackend()`.
 `SubjectLinkMappers.kt` is the one place that reads Core's types: a category a
 newer Backend adds shows as `OTHER`, a status it adds shows no badge, and authors
-map through `UserData.toUserSummary()` (`core/model/ClientUserMapping.kt`). With the connection the server is the source of truth: every action
+map through `UserData.toUserSummary()` (`core/model/ClientUserMapping.kt`). Koin's `resourcesModule` builds the
+one repository that the sheets, the recordbook and sign-out (the `links` cleaner, through
+`di/bridge/SessionCleanersBridge.kt`) share; Core's `SubjectLinksApi`, `AppDirectories`, the clock, `DemoMode` and
+the dispatchers come from `di/bridge/CoreBridge.kt`. With the connection the server is the source of truth: every action
 goes to it at once and its answer updates the cached snapshot. There is no
 background synchronization.
 
@@ -194,7 +198,7 @@ replaced with an empty one. Cloud backup and device transfer exclude the
 directory. A failed refresh keeps the cached snapshot; a scope that never
 loaded shows its local links if it has any, otherwise an error.
 
-Backend errors map to `AppError` through `BackendException.asAppError()`: 401 ->
+Backend errors map to `AppError` through `BackendException.asAppError()` (`ResourcesErrors.kt`): 401 ->
 `Unauthorized`, 403 `restricted` -> `Restricted` (and the restrictions are
 refreshed; the caller still sees `Restricted`), any other 403 -> `Forbidden`, 404 ->
 `NotFound`, no answer -> `Network`, anything else, including 409, -> `Unknown`.
@@ -220,7 +224,7 @@ Strict verification of flow membership is deferred, see
 ## Verification
 
 ```bash
-./gradlew :app:testGithubDebugUnitTest
+./gradlew :shared:feature-resources:testAndroidHostTest :app:testGithubDebugUnitTest
 ./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.resources.SubjectLinksVisualTest
 ```
 
@@ -229,7 +233,8 @@ the headings and group positions of the sheet (`SubjectLinkRowsTest`), period ke
 (`ResourceScopeTest`), category guessing (`LinkCategoryGuessTest`), the
 repository without and with the connection, the upload of local links, cached
 snapshots on errors, session cleanup and a corrupted file
-(`SubjectLinksRepositoryImplTest`), and the sheet and editor view models, including the ranking within a category
+(`SubjectLinksRepositoryImplTest` and `SubjectLinksFileStoreTest` in the module's `commonTest`, the 2.2 files in
+`SubjectLinks22GoldenTest`, sign-out on the real graph in `ResourcesReviewsSessionTest`), and the sheet and editor view models, including the ranking within a category
 votes that keep the actions sheet open and rows that keep their place after a vote (`SubjectLinksViewModelTest`, `StableOrderTest`,
 `LinkEditorViewModelTest`).
 `SubjectLinksVisualTest` runs the real sheets in `SubjectLinksPreviewActivity`

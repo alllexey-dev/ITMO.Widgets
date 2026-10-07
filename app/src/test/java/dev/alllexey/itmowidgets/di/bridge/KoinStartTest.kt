@@ -8,6 +8,8 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
+import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
@@ -102,6 +104,8 @@ class KoinStartTest {
         assertSame(hilt.markSourcePreferences(), koin.get<MarkSourcePreferences>())
         assertSame(hilt.usersApi(), koin.get<UsersApi>())
         assertSame(hilt.friendsApi(), koin.get<FriendsApi>())
+        assertSame(hilt.subjectLinksApi(), koin.get<SubjectLinksApi>())
+        assertSame(hilt.teacherReviewsApi(), koin.get<TeacherReviewsApi>())
         assertSame(hilt.backendIdentitySync(), koin.get<BackendIdentitySync>())
         assertSame(hilt.backendDeviceSession(), koin.get<BackendDeviceSession>())
         assertSame(hilt.fcmTokenSync(), koin.get<FcmTokenSync>())

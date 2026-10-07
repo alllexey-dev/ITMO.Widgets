@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
+import dev.alllexey.itmowidgets.feature.reviews.data.TeacherReviewsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
@@ -23,8 +24,8 @@ import org.koin.dsl.module
  * The social screens' and the friend picker's fixture in Koin: a debug host replaces the repositories its screens
  * read with its own while it lives, so `UserProfileFragment`, `UserFriendsFragment` and `FriendSelectorDialogFragment`
  * obtain their ViewModels exactly as in release. A host passes only the fakes it has; the other types stay the
- * release ones (`socialModule` and `friendSelectorModule` construct the data, `ReviewsBridge` and `CoreBridge`
- * forward the rest). While a fake is loaded, Hilt readers of `SocialBridge` get it too.
+ * release ones (`socialModule`, `friendSelectorModule` and `reviewsModule` construct the data, `CoreBridge` forwards
+ * the rest). While a fake is loaded, Hilt readers of `SocialBridge` get it too.
  *
  * Koin is process-wide: a host calls [load] in `onCreate` before `super.onCreate()` and [unload] in `onDestroy`, or
  * later tests in the same process would get the fake. Main thread only, like the host callbacks.
@@ -69,10 +70,10 @@ object SocialDebugFixtures {
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
      * overrode. Each overridden social or picker port points back at the single its module already holds:
      * reloading `socialModule` or `friendSelectorModule` would build a second repository beside the one the home
-     * card, the cleaners and Hilt's readers share. The reviews bridge loads again (its lazy singles forward Hilt's
-     * instances on first use); the current user, a light object, is declared directly instead of reloading
-     * `coreBridgeModule`, which also defines the wall clock that the QR and home fixtures of the same host may still
-     * override. A fixture that a newer host already replaced is left to that host.
+     * card, the cleaners and Hilt's readers share, and so does the reviews contract (`reviewsModule`). The current
+     * user, a light object, is declared directly instead of reloading `coreBridgeModule`, which also defines the wall
+     * clock that the QR and home fixtures of the same host may still override. A fixture that a newer host already
+     * replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
@@ -88,7 +89,9 @@ object SocialDebugFixtures {
         fakes.search?.let {
             koin.declare<PeopleSearchRepository>(koin.get<PeopleSearchRepositoryImpl>(), allowOverride = true)
         }
-        koin.loadModules(listOf(reviewsBridgeModule), allowOverride = true)
+        fakes.reviews?.let {
+            koin.declare<TeacherReviewsRepository>(koin.get<TeacherReviewsRepositoryImpl>(), allowOverride = true)
+        }
         koin.declare<CurrentUserProvider>(CoreBridgeEntryPoint.from(context).currentUserProvider(), allowOverride = true)
         current = null
         currentFakes = null
