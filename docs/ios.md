@@ -414,10 +414,10 @@ service's work with IO-12a.
   runs `PushForegroundRefresh` (`PushRefresh.run()`): it reads the notification settings (authorized, provisional
   or ephemeral count as allowed), which session-v1.json's `alertsAllowed` follows, then syncs, which registers
   again only when the token, the owner or the alerts answer changed. A failure is logged, never thrown into Swift.
-- Taps. `ITMOWidgetsAppDelegate` (`@UIApplicationDelegateAdaptor`; its push part in `PushAppDelegate.swift`) makes
-  `NotificationTaps` the notification center's delegate before launch ends. A tap reads the `data` envelope from `userInfo` (`NotificationTapRoutes`) and hands
-  the route to `AppRouter.open(entry:)`; a tap that launched the app waits until the shell attaches the router. A
-  notification that arrives in the foreground shows as a banner.
+- Taps. `ITMOWidgetsAppDelegate` (`@UIApplicationDelegateAdaptor`) runs `PushLaunch`, which makes `NotificationTaps`
+  the notification center's delegate before launch ends. A tap reads the `data` envelope from `userInfo`
+  (`NotificationTapRoutes`) and hands the route to `AppRouter.open(entry:)`; a tap that launched the app waits until
+  the shell attaches the router. A notification that arrives in the foreground shows as a banner.
 
 | Payload type | Opens |
 |---|---|
