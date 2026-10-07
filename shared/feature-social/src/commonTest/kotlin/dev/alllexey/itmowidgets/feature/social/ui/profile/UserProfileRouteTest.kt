@@ -30,6 +30,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import dev.alllexey.itmowidgets.feature.social.ui.reviews.TeacherReviewTestTags
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
+import dev.alllexey.itmowidgets.testkit.awaitText
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import dev.alllexey.itmowidgets.feature.social.ui.profile.preview.UserProfilePreviewData as P
@@ -46,7 +47,7 @@ class UserProfileRouteTest {
         setRoute(viewModel)
 
         waitUntil { content(viewModel) != null }
-        onNodeWithText("Часть данных не загрузилась").assertExists()
+        awaitText("Часть данных не загрузилась").assertExists()
         assertEquals(null, content(viewModel)?.reviews)
 
         reviews.results = mapOf(P.ISU to AppResult.Success(P.teacherReviews))
@@ -111,7 +112,7 @@ class UserProfileRouteTest {
 
         onNodeWithTag(UserProfileTestTags.PRIMARY).performClick()
         waitUntil { social.actions.isNotEmpty() }
-        onNodeWithText("Не получилось: Действие ограничено модерацией").assertExists()
+        awaitText("Не получилось: Действие ограничено модерацией").assertExists()
     }
 
     @Test
