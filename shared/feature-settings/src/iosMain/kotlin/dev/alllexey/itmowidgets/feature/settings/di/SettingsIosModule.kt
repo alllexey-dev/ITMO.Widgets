@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.settings.di
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.platform.AppBundleVersion
-import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
@@ -10,7 +9,6 @@ import dev.alllexey.itmowidgets.feature.settings.data.IosBackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.data.IosWidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.data.StoredScheduleChangeTracking
 import dev.alllexey.itmowidgets.feature.settings.data.UnavailableCalendarSync
-import dev.alllexey.itmowidgets.feature.settings.data.UnavailableMarkTracking
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
@@ -26,8 +24,9 @@ import org.koin.dsl.module
  * `onboardingDataModule`.
  *
  * Until their IO cards bind the real ones (`IosPendingChecks.kt`): the schedule change switch without its check
- * (IO-09b, IO-14), and mark tracking and the calendar sync, whose rows `PlatformCapabilities` hides (IO-09d3,
- * IO-15b). Each of those cards deletes its line here.
+ * (IO-09b, IO-14), and the calendar sync, whose rows `PlatformCapabilities` hides (IO-15b). Each of those cards
+ * deletes its line here. Mark tracking is `recordbookModule`'s (IO-09d1), with no scheduler until IO-09d3; its page
+ * stays hidden until then.
  */
 val settingsIosModule = module {
     single<WidgetRefreshRequester> { IosWidgetRefreshRequester(get()) }
@@ -37,7 +36,6 @@ val settingsIosModule = module {
     single { AppVersion(AppBundleVersion.fromMainBundle()) }
 
     single<ScheduleChangeTracking> { StoredScheduleChangeTracking(get()) }
-    single<MarkTracking> { UnavailableMarkTracking }
     single<CalendarSync> { UnavailableCalendarSync }
 }
 

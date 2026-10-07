@@ -201,8 +201,9 @@ Settings are SwiftUI screens over the shared page model (IO-08a): `Routes+Settin
   Background App Refresh to the ViewModel. The notification row asks for the permission while iOS has never asked,
   then opens the app's notification settings.
 - Not yet real on iOS (`shared/feature-settings/src/iosMain/.../data/IosPendingChecks.kt`): the schedule change
-  switch is stored where the check reads it, but the check runs from IO-14; mark tracking and the calendar sync are
-  stand-ins behind their hidden rows until IO-09d3 and IO-15b. "Пройти знакомство заново" resets the shared flag,
+  switch is stored where the check reads it, but the check runs from IO-14; the calendar sync is a stand-in behind
+  its hidden rows until IO-15b. Mark tracking is the recordbook graph's (IO-09d1), which schedules nothing until
+  IO-09d3, behind its hidden page. "Пройти знакомство заново" resets the shared flag,
   which the shell's gate reads (IO-07b). Widget pages draw no preview above their rows.
 - Diagnostics. The journal lists `AppDiagnostics`' records, newest first, with a stack trace folded under its
   record; the share sheet takes the plain-text journal (and copies it), clearing asks first.
