@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -27,6 +28,7 @@ import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksSheetTestTags
+import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
 import java.time.LocalDate
 import java.time.ZoneId
@@ -132,9 +134,7 @@ class DemoModeFlowTest {
 
             open(scenario) { it.openRoot(AppRoot.SCHEDULE) }
             shot(activity, "schedule")
-            scenario.onActivity { main ->
-                main.window.decorView.descendants().first { it.id == R.id.card_container && it.isShown }.performClick()
-            }
+            scenario.onActivity(::openFirstLesson)
             settle()
             Screenshots.capture(DIRECTORY, "lesson") { settle() }
             pressBack()
@@ -202,6 +202,17 @@ class DemoModeFlowTest {
             }
         }
         Screenshots.capture(DIRECTORY, name) { settle() }
+    }
+
+    /** The schedule is Compose (LS-6b): the first placed lesson row opens its sheet by its semantics click. */
+    private fun openFirstLesson(activity: MainActivity) {
+        val row = activity.window.decorView.descendants().filter { it.isShown }.filterIsInstance<ViewRootForTest>()
+            .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }
+            .first { node ->
+                node.layoutInfo.isPlaced &&
+                    node.config.getOrNull(SemanticsProperties.TestTag)?.startsWith(ScheduleListTestTags.LESSON_PREFIX) == true
+            }
+        checkNotNull(row.config[SemanticsActions.OnClick].action) { "the lesson row has no click" }.invoke()
     }
 
     /** The links sheet's Compose list, in the sheet's own dialog window, shows a row titled [title] on screen. */

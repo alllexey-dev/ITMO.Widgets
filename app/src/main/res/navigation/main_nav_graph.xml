@@ -23,8 +23,7 @@
     <fragment
         android:id="@+id/navigation_schedule"
         android:name="dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleFragment"
-        android:label="Schedule"
-        tools:layout="@layout/fragment_schedule" />
+        android:label="Schedule" />
 
     <dialog
         android:id="@+id/friend_selector"

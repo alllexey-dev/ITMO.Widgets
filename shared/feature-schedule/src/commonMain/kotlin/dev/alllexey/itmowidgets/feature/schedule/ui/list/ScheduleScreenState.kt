@@ -22,6 +22,11 @@ data class ScheduleScreenState(
     val canPickFriend: Boolean,
     /** The pull indicator over the list. */
     val refreshing: Boolean,
+    /**
+     * The host is still placing the list on the day a reader was on before a switch of schedules (paging toward it):
+     * the days are laid out, so the host can scroll them, but not drawn, so the list never shows rewound.
+     */
+    val positioning: Boolean = false,
 )
 
 sealed interface ScheduleScreenBody {

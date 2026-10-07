@@ -68,3 +68,25 @@ internal class ScheduleScreenErrorPreview {
     @Composable
     fun ScheduleScreen() = SchedulePreview(ScheduleScreenBody.Failed(AppError.Network))
 }
+
+@Composable
+private fun UserSchedulePreview() = ItmoPreview {
+    UserScheduleScreen(name = ScheduleListPreviewData.friend.name, onBack = {}) {
+        ScheduleScreen(
+            state = ScheduleScreenState(
+                body = ScheduleScreenBody.Days(ScheduleListPreviewData.days(ScheduleListPreviewData.friendDays)),
+                selectedUser = null,
+                canPickFriend = false,
+                refreshing = false,
+            ),
+            actions = ScheduleScreenActions(),
+        )
+    }
+}
+
+/** A friend's schedule as its own screen (from the profile): the titled bar, then the list without the friends button. */
+internal class UserScheduleScreenContentPreview {
+    @Preview(name = "content")
+    @Composable
+    fun UserScheduleScreen() = UserSchedulePreview()
+}

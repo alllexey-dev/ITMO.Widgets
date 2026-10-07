@@ -370,7 +370,7 @@ both platforms.
 | `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link | `MaterialAlertDialogBuilder` dialogs | Compose-drawn iOS alerts with capsule buttons; no hero icon |
 | `ScoreRing` | The sport score ring | `core/ui/CircularProgressBar.kt` | Same |
 | `GradeScale` | A 0-100 bar with grade ticks | `feature/recordbook/ui/GradeScaleView.kt` | Same |
-| `TimelineMarker`, `TimelineLine` | The schedule timeline | `feature/schedule/ui/ScheduleTimelineMarker.kt` | Same |
+| `TimelineMarker`, `TimelineLine` | The schedule timeline | `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule` | Same |
 | `StepsIndicator` | Progress dots of a flow | `OnboardingStepsView`, the first-run flow's dot strip | A `UIPageControl` row of equal dots, the current one in the tint |
 
 Experimental and expressive Material components reach screens only through
@@ -638,7 +638,7 @@ settings, and restore them if a separate test explicitly changes them.
 
 ## Reference implementations
 
-- Schedule day: `res/layout/item_day_schedule.xml`, `feature/schedule/ui/DayScheduleAdapter.kt`.
+- Schedule day: `feature/schedule/ui/list/ScheduleDayCard.kt` and `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule`.
 - Sport cards: `res/layout/item_sport_booking.xml`, the `Запись` lesson card `SportLessonCard` in
   `:shared:feature-sport`, details sheet `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt`.
 - Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsScreen.kt` in `:shared:feature-settings`.
@@ -753,7 +753,7 @@ settings, and restore them if a separate test explicitly changes them.
   above their rows; an empty history is the kit's `ContentState` with
   `ic_history`. On lesson cards the
   mark `change_indicator` (`ic_edit_calendar`, 16 dp, `colorPrimary`) after the
-  video-call icon in `res/layout/item_schedule_lesson.xml`; in the lesson sheet
+  video-call mark in `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule`; in the lesson sheet
   the `Изменения` block (divider, heading, `было → стало` lines) in
   `feature/schedule/ui/details/LessonDetailsSections.kt` of `:shared:feature-schedule` and
   the informational flow row between teacher and place of the kit's `DetailsHeader`.

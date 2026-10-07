@@ -40,7 +40,6 @@ class DesignComponentsVisualTest {
             scenario.onActivity { activity ->
                 // One layout per line, so each port deletes only its own.
                 for (layout in listOf(
-                    R.layout.fragment_schedule,
                     R.layout.fragment_recordbook_subject,
                 )) {
                     val root = activity.layoutInflater.inflate(layout, FrameLayout(activity), false)
@@ -84,8 +83,6 @@ class DesignComponentsVisualTest {
         Appearances.default.forEachIndexed { index, spec -> preview(spec) { scenario ->
             val cases = listOf(
                 StateLayout("subject", R.layout.fragment_recordbook_subject),
-                StateLayout("schedule", R.layout.fragment_schedule, R.id.schedule_state_container,
-                    R.id.schedule_state_title, R.id.schedule_state_description, R.id.schedule_state_action),
                 StateLayout("sport-inline", R.layout.item_content_state, inline = true)
             )
             for (case in cases) for (error in listOf(false, true)) {
@@ -96,14 +93,12 @@ class DesignComponentsVisualTest {
                     state.visibility = View.VISIBLE
                     state.findViewById<TextView>(case.title).setText(
                         if (error) R.string.common_load_error_title else when (case.name) {
-                            "schedule" -> R.string.schedule_empty_title
                             "sport-inline" -> R.string.sport_lessons_empty_title
                             else -> R.string.recordbook_empty_title
                         }
                     )
                     state.findViewById<TextView>(case.description).setText(
                         if (error) R.string.common_error_network else when (case.name) {
-                            "schedule" -> R.string.schedule_empty_description
                             "sport-inline" -> R.string.sport_lessons_empty_description
                             else -> R.string.recordbook_empty_description
                         }
