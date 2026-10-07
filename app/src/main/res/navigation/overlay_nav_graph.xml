@@ -54,8 +54,7 @@
     <fragment
         android:id="@+id/user_search"
         android:name="dev.alllexey.itmowidgets.feature.social.ui.UserSearchFragment"
-        android:label="Find people"
-        tools:layout="@layout/fragment_user_search" />
+        android:label="Find people" />
 
     <fragment
         android:id="@+id/user_profile"

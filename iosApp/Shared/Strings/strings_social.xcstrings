@@ -1729,6 +1729,18 @@
         }
       }
     },
+    "user_search_clear" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить текст"
+          }
+        }
+      }
+    },
     "user_search_empty_title" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",

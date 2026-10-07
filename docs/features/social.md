@@ -105,6 +105,15 @@ which opens a share sheet with the release link). `Показать ещё` load
 page. Actions update the row from the returned profile without a new search.
 The whole row opens the person's profile in both sections, including
 `Остальные`; the separate invitation action remains a share action.
+The field under the title (`Имя или фамилия`) takes focus when the screen
+opens and offers a clear button while it holds text; clearing resets to the
+idle hint at once, without the debounce. Nothing typed shows `Кого ищем?`,
+nobody found `Никого не нашли`, a failed first page a retry; the first page
+loads behind list placeholders, the next one under a bar at the bottom. A row
+in flight keeps its buttons inert; a failed action shows
+`Не получилось: <reason>` in a snackbar. The screen is `UserSearchRoute` from
+`:shared:feature-social`, hosted by `UserSearchFragment` on Android, which
+shares the invitation text with the download link of its distribution.
 
 ## Person profile (overlay `USER_PROFILE`, argument `UserScreenArgs.ISU`)
 
@@ -264,8 +273,7 @@ optional status line, up to two action buttons or a chevron, section headers and
 a load-more row. Presentation builds `UserRowUi` values with `UiText` labels.
 In Compose, `ui/list/UserList` in `:shared:feature-social` renders them with the
 kit's `UserRow` and maps `UserAction` to its label (`UserAction.label()`);
-the friends screen and another user's friends use it. People search still uses
-`item_user_row.xml` with `UserListAdapter` until its port.
+the friends screen, people search and another user's friends use it.
 
 ## Verification
 
@@ -284,7 +292,12 @@ load-more and 48 dp targets. The friends screen is `FriendsScreen`:
 `FriendsScreen_<state>` records content, requests, the badge, a busy row,
 refreshing, loading, both empty tabs, disabled and error, and
 `FriendsScreenTest` covers the tabs and the badge, row actions, the remove
-confirmation, the kept list and every state's way on.
+confirmation, the kept list and every state's way on. People search is
+`UserSearchScreen`: `UserSearchScreen_<state>` records idle, results with both
+sections and load-more, a busy row, the next page loading, loading, empty and
+error, and `UserSearchScreenTest` covers the field and its clear button, row
+actions, load-more, every state and, through `UserSearchRoute` with the real
+ViewModel, invite, load-more and the reset.
 See [visual test commands](../design.md#running-the-visual-tests).
 
 ## Not implemented yet
