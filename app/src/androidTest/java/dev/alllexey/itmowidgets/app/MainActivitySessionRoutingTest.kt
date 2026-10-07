@@ -6,34 +6,39 @@ import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
-import androidx.navigation.fragment.NavHostFragment
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.RootMatchers.withDecorView
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.app.shell.ShellModeRule
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
+import dev.alllexey.itmowidgets.core.navigation.AppTab
+import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
+import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.hamcrest.Matchers.`is`
-import org.hamcrest.Matchers.not
 
+/**
+ * Session and first-run routing of the real `MainActivity`. Navigation is read through `ShellProbe`, so each body runs
+ * in every shell [ShellModeRule] knows; the bar is still tapped by its legacy menu ids.
+ */
 @RunWith(AndroidJUnit4::class)
 class MainActivitySessionRoutingTest {
+
+    @get:Rule
+    val shells = ShellModeRule()
 
     @After
     fun clearSessionAndFirstRunFlag() {
@@ -46,19 +51,9 @@ class MainActivitySessionRoutingTest {
         TestSession.seedActiveSession()
         TestSession.completeOnboarding()
 
-        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            lateinit var decorView: View
-            scenario.onActivity { activity -> decorView = activity.window.decorView }
-
-            eventually {
-                onView(withId(R.id.bottom_nav_view))
-                    .inRoot(withDecorView(`is`(decorView)))
-                    .check(matches(isDisplayed()))
-            }
-
-            onView(withText(R.string.auth_title))
-                .inRoot(withDecorView(`is`(decorView)))
-                .check(doesNotExist())
+        ActivityScenario.launch(MainActivity::class.java).use {
+            eventually { assertEquals(TABS, ShellProbe.current().surface) }
+            assertEquals(AppTab.HOME, ShellProbe.current().tab)
         }
     }
 
@@ -91,15 +86,10 @@ class MainActivitySessionRoutingTest {
         TestSession.resetOnboarding()
 
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            lateinit var decorView: View
-            scenario.onActivity { activity -> decorView = activity.window.decorView }
-
             eventually { scenario.onActivity(::assertOnboardingShown) }
 
-            // The flow owns the window until it is passed.
-            onView(withId(R.id.bottom_nav_view))
-                .inRoot(withDecorView(`is`(decorView)))
-                .check(matches(not(isDisplayed())))
+            // The flow owns the window until it is passed: no tab, no bar.
+            assertFlowOwnsTheWindow()
         }
     }
 
@@ -109,21 +99,13 @@ class MainActivitySessionRoutingTest {
         TestSession.completeOnboarding()
 
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            lateinit var decorView: View
-            scenario.onActivity { activity -> decorView = activity.window.decorView }
-            eventually {
-                onView(withId(R.id.bottom_nav_view))
-                    .inRoot(withDecorView(`is`(decorView)))
-                    .check(matches(isDisplayed()))
-            }
+            eventually { assertEquals(TABS, ShellProbe.current().surface) }
 
             // What `Повторить первоначальную настройку` does: only the flag changes.
             TestSession.resetOnboarding()
 
             eventually { scenario.onActivity(::assertOnboardingShown) }
-            onView(withId(R.id.bottom_nav_view))
-                .inRoot(withDecorView(`is`(decorView)))
-                .check(matches(not(isDisplayed())))
+            assertFlowOwnsTheWindow()
         }
     }
 
@@ -133,30 +115,38 @@ class MainActivitySessionRoutingTest {
         TestSession.resetOnboarding()
 
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            eventually { scenario.onActivity { assertEquals(R.id.onboarding, root(it).navController.currentDestination?.id) } }
+            eventually { assertEquals(ShellSurface.Onboarding, ShellProbe.current().surface) }
             TestSession.completeOnboarding()
-            eventually { scenario.onActivity { assertEquals(R.id.navigation_home, root(it).navController.currentDestination?.id) } }
+            eventually { assertTabRoot(AppTab.HOME) }
 
-            for (destination in listOf(R.id.navigation_schedule, R.id.navigation_sport, R.id.navigation_home)) {
-                onView(withId(destination)).perform(click())
-                eventually {
-                    scenario.onActivity {
-                        assertEquals(destination, root(it).navController.currentDestination?.id)
-                        val previous = root(it).navController.previousBackStackEntry?.destination?.id
-                        assertTrue("The stack grew: $previous", previous == null || previous == R.id.navigation_home)
-                    }
-                }
+            for (tab in listOf(AppTab.SCHEDULE, AppTab.SPORT, AppTab.HOME, AppTab.SCHEDULE)) {
+                selectTab(tab)
+                eventually { assertTabRoot(tab) }
             }
-            onView(withId(R.id.navigation_schedule)).perform(click())
-            eventually { scenario.onActivity { assertEquals(R.id.navigation_schedule, root(it).navController.currentDestination?.id) } }
             scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-            eventually {
-                scenario.onActivity {
-                    assertEquals(R.id.navigation_home, root(it).navController.currentDestination?.id)
-                    assertNull(root(it).navController.previousBackStackEntry)
-                }
-            }
+            eventually { assertTabRoot(AppTab.HOME) }
         }
+    }
+
+    /** The tabs show [tab]'s root with nothing above it. */
+    private fun assertTabRoot(tab: AppTab) {
+        val shown = ShellProbe.current()
+        assertEquals(TABS, shown.surface)
+        assertEquals(tab, shown.tab)
+        assertEquals(emptyList<AppRoute>(), shown.overlays)
+        assertNull(shown.floating)
+    }
+
+    private fun assertFlowOwnsTheWindow() {
+        val shown = ShellProbe.current()
+        assertEquals(ShellSurface.Onboarding, shown.surface)
+        assertNull(shown.tab)
+    }
+
+    /** A tap on [tab] in the bar, repeated until the tab shows: right after the first-run flow a tap can get lost. */
+    private fun selectTab(tab: AppTab) = eventually {
+        if (ShellProbe.current().tab != tab) onView(withId(TAB_ITEMS.getValue(tab))).perform(click())
+        assertEquals(tab, ShellProbe.current().tab)
     }
 
     /** The Compose flow tagged `onboarding_root` is on screen, read through semantics (no compose test rule here). */
@@ -180,14 +170,21 @@ class MainActivitySessionRoutingTest {
     private fun SemanticsNode.subtree(): Sequence<SemanticsNode> =
         sequenceOf(this) + children.asSequence().flatMap { it.subtree() }
 
-    private fun root(activity: MainActivity) =
-        activity.supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-
     private fun eventually(assertion: () -> Unit) =
         TestUi.eventually(attempts = RETRY_COUNT, delayMillis = RETRY_DELAY_MILLIS, assertion = assertion)
 
     private companion object {
         const val RETRY_COUNT = 20
         const val RETRY_DELAY_MILLIS = 100L
+        val TABS = ShellSurface.Tabs(demoBanner = false)
+
+        /** The legacy bar's menu items. */
+        val TAB_ITEMS = mapOf(
+            AppTab.RECORDBOOK to R.id.navigation_recordbook,
+            AppTab.SCHEDULE to R.id.navigation_schedule,
+            AppTab.HOME to R.id.navigation_home,
+            AppTab.SPORT to R.id.navigation_sport,
+            AppTab.ME to R.id.navigation_me,
+        )
     }
 }

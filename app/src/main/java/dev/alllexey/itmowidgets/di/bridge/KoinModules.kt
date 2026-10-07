@@ -44,6 +44,7 @@ object KoinModules {
         shellBridgeModule,
         accountUpdateBridgeModule,
         qrBridgeModule,
+        debugToolsBridgeModule,
     )
 
     /** Definitions Koin constructs; the graph check verifies their constructors. */
@@ -69,6 +70,7 @@ object KoinModules {
         webLoginModule,
         updateModule,
         componentBindingsModule,
+        debugToolsModule,
     )
 
     val all: List<Module> get() = bridges + constructed

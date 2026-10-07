@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.debug.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
@@ -15,7 +14,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,8 +23,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
-@HiltViewModel
-class DebugToolsViewModel @Inject constructor(
+/** Koin's (`di/bridge/DebugToolsBridge`), so the Fragment and the shell's entry obtain it alike. */
+class DebugToolsViewModel(
     private val timeProvider: AcademicTimeProvider,
     private val timeOverrideController: AcademicTimeOverrideController,
     private val sportScoreOverrideController: SportScoreOverrideController,
