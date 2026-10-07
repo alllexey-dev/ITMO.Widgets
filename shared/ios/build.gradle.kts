@@ -52,6 +52,10 @@ kotlin {
             // The Swift bridge: the ViewModelStore each SwiftUI screen owns (bridge/ScreenViewModelStore.kt).
             implementation(libs.jetbrains.lifecycle.viewmodel)
         }
+        // The background runner's tests (IO-14): kotlin-test, coroutines-test and FakeClock.
+        iosTest.dependencies {
+            implementation(project(":shared:testing"))
+        }
     }
 }
 

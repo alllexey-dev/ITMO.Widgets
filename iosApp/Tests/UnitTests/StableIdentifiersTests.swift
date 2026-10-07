@@ -81,6 +81,16 @@ final class StableIdentifiersTests: XCTestCase {
         XCTAssertEqual(LessonTimeline.fileName, "schedule-timeline-v1.json")
     }
 
+    /// The app refresh task keeps its identifier: the system drops a scheduled request whose identifier the app no
+    /// longer permits (IO-14).
+    func testBackgroundRefreshTask() {
+        XCTAssertEqual(BackgroundRefresh.taskIdentifier, "dev.alllexey.itmowidgets.refresh")
+        XCTAssertEqual(
+            Bundle.main.infoDictionary?["BGTaskSchedulerPermittedIdentifiers"] as? [String],
+            ["dev.alllexey.itmowidgets.refresh"]
+        )
+    }
+
     /// `$(AppIdentifierPrefix)` is the team ID plus a dot on a device, `FAKETEAMID.` on the simulator and empty for
     /// a team-less device build (SP-23), so only the suffix is stable.
     private func assertKeychainGroup(_ group: String?, file: StaticString = #filePath, line: UInt = #line) {

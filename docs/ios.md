@@ -38,7 +38,7 @@ xcodegen --version
 | `iosApp/project.yml` | XcodeGen spec: targets, the Kotlin Run Script, the `ITMOWidgets` scheme. The generated `.xcodeproj` is ignored |
 | `iosApp/Config/` | `Base.xcconfig` (identifiers, versions, signing defaults) and one xcconfig per target |
 | `iosApp/Resources/` | `Info/` plists and the entitlements of each target, unsigned and `.signed` |
-| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `Bridge/` holds the Kotlin side's Swift glue (Swift bridge), `Features/<Feature>/` the Swift screen of each route (the QR pass's host), `Intents/` the App Shortcuts and the quick actions (System entries) |
+| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `Bridge/` holds the Kotlin side's Swift glue (Swift bridge), `Features/<Feature>/` the Swift screen of each route (the QR pass's host), `Intents/` the App Shortcuts and the quick actions (System entries), `Background/` the app refresh task (Background refresh) |
 | `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin); `<Widget>/` per widget, `Controls/` the Controls. The app target compiles these sources too, without `WidgetsBundle.swift`, so the hosted tests reach them |
 | `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin) |
 | `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images, `WidgetSnapshots/` (readers of the App Group snapshots), `Intents/` (App Intents of widget buttons and Controls, `RouteInbox`; not in the notification service) |
@@ -202,7 +202,8 @@ Settings are SwiftUI screens over the shared page model (IO-08a): `Routes+Settin
   Background App Refresh to the ViewModel. The notification row asks for the permission while iOS has never asked,
   then opens the app's notification settings.
 - Not yet real on iOS (`shared/feature-settings/src/iosMain/.../data/IosPendingChecks.kt`): the schedule change
-  switch is stored where the check reads it, but the check runs from IO-14; the calendar sync is a stand-in behind
+  switch is stored where the check reads it, and the background runner runs the check once the schedule data is in
+  the iOS graph (IO-09b, see Background refresh); the calendar sync is a stand-in behind
   its hidden rows until IO-15b. Mark tracking is the recordbook graph's (IO-09d1), which schedules nothing until
   IO-09d3, behind its hidden page. "Пройти знакомство заново" resets the shared flag,
   which the shell's gate reads (IO-07b). Widget pages draw no preview above their rows.
@@ -229,6 +230,7 @@ exists in the build.
 | Widget kinds | `dev.alllexey.itmowidgets.widget.qr` |
 | Control kinds | `dev.alllexey.itmowidgets.control.qr` |
 | Quick action types | `dev.alllexey.itmowidgets.qr_pass`, `dev.alllexey.itmowidgets.today` (`$(PRODUCT_BUNDLE_IDENTIFIER).<route id>`) |
+| Background task | `dev.alllexey.itmowidgets.refresh` (`BGTaskSchedulerPermittedIdentifiers`, a literal as in `AppRefreshScheduler`) |
 | App Group file names | `<name>-v<N>.json`, listed in Data sharing |
 
 The App Group and Keychain group are build settings (`APP_GROUP_ID`, `KEYCHAIN_GROUP` in `Base.xcconfig`). Xcode
@@ -254,6 +256,7 @@ notification service's `SharedPush`); the widget extension reads files and never
 | No-backup files (`AppDirectories.noBackup`) | `Library/Application Support/no-backup`, excluded from backup | `IosAppDirectories` |
 | Files the extensions read | the App Group container | `AppGroupDirectory` |
 | Secrets | the Keychain | `KeychainSecureStore` |
+| When each background step is next due (`backgroundRefresh.*`) | the app's `NSUserDefaults`, cleared on sign-out | `UserDefaultsRefreshStepLog` |
 
 DataStore stays in the app container: it is single-process, so no extension opens it.
 
@@ -363,8 +366,8 @@ process, BARS on a Darwin engine of its own (no cookies, cache or redirects, nev
   iOS (IO-09d2); in a Debug build `-itmoBarsLogin` presents it, and `-itmoBarsRenew foreground|background` replaces
   the saved header with one BARS rejects and renews it through the hidden view or the cookie copy
   (`BarsSessionCheck`, which logs only the header's length and expiry).
-- Until the mark check runs on iOS (IO-09d3, IO-14) the marks scheduler and `AppNotifier` do nothing; a BARS answer
-  still turns "Оценки БАРС" on.
+- Until the mark check runs on iOS (IO-09d3) the marks scheduler does nothing; a BARS answer still turns "Оценки
+  БАРС" on.
 
 Sign-out. Three `SessionDataCleaner`s run with the shared ones, on sign-out and before every sign-in or demo start:
 the Keychain (every item of the service), the App Group container and WebKit's website data, which Swift removes
@@ -513,6 +516,53 @@ any URL does (Shell and routes): it waits for a ready session and the tab bar, t
   synthetic `UIApplicationShortcutItem` against a router; XCUITest does not drive Siri, Control Center or the
   springboard reliably, so these surfaces are checked by hand on the simulator.
 
+## Background refresh
+
+iOS has no WorkManager: the app gets one app refresh task, `dev.alllexey.itmowidgets.refresh` (`UIBackgroundModes`
+`fetch`, listed in `BGTaskSchedulerPermittedIdentifiers`), and the system decides when it runs, from how the app is
+used, often hours apart, never with Background App Refresh off or in Low Power Mode. `BackgroundRunner`
+(`shared/ios/src/iosMain/.../ios/background/`, IO-14) is the one entry point of every run:
+
+- Triggers. The task (`.backgroundRefresh()` on the scene, `Sources/Background/BackgroundRefresh.swift`, SwiftUI's
+  `.backgroundTask(.appRefresh(_:))`), the app's launch and every return to the foreground (`App.init` calls
+  `IosBackgroundRefresh.start()` after the graph), and `CheckScheduler.runOnce` (the debug tools' "check now"). Runs
+  never overlap; a second one waits.
+- Steps. Each feature binds its `RefreshStep` (`shared/core`, iosMain, `core/work/RefreshSteps.kt`) under its key in
+  its iOS module; the runner takes them in `RefreshStepKeys.ORDER`, where each later check adds one line: widget
+  snapshots (`scheduleWidgetIosModule`: `ScheduleTimelineWriter` publishes the schedule timeline), schedule changes
+  (`scheduleChangesIosModule`: `ScheduleChangesRefresh`, LT-1's `ScheduleChangesCheck`, then the quiet hours), then
+  marks with the BARS renewal (IO-09d3) and the calendar sync (IO-15b) when they come. A bound step without a place
+  in the order fails the start.
+- Deadline. The system gives the task about 30 s and cancels the Swift task when it expires, which cancels the
+  Kotlin run; the runner stops its steps after 25 s (`BackgroundRunner.DEADLINE`), cancels the one running and
+  leaves the rest for the next run, then lets the posted notifications reach the system and asks for the next
+  wake, also when cut or cancelled.
+- Periods. A check keeps its Android period (schedule changes: two hours) in `UserDefaultsRefreshStepLog`: a launch,
+  a foreground or an early wake within it leaves the check out, so My ITMO gets no more requests from an iPhone than
+  from an Android phone. A retry (a network failure, or a step that threw) comes back after 15 minutes at most twice,
+  then waits for the next period, Android's backoff; a skipped check (signed out, switched off) is tried on the next
+  run. The widget snapshots run every time.
+- Scheduling. `AppRefreshScheduler` (`shared/core`, iosMain) is the `CheckScheduler` of every check: `ensurePeriodic`
+  submits the task for an hour on at the earliest (each run does it at its end), `runOnce` asks the running app for
+  a run, `cancel` does nothing (one task for all checks; a check whose switch is off skips itself). The simulator
+  refuses the request (logged).
+- Notifications. `IosAppNotifier` posts through `UNUserNotificationCenter` (`docs/features/notifications.md`, iOS):
+  thread = the channel, identifier `<channel>-<id>`, texts from the catalog. A schedule change found between 00:00
+  and 06:00 Moscow time is handed to the system for 06:00 at once (a calendar trigger) and counts as delivered;
+  Android keeps it for its first run after 06:00, which iOS might not give for hours.
+- The schedule change step resolves the check and its repository from the graph at each run: until the schedule
+  data is in the iOS graph (`scheduleDataModule`, IO-09b) it finds none and is skipped.
+  `scheduleChangesIosModule` already binds the check's iOS ports (`IosScheduleChangeNotifier`, the scheduler).
+- Debug. A Debug build launched with `-itmoRunRefresh` runs the entry point once more after the session is read,
+  prints `Refresh: <step>=<result> ...`, and posts a fixture schedule change notification (`ScheduleChangeFixture`,
+  catalog texts), since tests cannot force the scheduler. On the simulator Xcode's
+  `e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"dev.alllexey.itmowidgets.refresh"]`
+  also starts the task while the app is paused in the debugger.
+- Tests: `BackgroundRunnerTest` (`shared/ios`, `scripts/ios/test.sh kn :shared:ios`: order, deadline, period skip,
+  retries, overlapping runs, cancellation) with fake steps, `ScheduleChangesRefreshTest`, `IosAppNotifierTest`,
+  `AppRefreshSchedulerTest`, and the hosted `ITMOWidgetsTests/BackgroundRunnerTests` (the app graph's steps in order,
+  the fixture post by catalog key, the Info.plist keys).
+
 ## Core graph
 
 Koin is the only dependency graph on iOS. `iosCoreModule(host)` (`shared/core/src/iosMain/.../core/di/`) defines
@@ -531,8 +581,8 @@ sign-out cleaners.
   which writes session-v1.json for every signed-in state. The lifecycle effects do nothing yet (no background
   work, notifications or widgets to stop); push token sync and device registration are one shared
   `PushDeviceRegistration` (see Notifications), the Backend identity upload a no-op until an iOS card turns custom
-  services on. `AppNotifier` does nothing until IO-14 binds the notifier (`recordbookIosModule` holds the
-  placeholder).
+  services on. `AppNotifier` is `IosAppNotifier` (`iosBackgroundModule`, see Background refresh), also a sign-out
+  cleaner of every shown and scheduled notification.
 - Launch. `App.init` starts the graph, builds the shell's session, then calls `SessionRepository.initialize()`. A
   Debug build launched with `-itmoDemo` first opens the demo session unless `DemoMode` is already on
   (`startDemo()`), so the gate never passes the sign-in screen; most UI tests pass it through

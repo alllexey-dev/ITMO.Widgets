@@ -4,8 +4,9 @@ import SwiftUI
 /// The app entry point: the SwiftUI shell (`ShellView`) gated on the shared session (IO-07a), or in a Debug build on
 /// a fixture session from the launch arguments (`ShellFixtures`). Every `itmowidgets://route/<id>` URL, App Intent,
 /// quick action and notification tap (`NotificationTaps`) goes to the router; each return to the foreground refreshes
-/// the push registration (`PushRefresh`, IO-13a). `init` sets the app locale, starts the Kotlin graph, connects the
-/// router to `RouteInbox`, builds the shell's session, then starts the shared one.
+/// the push registration (`PushRefresh`, IO-13a). `init` sets the app locale, starts the Kotlin graph and the
+/// background refresh (`BackgroundRefresh`), connects the router to `RouteInbox`, builds the shell's session, then
+/// starts the shared one.
 @main
 struct ITMOWidgetsApp: App {
     @UIApplicationDelegateAdaptor(ITMOWidgetsAppDelegate.self) private var appDelegate
@@ -16,6 +17,7 @@ struct ITMOWidgetsApp: App {
     init() {
         IosStrings.shared.installAppLocale()
         _ = startKoinIos(platform: AppPlatform())
+        BackgroundRefresh.start()
         let router = AppRouter()
         _router = State(initialValue: router)
         RouteInbox.shared.connect { router.open(id: $0) }
@@ -36,6 +38,7 @@ struct ITMOWidgetsApp: App {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await PushRefresh.run() } }
         }
+        .backgroundRefresh()
     }
 
     /// The launch argument of a Debug build that opens the shared demo session, the way most UI tests start.
@@ -79,6 +82,7 @@ struct ITMOWidgetsApp: App {
             try? await repository.initialize()
             #if DEBUG
             BarsDebugLaunch.runIfRequested()
+            BackgroundRefresh.runIfRequested()
             #endif
         }
     }
