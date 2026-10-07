@@ -54,9 +54,8 @@ import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.core.sport_registration_waiting
 
 /*
- * The sport card and details texts in commonMain: the port of the View helpers in `:app`'s `SportCardPresentation`,
- * `OccupancyTone`, `SportBookingRestrictionText` and `SportLessonPresentation`, which stay for the remaining Views
- * until LP-5c and LP-6. Names differ from those helpers where the signatures would clash in the shared package.
+ * The sport card and details texts in commonMain, the only copy since LP-6 deleted `:app`'s View helpers they were
+ * ported from (`SportCardPresentation`, `OccupancyTone`, `SportBookingRestrictionText`, `SportLessonPresentation`).
  */
 
 /**

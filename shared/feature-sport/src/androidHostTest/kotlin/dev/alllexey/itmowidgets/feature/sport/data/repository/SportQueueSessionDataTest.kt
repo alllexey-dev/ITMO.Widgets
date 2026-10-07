@@ -131,6 +131,24 @@ class SportQueueSessionDataTest {
     }
 
     @Test
+    fun `session clear forgets the previous session's limits, queues and friends' bookings, failures included`() =
+        runTest {
+            val fixture = createFixture()
+            fixture.repository.refreshSportAutoSignLimits()
+            fixture.repository.refreshSportQueues()
+            fixture.repository.refreshFriendsBookings()
+            assertTrue(fixture.repository.observeSportAutoSignLimits().first() is LoadState.Error)
+            assertTrue(fixture.repository.observeSportQueues().first() is LoadState.Error)
+            assertTrue(fixture.repository.observeFriendsBookings().first() is LoadState.Error)
+
+            fixture.repository.clearSessionData()
+
+            assertEquals(LoadState.Disabled, fixture.repository.observeSportAutoSignLimits().first())
+            assertEquals(LoadState.Disabled, fixture.repository.observeSportQueues().first())
+            assertEquals(LoadState.Disabled, fixture.repository.observeFriendsBookings().first())
+        }
+
+    @Test
     fun `disabled services replace previous success without requesting either queue endpoint`() = runTest {
         val fixture = createFixture()
         fixture.repository.refreshSportQueueEntries()

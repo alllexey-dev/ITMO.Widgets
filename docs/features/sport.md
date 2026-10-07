@@ -1,12 +1,13 @@
 # Sport
 
-`feature/sport` has two tabs in a `ViewPager2`: `Мой спорт` (score, official
-bookings, own queues) and `Запись` (catalog with filters). Both keep their
+The sport tab has two pages: `Мой спорт` (score, official bookings, own
+queues) and `Запись` (catalog with filters). The screens are Compose in
+`shared/feature-sport` (`commonMain`); `:app` keeps only the Fragment hosts, the
+FCM adapter and the debug hosts. Both pages keep their
 content while they refresh: `SportMyUiState.Content.refreshing` and
 `SportSignUiState.Content.refreshing` drive the pull-to-refresh indicator,
-`Loading` exists only before the first snapshot and shows a skeleton
-(`skeleton` in `Мой спорт`, `SkeletonListAdapter` under the filter header in
-`Запись`), and a refresh whose sources fail keeps the last snapshot with
+`Loading` exists only before the first snapshot and shows placeholder cards
+(in `Мой спорт`, and under the filter header in `Запись`), and a refresh whose sources fail keeps the last snapshot with
 `hasPartialError` and its snackbar instead of an error screen. The first load
 and background reloads are silent (`refresh(RefreshMode.Silent)`); only a
 pull (`Pull`) or `Повторить` (`Force`) sets `refreshing`. Re-entering
@@ -16,6 +17,35 @@ is `Content(initialLoading = true)` with an empty list: the filters and days
 render at once and only the list area is a placeholder. Official data comes
 from MyItmoApi; queues, friends' bookings and quota come from Backend behind the
 custom-services gate.
+
+## Tab host
+
+`SportScreen` is stateless: the secondary tabs `Мой спорт` and `Запись` over a
+`HorizontalPager` whose pages are `SportMyScreen` and `SportSignScreen`. A tap
+on a tab slides to its page; a swipe moves one page, and the pager carries the
+kit's `tabSwipeHandover`, so its fling stops at `Запись` and only a new swipe
+at either end moves the bottom tabs (design.md, Tab swipe). Both pages stay
+composed, as the View pager kept its neighbour.
+
+`SportRoute` obtains `SportMyViewModel` and `SportSignViewModel` with
+`koinViewModel()` from the host's `ViewModelStoreOwner`: `SportFragment`'s on
+Android, a Nav3 entry's or the SwiftUI host's later. Navigation keeps the
+Fragment's store on the tab's saved back stack, so `Запись` keeps its week and
+filters across a round trip through the other tabs, and re-entering the tab
+with content loaded starts no request. No sport ViewModel is scoped to the
+activity; the feed, the schedule and `MainActivity` share the singleton
+`SportBookingsHolder` instead (`SportRulesTest`).
+
+Each page runs on a lifecycle of its own that stays `STARTED` while the other
+page is in front: a page shows its snackbars and dialogs only while it is the
+current one, and the page behind keeps them for later. A shared link reaches
+the route as a `SportSharedLesson`: it selects `Запись` at once and calls
+`openSharedLesson`. `SportFragment` relays `SportLessonRequest` from the
+activity's `FragmentManager`, opens the details sheet on its child
+`FragmentManager` and sends the sheet's result back to the page that opened it
+(remembered across recreation); it also keeps `changeView(index)` and exposes
+`currentPage` for the instrumented tests, starts the `geo:` map and shows the
+debug template-lesson Toast.
 
 ## Repositories
 
@@ -31,8 +61,9 @@ custom-services gate.
 
 Sign-out runs the session cleaners of `SportDataRepositoryImpl` and
 `SportBookingRepositoryImpl`: score and attempts return to `Loading`, a failed
-load included, own queue entries to `Disabled` and the confirmed bookings to an
-empty list, and a response of the previous session is dropped. `Loading` makes
+load included; own queue entries, auto-sign limits, queues and friends'
+bookings to `Disabled`; the confirmed bookings to an empty list; and a response
+of the previous session is dropped. `Loading` makes
 the next entry of «Мой спорт» load again, so another account or the demo never
 sees the previous session's data or its expired session.
 
@@ -52,10 +83,10 @@ a friends preview and, for lessons, a full-width occupancy bar whose label uses
 the bar's tone. Start time is the scanning anchor and the only metadata on
 `colorOnSurface`; the class kind is a filled chip on `colorSurfaceContainerHighest`.
 Russian weekday and month names are capitalised by the helpers in
-`SportCardPresentation`, never at the call site. Condition and occupancy tones
-come from `core/ui/ConditionTone` (allowed, waiting, warning, blocked), fixed
-colours independent of the dynamic palette; the schedule's pending sport sheet
-uses the same tones.
+`ui/common/SportCardTexts.kt`, never at the call site. Condition and occupancy
+tones are `SportConditionTone` (allowed, waiting, warning, blocked), fixed
+colours of the design system independent of the dynamic palette; the
+schedule's pending sport sheet uses the same tones.
 
 The details bottom sheet adds a fixed bottom action: sign in, sign out, auto-sign
 or cancel the active queue, following the same offer policy as the card. Existing
@@ -107,7 +138,7 @@ vertical scroll offset; the list reserves the expanded card height as top
 padding, and only drawing bounds, translations and alpha change during scrolling,
 so nothing is remeasured per frame. A half-collapsed header snaps to the nearer
 edge by scrolling the list, and a list too short to reach an edge stays put.
-`SportScoreCollapseTest` drives the real layout from a debug host.
+`SportScoreCollapseTest` (`:shared:feature-sport`) drives the real layout.
 
 The score ring keeps a constant gap between attendance and bonus sectors and a
 visible minimum for non-zero sectors; the app's total is attendance plus at most
@@ -124,10 +155,16 @@ in the Backend sport-automation contract.
 
 ## Another user's sport
 
-`UserSportFragment` (overlay `USER_SPORT`) lists confirmed lessons resolved
-against the ITMO catalog plus pending queues returned by Backend, sorted by
-start, read-only: no cancellation, no details, no friends preview and no teacher
-profile action. `Forbidden` renders as a lock state. The screen reads `observeSportCatalog()`, the raw
+`UserSportScreen`, hosted by `UserSportRoute` in `UserSportFragment` (overlay
+`USER_SPORT`, arguments `UserScreenArgs.ISU` and `NAME`), lists confirmed
+lessons resolved against the ITMO catalog plus pending queues returned by
+Backend, sorted by start, read-only: a card opens no details and offers no
+cancellation, shows no friends preview and no teacher profile action; its more
+button appears only when the place has an address and offers «Открыть на карте».
+The title is «Спорт: <first name>», or «Спорт» without a name. The first load
+shows placeholder cards and a list follows a pull; no bookings show «Записей
+нет», `Forbidden` the lock («Спорт скрыт») with nothing to retry, other errors
+a retry. The screen reads `observeSportCatalog()`, the raw
 free-attendance lessons, not the merged schedule: that stream also waits for
 the viewer's queues and friends, which only the sport tab refreshes.
 
@@ -155,11 +192,15 @@ booker (L18 IO-12a). See [`notifications.md`](notifications.md).
 
 ## Tests
 
-`SportDetailsSheetVisualTest` and `SportBookingCardsVisualTest` run the real sheet
-and adapters in an isolated debug host
-across both themes, two dynamic palettes, 320 dp width, font scale 1.0 and 1.3,
-queue states, busy-action protection, rebinding, recreation and where the share
-action shows. `SportSignViewModelTest` covers opening a shared lesson; `SportSignScreenTest` (`:shared:feature-sport`) covers the
-`Запись` route on it: shared links, the details sheet's stale-offer guard and debug template lessons. The `*ReferenceScreenshotTest` classes under
-`feature/sport/reference/` capture `Мой спорт`, `Запись`, the details sheet and another user's sport in the demo
-session on the JVM, into `shared/feature-sport/screenshots/`, under the names of the Compose previews that replace them.
+`SportScreenshotTest` (`:shared:feature-sport`) records every sport preview,
+including `SportScreen` (both pages) and `UserSportScreen` (content, empty,
+lock), into `shared/feature-sport/screenshots/`; the 7-day week strip is 45 dp
+per day at 320 dp, so the screens that show it keep light and dark only.
+`SportScreenTest` covers the tabs and the swipe handover inside a pager built
+like the shell's; `SportRouteTest` the shared link, the page lifecycles, the
+sheet's results and the bottom-tab round trip; `SportMyScreenTest`,
+`SportSignScreenTest` and `SportDetailsSheetTest` the pages and the sheet.
+`SportSignViewModelTest` covers opening a shared lesson. On a device,
+`MainActivityDeepLinkTest` opens `/sport/1` and `/sport/p/1` on `Запись`,
+`DemoModeFlowTest` walks both pages, and `SportSessionBindingsTest` checks that
+screens, cleaners, home cards and widgets share one graph.

@@ -35,6 +35,8 @@ class PreviewSuite private constructor(testClass: Class<*>) {
 
     val accessibilityChecks: Boolean = settings?.accessibilityChecks ?: true
 
+    private val narrowTouchTargetExemptions: List<String> = settings?.narrowTouchTargetExemptions?.toList().orEmpty()
+
     val directory = BaselineDirectory(File(System.getProperty(OUTPUT_DIR_PROPERTY) ?: DEFAULT_OUTPUT_DIR))
 
     private val size = settings?.let { CaptureSize(it.widthDp, it.heightDp, it.density) } ?: CaptureSize()
@@ -68,6 +70,18 @@ class PreviewSuite private constructor(testClass: Class<*>) {
             }
         }
     }
+
+    init {
+        narrowTouchTargetExemptions.forEach { prefix ->
+            check(previews.keys.any { it.startsWith(prefix) }) {
+                "narrowTouchTargetExemptions of $packageTree: no preview starts with $prefix"
+            }
+        }
+    }
+
+    /** Whether [case] runs ATF without its touch-target check ([PreviewScreenshots.narrowTouchTargetExemptions]). */
+    fun touchTargetsExempt(case: PreviewCase): Boolean =
+        case.appearance.widthDp != null && narrowTouchTargetExemptions.any(case.baseName::startsWith)
 
     fun case(name: String): PreviewCase = cases.singleOrNull { it.name == name }
         ?: error("No preview case $name in $packageTree; the previews changed during the run")

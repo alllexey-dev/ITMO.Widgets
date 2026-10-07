@@ -126,11 +126,9 @@ Feature doc: [Sport](sport.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/sport/ui/common/SportFragment.kt` | Fragment | — (pages own theirs) | `navigation_sport`, `AppRoot.SPORT` | — | — |
-| `feature/sport/ui/my/SportMyFragment.kt` hosting `SportMyScreen` (`:shared:feature-sport`) | Fragment | `SportMyViewModel` (Koin, Activity scope) | page of `SportPagerAdapter` | — | `SportScreenshotTest` (`:shared:feature-sport`) |
-| `feature/sport/ui/sign/SportSignFragment.kt` hosting `SportSignRoute` (`:shared:feature-sport`) | Fragment | `SportSignViewModel` (Koin, Activity scope) | page of `SportPagerAdapter` | `feature/sport/ui/SportCardsPreviewActivity.kt` (lesson list) | `SportScreenshotTest` (`:shared:feature-sport`) |
-| `feature/sport/ui/user/UserSportFragment.kt` | Fragment | `UserSportViewModel` | `user_sport`, `AppScreen.USER_SPORT` | — | — |
-| `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt` | bottom sheet | — | `SportMyFragment`, `SportSignFragment`; `MainNavigationCoordinator.openSportDetails` for a schedule row that is a known booking | `feature/sport/ui/SportCardsPreviewActivity.kt` | — (JVM `SportDetailsSheetTest` and the `SportDetailsSheetContent_*` goldens of `:shared:feature-sport`) |
+| `feature/sport/ui/common/SportFragment.kt` hosting `SportRoute` (`:shared:feature-sport`): `SportScreen` with `SportMyScreen` and `SportSignScreen` | Fragment | `SportMyViewModel`, `SportSignViewModel` (Koin, the Fragment's store) | `navigation_sport`, `AppRoot.SPORT`, `SportLessonRequest` | `feature/sport/ui/SportCardsPreviewActivity.kt` (booking cards, lesson list) | `SportScreenshotTest` (`:shared:feature-sport`) |
+| `feature/sport/ui/user/UserSportFragment.kt` hosting `UserSportRoute` (`:shared:feature-sport`) | Fragment | `UserSportViewModel` (Koin, the Fragment's store) | `user_sport`, `AppScreen.USER_SPORT` | — | `SportScreenshotTest` (`:shared:feature-sport`) |
+| `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt` | bottom sheet | — | `SportFragment` (either page); `MainNavigationCoordinator.openSportDetails` for a schedule row that is a known booking | `feature/sport/ui/SportCardsPreviewActivity.kt` | — (JVM `SportDetailsSheetTest` and the `SportDetailsSheetContent_*` goldens of `:shared:feature-sport`) |
 
 ## Subject links
 

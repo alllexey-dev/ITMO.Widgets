@@ -11,9 +11,9 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.fragment.app.DialogFragment
+import androidx.navigation.fragment.NavHostFragment
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.viewpager2.widget.ViewPager2
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
@@ -29,6 +29,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksSheetTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
+import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
+import dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment
 import dev.alllexey.itmowidgets.testing.Screenshots
 import java.time.LocalDate
 import java.time.ZoneId
@@ -159,7 +161,7 @@ class DemoModeFlowTest {
 
             open(scenario) { it.openRoot(AppRoot.SPORT) }
             shot(activity, "sport-my")
-            open(scenario) { main -> main.findViewById<ViewPager2>(R.id.sport_view_pager).currentItem = 1 }
+            open(scenario) { main -> main.sport().changeView(SportPage.SIGN.ordinal, animate = false) }
             shot(activity, "sport-sign")
 
             open(scenario) { it.openRoot(AppRoot.ME) }
@@ -182,6 +184,11 @@ class DemoModeFlowTest {
         scenario.onActivity(action)
         settle()
     }
+
+    /** The sport tab's host, whose page API replaces the View pager. */
+    private fun MainActivity.sport(): SportFragment =
+        (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment)
+            .childFragmentManager.fragments.filterIsInstance<SportFragment>().single()
 
     /** The screen has content, no empty or error state, and the demo banner; then its screenshot. */
     private fun shot(activity: MainActivity, name: String) {

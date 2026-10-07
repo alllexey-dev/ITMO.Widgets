@@ -93,22 +93,23 @@ class SportDataRepositoryImpl(
     }
 
     override suspend fun refreshSportAutoSignLimits() {
+        val generation = currentGeneration()
         if (demo.isActive()) {
-            autoSignLimitsFlow.emit(LoadState.Content(DemoSport.autoSignLimits(time)))
+            emitInSession(generation, autoSignLimitsFlow, LoadState.Content(DemoSport.autoSignLimits(time)))
             return
         }
         if (!backend.mayCallBackend()) {
-            autoSignLimitsFlow.emit(LoadState.Disabled)
+            emitInSession(generation, autoSignLimitsFlow, LoadState.Disabled)
             return
         }
 
         try {
             val result = withContext(dispatchers.io) { sportApi.sportAutoSignLimits().toModel() }
-            autoSignLimitsFlow.emit(LoadState.Content(result))
+            emitInSession(generation, autoSignLimitsFlow, LoadState.Content(result))
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            autoSignLimitsFlow.emit(LoadState.Error(error.toSportAppError()))
+            emitInSession(generation, autoSignLimitsFlow, LoadState.Error(error.toSportAppError()))
         }
     }
 
@@ -152,23 +153,29 @@ class SportDataRepositoryImpl(
         }
 
     /**
-     * Forgets the previous session's points, attempts and queues, failures included: `Loading` makes the next
-     * entry of the sport tab load them again instead of showing another account's data or its expired session.
+     * Forgets the previous session's points, attempts, auto-sign limits, queues and friends' bookings, failures
+     * included: `Loading` makes the next entry of the sport tab load the points and attempts again, and the
+     * Backend-derived data is `Disabled` until the next session refreshes it, instead of showing another account's
+     * data or its expired session.
      */
     override suspend fun clearSessionData() = sessionMutex.withLock {
         sessionGeneration++
         queueEntriesFlow.emit(LoadState.Disabled)
+        autoSignLimitsFlow.emit(LoadState.Disabled)
+        queuesFlow.emit(LoadState.Disabled)
+        friendsBookingsFlow.emit(LoadState.Disabled)
         attemptsFlow.emit(LoadState.Loading)
         scoreFlow.emit(LoadState.Loading)
     }
 
     override suspend fun refreshSportQueues() {
+        val generation = currentGeneration()
         if (demo.isActive()) {
-            queuesFlow.emit(LoadState.Content(DemoSport.queues(time)))
+            emitInSession(generation, queuesFlow, LoadState.Content(DemoSport.queues(time)))
             return
         }
         if (!backend.mayCallBackend()) {
-            queuesFlow.emit(LoadState.Disabled)
+            emitInSession(generation, queuesFlow, LoadState.Disabled)
             return
         }
 
@@ -181,22 +188,23 @@ class SportDataRepositoryImpl(
                 }
             }
 
-            queuesFlow.emit(LoadState.Content(result))
+            emitInSession(generation, queuesFlow, LoadState.Content(result))
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            queuesFlow.emit(LoadState.Error(error.toSportAppError()))
+            emitInSession(generation, queuesFlow, LoadState.Error(error.toSportAppError()))
         }
     }
 
     override suspend fun refreshFriendsBookings() {
+        val generation = currentGeneration()
         if (demo.isActive()) {
-            friendsBookingsFlow.emit(LoadState.Content(DemoSport.friendsBookings(time)))
+            emitInSession(generation, friendsBookingsFlow, LoadState.Content(DemoSport.friendsBookings(time)))
             return
         }
         if (!backend.mayCallBackend()) {
-            friendsBookingsFlow.emit(LoadState.Disabled)
+            emitInSession(generation, friendsBookingsFlow, LoadState.Disabled)
             return
         }
 
@@ -224,12 +232,12 @@ class SportDataRepositoryImpl(
                 mapped = map()
             }
 
-            friendsBookingsFlow.emit(LoadState.Content(mapped))
+            emitInSession(generation, friendsBookingsFlow, LoadState.Content(mapped))
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            friendsBookingsFlow.emit(LoadState.Error(error.toSportAppError()))
+            emitInSession(generation, friendsBookingsFlow, LoadState.Error(error.toSportAppError()))
         }
     }
 }

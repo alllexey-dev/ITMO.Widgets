@@ -45,8 +45,7 @@
     <fragment
         android:id="@+id/navigation_sport"
         android:name="dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment"
-        android:label="Sport"
-        tools:layout="@layout/fragment_sport" />
+        android:label="Sport" />
 
     <fragment
         android:id="@+id/navigation_me"

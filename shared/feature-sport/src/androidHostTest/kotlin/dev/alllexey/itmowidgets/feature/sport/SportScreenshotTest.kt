@@ -1,10 +1,13 @@
 package dev.alllexey.itmowidgets.feature.sport
 
 import dev.alllexey.itmowidgets.testkit.screenshot.PreviewScreenshotTest
+import dev.alllexey.itmowidgets.testkit.screenshot.PreviewScreenshots
 import java.util.Locale
 import org.junit.Rule
 import org.junit.rules.ExternalResource
 
+// Owner decision 2026-10-07: the week strip keeps 2.2 parity (45 dp days at 320 dp), exempt from ATF 48 dp targets.
+@PreviewScreenshots(narrowTouchTargetExemptions = ["SportWeekStrip", "SportSignScreen_", "SportScreen_sign"])
 class SportScreenshotTest : PreviewScreenshotTest() {
 
     /**

@@ -83,6 +83,9 @@ class SportBookingActions(
  * registration status, the teacher and the place, the friends on it. The whole card opens the details; the more
  * button, shown only for a booking or a queue entry, offers the cancellation and, when the place has an address, the
  * map. A booking carries no capacity, so a predicted one shows no places either.
+ *
+ * [readOnly] is another user's booking: the card opens nothing and shows no friends, and the more button, shown only
+ * when the place has an address, offers the map alone.
  */
 @Composable
 fun SportBookingCard(
@@ -90,9 +93,13 @@ fun SportBookingCard(
     time: AcademicTimeProvider,
     actions: SportBookingActions,
     modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
 ) {
     val timing = SportSessionTiming(booking.start, booking.end, time)
-    SportCardSurface(onClick = { actions.onOpen(booking) }, modifier = modifier.testTag(SportBookingCardTestTags.CARD)) {
+    SportCardSurface(
+        onClick = if (readOnly) null else ({ actions.onOpen(booking) }),
+        modifier = modifier.testTag(SportBookingCardTestTags.CARD),
+    ) {
         Box(Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth()) {
                 SportCardTitle(
@@ -149,12 +156,18 @@ fun SportBookingCard(
                         Modifier.testTag(SportBookingCardTestTags.META),
                     )
                 }
-                SportFriendsPreview(booking.friendsBookings)
+                if (!readOnly) SportFriendsPreview(booking.friendsBookings)
             }
-            if (booking.signed || booking.signEntry != null) {
+            val hasMenu = if (readOnly) {
+                booking.extractBuildingAddress() != null
+            } else {
+                booking.signed || booking.signEntry != null
+            }
+            if (hasMenu) {
                 MoreButton(
                     booking,
                     actions,
+                    readOnly,
                     // The View put the button 8 dp inside the card's corner, half the card padding.
                     Modifier
                         .align(Alignment.TopEnd)
@@ -237,13 +250,23 @@ private fun StatusLine(booking: SportBooking, modifier: Modifier = Modifier) {
     }
 }
 
-/** The 48 dp more button with its menu: the cancellation, then the map when the place has an address. */
+/**
+ * The 48 dp more button with its menu: the cancellation (not on a [readOnly] card), then the map when the place has an
+ * address.
+ */
 @Composable
-private fun MoreButton(booking: SportBooking, actions: SportBookingActions, modifier: Modifier = Modifier) {
+private fun MoreButton(
+    booking: SportBooking,
+    actions: SportBookingActions,
+    readOnly: Boolean,
+    modifier: Modifier = Modifier,
+) {
     var expanded by remember { mutableStateOf(false) }
     val description = stringResource(Res.string.common_options)
     val items = buildList {
-        add(ItmoMenuItem(stringResource(CoreRes.string.sport_cancel_booking_action), { actions.onCancel(booking) }))
+        if (!readOnly) {
+            add(ItmoMenuItem(stringResource(CoreRes.string.sport_cancel_booking_action), { actions.onCancel(booking) }))
+        }
         if (booking.extractBuildingAddress() != null) {
             add(ItmoMenuItem(stringResource(CoreRes.string.sport_open_map), { actions.onOpenMap(booking) }))
         }

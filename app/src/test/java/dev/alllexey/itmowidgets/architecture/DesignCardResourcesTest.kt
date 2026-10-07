@@ -55,7 +55,6 @@ class DesignCardResourcesTest {
     @Test
     fun `approved cards consume shared variants without local appearance overrides`() {
         val layouts = mapOf(
-            "item_sport_booking" to "Content.Outlined",
             "item_recordbook_note" to "Content",
             "item_subject_hero" to "Hero",
             "item_recordbook_sport" to "Summary"
@@ -71,14 +70,9 @@ class DesignCardResourcesTest {
     }
 
     @Test
-    fun `compact sport rows keep their spacing beside the shared card dimensions`() {
-        mapOf(
-            "item_sport_booking" to "4dp"
-        ).forEach { (layout, halfGap) ->
-            val row = document("layout/$layout.xml")
-            assertEquals(layout, "16dp", resolve(row.getAttribute("android:paddingHorizontal")))
-            assertEquals(layout, halfGap, resolve(row.getAttribute("android:paddingVertical")))
-        }
+    fun `shared card dimensions keep their values`() {
+        // The compact sport rows (4 dp half gap) are Compose since L11 LP-6 (`SportCardSurface` of
+        // :shared:feature-sport) and the schedule days since L10 LS-6b (`ScheduleDayCard` of :shared:feature-schedule).
         assertEquals("16dp", dimensions.getValue("design_card_padding"))
         assertEquals("20dp", dimensions.getValue("design_summary_padding"))
         assertEquals("48dp", dimensions.getValue("design_touch_target"))

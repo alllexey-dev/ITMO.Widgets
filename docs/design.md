@@ -525,7 +525,10 @@ only. Compilation is not visual verification.
 - **Every PR.** `scripts/verify.sh quick`, plus `scripts/verify.sh shots <module>`
   for a UI change: light and dark baselines of every preview, compared pixel for
   pixel, with accessibility checks (touch targets, labels, contrast) on every
-  capture. CI's `verify-quick` runs `shots all` and never records. A baseline
+  capture. One exemption: the sport week strip keeps 2.2's seven 45 dp days
+  below 336 dp (owner decision 2026-10-07), so its narrow captures skip ATF's
+  touch-target check (`PreviewScreenshots.narrowTouchTargetExemptions`).
+  CI's `verify-quick` runs `shots all` and never records. A baseline
   changes only with the code behind it, and every new or changed PNG is looked
   at before it is committed.
 - **Four appearances** (light; dark; a seeded palette at font scale 1.3 on a
@@ -639,7 +642,7 @@ settings, and restore them if a separate test explicitly changes them.
 ## Reference implementations
 
 - Schedule day: `feature/schedule/ui/list/ScheduleDayCard.kt` and `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule`.
-- Sport cards: `res/layout/item_sport_booking.xml`, the `Запись` lesson card `SportLessonCard` in
+- Sport cards: the `Мой спорт` booking card `SportBookingCard`, the `Запись` lesson card `SportLessonCard` in
   `:shared:feature-sport`, details sheet `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt`.
 - Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsScreen.kt` in `:shared:feature-settings`.
 - System surfaces: the quick-settings tile icon `res/drawable/ic_tile_qr.xml`

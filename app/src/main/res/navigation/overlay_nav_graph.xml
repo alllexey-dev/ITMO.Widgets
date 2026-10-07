@@ -79,8 +79,7 @@
     <fragment
         android:id="@+id/user_sport"
         android:name="dev.alllexey.itmowidgets.feature.sport.ui.user.UserSportFragment"
-        android:label="User sport"
-        tools:layout="@layout/fragment_user_sport">
+        android:label="User sport">
         <argument
             android:name="user_isu"
             app:argType="integer" />

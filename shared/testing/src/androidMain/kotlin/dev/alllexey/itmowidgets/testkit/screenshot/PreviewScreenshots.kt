@@ -11,6 +11,9 @@ package dev.alllexey.itmowidgets.testkit.screenshot
  * - [widthDp], [heightDp], [density]: the capture window ([CaptureSize]); a preview's own `widthDp`/`heightDp`
  *   override them.
  * - [accessibilityChecks]: ATF (Roborazzi accessibility check, error level) on every capture.
+ * - [narrowTouchTargetExemptions]: base-name prefixes of previews whose narrow captures (320 dp) run ATF without its
+ *   48 dp `TouchTargetSizeCheck`; every other check stays. Only for an owner-accepted exemption listed in
+ *   `docs/design.md`; a prefix that matches no preview fails the run.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
@@ -22,4 +25,5 @@ annotation class PreviewScreenshots(
     val heightDp: Int = CaptureSize.PHONE_HEIGHT_DP,
     val density: String = CaptureSize.DENSITY,
     val accessibilityChecks: Boolean = true,
+    val narrowTouchTargetExemptions: Array<String> = [],
 )
