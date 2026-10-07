@@ -9,20 +9,41 @@ My ITMO with the viewer's token. Its separate service account still resolves
 current study groups in `UserData`, as described in
 [Current study groups on read](../../../itmo-widgets-backend/docs/contracts/friendships.md#current-study-groups-on-read).
 
+## Modules and hosts
+
+Domain, presentation, data and the Compose screens of `feature/social` and
+`feature/friendselector` live in `:shared:feature-social` `commonMain`, with
+their packages unchanged; the module holds no Android type, so the iOS app
+hosts the same routes. On Android five hosts keep their names and render the
+shared routes: `FriendsFragment` (`FriendsRoute`), `UserSearchFragment`
+(`UserSearchRoute`), `UserFriendsFragment` (`UserFriendsRoute`),
+`UserProfileFragment` (`UserProfileRoute`) and `FriendSelectorDialogFragment`
+(`FriendSelectorSheetRoute`, see [friend selector](friend-selector.md)). The
+hosts perform the Android effects: sharing, the clipboard, the invitation,
+navigation and Fragment results. `app/` keeps besides them only
+`FriendshipPushHandler` (bound in `di/ComponentBindingsModule.kt`, see
+[notifications](notifications.md)), `di/bridge/SocialBridge.kt` and the debug
+fixtures (`SocialDebugFixtures`, `FriendSelectorFixture`). The texts are the
+module's `strings_social.xml`; `:app` still reads four of its ids as Android
+resources (`person_isu_label`, `person_isu_copied`, `user_search_invite_text`,
+`user_search_invite_chooser`).
+
 ## Repositories
 
 - `SocialRepository` loads friends, incoming and outgoing requests and the own
-  Backend profile in one refresh, caches them as `LoadState` flows (`core/result/LoadState`) and exposes
+  Backend profile in one refresh through Core 2.0's `UsersApi` and `FriendsApi`
+  (`dev.alllexey.itmowidgets.client`), mapping users with
+  `UserData.toUserSummary()` (`core/model/ClientUserMapping.kt`), caches them as `LoadState` flows (`core/result/LoadState`) and exposes
   `profile(isu)`, `userFriends(isu)`, `lookup(isus)` and the actions `sendRequest`, `acceptRequest`,
   `rejectRequest`, `cancelRequest`, `removeFriend`. Every action returns the
   fresh `UserProfile` and folds it into the cached lists, so screens never
   refresh after acting. It is a `SessionDataCleaner`.
-- `PeopleSearchRepository` searches people by name through MyITMO
-  (`searchPersonalities`, 20 per page) and annotates registered users through
+- `PeopleSearchRepository` searches people by name through MyItmoApi 2.x
+  (`MyItmoClient.personalities.searchPersonalities`, 20 per page) and annotates registered users through
   Backend lookup in chunks of 50. Phone and e-mail from the directory never leave
   the data layer. See decision [0006](../decisions/0006-people-search.md).
-- `feature/social/domain/PersonRepository` calls `MyItmoApi.getPersonality(isu)`
-  through `PersonRepositoryImpl`, independently of the Backend opt-in. It keeps
+- `feature/social/domain/PersonRepository` calls
+  `MyItmoClient.personalities.getPersonality(isu)` through `PersonRepositoryImpl`, independently of the Backend opt-in. It keeps
   a memory cache by ISU and is a singleton `SessionDataCleaner`. The mapper
   retains name, photo, positions, rooms and education, not contacts, gender or
   exchange status. Empty strings and repeated facts are normalized at this
@@ -37,7 +58,8 @@ current study groups in `UserData`, as described in
 
 The social and picker data live in `:shared:feature-social` `commonMain`
 (`feature/social/data`, `feature/friendselector/data`) and Koin constructs them
-in `socialModule` and `friendSelectorModule`: one `SocialRepositoryImpl` serves
+in `socialModule` and `friendSelectorModule`, which also declare the five
+ViewModels (`viewModelOf`): one `SocialRepositoryImpl` serves
 the screens, the friend-requests home card (`HomeCardSource` under the
 `social` qualifier), the picker and the session cleaners (`social`, `person`
 and `friend-history`, reaching sign-out through `di/bridge/SessionCleanersBridge.kt`).
@@ -54,6 +76,12 @@ request generation in one immutable snapshot that changes only through
 response from before disabling or sign-out cannot refill the cleared cache,
 even after re-enabling. Stale opt-in reads cannot clear or revive a newer
 connection either. `PersonRepositoryImpl` keeps its cache the same way.
+
+Every repository checks `DemoMode` before a network call and answers from
+`DemoSocial` instead, the demo session and App Review data on both platforms;
+Backend calls also pass `BackendGate.mayCallBackend()`. Only
+`feature/social/data` reads MyItmoApi's personality models, and only data
+mappers and demo data build `UserSharing`; `SocialRulesTest` keeps both.
 
 `RelationshipState` is viewer-relative: `NONE`, `OUTGOING`, `INCOMING`,
 `FRIENDS`, `BLOCKED` (reserved, never produced yet). `UserSummary.sharing`
@@ -312,6 +340,19 @@ sections and load-more, a busy row, the next page loading, loading, empty and
 error, and `UserSearchScreenTest` covers the field and its clear button, row
 actions, load-more, every state and, through `UserSearchRoute` with the real
 ViewModel, invite, load-more and the reset.
+
+The data run on the JVM in `commonTest`: `SocialRepositoryRemoteTest`
+decodes Core 2.0's users and friends answers and the viewer capabilities,
+`PeopleSearchRepositoryImplTest` and `PersonRepositoryImplTest` cover MyItmoApi
+2.x's personalities, `SocialDemoGateTest` answers friends, requests,
+profiles and people from the demo set and refuses actions, and `SocialHomeCardSourceTest` and
+`FriendRequestsHomeCardTest` cover the home card. `SocialModuleTest` and
+`FriendSelectorModuleTest` resolve the Koin modules over the bridged types; `FriendshipPushHandlerTest` (`app/src/test`) covers the push. On a
+device, the friends, teacher and friend steps of `DemoModeFlowTest` open the
+screens in the demo, and
+`MainActivityDeepLinkTest.profileLinkOpensTheProfileAboveTheProfileTab` opens
+a `/u/` link. `SocialRulesTest` (`:konsist`) keeps personality models in
+`feature/social/data` and `UserSharing` in data mappers and demo data.
 See [visual test commands](../design.md#running-the-visual-tests).
 
 ## Not implemented yet
