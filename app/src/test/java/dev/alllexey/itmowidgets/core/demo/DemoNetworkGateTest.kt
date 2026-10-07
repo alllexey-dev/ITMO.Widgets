@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.core.network.BackendClientFactory
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -126,7 +127,7 @@ class DemoNetworkGateTest {
 
     private fun update(gate: BackendGate, demo: DemoMode) = AppUpdateRepositoryImpl(
         backendClient.app, gate, UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2"), AppVersionName("2.2"),
-        Clock.System, RecordingDiagnostics(), demo,
+        DevicePlatform.ANDROID, Clock.System, RecordingDiagnostics(), demo,
         dispatchers = dispatchers
     )
 

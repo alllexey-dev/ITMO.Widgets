@@ -3,9 +3,11 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.feature.auth.data.DataStoreDemoMode
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
@@ -16,9 +18,14 @@ import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
+import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
+import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
+import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
+import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -49,13 +56,21 @@ class AccountKoinGraphTest {
     }
 
     @Test
-    fun `the update repository resolves in Koin to the instance Hilt builds`() {
-        val application = bootApplication()
+    fun `Koin builds one update and one web sign-in repository`() {
+        bootApplication()
+        val koin = GlobalContext.get()
 
-        assertSame(
-            AccountUpdateBridgeEntryPoint.from(application).appUpdateRepository(),
-            GlobalContext.get().get<AppUpdateRepository>(),
-        )
+        assertSame(koin.get<AppUpdateRepositoryImpl>(), koin.get<AppUpdateRepository>())
+        assertSame(koin.get<WebLoginRepositoryImpl>(), koin.get<WebLoginRepository>())
+    }
+
+    @Test
+    fun `the update check reads the installed version Hilt provides and asks for Android`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+
+        assertEquals(AccountUpdateBridgeEntryPoint.from(application).installedVersion(), koin.get<AppVersionName>())
+        assertEquals(DevicePlatform.ANDROID, koin.get<DevicePlatform>())
     }
 
     /**
@@ -75,6 +90,7 @@ class AccountKoinGraphTest {
                 onboardingDataModule,
                 onboardingModule,
                 meModule,
+                webLoginDataModule,
                 webLoginModule,
                 updateModule,
             ),
