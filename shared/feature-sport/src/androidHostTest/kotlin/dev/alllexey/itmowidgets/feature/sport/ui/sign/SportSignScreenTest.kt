@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -154,9 +155,11 @@ class SportSignScreenTest {
         showRoute(SportCardFixtures.lesson(1))
 
         sheet.trySend(SportSheetAction(1, SportBookingAction.CANCEL.name))
-        compose.waitForIdle()
-
-        // The snackbar merges its text into its live region.
+        // The snackbar merges its text into its live region. getString loads on the resources' own scope, which
+        // Compose idling does not track.
+        compose.waitUntil("the unavailable snackbar is shown", RESOURCE_LOAD_TIMEOUT_MS) {
+            compose.onAllNodesWithText(UNAVAILABLE, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithText(UNAVAILABLE, useUnmergedTree = true).assertExists()
         assertTrue(actions.signedInLessons.isEmpty())
 
@@ -250,5 +253,6 @@ class SportSignScreenTest {
     private companion object {
         const val LINK_UNAVAILABLE = "Занятие недоступно"
         const val UNAVAILABLE = "Недоступно"
+        const val RESOURCE_LOAD_TIMEOUT_MS = 5_000L
     }
 }
