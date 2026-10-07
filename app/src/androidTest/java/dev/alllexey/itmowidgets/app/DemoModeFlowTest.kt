@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.fragment.app.DialogFragment
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.viewpager2.widget.ViewPager2
@@ -24,6 +25,8 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
+import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
+import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksSheetTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
 import java.time.LocalDate
 import java.time.ZoneId
@@ -48,6 +51,7 @@ import org.hamcrest.Matchers.`is`
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -149,7 +153,7 @@ class DemoModeFlowTest {
             eventually { onView(withText(R.string.error_demo_unavailable)).check(matches(isDisplayed())) }
             open(scenario) { it.openSubjectLinks(SubjectLinksArgs(algorithms.id, algorithms.name, scope)) }
             Screenshots.capture(DIRECTORY, "links") { settle() }
-            onView(withText("Баллы потока")).check(matches(isDisplayed()))
+            assertLinksSheetShows(activity, "Баллы потока")
             pressBack()
             settle()
 
@@ -198,6 +202,25 @@ class DemoModeFlowTest {
             }
         }
         Screenshots.capture(DIRECTORY, name) { settle() }
+    }
+
+    /** The links sheet's Compose list, in the sheet's own dialog window, shows a row titled [title] on screen. */
+    private fun assertLinksSheetShows(activity: MainActivity, title: String) {
+        eventually {
+            TestUi.instrumentation.runOnMainSync {
+                val sheet = activity.supportFragmentManager.findFragmentByTag(SubjectLinksBottomSheet.TAG) as DialogFragment
+                val window = checkNotNull(sheet.dialog?.takeIf { it.isShowing }?.window) { "the links sheet is not shown" }
+                val list = window.decorView.descendants().filter { it.isShown }.filterIsInstance<ViewRootForTest>()
+                    .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }
+                    .single { it.config.getOrNull(SemanticsProperties.TestTag) == SubjectLinksSheetTestTags.LIST }
+                val row = list.descendants().firstOrNull { node ->
+                    node.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text == title }
+                }
+                assertNotNull("the links sheet does not list $title", row)
+                val bounds = row!!.boundsInWindow
+                assertTrue("$title is not displayed: $bounds", row.layoutInfo.isPlaced && bounds.width > 0f && bounds.height > 0f)
+            }
+        }
     }
 
     private val errorTexts: List<String> by lazy {
