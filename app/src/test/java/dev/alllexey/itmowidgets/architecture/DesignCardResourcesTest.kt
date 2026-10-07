@@ -58,8 +58,7 @@ class DesignCardResourcesTest {
             "item_sport_booking" to "Content.Outlined",
             "item_recordbook_note" to "Content",
             "item_subject_hero" to "Hero",
-            "item_recordbook_sport" to "Summary",
-            "item_day_schedule" to "ScheduleDay"
+            "item_recordbook_sport" to "Summary"
         )
 
         layouts.forEach { (layout, variant) ->
@@ -72,9 +71,8 @@ class DesignCardResourcesTest {
     }
 
     @Test
-    fun `schedule days retain wider spacing than compact sport rows`() {
+    fun `compact sport rows keep their spacing beside the shared card dimensions`() {
         mapOf(
-            "item_day_schedule" to "8dp",
             "item_sport_booking" to "4dp"
         ).forEach { (layout, halfGap) ->
             val row = document("layout/$layout.xml")

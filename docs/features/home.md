@@ -149,7 +149,7 @@ Tests: `QrTileClickTest`, `QrTileControllerTest`, `QrTilePreferencesImplTest`,
 `QuickSettingsTilesTest`, `MainActivityIntentRoutingTest`, `MainRouteQueueTest`
 (JVM); `AppShortcutsTest`, `MainActivityDeepLinkTest`, `QrTileFlowTest`
 (`cmd statusbar add-tile` and `click-tile` on the emulator) and the today
-request cases of `ScheduleFragmentLifecycleTest` (device).
+request cases of `ScheduleRouteTest` (`:shared:feature-schedule`, JVM).
 
 ## MyITMO web
 

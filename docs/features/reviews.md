@@ -334,6 +334,6 @@ the reasons, a failure under the comment, the comment's limit and cancel. `Revie
 hosts: Koin view models, the form sheet (no tap outside, no drag, resized for the keyboard), back with and without
 changes, the snackbar of a failed save, closing after a save or an accepted report. The
 `ReviewEditorSheetContent_*` and `ReportReviewDialog_*` goldens of `ReviewsScreenshotTest` show every state in the
-four appearances. `LessonDetailsVisualTest` and
+four appearances. The `LessonDetailsContent_teacher-level` goldens and
 `RecordbookVisualTest` cover the tone dots. Use the [visual test commands](../design.md#running-the-visual-tests)
 and inspect the saved PNGs.

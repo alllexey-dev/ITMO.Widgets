@@ -41,7 +41,10 @@ import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 object ScheduleListTestTags {
     fun day(date: LocalDate): String = "schedule_day_$date"
 
-    fun lesson(pairId: Long): String = "schedule_lesson_$pairId"
+    fun lesson(pairId: Long): String = LESSON_PREFIX + pairId
+
+    /** The start of every [lesson] tag, for instrumented flows that tap any lesson. */
+    const val LESSON_PREFIX = "schedule_lesson_"
 
     fun pending(queueId: Long): String = "schedule_pending_$queueId"
 

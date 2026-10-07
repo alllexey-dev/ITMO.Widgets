@@ -37,6 +37,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -90,7 +91,7 @@ object ScheduleScreenTestTags {
  * date under a pull to refresh, placeholder cards on a first load, the empty or error state in the list's place.
  * Two FABs at the bottom end: back to the top once the reader is past the third day, and the friends picker while
  * [ScheduleScreenState.canPickFriend]. [listState] belongs to the host, which scrolls it to today; failed refreshes
- * of a shown list go to [snackbarHostState]. Stateless.
+ * of a shown list go to [snackbarHostState]. Stateless; [ScheduleRoute] wires it to its ViewModel.
  */
 @Composable
 fun ScheduleScreen(
@@ -169,13 +170,18 @@ private fun ScheduleBody(state: ScheduleScreenState, actions: ScheduleScreenActi
             action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
         )
         is ScheduleScreenBody.Days -> AppRefreshBox(state.refreshing, actions.onRefresh, Modifier.fillMaxSize()) {
-            ScheduleDays(body, actions, listState)
+            ScheduleDays(body, actions, listState, drawn = !state.positioning)
         }
     }
 }
 
 @Composable
-private fun ScheduleDays(body: ScheduleScreenBody.Days, actions: ScheduleScreenActions, listState: LazyListState) {
+private fun ScheduleDays(
+    body: ScheduleScreenBody.Days,
+    actions: ScheduleScreenActions,
+    listState: LazyListState,
+    drawn: Boolean,
+) {
     val loadMore by rememberUpdatedState(actions.onLoadMore)
     LaunchedEffect(listState) {
         snapshotFlow {
@@ -188,7 +194,10 @@ private fun ScheduleDays(body: ScheduleScreenBody.Days, actions: ScheduleScreenA
             .collect { loadMore() }
     }
     LazyColumn(
-        Modifier.fillMaxSize().testTag(ScheduleScreenTestTags.LIST),
+        Modifier
+            .fillMaxSize()
+            .graphicsLayer { alpha = if (drawn) 1f else 0f }
+            .testTag(ScheduleScreenTestTags.LIST),
         state = listState,
         contentPadding = PaddingValues(top = ListTopPadding, bottom = ItmoTheme.spacing.fabStackClearance),
     ) {

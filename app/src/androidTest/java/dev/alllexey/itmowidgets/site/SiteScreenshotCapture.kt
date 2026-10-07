@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.site
 
-import android.view.View
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -27,6 +28,7 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.RecordbookSemantics
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
@@ -35,7 +37,15 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
-import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleUiState
+import dev.alllexey.itmowidgets.feature.schedule.presentation.buildScheduleDisplayDays
+import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsActions
+import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsContent
+import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsSheetState
+import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreen
+import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreenActions
+import dev.alllexey.itmowidgets.feature.schedule.ui.list.scheduleScreenState
+import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
@@ -158,31 +168,47 @@ class SiteScreenshotCapture {
     }
     // endregion
 
-    // region Schedule (ScheduleLifecycleTestActivity)
+    // region Schedule (SettingsPreviewActivity with the shared screens; SH-3 replaces this region)
 
+    /** The own schedule from today with the pending sport rows, then the second lesson's sheet. */
     private fun captureSchedule() {
-        ScheduleLifecycleTestActivity.appearance = PreviewAppearance(dark = night)
-        ScheduleLifecycleTestActivity.days.value = DemoSchedule.ownDays(TODAY.toKotlinLocalDate(), TODAY.plusDays(2).toKotlinLocalDate(), TODAY.toKotlinLocalDate())
-        ScheduleLifecycleTestActivity.showPendingSport.value = true
-        ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(pendingBookings())
+        SettingsPreviewActivity.appearance = PreviewAppearance(dark = night)
+        val today = TODAY.toKotlinLocalDate()
+        val official = DemoSchedule.ownDays(today, TODAY.plusDays(2).toKotlinLocalDate(), today)
+        val displayDays = buildScheduleDisplayDays(
+            official, pendingBookings(), today, TODAY.plusDays(2).toKotlinLocalDate(), TIME.timeZone, TIME.now()
+        )
+        val state = scheduleScreenState(
+            ScheduleUiState.Content(official, loadingMore = false, selectedUser = null, displayDays = displayDays),
+            TIME.localNow(),
+            TIME.timeZone,
+            ownTab = true
+        )
+        val lessons = official.first().lessons
+        val lesson = lessons.getOrElse(1) { lessons.first() }
         try {
-            ActivityScenario.launch(ScheduleLifecycleTestActivity::class.java).use { scenario ->
+            ActivityScenario.launch(SettingsPreviewActivity::class.java).use { scenario ->
+                scenario.onActivity { it.showCompose { ScheduleScreen(state, ScheduleScreenActions()) } }
                 settle()
                 capture("schedule")
-                scenario.onActivity { activity ->
-                    val cards = activity.findViewById<RecyclerView>(R.id.outer_recycler_view)
-                    cards.descendantsOf().filter { it.id == R.id.card_container && it.isShown }.elementAt(1).performClick()
+                scenario.onActivity {
+                    it.showCompose {
+                        LessonDetailsContent(
+                            LessonDetailsSheetState(lesson.toDetailsArgs(today), mapAvailable = true),
+                            LessonDetailsActions()
+                        )
+                    }
                 }
                 settle()
                 capture("lesson")
             }
         } finally {
-            ScheduleLifecycleTestActivity.appearance = PreviewAppearance()
-            ScheduleLifecycleTestActivity.days.value = emptyList()
-            ScheduleLifecycleTestActivity.showPendingSport.value = false
-            ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(emptyList())
+            SettingsPreviewActivity.appearance = PreviewAppearance()
         }
     }
+
+    private fun SettingsPreviewActivity.showCompose(content: @Composable () -> Unit) =
+        showContent(ComposeView(this).apply { setContent { ItmoTheme(content = content) } })
 
     // endregion
 
@@ -281,13 +307,6 @@ class SiteScreenshotCapture {
     )
 
     private fun me() = DemoPeople.ME_PERSON.summary()
-
-    private fun View.descendantsOf(): Sequence<View> = sequence {
-        yield(this@descendantsOf)
-        if (this@descendantsOf is android.view.ViewGroup) {
-            for (i in 0 until childCount) yieldAll(getChildAt(i).descendantsOf())
-        }
-    }
 
     private fun settle() = TestUi.settle(900)
 

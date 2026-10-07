@@ -6,6 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
@@ -31,6 +34,8 @@ import dev.alllexey.itmowidgets.feature.home.HomeSemantics
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
+import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
+import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreenTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestSession
@@ -86,10 +91,15 @@ class StoreScreenshotCapture {
 
             open(scenario) { it.openRoot(AppRoot.SCHEDULE) }
             frame(activity, "02-schedule")
+            // The schedule is Compose (LS-6b): the first placed Algorithms row opens by its semantics click.
             scenario.onActivity { main ->
-                main.window.decorView.descendants().filter { it.id == R.id.card_container && it.isShown }
-                    .first { card -> card.texts().any { DemoStudy.ALGORITHMS.name in it } }
-                    .performClick()
+                val root = composeRoot(main, ScheduleScreenTestTags.LIST)
+                val row = HomeSemantics.nodes(root).first { node ->
+                    val tag = node.config.getOrNull(SemanticsProperties.TestTag).orEmpty()
+                    tag.startsWith(ScheduleListTestTags.LESSON_PREFIX) && node.layoutInfo.isPlaced &&
+                        node.texts().any { DemoStudy.ALGORITHMS.name in it }
+                }
+                HomeSemantics.click(root, row.config[SemanticsProperties.TestTag])
             }
             settle()
             frame(activity, "03-lesson", sheet = true)
@@ -178,7 +188,9 @@ class StoreScreenshotCapture {
         ).map(context::getString) + TEST_WORDING
     }
 
-    private fun View.texts(): List<String> = descendants().filterIsInstance<TextView>().map { it.text.toString() }.toList()
+    /** The texts of a Compose node and everything under it in the unmerged tree. */
+    private fun SemanticsNode.texts(): List<String> =
+        config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } + children.flatMap { it.texts() }
 
     private fun View.descendants(): Sequence<View> = sequence {
         yield(this@descendants)

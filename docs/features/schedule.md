@@ -451,9 +451,8 @@ marks, the block and the flow; `ScheduleChangesScreenTest` and
 the read mark on start, the `ScheduleChangesScreen_*` goldens its look.
 Instrumented: `ScheduleChangesWorkTest` (the
 app's `WorkManager` through the debug `ScheduleChangesTestEntryPoint`),
-`ScheduleChangesNotificationTest`, `ScheduleCardsVisualTest` and
-`LessonDetailsVisualTest` (marks and the block through
-`ScheduleLifecycleTestActivity.changes`). They use synthetic `pairId`s and
+`ScheduleChangesNotificationTest`; the marks and the block are covered by the
+`ScheduleList*` and `LessonDetailsContent_change` goldens. They use synthetic `pairId`s and
 dates and restore the WorkManager state they found.
 
 ## Calendar
