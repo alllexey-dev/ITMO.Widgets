@@ -211,7 +211,7 @@ ViewModel code runs on the main thread until it suspends.
 
 | Data | Store |
 |---|---|
-| Settings, flags, one-off values | DataStore through the per-concern `*Preferences` stores in `core/storage` (`WidgetSettingsPreferences`, `MarkSourcePreferences`, `DemoPreferences`, ...) and `UtilityStorage`; `demo_active` marks the demo session |
+| Settings, flags, one-off values | DataStore through the per-concern `*Preferences` stores in `core/storage` (`WidgetSettingsPreferences`, `MarkSourcePreferences`, `DemoPreferences`, ...) and `UtilityStorage`; `demo_active` marks the demo session; `observe` takes its first value from an identity `updateData`, because DataStore 1.2.1 can drop a write for a collector whose first read lands inside it |
 | ITMO.ID tokens, BARS session | Encrypted files via Android Keystore |
 | Schedule and QR caches | Files under `cacheDir`, observed through flows |
 | Device-only subject links and the last links answer per subject period | `filesDir/subject_links/cache.json`, atomic writes, excluded from backup and device transfer |
