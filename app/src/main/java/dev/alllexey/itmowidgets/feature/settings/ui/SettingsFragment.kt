@@ -7,14 +7,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
-import androidx.core.view.isVisible
-import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -42,38 +43,46 @@ import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerImagePicker
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
-import dev.alllexey.itmowidgets.databinding.FragmentSettingsBinding
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/**
+ * Every settings page (`@id/settings` with its `settings_page` argument): `SettingsScreen` from
+ * `:shared:feature-settings` over the Koin `SettingsViewModel`, with the page's widget preview, a View of
+ * [WidgetPreviewFactory], in the screen's slot. The host keeps what only Android does: the dialogs, the permission
+ * and result launchers, system pages, navigation between pages and the postponed enter until the first rows and the
+ * preview are ready.
+ */
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
 
     @Inject lateinit var previewFactory: WidgetPreviewFactory
     private var widgetPreview: WidgetPreview? = null
+    private var boundPreviewSettings: WidgetPreviewSettings? = null
     private var previewState: Bundle? = null
-
-    private var _binding: FragmentSettingsBinding? = null
-    private val binding get() = _binding!!
 
     private val viewModel: SettingsViewModel by viewModel()
     private val spoilerViewModel: CustomSpoilerViewModel by viewModel()
 
-    private var renderer: SettingsRenderer? = null
+    private val actions = SettingsActions(
+        onBack = { closeScreen() },
+        onToggle = ::onToggleChanged,
+        onChoice = ::showChoiceDialog,
+        onNavigate = { page -> findNavController().navigate(R.id.settings, bundleOf(SettingsPage.ARGUMENT to page.name)) },
+        onAction = { id -> viewModel.onAction(id) },
+    )
 
     private val spoilerImagePicker = SpoilerImagePicker(this) { result ->
         when (result) {
@@ -102,12 +111,11 @@ class SettingsFragment : Fragment() {
                 viewModel.onCalendarAccessGranted()
                 return@registerForActivityResult
             }
-            restoreRenderedValues()
             // A refusal without a dialog means the permission is locked; only the app's system page can undo that.
             if (!shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)) {
-                showCalendarAccessDialog(locked = true, onAllow = {}, onCancel = ::restoreRenderedValues)
+                showCalendarAccessDialog(locked = true, onAllow = {}, onCancel = {})
             } else {
-                Snackbar.make(binding.root, R.string.calendar_access_denied, Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(requireView(), R.string.calendar_access_denied, Snackbar.LENGTH_SHORT).show()
             }
         }
 
@@ -130,9 +138,23 @@ class SettingsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
-        return binding.root
+    ): View = itmoComposeView {
+        val state by viewModel.uiState.collectAsState()
+        SettingsScreen(
+            state = state,
+            actions = actions,
+            widgetPreview = { settings ->
+                AndroidView(
+                    factory = { obtainPreview(settings).view },
+                    modifier = Modifier.fillMaxWidth(),
+                    onRelease = { releasePreview() },
+                    update = { bindPreview(settings) },
+                )
+            },
+        )
+    }.apply {
+        // The page slides as one surface in the shared-axis transitions.
+        isTransitionGroup = true
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -144,52 +166,15 @@ class SettingsFragment : Fragment() {
         }
 
         previewState = savedInstanceState?.getBundle(PREVIEW_STATE) ?: previewState
-        binding.settingsTitle.text = page.title.resolve(requireContext())
-        binding.backButton.setOnClickListener { closeScreen() }
-        val initialBottomPadding = binding.sectionsContainer.paddingBottom
-        ViewCompat.setOnApplyWindowInsetsListener(binding.sectionsContainer) { content, insets ->
-            content.updatePadding(
-                bottom = initialBottomPadding +
-                    insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            )
-            insets
-        }
-        ViewCompat.requestApplyInsets(binding.sectionsContainer)
-
-        renderer = SettingsRenderer(
-            container = binding.sectionsContainer,
-            onToggle = ::onToggleChanged,
-            onChoice = ::showChoiceDialog,
-            onNavigate = { page ->
-                findNavController().navigate(
-                    R.id.settings,
-                    bundleOf(SettingsPage.ARGUMENT to page.name)
-                )
-            },
-            onAction = viewModel::onAction
-        )
-
-        viewModel.uiState
-            .map { state -> state.previewSettings }
-            .distinctUntilChanged()
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach { settings -> settings?.let(::renderPreview) }
-            .launchIn(viewLifecycleOwner.lifecycleScope)
 
         if (page == SettingsPage.QR_WIDGET) {
             observeCustomSpoiler()
         }
 
-        viewModel.uiState
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach(::renderSections)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-
         viewLifecycleOwner.lifecycleScope.launch {
             val loaded = viewModel.uiState.first { it.loaded }
-            renderSections(loaded)
             // Widget pages build their preview in the same state as their first rows.
-            loaded.previewSettings?.let { renderPreview(it).awaitReady() }
+            loaded.previewSettings?.let { obtainPreview(it).awaitReady() }
             // Enter with final local values and an already drawn QR image, not a loading frame.
             view.doOnPreDraw {
                 startPostponedEnterTransition()
@@ -202,7 +187,7 @@ class SettingsFragment : Fragment() {
             .onEach { event ->
                 when (event) {
                     SettingsEvent.WidgetsRefreshStarted -> Snackbar.make(
-                        binding.root,
+                        requireView(),
                         R.string.settings_refresh_widgets_started,
                         Snackbar.LENGTH_SHORT
                     ).show()
@@ -223,24 +208,18 @@ class SettingsFragment : Fragment() {
                     SettingsEvent.OpenIcsExport -> if (childFragmentManager.findFragmentByTag(IcsExportBottomSheet.TAG) == null) {
                         IcsExportBottomSheet().show(childFragmentManager, IcsExportBottomSheet.TAG)
                     }
-                    is SettingsEvent.OpenWebPage -> openLink(BuildConfig.WIDGETS_BASE_URL + event.path, binding.root)
-                    is SettingsEvent.ShowMessage -> {
-                        // A switch the user flipped stays as the state says when the action did not go through.
-                        restoreRenderedValues()
-                        Snackbar.make(
-                            binding.root,
-                            event.text.resolve(requireContext()),
-                            Snackbar.LENGTH_SHORT
-                        ).show()
-                    }
-                    is SettingsEvent.ShowError -> {
-                        restoreRenderedValues()
-                        Snackbar.make(
-                            binding.root,
-                            event.error.messageRes(),
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    }
+                    is SettingsEvent.OpenWebPage -> openLink(BuildConfig.WIDGETS_BASE_URL + event.path, requireView())
+                    // A switch always shows the state, so one the action did not change has nothing to undo.
+                    is SettingsEvent.ShowMessage -> Snackbar.make(
+                        requireView(),
+                        event.text.resolve(requireContext()),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                    is SettingsEvent.ShowError -> Snackbar.make(
+                        requireView(),
+                        event.error.messageRes(),
+                        Snackbar.LENGTH_LONG
+                    ).show()
                 }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
@@ -263,29 +242,33 @@ class SettingsFragment : Fragment() {
                     CustomSpoilerEvent.FAILED -> R.string.settings_qr_custom_image_failed
                 }
                 if (event != CustomSpoilerEvent.FAILED) widgetPreview?.refresh()
-                Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+                Snackbar.make(requireView(), message, Snackbar.LENGTH_LONG).show()
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    private fun renderSections(state: SettingsUiState) {
-        binding.settingsProgress.isVisible = state.page == SettingsPage.PRIVACY &&
-            state.loaded && state.sections.isEmpty()
-        binding.settingsScroll.isVisible = state.sections.isNotEmpty()
-        renderer?.render(state.sections)
-    }
-
-    private fun renderPreview(settings: WidgetPreviewSettings): WidgetPreview {
-        val preview = widgetPreview ?: previewFactory.create(
-            requireContext(), viewLifecycleOwner.lifecycleScope, settings
-        ).also {
+    /** The page's one widget preview: built on first use with the state saved before, then reused. */
+    private fun obtainPreview(settings: WidgetPreviewSettings): WidgetPreview =
+        widgetPreview ?: previewFactory.create(requireContext(), viewLifecycleOwner.lifecycleScope, settings).also {
             previewState?.let(it::restoreState)
             widgetPreview = it
-            binding.widgetPreviewContainer.addView(it.view)
+            bindPreview(settings)
         }
+
+    private fun bindPreview(settings: WidgetPreviewSettings) {
+        val preview = widgetPreview ?: return
+        if (settings == boundPreviewSettings) return
+        boundPreviewSettings = settings
         preview.bind(settings)
-        binding.widgetPreviewContainer.isVisible = true
-        return preview
+    }
+
+    /** Called when the composition drops the preview and from [onDestroyView]; the second call finds nothing. */
+    private fun releasePreview() {
+        val preview = widgetPreview ?: return
+        previewState = preview.saveState() ?: previewState
+        preview.close()
+        widgetPreview = null
+        boundPreviewSettings = null
     }
 
     override fun onResume() {
@@ -310,11 +293,7 @@ class SettingsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        previewState = widgetPreview?.saveState() ?: previewState
-        widgetPreview?.close()
-        widgetPreview = null
-        renderer = null
-        _binding = null
+        releasePreview()
     }
 
     private fun onToggleChanged(id: SettingRowId, checked: Boolean) {
@@ -326,11 +305,10 @@ class SettingsFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.settings_custom_services_consent_title)
             .setMessage(R.string.settings_custom_services_consent_message)
-            .setNegativeButton(R.string.common_cancel) { _, _ -> restoreRenderedValues() }
+            .setNegativeButton(R.string.common_cancel, null)
             .setPositiveButton(R.string.settings_custom_services_enable) { _, _ ->
                 viewModel.onToggleChanged(id, true)
             }
-            .setOnCancelListener { restoreRenderedValues() }
             .show()
     }
 
@@ -341,10 +319,6 @@ class SettingsFragment : Fragment() {
             .setNegativeButton(R.string.background_work_later, null)
             .setPositiveButton(R.string.background_work_allow) { _, _ -> requireActivity().openBackgroundWorkSettings() }
             .show()
-    }
-
-    private fun restoreRenderedValues() {
-        renderer?.render(viewModel.uiState.value.sections)
     }
 
     private fun showChoiceDialog(item: SettingItem.Choice) {
@@ -370,7 +344,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun showImageError() {
-        _binding?.let { Snackbar.make(it.root, R.string.settings_qr_custom_image_failed, Snackbar.LENGTH_LONG).show() }
+        view?.let { Snackbar.make(it, R.string.settings_qr_custom_image_failed, Snackbar.LENGTH_LONG).show() }
     }
 
     /** Granted: straight on. Otherwise a short explanation first when Android suggests one, then the system dialog. */
@@ -391,7 +365,7 @@ class SettingsFragment : Fragment() {
             ask()
             return
         }
-        showCalendarAccessDialog(locked = false, onAllow = ask, onCancel = ::restoreRenderedValues)
+        showCalendarAccessDialog(locked = false, onAllow = ask, onCancel = {})
     }
 
     private companion object {

@@ -14,10 +14,6 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.fragment.app.DialogFragment
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
@@ -26,6 +22,8 @@ import dev.alllexey.itmowidgets.feature.debug.ui.DebugToolsTestTags
 import dev.alllexey.itmowidgets.feature.home.HomeSemantics
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeTestTags
+import dev.alllexey.itmowidgets.feature.settings.SettingsSemantics
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -52,7 +50,7 @@ class MainNavigationTest {
             scenario.onActivity { openMeSettings(it) }
             settle()
             scenario.onActivity { capture(it, "settings") }
-            onView(withText(R.string.settings_qr_short_title)).perform(click())
+            scenario.onActivity { SettingsSemantics.click(settingsPage(it), SettingRowId.PAGE_QR_WIDGET) }
             settle()
             scenario.onActivity { capture(it, "qr") }
             repeat(2) {
@@ -65,7 +63,7 @@ class MainNavigationTest {
                     assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS, it.binding.navHostFragment.importantForAccessibility)
                     assertSame(it.navigation.overlayHost, it.supportFragmentManager.primaryNavigationFragment)
                 }
-                onView(withId(R.id.back_button)).perform(click())
+                scenario.onActivity { SettingsSemantics.back(settingsPage(it)) }
                 settle()
             }
             scenario.onActivity {
@@ -89,7 +87,7 @@ class MainNavigationTest {
                 settle()
                 scenario.onActivity { openMeSettings(it) }
                 settle()
-                onView(withText(R.string.settings_qr_short_title)).perform(click())
+                scenario.onActivity { SettingsSemantics.click(settingsPage(it), SettingRowId.PAGE_QR_WIDGET) }
                 settle()
                 scenario.onActivity { assertTrue(it.navigation.selectRoot(destination)) }
                 settle()
@@ -117,7 +115,7 @@ class MainNavigationTest {
             settle()
             scenario.onActivity { openMeSettings(it) }
             settle()
-            onView(withText(R.string.settings_qr_short_title)).perform(click())
+            scenario.onActivity { SettingsSemantics.click(settingsPage(it), SettingRowId.PAGE_QR_WIDGET) }
             settle()
             scenario.recreate()
             settle()
@@ -127,7 +125,7 @@ class MainNavigationTest {
                 assertEquals(1, it.supportFragmentManager.backStackEntryCount)
                 assertSame(it.navigation.overlayHost, it.supportFragmentManager.primaryNavigationFragment)
             }
-            onView(withId(R.id.back_button)).perform(click())
+            scenario.onActivity { SettingsSemantics.back(settingsPage(it)) }
             settle()
             scenario.onActivity {
                 assertEquals(SettingsPage.ROOT.name, it.navigation.overlayHost!!.navController.currentBackStackEntry!!.arguments!!.getString(SettingsPage.ARGUMENT))
@@ -358,6 +356,10 @@ class MainNavigationTest {
         val me = activity.host.childFragmentManager.primaryNavigationFragment!!.requireView()
         HomeSemantics.click(me, MeTestTags.SETTINGS_ROW)
     }
+
+    /** The settings page on top of the overlay, a Compose screen read through its semantics. */
+    private fun settingsPage(activity: SettingsNavigationTestActivity): View =
+        activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment!!.requireView()
 
     private fun settle() = TestUi.settle(500)
 
