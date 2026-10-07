@@ -8,12 +8,16 @@ import kotlinx.io.IOException
  * Whether an I/O failure is anywhere in the cause chain; cycles in the chain are tolerated. A failure before any
  * answer (no DNS, refused or lost connection, timeout) is [AppError.Network] wherever it is wrapped: a token
  * refresh that could not reach ITMO.ID is not a rejected session.
+ *
+ * Both I/O exception roots count: Ktor (every engine, Darwin included) throws [IOException] of kotlinx-io, okio
+ * throws its own. On the JVM both are `java.io.IOException`; on Kotlin/Native they are unrelated classes, and
+ * checking only one of them would make iOS answer a failure Android calls [AppError.Network] with a generic error.
  */
 fun Throwable.isCausedByNetworkFailure(): Boolean {
     var current: Throwable? = this
     val seen = mutableSetOf<Throwable>()
     while (current != null && seen.add(current)) {
-        if (current is IOException || current is MyItmoException.Network) return true
+        if (current is IOException || current is okio.IOException || current is MyItmoException.Network) return true
         current = current.cause
     }
     return false
