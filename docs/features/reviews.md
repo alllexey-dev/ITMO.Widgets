@@ -33,7 +33,13 @@ defines the routes, limits, premoderation and the ISU check.
   `ImageView.bindLevel`, shared by the profile, the lesson sheet and the subject
   page.
 - `feature/reviews/presentation`: `ReviewEditorViewModel`, `ReportReviewViewModel`.
-- `feature/reviews/ui`: `ReviewEditorBottomSheet`, `ReportReviewDialogFragment`.
+- `feature/reviews/ui` (`:shared:feature-reviews` `commonMain`): `ReviewEditorSheet.kt` with the editor's
+  `ReviewEditorSheet` (the hosts' entry) and its stateless `ReviewEditorSheetContent`, and `ReportReviewDialog.kt`
+  with `ReportReviewForm` (the entry) over `ReportReviewDialog` on the kit's report dialog; previews and goldens of
+  both live there.
+- `feature/reviews/ui` (`:app`): the Fragment hosts `ReviewEditorBottomSheet` (on the kit's
+  `ItmoBottomSheetFragment`) and `ReportReviewDialogFragment`; they keep their class names, tags and `newInstance`
+  and perform the effects: closing, the snackbar of a failed save.
 
 The profile (`feature/social`) opens both through `AppNavigator.openReviewEditor`
 and `openReviewReport`, so the two features never import each other.
@@ -238,14 +244,14 @@ with a typographic minus in the error colour.
 
 ## Editor
 
-`ReviewEditorBottomSheet` (`sheet_review_editor.xml`) writes a new review or
+`ReviewEditorBottomSheet` hosts `ReviewEditorSheet` and writes a new review or
 edits the own one:
 
 - The title is `Новый отзыв` or `Изменить отзыв`, with the teacher's short name
   on a second line; a close button stands next to it. The sheet has no handle,
   cannot be dragged or closed by a tap outside, and opens at its content height.
 - `Предмет` is optional and wraps up to three lines. Below it a row of filter
-  chips (`item_review_subject_chip.xml`) suggests the subjects of the viewer's
+  chips suggests the subjects of the viewer's
   own academic lessons with this teacher, newest first. A chip fills the field;
   the chip matching the field shows as picked, and tapping it again clears it.
 - `Отзыв` has a counter to 3000. While the text is shorter than 30 characters
@@ -253,14 +259,18 @@ edits the own one:
   error. Longer than 3000, or a subject longer than 200, is an error on send.
 - `Анонимно` is on by default; turning it off shows `Имя будет видно всем`.
 - The button is `Отправить` for a new review and `Сохранить` for an edit,
-  disabled while the text is blank or a save runs. A success closes the sheet,
-  a failure shows a snackbar and keeps it.
+  pinned under the scrolling form, so the keyboard never hides it; it is
+  disabled while the text is blank and shows a progress indicator while a save
+  runs, which takes no second tap. A success closes the sheet, a failure shows
+  a snackbar and keeps it.
 
 Back or the close button with changes asks `Не сохранять отзыв?`
 (`Не сохранять` / `Отмена`); without changes it simply closes. Fields, the
 initial values and the mode live in `SavedStateHandle`, so the text survives
 recreation and process death; the first opening starts from the cached own
-review. The flows of the viewer's lessons with the teacher go into the draft as
+review. The fields start from the view model's state, so restored text comes
+back with the cursor at its end; the sheet keeps no second saved copy. The
+flows of the viewer's lessons with the teacher go into the draft as
 `flowIds`, candidates for Backend's check. Suggestions and flows grow as the
 schedule weeks answer; a save does not wait for the history and sends the flows
 collected by then, and an unavailable history leaves no suggestions without an
@@ -268,12 +278,15 @@ error.
 
 ## Report
 
-`ReportReviewDialogFragment` (`dialog_report_review.xml`) is `Жалоба на отзыв`
-with the reasons `Оскорбления`, `Не тот преподаватель`, `Спам`, `Другое` and an
-optional `Комментарий` of up to 500 characters. `Отправить` is enabled once a
-reason is chosen. A success closes the dialog and the report entry disappears
-from the review; a failure shows its text under the comment and keeps the
-dialog.
+`ReportReviewDialogFragment` hosts `ReportReviewForm` on the kit's report
+dialog, which brings its own window; the Fragment's own dialog only anchors it.
+It is `Жалоба на отзыв` with the reasons `Оскорбления`, `Не тот преподаватель`,
+`Спам`, `Другое` and an optional `Комментарий` of up to 500 characters; the
+chosen reason and the comment survive recreation. `Отправить` is enabled once a
+reason is chosen and shows a progress indicator while the report is sent; back
+and a tap outside close the dialog only while nothing is being sent. A success
+closes the dialog and the report entry disappears from the review; a failure
+shows its text under the comment and keeps the dialog.
 
 ## Verification
 
@@ -313,7 +326,14 @@ pill, reports, author navigation, deletion after `Удалить отзыв?`, a
 answer and the summary card (tone, low confidence, empty blocks, the scales
 toggle); `SocialScreenshotTest` records the rows, the summary card (collapsed,
 expanded, sparse, long texts) and the profile in four appearances.
-`ReviewEditorVisualTest` (with `ReviewEditorPreviewActivity`, debug only)
-covers the editor and the report dialog in the full appearance matrix. `LessonDetailsVisualTest` and
+`ReviewEditorSheetTest` and `ReportReviewDialogTest` (the module's `androidHostTest`, on the real view models at
+320 dp and font 1.3) cover the editor and the report: the new and the edited form, suggestions arriving with the
+history and filling or clearing the subject, anonymity, the minimum as a hint and then the error, the discard
+question, text and cursor after recreation and process death, one save at a time, `Отправить` above the keyboard,
+the reasons, a failure under the comment, the comment's limit and cancel. `ReviewsHostsKoinTest` (`:app`) covers the
+hosts: Koin view models, the form sheet (no tap outside, no drag, resized for the keyboard), back with and without
+changes, the snackbar of a failed save, closing after a save or an accepted report. The
+`ReviewEditorSheetContent_*` and `ReportReviewDialog_*` goldens of `ReviewsScreenshotTest` show every state in the
+four appearances. `LessonDetailsVisualTest` and
 `RecordbookVisualTest` cover the tone dots. Use the [visual test commands](../design.md#running-the-visual-tests)
 and inspect the saved PNGs.

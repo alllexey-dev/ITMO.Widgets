@@ -1,175 +1,83 @@
 package dev.alllexey.itmowidgets.feature.reviews.ui
 
-import android.app.Dialog
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
-import android.widget.FrameLayout
-import androidx.activity.OnBackPressedCallback
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.os.bundleOf
-import androidx.core.view.isVisible
-import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.chip.Chip
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
-import dev.alllexey.itmowidgets.core.reviews.TeacherReviewLimits
-import dev.alllexey.itmowidgets.core.ui.expandToContent
 import dev.alllexey.itmowidgets.core.ui.messageRes
-import dev.alllexey.itmowidgets.core.ui.shortPersonName
-import dev.alllexey.itmowidgets.databinding.SheetReviewEditorBinding
+import dev.alllexey.itmowidgets.designsystem.host.ItmoBottomSheetFragment
+import dev.alllexey.itmowidgets.designsystem.host.SheetDismissal
+import dev.alllexey.itmowidgets.designsystem.host.SheetSpec
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorEvent
-import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorUiState
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorViewModel
-import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewFieldError
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-/** Writes or edits the viewer's review: subject with suggestions, text, anonymity. Changes are never lost silently. */
+/**
+ * Writes or edits the viewer's review, drawn by `ReviewEditorSheet` of `:shared:feature-reviews`. A form sheet: no
+ * handle, no drag, no tap outside, the window resized for the keyboard; back and the close button ask before
+ * discarding changes, so they are never lost silently. The Fragment keeps the stable entry points (class name, [TAG],
+ * [newInstance]) and performs the effects: closing after a save, the snackbar of a failed one.
+ */
 @AndroidEntryPoint
-class ReviewEditorBottomSheet : BottomSheetDialogFragment() {
-    private var _binding: SheetReviewEditorBinding? = null
-    private val binding get() = _binding!!
+class ReviewEditorBottomSheet : ItmoBottomSheetFragment() {
     private val viewModel: ReviewEditorViewModel by viewModel()
-    /** Programmatic updates of the fields must not read as the user's input. */
-    private var rendering = false
-    private var shownSuggestions: List<String>? = null
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        isCancelable = false
-        return (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
-            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() = close()
-            })
-        }
+    /** `Не сохранять отзыв?` is up; like the View dialog, the question is not restored after recreation. */
+    private var discarding by mutableStateOf(false)
+
+    override val spec: SheetSpec get() = SPEC
+
+    @Composable
+    override fun SheetContent() {
+        val form by viewModel.uiState.collectAsState()
+        ReviewEditorSheet(
+            form = form,
+            teacherName = viewModel.teacherName,
+            discarding = discarding,
+            actions = ReviewEditorActions(
+                onSubjectChange = viewModel::onSubjectChanged,
+                onTextChange = viewModel::onTextChanged,
+                onAnonymousChange = viewModel::onAnonymousChanged,
+                onSave = viewModel::save,
+                onClose = ::onCloseRequest,
+                onDiscard = ::dismiss,
+                onKeepEditing = { discarding = false },
+            ),
+        )
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = SheetReviewEditorBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onStart() {
-        super.onStart()
-        @Suppress("DEPRECATION")
-        dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        expandToContent()
-        dialog?.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)?.let {
-            BottomSheetBehavior.from(it).isDraggable = false
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?): Unit = with(binding) {
-        // Long subjects wrap instead of scrolling away, and the keyboard still moves on to the text.
-        subject.setHorizontallyScrolling(false)
-        subject.maxLines = MAX_SUBJECT_LINES
-        subject.doAfterTextChanged { if (!rendering) viewModel.onSubjectChanged(it?.toString().orEmpty()) }
-        text.doAfterTextChanged { if (!rendering) viewModel.onTextChanged(it?.toString().orEmpty()) }
-        anonymous.setOnCheckedChangeListener { _, checked -> if (!rendering) viewModel.onAnonymousChanged(checked) }
-        close.setOnClickListener { close() }
-        saveButton.setOnClickListener { viewModel.save() }
-        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
             when (event) {
                 ReviewEditorEvent.Saved -> dismiss()
-                is ReviewEditorEvent.Failed -> Snackbar.make(root, event.error.messageRes(), Snackbar.LENGTH_LONG).show()
+                is ReviewEditorEvent.Failed ->
+                    Snackbar.make(view, event.error.messageRes(), Snackbar.LENGTH_LONG).show()
             }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    private fun render(state: ReviewEditorUiState) = with(binding) {
-        rendering = true
-        try {
-            title.setText(if (state.editing) R.string.review_editor_edit else R.string.review_editor_new)
-            teacher.text = shortPersonName(viewModel.teacherName)
-            if (subject.text?.toString() != state.subject) {
-                subject.setText(state.subject)
-                subject.setSelection(state.subject.length)
-            }
-            subjectLayout.error = state.subjectError?.let(::message)
-            bindSuggestions(state.suggestions)
-            markPickedSuggestion(state.subject)
-            if (text.text?.toString() != state.text) {
-                text.setText(state.text)
-                text.setSelection(state.text.length)
-            }
-            textLayout.error = state.textError?.let(::message)
-            textLayout.helperText = if (state.showsMinimumHint) {
-                getString(R.string.review_text_too_short, TeacherReviewLimits.MIN_TEXT)
-            } else null
-            if (anonymous.isChecked != state.anonymous) anonymous.isChecked = state.anonymous
-            anonymousHint.isVisible = !state.anonymous
-            saveButton.setText(if (state.editing) R.string.review_save else R.string.review_send)
-            saveButton.isEnabled = state.canSave
-        } finally {
-            rendering = false
-        }
-    }
-
-    private fun message(error: ReviewFieldError): String = when (error) {
-        ReviewFieldError.TEXT_TOO_SHORT -> getString(R.string.review_text_too_short, TeacherReviewLimits.MIN_TEXT)
-        ReviewFieldError.TEXT_TOO_LONG -> getString(R.string.review_text_too_long, TeacherReviewLimits.MAX_TEXT)
-        ReviewFieldError.SUBJECT_TOO_LONG -> getString(R.string.review_subject_too_long, TeacherReviewLimits.MAX_SUBJECT)
-    }
-
-    private fun bindSuggestions(suggestions: List<String>) = with(binding) {
-        suggestionsScroll.isVisible = suggestions.isNotEmpty()
-        if (suggestions == shownSuggestions) return@with
-        shownSuggestions = suggestions
-        this.suggestions.removeAllViews()
-        suggestions.forEach { name ->
-            val chip = layoutInflater.inflate(R.layout.item_review_subject_chip, this.suggestions, false) as Chip
-            chip.text = name
-            chip.setOnClickListener {
-                val picked = if (subject.text?.toString() == name) "" else name
-                subject.setText(picked)
-                subject.setSelection(picked.length)
-            }
-            this.suggestions.addView(chip)
-        }
-    }
-
-    /** The chip matching the typed subject shows as selected, so a tap reads as a choice. */
-    private fun markPickedSuggestion(current: String) = with(binding) {
-        for (index in 0 until suggestions.childCount) {
-            val chip = suggestions.getChildAt(index) as Chip
-            chip.isChecked = chip.text.toString() == current
-        }
-    }
-
-    /** Leaving with unsaved changes asks first; an untouched form simply closes. */
-    private fun close() {
-        if (!viewModel.hasChanges()) {
-            dismiss()
-            return
-        }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.review_discard_title)
-            .setNegativeButton(R.string.common_cancel, null)
-            .setPositiveButton(R.string.review_discard) { _, _ -> dismiss() }
-            .show()
-    }
-
-    override fun onDestroyView() {
-        shownSuggestions = null
-        _binding = null
-        super.onDestroyView()
+    /** Back and the close button: leaving with unsaved changes asks first; an untouched form simply closes. */
+    override fun onCloseRequest() {
+        if (viewModel.hasChanges()) discarding = true else dismiss()
     }
 
     companion object {
         const val TAG = "ReviewEditorBottomSheet"
-        private const val MAX_SUBJECT_LINES = 3
+
+        /** Content height, no drag or tap outside, resized above the keyboard, as the View sheet opened. */
+        private val SPEC = SheetSpec(dismissal = SheetDismissal.Form, textInput = true)
 
         fun newInstance(args: TeacherReviewArgs) = ReviewEditorBottomSheet().apply {
             arguments = bundleOf(TeacherReviewArgs.TEACHER_ISU to args.teacherIsu, TeacherReviewArgs.TEACHER_NAME to args.teacherName)

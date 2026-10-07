@@ -719,12 +719,12 @@ settings, and restore them if a separate test explicitly changes them.
   teacher fact (`fact_mark` in `res/layout/item_sport_detail_fact.xml`) and the
   subject page's teacher rows (`level_dot` in `res/layout/item_subject_teacher.xml`);
   its place is reserved where a late dot would otherwise move the row.
-- Review editor: `res/layout/sheet_review_editor.xml`,
-  `feature/reviews/ui/ReviewEditorBottomSheet.kt`. A form sheet without a handle
+- Review editor: Compose in `:shared:feature-reviews` (`feature/reviews/ui/ReviewEditorSheet.kt`),
+  hosted by `feature/reviews/ui/ReviewEditorBottomSheet.kt`. A form sheet without a handle
   that cannot be dragged or dismissed outside: Back and the close button ask
   `Не сохранять отзыв?` only when something changed. The title has a second line
-  with the teacher's short name; subject suggestions are filter chips
-  (`item_review_subject_chip.xml`) that mark the picked one.
+  with the teacher's short name; subject suggestions are filter chips that mark
+  the picked one.
 - Clickable teacher fact in details headers: `res/layout/item_sport_detail_fact.xml`,
   `core/ui/DetailsHeader.kt` (`bindAction` resets chevron, ripple, touch target
   and accessibility action when the identifier is absent).
@@ -757,5 +757,4 @@ settings, and restore them if a separate test explicitly changes them.
   the `Изменения` block (divider, heading, `было → стало` lines) in
   `feature/schedule/ui/details/LessonDetailsSections.kt` of `:shared:feature-schedule` and
   the informational flow row between teacher and place of the kit's `DetailsHeader`.
-- Visual tests: `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
-  `feature/reviews/ReviewEditorVisualTest.kt`.
+- Visual tests: `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`.

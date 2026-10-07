@@ -149,8 +149,8 @@ Feature doc: [Teacher reviews](reviews.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/reviews/ui/ReviewEditorBottomSheet.kt` | bottom sheet | `ReviewEditorViewModel` | `AppNavigator.openReviewEditor` | `feature/reviews/ui/ReviewEditorPreviewActivity.kt` | `feature/reviews/ReviewEditorVisualTest.kt` |
-| `feature/reviews/ui/ReportReviewDialogFragment.kt` | dialog | `ReportReviewViewModel` | `AppNavigator.openReviewReport` | `feature/reviews/ui/ReviewEditorPreviewActivity.kt` | `feature/reviews/ReviewEditorVisualTest.kt` |
+| `feature/reviews/ui/ReviewEditorBottomSheet.kt` hosting `ReviewEditorSheet` (`:shared:feature-reviews`) | bottom sheet (form) | `ReviewEditorViewModel` (Koin) | `AppNavigator.openReviewEditor` | - | - (JVM `ReviewEditorSheetTest`, `ReviewsHostsKoinTest` and the `ReviewEditorSheetContent_*` goldens of `:shared:feature-reviews`) |
+| `feature/reviews/ui/ReportReviewDialogFragment.kt` hosting `ReportReviewForm` (`:shared:feature-reviews`) | dialog | `ReportReviewViewModel` (Koin) | `AppNavigator.openReviewReport` | - | - (JVM `ReportReviewDialogTest`, `ReviewsHostsKoinTest` and the `ReportReviewDialog_*` goldens of `:shared:feature-reviews`) |
 
 ## Social
 
