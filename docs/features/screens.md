@@ -185,9 +185,9 @@ Feature doc: [Settings](../settings.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/settings/ui/SettingsFragment.kt` | Fragment | `SettingsViewModel`, `CustomSpoilerViewModel` | `settings`, `AppScreen.SETTINGS` | `app/SettingsNavigationTestActivity.kt`, `feature/settings/ui/SettingsPreviewActivity.kt` (layout) | — |
-| `feature/settings/ui/DiagnosticsFragment.kt` | Fragment | `DiagnosticsViewModel` | `diagnostics`, `AppScreen.DIAGNOSTICS` | — | — |
-| `feature/settings/ui/IcsExportBottomSheet.kt` | bottom sheet | `IcsExportViewModel` | from `SettingsFragment` | `app/SettingsNavigationTestActivity.kt` | — |
+| `feature/settings/ui/SettingsFragment.kt` hosting `SettingsScreen` (`:shared:feature-settings`) with `AndroidView` widget previews | Fragment | `SettingsViewModel`, `CustomSpoilerViewModel` (Koin) | `settings`, `AppScreen.SETTINGS` | `app/SettingsNavigationTestActivity.kt`, `feature/settings/ui/SettingsPreviewActivity.kt` | `SettingsScreenshotTest` (`:shared:feature-settings`), `feature/settings/SettingsNavigationTest.kt`, `feature/settings/WidgetPreviewTest.kt` |
+| `feature/settings/ui/DiagnosticsFragment.kt` hosting `DiagnosticsScreen` (`:shared:feature-settings`) | Fragment | `DiagnosticsViewModel` (Koin) | `diagnostics`, `AppScreen.DIAGNOSTICS` | — | `SettingsScreenshotTest` (`:shared:feature-settings`) |
+| `feature/settings/ui/IcsExportBottomSheet.kt` hosting `IcsExportSheetContent` (`:shared:feature-settings`) | bottom sheet | `IcsExportViewModel` (Koin) | from `SettingsFragment` | `app/SettingsNavigationTestActivity.kt` | `SettingsScreenshotTest` (`:shared:feature-settings`), `feature/settings/SettingsNavigationTest.kt` |
 
 ## Update offer
 

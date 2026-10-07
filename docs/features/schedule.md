@@ -586,12 +586,12 @@ as synchronization, `TRANSP:OPAQUE`. The file is
 shared through the `FileProvider` `${applicationId}.files`. A range without
 lessons writes nothing. This is the way into Google Calendar.
 
-`IcsExportBottomSheet` (`feature/settings/ui`, `res/layout/sheet_ics_export.xml`)
+`IcsExportBottomSheet` (`feature/settings/ui`, body `IcsExportSheetContent` in `:shared:feature-settings`)
 is the whole flow: the title `Выгрузить в .ics`, the subtitle `Своё расписание
 из My ITMO` and one area of at least 288 dp that every state shares, so the
 sheet does not jump. `IcsExportViewModel` holds the state:
 
-- Choose: the four ranges as one connected group (`item_ics_range.xml`,
+- Choose: the four ranges as one connected group (rows on
   `colorSurfaceContainerHigh`, 56 dp rows, the whole row is the target), each
   with its days on the second line from today (`2–8 октября`, `до 31 января`,
   `Выбрать в календаре`; `IcsDateLabels`: one day, a month, two months, two

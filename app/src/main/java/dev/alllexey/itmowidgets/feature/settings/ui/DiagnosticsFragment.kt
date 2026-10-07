@@ -4,80 +4,51 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.copyToClipboard
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
-import dev.alllexey.itmowidgets.databinding.FragmentDiagnosticsBinding
-import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsUiState
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import dev.alllexey.itmowidgets.feature.settings.ui.diagnostics.DiagnosticsActions
+import dev.alllexey.itmowidgets.feature.settings.ui.diagnostics.DiagnosticsScreen
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/**
+ * «Журнал ошибок» (`@id/diagnostics`): `DiagnosticsScreen` of `:shared:feature-settings` over the Koin
+ * `DiagnosticsViewModel`. The host leaves the screen and puts the journal on the clipboard; the screen asks before
+ * clearing.
+ */
 @AndroidEntryPoint
 class DiagnosticsFragment : Fragment() {
 
-    private var _binding: FragmentDiagnosticsBinding? = null
-    private val binding get() = _binding!!
-
     private val viewModel: DiagnosticsViewModel by viewModel()
 
-    private lateinit var adapter: DiagnosticsAdapter
+    private val snackbars = SnackbarHostState()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentDiagnosticsBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+    private val actions = DiagnosticsActions(
+        onBack = { closeScreen() },
+        onCopy = { copyJournal() },
+        onClear = { viewModel.clear() },
+    )
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        adapter = DiagnosticsAdapter(viewModel::formatTime)
-        binding.recyclerView.adapter = adapter
-        binding.backButton.setOnClickListener { closeScreen() }
-        binding.copyButton.setOnClickListener { copyJournal() }
-        binding.clearButton.setOnClickListener { confirmClear() }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        itmoComposeView {
+            val state by viewModel.uiState.collectAsState()
+            DiagnosticsScreen(state, actions, viewModel::formatTime, snackbarHostState = snackbars)
+        }
 
-        viewModel.uiState
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach(::render)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    override fun onDestroyView() {
-        binding.recyclerView.adapter = null
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun render(state: DiagnosticsUiState) = with(binding) {
-        val entries = (state as? DiagnosticsUiState.Content)?.entries
-        loading.isVisible = entries == null
-        val empty = entries != null && entries.isEmpty()
-        stateContainer.isVisible = empty
-        recyclerView.isVisible = entries != null && entries.isNotEmpty()
-        copyButton.isEnabled = entries?.isNotEmpty() == true
-        clearButton.isEnabled = entries?.isNotEmpty() == true
-        adapter.submitList(entries.orEmpty())
-    }
-
+    /** Android 13 and later confirm a copy themselves; before that the screen says so. */
     private fun copyJournal() {
         requireContext().copyToClipboard(getString(R.string.diagnostics_title), viewModel.exportText()) {
-            Snackbar.make(binding.root, R.string.diagnostics_copied, Snackbar.LENGTH_SHORT).show()
+            val message = getString(R.string.diagnostics_copied)
+            viewLifecycleOwner.lifecycleScope.launch { snackbars.showSnackbar(message) }
         }
-    }
-
-    private fun confirmClear() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.diagnostics_clear_confirm_title)
-            .setMessage(R.string.diagnostics_clear_confirm_message)
-            .setNegativeButton(R.string.common_cancel, null)
-            .setPositiveButton(R.string.diagnostics_clear) { _, _ -> viewModel.clear() }
-            .show()
     }
 }

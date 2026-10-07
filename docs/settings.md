@@ -355,8 +355,12 @@ system `geo:` intent and lets Android resolve the installed mapping application.
   newest 200 warnings, errors and crashes, stored as one JSON line each in
   `files/diagnostics/log.jsonl`. Every message passes `DiagnosticSanitizer`,
   which redacts bearer headers, JWTs and named token/password fields before
-  the write. The screen copies the whole journal to the clipboard or clears it
-  after confirmation; nothing is uploaded. The row shows the entry count.
+  the write. The screen lists the entries newest first (time, level, tag,
+  message; an entry with a stack trace opens it on a tap), copies the whole
+  journal to the clipboard (`Журнал скопирован` below Android 13, where the
+  system does not confirm a copy itself) or clears it after `Очистить
+  журнал?`; copy and clear wait for the first entry. Nothing is uploaded. The
+  row shows the entry count.
 - `Повторить первоначальную настройку` (`Виджеты, подключение и уведомления`)
   clears the first-run flag, closes the settings overlay and returns the root
   graph to the first-run flow with an empty back stack. Nothing else is reset:
@@ -367,6 +371,27 @@ system `geo:` intent and lets Android resolve the installed mapping application.
 - `Версия` displays the application version.
 - The group's footer is `Неофициальное приложение. Не связано с Университетом
   ИТМО.`; the sign-in screen shows the same line under its buttons.
+
+## Where it lives
+
+The settings domain, presentation (`SettingsViewModel` with one page provider
+per `SettingsPage`, `DiagnosticsViewModel`, `IcsExportViewModel`), data and
+Compose UI (`SettingsScreen` with its dialogs, `DiagnosticsScreen`,
+`IcsExportSheetContent`) are in `:shared:feature-settings`, packages
+`dev.alllexey.itmowidgets.feature.settings.*`, with Koin modules. The page
+model (`SettingItem`, `SettingSection`, `SettingsPage`, `SettingRowId`,
+`SettingsEvent`) is platform-neutral: `UiText` and `AppIcon`, never Android,
+`R`, Compose or a resource id (`SettingsRulesTest`). iOS renders the same
+pages and the journal as SwiftUI forms over the shared view models.
+
+Android keeps the hosts in `app/`: `SettingsFragment` (permissions, system
+pages, the widget preview in the screen's slot), `DiagnosticsFragment` (the
+clipboard) and `IcsExportBottomSheet` (the date range picker, the share and
+view intents), plus `AndroidBackgroundWorkAccess`,
+`AndroidQuickSettingsTileAccess` and `CustomSpoilerRepositoryImpl`. Their looks
+are the `SettingsScreenshotTest` baselines of `:shared:feature-settings` in
+four appearances; `SettingsNavigationTest` and `WidgetPreviewTest` cover the
+host flows on a device.
 
 ## Debug-only controls
 
