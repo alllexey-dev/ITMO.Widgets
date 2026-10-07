@@ -1,19 +1,23 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
-import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import androidx.test.core.app.ApplicationProvider
+import dagger.hilt.android.EntryPointAccessors
+import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksCheck
 import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
-import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
+import dev.alllexey.itmowidgets.feature.recordbook.work.MarksEntryPoint
 import io.ktor.client.engine.HttpClientEngine
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -39,16 +43,29 @@ class RecordbookBridgeTest {
         val hilt = RecordbookBridgeEntryPoint.from(application)
         val koin = GlobalContext.get()
 
-        assertSame(hilt.markTrackingRepository(), koin.get<MarkTrackingRepository>())
-        assertSame(hilt.sheetScoresRepository(), koin.get<SheetScoresRepository>())
-        assertSame(hilt.subjectBindingStore(), koin.get<SubjectBindingStore>())
         assertSame(hilt.barsEngine(), koin.get<HttpClientEngine>(barsEngineQualifier))
         assertSame(hilt.barsLogin(), koin.get<BarsLogin>())
         // Unscoped in Hilt and stateless: the same implementations, Koin keeps its first instance.
         assertEquals(hilt.barsSilentLogin()::class, koin.get<BarsSilentLogin>()::class)
         assertEquals(hilt.itmoIdCookies()::class, koin.get<ItmoIdCookies>()::class)
-        assertEquals(hilt.barsSessionListener()::class, koin.get<BarsSessionListener>()::class)
+        assertEquals(hilt.marksScheduler()::class, koin.get<MarksScheduler>()::class)
+        assertEquals(hilt.marksNotifier()::class, koin.get<MarksNotifier>()::class)
         assertSame(koin.get<BarsSilentLogin>(), koin.get<BarsSilentLogin>())
+    }
+
+    @Test
+    fun `Hilt takes the mark tracking switches and the marks check from Koin`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+        val tracking = koin.get<DefaultMarkTracking>()
+
+        assertSame(tracking, koin.get<MarkTracking>())
+        assertSame(tracking, RecordbookBridge.markTracking(application))
+        assertSame(tracking, RecordbookBridge.marksBackgroundCheck(application))
+        // Stateless and unscoped, as Hilt built it: the worker gets a new check from Koin on every run.
+        val check = EntryPointAccessors.fromApplication(application, MarksEntryPoint::class.java).marksCheck()
+        assertEquals(MarksCheck::class, check::class)
+        assertNotSame(check, koin.get<MarksCheck>())
     }
 
     @Test

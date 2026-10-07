@@ -3,17 +3,18 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dagger.hilt.android.EntryPointAccessors
-import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsClient
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkReader
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.work.MarksTestEntryPoint
 import dev.alllexey.itmowidgets.feature.sport.data.SportSessionBindingsEntryPoint
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -28,9 +29,9 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The real graph's view of the recordbook data Koin constructs: Hilt hands out Koin's instances through
- * `RecordbookBridge`, so there is one `BarsClient` (one session lock) and one BARS session store per process, and
- * Hilt's sign-out set holds each of the feature's six cleaners once.
+ * The real graph's view of the recordbook data, all of which Koin constructs: Hilt-built code (the marks test entry
+ * point, debug tools) reads Koin's mark tracking, the one BARS client reports to Koin's `BarsMarksActivation`, and
+ * Hilt's sign-out set holds each of the feature's six cleaners once, all through `SessionCleanersBridge`.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -41,17 +42,13 @@ class RecordbookBindingsTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `Hilt and Koin share one BARS client and the recordbook repositories`() {
+    fun `Hilt reads Koin's mark tracking and the BARS answer reaches Koin's activation`() {
         val application = bootApplication()
-        val hilt = RecordbookBindingsEntryPoint.from(application)
         val koin = GlobalContext.get()
+        val marks = EntryPointAccessors.fromApplication(application, MarksTestEntryPoint::class.java)
 
-        assertSame(koin.get<BarsClient>(), hilt.barsClient())
-        assertSame(hilt.barsClient(), hilt.barsClient())
-        assertSame(koin.get<BarsLogin>(), hilt.barsLogin())
-        assertSame(koin.get<BarsMarkReader>(), hilt.barsMarkSource())
-        assertSame(koin.get<RecordbookRepositoryImpl>(), hilt.recordbookRepository())
-        assertSame(koin.get<BarsPreferenceRepositoryImpl>(), hilt.barsPreferenceRepository())
+        assertSame(koin.get<DefaultMarkTracking>(), marks.marksTracking())
+        assertSame(koin.get<BarsMarksActivation>(), koin.get<BarsSessionListener>())
     }
 
     @Test
@@ -61,14 +58,12 @@ class RecordbookBindingsTest {
         val cleaners = EntryPointAccessors.fromApplication(application, SportSessionBindingsEntryPoint::class.java)
             .sessionDataCleaners()
 
-        // Koin's three, through SessionCleanersBridge.
         assertEquals(1, cleaners.count { it === koin.get<RecordbookRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<BarsRecordbookRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<BarsPreferenceRepositoryImpl>() })
-        // Hilt's three, until KM-11b2 moves them.
-        assertEquals(1, cleaners.count { it is DataStoreSubjectBindingStore })
-        assertEquals(1, cleaners.count { it is MarkTrackingRepositoryImpl })
-        assertEquals(1, cleaners.count { it is SheetScoresRepositoryImpl })
+        assertEquals(1, cleaners.count { it === koin.get<DataStoreSubjectBindingStore>() })
+        assertEquals(1, cleaners.count { it === koin.get<MarkTrackingRepositoryImpl>() })
+        assertEquals(1, cleaners.count { it === koin.get<SheetScoresRepositoryImpl>() })
         assertEquals(6, cleaners.count(::isRecordbookCleaner))
     }
 

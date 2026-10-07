@@ -12,7 +12,6 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
-import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
@@ -112,7 +111,6 @@ class KoinStartTest {
         assertSame(hilt.demoPreferences(), koin.get<DemoPreferences>())
         assertSame(hilt.utilityStorage(), koin.get<UtilityStorage>())
         assertSame(hilt.customSpoilerRepository(), koin.get<CustomSpoilerRepository>())
-        assertSame(hilt.markTracking(), koin.get<MarkTracking>())
         assertSame(hilt.coreCalendarSync(), koin.get<CalendarSync>())
         // Unscoped in Hilt, a factory in Koin: the same implementation, a new instance each time.
         assertEquals(hilt.scheduleIcsExport()::class, koin.get<ScheduleIcsExport>()::class)

@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
@@ -15,21 +17,23 @@ import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
-import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
-import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
-import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
-import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
-import dev.alllexey.itmowidgets.feature.recordbook.FakeSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
+import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
+import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewFixtures
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
 import org.junit.Assert.assertNotSame
@@ -59,6 +63,9 @@ class RecordbookDebugFixturesTest {
         val recordbookBefore = koin.get<RecordbookRepository>()
         val barsBefore = koin.get<BarsRecordbookRepository>()
         val barsPreferenceBefore = koin.get<BarsPreferenceRepository>()
+        val marksBefore = koin.get<MarkTrackingRepository>()
+        val sheetsBefore = koin.get<SheetScoresRepository>()
+        val bindingsBefore = koin.get<SubjectBindingStore>()
 
         val fixture = RecordbookDebugFixtures.load(application, Fakes)
         assertSame(Fakes.recordbook, koin.get<RecordbookRepository>())
@@ -75,7 +82,6 @@ class RecordbookDebugFixturesTest {
         assertSame(Fakes.time, koin.get<AcademicTimeProvider>())
 
         RecordbookDebugFixtures.unload(application, fixture)
-        val recordbook = RecordbookBridgeEntryPoint.from(application)
         val core = CoreBridgeEntryPoint.from(application)
         // The module's own instances again, not a second cache or BARS client beside the ones Hilt-built code holds.
         assertSame(recordbookBefore, koin.get<RecordbookRepository>())
@@ -84,9 +90,12 @@ class RecordbookDebugFixturesTest {
         assertSame(koin.get<BarsRecordbookRepositoryImpl>(), koin.get<BarsRecordbookRepository>())
         assertSame(barsPreferenceBefore, koin.get<BarsPreferenceRepository>())
         assertSame(koin.get<BarsPreferenceRepositoryImpl>(), koin.get<BarsPreferenceRepository>())
-        assertSame(recordbook.markTrackingRepository(), koin.get<MarkTrackingRepository>())
-        assertSame(recordbook.sheetScoresRepository(), koin.get<SheetScoresRepository>())
-        assertSame(recordbook.subjectBindingStore(), koin.get<SubjectBindingStore>())
+        assertSame(marksBefore, koin.get<MarkTrackingRepository>())
+        assertSame(koin.get<MarkTrackingRepositoryImpl>(), koin.get<MarkTrackingRepository>())
+        assertSame(sheetsBefore, koin.get<SheetScoresRepository>())
+        assertSame(koin.get<SheetScoresRepositoryImpl>(), koin.get<SheetScoresRepository>())
+        assertSame(bindingsBefore, koin.get<SubjectBindingStore>())
+        assertSame(koin.get<DataStoreSubjectBindingStore>(), koin.get<SubjectBindingStore>())
         assertNotSame(Fakes.sport, koin.get<SportScoreRepository>())
         assertSame(koin.get<SubjectLessonsGatewayImpl>(), koin.get<SubjectLessonsGateway>())
         assertSame(koin.get<ScheduleRepositoryImpl>(), koin.get<ScheduleRefreshGateway>())
@@ -109,13 +118,20 @@ class RecordbookDebugFixturesTest {
         assertNotSame(Fakes.recordbook, koin.get<RecordbookRepository>())
     }
 
+    /** Only identities are compared, so the debug host's in-memory stand-ins serve as the fakes. */
     private object Fakes : RecordbookDebugFixtures.Fakes {
-        val recordbook = FakeRecordbookRepository()
-        val bars = FakeBarsRepository()
-        val barsPreference = FakeBarsPreference()
-        val marks = FakeMarkTrackingRepository()
-        val sheets = FakeSheetScoresRepository()
-        val bindings = FakeSubjectBindingStore()
+        val recordbook = RecordbookPreviewFixtures.Recordbook(RecordbookPreviewFixtures.Phase.MIDDLE)
+        val bars = object : BarsRecordbookRepository {
+            override suspend fun getSubjects(period: RecordbookPeriod) = AppResult.Success(emptyList<RecordbookSubject>())
+            override suspend fun getSubject(journal: BarsJournalReference) = AppResult.Failure(AppError.NotFound)
+        }
+        val barsPreference = object : BarsPreferenceRepository {
+            override suspend fun isEnabled() = false
+            override suspend fun setEnabled(enabled: Boolean): AppResult<Unit> = AppResult.Success(Unit)
+        }
+        val marks = RecordbookPreviewActivity.MemoryMarkTracking
+        val sheets = RecordbookPreviewActivity.MemorySheetScores
+        val bindings = RecordbookPreviewActivity.MemoryBindings()
         val sport = FakeSportScoreRepository()
         val lessons = FakeSubjectLessonsGateway()
         val scheduleRefresh = FakeScheduleRefreshGateway()
