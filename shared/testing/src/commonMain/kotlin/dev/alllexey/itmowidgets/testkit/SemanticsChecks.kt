@@ -8,6 +8,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.unit.Dp
 
 /**
@@ -47,12 +48,26 @@ fun SemanticsNodeInteractionsProvider.assertNoTextOverflow(allowed: SemanticsMat
 
 /**
  * `hasVisualOverflow` would flag every short text narrower than its constraints: the layout that the semantics action
- * returns keeps the paragraph at the constraints' width while `size` is the text's own. So widths compare per line.
+ * returns keeps the paragraph at the constraints' width while `size` is the text's own. So widths compare per line,
+ * on the [drawn] layout against the node's `size`.
  */
 private fun TextLayoutResult.overflows(): Boolean {
-    if (didOverflowHeight) return true
-    if (lineCount > 0 && isLineEllipsized(lineCount - 1)) return true
-    return (0 until lineCount).any { line -> getLineRight(line) - getLineLeft(line) > size.width + LINE_SLACK_PX }
+    val drawn = drawn().multiParagraph
+    if (drawn.didExceedMaxLines || drawn.height > size.height) return true
+    val lines = drawn.lineCount
+    if (lines > 0 && drawn.isLineEllipsized(lines - 1)) return true
+    return (0 until lines).any { line -> drawn.getLineRight(line) - drawn.getLineLeft(line) > size.width + LINE_SLACK_PX }
+}
+
+/**
+ * The layout the text node draws. The semantics action lays the text out again from the unresolved style (androidx
+ * `ParagraphLayoutCache.slowCreateTextLayoutResultOrNull` skips `resolveDefaults`). Android's paragraph falls back to
+ * the same defaults; Skiko's does not, so on iOS a `BasicText` without its own font size and family came out wider and
+ * taller than its node. [TextMeasurer] resolves the defaults as the node does.
+ */
+private fun TextLayoutResult.drawn(): TextLayoutResult = with(layoutInput) {
+    TextMeasurer(fontFamilyResolver, density, layoutDirection, cacheSize = 0)
+        .measure(text, style, overflow, softWrap, maxLines, placeholders, constraints)
 }
 
 /** Half a pixel for the rounding between a line's float width and the integer size. */

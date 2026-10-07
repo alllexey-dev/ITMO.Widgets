@@ -21,7 +21,6 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.testkit.MinTouchTarget
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
@@ -40,11 +39,11 @@ class TeacherReviewRowTest {
 
         listOf(UP, DOWN).forEach { label ->
             onNodeWithContentDescription(label)
-                .assertWidthIsEqualTo(MinTouchTarget)
-                .assertHeightIsEqualTo(MinTouchTarget)
+                .assertWidthIsEqualTo(Target)
+                .assertHeightIsEqualTo(Target)
                 .performClick()
         }
-        assertTouchTargets()
+        assertTouchTargets(Target)
         assertEquals(listOf(F.named.id to true, F.named.id to false), votes)
     }
 
@@ -108,7 +107,7 @@ class TeacherReviewRowTest {
 
         onNodeWithText("Иванова А. С.", useUnmergedTree = true).assertExists()
         onNodeWithContentDescription("Иванова Анна Сергеевна")
-            .assertHeightIsAtLeast(MinTouchTarget)
+            .assertHeightIsAtLeast(Target)
             .performClick()
         onNodeWithText("Вёл у автора", useUnmergedTree = true).assertExists()
         assertEquals(listOf(F.author.isu), opened)
@@ -132,7 +131,7 @@ class TeacherReviewRowTest {
         waitForIdle()
         onNodeWithText("Анонимный отзыв", useUnmergedTree = true).assertExists()
         onNodeWithText("Не подтверждён", useUnmergedTree = true).assertExists()
-        assertTouchTargets()
+        assertTouchTargets(Target)
     }
 
     @Test
@@ -160,7 +159,7 @@ class TeacherReviewRowTest {
         onNodeWithText("Вёл у вас", useUnmergedTree = true).assertExists()
         onNodeWithContentDescription("Рейтинг 7").assertExists()
         onNodeWithContentDescription(UP).assertDoesNotExist()
-        assertTouchTargets()
+        assertTouchTargets(Target)
     }
 
     @Composable
@@ -170,7 +169,7 @@ class TeacherReviewRowTest {
         busy: Boolean = false,
         actions: TeacherReviewActions = TeacherReviewActions(),
     ) {
-        // The sizes below are Material's 48 dp.
+        // Material on every platform, so the targets are its 48 dp, not the platform default's (44 pt on iOS).
         ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
             TeacherReviewRow(review, GroupPosition.Single, canVote = canVote, canReport = true, busy = busy, actions = actions)
         }
@@ -180,5 +179,6 @@ class TeacherReviewRowTest {
         const val UP = "Полезный отзыв"
         const val DOWN = "Бесполезный отзыв"
         const val ACTIONS = "Действия с отзывом"
+        val Target = ItmoPlatformStyle.Material.minTouchTarget
     }
 }
