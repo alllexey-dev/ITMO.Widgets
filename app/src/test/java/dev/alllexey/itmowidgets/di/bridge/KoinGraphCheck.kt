@@ -5,10 +5,13 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.work.WorkerParameters
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
+import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleDataModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
+import dev.alllexey.itmowidgets.feature.social.di.socialModule
+import dev.alllexey.itmowidgets.feature.sport.di.sportModule
 import kotlin.reflect.KClass
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.annotation.KoinInternalApi
@@ -62,9 +65,19 @@ internal object KoinGraphCheck {
 
 /**
  * The schedule data Koin constructs (`scheduleDataModule`, KM-11a2) with the modules it reads (the demo flag, the
- * opt-in and the schedule preferences, the selectors, and the teacher levels of `reviewsModule` since KM-11f, whose
- * review editor reads the teacher lessons gateway back). A feature that reads the schedule gateways, the change
- * tracking or the reviews checks its module together with these.
+ * opt-in and the schedule preferences, the selectors, the teacher levels of `reviewsModule` since KM-11f, whose
+ * review editor reads the teacher lessons gateway back, and the pending sport rows of `sportModule` since KM-11c with
+ * the friend list it reads). A feature that reads the schedule gateways, the change tracking or the reviews checks
+ * its module together with these.
  */
 internal val scheduleDataGraph: List<Module>
-    get() = listOf(authDataModule, settingsDataModule, reviewsModule, scheduleModule, scheduleDataModule)
+    get() = listOf(
+        authDataModule,
+        settingsDataModule,
+        reviewsModule,
+        socialModule,
+        friendSelectorModule,
+        sportModule,
+        scheduleModule,
+        scheduleDataModule,
+    )

@@ -5,11 +5,12 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
-import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
+import dev.alllexey.itmowidgets.client.sport.SportApi
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
@@ -24,8 +25,6 @@ import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
-import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
-import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
@@ -106,6 +105,7 @@ class KoinStartTest {
         assertSame(hilt.friendsApi(), koin.get<FriendsApi>())
         assertSame(hilt.subjectLinksApi(), koin.get<SubjectLinksApi>())
         assertSame(hilt.teacherReviewsApi(), koin.get<TeacherReviewsApi>())
+        assertSame(hilt.sportApi(), koin.get<SportApi>())
         assertSame(hilt.backendIdentitySync(), koin.get<BackendIdentitySync>())
         assertSame(hilt.backendDeviceSession(), koin.get<BackendDeviceSession>())
         assertSame(hilt.fcmTokenSync(), koin.get<FcmTokenSync>())
@@ -118,9 +118,6 @@ class KoinStartTest {
         assertSame(hilt.coreCalendarSync(), koin.get<CalendarSync>())
         // Unscoped in Hilt, a factory in Koin: the same implementation, a new instance each time.
         assertEquals(hilt.scheduleIcsExport()::class, koin.get<ScheduleIcsExport>()::class)
-        // Unscoped in Hilt: Koin keeps the first instance it gets and hands out that one.
-        assertSame(koin.get<SportScoreRepository>(), koin.get<SportScoreRepository>())
-        assertSame(hilt.pendingSportBookingsRepository(), koin.get<PendingSportBookingsRepository>())
         assertSame(hilt.applicationScope(), koin.get<CoroutineScope>())
         assertSame(hilt.scheduleWidgetRefreshRequester(), koin.get<ScheduleWidgetRefreshRequester>())
     }

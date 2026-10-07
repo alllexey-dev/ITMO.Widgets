@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.data.repository.PendingSportBookingsRepositoryImpl
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -57,10 +58,10 @@ object ScheduleDebugFixtures {
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
      * overrode, so the bridge modules load again; their singles forward Hilt's instances, as before. Koin owns the
-     * opt-in and the schedule preferences (`settingsDataModule`), the schedule data (`scheduleDataModule`) and the
-     * teacher levels (`reviewsModule`): loading those modules again would build second repositories, so the contracts
-     * point back at their singles, which the fixture never overrode. A fixture that a newer host already replaced is
-     * left to that host.
+     * opt-in and the schedule preferences (`settingsDataModule`), the schedule data (`scheduleDataModule`), the
+     * teacher levels (`reviewsModule`) and the pending sport rows (`sportModule`): loading those modules again would
+     * build second repositories, so the contracts point back at their singles, which the fixture never overrode. A
+     * fixture that a newer host already replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
@@ -73,6 +74,9 @@ object ScheduleDebugFixtures {
         koin.declare<ScheduleChangesRepository>(koin.get<ScheduleChangesRepositoryImpl>(), allowOverride = true)
         koin.declare<LessonFriendsRepository>(koin.get<LessonFriendsRepositoryImpl>(), allowOverride = true)
         koin.declare<TeacherLevelsRepository>(koin.get<TeacherLevelsRepositoryImpl>(), allowOverride = true)
+        koin.declare<PendingSportBookingsRepository>(
+            koin.get<PendingSportBookingsRepositoryImpl>(), allowOverride = true
+        )
         current = null
     }
 

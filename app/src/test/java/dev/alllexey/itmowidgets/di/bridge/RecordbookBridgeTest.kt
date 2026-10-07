@@ -54,6 +54,7 @@ class RecordbookBridgeTest {
         assertSame(koin.get<BarsSilentLogin>(), koin.get<BarsSilentLogin>())
     }
 
+    /** The sport scores come from `sportModule` since KM-11c, with the opt-in and the friend list it reads. */
     @Test
     fun `Hilt takes the mark tracking switches and the marks check from Koin`() {
         val application = bootApplication()

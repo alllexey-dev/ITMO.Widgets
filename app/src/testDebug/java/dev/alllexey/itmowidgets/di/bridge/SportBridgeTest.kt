@@ -4,17 +4,22 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.notification.FcmWorkerEntryPoint
 import dev.alllexey.itmowidgets.feature.sport.data.SportSessionBindingsEntryPoint
+import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
+import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
+import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushBooker
+import dev.alllexey.itmowidgets.feature.sport.data.repository.PendingSportBookingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScoreRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.di.sportCardsQualifier
 import dev.alllexey.itmowidgets.feature.sport.di.sportModule
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -27,10 +32,9 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The sport screens Koin builds read the repositories Hilt builds, and the booking and queue ones are the members of
- * Hilt's `Set<SessionDataCleaner>`, so sign-out clears what the screens show (one graph per binding). Read through
- * the debug-only identity entry point of the real graph, as `SessionCleanersBridgeTest` does; nothing is refreshed
- * or cleared.
+ * Koin builds the sport data once (`sportModule`): sign-out clears the instances the screens read, the home feed and
+ * Hilt's readers get those instances too, and the app-only debug inputs come from Hilt. Read through the debug-only
+ * identity entry point of the real graph, as `SessionCleanersBridgeTest` does; nothing is refreshed or cleared.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -41,39 +45,61 @@ class SportBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the sport screens read the repositories the session cleaners clear`() {
+    fun `sign-out clears the booking and queue repositories the screens read, once each`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
         val cleaners = identity(application).sessionDataCleaners()
 
         assertSame(cleaners.filterIsInstance<SportBookingRepositoryImpl>().single(), koin.get<SportBookingRepository>())
         assertSame(cleaners.filterIsInstance<SportDataRepositoryImpl>().single(), koin.get<SportDataRepository>())
+        assertEquals(cleaners.size, cleaners.toSet().size)
     }
 
     @Test
-    fun `every sport repository resolves in Koin to the instance Hilt builds`() {
+    fun `the sport home card reaches the feed once, from Koin`() {
+        bootApplication()
+        val koin = GlobalContext.get()
+        val source = koin.get<SportHomeCardSource>()
+
+        assertSame(source, koin.get<HomeCardSource>(sportCardsQualifier))
+        assertEquals(1, koin.getAll<HomeCardSource>().count { it === source })
+        val hiltSources = (koin.get<HomeCardSource>(hiltCardsQualifier) as CompositeHomeCardSource).parts
+        assertTrue(hiltSources.none { it is SportHomeCardSource })
+    }
+
+    @Test
+    fun `Hilt's readers get the instances Koin builds`() {
         val application = bootApplication()
-        val hilt = SportBridgeEntryPoint.from(application)
         val koin = GlobalContext.get()
 
-        assertSame(hilt.sportActionRepository(), koin.get<SportActionRepository>())
-        assertSame(hilt.sportBookingRepository(), koin.get<SportBookingRepository>())
-        assertSame(hilt.sportDataRepository(), koin.get<SportDataRepository>())
-        assertSame(hilt.sportScheduleRepository(), koin.get<SportScheduleRepository>())
-        assertSame(hilt.sportSignPreferencesRepository(), koin.get<SportSignPreferencesRepository>())
-        assertSame(hilt.userSportRepository(), koin.get<UserSportRepository>())
+        // The providers Hilt calls; unscoped, so every call asks Koin.
+        assertSame(koin.get<SportBookingsHolder>(), SportKoinBridgeModule.sportBookingsHolder(application))
+        assertSame(
+            koin.get<PendingSportBookingsRepositoryImpl>(),
+            SportKoinBridgeModule.pendingSportBookingsRepository(application)
+        )
+        assertSame(koin.get<SportScoreRepositoryImpl>(), SportKoinBridgeModule.sportScoreRepository(application))
+        assertSame(koin.get<SportSignPushBooker>(), SportKoinBridgeModule.sportSignPushBooker(application))
+        assertSame(
+            SportKoinBridgeModule.sportBookingsHolder(application),
+            SportKoinBridgeModule.sportBookingsHolder(application)
+        )
     }
 
     @Test
-    fun `MainActivity's bookings holder is the one Koin builds`() {
+    fun `the push handlers build over Koin's booker and the debug inputs come from Hilt`() {
         val application = bootApplication()
-        val holder = GlobalContext.get().get<SportBookingsHolder>()
 
-        // The provider Hilt calls for `MainActivity.sportBookingsHolder`; unscoped, so every call asks Koin.
-        assertSame(holder, SportKoinBridgeModule.sportBookingsHolder(application))
-        assertSame(holder, SportKoinBridgeModule.sportBookingsHolder(application))
+        // Hilt builds the FCM dispatcher with the free and auto handlers, which take the booker from Koin; a
+        // duplicate type would fail its construction.
+        EntryPointAccessors.fromApplication(application, FcmWorkerEntryPoint::class.java).dispatcher()
+        assertSame(
+            SportBridgeEntryPoint.from(application).sportLessonTemplateProvider(),
+            GlobalContext.get().get<SportLessonTemplateProvider>()
+        )
     }
 
+    /** The data reads the opt-in (`settingsDataModule`) and the friends (`friendSelectorModule`, `socialModule`). */
     @Test
     fun `the sport module passes the graph check against the release bridges`() {
         KoinGraphCheck.assertValid(KoinModules.bridges, listOf(sportModule) + scheduleDataGraph)
