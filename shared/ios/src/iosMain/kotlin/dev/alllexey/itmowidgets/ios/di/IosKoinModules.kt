@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
+import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookIosModule
+import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
@@ -30,5 +32,7 @@ object IosKoinModules {
         authModule, onboardingDataModule, onboardingModule,
         // The SwiftUI settings and diagnostics over the shared pages (IO-08a); IO-07b's screens write the same data.
         settingsDataModule, settingsModule, settingsIosModule,
+        // The recordbook graph with the BARS session on WebKit and the Keychain (IO-09d1); no screen yet (IO-09d2).
+        recordbookModule, recordbookIosModule(platform),
     )
 }

@@ -64,6 +64,9 @@ struct ITMOWidgetsApp: App {
             }
             #endif
             try? await repository.initialize()
+            #if DEBUG
+            BarsDebugLaunch.runIfRequested()
+            #endif
         }
     }
 

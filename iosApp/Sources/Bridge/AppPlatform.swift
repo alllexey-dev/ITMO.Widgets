@@ -3,8 +3,9 @@ import UIKit
 import WebKit
 import WidgetKit
 
-/// The app's `IosPlatform` (L18 IO-05): what the Kotlin graph needs from UIKit, WidgetKit and WebKit. `App.init`
-/// passes it to `startKoinIos`; Kotlin calls it on the main thread.
+/// The app's `IosPlatform` (L18 IO-05): what the Kotlin graph needs from UIKit, WidgetKit and WebKit, the BARS
+/// session's cookies and hidden view included (IO-09d1). `App.init` passes it to `startKoinIos`; Kotlin calls it on
+/// the main thread.
 final class AppPlatform: NSObject, IosPlatform {
     func reload(kind: String) {
         WidgetCenter.shared.reloadTimelines(ofKind: kind)
@@ -26,6 +27,18 @@ final class AppPlatform: NSObject, IosPlatform {
             modifiedSince: .distantPast,
             completionHandler: completion
         )
+    }
+
+    func webKitCookies(completion: @escaping ([WebKitCookie]) -> Void) {
+        WebKitCookies.all(completion: completion)
+    }
+
+    func loadHiddenBarsPage(
+        url: String,
+        navigation: BarsWebNavigation,
+        completion: @escaping (String?) -> Void
+    ) -> any BarsWebLoad {
+        HiddenBarsBrowser.load(url: url, navigation: navigation, completion: completion)
     }
 
     func installedWidgetKinds(completion: @escaping (Set<String>) -> Void) {

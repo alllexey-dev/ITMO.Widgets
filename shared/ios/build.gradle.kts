@@ -26,6 +26,8 @@ kotlin {
             export(project(":shared:feature-account"))
             // IO-08a: SettingsViewModel, DiagnosticsViewModel and the settings page model in Swift.
             export(project(":shared:feature-settings"))
+            // IO-09d1: the BARS sign-in sheet's BarsLoginViewModel and the WebKit ports AppPlatform implements.
+            export(project(":shared:feature-recordbook"))
         }
     }
 
@@ -38,7 +40,7 @@ kotlin {
             implementation(project(":shared:feature-home"))
             implementation(project(":shared:feature-schedule"))
             implementation(project(":shared:feature-sport"))
-            implementation(project(":shared:feature-recordbook"))
+            api(project(":shared:feature-recordbook"))
             implementation(project(":shared:feature-social"))
             api(project(":shared:feature-settings"))
             implementation(project(":shared:feature-resources"))
