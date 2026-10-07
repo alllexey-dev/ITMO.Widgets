@@ -138,10 +138,10 @@ Feature doc: [Subject links](resources.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/resources/ui/SubjectLinksBottomSheet.kt` | bottom sheet | `SubjectLinksViewModel` | `AppNavigator.openSubjectLinks` | `app/SubjectLinksPreviewActivity.kt` | `feature/resources/SubjectLinksVisualTest.kt` |
-| `feature/resources/ui/LinkEditorBottomSheet.kt` | bottom sheet | `LinkEditorViewModel` | `AppNavigator.openLinkEditor` | `app/SubjectLinksPreviewActivity.kt` | `feature/resources/SubjectLinksVisualTest.kt` |
-| `feature/resources/ui/LinkActionsBottomSheet.kt` | bottom sheet | `SubjectLinksViewModel` | `AppNavigator.openLinkActions` | `app/SubjectLinksPreviewActivity.kt` | `feature/resources/SubjectLinksVisualTest.kt` |
-| `feature/resources/ui/ReportLinkDialogFragment.kt` | dialog | `SubjectLinksViewModel` | from `LinkActionsBottomSheet` | `app/SubjectLinksPreviewActivity.kt` | — |
+| `feature/resources/ui/SubjectLinksBottomSheet.kt` hosting `SubjectLinksSheetRoute` (`:shared:feature-resources`) | bottom sheet | `SubjectLinksViewModel` (Koin) | `AppNavigator.openSubjectLinks` | - | - (JVM `SubjectLinksSheetTest`, `ResourcesHostsKoinTest` and the `SubjectLinksSheetContent_*` goldens of `:shared:feature-resources`) |
+| `feature/resources/ui/LinkEditorBottomSheet.kt` hosting `LinkEditorSheetRoute` (`:shared:feature-resources`) | bottom sheet | `LinkEditorViewModel` (Koin) | `AppNavigator.openLinkEditor` | - | - (JVM `LinkEditorSheetTest`, `LinkEditorPasteTest`, `ResourcesHostsKoinTest` and the `LinkEditorSheetContent_*` goldens) |
+| `feature/resources/ui/LinkActionsBottomSheet.kt` hosting `LinkActionsSheetRoute` (`:shared:feature-resources`) | bottom sheet | `SubjectLinksViewModel` (Koin) | `AppNavigator.openLinkActions` | - | - (JVM `LinkActionsSheetTest`, `ResourcesHostsKoinTest` and the `LinkActionsSheetContent_*` goldens) |
+| `feature/resources/ui/ReportLinkDialogFragment.kt` hosting `ReportLinkForm` (`:shared:feature-resources`) | dialog | `SubjectLinksViewModel` (Koin) | from `LinkActionsBottomSheet` | - | - (JVM `ReportLinkDialogTest`, `ResourcesHostsKoinTest` and the `ReportLinkDialog_*` goldens) |
 
 ## Teacher reviews
 

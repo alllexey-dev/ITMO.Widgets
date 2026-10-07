@@ -247,7 +247,8 @@ private fun LinkItem(row: LinkListRow.Item, actions: SubjectLinksActions) {
     )
 }
 
-private fun Int.toVote(): Vote? = when {
+/** A viewer's vote of +1, -1 or 0 as the pill's selected arrow. */
+internal fun Int.toVote(): Vote? = when {
     this > 0 -> Vote.Up
     this < 0 -> Vote.Down
     else -> null

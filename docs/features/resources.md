@@ -102,57 +102,81 @@ first, so a second visit opens without a spinner, then refreshes the scope.
 The sheets sit on the Activity's FragmentManager and belong to no back stack.
 `AppNavigator.openSubjectLinks`, `openLinkEditor` and `openLinkActions` take
 `core/navigation/SubjectLinksArgs`; `MainNavigationCoordinator` shows one sheet
-per tag and nothing once the state is saved.
+per tag and nothing once the state is saved. Each sheet's body is Compose
+Multiplatform in `:shared:feature-resources` (package
+`dev.alllexey.itmowidgets.feature.resources.ui`), drawn inside a Fragment host in
+`app/` that keeps its class name, `TAG` and `newInstance` and runs the
+Android effects (opening a link, the clipboard, navigation, snackbars). The
+three sheets are `ItmoBottomSheetFragment`s that open expanded and as tall as
+their content; every host obtains its view model from Koin, and the actions
+sheet and the report dialog each have their own `SubjectLinksViewModel`.
 
-- `SubjectLinksBottomSheet` (`Ссылки` and the subject name): one section per
-  category in declaration order, `Чаты` after them, `С прошлых лет` last. A
-  section is a heading in `colorPrimary` over one connected group on
-  `colorSurfaceContainerHigh`, two tonal steps above the sheet's
+- `SubjectLinksBottomSheet` (`SubjectLinksSheetRoute`; `Ссылки` and the
+  subject name): one section per category in declaration order, `Чаты` after
+  them, `С прошлых лет` last. A section is a heading over one connected group
+  on the sheet's group surface, a tonal step above the sheet's
   `colorSurfaceContainerLow`. Within a category own and others' links are
-  ranked together by `SubjectLinkRanking` and share one row style
-  (`item_subject_link.xml` without the category symbol): the title or host and
-  a line with the host when titled, who sees the link (`Все` or the flow, for
-  own and others' links alike; the author is in the actions sheet), the study year of a past link, `закреплена` and
-  the owner's review state (`на проверке`, `отклонена`, `скрыта`), joined by
-  commas. An own link has the `моя` badge; others' links have the vote pill
+  ranked together by `SubjectLinkRanking` and share the kit's `LinkRow`: the
+  title or host and a caption with the host when titled, who sees the link
+  (`Все` or the flow, for own and others' links alike; the author is in the
+  actions sheet), the study year of a past link, `закреплена` and the owner's
+  review state (`на проверке`, `отклонена`, `скрыта`), joined by commas. An
+  own link has the `моя` badge; others' links have the kit's `VotePill`
   `▲ N ▼` (a negative score in the error colour, the own vote in
   `colorPrimary`), whose arrows are hidden under a `VOTE` restriction and
   without the connection. While the sheet is open its rows keep the order they
   were first shown in (`StableOrder`): a vote updates the pill in place, a new
-  link follows the shown ones, and a new sheet or `Повторить` ranks afresh. The sheet refreshes silently on open; a failed first
-  load offers `Повторить`, an empty one says `Ссылок пока нет`. The add button
-  opens the editor.
-- `LinkEditorBottomSheet` (`Новая ссылка` / `Изменить ссылку`): the URL is
-  pasted from the clipboard when the sheet gets focus and the clipboard holds a
-  single HTTPS link. `guessCategory` suggests a category by site until the user
-  picks one (Google Sheets → `SCORES`, Google Forms → `QUEUE`, GitHub → `TASKS`,
-  YouTube, VK Video → `RECORDINGS`, Notion → `NOTES`, `lms.itmo.ru` →
-  `MATERIALS`, Telegram, VK chats, WhatsApp → `CHAT`). The title is optional
-  and its hint is the category name. `Кто видит` is a list of radio rows
-  (at least 48 dp) ordered from the widest audience to the narrowest: `Все`
-  (with `После проверки` while premoderation is on), every flow of the viewer
-  from broad to nested (the flow name over the kind of classes from
-  `lessonTypeNameRes`), then `Только я`. A chosen flow that is no longer offered falls
-  back to `Только я`; without the connection only `Только я` is listed with a
-  line saying sharing needs the connection. The new link's UUID survives
-  process death, so a retried save reaches the same link.
-- `LinkActionsBottomSheet` (long press): another student's link starts with
-  the same vote pill as the list at the end of its title (`view_link_vote_pill.xml`,
-  `ViewLinkVotePillBinding.bind`; tapping the current arrow takes the vote back); the score
-  follows the repository and a vote keeps the sheet open. The arrows are
+  link follows the shown ones, and a new sheet or `Повторить` ranks afresh. The
+  sheet refreshes silently on open; the first load shows placeholder rows, a
+  failed one offers `Повторить`, an empty one says `Ссылок пока нет`. A tap
+  opens a link, a long press its actions; the add button under the list opens
+  the editor.
+- `LinkEditorBottomSheet` (`LinkEditorSheetRoute`; `Новая ссылка` /
+  `Изменить ссылку`): the window resizes for the keyboard, so `Сохранить` stays
+  pinned above it. The URL is pasted from the clipboard when the sheet first
+  gets focus and the clipboard holds a single HTTPS link. `guessCategory`
+  suggests a category by site until the user picks one (Google Sheets ->
+  `SCORES`, Google Forms -> `QUEUE`, GitHub -> `TASKS`, YouTube, VK Video ->
+  `RECORDINGS`, Notion -> `NOTES`, `lms.itmo.ru` -> `MATERIALS`, Telegram, VK
+  chats, WhatsApp -> `CHAT`); the category chips scroll the chosen one into
+  view. The title is optional and its hint is the category name. `Кто видит`
+  is a list of radio rows (at least 48 dp) ordered from the widest audience to
+  the narrowest: `Все` (with `После проверки` while premoderation is on), every
+  flow of the viewer from broad to nested (the flow name over the kind of
+  classes from `lessonTypeName`), then `Только я`. A chosen flow that is no
+  longer offered falls back to `Только я`; without the connection only
+  `Только я` is listed with a line saying sharing needs the connection. The new
+  link's UUID survives process death, so a retried save reaches the same link.
+- `LinkActionsBottomSheet` (`LinkActionsSheetRoute`, long press): the link's
+  title and caption as in the list. Another student's link has the vote pill at
+  the end of its title (tapping the current arrow takes the vote back); the
+  score follows the repository and a vote keeps the sheet open. The arrows are
   hidden under a `VOTE` restriction and without the connection. An own shared
-  link shows its score without arrows, an own private one none. Then
-  `Открыть`; for another student's link `Автор: <name>`, which opens their profile
-  (`openUserProfile`); `Скопировать ссылку` (the address to the clipboard; below Android 13
-  a toast `Ссылка скопирована`, the system shows its own above); `Мои баллы`
-  for a Google Sheet address of any author
-  (`GoogleSheetUrl.parse`), which closes the sheet and opens the recordbook's
-  connection sheet through `AppNavigator.openSheetScores` with the link's
-  address and scope ([sheet scores](recordbook.md#sheet-scores));
-  `Закрепить` / `Открепить`; `Изменить`
-  and `Удалить` (confirmed) for own links; `Пожаловаться` opens
-  `ReportLinkDialogFragment` once per link. Actions run one at a time; a
-  failure is a snackbar. Every action but a vote closes the sheet on success.
+  link shows its score without arrows, an own private one none. An own rejected
+  or hidden link shows `Причина: <reason>` in the error colour. Then
+  `Открыть`; for another student's link with a known profile (ISU above 0)
+  `Автор: <name>`, which opens their profile (`openUserProfile`);
+  `Скопировать ссылку` (the address to the clipboard; below Android 13 a toast
+  `Ссылка скопирована`, the system shows its own above); `Мои баллы` for a
+  Google Sheet address of any author (`GoogleSheetUrl.parse`), which closes the
+  sheet and opens the recordbook's connection sheet through
+  `AppNavigator.openSheetScores` with the link's address and scope
+  ([sheet scores](recordbook.md#sheet-scores)); `Закрепить` / `Открепить`
+  (own links always, others' with the connection); `Изменить` and `Удалить`
+  for own links, the delete confirmed by the kit's `ConfirmDialog`
+  (`Удалить ссылку?`); `Пожаловаться` for another student's link with the
+  connection, no `REPORT` restriction and no earlier report, which opens
+  `ReportLinkDialogFragment`. Actions run one at a time: while one is in flight
+  the rows that act ignore taps. A failure is a snackbar. Every action but a
+  vote closes the sheet on success, and a link deleted here or elsewhere closes
+  it unless an action is pending.
+- `ReportLinkDialogFragment` (`ReportLinkForm` on the kit's `ReportDialog`;
+  `Жалоба на ссылку`): `Не открывается`, `Другой предмет`, `Спам`, `Другое` and
+  an optional comment of up to 500 characters, trimmed and sent as none when
+  blank. `Отправить` needs a reason and no report in flight; back and a tap
+  outside close the dialog only while nothing is being sent. A failure keeps the
+  dialog with its text under the comment; an accepted report closes it. The
+  reason and the comment survive a recreation.
 
 ## Without the connection
 
@@ -224,8 +248,8 @@ Strict verification of flow membership is deferred, see
 ## Verification
 
 ```bash
-./gradlew :shared:feature-resources:testAndroidHostTest :app:testGithubDebugUnitTest
-./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.resources.SubjectLinksVisualTest
+scripts/verify.sh run -- :shared:feature-resources:testAndroidHostTest :app:testGithubDebugUnitTest
+scripts/verify.sh shots feature-resources
 ```
 
 JVM tests cover the order of the short list, ranking ties and the count of the rest (`SubjectLinkChipsTest`),
@@ -234,19 +258,20 @@ the headings and group positions of the sheet (`SubjectLinkRowsTest`), period ke
 repository without and with the connection, the upload of local links, cached
 snapshots on errors, session cleanup and a corrupted file
 (`SubjectLinksRepositoryImplTest` and `SubjectLinksFileStoreTest` in the module's `commonTest`, the 2.2 files in
-`SubjectLinks22GoldenTest`, sign-out on the real graph in `ResourcesReviewsSessionTest`), and the sheet and editor view models, including the ranking within a category
-votes that keep the actions sheet open and rows that keep their place after a vote (`SubjectLinksViewModelTest`, `StableOrderTest`,
-`LinkEditorViewModelTest`).
-`SubjectLinksVisualTest` runs the real sheets in `SubjectLinksPreviewActivity`
-over the debug-only `MemorySubjectLinksRepository`: every category with chats
-and past years, voting with the pill, the editor with three nested flows, the editor with a guessed link and available audiences,
-the editor without the connection, an own rejected link, another student's
-link, an own row with `моя` ranked between others' rows on the same group
-surface, a voted row that keeps its place (`aVoteKeepsTheRowInItsPlace`), the review state in an own row's caption and pills without arrows
-under a restriction (`ownRowsSayTheirReviewStateAndOthersShowVotesWithoutArrowsUnderARestriction`), voting in
-the actions sheet, the own score without arrows, arrows hidden by a restriction,
-`Мои баллы` only for a Google Sheet (`actionsSheetOffersMyScoresOnlyForAGoogleSheet`),
-and long titles at a large font on a narrow screen. The subject page's
-`Ссылки` rows, votes, `Все ссылки, N`, `Добавить ссылку` and chats are
-covered by `RecordbookVisualTest`; votes from the page and `canVote` by
+`SubjectLinks22GoldenTest`, sign-out on the real graph in `ResourcesReviewsSessionTest`), and the sheet and editor
+view models, including the ranking within a category, votes that keep the actions sheet open and rows that keep
+their place after a vote (`SubjectLinksViewModelTest`, `StableOrderTest`, `LinkEditorViewModelTest`).
+
+The Compose bodies have host tests in `:shared:feature-resources`: `SubjectLinksSheetTest` (sections in order,
+votes through the view model, own rows among others, review states, a restriction, the missing connection, long
+titles at 320 dp and font scale 1.3, the four states), `LinkEditorSheetTest` (the form, the audiences and the
+save), `LinkActionsSheetTest` (votes that keep the sheet open, `Мои баллы` only for a Google Sheet, the own score
+without arrows and none for a private link, a restriction, an own rejected link with its reason, pinning and
+reporting, the confirmed delete, a deleted link, one action at a time) and `ReportLinkDialogTest` (reasons, the
+failure under the comment, the comment's limit). In `:app`, `ResourcesHostsKoinTest` runs the four hosts over Koin
+and an in-memory repository (votes, pins, deletes and reports through the hosts, the report dialog across a
+recreation) and `LinkEditorPasteTest` the clipboard paste. Their looks are the four-appearance goldens
+`SubjectLinksSheetContent_*`, `LinkEditorSheetContent_*`, `LinkActionsSheetContent_*` and `ReportLinkDialog_*` in
+`shared/feature-resources/screenshots/`. The subject page's `Ссылки` rows, votes, `Все ссылки, N`,
+`Добавить ссылку` and chats are covered by the recordbook's tests; votes from the page and `canVote` by
 `RecordbookSubjectViewModelTest`.
