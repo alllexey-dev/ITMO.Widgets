@@ -50,6 +50,25 @@
 			</array>
 		</dict>
 	</array>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER).qr_pass</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>shortcut_qr_long</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>qrcode</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER).today</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>shortcut_today_long</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>calendar</string>
+		</dict>
+	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 </dict>

@@ -85,6 +85,30 @@
         }
       }
     },
+    "ios_intent_open_route_title" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть раздел"
+          }
+        }
+      }
+    },
+    "ios_intent_route_parameter" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Раздел"
+          }
+        }
+      }
+    },
     "ios_onboarding_notifications_configure" : {
       "comment" : "Generated from strings_ios_onboarding.xml",
       "extractionState" : "manual",
@@ -141,6 +165,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Запрещены в iOS"
+          }
+        }
+      }
+    },
+    "ios_shortcut_qr_phrase_open" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открой QR-пропуск в ${applicationName}"
+          }
+        }
+      }
+    },
+    "ios_shortcut_qr_phrase_show" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покажи пропуск ${applicationName}"
+          }
+        }
+      }
+    },
+    "ios_shortcut_today_phrase_lessons" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Какие пары сегодня в ${applicationName}"
+          }
+        }
+      }
+    },
+    "ios_shortcut_today_phrase_schedule" : {
+      "comment" : "Generated from strings_ios_shortcuts.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание на сегодня в ${applicationName}"
           }
         }
       }

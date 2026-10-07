@@ -2,16 +2,21 @@ import Shared
 import SwiftUI
 
 /// The app entry point: the SwiftUI shell (`ShellView`) gated on the shared session (IO-07a), or in a Debug build on
-/// a fixture session from the launch arguments (`ShellFixtures`). Every `itmowidgets://route/<id>` URL goes to the
-/// router. `init` sets the app locale, starts the Kotlin graph, builds the shell's session, then starts the shared one.
+/// a fixture session from the launch arguments (`ShellFixtures`). Every `itmowidgets://route/<id>` URL, App Intent and
+/// quick action goes to the router. `init` sets the app locale, starts the Kotlin graph, connects the router to
+/// `RouteInbox`, builds the shell's session, then starts the shared one.
 @main
 struct ITMOWidgetsApp: App {
-    @State private var router = AppRouter()
+    @UIApplicationDelegateAdaptor(ITMOWidgetsAppDelegate.self) private var appDelegate
+    @State private var router: AppRouter
     @State private var session: ShellSession
 
     init() {
         IosStrings.shared.installAppLocale()
         _ = startKoinIos(platform: AppPlatform())
+        let router = AppRouter()
+        _router = State(initialValue: router)
+        RouteInbox.shared.connect { router.open(id: $0) }
         _session = State(initialValue: Self.makeSession())
         Self.startSession()
     }

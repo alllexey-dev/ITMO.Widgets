@@ -117,6 +117,42 @@ The static shortcut `qr_pass` («QR-пропуск» / «Открыть QR-пр�
 `ACTION_OPEN_QR_PASS` to `MainActivity`. Running the route reports the
 shortcut as used, for the tile too; the in-app button does not.
 
+## iOS
+
+The iOS app ([iOS app](../ios.md)) shows the same pass on the same shared
+code; only the system surfaces are its own.
+
+- Pass. The Compose route `QrPassRoute` of `:shared:feature-qr`, hosted by
+  `QrPassScreen` (`iosApp/Sources/Features/Qr/`) above home, opens from the
+  home QR button, the widget, the Control, the App Shortcut and the quick
+  action. Unlike Android it raises the screen to full brightness while it is
+  on screen and the app is active, and puts the user's level back when it
+  leaves or the app goes to the background. The demo session shows the demo
+  pass with no network call.
+- QR widget (`dev.alllexey.itmowidgets.widget.qr`, small): Swift only, it
+  draws the code from `qr-pass-v1.json`, which the app writes from the shared
+  `QrCodeGenerator` on every new valid pass, and never fetches it itself.
+  States: signed out («Войдите в приложение», opens the app), spoiler
+  («Нажмите, чтобы показать», reveals the code for 30 s for every placed QR
+  widget at once), revealed (the demo pass labelled «Демо-режим»), expired
+  («Нажмите, чтобы обновить», opens the app, which writes a new pass).
+  Degradations: no circle animation on reveal, the code is always black on
+  white, no custom spoiler image and no iOS setting for the spoiler yet
+  (always on).
+- Control «QR-пропуск» (`dev.alllexey.itmowidgets.control.qr`) in Control
+  Center, on the Lock Screen and on the Action button: the counterpart of the
+  tile. It opens the app on the pass and cannot draw the code; there is no
+  active or inactive state, and without a session the route waits for
+  sign-in.
+- App Shortcuts «QR-пропуск» and «Сегодня» in Siri, Spotlight and Shortcuts,
+  with phrases such as «Открой QR-пропуск в ITMO.Widgets»; quick actions
+  «Открыть QR-пропуск» and «Расписание на сегодня» on the app icon, types
+  `dev.alllexey.itmowidgets.qr_pass` and `dev.alllexey.itmowidgets.today`.
+  Both open what Android's `qr_pass` and `today` shortcuts open.
+- Tests: `IntentsTests` (each intent and quick action against a router),
+  `StableIdentifiersTests`, `QrWidgetTimelineTests`, `QrPassSnapshotTests`,
+  `WidgetSnapshotTests`, `QrPassUITests`.
+
 ## Stable identifiers
 
 Quoted from `StableIdentifiersTest`:

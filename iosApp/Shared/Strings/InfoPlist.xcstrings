@@ -12,6 +12,30 @@
           }
         }
       }
+    },
+    "shortcut_qr_long" : {
+      "comment" : "Generated from strings_platform.xml (shortcut_qr_long)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть QR-пропуск"
+          }
+        }
+      }
+    },
+    "shortcut_today_long" : {
+      "comment" : "Generated from strings_platform.xml (shortcut_today_long)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание на сегодня"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
