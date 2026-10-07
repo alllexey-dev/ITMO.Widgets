@@ -5,7 +5,6 @@ import dev.alllexey.itmowidgets.client.push.SportFreeSignLessonsPayload
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmPayloadHandler
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking.QueueKind
-import javax.inject.Inject
 import kotlinx.serialization.json.JsonElement
 
 /**
@@ -24,12 +23,5 @@ class SportSignPushHandler(
 
     override suspend fun handle(payload: JsonElement) {
         booker.book(queue, payload) { notice -> notifier.show(notice.toAppNotification()) }
-    }
-
-    class Factory @Inject constructor(
-        private val booker: SportSignPushBooker,
-        private val notifier: AppNotifier
-    ) {
-        fun create(queue: QueueKind): FcmPayloadHandler = SportSignPushHandler(queue, booker, notifier)
     }
 }

@@ -114,7 +114,7 @@ interface CoreBridgeEntryPoint {
     fun utilityStorage(): UtilityStorage
 
     fun customSpoilerRepository(): CustomSpoilerRepository
-    /** Not `calendarSync()`: `CalendarSyncEntryPoint` declares that name for the implementation type. */
+    /** The same `@Singleton` that `ScheduleBridgeEntryPoint.defaultCalendarSync()` hands the worker. */
     fun coreCalendarSync(): CalendarSync
 
     /** Unscoped in Hilt: the export keeps no state, so every reader gets a new one. */

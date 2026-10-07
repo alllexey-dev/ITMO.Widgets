@@ -12,19 +12,20 @@ import dagger.multibindings.IntoSet
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleChangeTracking
-import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesCheck
-import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 /**
  * Hilt to Koin for what the schedule data takes from `:app`: Core 2.0's schedule area over the one `BackendClient`,
  * the Android notification of found changes and LT-1's WorkManager scheduler of the change check. iOS binds its own
- * (L18).
+ * (L18). Also the phone calendar sync for `CalendarSyncWorker`, whose repository and calendars stay on Hilt until
+ * KM-12b.
  */
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -33,6 +34,9 @@ interface ScheduleBridgeEntryPoint {
     fun backendScheduleApi(): ScheduleApi
     fun scheduleChangeNotifier(): ScheduleChangeNotifier
     fun scheduleChangesScheduler(): ScheduleChangesScheduler
+
+    /** The `@Singleton` behind `CalendarSync`; the worker runs it through its implementation type. */
+    fun defaultCalendarSync(): DefaultCalendarSync
 
     companion object {
         fun from(context: Context): ScheduleBridgeEntryPoint =
@@ -48,16 +52,17 @@ val scheduleBridgeModule = module {
     single<ScheduleApi> { ScheduleBridgeEntryPoint.from(androidContext()).backendScheduleApi() }
     factory<ScheduleChangeNotifier> { ScheduleBridgeEntryPoint.from(androidContext()).scheduleChangeNotifier() }
     factory<ScheduleChangesScheduler> { ScheduleBridgeEntryPoint.from(androidContext()).scheduleChangesScheduler() }
+    single<DefaultCalendarSync> { ScheduleBridgeEntryPoint.from(androidContext()).defaultCalendarSync() }
 }
 
 /**
  * Koin to Hilt for the schedule data `scheduleDataModule` constructs, which Hilt-built Android code still takes: the
- * change tracking (the debug tools, LT-1's background check set), the change check (`ScheduleChangesWorker`), the
- * widget data provider (`ScheduleWidgetEntryPoint`) and the launcher preview scenario (`ScheduleSettingsPreview`,
- * `DefaultWidgetPreviewFactory`). Unscoped on purpose: Koin owns the lifetime, so Hilt and Koin readers share one
- * tracking. The tracking is read by its implementation key, so a debug fixture that overrides a contract in Koin
- * never reaches the background check set. `ensureStarted`, because a widget broadcast or a worker can run before
- * `Application.onCreate()`.
+ * change tracking (the debug tools, LT-1's background check set) and the launcher preview scenario
+ * (`ScheduleSettingsPreview`, `DefaultWidgetPreviewFactory`); and for the widget snapshot store
+ * `componentBindingsModule` constructs (the session effects). Unscoped on purpose: Koin owns the lifetime, so Hilt
+ * and Koin readers share one tracking and one store. The tracking is read by its implementation key, so a debug
+ * fixture that overrides a contract in Koin never reaches the background check set. `ensureStarted`, because Hilt
+ * can build a reader before `Application.onCreate()` has started Koin.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -73,11 +78,7 @@ object ScheduleBridge {
         KoinStarter.ensureStarted(context).get<DefaultScheduleChangeTracking>()
 
     @Provides
-    fun scheduleChangesCheck(@ApplicationContext context: Context): ScheduleChangesCheck =
-        KoinStarter.ensureStarted(context).get()
-
-    @Provides
-    fun scheduleWidgetDataProvider(@ApplicationContext context: Context): ScheduleWidgetDataProvider =
+    fun scheduleWidgetSnapshotStore(@ApplicationContext context: Context): ScheduleWidgetSnapshotStore =
         KoinStarter.ensureStarted(context).get()
 
     @Provides

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.di.bridge
 
+import dev.alllexey.itmowidgets.di.componentBindingsModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
@@ -27,7 +28,7 @@ import org.koin.core.module.Module
  *
  * A lane adds one line per module, and L07 reviews it: a Hilt to Koin `<Feature>Bridge` from this package goes to
  * [bridges], a module whose definitions Koin constructs (`feature-<x>/di`, `core/di`) goes to [constructed]. Debug
- * fixture overrides stay out of both lists.
+ * fixture overrides stay out of both lists. The app's own Android-only bindings (`di`) count as constructed.
  */
 object KoinModules {
 
@@ -42,6 +43,7 @@ object KoinModules {
         accountAuthBridgeModule,
         shellBridgeModule,
         accountUpdateBridgeModule,
+        qrBridgeModule,
     )
 
     /** Definitions Koin constructs; the graph check verifies their constructors. */
@@ -66,6 +68,7 @@ object KoinModules {
         webLoginDataModule,
         webLoginModule,
         updateModule,
+        componentBindingsModule,
     )
 
     val all: List<Module> get() = bridges + constructed

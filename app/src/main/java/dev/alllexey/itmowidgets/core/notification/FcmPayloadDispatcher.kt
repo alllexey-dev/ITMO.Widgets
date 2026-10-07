@@ -4,15 +4,14 @@ import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.push.FcmDecoder
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import kotlinx.coroutines.CancellationException
-import javax.inject.Inject
 
 /**
  * Routes Backend's data message to the handler of its `type` through Core 2.0's envelope. An unknown type is
  * recorded and dropped; a message that is not an envelope (not JSON, a JSON `null`, no `type`, a `payload` that is
  * not an object) is dropped with the fact recorded, as 2.2 dropped it.
  */
-class FcmPayloadDispatcher @Inject constructor(
-    handlers: Set<@JvmSuppressWildcards FcmPayloadHandler>,
+class FcmPayloadDispatcher(
+    handlers: List<FcmPayloadHandler>,
     private val diagnostics: AppDiagnostics
 ) {
     private val handlersByType = handlers.associateBy(FcmPayloadHandler::type).also {

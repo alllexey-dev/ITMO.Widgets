@@ -4,26 +4,23 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.ListenableWorker.Result
 import androidx.work.WorkerParameters
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.work.PeriodicCheckSpec
 import dev.alllexey.itmowidgets.core.work.workResultOf
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+import org.koin.core.Koin
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-/** Workers are built by WorkManager; see `QrWidgetEntryPoint` for why this is not `@HiltWorker`. */
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface CalendarSyncEntryPoint {
-    fun calendarSync(): DefaultCalendarSync
-}
+class CalendarSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params), KoinComponent {
+    private val sync: DefaultCalendarSync by inject()
 
-class CalendarSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    /** WorkManager can run a worker before `Application.onCreate()` has started Koin. */
+    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
+
     override suspend fun doWork(): Result {
-        val sync = EntryPointAccessors.fromApplication(applicationContext, CalendarSyncEntryPoint::class.java).calendarSync()
         // CancellationException propagates: WorkManager stopped the run and owns what happens next.
         return workResultOf(sync.run(), runAttemptCount)
     }

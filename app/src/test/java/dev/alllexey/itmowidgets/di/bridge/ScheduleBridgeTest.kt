@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
@@ -15,9 +16,12 @@ import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleChangeTracking
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesCheck
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleDataModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleModule
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
@@ -25,15 +29,15 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.work.AndroidScheduleChangeNotifier
-import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesEntryPoint
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesTestEntryPoint
-import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetEntryPoint
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.sport.di.sportModule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -46,9 +50,9 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The schedule data on the real graph (KM-11a2): Koin constructs it once, Hilt's remaining readers (the workers, the
- * widget, the debug tools, the background check set) get Koin's instances through `ScheduleBridge`, and Koin gets
- * the Android notifier, the WorkManager scheduler and Core 2.0's schedule area from Hilt.
+ * The schedule data on the real graph (KM-11a2): Koin constructs it once, Hilt's remaining readers (the debug tools,
+ * the background check set, the session effects) get Koin's instances through `ScheduleBridge`, and Koin gets the
+ * Android notifier, the WorkManager scheduler, the calendar sync and Core 2.0's schedule area from Hilt.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -73,7 +77,7 @@ class ScheduleBridgeTest {
     }
 
     @Test
-    fun `Hilt's readers get Koin's tracking, check and widget data`() {
+    fun `Hilt's readers get Koin's tracking and widget snapshot store`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
         val tracking = koin.get<DefaultScheduleChangeTracking>()
@@ -83,8 +87,21 @@ class ScheduleBridgeTest {
             EntryPointAccessors.fromApplication(application, ScheduleChangesTestEntryPoint::class.java).scheduleChangeTracking()
         )
         assertEquals(1, application.backgroundChecks.count { it === tracking })
-        assertNotNull(EntryPointAccessors.fromApplication(application, ScheduleChangesEntryPoint::class.java).check())
-        assertNotNull(ScheduleWidgetEntryPoint.from(application).scheduleWidgetDataProvider())
+        val store = koin.get<ScheduleWidgetSnapshotStoreImpl>()
+        assertSame(store, koin.get<ScheduleWidgetSnapshotStore>())
+        assertSame(store, ScheduleBridge.scheduleWidgetSnapshotStore(application))
+    }
+
+    @Test
+    fun `the workers get the change check and the calendar sync from Koin`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+
+        // Stateless and unscoped: every run of the worker gets a new check.
+        assertNotSame(koin.get<ScheduleChangesCheck>(), koin.get<ScheduleChangesCheck>())
+        // Hilt's `@Singleton`, read by its contract and by its implementation type.
+        assertSame(ScheduleBridgeEntryPoint.from(application).defaultCalendarSync(), koin.get<DefaultCalendarSync>())
+        assertSame(koin.get<CalendarSync>(), koin.get<DefaultCalendarSync>())
     }
 
     @Test

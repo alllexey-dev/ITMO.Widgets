@@ -8,21 +8,22 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.widget.RemoteViews
-import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
 import dev.alllexey.itmowidgets.feature.qr.work.QrWidgetWork
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Home-screen QR pass.
@@ -32,16 +33,16 @@ import kotlinx.coroutines.launch
  * no timing guarantee, so a tap would visibly lag, and every frame is an IPC round
  * trip that has to stay short-lived.
  */
-@AndroidEntryPoint
-class QrCodeWidgetProvider : AppWidgetProvider() {
+class QrCodeWidgetProvider : AppWidgetProvider(), KoinComponent {
 
-    @Inject lateinit var repository: QrCodeRepository
+    // Resolved on first use, after onReceive() has started Koin.
+    private val repository: QrCodeRepository by inject()
 
-    @Inject lateinit var stateStore: QrWidgetStateStore
+    private val stateStore: QrWidgetStateStore by inject()
 
-    @Inject lateinit var images: QrWidgetImages
+    private val images: QrWidgetImages by inject()
 
-    @Inject lateinit var appearance: QrAppearancePreferences
+    private val appearance: QrAppearancePreferences by inject()
 
     /**
      * Draws from the cache straight away and only then asks for a refresh.
@@ -117,6 +118,8 @@ class QrCodeWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
+        // The one idempotent starter, as every Android component (KoinStarter); inject() then reads its graph.
+        KoinStarter.ensureStarted(context)
         super.onReceive(context, intent)
         if (intent.action != ACTION_WIDGET_CLICK && intent.action != ACTION_AUTO_HIDE) return
 

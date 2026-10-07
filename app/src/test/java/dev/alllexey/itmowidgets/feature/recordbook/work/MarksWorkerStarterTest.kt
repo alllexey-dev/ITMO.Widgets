@@ -1,55 +1,48 @@
-package dev.alllexey.itmowidgets.di
+package dev.alllexey.itmowidgets.feature.recordbook.work
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import dagger.hilt.android.EntryPointAccessors
+import androidx.work.ListenableWorker.Result
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
-import dev.alllexey.itmowidgets.di.bridge.CoreBridgeEntryPoint
+import dev.alllexey.itmowidgets.core.work.buildWorker
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
-import dev.alllexey.itmowidgets.feature.recordbook.work.MarksTestEntryPoint
-import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesTestEntryPoint
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.GlobalContext
+import org.koin.core.context.stopKoin
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The Hilt set of background checks the Application and the session effects iterate. A test `@EntryPoint` would only
- * join a `@HiltAndroidTest` component, so the set is read from the Application's injected field and the single
- * bindings from the app's own entry points (`CalendarSync` is bound to the `@Singleton` `DefaultCalendarSync`).
+ * WorkManager's `InitializationProvider` can run a worker before `Application.onCreate()` has started Koin; the
+ * worker then starts the release graph itself through `KoinStarter`. Proven on the real Application with Koin
+ * stopped after the boot: a fresh device has no session, so the marks check skips.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
 @LazyApplication(LazyLoad.ON)
-class BackgroundCheckGraphTest {
+class MarksWorkerStarterTest {
 
     @get:Rule
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the set holds the three checks once each, as the instances of their own bindings`() {
+    fun `a worker that runs before Koin starts it`() = runTest {
         val application = bootApplication()
-        val checks = application.backgroundChecks.toList()
-        val expected = listOf(
-            entryPoint<ScheduleChangesTestEntryPoint>(application).scheduleChangeTracking(),
-            CoreBridgeEntryPoint.from(application).coreCalendarSync(),
-            entryPoint<MarksTestEntryPoint>(application).marksTracking()
-        )
+        stopKoin()
+        assertNull(GlobalContext.getOrNull())
 
-        assertEquals(3, checks.size)
-        expected.forEach { binding ->
-            assertEquals("$binding in $checks", 1, checks.count { it === binding })
-        }
+        assertEquals(Result.success(), buildWorker<MarksWorker>(application).doWork())
+        assertSame(application, GlobalContext.get().get<Context>())
     }
-
-    private inline fun <reified T : Any> entryPoint(context: Context): T =
-        EntryPointAccessors.fromApplication(context, T::class.java)
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
     private fun bootApplication(): ItmoWidgetsApplication {

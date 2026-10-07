@@ -16,7 +16,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsHttp
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
-import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksCheck
 import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
@@ -60,18 +59,15 @@ val recordbookBridgeModule = module {
 }
 
 /**
- * Koin to Hilt for the recordbook data `recordbookModule` constructs that Hilt-built code still takes: the marks check
- * of `MarksWorker` (through `MarksEntryPoint`), the switches of [MarkTracking] (debug tools, the marks test entry
- * point) and the same instance as one of the Application's background checks. Unscoped on purpose: Koin owns the
- * lifetime and returns its single every time. The implementation key is read, so a debug fixture that overrides a
- * domain type in Koin never reaches Hilt. `ensureStarted`, because a worker can run before `Application.onCreate()`.
+ * Koin to Hilt for the recordbook data `recordbookModule` constructs that Hilt-built code still takes: the switches of
+ * [MarkTracking] (debug tools, the marks test entry point) and the same instance as one of the Application's
+ * background checks. Unscoped on purpose: Koin owns the lifetime and returns its single every time. The
+ * implementation key is read, so a debug fixture that overrides a domain type in Koin never reaches Hilt.
+ * `ensureStarted`, because Hilt can build a reader before `Application.onCreate()` has started Koin.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object RecordbookBridge {
-
-    @Provides
-    fun marksCheck(@ApplicationContext context: Context): MarksCheck = KoinStarter.ensureStarted(context).get()
 
     @Provides
     fun markTracking(@ApplicationContext context: Context): MarkTracking =

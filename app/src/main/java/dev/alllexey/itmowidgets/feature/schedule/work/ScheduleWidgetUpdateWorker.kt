@@ -4,26 +4,35 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetLoadResult
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRenderer
 import kotlin.time.Duration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import org.koin.core.Koin
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class ScheduleWidgetUpdateWorker(
     appContext: Context,
     workerParams: WorkerParameters,
-) : CoroutineWorker(appContext, workerParams) {
+) : CoroutineWorker(appContext, workerParams), KoinComponent {
 
-    private val dependencies = ScheduleWidgetEntryPoint.from(appContext)
-    private val dataProvider = dependencies.scheduleWidgetDataProvider()
-    private val store = dependencies.scheduleWidgetSnapshotStore()
-    private val diagnostics = dependencies.appDiagnostics()
+    private val dataProvider: ScheduleWidgetDataProvider by inject()
+    private val store: ScheduleWidgetSnapshotStore by inject()
+    private val diagnostics: AppDiagnostics by inject()
+
+    /** WorkManager can run a worker before `Application.onCreate()` has started Koin. */
+    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
 
     override suspend fun doWork(): Result {
         val singleIds = ScheduleWidgetProviders.singleLessonIds(applicationContext)

@@ -196,6 +196,8 @@ dependencies {
     // The store tests prove 2.2 (Gson) reads what kotlinx writes; Gson is on no runtime classpath (KM-10i).
     testImplementation(libs.gson)
     testImplementation(libs.koin.test)
+    // TestListenableWorkerBuilder: the worker tests build each worker as WorkManager does, on a Koin test graph (KM-12a).
+    testImplementation(libs.androidx.work.testing)
     // KoinContext for Robolectric Compose tests: Koin Compose caches the first graph per JVM, and StopKoinRule restarts it.
     testImplementation(libs.koin.compose.viewmodel)
     // Screenshot tests that host @AndroidEntryPoint screens (AppScreenshotRule, XmlReferenceCapture).
