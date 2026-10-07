@@ -336,7 +336,7 @@ Sign-out. Three `SessionDataCleaner`s run with the shared ones, on sign-out and 
 the Keychain (every item of the service), the App Group container and WebKit's website data, which Swift removes
 through `IosCoreHost.clearWebsiteData` (`WKWebsiteDataStore`, as Android clears its WebView data). The App Group
 cleaner removes the app's files (snapshots and a writer's leftover `.tmp` file) and keeps `locks`, `Library` and
-every other hidden file: the system's `.com.apple.mobile_container_manager.metadata.plist` is the container's
+every other hidden file: the system's .com.apple.mobile_container_manager.metadata.plist is the container's
 record, and without it the system drops the container as stale and gives the next process a new, empty one, so the
 widgets would read a container the app no longer writes (`ITMOWidgetsTests/WidgetSnapshotsTests`).
 
