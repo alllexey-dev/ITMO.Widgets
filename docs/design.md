@@ -670,9 +670,9 @@ settings, and restore them if a separate test explicitly changes them.
   `ic_history`. On lesson cards the
   mark `change_indicator` (`ic_edit_calendar`, 16 dp, `colorPrimary`) after the
   video-call icon in `res/layout/item_schedule_lesson.xml`; in the lesson sheet
-  the block `changes_card` (divider, `Изменения`, `было → стало` lines) in
-  `res/layout/fragment_lesson_details.xml` and the informational `flow_fact` row
-  between teacher and place in `res/layout/view_details_header.xml`.
+  the `Изменения` block (divider, heading, `было → стало` lines) in
+  `feature/schedule/ui/details/LessonDetailsSections.kt` of `:shared:feature-schedule` and
+  the informational flow row between teacher and place of the kit's `DetailsHeader`.
 - Visual tests: `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
   `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`,
   `feature/reviews/ReviewEditorVisualTest.kt`,
