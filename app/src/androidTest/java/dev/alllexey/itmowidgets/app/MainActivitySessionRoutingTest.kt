@@ -1,6 +1,11 @@
 package dev.alllexey.itmowidgets.app
 
 import android.view.View
+import android.view.ViewGroup
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.navigation.fragment.NavHostFragment
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.action.ViewActions.click
@@ -13,6 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
@@ -88,11 +94,7 @@ class MainActivitySessionRoutingTest {
             lateinit var decorView: View
             scenario.onActivity { activity -> decorView = activity.window.decorView }
 
-            eventually {
-                onView(withId(R.id.onboarding_root))
-                    .inRoot(withDecorView(`is`(decorView)))
-                    .check(matches(isDisplayed()))
-            }
+            eventually { scenario.onActivity(::assertOnboardingShown) }
 
             // The flow owns the window until it is passed.
             onView(withId(R.id.bottom_nav_view))
@@ -118,11 +120,7 @@ class MainActivitySessionRoutingTest {
             // What `Повторить первоначальную настройку` does: only the flag changes.
             TestSession.resetOnboarding()
 
-            eventually {
-                onView(withId(R.id.onboarding_root))
-                    .inRoot(withDecorView(`is`(decorView)))
-                    .check(matches(isDisplayed()))
-            }
+            eventually { scenario.onActivity(::assertOnboardingShown) }
             onView(withId(R.id.bottom_nav_view))
                 .inRoot(withDecorView(`is`(decorView)))
                 .check(matches(not(isDisplayed())))
@@ -160,6 +158,27 @@ class MainActivitySessionRoutingTest {
             }
         }
     }
+
+    /** The Compose flow tagged `onboarding_root` is on screen, read through semantics (no compose test rule here). */
+    private fun assertOnboardingShown(activity: MainActivity) {
+        val shown = activity.window.decorView.descendants()
+            .filter { it.isShown }
+            .filterIsInstance<ViewRootForTest>()
+            .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.subtree() }
+            .any { node ->
+                node.config.getOrNull(SemanticsProperties.TestTag) == OnboardingFragment.ROOT_TEST_TAG &&
+                    node.size.height > 0
+            }
+        assertTrue("The first-run flow is not shown", shown)
+    }
+
+    private fun View.descendants(): Sequence<View> {
+        val group = this as? ViewGroup ?: return sequenceOf(this)
+        return sequenceOf(this) + (0 until group.childCount).asSequence().flatMap { group.getChildAt(it).descendants() }
+    }
+
+    private fun SemanticsNode.subtree(): Sequence<SemanticsNode> =
+        sequenceOf(this) + children.asSequence().flatMap { it.subtree() }
 
     private fun root(activity: MainActivity) =
         activity.supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment

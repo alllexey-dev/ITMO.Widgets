@@ -62,10 +62,7 @@ Feature doc: [First-run flow](onboarding.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/onboarding/ui/OnboardingFragment.kt` | Fragment | `OnboardingViewModel` | `onboarding` | `app/SettingsNavigationTestActivity.kt` | `feature/onboarding/OnboardingVisualTest.kt` |
-| `feature/onboarding/ui/ServicesStepFragment.kt` | Fragment | `OnboardingViewModel` (parent's) | page of `OnboardingStepAdapter` | `app/SettingsNavigationTestActivity.kt` | `feature/onboarding/OnboardingVisualTest.kt` |
-| `feature/onboarding/ui/NotificationsStepFragment.kt` | Fragment | `OnboardingViewModel` (parent's) | page of `OnboardingStepAdapter` | `app/SettingsNavigationTestActivity.kt` | `feature/onboarding/OnboardingVisualTest.kt` |
-| `feature/onboarding/ui/WidgetStepFragment.kt` | Fragment | `OnboardingViewModel` (parent's) | page of `OnboardingStepAdapter` | `app/SettingsNavigationTestActivity.kt` | `feature/onboarding/OnboardingVisualTest.kt` |
+| `feature/onboarding/ui/OnboardingFragment.kt` hosting `OnboardingScreen` (`:shared:feature-account`) with `AndroidView` widget previews | Fragment | `OnboardingViewModel` (Koin) | `onboarding` | `app/SettingsNavigationTestActivity.kt` (`onboardingFixture`) | `AccountScreenshotTest` (`:shared:feature-account`), `feature/onboarding/OnboardingVisualTest.kt` |
 
 ## Home
 

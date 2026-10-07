@@ -14,8 +14,7 @@
     <fragment
         android:id="@+id/onboarding"
         android:name="dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment"
-        android:label="Onboarding"
-        tools:layout="@layout/fragment_onboarding" />
+        android:label="Onboarding" />
 
     <fragment
         android:id="@+id/navigation_recordbook"

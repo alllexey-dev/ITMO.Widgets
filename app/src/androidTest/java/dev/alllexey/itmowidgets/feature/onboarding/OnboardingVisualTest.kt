@@ -1,195 +1,106 @@
 package dev.alllexey.itmowidgets.feature.onboarding
 
+import android.accessibilityservice.AccessibilityService
+import android.appwidget.AppWidgetManager
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.materialswitch.MaterialSwitch
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
+import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetKind
+import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
+import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingTestTags
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
-import dev.alllexey.itmowidgets.testing.ViewChecks
-import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
-import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
+import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.math.abs
 
-/** The real first-run flow on fixture repositories: no stored preferences, no backend. */
+/**
+ * What only a device shows of the first-run flow, on fixture repositories (no stored preferences, no backend): the
+ * real widget previews in the Compose slot and the launcher pin. Everything else is the JVM host tests and goldens
+ * of `OnboardingScreen` in `:shared:feature-account`. `:app` has no compose test rule, so nodes are read through the
+ * `ComposeView`'s semantics owner.
+ */
 @RunWith(AndroidJUnit4::class)
 class OnboardingVisualTest {
 
     @After
     fun reset() {
         SettingsNavigationTestActivity.appearance = PreviewAppearance()
-        SettingsNavigationTestActivity.onboardingFixture =
-            SettingsNavigationTestActivity.OnboardingFixture()
+        SettingsNavigationTestActivity.onboardingFixture = SettingsNavigationTestActivity.OnboardingFixture()
         SettingsNavigationTestActivity.startDestination = R.id.navigation_home
     }
 
     @Test
-    fun everyStepReadsAndFitsAcrossAppearances() {
-        Appearances.default.forEachIndexed { index, spec ->
-            launch(spec.toSettingsNavigation()) { scenario ->
-                // Three widget steps: preview, the widget's own rows, one pin button.
-                listOf(
-                    R.string.onboarding_compact_widget_title to 2,
-                    R.string.onboarding_full_widget_title to 3,
-                    R.string.onboarding_qr_widget_title to 2
-                ).forEachIndexed { step, (titleRes, rows) ->
-                    if (step > 0) next(scenario)
+    fun everyWidgetPageDrawsItsRealPreviewAtWidgetHeight() {
+        launch { scenario ->
+            WidgetKind.entries.forEachIndexed { step, kind ->
+                if (step > 0) click(scenario, OnboardingTestTags.NEXT)
+                TestUi.eventually(message = "$kind preview") {
                     scenario.onActivity { activity ->
-                        val root = activity.onboardingRoot()
-                        val page = activity.currentPage()
-                        assertEquals(activity.getString(titleRes), page.text(R.id.step_title))
-                        assertEquals(rows, page.findViewById<ViewGroup>(R.id.setting_rows).switches().size)
-                        // Schedule widgets also offer their text size; the QR widget offers its spoiler image instead.
-                        assertEquals(step < 2, page.findViewById<ViewGroup>(R.id.setting_rows).hasTextSizeRow(activity))
-                        assertEquals(step == 2, page.findViewById<ViewGroup>(R.id.setting_rows).hasSpoilerImageRow(activity))
-                        assertPreviewDrawn(page, compact = step == 0)
-                        assertEquals(View.VISIBLE, page.findViewById<View>(R.id.pin_button).visibility)
-                        assertEquals(View.GONE, page.findViewById<View>(R.id.pin_hint).visibility)
-                        assertEquals(4, root.findViewById<ViewGroup>(R.id.onboarding_steps).childCount)
-                        assertEquals(activity.getString(R.string.onboarding_next), root.text(R.id.next_button))
-                        assertTextFits(root)
-                        assertTouchTargets(root)
+                        val root = activity.onboarding().requireView()
+                        val preview = activity.onboarding().previewViews[kind]
+                        assertNotNull("$kind preview", preview)
+                        preview!!
+                        assertTrue("$kind preview is shown", preview.isShown)
+                        assertTrue("$kind preview size", preview.width > 0 && preview.height > 0)
+                        // The slot is as tall as the widget view, not stretched or clipped by the card.
+                        val slot = node(root, OnboardingTestTags.PREVIEW)
+                        assertTrue("$kind slot height", abs(slot.size.height - preview.height) <= 1)
+                        assertEquals("$kind slot width", slot.size.width, preview.width)
+                        // A single-lesson preview is as tall as the widget, never the day list's bounded band.
+                        if (kind == WidgetKind.SINGLE_LESSON) {
+                            val limit = 200 * root.resources.displayMetrics.density
+                            assertTrue("Single lesson height", preview.height < limit)
+                        }
                     }
-                    capture("widget-$step-$index")
                 }
-
-                next(scenario)
-                scenario.onActivity { activity ->
-                    val root = activity.onboardingRoot()
-                    val page = activity.currentPage()
-                    assertEquals(false, page.findViewById<MaterialSwitch>(R.id.services_switch).isChecked)
-                    // Without the opt-in this is the last step: nothing to skip, "Готово" instead of "Далее".
-                    assertEquals(View.GONE, root.findViewById<View>(R.id.skip_button).visibility)
-                    assertEquals(activity.getString(R.string.onboarding_done), root.text(R.id.next_button))
-                    assertTextFits(root)
-                    assertTouchTargets(root)
-                }
-                capture("services-$index")
-
-                scenario.onActivity { it.currentPage().findViewById<View>(R.id.services_row).performClick() }
-                settle()
-                scenario.onActivity { activity ->
-                    val root = activity.onboardingRoot()
-                    val page = activity.currentPage()
-                    // The switch flips in place; the flow grows by the notifications step.
-                    assertEquals(true, page.findViewById<MaterialSwitch>(R.id.services_switch).isChecked)
-                    assertEquals(View.VISIBLE, page.findViewById<View>(R.id.services_switch).visibility)
-                    assertEquals(5, root.findViewById<ViewGroup>(R.id.onboarding_steps).childCount)
-                    assertEquals(View.VISIBLE, root.findViewById<View>(R.id.skip_button).visibility)
-                    assertEquals(activity.getString(R.string.onboarding_next), root.text(R.id.next_button))
-                    assertTextFits(root)
-                }
-                capture("services-on-$index")
-
-                next(scenario)
-                scenario.onActivity { activity ->
-                    val root = activity.onboardingRoot()
-                    val page = activity.currentPage()
-                    assertEquals(View.VISIBLE, page.findViewById<View>(R.id.notifications_status).visibility)
-                    assertEquals(View.VISIBLE, page.findViewById<View>(R.id.notifications_button).visibility)
-                    assertEquals(View.GONE, root.findViewById<View>(R.id.skip_button).visibility)
-                    assertEquals(activity.getString(R.string.onboarding_done), root.text(R.id.next_button))
-                    assertTextFits(root)
-                    assertTouchTargets(root)
-                }
-                capture("notifications-$index")
+                Screenshots.capture("onboarding-screenshots", "widget-$step") { settle() }
             }
         }
     }
 
     @Test
-    fun aWidgetRowWritesThroughAndTheSwitchFollows() {
-        launch(Appearances.light.toSettingsNavigation()) { scenario ->
-            scenario.onActivity { activity ->
-                val rows = activity.currentPage().findViewById<ViewGroup>(R.id.setting_rows)
-                assertEquals(true, rows.switches().first().isChecked)
-                rows.rows().first().performClick()
-            }
-            settle()
-            scenario.onActivity { activity ->
-                val rows = activity.currentPage().findViewById<ViewGroup>(R.id.setting_rows)
-                assertEquals(false, rows.switches().first().isChecked)
-                assertPreviewDrawn(activity.currentPage(), compact = true)
-            }
-            capture("widget-0-toggled")
-        }
-    }
-
-    @Test
-    fun theSpoilerImageRowFollowsTheSpoilerSwitch() {
-        launch(Appearances.light.toSettingsNavigation()) { scenario ->
-            repeat(2) { next(scenario) }
-            scenario.onActivity { activity ->
-                val rows = activity.currentPage().findViewById<ViewGroup>(R.id.setting_rows)
-                val row = rows.spoilerImageRow(activity)
-                assertTrue("Enabled with the spoiler", row.isEnabled)
-                assertEquals(
-                    activity.getString(R.string.settings_qr_custom_image_default),
-                    row.findViewById<TextView>(R.id.setting_value).text.toString()
-                )
-                // The spoiler switch is the second row of the QR step.
-                rows.rows()[1].performClick()
-            }
-            settle()
-            scenario.onActivity { activity ->
-                val rows = activity.currentPage().findViewById<ViewGroup>(R.id.setting_rows)
-                assertEquals(false, rows.switches()[1].isChecked)
-                assertEquals(false, rows.spoilerImageRow(activity).isEnabled)
-            }
-            capture("widget-2-no-spoiler")
-        }
-    }
-
-    @Test
-    fun aStoredSpoilerImageReadsAsChosen() {
-        SettingsNavigationTestActivity.onboardingFixture =
-            SettingsNavigationTestActivity.OnboardingFixture(customSpoiler = true)
-        launch(Appearances.light.toSettingsNavigation()) { scenario ->
-            repeat(2) { next(scenario) }
-            scenario.onActivity { activity ->
-                val row = activity.currentPage().findViewById<ViewGroup>(R.id.setting_rows).spoilerImageRow(activity)
-                assertEquals(
-                    activity.getString(R.string.settings_qr_custom_image_selected),
-                    row.findViewById<TextView>(R.id.setting_value).text.toString()
-                )
-                assertTextFits(activity.onboardingRoot())
+    fun thePinButtonAsksTheLauncher() {
+        val context = TestUi.instrumentation.targetContext
+        assumeTrue(
+            "The launcher cannot pin widgets",
+            AppWidgetManager.getInstance(context).isRequestPinAppWidgetSupported
+        )
+        launch { scenario ->
+            click(scenario, OnboardingTestTags.PIN)
+            try {
+                // requestPinAppWidget opens the launcher's own confirmation over the flow.
+                TestUi.eventually(attempts = 50, delayMillis = 100, message = "The launcher dialog did not open") {
+                    scenario.onActivity { assertFalse("The flow keeps the focus", it.hasWindowFocus()) }
+                }
+            } finally {
+                TestUi.instrumentation.uiAutomation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+                TestUi.eventually(attempts = 50, delayMillis = 100, message = "The flow did not come back") {
+                    scenario.onActivity { assertTrue(it.hasWindowFocus()) }
+                }
             }
         }
     }
 
-    @Test
-    fun aLauncherWithoutPinningExplainsItselfInsteadOfOfferingButtons() {
-        SettingsNavigationTestActivity.onboardingFixture =
-            SettingsNavigationTestActivity.OnboardingFixture(pinSupported = false)
-
-        launch(Appearances.light.toSettingsNavigation()) { scenario ->
-            scenario.onActivity { activity ->
-                val page = activity.currentPage()
-                assertEquals(View.VISIBLE, page.findViewById<View>(R.id.pin_hint).visibility)
-                assertEquals(View.GONE, page.findViewById<View>(R.id.pin_button).visibility)
-                assertPreviewDrawn(page, compact = true)
-                assertTextFits(activity.onboardingRoot())
-            }
-            capture("widget-no-pinning")
-        }
-    }
-
-    private fun launch(
-        appearance: PreviewAppearance,
-        block: (ActivityScenario<SettingsNavigationTestActivity>) -> Unit
-    ) {
-        SettingsNavigationTestActivity.appearance = appearance
+    private fun launch(block: (ActivityScenario<SettingsNavigationTestActivity>) -> Unit) {
+        SettingsNavigationTestActivity.appearance = Appearances.light.toSettingsNavigation()
         SettingsNavigationTestActivity.startDestination = R.id.onboarding
         ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
             settle()
@@ -197,54 +108,24 @@ class OnboardingVisualTest {
         }
     }
 
-    private fun next(scenario: ActivityScenario<SettingsNavigationTestActivity>) {
-        scenario.onActivity { it.onboardingRoot().findViewById<View>(R.id.next_button).performClick() }
+    private fun click(scenario: ActivityScenario<SettingsNavigationTestActivity>, tag: String) {
+        scenario.onActivity { activity ->
+            val onClick = node(activity.onboarding().requireView(), tag).config.getOrNull(SemanticsActions.OnClick)
+            assertTrue("$tag has no click action", onClick?.action?.invoke() == true)
+        }
         settle()
     }
 
-    private fun SettingsNavigationTestActivity.onboardingRoot(): View =
-        host.childFragmentManager.fragments.single().requireView()
+    private fun SettingsNavigationTestActivity.onboarding(): OnboardingFragment =
+        host.childFragmentManager.fragments.single() as OnboardingFragment
 
-    /** The resumed page of the pager; other pages may exist off screen. */
-    private fun SettingsNavigationTestActivity.currentPage(): View =
-        host.childFragmentManager.fragments.single().childFragmentManager.fragments
-            .single { it.isResumed }.requireView()
-
-    private fun assertPreviewDrawn(page: View, compact: Boolean = false) {
-        val container = page.findViewById<ViewGroup>(R.id.widget_preview_container)
-        assertEquals("Preview count", 1, container.childCount)
-        val preview = container.getChildAt(0)
-        assertTrue("Preview size", preview.width > 0 && preview.height > 0)
-        // A single-lesson preview is as tall as the widget, never the day list's bounded band.
-        if (compact) assertTrue("Preview height", preview.height < 200 * page.resources.displayMetrics.density)
+    /** The node tagged [tag] in the unmerged semantics tree of the Fragment's `ComposeView`. */
+    private fun node(root: View, tag: String): SemanticsNode {
+        val owner = ((root as ViewGroup).getChildAt(0) as ViewRootForTest).semanticsOwner
+        return generateSequence(listOf(owner.unmergedRootSemanticsNode)) { level ->
+            level.flatMap { it.children }.ifEmpty { null }
+        }.flatten().first { it.config.getOrNull(SemanticsProperties.TestTag) == tag }
     }
 
-    private fun ViewGroup.switches(): List<MaterialSwitch> =
-        descendants().filterIsInstance<MaterialSwitch>().toList()
-
-    private fun ViewGroup.hasTextSizeRow(activity: SettingsNavigationTestActivity): Boolean =
-        descendants().filterIsInstance<TextView>()
-            .any { it.text == activity.getString(R.string.settings_widget_text_size_title) }
-
-    private fun ViewGroup.hasSpoilerImageRow(activity: SettingsNavigationTestActivity): Boolean =
-        descendants().filterIsInstance<TextView>()
-            .any { it.text == activity.getString(R.string.settings_qr_custom_image_title) }
-
-    /** The clickable row whose title is the spoiler image. */
-    private fun ViewGroup.spoilerImageRow(activity: SettingsNavigationTestActivity): View =
-        rows().single { row ->
-            row.findViewById<TextView>(R.id.setting_title)?.text ==
-                activity.getString(R.string.settings_qr_custom_image_title)
-        }
-
-    private fun ViewGroup.rows(): List<View> = (0 until childCount).map(::getChildAt).filter { it.isClickable }
-
-    private fun View.text(id: Int): String = findViewById<TextView>(id).text.toString()
-
     private fun settle() = TestUi.settle(650)
-
-    private fun capture(name: String) = Screenshots.capture("onboarding-screenshots", name) { settle() }
-
-    /** Onboarding rows span the width; only their height is a touch-target concern. */
-    private fun assertTouchTargets(root: View) = ViewChecks.assertTouchTargets(root, requireWidth = false)
 }
