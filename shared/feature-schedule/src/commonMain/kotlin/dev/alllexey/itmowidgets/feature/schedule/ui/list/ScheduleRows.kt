@@ -360,7 +360,7 @@ private fun TypeDot(color: Color) {
 
 /** MyITMO lesson type ids as every feature colours them (`core/ui/LessonTypes.kt` for Views). */
 @Composable
-private fun lessonTypeColor(typeId: Int): Color {
+internal fun lessonTypeColor(typeId: Int): Color {
     val colors = ItmoTheme.extendedColors
     return when (typeId) {
         -1 -> colors.lessonTypeFree

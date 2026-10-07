@@ -1,11 +1,5 @@
 # XML references recorded by :app (XmlReferenceCapture) under the name of a future preview.
 # The port that adds the preview re-records the files and deletes its line and the reference test.
-LessonDetailsContent_friends-empty
-LessonDetailsContent_friends-error
-LessonDetailsContent_friends-loading
-LessonDetailsContent_full
-LessonDetailsContent_minimal
-LessonDetailsContent_teacher-level
 PendingSportDetailsContent_predicted
 PendingSportDetailsContent_waiting
 UserScheduleScreen_content

@@ -4,72 +4,44 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.TypedValue
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.ContextCompat
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.core.net.toUri
-import androidx.core.view.isVisible
-import androidx.core.widget.TextViewCompat
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.location.MapDestination
-import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.navigationArgs
 import dev.alllexey.itmowidgets.core.navigation.putNavigationArgs
-import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
-import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
-import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
-import dev.alllexey.itmowidgets.core.ui.bind
-import dev.alllexey.itmowidgets.core.ui.bindTeacherLevel
-import dev.alllexey.itmowidgets.core.ui.bindFact
 import dev.alllexey.itmowidgets.core.ui.color
-import dev.alllexey.itmowidgets.core.ui.detailLines
-import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
-import dev.alllexey.itmowidgets.databinding.FragmentLessonDetailsBinding
-import dev.alllexey.itmowidgets.databinding.ItemLessonFriendBinding
+import dev.alllexey.itmowidgets.designsystem.host.ItmoBottomSheetFragment
+import dev.alllexey.itmowidgets.designsystem.host.SheetHeight
+import dev.alllexey.itmowidgets.designsystem.host.SheetSpec
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsUiState
 import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsViewModel
-import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonFriendsState
-import dev.alllexey.itmowidgets.feature.schedule.ui.colorRes
-import dev.alllexey.itmowidgets.feature.schedule.ui.nameRes
 import dev.alllexey.itmowidgets.feature.schedule.ui.shortTitle
-import java.time.LocalDate
-import java.time.LocalTime
 import javax.inject.Inject
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
- * One lesson occurrence: what the schedule card shows, in full, plus the map
- * hand-off and the viewer's friends on the same lesson.
+ * One lesson occurrence, drawn by `LessonDetailsSheetRoute` of `:shared:feature-schedule`: what the schedule card
+ * shows, in full, plus the map hand-off and the viewer's friends on the same lesson. The Fragment keeps the stable
+ * entry points (class name, [TAG], [newInstance], the argument keys) and performs the effects: the `geo:` map, the
+ * meeting link, the profile after closing.
  */
 @AndroidEntryPoint
-class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
-    private var _binding: FragmentLessonDetailsBinding? = null
-    private val binding get() = _binding!!
+class LessonDetailsBottomSheet : ItmoBottomSheetFragment() {
 
     @Inject lateinit var buildings: BuildingDirectory
 
@@ -79,9 +51,28 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
         requireNotNull(requireArguments().navigationArgs<LessonDetailsArgs>(ARG_LESSON))
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLessonDetailsBinding.inflate(inflater, container, false)
-        return binding.root
+    /** What the body asks of the host; instrumented tests call it to check the effects without the Compose tree. */
+    @VisibleForTesting
+    internal val actions = LessonDetailsActions(
+        onMap = { mapDestination()?.let(::openMap) },
+        onLink = ::openLink,
+        onProfile = ::openProfile,
+        onClose = ::onCloseRequest,
+    )
+
+    private val mapAvailable: Boolean by lazy { mapDestination() != null }
+
+    override val spec: SheetSpec get() = SPEC
+
+    @Composable
+    override fun SheetContent() {
+        LessonDetailsSheetRoute(
+            lesson = lesson,
+            mapAvailable = mapAvailable,
+            actions = actions,
+            modifier = Modifier.fillMaxSize(),
+            viewModel = viewModel,
+        )
     }
 
     override fun onStart() {
@@ -90,127 +81,14 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
             it.backgroundTintList = ColorStateList.valueOf(
                 requireContext().color.resolve(com.google.android.material.R.attr.colorSurfaceContainerLowest)
             )
-            (it.background as? com.google.android.material.shape.MaterialShapeDrawable)?.elevation = 0f
-            it.layoutParams = it.layoutParams.apply { height = (resources.displayMetrics.heightPixels * 0.90f).toInt() }
-            BottomSheetBehavior.from(it).apply {
-                state = BottomSheetBehavior.STATE_EXPANDED
-                skipCollapsed = true
-            }
+            (it.background as? MaterialShapeDrawable)?.elevation = 0f
         }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?): Unit = with(binding) {
-        toolbar.setNavigationOnClickListener { dismiss() }
-        val typeId = Lesson.TypeId(lesson.typeId)
-        val destination = mapDestination()
-        val teacherIsu = UserScreenArgs.profileIsu(lesson.teacherIsu)
-        header.bind(
-            DetailsHeaderContent(
-                title = lesson.subjectName.ifBlank { getString(R.string.schedule_unknown_subject) },
-                kind = listOf(getString(typeId.nameRes()), lesson.format).filter { it.isNotBlank() }.joinToString(" · "),
-                typeColor = ContextCompat.getColor(requireContext(), typeId.colorRes()),
-                date = LocalDate.parse(lesson.date),
-                start = LocalTime.parse(lesson.start),
-                end = LocalTime.parse(lesson.end),
-                teacher = lesson.teacherFio,
-                location = locationText(),
-                mapAvailable = destination != null,
-                flow = lesson.flowName
-            ),
-            teacherIsu?.let { isu -> { openProfile(isu) } }
-        ) { destination?.let(::openMap) }
-        // The button is the link; only what the reader has to type or know is a fact.
-        linkFact.bindFact(R.string.schedule_lesson_details_link, listOfNotNull(
-            lesson.zoomInfo,
-            lesson.zoomPassword?.let { getString(R.string.schedule_lesson_details_link_password, it) }
-        ).joinToString("\n"), R.drawable.ic_videocam)
-
-        linkButton.isVisible = lesson.zoomUrl != null
-        linkButton.setOnClickListener { lesson.zoomUrl?.let(::openLink) }
-        actions.isVisible = linkButton.isVisible
-
-        noteCard.isVisible = lesson.note != null
-        note.text = lesson.note
-        friendsRetry.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
-
-        render(viewModel.uiState.value)
-        viewModel.uiState
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach(::render)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    private fun render(state: LessonDetailsUiState) {
-        renderFriends(state.friends)
-        showTeacherLevel(state.teacherLevel)
-        showChange(state.change)
-    }
-
-    /** "было → стало" per changed field of the latest change; the block leaves when there is none. */
-    @VisibleForTesting
-    internal fun showChange(change: ScheduleChange?) = with(binding) {
-        changesLines.removeAllViews()
-        change?.detailLines(requireContext())?.forEach { changesLines.addView(changeLine(it)) }
-        changesCard.isVisible = change != null
-    }
-
-    private fun changeLine(text: String): TextView = TextView(requireContext()).apply {
-        val appearance = TypedValue()
-        context.theme.resolveAttribute(com.google.android.material.R.attr.textAppearanceBodyMedium, appearance, true)
-        TextViewCompat.setTextAppearance(this, appearance.resourceId)
-        setTextColor(context.color.onSurface)
-        this.text = text
-        layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-        ).apply { topMargin = resources.getDimensionPixelSize(R.dimen.design_spacing_related) }
-    }
-
-    /** The dot's place is kept for a teacher with an ISU, so a level arriving later does not move the row. */
-    @VisibleForTesting
-    internal fun showTeacherLevel(level: TeacherLevel?) {
-        binding.header.bindTeacherLevel(level, reserve = UserScreenArgs.profileIsu(lesson.teacherIsu) != null)
-    }
-
-    private fun renderFriends(state: LessonFriendsState) = with(binding) {
-        friendsCard.isVisible = state != LessonFriendsState.Disabled
-        friendsProgress.isVisible = state == LessonFriendsState.Loading
-        friendsRetry.isVisible = state is LessonFriendsState.Error
-        friendsMessage.isVisible = state is LessonFriendsState.Error ||
-            (state is LessonFriendsState.Content && state.friends.isEmpty())
-        friendsMessage.text = when (state) {
-            is LessonFriendsState.Error -> getString(state.error.messageRes())
-            is LessonFriendsState.Content -> getString(R.string.schedule_lesson_friends_none)
-            else -> null
-        }
-        friendsTitle.text = if (state is LessonFriendsState.Content && state.friends.isNotEmpty()) {
-            getString(R.string.schedule_lesson_friends_count, state.friends.size)
-        } else {
-            getString(R.string.schedule_lesson_friends_title)
-        }
-        friendsContainer.removeAllViews()
-        (state as? LessonFriendsState.Content)?.friends?.forEach { friend -> friendsContainer.addView(friendRow(friend)) }
-    }
-
-    private fun friendRow(friend: UserSummary): View {
-        val row = ItemLessonFriendBinding.inflate(layoutInflater, binding.friendsContainer, false)
-        row.friendAvatar.setUser(friend.name, friend.pictureUrl)
-        row.friendName.text = friend.name.ifBlank { getString(R.string.user_name_placeholder, friend.isu) }
-        val group = friend.primaryGroup()?.name
-        row.friendGroup.isVisible = !group.isNullOrBlank()
-        row.friendGroup.text = group
-        row.root.setOnClickListener { openProfile(friend.isu) }
-        return row.root
     }
 
     /** The profile is a contextual screen above the tabs; the sheet has nothing to add once it opens. */
     private fun openProfile(isu: Int) {
         dismiss()
         openUserProfile(isu)
-    }
-
-    private fun locationText(): String {
-        val room = lesson.room?.let { Room(it).shortTitle(requireContext()) }
-        return listOfNotNull(room, lesson.building).joinToString(" · ")
     }
 
     private fun mapDestination(): MapDestination? {
@@ -221,7 +99,7 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
 
     private fun openMap(destination: MapDestination) {
         if (!MapLauncher.open(requireContext(), destination)) {
-            Snackbar.make(binding.root, R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(requireView(), R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()
         }
     }
 
@@ -229,18 +107,16 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
         try {
             startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
         } catch (_: ActivityNotFoundException) {
-            Snackbar.make(binding.root, R.string.link_open_failed, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(requireView(), R.string.link_open_failed, Snackbar.LENGTH_SHORT).show()
         }
-    }
-
-    override fun onDestroyView() {
-        _binding = null
-        super.onDestroyView()
     }
 
     companion object {
         const val TAG = "LessonDetailsBottomSheet"
         private const val ARG_LESSON = "arg_lesson"
+
+        /** 90 % of the screen however short the content, as the View sheet opened. */
+        private val SPEC = SheetSpec(height = SheetHeight.Tall)
 
         fun newInstance(lesson: Lesson, date: kotlinx.datetime.LocalDate): LessonDetailsBottomSheet =
             newInstance(lesson.toDetailsArgs(date))
