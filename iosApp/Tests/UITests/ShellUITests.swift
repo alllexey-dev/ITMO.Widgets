@@ -1,7 +1,8 @@
 import XCTest
 
-/// The shell on fixtures (IO-06b): tabs in Android's order, `itmowidgets://route/<id>` URLs, the session gate, the
-/// demo banner, and the edge swipe back from a screen that hides the navigation bar (the Compose QR pass, IO-21).
+/// The shell (IO-06b): tabs in Android's order, `itmowidgets://route/<id>` URLs, the session gate and the demo banner
+/// on fixtures and on the shared session (IO-07a), and the edge swipe back from a screen that hides the navigation bar
+/// (the Compose QR pass, IO-21).
 final class ShellUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
@@ -109,6 +110,26 @@ final class ShellUITests: XCTestCase {
         element(app, "kit.demoBanner.signIn").tap()
 
         XCTAssertTrue(element(app, "shell.gate.signedOut").waitForExistence(timeout: stepTimeout))
+    }
+
+    /// The shared session (IO-07a): the me root's sign-out ends the demo through `SessionRepository`, and the gate
+    /// shows the ITMO.ID sign-in page instead of the tabs.
+    func testSignOutOfTheSharedDemoOpensTheSignInPage() {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        XCTAssertTrue(element(app, "kit.demoBanner").waitForExistence(timeout: rootTimeout))
+        app.tabBars.firstMatch.buttons.element(boundBy: 3).tap()
+        XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
+
+        element(app, "me.signOut").tap()
+        let confirm = element(app, "me.signOut.confirm")
+        XCTAssertTrue(confirm.waitForExistence(timeout: stepTimeout))
+        attachScreenshot(named: "sign-out-confirm")
+        confirm.tap()
+
+        XCTAssertTrue(element(app, "auth.signIn").waitForExistence(timeout: stepTimeout))
+        XCTAssertFalse(app.tabBars.firstMatch.exists)
+        XCTAssertFalse(element(app, "kit.demoBanner").exists)
     }
 
     private func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The app's root: the session gate, then the tab bar with one `NavigationStack` per tab, the demo banner above the
-/// tab bar while the demo session is open, and the shell's sheets.
+/// The app's root: the session gate (the ITMO.ID sign-in page while signed out), then the tab bar with one
+/// `NavigationStack` per tab, the demo banner above the tab bar while the demo session is open, and the shell's sheets.
 struct ShellView: View {
     @Bindable var router: AppRouter
     let session: ShellSession
@@ -11,6 +11,7 @@ struct ShellView: View {
             .onChange(of: session.state, initial: true) { _, state in
                 router.sessionChanged(state.sessionState, onboarding: state.onboarding)
             }
+            .task { await session.follow() }
             .sheet(item: $router.sheet) { sheet in
                 ShellSheetView(sheet: sheet)
             }
@@ -24,10 +25,20 @@ struct ShellView: View {
                 .frame(maxHeight: .infinity)
                 .accessibilityIdentifier("shell.gate.loading")
         case .signedOut:
-            FixtureSignInGate(signIn: session.signIn)
+            if let gateway = session.gateway {
+                ItmoSignInScreen(gateway: gateway)
+            } else {
+                FixtureSignInGate(signIn: session.signIn)
+            }
         case .demo, .signedIn:
             ShellTabs(selection: $router.selectedTab) { tab in
-                ShellStack(tab: tab, router: router, isDemo: session.state == .demo, leaveDemo: session.leaveDemo)
+                ShellStack(
+                    tab: tab,
+                    router: router,
+                    isDemo: session.state == .demo,
+                    leaveDemo: { session.signOut() },
+                    signOut: { session.signOut() }
+                )
             }
             .onAppear { router.shellMounted(true) }
             .onDisappear { router.shellMounted(false) }
@@ -41,13 +52,15 @@ struct ShellStack: View {
     @Bindable var router: AppRouter
     let isDemo: Bool
     let leaveDemo: () -> Void
+    /// The sign-out of the me root; none in snapshot tests.
+    var signOut: (() -> Void)?
 
     var body: some View {
         // The banner sits under the stack, not in a `safeAreaInset`: the inset never reaches the screens a stack
         // pushes, so the end of a pushed Compose screen would scroll behind the banner (IO-21).
         VStack(spacing: 0) {
             NavigationStack(path: path) {
-                FixtureRootScreen(tab: tab, router: router)
+                FixtureRootScreen(tab: tab, router: router, signOut: signOut)
                     .shellChrome(.compose)
                     .navigationDestination(for: ShellDestination.self) { destination in
                         Routes.view(for: destination)
