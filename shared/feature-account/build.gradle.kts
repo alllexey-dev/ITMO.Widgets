@@ -32,7 +32,6 @@ kotlin {
 // :app reads these files as Android resources until --retire (scripts/strings-move.py, L05 KM-09b).
 itmowidgetsStrings {
     androidExport("values/strings_auth.xml")
-    androidExport("values/strings_onboarding.xml")
     androidExport("values/strings_weblogin.xml")
     androidExport("values/strings_update.xml")
 }

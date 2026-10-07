@@ -368,7 +368,7 @@ A port uses the kit and grows it instead of drawing its own variant.
 | `ScoreRing` | The sport score ring | `core/ui/CircularProgressBar.kt` |
 | `GradeScale` | A 0-100 bar with grade ticks | `feature/recordbook/ui/GradeScaleView.kt` |
 | `TimelineMarker`, `TimelineLine` | The schedule timeline | `feature/schedule/ui/ScheduleTimelineMarker.kt` |
-| `StepsIndicator` | Progress dots of a flow | `feature/onboarding/ui/OnboardingStepsView.kt` |
+| `StepsIndicator` | Progress dots of a flow | `OnboardingStepsView`, the first-run flow's dot strip |
 
 Experimental and expressive Material components reach screens only through
 `Itmo*` wrappers in `shared/designsystem`, so a material3 line switch stays in
