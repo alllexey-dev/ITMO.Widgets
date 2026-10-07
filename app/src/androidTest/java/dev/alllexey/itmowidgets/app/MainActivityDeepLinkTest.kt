@@ -10,7 +10,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.viewpager2.widget.ViewPager2
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -21,6 +20,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -172,7 +172,7 @@ class MainActivityDeepLinkTest {
                 eventually {
                     onActivity { activity ->
                         val sport = root(activity).childFragmentManager.fragments.filterIsInstance<SportFragment>().single()
-                        assertEquals(path, 1, sport.requireView().findViewById<ViewPager2>(R.id.sport_view_pager).currentItem)
+                        assertEquals(path, SportPage.SIGN, sport.currentPage)
                     }
                 }
             }

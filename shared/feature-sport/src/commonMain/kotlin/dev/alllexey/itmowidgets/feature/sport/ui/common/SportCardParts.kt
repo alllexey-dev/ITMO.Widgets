@@ -68,27 +68,26 @@ fun SportConditionTone.accent(): Color = with(ItmoTheme.extendedColors) {
 
 /**
  * The outlined content card of a sport list row (`Widget.ItmoWidgets.Card.Content.Outlined`) inside the list's screen
- * margin; the whole card opens the details. [bottomPadding] lets a card whose last row ends in a [SportCardAction]
- * align the action's visible outline, not its touch target, with the card padding ([sportCardBottomPadding]).
+ * margin; the whole card opens the details, or nothing when [onClick] is null (another user's read-only list).
+ * [bottomPadding] lets a card whose last row ends in a [SportCardAction] align the action's visible outline, not its
+ * touch target, with the card padding ([sportCardBottomPadding]).
  */
 @Composable
 fun SportCardSurface(
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     bottomPadding: Dp = ItmoTheme.spacing.cardPadding,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Surface(
-        onClick = onClick,
-        // The margin goes outside [modifier], so a test tag or a size on it describes the card itself.
-        modifier = Modifier
-            .padding(horizontal = ItmoTheme.spacing.screenMargin, vertical = ItmoTheme.spacing.related)
-            .then(modifier)
-            .fillMaxWidth(),
-        shape = ItmoTheme.shapes.cardContent,
-        color = ItmoTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(ItmoTheme.shapes.cardStroke, ItmoTheme.colorScheme.outlineVariant),
-    ) {
+    // The margin goes outside [modifier], so a test tag or a size on it describes the card itself.
+    val placed = Modifier
+        .padding(horizontal = ItmoTheme.spacing.screenMargin, vertical = ItmoTheme.spacing.related)
+        .then(modifier)
+        .fillMaxWidth()
+    val shape = ItmoTheme.shapes.cardContent
+    val color = ItmoTheme.colorScheme.surfaceContainerLow
+    val border = BorderStroke(ItmoTheme.shapes.cardStroke, ItmoTheme.colorScheme.outlineVariant)
+    val body: @Composable () -> Unit = {
         Column(
             Modifier.padding(
                 start = ItmoTheme.spacing.cardPadding,
@@ -98,6 +97,11 @@ fun SportCardSurface(
             ),
             content = content,
         )
+    }
+    if (onClick != null) {
+        Surface(onClick = onClick, modifier = placed, shape = shape, color = color, border = border, content = body)
+    } else {
+        Surface(modifier = placed, shape = shape, color = color, border = border, content = body)
     }
 }
 

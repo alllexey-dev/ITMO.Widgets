@@ -1,75 +1,166 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.common
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SportLessonRequest
-import dev.alllexey.itmowidgets.databinding.FragmentSportBinding
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
+import dev.alllexey.itmowidgets.feature.sport.ui.SportHostActions
+import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
+import dev.alllexey.itmowidgets.feature.sport.ui.SportRoute
+import dev.alllexey.itmowidgets.feature.sport.ui.SportSharedLesson
+import dev.alllexey.itmowidgets.feature.sport.ui.rememberSportPagerState
+import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportSheetAction
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import org.koin.android.ext.android.inject
 
+/**
+ * The sport tab (`navigation_sport`), kept by name until L17 mounts the tab in the Nav3 shell. The screen is
+ * `SportRoute` from `:shared:feature-sport`; its ViewModels live in this Fragment's store, which Navigation keeps on
+ * the tab's saved back stack, so `Запись` keeps its week and filters across a round trip through the other tabs.
+ *
+ * This host does what only Android does: it relays shared-lesson links of the activity's [SportLessonRequest], opens
+ * the details sheet on its child `FragmentManager` and hands the sheet's result to the page that opened it, starts the
+ * `geo:` map and shows the debug template-lesson Toast.
+ */
 @AndroidEntryPoint
 class SportFragment : Fragment() {
 
-    // region Binding
+    private val timeProvider: AcademicTimeProvider by inject()
 
-    private var _binding: FragmentSportBinding? = null
-    private val binding get() = _binding!!
+    private val sharedLessons = Channel<SportSharedLesson>(Channel.UNLIMITED)
+    private val mySheetActions = Channel<SportSheetAction>(Channel.UNLIMITED)
+    private val signSheetActions = Channel<SportSheetAction>(Channel.UNLIMITED)
+    private val pageRequests = Channel<PageRequest>(Channel.CONFLATED)
 
-    // endregion
+    // One flow per channel for the Fragment's life, so recomposition never restarts the route's collectors.
+    private val sharedLessonFlow: Flow<SportSharedLesson> = sharedLessons.receiveAsFlow()
+    private val mySheetActionFlow: Flow<SportSheetAction> = mySheetActions.receiveAsFlow()
+    private val signSheetActionFlow: Flow<SportSheetAction> = signSheetActions.receiveAsFlow()
 
-    // region Lifecycle
+    /** The page whose details sheet is open: the sheet's result goes back there, also after recreation. */
+    private var sheetPage = SportPage.MY
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentSportBinding.inflate(inflater, container, false)
-        val view = binding.root
-        return view
+    private var pager: PagerState? = null
+
+    /** The page in front, or null before the screen is composed; the instrumented tests read it. */
+    val currentPage: SportPage?
+        get() = pager?.let { SportPage.at(it.currentPage) }
+
+    private val host = SportHostActions(
+        onOpenBooking = { booking -> openDetails(SportPage.MY, booking) },
+        onOpenLesson = { lesson, busy -> openDetails(SportPage.SIGN, lesson, busy) },
+        onOpenMap = { booking -> openMap(booking) },
+        onTemplateLesson = {
+            Toast.makeText(requireContext(), R.string.debug_sport_lesson_action_disabled, Toast.LENGTH_SHORT).show()
+        },
+    )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        savedInstanceState?.getString(STATE_SHEET_PAGE)?.let { sheetPage = SportPage.valueOf(it) }
     }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        itmoComposeView {
+            val pagerState = rememberSportPagerState()
+            DisposableEffect(pagerState) {
+                pager = pagerState
+                onDispose { if (pager === pagerState) pager = null }
+            }
+            LaunchedEffect(pagerState) {
+                for (request in pageRequests) {
+                    if (request.animate) {
+                        pagerState.animateScrollToPage(request.page.ordinal)
+                    } else {
+                        pagerState.scrollToPage(request.page.ordinal)
+                    }
+                }
+            }
+            SportRoute(
+                time = timeProvider,
+                host = host,
+                pagerState = pagerState,
+                sharedLessons = sharedLessonFlow,
+                mySheetActions = mySheetActionFlow,
+                signSheetActions = signSheetActionFlow,
+            )
+        }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val viewPager = binding.sportViewPager
-        val tabLayout = binding.sportTabLayout
-
-        viewPager.adapter = SportPagerAdapter(this)
-        viewPager.isUserInputEnabled = true
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = when (position) {
-                0 -> getString(R.string.title_sport_my)
-                1 -> getString(R.string.title_sport_sign)
-                else -> null
-            }
-        }.attach()
-        // A shared lesson opens on the sign page; the page itself finds it in the catalog.
+        // A shared lesson opens on `Запись`; the page finds it in the merged catalog even when the filters hide it.
         requireActivity().supportFragmentManager.setFragmentResultListener(
             SportLessonRequest.KEY,
             viewLifecycleOwner
-        ) { key, result ->
-            binding.sportViewPager.setCurrentItem(SIGN_PAGE, false)
-            childFragmentManager.setFragmentResult(key, result)
+        ) { _, result ->
+            sharedLessons.trySend(
+                SportSharedLesson(
+                    lessonId = result.getLong(SportLessonRequest.LESSON_ID),
+                    predicted = result.getBoolean(SportLessonRequest.PREDICTED),
+                )
+            )
+        }
+        childFragmentManager.setFragmentResultListener(
+            SportCommonDetailsBottomSheet.ACTION_REQUEST,
+            viewLifecycleOwner
+        ) { _, result ->
+            val action = SportSheetAction(
+                lessonId = result.getLong(SportCommonDetailsBottomSheet.RESULT_LESSON_ID),
+                action = result.getString(SportCommonDetailsBottomSheet.RESULT_ACTION),
+            )
+            when (sheetPage) {
+                SportPage.MY -> mySheetActions.trySend(action)
+                SportPage.SIGN -> signSheetActions.trySend(action)
+            }
         }
     }
 
-    fun changeView(index: Int) {
-        binding.sportViewPager.setCurrentItem(index, true)
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_SHEET_PAGE, sheetPage.name)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    /** Moves to the page at [index] (0 `Мой спорт`, 1 `Запись`), sliding there unless [animate] is off. */
+    fun changeView(index: Int, animate: Boolean = true) {
+        pageRequests.trySend(PageRequest(SportPage.at(index), animate))
     }
 
-    // endregion
+    private fun openDetails(page: SportPage, item: SportCommon, busy: Boolean = false) {
+        sheetPage = page
+        SportCommonDetailsBottomSheet.newInstance(item, actionsEnabled = true, busy = busy)
+            .show(childFragmentManager, SportCommonDetailsBottomSheet.TAG)
+    }
+
+    private fun openMap(booking: SportBooking) {
+        val address = booking.extractBuildingAddress() ?: return
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, "geo:0,0?q=${Uri.encode(address)}".toUri()))
+        } catch (_: ActivityNotFoundException) {
+            // No map app: the menu item does nothing, as before.
+        }
+    }
+
+    private data class PageRequest(val page: SportPage, val animate: Boolean)
 
     private companion object {
-        const val SIGN_PAGE = 1
+        const val STATE_SHEET_PAGE = "sport_sheet_page"
     }
 }

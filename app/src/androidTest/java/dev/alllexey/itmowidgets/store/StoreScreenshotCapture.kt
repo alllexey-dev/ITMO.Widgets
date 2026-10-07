@@ -18,7 +18,7 @@ import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.viewpager2.widget.ViewPager2
+import androidx.navigation.fragment.NavHostFragment
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
@@ -37,6 +37,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreenTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
+import dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -116,9 +117,9 @@ class StoreScreenshotCapture {
             frame(activity, "05-subject")
 
             open(scenario) { it.openRoot(AppRoot.SPORT) }
-            open(scenario) { main -> main.findViewById<ViewPager2>(R.id.sport_view_pager).currentItem = SPORT_SIGN_PAGE }
+            open(scenario) { main -> main.sport().changeView(SPORT_SIGN_PAGE, animate = false) }
             frame(activity, "06-sport")
-            open(scenario) { main -> main.findViewById<ViewPager2>(R.id.sport_view_pager).currentItem = SPORT_MY_PAGE }
+            open(scenario) { main -> main.sport().changeView(SPORT_MY_PAGE, animate = false) }
             frame(activity, "07-sport-mine")
 
             open(scenario) {
@@ -161,6 +162,11 @@ class StoreScreenshotCapture {
         scenario.onActivity(action)
         settle()
     }
+
+    /** The sport tab's host, whose page API replaces the View pager. */
+    private fun MainActivity.sport(): SportFragment =
+        (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment)
+            .childFragmentManager.fragments.filterIsInstance<SportFragment>().single()
 
     /** The screen has content, no state placeholder, no error and no test wording; then the device screenshot. */
     private fun frame(activity: MainActivity, name: String, sheet: Boolean = false) {

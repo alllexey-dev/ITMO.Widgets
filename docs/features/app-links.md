@@ -45,8 +45,8 @@ capabilities Backend returns. The app never enforces privacy itself.
 
 A lesson route sets `SportLessonRequest` (`LESSON_ID`, `PREDICTED`) as a
 Fragment result on the Activity's FragmentManager. The root `SportFragment`
-listens, switches to `Запись` and hands it to its pager, where
-`SportSignFragment` passes it to `SportSignViewModel.openSharedLesson`. That
+listens and hands it to `SportRoute`, which switches to `Запись` and
+passes it to `SportSignViewModel.openSharedLesson`. That
 waits for the first answer of the merged catalog and looks the lesson up among
 all lessons, ignoring filters (`findLinked` in
 `feature/sport/domain/model/SportLessonPrediction.kt`):
@@ -62,7 +62,7 @@ all lessons, ignoring filters (`findLinked` in
   error is the usual snackbar.
 
 When found, the lesson's day is selected and its card opens as on a tap; the
-card's actions go through `SportSignFragment` to `SportSignRoute`
+card's actions go through `SportFragment` to `SportSignRoute`
 (`SportSheetAction.outcome`), which falls back to
 `SportSignViewModel.linkedLesson` when filters hide the lesson from the list.
 Both dialogs are `MaterialAlertDialog`s with a title, a text and `Понятно`.
