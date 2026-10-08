@@ -90,7 +90,8 @@ Feature docs: [My ITMO in the app](my-itmo-web.md), [Home and quick actions](hom
 
 ## Recordbook
 
-Feature doc: [Recordbook](recordbook.md).
+Feature docs: [Recordbook](recordbook.md), [Subject page](subject-page.md),
+[Mark tracking](marks-tracking.md), [Sheet scores](sheet-scores.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|

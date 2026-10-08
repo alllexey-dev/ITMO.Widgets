@@ -2,7 +2,7 @@
 
 Students keep HTTPS links per subject and period and see the links shared with
 one of their schedule flows or with everybody. Links live on the subject page of
-the recordbook (see [recordbook](recordbook.md#subject-page)); there is no
+the recordbook (see [subject page](subject-page.md)); there is no
 separate links screen. `core/resources` holds the contract, `feature/resources`
 the data, the sheets and their view models. The Backend contract is
 `../itmo-widgets-backend/docs/contracts/subject-links.md`; the moderation model
@@ -161,7 +161,7 @@ sheet and the report dialog each have their own `SubjectLinksViewModel`.
   Google Sheet address of any author (`GoogleSheetUrl.parse`), which closes the
   sheet and opens the recordbook's connection sheet through
   `AppNavigator.openSheetScores` with the link's address and scope
-  ([sheet scores](recordbook.md#sheet-scores)); `Закрепить` / `Открепить`
+  ([sheet scores](sheet-scores.md)); `Закрепить` / `Открепить`
   (own links always, others' with the connection); `Изменить` and `Удалить`
   for own links, the delete confirmed by the kit's `ConfirmDialog`
   (`Удалить ссылку?`); `Пожаловаться` for another student's link with the

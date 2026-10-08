@@ -238,7 +238,7 @@ only among installed instances of that same format:
 
 `Зачётка` (`SettingsPage.RECORDBOOK`, after `Расписание`) is an offline page
 with one untitled group for the background mark check
-([mark tracking](features/recordbook.md#mark-tracking)). No switch needs
+([mark tracking](features/marks-tracking.md)). No switch needs
 `Подключение к ITMO.Widgets`: the check talks only to My ITMO, BARS and public
 Google Sheets.
 
@@ -258,7 +258,7 @@ Google Sheets.
   hidden). Off keeps the totals of the connected sheets, which the subject pages
   show, and untracks every connection, so the first background read after
   switching on only takes a baseline
-  ([sheet scores](features/recordbook.md#background-check-of-sheets)). The work
+  ([sheet scores](features/sheet-scores.md#background-check-of-sheets)). The work
   is cancelled only when all three are off.
 - The footer is `Уведомлять о новых и изменённых оценках.`, or
   `Уведомления выключены.` while Android notifications are off for the app.
