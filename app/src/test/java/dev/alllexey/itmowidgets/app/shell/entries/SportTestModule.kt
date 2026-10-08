@@ -85,6 +85,12 @@ internal class SportTestGraph(scope: CoroutineScope) {
     )
     val holder = SportBookingsHolder(bookingRepository, SportData, delegate, time, scope)
 
+    /**
+     * Only [holder], for a graph whose academic clock comes from another test module: what the schedule root's sport
+     * redirect reads.
+     */
+    fun holderModule(): Module = module { single { holder } }
+
     fun module(): Module = module {
         single { holder }
         single { time }

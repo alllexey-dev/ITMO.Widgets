@@ -72,13 +72,15 @@ internal fun EntryRegistry.Builder.scheduleEntries() {
 /**
  * The schedule tab's root: the own `ScheduleRoute`. It alone takes [TabRequest.ScheduleToday], once,
  * and the friend picker's [FriendSelection]; the request stays with the back stack until this root hands it on, so it
- * survives recreation, and it is never handed out twice. The sport redirect of a lesson arrives with SH-1b9.
+ * survives recreation, and it is never handed out twice. A sport lesson or a pending sport row goes through the
+ * [SportDetailsRedirect], which opens the sport tab's sheet when it finds the booking, the schedule's own otherwise.
  */
 @Composable
 internal fun ScheduleTabRoot(navigator: Nav3AppNavigator) {
     val timeProvider = koinGet<AcademicTimeProvider>()
     val requests = remember { Channel<ScheduleRouteRequest>(Channel.UNLIMITED) }
     val requestFlow = remember(requests) { requests.receiveAsFlow() }
+    val sport = rememberSportDetailsRedirect()
 
     val pending = navigator.pendingRequest(AppTab.SCHEDULE)
     LaunchedEffect(pending) {
@@ -89,10 +91,10 @@ internal fun ScheduleTabRoot(navigator: Nav3AppNavigator) {
     }
     ResultEffect<FriendSelection> { requests.trySend(ScheduleRouteRequest.SelectUser(it.toSelectedUser())) }
 
-    val actions = remember(navigator, timeProvider) {
+    val actions = remember(navigator, timeProvider, sport) {
         ScheduleRouteActions(
-            onLessonClick = { lesson, date -> navigator.open(AppRoutes.LessonDetails(lesson.toDetailsArgs(date))) },
-            onPendingClick = { navigator.open(AppRoutes.PendingSportDetails(it.toDetailsArgs(timeProvider.timeZone))) },
+            onLessonClick = { lesson, date -> sport.openLesson(navigator, lesson.toDetailsArgs(date)) },
+            onPendingClick = { sport.openPendingSport(navigator, it.toDetailsArgs(timeProvider.timeZone)) },
             onPickFriend = { shown ->
                 navigator.open(AppRoutes.FriendSelector(shown?.isu ?: FriendSelectionContract.NO_USER_ISU))
             },

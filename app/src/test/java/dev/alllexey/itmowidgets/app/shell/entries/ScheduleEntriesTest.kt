@@ -24,10 +24,13 @@ import dev.alllexey.itmowidgets.core.navigation.ShellBackStack
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.core.navigation.TabRequest
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
 import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorTestTags
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsTestTags
@@ -35,6 +38,20 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsT
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreenTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.UserScheduleTestTags
+import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
+import dev.alllexey.itmowidgets.feature.sport.navigation.SportDetailsOpener
+import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.toInstant
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -51,7 +68,8 @@ import org.robolectric.annotation.Config
 /**
  * The schedule keys in the Compose shell with Koin ViewModels on synthetic data: the tab root, another user's
  * schedule, the changes and both sheets render under the real [shellEntries]; the root opens the lesson sheet and the
- * friend picker and shows the picked friend; `ScheduleToday` reaches the own schedule exactly once, also across a
+ * friend picker and shows the picked friend, and a sport lesson opens the sport tab's sheet of its booking through
+ * the sport redirect; `ScheduleToday` reaches the own schedule exactly once, also across a
  * saved-state restore, and another user's schedule never takes it.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -65,13 +83,18 @@ class ScheduleEntriesTest {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val schedules = ScheduleSamples.repository()
+    private val sportScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val sport = SportTestGraph(sportScope)
     private lateinit var koin: Koin
     private lateinit var navigator: Nav3AppNavigator
 
     @Before
     fun startGraph() {
-        koin = startKoin { modules(scheduleTestModule(schedules), socialTestModule()) }.koin
+        koin = startKoin { modules(scheduleTestModule(schedules), socialTestModule(), sport.holderModule()) }.koin
     }
+
+    @After
+    fun stopSportScope() = sportScope.cancel()
 
     @Test
     fun theScheduleKeysRenderTheirScreensAndCloseThemselves() {
@@ -98,6 +121,23 @@ class ScheduleEntriesTest {
         compose.waitForIdle()
 
         assertEquals(listOf<AppRoute>(AppRoutes.LessonDetails(LESSON_ARGS)), navigator.state.floating)
+    }
+
+    @Test
+    fun aSportLessonOnTheRootOpensTheSportSheetOfItsBooking() {
+        schedules.days.value = listOf(DaySchedule(DATE.dayOfWeek.isoDayNumber, 1, DATE, null, listOf(SPORT_LESSON)))
+        val start = LocalDateTime(DATE, SPORT_LESSON.start).toInstant(ScheduleSamples.time.timeZone)
+        val booking = SportCardFixtures.booking(SPORT_BOOKING_ID)
+            .copy(start = start, end = start + 90.minutes, sectionName = SectionName(SPORT_LESSON.subjectName))
+        sport.bookings.value = LoadState.Content(listOf(booking))
+        show(Nav3AppNavigator(ShellBackStack(AppTab.SCHEDULE)))
+
+        compose.onNodeWithTag(ScheduleListTestTags.lesson(SPORT_LESSON.pairId)).performClick()
+        compose.waitForIdle()
+
+        val sheet = navigator.state.floating.single() as SportRoutes.SportCommonDetails
+        assertEquals(SPORT_BOOKING_ID, sheet.item.lessonId)
+        assertEquals(SportDetailsOpener.SHELL, sheet.replyTo)
     }
 
     @Test
@@ -246,5 +286,13 @@ class ScheduleEntriesTest {
         const val FRIEND_NAME = SocialSamples.FRIEND_NAME
         val LESSON = ScheduleSamples.LESSON
         val LESSON_ARGS = LESSON.toDetailsArgs(ScheduleSamples.DATE)
+        val DATE = ScheduleSamples.DATE
+        const val SPORT_BOOKING_ID = 7L
+
+        /** A sport lesson (type 11) of the own schedule, in the slot of the sport graph's one booking. */
+        val SPORT_LESSON = LESSON.copy(
+            pairId = 7002, typeId = Lesson.TypeId(11), type = "Спорт", subjectName = "Плавание",
+            start = LocalTime(18, 30), end = LocalTime(20, 0),
+        )
     }
 }
