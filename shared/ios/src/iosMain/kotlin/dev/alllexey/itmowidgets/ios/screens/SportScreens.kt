@@ -18,7 +18,6 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.sport.data.SportShares
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
@@ -28,6 +27,7 @@ import dev.alllexey.itmowidgets.feature.sport.ui.SportHostActions
 import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
 import dev.alllexey.itmowidgets.feature.sport.ui.SportRoute
 import dev.alllexey.itmowidgets.feature.sport.ui.SportSharedLesson
+import dev.alllexey.itmowidgets.feature.sport.ui.SportShares
 import dev.alllexey.itmowidgets.feature.sport.ui.UserSportIosRoute
 import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsActions
 import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsSheet

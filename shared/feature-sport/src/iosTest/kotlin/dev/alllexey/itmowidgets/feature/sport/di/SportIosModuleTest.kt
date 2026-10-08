@@ -25,7 +25,6 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
-import dev.alllexey.itmowidgets.feature.sport.data.SportShares
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportBookings
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
@@ -33,6 +32,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportShareTarg
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportViewModel
+import dev.alllexey.itmowidgets.feature.sport.ui.SportShares
 import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsSamples
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine

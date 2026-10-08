@@ -2,9 +2,9 @@ package dev.alllexey.itmowidgets.feature.sport.di
 
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.sport.SportApi
-import dev.alllexey.itmowidgets.feature.sport.data.SportShares
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportScoreOverrideSource
+import dev.alllexey.itmowidgets.feature.sport.ui.SportShares
 import org.koin.dsl.module
 
 /**

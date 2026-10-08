@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.sport.data
+package dev.alllexey.itmowidgets.feature.sport.ui
 
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
