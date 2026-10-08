@@ -109,8 +109,8 @@ Feature doc: [Schedule](schedule.md).
 | `feature/schedule/ui/ScheduleFragment.kt` hosting `ScheduleRoute` (`:shared:feature-schedule`) | Fragment | `ScheduleViewModel` (Koin) | `navigation_schedule`, `AppRoot.SCHEDULE` | — | `ScheduleScreenshotTest`, `ScheduleRouteTest` (`:shared:feature-schedule`) |
 | `feature/schedule/ui/UserScheduleFragment.kt` hosting `UserScheduleScreen` around `ScheduleRoute` (`:shared:feature-schedule`) | Fragment | `ScheduleViewModel` (Koin) | `user_schedule`, `AppScreen.USER_SCHEDULE` | — | `ScheduleScreenshotTest` (`UserScheduleScreen_content`) |
 | `feature/schedule/ui/changes/ScheduleChangesFragment.kt` hosting `ScheduleChangesRoute` (`:shared:feature-schedule`) | Fragment | `ScheduleChangesViewModel` (Koin) | `schedule_changes`, `AppScreen.SCHEDULE_CHANGES` | — | `ScheduleScreenshotTest` (`:shared:feature-schedule`) |
-| `feature/schedule/ui/details/LessonDetailsBottomSheet.kt` | bottom sheet | `LessonDetailsViewModel` | `AppNavigator.openLessonDetails` | — | `ScheduleScreenshotTest`, `LessonDetailsSheetTest` (`:shared:feature-schedule`) |
-| `feature/schedule/ui/details/PendingSportDetailsBottomSheet.kt` | bottom sheet | — | `AppNavigator.openPendingSportDetails` | — | `ScheduleScreenshotTest`, `PendingSportDetailsSheetTest` (`:shared:feature-schedule`) |
+| `feature/schedule/ui/details/LessonDetailsBottomSheet.kt` hosting `LessonDetailsSheetRoute` (`:shared:feature-schedule`) | bottom sheet (kit sheet host) | `LessonDetailsViewModel` (Koin) | `AppNavigator.openLessonDetails` | — | `ScheduleScreenshotTest`, `LessonDetailsSheetTest` (`:shared:feature-schedule`) |
+| `feature/schedule/ui/details/PendingSportDetailsBottomSheet.kt` hosting `PendingSportDetailsContent` (`:shared:feature-schedule`) | bottom sheet (kit sheet host) | — | `AppNavigator.openPendingSportDetails` | — | `ScheduleScreenshotTest`, `PendingSportDetailsSheetTest` (`:shared:feature-schedule`) |
 
 ## Friend selector
 

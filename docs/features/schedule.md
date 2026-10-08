@@ -6,6 +6,81 @@ checks the own schedule for changes in the background
 ([schedule changes](#schedule-changes)) and puts it into the phone's calendar
 or a `.ics` file ([calendar](#calendar)).
 
+## Modules
+
+- `:shared:feature-schedule` holds the feature in `commonMain`, under the
+  `dev.alllexey.itmowidgets.feature.schedule` packages of 2.2: `domain`
+  (lessons, changes, calendar events, the widget selector and timeline),
+  `presentation` (`ScheduleViewModel`, `ScheduleChangesViewModel`,
+  `LessonDetailsViewModel`), `ui/list`, `ui/changes`, `ui/details` and
+  `ui/home` (Compose Multiplatform), and `data` (the cache, the file stores,
+  the My ITMO and Backend sources, the calendar sync, `DemoSchedule`). Koin
+  builds all of it from `scheduleModule` and `scheduleDataModule` in `di`.
+  `androidMain` only supplies `ScheduleFileSystem`; `iosMain` adds the iOS
+  change check (`ScheduleChangesRefresh`, `IosScheduleChangeNotifier`) and the
+  widget timeline writer (`ScheduleTimelineWriter`). The module compiles for
+  iOS, and its strings live in its `composeResources`
+  (`strings_schedule.xml`).
+- My ITMO comes through MyItmoApi 2.x, Backend through Core 2.0's
+  `ScheduleApi`: `syncLessons` uploads the own lessons best-effort behind
+  `BackendGate`, `userLessons` reads another user's schedule and
+  `friendsOnLesson` the friends on a lesson, also behind `BackendGate`. Every
+  network call checks `DemoMode` first (`DemoSchedule`).
+- `:app` keeps only what is Android: the Fragment and sheet hosts
+  (`feature/schedule/ui`), the two widgets, their renderers and the legacy
+  list adapter (`ui/widget`), the workers, the change notification and the
+  refresh receiver (`work`), `AndroidPhoneCalendars` and `IcsFileExport`
+  (`data/calendar`) and the widget snapshot file
+  (`data/widget/ScheduleWidgetSnapshotStoreImpl`). Hilt's side is
+  `di/ScheduleModule.kt`; `di/bridge/ScheduleBridge.kt` hands it to Koin and
+  back. `ScheduleRulesTest` keeps the shared code free of Fragments, Views and
+  `R`, and the widget providers, the receiver, the adapter service and the
+  workers in `:app` under their packages.
+
+### Screens
+
+Every screen and sheet is a stateless composable of
+`:shared:feature-schedule` drawn by its unchanged host in `:app`, which keeps
+the class name, the factories, the `TAG`, the arguments and the Fragment
+results:
+
+| Host | Compose body | Route |
+|---|---|---|
+| `ScheduleFragment` | `ScheduleScreen` | `ScheduleRoute` |
+| `UserScheduleFragment` | `UserScheduleScreen` around `ScheduleScreen` | `ScheduleRoute` |
+| `ScheduleChangesFragment` | `ScheduleChangesScreen` | `ScheduleChangesRoute` |
+| `LessonDetailsBottomSheet` | `LessonDetailsContent` | `LessonDetailsSheetRoute` |
+| `PendingSportDetailsBottomSheet` | `PendingSportDetailsContent` | - |
+
+The screens take state and callbacks only; the ViewModels come from Koin in
+the route or its host, and the host performs the effects (maps, links,
+profiles, the picker, navigation). The sheets sit on the design
+system's `ItmoBottomSheetFragment`. The XML layouts, adapters and View tests
+of these screens are gone: JVM host tests (`ScheduleScreenTest`,
+`ScheduleRouteTest`, `UserScheduleScreenTest`, `ScheduleChangesScreenTest`,
+`ScheduleChangesRouteTest`, `LessonDetailsSheetTest`,
+`PendingSportDetailsSheetTest`) cover the behaviour, and
+`ScheduleScreenshotTest` keeps the goldens in four appearances under
+`shared/feature-schedule/screenshots/`.
+
+### Files
+
+All schedule files are kotlinx JSON (`ScheduleStoreJson`: absent keys read
+as null or the default, nulls are omitted, defaults are written), with the
+keys 2.2 wrote through Gson, so 2.2 files read unchanged and either build
+reads the other's files. The `UpgradeFrom22Test` checkers in
+`app/src/androidTest/java/dev/alllexey/itmowidgets/upgrade/stores/` read 2.2's captured files.
+
+| File | Format |
+|---|---|
+| `cacheDir/schedule_cache/<isu or default>_<date>.json` | gzipped day, no format field; a file that does not decode is a cache miss |
+| `filesDir/schedule_changes/state.json` | `format` 1 ([storage](#storage)) |
+| `filesDir/teacher_lessons/weeks.json` | `format` 1 ([lessons with a teacher](#lessons-with-a-teacher)) |
+| `filesDir/calendar_sync/state.json` | `format` 1 ([synchronization](#synchronization)) |
+| `noBackupFilesDir/widgets/schedule_snapshot.json` | top-level `formatVersion` 2 ([widgets](widgets.md#schedule-widgets)) |
+
+The stores write through `AtomicTextFile` (`<name>.new`, sync, atomic move).
+
 ## Data
 
 - `ScheduleFragment` takes an optional `ARG_USER_ISU`. Without it the screen
@@ -23,9 +98,9 @@ or a `.ics` file ([calendar](#calendar)).
   cache. Ordinary network failures keep cached content.
 - The first frame comes from memory: `ScheduleRepository.peekScheduleForRange`
   returns the range without touching the disk when every date is already
-  hydrated, so `loadInitialSchedule` publishes `Content(loadingMore = true)` at
-  once and only a screen with nothing cached shows the skeleton
-  (`schedule_skeleton`) until the cache flow answers.
+  hydrated, so the first load publishes `Content(loadingMore = true)` at
+  once and only a screen with nothing cached shows the skeleton (three
+  placeholder cards) until the cache flow answers.
 - The schedule data lives in `commonMain` of `:shared:feature-schedule` and is
   constructed by Koin (`scheduleDataModule`), one instance of each per
   process: the cache and remote sources, `ScheduleRepositoryImpl` (also the
@@ -44,8 +119,8 @@ or a `.ics` file ([calendar](#calendar)).
   the platform supplies the `PhoneCalendars` port and the
   `CalendarSyncScheduler`, and the bridge hands the sync to
   `CalendarSyncWorker` and the background check set and the source to
-  `IcsFileExport`. Only `AndroidPhoneCalendars`, the `.ics` export and the
-  widget snapshot file (`ScheduleWidgetSnapshotStoreImpl`) stay in `:app`. The
+  `IcsFileExport`. The workers, the widgets and the list adapter read Koin
+  through `KoinStarter`. The
   four Koin cleaners (the cache, the change history, the teacher weeks, the
   calendar sync) join sign-out's set through `SessionCleanersBridge`.
 
@@ -82,27 +157,10 @@ since its teachers carry no ISU.
 
 ## Friend picker
 
-`feature/friendselector` is a bottom sheet opened from the schedule FAB and
-answered through `FriendSelectionContract` fragment results.
-
-- Recent chips (own schedule first, then up to five recent friends), a
-  `Друзья / Все` toggle, a search field, the list and a filled apply button.
-- `Друзья` filters the loaded friend list locally by name, ISU or group. `Все`
-  searches ITMO.Widgets users by name through `PeopleSearchRepository` after a
-  300 ms debounce and shows only registered people.
-- A row is selectable only when its schedule is open (`sharing.schedule`).
-  Closed rows show a lock and open the public profile on tap; long-press opens
-  the profile for any row. Applying records the choice in the recent history.
-- Recent-chip identities and order are fixed when the loaded selector first opens
-  and survive view recreation. Pending taps change only selection markers; a new
-  choice enters the recent history only after Apply and appears on the next opening.
-  Profile refreshes update metadata in place; removed or private schedules stop
-  being selectable without reordering the remaining chips.
-- The own chip reads the current user from the picker state, so an empty or
-  failed friend list still shows the avatar.
-- Filtering, the pending choice and the recent-chip order live in
-  `FriendSelectorViewModel`; the pending ISU and the chip order survive process
-  death through its `SavedStateHandle`.
+The FAB opens the friend picker (`FriendSelectorDialogFragment`, body
+`FriendSelectorSheetRoute` from `:shared:feature-social`); its result arrives
+through `FriendSelectionContract` fragment results. The sheet, its states and
+the recent chips are in [Friend selector](friend-selector.md).
 
 ## Pending sport rows
 
@@ -124,8 +182,9 @@ or the official cache.
   waiting or predicted, never styled as a confirmed lesson, and do not change the
   lesson count. An error or empty snapshot from the optional source removes the
   pending rows; it never replaces the academic screen.
-- The adapter diffs the whole display day, so live additions and cancellations
-  render without clearing the cache or resetting scroll.
+- The list keys its days by date and recomposes the whole display day, so
+  live additions and cancellations render without clearing the cache or
+  resetting scroll.
 - A pending row opens `PendingSportDetailsBottomSheet`
   (`feature/schedule/ui/details`) with `core/navigation/PendingSportDetailsArgs`;
   the home feed opens the same sheet through `AppNavigator`.
@@ -133,35 +192,39 @@ or the official cache.
 ## Behaviour
 
 - Timeline markers and day alpha follow [`design.md`](../design.md).
-- Lesson type colours and names (`core/ui/LessonTypes.kt`) and the short
-  building and room titles (`core/ui/LocationTitles.kt`) are shared with the
-  recordbook's lesson rows.
+- Lesson type names (`lessonTypeName` in `:shared:core`
+  `core/schedule/LessonTypeNames.kt`) and the short building and room titles
+  (`core/text/LocationTitles.kt`) are shared with the recordbook, the home
+  cards and the widgets; type colours are the design system's extended colours
+  (`ItmoTheme.extendedColors`).
 - `core/navigation/ScheduleTodayRequest` is the Fragment result `MainActivity`
   sends to show today in the own schedule (the `Сегодня` shortcut, see
   [home](home.md#quick-settings-tile-and-app-shortcuts)).
-- The list snapshots its scroll position before the view is destroyed; restoration
-  waits for data, and adapter callbacks never touch an old view.
+- The list keeps its position across recreation (saved list state); a
+  restored position is never replaced by today, and it waits for late data.
 - Switching between own and a friend's schedule keeps the reader on the day and
   offset they were reading: the visible day is anchored by date, the closest later
   day is used when that date has no lessons, and a day past the initial range is
-  paged in (up to four pages) before the list is shown. An unreachable day opens
-  the schedule on today instead.
+  paged in (up to four pages) before the list is shown; meanwhile the list is
+  laid out but not drawn. An unreachable day opens the schedule on today
+  instead.
 - After the first successful load, later refresh failures show a snackbar while
   content stays; the initial failure is an explicit error state.
 
 ## Lesson details
 
-- Every ordinary lesson card opens `LessonDetailsBottomSheet` from the schedule
-  fragment's child fragment manager, in the own and in a friend's schedule alike.
-  Pending sport rows never open it. A sport lesson (type 11) in the own schedule goes through
+- Every ordinary lesson card opens `LessonDetailsBottomSheet` (body
+  `LessonDetailsContent` in `ui/details` of `:shared:feature-schedule`) from
+  the schedule fragment's child fragment manager, in the own and in a friend's
+  schedule alike. Pending sport rows never open it. A sport lesson (type 11) in the own schedule goes through
   `AppNavigator.openLessonDetails` to `MainActivity`, which finds the booking
   with the same date and start in the sport tab's data (a confirmed booking
   before a queue, then the matching section name) and opens the sport sheet
-  with `Отменить`; without a match the lesson sheet appears. The sheet gets a `Serializable`
-  `LessonDetailsArgs` built from the `Lesson` plus the day's date; nothing is
-  fetched for the lesson itself.
-- The sheet starts with the header every details sheet shares
-  (`view_details_header.xml`, bound through `core/ui/DetailsHeader.kt`): subject,
+  with `Отменить`; without a match the lesson sheet appears. The sheet gets a
+  `@Serializable` `LessonDetailsArgs` (`core/navigation`) built from the
+  `Lesson` plus the day's date; nothing is fetched for the lesson itself.
+- The sheet starts with the design system's `DetailsHeader`, which every
+  details sheet shares: subject,
   type and format with the type colour, the weekday and date with the time
   range and duration, teacher, flow, room with the full building name and
   `Открыть на карте`. Then, each only when present: the `Изменения` block, the
@@ -189,8 +252,8 @@ or the official cache.
   no chevron, ripple or click action; no name lookup is attempted.
 - With `Подключение к ITMO.Widgets` and a teacher ISU the lesson sheet shows the
   tone of the teacher's AI summary as a 10 dp dot between the name and the
-  chevron (`fact_mark` in `item_sport_detail_fact.xml`,
-  `ViewDetailsHeaderBinding.bindTeacherLevel`). `LessonDetailsViewModel` gets it
+  chevron (`DetailsTeacher.tone`, its place kept by `reserveTone`).
+  `LessonDetailsViewModel` gets it
   from `TeacherLevelsRepository` (`ARG_TEACHER_ISU`), cached for a day
   ([teacher levels](reviews.md#teacher-levels)). The place of the dot is
   reserved while the level loads or when there is none, so a late dot moves
@@ -202,15 +265,15 @@ or the official cache.
   viewer's accepted friends who attend that occurrence and share their schedule
   with the viewer. Without the ITMO.Widgets opt-in the block is absent; while
   loading it shows a spinner; an error offers `Повторить`; an empty answer says
-  so. A friend row opens the person profile.
-- `Поток` (`flow_fact`, `ic_group`) is the My ITMO flow of the lesson, for
+  so. A friend row (`UserRow`) opens the person profile.
+- `Поток` (`ic_group`) is the My ITMO flow of the lesson, for
   example `ФИЗ ПИИКТ 3.2`: `LessonDetailsArgs.flowName` is the lesson's
   `groupName`, trimmed, and a blank one hides the row. It is informational,
   without a chevron or a click action; TalkBack reads `Поток: …`. The lesson
   type is already in the kind line, so the row does not repeat it. It exists
   only in the lesson sheet: schedule cards, `PendingSportDetailsBottomSheet`
   and the sport sheets have no flow.
-- `Изменения` (`changes_card`, after the header and before the meeting info)
+- `Изменения` (after the header and before the meeting info)
   shows the newest [schedule change](#schedule-changes) of the last 30 days
   whose occurrences contain this lesson's `pairId` and date
   (`LessonDetailsViewModel.change`, from the local store only). A divider, the
@@ -232,11 +295,11 @@ Backend (decision [0013](../decisions/0013-schedule-changes-on-device.md)).
   exponential backoff from 15 minutes, tag `schedule-changes`.
   `ExistingPeriodicWorkPolicy.UPDATE` keeps the enrolment time, so enqueuing it
   again on every start does not push the next run away. The worker gets
-  `ScheduleChangesCheck` through the `ScheduleChangesEntryPoint` entry point,
-  not `@HiltWorker` (see `QrWidgetEntryPoint`).
-  `WorkManagerScheduleChangesScheduler` enqueues and cancels it, and
-  `AndroidScheduleChangeNotifier` posts the notification; all three live in
-  `feature/schedule/work`.
+  `ScheduleChangesCheck` from Koin through `KoinStarter`, so it also runs
+  before `Application.onCreate()`. `PeriodicCheckScheduler` with
+  `SCHEDULE_CHANGES_SPEC` enqueues and cancels it, and
+  `AndroidScheduleChangeNotifier` posts the notification; the worker, the spec
+  and the notifier live in `feature/schedule/work`.
 - `ScheduleChangesCheck.run()` ends `SKIPPED` without a request when there is no
   refresh token or the switch is off. Otherwise it runs
   `ScheduleChangesRepository.check()` and then delivers the notification, even
@@ -331,14 +394,14 @@ The change model, shared with the home card, is `ScheduleChange` in
 (a `pairId` on a date). `ScheduleChangesFileStore` keeps everything in
 `filesDir/schedule_changes/state.json` (format 1): the snapshot, `emptyHeld`
 and the changes with both sides, subject, type, flow, `read` and `notified`.
-The snapshot and the changes are written together, atomically (`.tmp`,
-`fd.sync()`, `ATOMIC_MOVE`), and the directory is excluded from backup and
+The snapshot and the changes are written together, atomically
+(`AtomicTextFile`), and the directory is excluded from backup and
 device transfer. Changes older than 30 days by detection are dropped on every
 write and never emitted; at most the 500 newest are kept. A corrupt file or one
 of another format is deleted and the state starts empty, so the next check is a
 baseline.
 
-`ScheduleChangesRepositoryImpl` is a `@Singleton` that reads the file once and
+`ScheduleChangesRepositoryImpl` is a Koin `single` that reads the file once and
 keeps the state in memory:
 
 - Two mutexes: `checks` runs one check at a time (the periodic and the one-off
@@ -383,8 +446,8 @@ named change's headline (`Физика — отменена: вт, 8 сентя�
 ### In the schedule
 
 - A lesson card whose occurrence (`pairId` and date) belongs to a change of the
-  30-day history shows `change_indicator` (`ic_edit_calendar`, 16 dp,
-  `colorPrimary`, `Изменена` for TalkBack) after the video-call icon. The
+  30-day history shows `ic_edit_calendar` (16 dp, `primary`, `Изменена` for
+  TalkBack) after the video-call icon. The
   occurrences of a change are the new slot plus the old one for a cancel or a
   move, so a stale cache that still has the old slot is marked too. Read or
   not does not matter.
@@ -440,8 +503,9 @@ the same `ScheduleChangesCheck` on the real account. Debug builds only.
 digest. `ScheduleChangesFileStoreTest` and `ScheduleChangesRepositoryImplTest`
 cover the file, the request, baselines, held empty answers, the publication
 rule, retention, the session clear and the snapshot reset against My ITMO stubs.
-`ScheduleChangesCheckTest`, `BackgroundChecksTest` (quiet hours,
-`outcomeOf`, `workResultOf`) and `DefaultScheduleChangeTrackingTest` cover the
+`ScheduleChangesCheckTest`, `BackgroundChecksTest` (`:shared:core`, quiet
+hours, `outcomeOf`), `WorkResultsTest` (`workResultOf`),
+`PeriodicCheckSpecTest` and `DefaultScheduleChangeTrackingTest` cover the
 run, retries and the work, `ScheduleChangesRepositoryImplTest` also a network
 failure that keeps the file;
 `ScheduleChangesViewModelTest`, `ScheduleViewModelTest`,
@@ -555,9 +619,10 @@ through; failed ones stay in the file with their calendar and are retried.
 - `DefaultCalendarSync` (`core/schedule/CalendarSync`) owns the switch and the
   work. `CalendarSyncWorker` runs the unique periodic work `calendar-sync`
   every 2 hours with `NetworkType.CONNECTED`, backoff from 15 minutes,
-  `ExistingPeriodicWorkPolicy.UPDATE`, tag `calendar-sync`, through
-  `CalendarSyncEntryPoint`; `WorkManagerCalendarSyncScheduler` enqueues and
-  cancels it. Both live in `:app`'s `feature/schedule/work`; the rest of the
+  `ExistingPeriodicWorkPolicy.UPDATE`, tag `calendar-sync`, with
+  `DefaultCalendarSync` from Koin; `PeriodicCheckScheduler` with
+  `CALENDAR_SYNC_SPEC` enqueues and cancels it. The worker and the spec live
+  in `:app`'s `feature/schedule/work`; the rest of the
   synchronization, the `PhoneCalendars` port included, lives in `domain/calendar`
   and `data/calendar` of `:shared:feature-schedule` `commonMain`, except
   `AndroidPhoneCalendars` and `IcsFileExport` in `:app`. The work does not
