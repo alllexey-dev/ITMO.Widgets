@@ -1,11 +1,10 @@
 package dev.alllexey.itmowidgets.store
 
 import android.content.Context
-import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -13,21 +12,22 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.RootMatchers.withDecorView
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.ViewAssertion
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.navigation.fragment.NavHostFragment
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
+import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
+import dev.alllexey.itmowidgets.app.shell.ShellHost
+import dev.alllexey.itmowidgets.app.shell.StoreLook
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
-import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
-import dev.alllexey.itmowidgets.core.navigation.toBundle
-import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
-import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.home.HomeSemantics
@@ -35,28 +35,33 @@ import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreenTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
-import dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment
+import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
+import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.datetime.toKotlinLocalDate
-import org.hamcrest.Matchers.`is`
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Not a test: with `captureScreenshots=true` it enters the demo through the real MainActivity (five taps on the
- * logo) and saves the Google Play frames `01-home` … `10-me` (and `11-qr` for the landing) to `externalCacheDir/store-screenshots`. The theme
- * follows the device (`cmd uimode night yes|no`); the device size, density and status bar are set by the caller.
- * Every frame is checked for content, error and empty states and the word «Тест» before it is saved; the demo strip
- * is hidden for the shot.
+ * The Google Play frames `01-home` ... `10-me` (and `11-qr` for the landing) of the Compose shell. It enters the demo
+ * through the real MainActivity (five taps on the logo), walks every frame and checks each for content, no error or
+ * empty state and no word «Тест»; with `captureScreenshots=true` it also saves them to
+ * `externalCacheDir/store-screenshots`, so without the argument it is a smoke test of the demo's main screens. The
+ * landing images under `site/img/light` and `site/img/dark` are these frames at 540x960. The theme follows the device
+ * (`cmd uimode night yes|no`); the device size, density and status bar are set by the caller. The frames show the
+ * release look: no demo banner ([StoreLook]) and no developer tools row on Me.
  */
 @RunWith(AndroidJUnit4::class)
 class StoreScreenshotCapture {
@@ -64,19 +69,19 @@ class StoreScreenshotCapture {
     @Before
     fun startSignedOut() {
         TestSession.signOut()
-        // Release builds hide the developer tools row on Me; the store shows the release screen.
         MeFragment.releaseLook = true
+        StoreLook.hideDemoBanner = true
     }
 
     @After
     fun leaveTheDemo() {
+        StoreLook.hideDemoBanner = false
         MeFragment.releaseLook = false
         TestSession.signOut()
     }
 
     @Test
     fun captureStoreScreenshots() {
-        if (!Screenshots.enabled) return
         val today = LocalDate.now(ZoneId.of("Europe/Moscow"))
         val period = DemoRecordbook.programs(today.toKotlinLocalDate()).single().periods.single { it.actual }
 
@@ -87,101 +92,131 @@ class StoreScreenshotCapture {
 
             frame(activity, "01-home")
             // Scrolled to the end, the feed's FAB clearance keeps the last cards clear of the quick actions.
-            open(scenario) { main -> HomeSemantics.scrollBy(HomeSemantics.feedRoot(main), HomeTestTags.FEED, FEED_END_PX) }
+            scenario.onActivity { main -> HomeSemantics.scrollBy(HomeSemantics.feedRoot(main), HomeTestTags.FEED, FEED_END_PX) }
+            settle()
             frame(activity, "01-home-end")
 
-            open(scenario) { it.openRoot(AppRoot.SCHEDULE) }
+            open(scenario, AppTab.SCHEDULE) { it.select(AppTab.SCHEDULE) }
             frame(activity, "02-schedule")
-            // The schedule is Compose (LS-6b): the first placed Algorithms row opens by its semantics click.
-            scenario.onActivity { main ->
-                val root = composeRoot(main, ScheduleScreenTestTags.LIST)
-                val row = HomeSemantics.nodes(root).first { node ->
-                    val tag = node.config.getOrNull(SemanticsProperties.TestTag).orEmpty()
-                    tag.startsWith(ScheduleListTestTags.LESSON_PREFIX) && node.layoutInfo.isPlaced &&
-                        node.texts().any { DemoStudy.ALGORITHMS.name in it }
-                }
-                HomeSemantics.click(root, row.config[SemanticsProperties.TestTag])
-            }
+            scenario.onActivity(::openAlgorithmsLesson)
             settle()
+            eventually { assertNotNull("the lesson sheet is not shown", ShellProbe.current().floating) }
             frame(activity, "03-lesson", sheet = true)
             pressBack()
             settle()
+            awaitShown(AppTab.SCHEDULE)
 
-            open(scenario) { it.openRoot(AppRoot.RECORDBOOK) }
+            open(scenario, AppTab.RECORDBOOK) { it.select(AppTab.RECORDBOOK) }
             frame(activity, "04-recordbook")
-            open(scenario) {
-                val algorithms = DemoStudy.ALGORITHMS
-                val args = RecordbookSubjectArgs(algorithms.id * 10 + period.semester, DemoStudy.PROGRAM_ID, period.semester, period.studyYear)
-                it.openScreen(AppScreen.RECORDBOOK_SUBJECT, args.toBundle())
-            }
+            val algorithms = DemoStudy.ALGORITHMS
+            val subject = AppRoutes.RecordbookSubject(
+                RecordbookSubjectArgs(algorithms.id * 10 + period.semester, DemoStudy.PROGRAM_ID, period.semester, period.studyYear),
+            )
+            open(scenario, AppTab.RECORDBOOK, subject) { it.open(subject) }
             frame(activity, "05-subject")
 
-            open(scenario) { it.openRoot(AppRoot.SPORT) }
-            open(scenario) { main -> main.sport().changeView(SPORT_SIGN_PAGE, animate = false) }
+            open(scenario, AppTab.SPORT) { it.select(AppTab.SPORT) }
+            showSportPage(scenario, SportPage.SIGN)
             frame(activity, "06-sport")
-            open(scenario) { main -> main.sport().changeView(SPORT_MY_PAGE, animate = false) }
+            showSportPage(scenario, SportPage.MY)
             frame(activity, "07-sport-mine")
 
-            open(scenario) {
-                it.openScreen(AppScreen.USER_PROFILE, Bundle().apply { putInt(UserScreenArgs.ISU, DemoPeople.MATH_TEACHER.isu) })
-            }
+            val teacher = AppRoutes.UserProfile(DemoPeople.MATH_TEACHER.isu)
+            open(scenario, AppTab.SPORT, teacher) { it.open(teacher) }
             // The reviews block with the summary, under the profile header.
-            open(scenario) { main ->
-                val profile = composeRoot(main, UserProfileTestTags.LIST)
-                HomeSemantics.scrollBy(profile, UserProfileTestTags.LIST, REVIEWS_SCROLL_DP * main.resources.displayMetrics.density)
+            scenario.onActivity { main ->
+                val pixels = REVIEWS_SCROLL_DP * main.resources.displayMetrics.density
+                HomeSemantics.scrollBy(main.composeRoot(), UserProfileTestTags.LIST, pixels)
             }
+            settle()
             frame(activity, "08-teacher")
 
-            open(scenario) { it.openRoot(AppRoot.ME) }
-            open(scenario) { it.openScreen(AppScreen.FRIENDS) }
+            open(scenario, AppTab.ME) { it.select(AppTab.ME) }
+            open(scenario, AppTab.ME, AppRoutes.Friends) { it.open(AppRoutes.Friends) }
             frame(activity, "09-friends")
 
-            open(scenario) { it.openRoot(AppRoot.ME) }
+            open(scenario, AppTab.ME) { it.select(AppTab.ME) }
             frame(activity, "10-me")
 
             // Not one of the ten Play frames: the landing's «QR-пропуск» section.
-            open(scenario) { it.openScreen(AppScreen.QR_PASS) }
-            frame(activity, "11-qr", sheet = true)
+            open(scenario, AppTab.ME, AppRoutes.QrPass) { it.open(AppRoutes.QrPass) }
+            frame(activity, "11-qr", minTexts = QR_MIN_TEXTS)
         }
     }
 
-    /** The `ComposeView` of a Compose screen whose node is tagged [tag], such as the profile list. */
-    private fun composeRoot(activity: MainActivity, tag: String): View =
-        activity.window.decorView.descendants().filterIsInstance<ComposeView>().first { HomeSemantics.node(it, tag) != null }
-
     private fun enterDemo(activity: MainActivity) {
-        val decorView = activity.window.decorView
+        assertNotNull("MainActivity runs the Compose shell", onMain { ShellHost.of(activity) })
         eventually { assertTrue("The sign-in screen shows", AuthSemantics.isShown(activity)) }
         repeat(DEMO_TAPS) { AuthSemantics.tap(activity, AuthTestTags.LOGO) }
-        eventually { onView(withId(R.id.demo_banner)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed())) }
+        awaitShown(AppTab.HOME)
         // The «Демо-режим» toast must be gone before the first frame.
         TestUi.settle(TOAST_MILLIS)
     }
 
-    private fun open(scenario: ActivityScenario<MainActivity>, action: (MainActivity) -> Unit) {
-        scenario.onActivity(action)
+    /** Runs one step on the Compose shell's navigator and waits until it shows [tab] with exactly [overlays]. */
+    private fun open(
+        scenario: ActivityScenario<MainActivity>,
+        tab: AppTab,
+        vararg overlays: AppRoute,
+        step: (Nav3AppNavigator) -> Unit,
+    ) {
+        scenario.onActivity { step(it.navigator()) }
         settle()
+        awaitShown(tab, *overlays)
     }
 
-    /** The sport tab's host, whose page API replaces the View pager. */
-    private fun MainActivity.sport(): SportFragment =
-        (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment)
-            .childFragmentManager.fragments.filterIsInstance<SportFragment>().single()
-
-    /** The screen has content, no error and no test wording; then the device screenshot. */
-    private fun frame(activity: MainActivity, name: String, sheet: Boolean = false) {
-        eventually {
-            TestUi.instrumentation.runOnMainSync {
-                val views = activity.window.decorView.descendants().filter { it.isShown }.toList()
-                val texts = views.filterIsInstance<TextView>().map { it.text.toString() }.filter { it.isNotBlank() }
-                assertTrue("$name has too little content", sheet || texts.size >= MIN_TEXTS)
-                val failures = texts.filter { text -> forbiddenTexts.any { it in text } }
-                assertTrue("$name shows $failures", failures.isEmpty())
-            }
+    /** The sport pager's segment [page], by its tab's semantics click. */
+    private fun showSportPage(scenario: ActivityScenario<MainActivity>, page: SportPage) {
+        scenario.onActivity { main ->
+            val tag = SportScreenTestTags.tab(page)
+            val segment = main.composedNodes().first { it.tag == tag }
+            checkNotNull(segment.config[SemanticsActions.OnClick].action) { "$tag has no click" }.invoke()
         }
-        // The store frames show the app as a signed-in session sees it: without the demo strip above the bottom bar.
-        TestUi.instrumentation.runOnMainSync { activity.findViewById<View>(R.id.demo_banner).visibility = View.GONE }
+        settle()
+        awaitShown(AppTab.SPORT)
+    }
+
+    /** The schedule's first placed Algorithms row opens its lesson sheet by its semantics click. */
+    private fun openAlgorithmsLesson(activity: MainActivity) {
+        val row = activity.composedNodes().first { node ->
+            node.tag.orEmpty().startsWith(ScheduleListTestTags.LESSON_PREFIX) &&
+                node.texts().any { DemoStudy.ALGORITHMS.name in it }
+        }
+        checkNotNull(row.config[SemanticsActions.OnClick].action) { "the lesson row has no click" }.invoke()
+    }
+
+    /** The demo session's tabs show [tab] with exactly [overlays] above it and no sheet or dialog. */
+    private fun awaitShown(tab: AppTab, vararg overlays: AppRoute) = eventually {
+        val shown = ShellProbe.current()
+        assertEquals(ShellSurface.Tabs(demoBanner = true), shown.surface)
+        assertEquals(tab, shown.tab)
+        assertEquals(overlays.toList(), shown.overlays)
+        assertNull(shown.floating)
+    }
+
+    /**
+     * The frame has content, no `ContentState` (an empty or error state) and no error or test wording; then the
+     * device screenshot. A [sheet] frame is read in the sheet's own dialog window.
+     */
+    private fun frame(activity: MainActivity, name: String, sheet: Boolean = false, minTexts: Int = MIN_TEXTS) {
+        eventually {
+            val nodes = if (sheet) sheetNodes() else onMain { activity.composedNodes() }
+            val states = nodes.filter { it.tag == CONTENT_STATE_TAG }
+            assertTrue("$name shows a state instead of content", states.isEmpty())
+            val texts = nodes.flatMap { node -> node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } }
+                .filter { it.isNotBlank() }
+            assertTrue("$name has too little content: $texts", texts.size >= minTexts)
+            val failures = texts.filter { text -> forbiddenTexts.any { it in text } }
+            assertTrue("$name shows $failures", failures.isEmpty())
+        }
         Screenshots.capture(DIRECTORY, name) { settle() }
+    }
+
+    /** The placed semantics nodes of the top dialog window, the sheet scene's. */
+    private fun sheetNodes(): List<SemanticsNode> {
+        var nodes = emptyList<SemanticsNode>()
+        onView(isRoot()).inRoot(isDialog()).check(ViewAssertion { root, _ -> nodes = root.composedNodes() })
+        return nodes
     }
 
     private val forbiddenTexts: List<String> by lazy {
@@ -189,17 +224,63 @@ class StoreScreenshotCapture {
         listOf(
             R.string.common_error_network, R.string.common_error_unknown, R.string.common_error_unauthorized,
             R.string.common_error_forbidden, R.string.common_error_not_found, R.string.common_error_services_disabled,
-            R.string.error_demo_unavailable
+            R.string.error_demo_unavailable,
         ).map(context::getString) + TEST_WORDING
     }
 
-    /** The texts of a Compose node and everything under it in the unmerged tree. */
-    private fun SemanticsNode.texts(): List<String> =
-        config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } + children.flatMap { it.texts() }
+    /**
+     * The Compose shell's navigator. `ShellHost` keeps it private (entries get it as callbacks), so the capture reads
+     * the field, as `DemoModeFlowTest` does.
+     */
+    private fun MainActivity.navigator(): Nav3AppNavigator {
+        val host = checkNotNull(ShellHost.of(this)) { "MainActivity runs the legacy shell" }
+        val field = ShellHost::class.java.getDeclaredField("navigator").apply { isAccessible = true }
+        return checkNotNull(field.get(host) as Nav3AppNavigator?) { "the Compose shell has not composed yet" }
+    }
+
+    /** The shell's one Compose root, for the semantics helpers that take a `ComposeView`. */
+    private fun MainActivity.composeRoot(): View =
+        window.decorView.descendants().first { view -> view is ViewGroup && view.childCount > 0 && view.getChildAt(0) is ViewRootForTest }
+
+    /** The activity window's placed semantics nodes; main thread. */
+    private fun MainActivity.composedNodes(): List<SemanticsNode> = window.decorView.composedNodes()
+
+    /**
+     * The placed, on-screen semantics nodes under this view, the unmerged tree, so every text counts once. The tab
+     * pager's neighbouring pages do not count, nor does a tab layer an overlay hides from accessibility.
+     */
+    private fun View.composedNodes(): List<SemanticsNode> {
+        val width = rootView.width.toFloat()
+        val height = rootView.height.toFloat()
+        return descendants().filter { it.isShown }.filterIsInstance<ViewRootForTest>()
+            .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }
+            .filter { node ->
+                val bounds = node.boundsInWindow
+                node.layoutInfo.isPlaced && bounds.right > 0f && bounds.left < width && bounds.bottom > 0f && bounds.top < height
+            }
+            .toList()
+    }
 
     private fun View.descendants(): Sequence<View> = sequence {
         yield(this@descendants)
         if (this@descendants is ViewGroup) for (index in 0 until childCount) yieldAll(getChildAt(index).descendants())
+    }
+
+    private fun SemanticsNode.descendants(): Sequence<SemanticsNode> = sequence {
+        yield(this@descendants)
+        children.forEach { yieldAll(it.descendants()) }
+    }
+
+    /** The texts of a node and everything under it. */
+    private fun SemanticsNode.texts(): List<String> = descendants()
+        .flatMap { node -> node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } }.toList()
+
+    private val SemanticsNode.tag: String? get() = config.getOrNull(SemanticsProperties.TestTag)
+
+    private fun <T> onMain(block: () -> T): T {
+        var result: Result<T>? = null
+        TestUi.instrumentation.runOnMainSync { result = runCatching(block) }
+        return checkNotNull(result).getOrThrow()
     }
 
     private fun settle() = TestUi.settle(SETTLE_MILLIS)
@@ -210,15 +291,17 @@ class StoreScreenshotCapture {
     private companion object {
         const val DIRECTORY = "store-screenshots"
         const val DEMO_TAPS = 5
-        const val SPORT_MY_PAGE = 0
-        const val SPORT_SIGN_PAGE = 1
         const val RETRY_COUNT = 50
         const val RETRY_DELAY_MILLIS = 100L
         const val SETTLE_MILLIS = 1_000L
         const val TOAST_MILLIS = 4_000L
         const val MIN_TEXTS = 6
+        const val QR_MIN_TEXTS = 1
         const val REVIEWS_SCROLL_DP = 420
         const val FEED_END_PX = 10_000f
         const val TEST_WORDING = "Тест"
+
+        /** The test tag of DS-03a's `ContentState`, as `DemoModeFlowTest` reads it. */
+        const val CONTENT_STATE_TAG = "ContentState"
     }
 }

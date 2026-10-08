@@ -97,9 +97,11 @@ Sunday) `DemoSportSlots.extraSlots` adds two fitness lessons to today from the
 next ten-minute mark; `DemoContentTest` checks today always has a lesson to sign
 up for.
 
-`SiteScreenshotCapture` (landing screenshots) and the debug `HomeFixture` read
-the same set. `RecordbookPreviewFixtures` and the profile previews of
-`:shared:feature-social` keep their own edge cases for the visual tests.
+`StoreScreenshotCapture` (the Google Play frames, which are also the landing's
+screenshots) walks this set through the real `MainActivity`, and the debug
+`HomeFixture` reads it too. `RecordbookPreviewFixtures` and the profile
+previews of `:shared:feature-social` keep their own edge cases for the visual
+tests.
 
 ## Tests
 
@@ -112,7 +114,9 @@ the same set. `RecordbookPreviewFixtures` and the profile previews of
   weekday and a Sunday clock).
 - Instrumented: `DemoModeFlowTest` (five taps open the demo, it survives
   recreation and ends with sign-in; every main screen has content and writes
-  are refused).
+  are refused) and `StoreScreenshotCapture` (every store frame in the Compose
+  shell has content, no error or empty state and no test wording; it saves the
+  PNGs only with `captureScreenshots=true`).
 
 ```bash
 ./gradlew :app:testGithubDebugUnitTest

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.app.shell
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.VisibleForTesting
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppTab
@@ -81,6 +83,17 @@ object ShellTags {
     fun tab(tab: AppTab): String = "shell:tab:${tab.name}"
 
     fun overlay(contentKey: Any): String = "shell:overlay:$contentKey"
+}
+
+/**
+ * Debug-only hook for the store screenshots (`StoreScreenshotCapture`): hides the demo banner, so the frames show the
+ * tabs as a signed-in session sees them. Read when the tabs compose; the surface still says `demoBanner`, and release
+ * builds always show the banner.
+ */
+object StoreLook {
+    @VisibleForTesting
+    @Volatile
+    var hideDemoBanner = false
 }
 
 /**
@@ -171,7 +184,7 @@ private fun TabLayer(
                 page = page,
             )
         }
-        if (demoBanner) DemoBanner(onDemoSignIn)
+        if (demoBanner && !(BuildConfig.DEBUG && StoreLook.hideDemoBanner)) DemoBanner(onDemoSignIn)
         ShellNavigationBar(pages.barTab(selected), navigator::select)
     }
 }
