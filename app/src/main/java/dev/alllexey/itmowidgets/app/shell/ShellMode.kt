@@ -16,8 +16,11 @@ enum class ShellMode {
     ;
 
     companion object {
-        /** SH-1c flips this line; until then the Navigation 3 shell runs only through the debug override. */
-        val DEFAULT: ShellMode = LEGACY
+        /**
+         * The Navigation 3 shell since SH-1c. The Fragment shell stays in the APK until SH-1d1: a fallback build
+         * reverts this one line, and debug builds still reach it through the override.
+         */
+        val DEFAULT: ShellMode = NAV3
 
         /** The mode for an activity created now; read once per `onCreate`. */
         fun current(context: Context): ShellMode = if (BuildConfig.DEBUG) debugOverride(context) ?: DEFAULT else DEFAULT
