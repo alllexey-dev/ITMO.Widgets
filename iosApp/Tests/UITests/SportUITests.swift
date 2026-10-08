@@ -40,7 +40,9 @@ final class SportUITests: XCTestCase {
         let app = XCUIApplication.itmo()
         app.launch()
         openSport(app)
-        let booking = element(app, "sport_booking_card")
+        // A later day's booking: the demo's today lesson ends in the afternoon, and an ended lesson shares nothing.
+        let booking = app.descendants(matching: .any).matching(identifier: "sport_booking_card")
+            .matching(NSPredicate(format: "NOT (label CONTAINS %@)", Self.todayLabel)).firstMatch
         XCTAssertTrue(booking.waitForExistence(timeout: stepTimeout))
         booking.tap()
 
@@ -148,6 +150,8 @@ final class SportUITests: XCTestCase {
     private static let closeLabel = "Закрыть"
     private static let signUpLabel = "Записаться"
     private static let demoUnavailable = "Недоступно в демо"
+    /// The day label of a booking card dated today.
+    private static let todayLabel = "Сегодня"
 
     private func openSport(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
