@@ -10,6 +10,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import dagger.hilt.android.EntryPointAccessors
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.app.shell.ShellModeRule
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,6 +58,11 @@ class QrTileFlowTest {
         shell("cmd statusbar add-tile $TILE")
         eventually { assertEquals(true, runBlocking { deviceHints.observeQrTileAdded().first() }) }
 
+        // A click reaches the service only while SystemUI listens to the tile, as in the open shade. With the shade
+        // closed, a click that finds the service unbound (onTileAdded unbinds it) is queued and dropped on the rebind
+        // ("Managed to get click on non-listening state" in TileLifecycleManager).
+        shell("cmd statusbar expand-settings")
+        eventually { assertTrue("The shade does not show the tile", tileShown()) }
         shell("cmd statusbar click-tile $TILE")
         eventually {
             val shown = ShellProbe.current()
@@ -72,6 +79,13 @@ class QrTileFlowTest {
         assertEquals(AppEntryIntents.ACTION_OPEN_QR_PASS, intent.action)
         val flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         assertEquals(flags, intent.flags)
+    }
+
+    /** The open shade shows the tile, so SystemUI listens to it. */
+    private fun tileShown(): Boolean {
+        val label = context.getString(R.string.qr_tile_label)
+        val shade = instrumentation.uiAutomation.rootInActiveWindow ?: return false
+        return shade.findAccessibilityNodeInfosByText(label).any { it.isClickable && it.isVisibleToUser }
     }
 
     private fun onActivity(block: (MainActivity) -> Unit) {
