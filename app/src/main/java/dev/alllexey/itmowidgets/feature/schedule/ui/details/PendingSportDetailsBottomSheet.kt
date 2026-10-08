@@ -1,7 +1,9 @@
 package dev.alllexey.itmowidgets.feature.schedule.ui.details
 
+import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.fillMaxSize
@@ -86,12 +88,7 @@ class PendingSportDetailsBottomSheet : ItmoBottomSheetFragment() {
         openRoot(AppRoot.SPORT)
     }
 
-    private fun openMap() {
-        val destination = MapDestination(label = booking.sectionName, address = booking.roomName)
-        if (!MapLauncher.open(requireContext(), destination)) {
-            Snackbar.make(requireView(), R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()
-        }
-    }
+    private fun openMap() = requireContext().openPendingSportMap(booking, requireView())
 
     companion object {
         const val TAG = "PendingSportDetailsBottomSheet"
@@ -106,5 +103,16 @@ class PendingSportDetailsBottomSheet : ItmoBottomSheetFragment() {
         fun newInstance(args: PendingSportDetailsArgs): PendingSportDetailsBottomSheet = PendingSportDetailsBottomSheet().apply {
             arguments = Bundle().apply { putNavigationArgs(ARG_BOOKING, args) }
         }
+    }
+}
+
+/**
+ * Opens the room of [booking] in a `geo:` handler; without one a snackbar on [anchor] says so. Shared by
+ * [PendingSportDetailsBottomSheet] and the Compose shell's pending sport entry.
+ */
+internal fun Context.openPendingSportMap(booking: PendingSportDetailsArgs, anchor: View) {
+    val destination = MapDestination(label = booking.sectionName, address = booking.roomName)
+    if (!MapLauncher.open(this, destination)) {
+        Snackbar.make(anchor, R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()
     }
 }
