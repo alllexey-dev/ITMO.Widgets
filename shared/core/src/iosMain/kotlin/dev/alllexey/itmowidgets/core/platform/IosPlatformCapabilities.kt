@@ -7,14 +7,15 @@ package dev.alllexey.itmowidgets.core.platform
  *
  * - [PlatformCapabilities.recordbook]: IO-09d2; [PlatformCapabilities.marks]: IO-09d3, with the settings
  *   recordbook page.
- * - [PlatformCapabilities.calendarExport]: IO-15b, with the settings calendar rows.
+ * - [PlatformCapabilities.calendarExport]: on since IO-15b, the settings calendar rows over EventKit and the `.ics`
+ *   sheet.
  * - [PlatformCapabilities.reviews]: IO-09f.
  */
 val IosPlatformCapabilities = PlatformCapabilities(
     quickSettingsTile = false,
     backgroundWorkSettings = false,
     updateChannel = false,
-    calendarExport = false,
+    calendarExport = true,
     recordbook = false,
     marks = false,
     reviews = false,

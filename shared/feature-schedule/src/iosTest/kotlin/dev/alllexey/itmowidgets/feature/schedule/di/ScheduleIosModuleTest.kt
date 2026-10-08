@@ -27,6 +27,9 @@ import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
+import dev.alllexey.itmowidgets.core.work.AppRefreshScheduler
+import dev.alllexey.itmowidgets.core.work.RefreshStepLog
+import dev.alllexey.itmowidgets.feature.schedule.di.calendar.calendarIosModule
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
@@ -45,12 +48,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import okio.FileSystem
 import okio.Path
@@ -64,10 +67,11 @@ import platform.UIKit.UIViewController
 
 /**
  * The schedule routes' graph as the iOS app starts it (`IosKoinModules`): the core module, [scheduleModule],
- * [scheduleDataModule] and [scheduleIosModule] on the demo session, with the account types, the settings data
- * (`settingsDataModule` on iOS), the change notifier and scheduler (`scheduleChangesIosModule` over the system's
- * centres), the pending sport rows (`sportModule`), the session's tokens and the simulator test binary's device
- * stood in.
+ * [scheduleDataModule], [scheduleIosModule] and `calendarIosModule` on the demo session, with the account types, the
+ * settings data (`settingsDataModule` on iOS), the change notifier and scheduler (`scheduleChangesIosModule` over the
+ * system's centres), the pending sport rows (`sportModule`), the app refresh task and its step log (the background
+ * module), the session's tokens and the simulator test binary's device stood in. The test binary has no calendar
+ * access, as before the system prompt.
  */
 class ScheduleIosModuleTest {
 
@@ -105,8 +109,15 @@ class ScheduleIosModuleTest {
         val koin = graph { BUILDINGS }
 
         assertEquals(emptyMap(), koin.get<TeacherLevelsRepository>().levels(setOf(USER)))
+        assertEquals(emptyList(), requests)
+        koin.close()
+    }
+
+    @Test
+    fun withoutCalendarAccessTheSyncNeitherTurnsOnNorAsksMyItmo() = runTest {
+        val koin = graph { BUILDINGS }
+
         assertFalse(koin.get<PhoneCalendars>().hasAccess())
-        assertNull(koin.get<PhoneCalendars>().findOwn())
         koin.get<CalendarSync>().requestSync()
         assertEquals(emptyList(), requests)
         koin.close()
@@ -146,6 +157,7 @@ class ScheduleIosModuleTest {
             scheduleModule,
             scheduleDataModule,
             scheduleIosModule(buildings),
+            calendarIosModule,
             platformTypes(),
             testDevice(),
         )
@@ -170,6 +182,8 @@ class ScheduleIosModuleTest {
         single<ScheduleChangesScheduler> { IdleScheduler }
         // `sportModule` in the app (IO-09c), a feature this module cannot read.
         single<PendingSportBookingsRepository> { NoPendingSport }
+        single { AppRefreshScheduler({ _, _ -> }, get(), get()) }
+        single<RefreshStepLog> { NoStepLog }
     }
 
     /** A counting engine, directories and the App Group under the test's temporary directory, no main queue. */
@@ -215,6 +229,18 @@ class ScheduleIosModuleTest {
         override fun runOnce() = Unit
 
         override fun cancel() = Unit
+    }
+
+    private object NoStepLog : RefreshStepLog {
+        override fun dueAt(key: String): Instant? = null
+
+        override fun retries(key: String): Int = 0
+
+        override fun record(key: String, dueAt: Instant, retries: Int) = Unit
+
+        override fun forget(key: String) = Unit
+
+        override fun forgetAll() = Unit
     }
 
     private class FakeHost : IosCoreHost {

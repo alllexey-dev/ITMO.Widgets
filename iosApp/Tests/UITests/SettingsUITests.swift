@@ -45,6 +45,29 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(waitForValue(of: relaunched, on: before))
     }
 
+    /// The calendar group (IO-15b): the switch and the `.ics` row; the demo's own schedule is synthetic, so the sheet
+    /// writes a file without a request. The switch is not flipped: it would show the system's calendar prompt.
+    func testTheSchedulePageOffersTheCalendarAndTheIcsFile() {
+        let app = XCUIApplication.itmo(session: .demo)
+        app.launch()
+        openPage(app, "schedule")
+
+        XCTAssertTrue(settingsSwitch(app, "calendar_sync").exists)
+        let export = element(app, "settings.row.ics_export")
+        if !export.isHittable { element(app, "settings.page.schedule").swipeUp() }
+        export.tap()
+
+        let week = element(app, "ics.range.week")
+        XCTAssertTrue(week.waitForExistence(timeout: stepTimeout))
+        attachScreenshot(named: "ics-choose")
+        week.tap()
+        XCTAssertTrue(element(app, "ics.send").waitForExistence(timeout: stepTimeout), "the demo week has lessons")
+        attachScreenshot(named: "ics-ready")
+
+        element(app, "ics.close").tap()
+        XCTAssertTrue(element(app, "settings.page.schedule").waitForExistence(timeout: stepTimeout))
+    }
+
     func testQrWidgetPageListsOnlyWhatIosOffers() {
         let app = XCUIApplication.itmo(session: .demo)
         app.launch()

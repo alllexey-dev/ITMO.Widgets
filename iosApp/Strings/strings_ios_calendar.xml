@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy only the iOS calendar shows (IO-15b, ADR 0028): exported to Localizable.xcstrings, never to Android. -->
+<resources>
+    <!-- NSCalendarsFullAccessUsageDescription (InfoPlist row): the system prompt when the sync is turned on. Full
+         access, since write-only access can neither create the app's calendar nor read its events back. -->
+    <string name="ios_calendar_full_access_usage">Чтобы записывать пары в календарь «ITMO.Widgets» и обновлять их, когда меняется расписание</string>
+    <!-- «Свои даты» of the .ics sheet: the first and the last day of the range. -->
+    <string name="ios_ics_dates_start">Первый день</string>
+    <string name="ios_ics_dates_end">Последний день</string>
+    <!-- Confirms the chosen days. -->
+    <string name="ios_ics_dates_confirm">Выбрать</string>
+</resources>

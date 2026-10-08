@@ -13,14 +13,15 @@ final class BackgroundRunnerTests: XCTestCase {
         XCTAssertEqual(info["UIBackgroundModes"] as? [String], ["fetch"])
     }
 
-    func testTheEntryPointRunsWidgetSnapshotsThenScheduleChanges() async throws {
+    func testTheEntryPointRunsWidgetSnapshotsThenScheduleChangesThenTheCalendarSync() async throws {
         let finished = await BackgroundRefresh.run()
         let report = try XCTUnwrap(finished)
 
-        XCTAssertEqual(report.steps.map(\.key), ["widget-snapshots", "schedule-changes"])
+        XCTAssertEqual(report.steps.map(\.key), ["widget-snapshots", "schedule-changes", "calendar-sync"])
         XCTAssertEqual(report.resultOf(key: "widget-snapshots"), .done)
-        // The hosted tests' session has no ITMO.ID token, so the schedule data graph's check skips.
+        // The hosted tests' session has no ITMO.ID token, so the schedule data graph's checks skip.
         XCTAssertEqual(report.resultOf(key: "schedule-changes"), .skipped)
+        XCTAssertEqual(report.resultOf(key: "calendar-sync"), .skipped)
     }
 
     func testTheDebugTriggerPostsTheFixtureChangeByCatalogKey() async throws {

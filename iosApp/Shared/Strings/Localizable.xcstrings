@@ -61,6 +61,18 @@
         }
       }
     },
+    "ios_calendar_full_access_usage" : {
+      "comment" : "Generated from strings_ios_calendar.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы записывать пары в календарь «ITMO.Widgets» и обновлять их, когда меняется расписание"
+          }
+        }
+      }
+    },
     "ios_control_qr_description" : {
       "comment" : "Generated from strings_ios.xml",
       "extractionState" : "manual",
@@ -81,6 +93,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Поделиться"
+          }
+        }
+      }
+    },
+    "ios_ics_dates_confirm" : {
+      "comment" : "Generated from strings_ios_calendar.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать"
+          }
+        }
+      }
+    },
+    "ios_ics_dates_end" : {
+      "comment" : "Generated from strings_ios_calendar.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Последний день"
+          }
+        }
+      }
+    },
+    "ios_ics_dates_start" : {
+      "comment" : "Generated from strings_ios_calendar.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Первый день"
           }
         }
       }

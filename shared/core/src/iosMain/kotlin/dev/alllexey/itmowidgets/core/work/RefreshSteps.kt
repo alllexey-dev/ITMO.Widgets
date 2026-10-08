@@ -19,20 +19,25 @@ class RefreshStep(
 
 /**
  * The steps of the iOS background runner (`shared/ios`, IO-14) by key, in the order they run: widget snapshots
- * first, then the checks. Each later check adds one line here (marks with the BARS renewal IO-09d3, calendar sync
- * IO-15b) and binds its [RefreshStep] under its key in its feature's iOS module.
+ * first, then the checks. Each later check adds one line here (marks with the BARS renewal IO-09d3, before the
+ * calendar sync) and binds its [RefreshStep] under its key in its feature's iOS module.
  */
 object RefreshStepKeys {
     const val WIDGET_SNAPSHOTS = "widget-snapshots"
     const val SCHEDULE_CHANGES = "schedule-changes"
+    const val CALENDAR_SYNC = "calendar-sync"
 
     val ORDER: List<String> = listOf(
         WIDGET_SNAPSHOTS,
         SCHEDULE_CHANGES,
+        CALENDAR_SYNC,
     )
 
     /** Android's `SCHEDULE_CHANGES_SPEC.period`. */
     val SCHEDULE_CHANGES_PERIOD: Duration = 2.hours
+
+    /** Android's `CALENDAR_SYNC_SPEC.period` (IO-15b). */
+    val CALENDAR_SYNC_PERIOD: Duration = 2.hours
 }
 
 /** When each step of the runner is next due, kept across launches; never a token or user data. */

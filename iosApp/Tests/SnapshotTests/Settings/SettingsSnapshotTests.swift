@@ -18,7 +18,19 @@ final class SettingsSnapshotTests: XCTestCase {
             .schedule,
             SettingsFixtures.pageState(notificationsGranted: false, backgroundWorkRestricted: true)
         )
-        assertPage(state, named: "schedule", height: 640, ax1Height: 1400)
+        assertPage(state, named: "schedule", height: 920, ax1Height: 1400)
+    }
+
+    /// The calendar group (IO-15b) under the schedule rows, with the reason the sync turned itself off.
+    func testScheduleWithTheCalendarDeleted() {
+        let state = SettingsFixtures.page(
+            .schedule,
+            SettingsFixtures.pageState(
+                notificationsGranted: true,
+                calendar: CalendarSyncState(enabled: false, problem: .calendarMissing)
+            )
+        )
+        assertPage(state, named: "schedule-calendar", height: 760, ax1Height: 1150)
     }
 
     func testQrWidget() {
@@ -65,7 +77,8 @@ final class SettingsSnapshotTests: XCTestCase {
 enum SettingsFixtures {
     static func pageState(
         notificationsGranted: Bool,
-        backgroundWorkRestricted: Bool = false
+        backgroundWorkRestricted: Bool = false,
+        calendar: CalendarSyncState = CalendarSyncState(enabled: false, problem: nil)
     ) -> SettingsPageState {
         SettingsPageState(
             local: local,
@@ -74,7 +87,7 @@ enum SettingsFixtures {
             hasCustomSpoiler: false,
             imageBusy: false,
             backgroundWorkRestricted: backgroundWorkRestricted,
-            calendar: CalendarSyncState(enabled: false, problem: nil),
+            calendar: calendar,
             diagnosticsCount: 0
         )
     }
