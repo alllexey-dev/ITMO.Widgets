@@ -69,8 +69,13 @@ Everything here describes the current state of the apps. History is in
   schedule is shown: recent chips, friends and people search, the result.
 - [Sport](features/sport.md) — catalog, bookings, queues, cards and details.
 - [Recordbook](features/recordbook.md) — MyITMO recordbook, BARS overlay,
-  physical-education link, the one-page subject screen, new marks checked on
-  the device, the own total from a public Google Sheet.
+  physical-education link, the list of subjects.
+- [Subject page](features/subject-page.md) — the one-page subject screen: the
+  result card, links, controls, teachers and nearest lessons.
+- [Mark tracking](features/marks-tracking.md) — new marks from My ITMO, BARS and
+  sheets checked on the device, the notification and the dots.
+- [Sheet scores](features/sheet-scores.md) — the own total from a public Google
+  Sheet: connecting, downloading, the subject page and the list.
 - [Subject links](features/resources.md) — link categories and audiences,
   chips, sheets, the local mode without the connection.
 - [Social](features/social.md) — friends, requests, people search, person profiles.

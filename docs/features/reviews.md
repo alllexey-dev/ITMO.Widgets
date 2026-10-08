@@ -180,7 +180,7 @@ it adds `, тон отзывов: …` to its TalkBack description. Where it sta
 - the summary card's tone row;
 - the teacher row of the lesson sheet ([schedule](schedule.md#lesson-details));
 - the teacher rows of the subject page
-  ([recordbook](recordbook.md#subject-page)).
+  ([subject page](subject-page.md)).
 
 ## The profile section
 
