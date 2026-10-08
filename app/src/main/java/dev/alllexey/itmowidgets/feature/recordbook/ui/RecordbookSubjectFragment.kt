@@ -7,22 +7,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.view.ViewCompat
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
-import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
-import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
-import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkActions
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
@@ -30,158 +18,37 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openSheetScores
 import dev.alllexey.itmowidgets.core.ui.navigation.openSubjectLinks
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.openLink
-import dev.alllexey.itmowidgets.databinding.FragmentRecordbookSubjectBinding
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectEvent
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.RecordbookSubjectExits
+import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.RecordbookSubjectRoute
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-/** One page per subject: the result, links, chats, scores, teachers and the nearest lessons. */
+/**
+ * The subject page (`recordbook_subject` in the overlay graph), kept by name for the graph and the notifications. The
+ * screen is `RecordbookSubjectRoute` from `:shared:feature-recordbook`; this host opens links, the link sheets,
+ * `Мои баллы`, teacher profiles and the BARS sign-in, and refreshes the page after a completed sign-in.
+ */
 @AndroidEntryPoint
 class RecordbookSubjectFragment : Fragment() {
-    private var _binding: FragmentRecordbookSubjectBinding? = null
-    private val binding get() = _binding!!
+    /** The route's ViewModel, created with this Fragment's arguments as its saved state. */
     private val viewModel: RecordbookSubjectViewModel by viewModel()
-    private lateinit var adapter: SubjectHubAdapter
     private val barsLogin = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == Activity.RESULT_OK) viewModel.refresh(RefreshMode.Force)
     }
-    private var lastRefreshError: AppError? = null
-    private var lastBarsError: AppError? = null
-    private var errorSnackbar: Snackbar? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentRecordbookSubjectBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.toolbar.setNavigationOnClickListener { closeScreen() }
-        ViewCompat.setAccessibilityHeading(binding.title, true)
-        binding.stateAction.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
-        adapter = SubjectHubAdapter({ viewModel.refresh(RefreshMode.Force) }, SubjectHubActions(
-            onConfirmBinding = viewModel::confirmBinding,
-            onRejectProposal = viewModel::rejectProposal,
-            onRetryLessons = viewModel::retryLessons,
-            onShowAllLessons = viewModel::showAllLessons,
-            onOpenLink = { openLink(it, binding.root) },
-            onLinkActions = { link -> linksArgs()?.let { openLinkActions(it, link.id) } },
-            onVoteLink = { link, up -> viewModel.voteLink(link.id, up) },
-            onAllLinks = { linksArgs()?.let(::openSubjectLinks) },
-            onAddLink = { linksArgs()?.let { openLinkEditor(it) } },
-            onOpenTeacher = ::openUserProfile,
-            onOpenSheet = { openLink(it, binding.root) },
-            onChangeSheetTotal = ::changeSheetTotal,
-            onDisconnectSheet = viewModel::disconnectSheet,
-            onConnectSheet = ::connectSheet
-        ))
-        binding.recyclerView.adapter = adapter
-        binding.recyclerView.itemAnimator = null
-        binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh(RefreshMode.Pull) })
-        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
-            when (event) {
-                is RecordbookSubjectEvent.VoteFailed ->
-                    Snackbar.make(binding.root, event.error.messageRes(), Snackbar.LENGTH_SHORT).show()
-            }
-        }.launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    override fun onDestroyView() {
-        binding.recyclerView.adapter = null
-        errorSnackbar?.dismiss()
-        errorSnackbar = null
-        lastRefreshError = null
-        lastBarsError = null
-        _binding = null
-        super.onDestroyView()
-    }
-
-    private fun linksArgs(): SubjectLinksArgs? =
-        (viewModel.uiState.value as? RecordbookSubjectUiState.Content)?.hub?.resourceScope
-            ?.let { SubjectLinksArgs(it.subjectId, it.subjectName, it.periodKey) }
-
-    private fun changeSheetTotal() {
-        val content = viewModel.uiState.value as? RecordbookSubjectUiState.Content ?: return
-        val score = (content.hub.sheet as? SubjectSheetState.Connected)?.score ?: return
-        openSheetScores(sheetArgs(score.url, SheetScoresArgs.Step.TOTAL) ?: return)
-    }
-
-    /** One sheet link starts at once; several ask which one first, own links on top. */
-    private fun connectSheet(links: List<SheetLinkOption>) {
-        val single = links.singleOrNull()
-        if (single != null) {
-            sheetArgs(single.url, SheetScoresArgs.Step.CONNECT)?.let(::openSheetScores)
-            return
-        }
-        val names = links.map { link ->
-            val title = link.title?.takeIf(String::isNotBlank) ?: getString(R.string.sheet_scores_link_untitled)
-            if (link.mine) getString(R.string.sheet_scores_link_mine, title) else title
-        }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.sheet_scores_choose_link)
-            .setItems(names.toTypedArray()) { _, index ->
-                sheetArgs(links[index].url, SheetScoresArgs.Step.CONNECT)?.let(::openSheetScores)
-            }
-            .show()
-    }
-
-    private fun sheetArgs(url: String, step: SheetScoresArgs.Step): SheetScoresArgs? =
-        (viewModel.uiState.value as? RecordbookSubjectUiState.Content)?.hub?.resourceScope
-            ?.let { SheetScoresArgs(it.subjectId, it.subjectName, it.periodKey, url, step) }
-
-    private fun render(state: RecordbookSubjectUiState) {
-        if (state !is RecordbookSubjectUiState.Content) binding.loading.isVisible = state is RecordbookSubjectUiState.Loading
-        val refreshError = (state as? RecordbookSubjectUiState.Content)?.refreshError
-        val barsError = (state as? RecordbookSubjectUiState.Content)?.barsError
-        if (refreshError != lastRefreshError || barsError != lastBarsError) {
-            errorSnackbar?.dismiss()
-            errorSnackbar = refreshError?.let {
-                Snackbar.make(binding.root, getString(R.string.recordbook_refresh_error, getString(it.messageRes())), Snackbar.LENGTH_LONG)
-                    .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }.also(Snackbar::show)
-            } ?: barsError?.let { error ->
-                recordbookBarsSnackbar(binding.root, error, { viewModel.refresh(RefreshMode.Force) }) {
-                    barsLogin.launch(Intent(requireContext(), BarsLoginActivity::class.java))
-                }
-            }
-            lastRefreshError = refreshError
-            lastBarsError = barsError
-        }
+        val exits = RecordbookSubjectExits(
+            onBack = { closeScreen() },
+            onOpenLink = { url -> openLink(url, requireView()) },
+            onLinkActions = { args, linkId -> openLinkActions(args, linkId) },
+            onAllLinks = { openSubjectLinks(it) },
+            onAddLink = { openLinkEditor(it) },
+            onOpenTeacher = { openUserProfile(it) },
+            onOpenSheetScores = { openSheetScores(it) },
+            onBarsLogin = { barsLogin.launch(Intent(requireContext(), BarsLoginActivity::class.java)) },
+        )
         val semester = requireArguments().getInt(RecordbookSubjectArgs.SEMESTER)
-        when (state) {
-            RecordbookSubjectUiState.Loading -> {
-                binding.title.text = null
-                binding.subtitle.text = getString(R.string.subject_semester, semester)
-                binding.swipeRefreshLayout.isVisible = false
-                binding.stateContainer.isVisible = false
-            }
-            is RecordbookSubjectUiState.Content -> {
-                binding.title.text = state.subject.name
-                binding.subtitle.text = state.subject.controlType.takeIf(String::isNotBlank)
-                    ?.let { getString(R.string.subject_subtitle, it, semester) } ?: getString(R.string.subject_semester, semester)
-                binding.swipeRefreshLayout.isRefreshing = state.refreshing
-                val currentBinding = binding
-                adapter.submitContent(state) {
-                    if (_binding !== currentBinding) return@submitContent
-                    currentBinding.loading.isVisible = false
-                    currentBinding.stateContainer.isVisible = false
-                    currentBinding.swipeRefreshLayout.isVisible = true
-                }
-            }
-            is RecordbookSubjectUiState.Error -> {
-                binding.swipeRefreshLayout.isVisible = false
-                binding.stateContainer.isVisible = true
-                binding.stateIcon.setImageResource(R.drawable.ic_error)
-                binding.stateTitle.setText(R.string.common_load_error_title)
-                binding.stateDescription.setText(state.error.messageRes())
-                binding.stateAction.isVisible = true
-            }
-        }
+        return itmoComposeView { RecordbookSubjectRoute(semester, exits, viewModel) }
     }
 }

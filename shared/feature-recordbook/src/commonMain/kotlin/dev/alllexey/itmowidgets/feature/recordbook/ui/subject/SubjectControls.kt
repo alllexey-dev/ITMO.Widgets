@@ -62,7 +62,7 @@ import kotlin.time.Instant
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 
 /**
- * The heading of a control group (`item_recordbook_control_group.xml`): its title, the sum `30 / 48` and, while a
+ * The heading of a control group (2.2's `item_recordbook_control_group.xml`): its title, the sum `30 / 48` and, while a
  * control of it is under its minimum, the «ниже минимума» badge. The group's controls follow as their own group.
  */
 @Composable
@@ -79,7 +79,7 @@ fun SubjectControlGroupHeading(group: ControlGroup, modifier: Modifier = Modifie
 }
 
 /**
- * A control as a row of a connected group (`item_recordbook_control.xml`): the name wraps, the score sits on its
+ * A control as a row of a connected group (2.2's `item_recordbook_control.xml`): the name wraps, the score sits on its
  * first line, a thin bar of the share under them, then a broken minimum or a no-show in the error colour and the date
  * with a teacher other than the subject's. A first row right below a control group keeps a gap to it.
  */
@@ -116,7 +116,7 @@ fun SubjectControlRow(item: SubjectHubItem.Control, modifier: Modifier = Modifie
             .heightIn(min = ControlMinHeight)
             .padding(ItmoTheme.spacing.cardPadding),
     ) {
-        // The score stands on the name's first baseline, as the View's baseline-aligned row put it.
+        // The score stands on the name's first baseline, as 2.2's baseline-aligned View row put it.
         Row {
             Text(
                 if (control.additional) stringResource(Res.string.recordbook_additional_points) else control.name,
@@ -155,7 +155,7 @@ fun SubjectControlRow(item: SubjectHubItem.Control, modifier: Modifier = Modifie
 }
 
 /**
- * The card in place of the controls (`item_recordbook_note.xml`): «Баллы» with MyITMO's missing details, or the
+ * The card in place of the controls (2.2's `item_recordbook_note.xml`): «Баллы» with MyITMO's missing details, or the
  * failure to load them as [error] with a retry.
  */
 @Composable

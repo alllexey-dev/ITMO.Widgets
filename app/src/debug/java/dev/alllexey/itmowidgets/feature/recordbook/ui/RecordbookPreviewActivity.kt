@@ -23,7 +23,6 @@ import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
-import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
@@ -216,7 +215,7 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
                 endDate: kotlinx.datetime.LocalDate
             ): AppResult<Unit> = AppResult.Success(Unit)
         }
-        @Volatile var resourceRepository: SubjectLinksRepository = MemorySubjectLinksRepository()
+        @Volatile var resourceRepository: SubjectLinksRepository = RecordbookPreviewLinks()
         /** The host's clock; spring 2025/2026 by default. */
         @Volatile var today: LocalDate = LocalDate.of(2026, 6, 1)
         /** Link sheets the page asked for: `links`, `editor`, `actions:<id>` or `sheet:<step>`. */

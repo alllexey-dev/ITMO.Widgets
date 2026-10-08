@@ -61,9 +61,9 @@ import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
- * A link of the short list under «Ссылки» (`SubjectHubAdapter.LinkHolder.bindLink`): the category's icon, the title
- * or the category's name, the site under it, then «моя» for an own link or the vote pill of another student's, with
- * arrows only while [SubjectHubItem.Link.canVote]. A tap opens the link, a long press its actions.
+ * A link of the short list under «Ссылки» (2.2's `SubjectHubAdapter.LinkHolder.bindLink`): the category's icon, the
+ * title or the category's name, the site under it, then «моя» for an own link or the vote pill of another student's,
+ * with arrows only while [SubjectHubItem.Link.canVote]. A tap opens the link, a long press its actions.
  */
 @Composable
 fun SubjectLinkItem(
@@ -101,8 +101,8 @@ fun SubjectLmsItem(item: SubjectHubItem.Lms, onOpen: (String) -> Unit) {
 }
 
 /**
- * A chat of the subject (`LinkHolder.bindChat`): the messenger's icon, the title or the site, and who sees it; an own
- * chat carries «моя». A tap opens the chat, a long press its actions.
+ * A chat of the subject (2.2's `LinkHolder.bindChat`): the messenger's icon, the title or the site, and who sees it; an
+ * own chat carries «моя». A tap opens the chat, a long press its actions.
  */
 @Composable
 fun SubjectChatItem(item: SubjectHubItem.Chat, onOpen: (String) -> Unit, onActions: (SubjectLink) -> Unit) {
@@ -144,7 +144,7 @@ fun SubjectAddLinkRow(item: SubjectHubItem.AddLink, onClick: () -> Unit) {
 }
 
 /**
- * The row that ends a group and leads further (`item_group_action_row.xml` as `SubjectHubAdapter.ActionHolder`
+ * The row that ends a group and leads further (2.2's `item_group_action_row.xml` as `SubjectHubAdapter.ActionHolder`
  * binds it): an optional decorative [icon] or its empty place ([keepIconSpace]), the text and an optional [trailing]
  * symbol. The kit's `GroupActionRow` always draws an icon and a chevron, which the subject page's three rows do not.
  */
@@ -214,10 +214,10 @@ private fun LinkVotes(link: SubjectLink, onVote: ((Boolean) -> Unit)?) {
 
 private const val WWW = "www."
 
-/** `item_group_action_row.xml`'s `minHeight`, a connected group's 56 dp row. */
+/** The `minHeight` of 2.2's `item_group_action_row.xml`, a connected group's 56 dp row. */
 private val ActionRowMinHeight = 56.dp
 
-/** The 24 dp icons of `item_group_action_row.xml`. */
+/** The 24 dp icons of 2.2's `item_group_action_row.xml`. */
 private val ActionIconSize = 24.dp
 
 private val previewScope = ResourceScope(RecordbookPreviewSamples.MATH_ID, RecordbookPreviewSamples.MATH, "2025-2")

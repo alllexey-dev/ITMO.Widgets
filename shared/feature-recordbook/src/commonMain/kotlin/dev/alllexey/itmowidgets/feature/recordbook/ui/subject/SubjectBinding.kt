@@ -30,8 +30,8 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_lessons_title
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The schedule found one subject that looks like this one (`item_subject_binding.xml` as `BindingHolder.bindProposal`
- * binds it): the question with the schedule's name, «Нет» and «Связать» at the end.
+ * The schedule found one subject that looks like this one (2.2's `item_subject_binding.xml` as
+ * `BindingHolder.bindProposal` binds it): the question with the schedule's name, «Нет» and «Связать» at the end.
  */
 @Composable
 fun SubjectBindingProposal(candidate: ScheduleSubject, onConfirm: (Long) -> Unit, onReject: () -> Unit) {

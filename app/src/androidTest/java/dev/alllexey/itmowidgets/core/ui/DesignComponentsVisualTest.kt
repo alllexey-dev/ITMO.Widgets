@@ -35,29 +35,6 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class DesignComponentsVisualTest {
     @Test
-    fun optInRefreshUsesAppForegroundAndBackgroundAcrossAppearances() {
-        Appearances.default.forEach { spec -> preview(spec) { scenario ->
-            scenario.onActivity { activity ->
-                // One layout per line, so each port deletes only its own.
-                for (layout in listOf(
-                    R.layout.fragment_recordbook_subject,
-                )) {
-                    val root = activity.layoutInflater.inflate(layout, FrameLayout(activity), false)
-                    val refresh = root.descendants().filterIsInstance<SwipeRefreshLayout>().single()
-                    refresh.applyAppRefreshColors()
-                    val indicator = refresh.indicator()
-                    assertArrayEquals(intArrayOf(activity.color.primary), (indicator.drawable as CircularProgressDrawable).colorSchemeColors)
-                    assertEquals(activity.color.background, centerPixel(indicator.background))
-                    // Applying the shared configuration again must not accumulate variants.
-                    refresh.applyAppRefreshColors()
-                    assertArrayEquals(intArrayOf(activity.color.primary), (indicator.drawable as CircularProgressDrawable).colorSchemeColors)
-                    assertEquals(activity.color.background, centerPixel(indicator.background))
-                }
-            }
-        } }
-    }
-
-    @Test
     fun inflatedLightItmoIdRefreshKeepsLibraryDefaults() = preview(Appearances.light) { scenario ->
         scenario.onActivity { activity ->
             val root = activity.layoutInflater.inflate(R.layout.activity_login, FrameLayout(activity), false)
@@ -82,26 +59,19 @@ class DesignComponentsVisualTest {
     fun errorAndEmptyStatesFitFullScreenAndInlineLayouts() {
         Appearances.default.forEachIndexed { index, spec -> preview(spec) { scenario ->
             val cases = listOf(
-                StateLayout("subject", R.layout.fragment_recordbook_subject),
                 StateLayout("sport-inline", R.layout.item_content_state, inline = true)
             )
             for (case in cases) for (error in listOf(false, true)) {
                 lateinit var state: View
                 scenario.onActivity { activity ->
                     val root = activity.layoutInflater.inflate(case.layout, FrameLayout(activity), false)
-                    state = if (case.inline) root else root.findViewById(case.container)
+                    state = root
                     state.visibility = View.VISIBLE
                     state.findViewById<TextView>(case.title).setText(
-                        if (error) R.string.common_load_error_title else when (case.name) {
-                            "sport-inline" -> R.string.sport_lessons_empty_title
-                            else -> R.string.recordbook_empty_title
-                        }
+                        if (error) R.string.common_load_error_title else R.string.sport_lessons_empty_title
                     )
                     state.findViewById<TextView>(case.description).setText(
-                        if (error) R.string.common_error_network else when (case.name) {
-                            "sport-inline" -> R.string.sport_lessons_empty_description
-                            else -> R.string.recordbook_empty_description
-                        }
+                        if (error) R.string.common_error_network else R.string.sport_lessons_empty_description
                     )
                     state.findViewById<MaterialButton>(case.action).apply {
                         setText(R.string.common_retry)
@@ -193,7 +163,7 @@ class DesignComponentsVisualTest {
 
     private fun screenshot(name: String) = Screenshots.capture("design-components-screenshots", name)
 
-    private data class StateLayout(val name: String, val layout: Int, val container: Int = R.id.state_container,
+    private data class StateLayout(val name: String, val layout: Int,
         val title: Int = R.id.state_title, val description: Int = R.id.state_description,
         val action: Int = R.id.state_action, val inline: Boolean = false)
 }

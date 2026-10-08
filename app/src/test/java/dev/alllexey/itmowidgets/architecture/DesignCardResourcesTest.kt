@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.architecture
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.w3c.dom.Element
 import java.io.File
@@ -53,23 +52,6 @@ class DesignCardResourcesTest {
     }
 
     @Test
-    fun `approved cards consume shared variants without local appearance overrides`() {
-        val layouts = mapOf(
-            "item_recordbook_note" to "Content",
-            "item_subject_hero" to "Hero",
-            "item_recordbook_sport" to "Summary"
-        )
-
-        layouts.forEach { (layout, variant) ->
-            val card = elements("layout/$layout.xml", MATERIAL_CARD).first()
-            assertEquals(layout, "@style/${cardStyle(variant)}", card.getAttribute("style"))
-            appearanceAttributes.forEach { attribute ->
-                assertFalse("$layout overrides $attribute", card.hasAttribute("app:$attribute"))
-            }
-        }
-    }
-
-    @Test
     fun `shared card dimensions keep their values`() {
         // The compact sport rows (4 dp half gap) are Compose since L11 LP-6 (`SportCardSurface` of
         // :shared:feature-sport) and the schedule days since L10 LS-6b (`ScheduleDayCard` of :shared:feature-schedule).
@@ -84,7 +66,7 @@ class DesignCardResourcesTest {
         assertEquals("4dp", dimensions.getValue("design_group_radius_inner"))
         assertEquals("2dp", dimensions.getValue("design_group_gap"))
         // Rows of a group are drawn by core/ui/ConnectedGroup.kt, never by a card of their own.
-        listOf("item_recordbook_control", "item_subject_link", "item_group_action_row", "item_subject_teacher", "item_subject_lesson")
+        listOf("item_subject_link")
             .forEach { layout -> assertEquals(layout, emptyList<Element>(), elements("layout/$layout.xml", MATERIAL_CARD)) }
     }
 
@@ -133,8 +115,5 @@ class DesignCardResourcesTest {
 
     private companion object {
         const val MATERIAL_CARD = "com.google.android.material.card.MaterialCardView"
-        val appearanceAttributes = listOf(
-            "cardBackgroundColor", "cardCornerRadius", "cardElevation", "strokeWidth", "strokeColor"
-        )
     }
 }

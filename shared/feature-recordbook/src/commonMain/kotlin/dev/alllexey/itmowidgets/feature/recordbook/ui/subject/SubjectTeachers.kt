@@ -44,11 +44,11 @@ import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
- * A teacher of the subject (`item_subject_teacher.xml` as `TeacherHolder` binds it): the avatar with initials, the
- * name and the lesson types they run, the review tone's dot and, with an ISU that a profile accepts
- * ([UserScreenArgs.profileIsu]), a chevron; only then the row opens the profile through [onOpenProfile]. A teacher
- * with such an ISU keeps the dot's place, so a tone arriving later does not move the chevron. TalkBack reads the name
- * with the tone.
+ * A teacher of the subject (2.2's `item_subject_teacher.xml` as `TeacherHolder` binds it): the avatar with initials,
+ * the name and the lesson types they run, the review tone's dot and, with an ISU that a profile accepts
+ * ([UserScreenArgs.profileIsu]), a chevron; only then the row opens the profile through [onOpenProfile]. A teacher with
+ * such an ISU keeps the dot's place, so a tone arriving later does not move the chevron. TalkBack reads the name with
+ * the tone.
  */
 @Composable
 fun SubjectTeacherRow(item: SubjectHubItem.Teacher, onOpenProfile: (Int) -> Unit) {
@@ -118,7 +118,7 @@ private fun TeacherLevelTone.color(): Color {
 
 private const val LIST_SEPARATOR = ", "
 
-/** `item_subject_teacher.xml`: a connected group's 56 dp row with a 40 dp avatar. */
+/** 2.2's `item_subject_teacher.xml`: a connected group's 56 dp row with a 40 dp avatar. */
 private val TeacherMinHeight = 56.dp
 private val AvatarSize = 40.dp
 private val ChevronSize = 24.dp

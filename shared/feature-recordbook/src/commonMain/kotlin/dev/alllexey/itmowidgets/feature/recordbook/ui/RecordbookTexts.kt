@@ -21,8 +21,7 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 
 /*
- * The recordbook list's texts in common code (LR-3). The hub keeps the View versions in `RecordbookPresentation.kt`
- * until its own port; both read the pure helpers here.
+ * The recordbook's texts in common code: the list (LR-3) and the subject page (LR-4b) read the helpers here.
  */
 
 /** The official result in words: `Неявка`, `Зачёт`, `Без оценки` or the grade code as MyITMO wrote it. */

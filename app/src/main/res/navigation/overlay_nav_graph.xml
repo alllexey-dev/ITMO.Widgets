@@ -33,8 +33,7 @@
     <fragment
         android:id="@+id/recordbook_subject"
         android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookSubjectFragment"
-        android:label="Record book subject"
-        tools:layout="@layout/fragment_recordbook_subject" />
+        android:label="Record book subject" />
 
     <fragment
         android:id="@+id/friends"

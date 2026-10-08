@@ -95,9 +95,9 @@ Feature doc: [Recordbook](recordbook.md).
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
 | `feature/recordbook/ui/RecordbookFragment.kt` hosting `RecordbookRoute` (`:shared:feature-recordbook`) | Fragment | `RecordbookViewModel` (Koin) | `navigation_recordbook`, `AppRoot.RECORDBOOK` | `feature/recordbook/ui/RecordbookPreviewActivity.kt` | `RecordbookScreenshotTest` (`:shared:feature-recordbook`) |
-| `feature/recordbook/ui/RecordbookSubjectFragment.kt` | Fragment | `RecordbookSubjectViewModel` | `recordbook_subject`, `AppScreen.RECORDBOOK_SUBJECT` | `feature/recordbook/ui/RecordbookPreviewActivity.kt` | `feature/recordbook/RecordbookVisualTest.kt`, `core/ui/DesignComponentsVisualTest.kt` (layout) |
+| `feature/recordbook/ui/RecordbookSubjectFragment.kt` hosting `RecordbookSubjectRoute` (`:shared:feature-recordbook`) | Fragment | `RecordbookSubjectViewModel` (Koin) | `recordbook_subject`, `AppScreen.RECORDBOOK_SUBJECT` | `feature/recordbook/ui/RecordbookPreviewActivity.kt` | `RecordbookScreenshotTest`, `RecordbookSubjectScreenTest`, `SubjectHubSectionsTest` (`:shared:feature-recordbook`) |
 | `feature/recordbook/ui/RecordbookPeriodBottomSheet.kt` hosting `RecordbookPeriodSheetContent` (`:shared:feature-recordbook`) | bottom sheet | — | `RecordbookPeriodBottomSheet.show` from `RecordbookFragment` | — | `RecordbookScreenshotTest` (`:shared:feature-recordbook`) |
-| `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt` | bottom sheet | `SheetScoresViewModel` | `AppNavigator.openSheetScores` | `feature/recordbook/ui/RecordbookPreviewActivity.kt` | `feature/recordbook/RecordbookVisualTest.kt` (JVM `SheetScoresSheetTest` and the `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`) |
+| `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt` | bottom sheet | `SheetScoresViewModel` | `AppNavigator.openSheetScores` | `feature/recordbook/ui/RecordbookPreviewActivity.kt` | - (JVM `SheetScoresSheetTest` and the `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`) |
 | `feature/recordbook/ui/BarsLoginActivity.kt` | Activity | `BarsLoginViewModel` | started by `RecordbookFragment`, `RecordbookSubjectFragment` and `MainActivity` for `AppEntryIntents.ACTION_OPEN_BARS_LOGIN` | — | — |
 
 ## Schedule

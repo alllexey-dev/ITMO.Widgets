@@ -56,10 +56,10 @@ import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
- * Physical education's result card in place of the hero (`item_recordbook_sport.xml`): My Sport's period and score as
- * a ring of attendance and bonus points with both numbers beside it, the bonus cap when it cut points, and MyITMO's
- * official result under a hairline. Without a matching sport period, or when the score failed ([onRetry]), the ring
- * gives way to the reason.
+ * Physical education's result card in place of the hero (2.2's `item_recordbook_sport.xml`): My Sport's period and
+ * score as a ring of attendance and bonus points with both numbers beside it, the bonus cap when it cut points, and
+ * MyITMO's official result under a hairline. Without a matching sport period, or when the score failed ([onRetry]), the
+ * ring gives way to the reason.
  */
 @Composable
 fun SubjectSportOverview(

@@ -1,31 +1,18 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
-import android.view.View
-import androidx.fragment.app.Fragment
-import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
-import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
-import dev.alllexey.itmowidgets.core.navigation.toBundle
-import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
-import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
-import org.koin.androidx.viewmodel.ext.android.getViewModel
-import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity.MemorySheetScores
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalTime as KotlinLocalTime
-import kotlinx.datetime.plus
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
+import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
+import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
@@ -36,15 +23,15 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookContro
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
-import kotlin.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalTime
 
@@ -65,15 +52,13 @@ object RecordbookPreviewFixtures {
     const val LMS_URL = "https://lms.itmo.ru/course/1"
     /** A synthetic Google Sheet address: no real sheet has this id. */
     const val SHEET_URL = "https://docs.google.com/spreadsheets/d/1SyntheticPreviewSheet0123456789/edit#gid=22"
-    /** The math subject in the spring of 2025/2026, the period of the preview. */
-    val MATH_SCOPE = ResourceScope(MATH_ID, MATH, "2025-2")
     private val SPORT_END: OffsetDateTime = OffsetDateTime.parse("2026-06-20T23:59:00+03:00")
     private val UPDATED: OffsetDateTime = OffsetDateTime.parse("2026-05-20T09:00:00+03:00")
     private val LECTURE_FLOW = LinkAudience(7101, "МАТ АН ПИИКТ 3", typeId = 1, depth = 1)
     private val PRACTICE_FLOW = LinkAudience(7102, "МАТ АН ПИИКТ 3.2", typeId = 3, depth = 2)
 
     /** Installs every repository of the host for [phase]; returns the links fixture for further edits. */
-    fun install(phase: Phase): MemorySubjectLinksRepository {
+    fun install(phase: Phase): RecordbookPreviewLinks {
         RecordbookPreviewActivity.today = phase.today
         RecordbookPreviewActivity.repository = Recordbook(phase)
         RecordbookPreviewActivity.sportRepository = Sport(if (phase == Phase.START) SportScoreSummary(12, 0) else SportScoreSummary(48, 16))
@@ -89,138 +74,12 @@ object RecordbookPreviewFixtures {
         RecordbookPreviewActivity.bindingStore = RecordbookPreviewActivity.MemoryBindings()
         RecordbookPreviewActivity.sportRepository = null
         RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons()
-        RecordbookPreviewActivity.resourceRepository = MemorySubjectLinksRepository()
+        RecordbookPreviewActivity.resourceRepository = RecordbookPreviewLinks()
         RecordbookPreviewActivity.linkNavigation.clear()
         RecordbookPreviewActivity.levelsRepository = RecordbookPreviewActivity.MemoryLevels()
         RecordbookPreviewActivity.MemoryMarkTracking.reset()
         RecordbookPreviewActivity.MemorySheetScores.reset()
         RecordbookPreviewActivity.sheetRequests.clear()
-    }
-
-    /**
-     * The states of the XML reference captures (LR-1c, recipe roborazzi-screenshot-test). [install] fills the host
-     * before each launch, [show] steps the launched host towards the screen and answers whether it is there, [view] is
-     * what the capture takes. The reference tests name a scene and nothing else, so prep cards that reshape the domain
-     * or the view models change this file, never those tests.
-     */
-    enum class Scene {
-        SUBJECT_SESSION,
-        SUBJECT_CREDIT,
-        SUBJECT_SPORT,
-        /** A BARS subject with its control tree. */
-        SUBJECT_BARS,
-        /** The math subject with its connected sheet total. */
-        SUBJECT_SHEET,
-        /** A subject whose lessons are only matched by name: the binding proposal at the end of the page. */
-        SUBJECT_BINDING;
-
-        fun install() {
-            reset()
-            RecordbookPreviewFixtures.install(if (this == SUBJECT_SESSION) Phase.SESSION else Phase.MIDDLE)
-            when (this) {
-                SUBJECT_BARS -> barsOn()
-                SUBJECT_SHEET -> MemorySheetScores.scores.value = listOf(sheetScore())
-                SUBJECT_BINDING -> RecordbookPreviewActivity.lessonsGateway =
-                    RecordbookPreviewActivity.MemoryLessons(lessons(Phase.MIDDLE.today) + algorithmsLesson())
-                SUBJECT_SESSION, SUBJECT_CREDIT, SUBJECT_SPORT -> Unit
-            }
-        }
-
-        fun show(activity: RecordbookPreviewActivity): Boolean {
-            val list = activity.supportFragmentManager.findFragmentByTag(RecordbookPreviewActivity.ROOT_TAG) ?: return false
-            // The subject page replaces the list, whose view is then gone.
-            val opened = activity.supportFragmentManager.findFragmentByTag(SUBJECT_TAG) != null
-            if (!opened && !list.listSettled()) return false
-            return when (this) {
-                SUBJECT_SESSION -> activity.subject(ALGORITHMS_ID)
-                SUBJECT_CREDIT -> activity.subject(LANGUAGE_ID)
-                SUBJECT_SPORT -> activity.subject(PE_ID)
-                SUBJECT_BARS -> activity.subject(DESIGN_ID, DESIGN_JOURNAL)
-                SUBJECT_SHEET -> activity.subject(MATH_ID)
-                SUBJECT_BINDING -> activity.subject(ALGORITHMS_ID) && activity.scrolledToBinding()
-            }
-        }
-
-        /** The window content. */
-        fun view(activity: RecordbookPreviewActivity): View = activity.findViewById(android.R.id.content)
-    }
-
-    /** The tag the host replaces the list with on [RecordbookPreviewActivity.openScreen]. */
-    private const val SUBJECT_TAG = "detail"
-    private const val ALGORITHMS_ID = 2L
-    private const val PE_ID = 3L
-    private const val DESIGN_ID = 4L
-    private const val LANGUAGE_ID = 5L
-    private const val DESIGN = "Проектирование и разработка распределённых информационных систем"
-    private val MATH_JOURNAL = BarsJournalReference(7, "flow", "6", 2025, 2)
-    private val DESIGN_JOURNAL = BarsJournalReference(8, "flow", "7", 2025, 2)
-
-    private fun barsOn() {
-        RecordbookPreviewActivity.bars = Bars
-        RecordbookPreviewActivity.barsEnabled = true
-    }
-
-    /** BARS journals of the math and design subjects; design carries a two-module control tree. */
-    private object Bars : BarsRecordbookRepository {
-        private val math = RecordbookSubject(MATH, 901, 7, "Экзамен", 74.0, null, 1, null, true, null, MATH_JOURNAL)
-        private val design = RecordbookSubject(DESIGN, 902, 8, "Экзамен", 63.5, null, 1, null, true, null, DESIGN_JOURNAL)
-        private val designControls = listOf(
-            RecordbookControl(101, "Модуль 1. Архитектура распределённых систем", 28.0, 15.0, 30.0, true, null, null),
-            RecordbookControl(102, "Практическая работа 1", 9.0, 5.0, 10.0, true, null, null, parentId = 101),
-            RecordbookControl(103, "Практическая работа 2", 10.0, 5.0, 10.0, true, null, null, parentId = 101),
-            RecordbookControl(104, "Тест по модулю", 9.0, 5.0, 10.0, true, null, null, parentId = 101),
-            RecordbookControl(105, "Модуль 2. Масштабирование и отказоустойчивость", 33.5, 20.0, 40.0, true, null, null),
-            RecordbookControl(106, "Лабораторная работа 1", 18.0, 10.0, 20.0, true, null, null, parentId = 105),
-            RecordbookControl(107, "Лабораторная работа 2", 15.5, 10.0, 20.0, true, null, null, parentId = 105),
-            RecordbookControl(108, "Экзамен", null, 12.0, 30.0, true, null, null),
-            RecordbookControl(-8, "", 2.0, null, null, false, null, null, additional = true),
-        )
-
-        override suspend fun getSubjects(period: RecordbookPeriod) = AppResult.Success(listOf(math, design))
-
-        override suspend fun getSubject(journal: BarsJournalReference) =
-            if (journal == DESIGN_JOURNAL) AppResult.Success(BarsSubjectDetails(design, designControls))
-            else AppResult.Success(BarsSubjectDetails(math, mathControls))
-
-        override fun cachedControls(journal: BarsJournalReference) =
-            if (journal == DESIGN_JOURNAL) designControls else mathControls
-    }
-
-    /** An algorithms lesson under another schedule id, so the page proposes the name match. */
-    private fun algorithmsLesson() = SubjectLesson(pairId = 200, date = Phase.MIDDLE.today.toKotlinLocalDate().plus(2, DateTimeUnit.DAY),
-        start = KotlinLocalTime(9, 30), end = KotlinLocalTime(11, 0), typeId = 2, type = "", subjectId = 555,
-        subjectName = DemoStudy.ALGORITHMS.name, flowId = 5550L, teacherIsu = 300003L, teacherFio = "Лаборант Лев Львович",
-        room = "1506", building = "Кронверкский проспект, 49", formatId = 1)
-
-    /** The list has loaded: its ViewModel left the first load (the Compose screen draws what it holds). */
-    private fun Fragment.listSettled(): Boolean =
-        view != null && getViewModel<RecordbookViewModel>().uiState.value !is RecordbookUiState.Loading
-
-    /** Loaded: no indicator, and the content or the state area is up. */
-    private fun Fragment.settled(): Boolean {
-        val root = view ?: return false
-        val visible = { id: Int -> root.findViewById<View>(id)?.visibility == View.VISIBLE }
-        return !visible(R.id.loading) && (visible(R.id.swipe_refresh_layout) || visible(R.id.state_container))
-    }
-
-    /** Opens the subject page once; true when it has loaded. */
-    private fun RecordbookPreviewActivity.subject(entryId: Long, journal: BarsJournalReference? = null): Boolean {
-        val page = supportFragmentManager.findFragmentByTag(SUBJECT_TAG)
-        if (page == null) {
-            openScreen(AppScreen.RECORDBOOK_SUBJECT, RecordbookSubjectArgs(entryId, 1, 2, "2025/2026",
-                journal?.planId, journal?.type, journal?.identifier).toBundle())
-            return false
-        }
-        return page.settled()
-    }
-
-    /** Scrolls the page to its end; true once the binding proposal is on screen. */
-    private fun RecordbookPreviewActivity.scrolledToBinding(): Boolean {
-        val list = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recycler_view)
-        val last = (list.adapter?.itemCount ?: 0) - 1
-        if (last < 0) return false
-        list.scrollToPosition(last)
-        return findViewById<View>(R.id.confirm)?.visibility == View.VISIBLE
     }
 
     class Recordbook(private val phase: Phase) : RecordbookRepository {
@@ -300,8 +159,7 @@ object RecordbookPreviewFixtures {
             room = "1506", building = "Кронверкский проспект, 49", formatId = 1)
     }
 
-    private fun links() = MemorySubjectLinksRepository().apply {
-        servicesEnabled = true
+    private fun links() = RecordbookPreviewLinks().apply {
         val current = ResourceScope(MATH_ID, MATH, "2025-2")
         val past = ResourceScope(MATH_ID, MATH, "2025-1")
         snapshots.value = mapOf(
@@ -334,17 +192,65 @@ object RecordbookPreviewFixtures {
     ) = SubjectLink(id, scope, category, url, title, visibility, flow?.flowId, flow?.label,
         if (mine && visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED, null,
         score, 0, isMine = mine, reportedByMe = false, author = null, updatedAt = UPDATED.toInstant().toKotlinInstant())
+}
 
-    /** The own total of the math subject in [status]: read at 12:00 on the preview's today, unless [updatedAt]. */
-    fun sheetScore(
-        status: SheetStatus = SheetStatus.OK,
-        value: String? = "66,3",
-        headerPath: String = "ИТОГО баллов",
-        tabName: String = "P3110",
-        updatedAt: Instant? = Instant.parse("2026-06-01T09:00:00Z"),
-    ) = SheetScore(
-        scope = MATH_SCOPE, url = SHEET_URL, tabGid = 22, tabName = tabName, rowKey = "123456", keyColumn = 0,
-        keyKind = KeyKind.ISU, column = SheetColumnRef(headerPath, 11), value = value, baseline = value, tracked = true,
-        status = status, updatedAt = updatedAt, connectedAt = Instant.parse("2026-05-01T09:00:00Z"),
-    )
+/**
+ * The subject links of the preview host, in memory with the connection on: votes, pins and own links change the
+ * snapshot and nothing else. Debug only; it has no API, token or session and cannot transmit synthetic data.
+ */
+class RecordbookPreviewLinks : SubjectLinksRepository {
+    init { check(BuildConfig.DEBUG) }
+
+    /** Keyed by [ResourceScope.key]; a missing scope is an empty one. */
+    val snapshots = MutableStateFlow<Map<String, SubjectLinksSnapshot>>(emptyMap())
+
+    override fun observe(scope: ResourceScope): Flow<SubjectLinksState> =
+        snapshots.map { SubjectLinksState.Content(peek(scope)) }
+
+    override fun peek(scope: ResourceScope): SubjectLinksSnapshot = snapshots.value[scope.key]
+        ?: SubjectLinksSnapshot(emptyList(), emptyList(), emptyList(), null, emptyList(), premoderation = true, servicesEnabled = true)
+
+    override suspend fun refresh(scope: ResourceScope): AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun save(
+        scope: ResourceScope,
+        id: String,
+        category: LinkCategory,
+        url: String,
+        title: String?,
+        visibility: LinkVisibility,
+        flowId: Long?,
+    ): AppResult<SubjectLink> {
+        val label = peek(scope).audiences.firstOrNull { it.flowId == flowId }?.label
+        val status = if (visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED
+        val link = SubjectLink(id, scope, category, url, title, visibility, flowId, label, status, null, 0, 0,
+            isMine = true, reportedByMe = false, author = null, updatedAt = UPDATED)
+        update(scope) { it.copy(mine = it.mine.filterNot { row -> row.id == id } + link) }
+        return AppResult.Success(link)
+    }
+
+    override suspend fun delete(scope: ResourceScope, id: String) = update(scope) { it.copy(mine = it.mine.filterNot { row -> row.id == id }) }
+
+    override suspend fun pin(scope: ResourceScope, id: String?) = update(scope) { it.copy(pinnedId = id) }
+
+    override suspend fun vote(scope: ResourceScope, id: String, value: Int) = update(scope) { snapshot ->
+        snapshot.copy(shared = snapshot.shared.map { if (it.id == id) it.copy(myVote = value, score = it.score - it.myVote + value) else it })
+    }
+
+    override suspend fun report(scope: ResourceScope, id: String, reason: ResourceReportReason, comment: String?) = update(scope) { snapshot ->
+        snapshot.copy(shared = snapshot.shared.map { if (it.id == id) it.copy(reportedByMe = true) else it })
+    }
+
+    override fun observeRestrictions(): Flow<List<UserRestriction>> = flowOf(emptyList())
+
+    override suspend fun refreshRestrictions(): AppResult<Unit> = AppResult.Success(Unit)
+
+    private fun update(scope: ResourceScope, transform: (SubjectLinksSnapshot) -> SubjectLinksSnapshot): AppResult<Unit> {
+        snapshots.value = snapshots.value + (scope.key to transform(peek(scope)))
+        return AppResult.Success(Unit)
+    }
+
+    private companion object {
+        val UPDATED = Instant.parse("2026-05-20T06:00:00Z")
+    }
 }

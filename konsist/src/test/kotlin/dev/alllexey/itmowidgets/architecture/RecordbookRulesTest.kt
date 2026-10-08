@@ -34,12 +34,27 @@ class RecordbookRulesTest {
             .assertFalse { file -> file.imports.any { it.name.startsWith(LEGACY_API_PREFIX) } }
     }
 
+    @Test
+    fun `the app's recordbook screens are hosts without View rendering`() {
+        // The list, the period sheet, the subject page and the sheet are Compose in the shared module (LR-3, LR-4b,
+        // LR-5); `:app` keeps their Fragment and sheet hosts, so no RecyclerView, adapter or diff may come back there.
+        recordbookFiles
+            .filter { file -> file.projectPath.startsWith(APP_SOURCES) }
+            .requireNonEmpty("app recordbook files")
+            .assertFalse { file ->
+                file.imports.any { it.name == RECYCLER_PACKAGE || it.name.startsWith("$RECYCLER_PACKAGE.") }
+            }
+    }
+
     private companion object {
         const val RECORDBOOK_PACKAGE = "dev.alllexey.itmowidgets.feature.recordbook"
         const val APP_SOURCES = "/app/src/"
         const val SHARED_MODULE = "/shared/feature-recordbook/"
         const val LEGACY_API_PREFIX = "api."
         const val WEBKIT_WILDCARD = "android.webkit.*"
+
+        /** Any import under it, a wildcard `androidx.recyclerview.widget.*` included. */
+        const val RECYCLER_PACKAGE = "androidx.recyclerview"
         val WEB_VIEW_TYPES = setOf("android.webkit.WebView", "android.webkit.CookieManager")
 
         /** The domain, presentation and Koin module files LR-2a moved; drops only with the integrator's OK. */
