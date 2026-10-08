@@ -8,5 +8,4 @@
   on iOS as on Android, from the Me tab, the home friend-requests card and a
   friendship notification; in the demo a friendship action says «Не
   получилось: Недоступно в демо».
-- On iOS the profile shows no teacher reviews until reviews ship there, and
-  copying the ISU confirms with «Номер ИСУ скопирован».
+- Copying the ISU on iOS confirms with «Номер ИСУ скопирован».

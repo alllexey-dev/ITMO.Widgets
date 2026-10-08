@@ -178,12 +178,16 @@ Compose schedule (`ScheduleScreen`, IO-09b); no tab has a placeholder root any m
   delegates each key to its feature's `Routes+<Feature>.swift`, which returns a Compose screen, a SwiftUI screen, a
   shell sheet, a Compose sheet, a tab, the gate, or "not on iOS". A feature card changes only its own file; a key no feature claims fails
   `RouterTests.testEveryRegisteredRouteHasAFeature`, and `testEveryRouteKindHasItsTarget` pins the target of every
-  key. "Not on iOS" keys (reviews, resources until IO-09f maps them, the `.ics` export, which the settings screen
-  presents itself, the debug tools for good, and every screen of a feature whose IO card has not merged) have no
-  entry point and open nothing.
+  key. "Not on iOS" keys (the `.ics` export, which the settings screen presents itself; the link and review reports,
+  Compose dialogs inside what asks for them (IO-09f); the debug tools for good; and every screen of a feature whose
+  IO card has not merged) have no entry point and open nothing.
 - Route results. A screen that answers its opener (the friend picker answers the schedule, the period picker the
   recordbook) is opened with `open(_:onResult:)` and answers with `deliver(_:from:)`; the router holds the callback
   until then.
+- Sheets that lead on. One router sheet shows at a time. A links sheet that opens the next one in its place, as
+  Android's close themselves first, calls `replaceSheet(with:)` (SwiftUI dismisses the one and presents the other);
+  all links show a link's actions and the editor as their own nested sheet over the list, as Android stacks them
+  (IO-09f).
 
 | Route id | URL | Opens |
 |---|---|---|
@@ -631,9 +635,12 @@ sign-out cleaners.
   repository). `sportModule` replaces the schedule's empty pending sport rows, and the sport card joins the home feed
   (IO-09c).
 - Recordbook screens. `recordbookModule`'s four ViewModels and the subject page's loaders run on the schedule data
-  graph's own lessons and refresh, the sport graph's score and `scheduleIosModule`'s empty teacher tones;
-  `recordbookIosModule` adds a `SubjectLinksRepository` stand-in that offers no links and asks nothing until IO-09f
-  loads `resourcesModule` (IO-09d2).
+  graph's own lessons and refresh, the sport graph's score, the reviews graph's teacher tones and the links graph's
+  subject links (IO-09d2).
+- Reviews and subject links. `reviewsModule` on `reviewsIosModule` and `resourcesModule` on `resourcesIosModule`
+  (`shared/feature-{reviews,resources}/src/iosMain/.../di/`): Core 2.0's reviews and links areas from the one
+  `BackendClient`; the editor's teacher lessons come from `scheduleDataModule`. They replace the stand-ins the
+  social, schedule and recordbook graphs had before (IO-09f).
 - `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
   controller for the share sheet.
 - Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`; dev
@@ -644,8 +651,8 @@ sign-out cleaners.
   with its type and stack frames, written at once to the JSON file diagnostics-crash-v1.json in the no-backup directory, which
   the next launch shows first and deletes. Swift crashes never pass Kotlin and are not recorded.
 - `PlatformCapabilities` is `IosPlatformCapabilities`: everything off until the IO card that ships a feature turns
-  it on (calendar export on since IO-15b, recordbook since IO-09d2, marks since IO-09d3; reviews and subject links
-  IO-09f); the quick settings tile, Android's battery and Xiaomi screens, the update channel, the animated QR widget
+  it on (calendar export on since IO-15b, recordbook since IO-09d2, marks since IO-09d3, reviews and subject links
+  since IO-09f); the quick settings tile, Android's battery and Xiaomi screens, the update channel, the animated QR widget
   and the custom spoiler image stay off.
 - `PlatformActions`: the share sheet (the title is not shown: iOS's sheet has none), links (t.me in Telegram when
   installed), Apple Maps (`maps.apple.com`, the pin or the address) and the app's pages in Settings.
@@ -693,7 +700,9 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   route whose ViewModel reads its key's arguments gets them from its feature's iOS route, which resolves the Koin
   definition in that store with a `SavedStateHandle` of the arguments (`UserProfileIosRoute`, IO-09e;
   `UserScheduleIosRoute`, `LessonDetailsIosRoute`, `FriendSelectorIosRoute`, IO-09b; `UserSportIosRoute`, IO-09c;
-  `RecordbookSubjectIosRoute`, `SheetScoresIosRoute`, IO-09d2).
+  `RecordbookSubjectIosRoute`, `SheetScoresIosRoute`, IO-09d2). The links and review sheets and the report dialogs
+  resolve theirs with `hostedViewModel` (`shared/ios`, `screens/HostedViewModel.kt`) in a store cleared when they
+  leave the composition (IO-09f).
   A Swift host that keeps state for its route across the route's life holds a Kotlin object the factory reads
   (`SportTabState`: the sport tab's shared lessons and the details sheet's results).
 - Requests into a hosted route. A tab root that takes requests from the shell returns a Kotlin handle with its

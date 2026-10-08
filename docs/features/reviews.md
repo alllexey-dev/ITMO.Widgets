@@ -288,6 +288,34 @@ and a tap outside close the dialog only while nothing is being sent. A success
 closes the dialog and the report entry disappears from the review; a failure
 shows its text under the comment and keeps the dialog.
 
+## iOS
+
+The iOS app (IO-09f, [iOS app](../ios.md)) loads `reviewsModule` with
+`reviewsIosModule` (Core 2.0's reviews area from the one `BackendClient`; the
+teacher's lessons from `scheduleDataModule`) and turns
+`PlatformCapabilities.reviews` on, so the person profile shows a teacher's
+reviews section and the schedule and subject page their teacher tones, as on
+Android.
+
+- Editor: `Написать` and an own review's edit open `AppRoutes.ReviewEditor` as a
+  SwiftUI sheet at full height hosting `ReviewEditorSheet`
+  (`reviewEditorViewController`, `shared/ios` `screens/ReviewsScreens.kt`;
+  `iosApp/Sources/Features/Reviews/ReviewEditorSheet.swift`). It is a form sheet:
+  a drag does not close it, the close button asks `Не сохранять отзыв?` over the
+  form when it has unsaved changes. A failed save shows as a banner over the
+  sheet.
+- Report: `Пожаловаться` of a review shows the report dialog as the Compose
+  dialog over the profile (`ReportReviewHosted`); `AppRoutes.ReportReview` has no
+  iOS surface of its own.
+- Pre-moderation, restrictions and reports are Backend's and work unchanged;
+  there is no iOS-only moderation UI. The demo shows `DemoReviews` and refuses
+  every change (`error_demo_unavailable`) with no request.
+- Tests: `ReviewsIosModuleTest` (`scripts/ios/test.sh kn
+  :shared:feature-reviews`: the graph resolves with the hosts' arguments, the
+  demo answers and refuses with no request, the demo tone) and
+  `ReviewsLinksUITests` on the demo session (a review's report, a new review
+  refused by the demo, the discard question, the reviews at AX1).
+
 ## Verification
 
 Backend decides «taught the author» through ISU flows; the app only sends

@@ -17,6 +17,10 @@ import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookIosModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
+import dev.alllexey.itmowidgets.feature.resources.di.resourcesIosModule
+import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
+import dev.alllexey.itmowidgets.feature.reviews.di.reviewsIosModule
+import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import dev.alllexey.itmowidgets.feature.schedule.di.calendar.calendarIosModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleChangesIosModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleDataModule
@@ -56,7 +60,7 @@ object IosKoinModules {
         // The SwiftUI settings and diagnostics over the shared pages (IO-08a); IO-07b's screens write the same data.
         settingsDataModule, settingsModule, settingsIosModule,
         // The recordbook graph with the BARS session on WebKit and the Keychain (IO-09d1); the tab, the subject page
-        // and `Мои баллы` with the subject links left out until IO-09f (IO-09d2).
+        // and `Мои баллы` (IO-09d2).
         recordbookModule, recordbookIosModule(platform),
         // The schedule widgets' App Group timeline and the schedule widget refresh port (IO-10b).
         scheduleWidgetIosModule,
@@ -71,13 +75,16 @@ object IosKoinModules {
         // site (IO-09e).
         socialModule, socialIosModule(inviteUrl()), meModule,
         // The schedule tab, another user's schedule, the changes, the lesson and pending sport sheets and the friend
-        // picker; the iOS ports keep the teacher tones empty until their card (IO-09b).
+        // picker (IO-09b).
         scheduleModule, scheduleDataModule, scheduleIosModule(), friendSelectorModule,
         // The sport tab, its details sheet and another user's sport; the lessons' friends come through the friend
         // picker's `FriendRepository` above (IO-09c).
         sportModule, sportIosModule,
         // The calendar sync over EventKit with its refresh step and the `.ics` file (IO-15b).
         calendarIosModule,
+        // The teacher reviews with the editor and the report, the teacher tones, and the subject links with their
+        // sheets and report (IO-09f).
+        reviewsModule, reviewsIosModule, resourcesModule, resourcesIosModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record (T13), the build's site until then. */

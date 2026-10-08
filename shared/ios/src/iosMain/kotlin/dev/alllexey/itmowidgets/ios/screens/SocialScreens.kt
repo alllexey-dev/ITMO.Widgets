@@ -7,12 +7,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.ProjectLinks
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.text.resolve
@@ -93,9 +97,9 @@ fun userSearchViewController(open: (AppRoute) -> Unit, onBack: () -> Unit): UIVi
 /**
  * The person profile (`AppRoutes.UserProfile`), as `UserProfileFragment` hosts it: a user's friends, schedule and
  * sport open through [open] with the name the page shows, the share button sends the profile link, [copyIsu] is the
- * Swift host's (the clipboard and its confirmation), a source link opens in Safari. The reviews section stays hidden
- * while iOS does not offer reviews (`PlatformCapabilities.reviews`, IO-09f), so neither the editor nor the report
- * dialog is reachable.
+ * Swift host's (the clipboard and its confirmation), a source link opens in Safari. A teacher's reviews section
+ * (`PlatformCapabilities.reviews`, IO-09f) opens the review editor through [open] (a SwiftUI sheet) and shows the
+ * report of a review as the Compose dialog over the profile, as Android's `ReportReviewEntry` over its screen.
  */
 fun userProfileViewController(
     isu: Int,
@@ -109,6 +113,7 @@ fun userProfileViewController(
     val reviewsEnabled = koin.get<PlatformCapabilities>().reviews
     return screenController {
         val scope = rememberCoroutineScope()
+        var reporting by remember { mutableStateOf<ReviewReport?>(null) }
         val exits = remember(scope) {
             fun openNamed(page: UserProfileUiState.Content, route: (String) -> AppRoute) {
                 scope.launch { open(route(page.displayName.resolve())) }
@@ -120,15 +125,25 @@ fun userProfileViewController(
                 onFriends = { page -> openNamed(page) { name -> AppRoutes.UserFriends(page.isu, name) } },
                 onSchedule = { page -> openNamed(page) { name -> AppRoutes.UserSchedule(page.isu, name) } },
                 onSport = { page -> openNamed(page) { name -> AppRoutes.UserSport(page.isu, name) } },
-                onReviewEditor = {},
-                onReport = { _, _ -> },
+                onReviewEditor = { page -> open(AppRoutes.ReviewEditor(page.reviewArgs())) },
+                onReport = { page, reviewId -> reporting = ReviewReport(page.reviewArgs(), reviewId) },
                 onOpenProfile = { author -> open(AppRoutes.UserProfile(author)) },
                 onSource = { url -> actions.openLink(url) },
             )
         }
         Hosted { UserProfileIosRoute(isu, exits, reviewsEnabled) }
+        reporting?.let { report ->
+            val close = { reporting = null }
+            ReportReviewHosted(report.args, report.reviewId, onDone = close, onDismiss = close)
+        }
     }
 }
+
+/** The review whose report the profile shows. */
+private data class ReviewReport(val args: TeacherReviewArgs, val reviewId: String)
+
+/** Android's `reviewArgs()`: the teacher of the page. */
+private fun UserProfileUiState.Content.reviewArgs() = TeacherReviewArgs(isu, name)
 
 /** Another user's friends (`AppRoutes.UserFriends`), as `UserFriendsFragment` hosts them. */
 fun userFriendsViewController(
