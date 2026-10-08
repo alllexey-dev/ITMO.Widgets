@@ -224,8 +224,8 @@ Every other review is a row in three zones (`TeacherReviewRow`):
   `bodySmall` without a chip: `Вёл у автора` with a 16 dp `ic_check` in
   `colorPrimary`, or `Не подтверждён` in `colorOnSurfaceVariant`. The links
   keep 48 dp targets; the line under them tucks into their padding. On the
-  right the vote pill `▲ N ▼` (`view_link_vote_pill.xml`, `core/ui`
-  `bindVotes`), centred on the left column.
+  right the vote pill `▲ N ▼` (the kit's `VotePill`), centred on the left
+  column.
 
 Votes show arrows only with `canVote`; the score turns to the accent once the
 viewer voted, and without arrows a zero score is left out. While the profile is open

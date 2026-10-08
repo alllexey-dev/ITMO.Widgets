@@ -1,6 +1,5 @@
-package dev.alllexey.itmowidgets.core.debug
+package dev.alllexey.itmowidgets.feature.resources
 
-import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
@@ -18,10 +17,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 
-/** Debug-only fixture. It has no API, token or session dependency and cannot transmit synthetic data. */
-class MemorySubjectLinksRepository : SubjectLinksRepository {
-    init { check(BuildConfig.DEBUG) }
-
+/**
+ * An in-memory links repository for the links hosts' JVM tests. It has no API, token or session dependency and
+ * cannot transmit synthetic data.
+ */
+internal class LinksHostRepository : SubjectLinksRepository {
     /** Keyed by [ResourceScope.key]; a missing scope is an empty one. */
     val snapshots = MutableStateFlow<Map<String, SubjectLinksSnapshot>>(emptyMap())
     val restrictions = MutableStateFlow<List<UserRestriction>>(emptyList())

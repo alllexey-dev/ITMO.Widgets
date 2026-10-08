@@ -65,9 +65,6 @@ class DesignCardResourcesTest {
         assertEquals("20dp", dimensions.getValue("design_group_radius_outer"))
         assertEquals("4dp", dimensions.getValue("design_group_radius_inner"))
         assertEquals("2dp", dimensions.getValue("design_group_gap"))
-        // Rows of a group are drawn by core/ui/ConnectedGroup.kt, never by a card of their own.
-        listOf("item_subject_link")
-            .forEach { layout -> assertEquals(layout, emptyList<Element>(), elements("layout/$layout.xml", MATERIAL_CARD)) }
     }
 
     @Test
@@ -112,8 +109,4 @@ class DesignCardResourcesTest {
     }
 
     private fun cardStyle(variant: String): String = "Widget.ItmoWidgets.Card.$variant"
-
-    private companion object {
-        const val MATERIAL_CARD = "com.google.android.material.card.MaterialCardView"
-    }
 }

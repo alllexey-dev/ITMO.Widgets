@@ -16,7 +16,6 @@ import androidx.lifecycle.ViewModel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
-import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.resources.LinksHostFixtures.ARGS
@@ -69,7 +68,7 @@ class ResourcesHostsKoinTest {
     @get:Rule(order = 2)
     val compose = createEmptyComposeRule()
 
-    private lateinit var repository: MemorySubjectLinksRepository
+    private lateinit var repository: LinksHostRepository
 
     @Before
     fun setUp() {
