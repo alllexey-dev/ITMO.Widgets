@@ -7,6 +7,14 @@ the app.
 
 ## Schedule widgets
 
+The widgets stay RemoteViews in `:app`
+(`feature/schedule/ui/widget`: `SingleLessonWidgetProvider`,
+`DayScheduleWidgetProvider`, `ScheduleWidgetRenderer`,
+`ScheduleListRowRenderer`; `feature/schedule/work`:
+`ScheduleWidgetUpdateWorker`, `ScheduleWidgetRefreshReceiver`), read Koin
+through `KoinStarter` and render what the shared selector and data provider of
+`:shared:feature-schedule` compute ([schedule](schedule.md#modules)).
+
 - `ScheduleWidgetDataProvider` loads only the own academic range. With both the
   `Автозапись на спорт` preference and services enabled it also refreshes the
   pending projection and reads its completed snapshot; this API has no synthetic
@@ -21,6 +29,13 @@ the app.
   official-only fallback, so dropping optional rows restores the correct next
   lesson and remaining count. Pending data expires at its earliest start or after
   seven minutes; snapshot reads re-check settings and authentication.
+- The snapshot is kotlinx JSON in
+  `noBackupFilesDir/widgets/schedule_snapshot.json`
+  (`ScheduleWidgetSnapshotStoreImpl`, written through `AtomicTextFile`) with a
+  top-level `formatVersion` 2, always written first; a file without it is a
+  2.2 snapshot with the same keys and reads as before, and 2.2 ignores the
+  marker. A file of another version reads as loading until the next refresh. The serial names are a
+  contract shared with the [iOS timeline](#timeline-widgetkit).
 - The snapshot store is a shared session cleaner; cleanup invalidates in-flight
   worker tickets before clearing disk so an old account's snapshot cannot be
   written into a new session.
@@ -49,11 +64,52 @@ the app.
   `setTextViewTextSize` on every render, so a recycled launcher view never keeps
   a previous size. The base sizes live in the renderer next to the layouts; the
   list row's time column grows with its text instead of a fixed 44 dp.
+- The day widget sends its rows inline with the widget update
+  (`RemoteCollectionItems` through `core-remoteviews`, which falls back to an
+  adapter below Android 12), with stable ids taken from each row's identity, so
+  a refresh never shows rows of an older snapshot under a newer header.
+  `ScheduleWidgetRemoteViewsService` stays declared and serves the same rows
+  and ids to launchers that still hold the adapter intent of an earlier
+  build.
+- On Android 12+ both widgets follow the launcher's widget corner radius
+  (`system_app_widget_background_radius` in
+  `drawable-v31/widget_background_rounded.xml`, root `@android:id/background`
+  with `clipToOutline`); older launchers keep 20 dp. Both keep a 1 dp outline.
 - Provider descriptors for Android 12+ declare `targetCellWidth/Height` for the
   default span and keep `minWidth` at 180 dp with explicit resize bounds, the
   smallest span the layouts still read in. A launcher scales the whole widget
   down when its cells are smaller than the declared minimum; the descriptors
   never ask for more than the layouts need.
+
+### Timeline (WidgetKit)
+
+`ScheduleWidgetSelector.timeline` computes what the widgets show up to a given
+instant (`ScheduleWidgetDataProvider.loadTimeline`; the iOS writer asks for
+the end of tomorrow): an entry at the start and at every instant where the
+snapshot can change (lesson starts and ends, the compact early switch,
+midnights, pending sport starts), adjacent equal entries merged. Every entry
+equals `select` at any instant of its interval. `ScheduleWidgetTimelineJson`
+is the JSON contract, version 1: `{"version", "generatedAt", "validUntil",
+"entries": [{"validFrom", "snapshot"}]}` with the snapshot in the keys of
+`schedule_snapshot.json`, nulls omitted, defaults (and so `version`) always
+written, ISO-8601 UTC instants. `version` stays for additive fields and goes
+up for a rename or a removal; a reader rejects a higher one. The reference
+fixture is `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json`
+(`ScheduleWidgetTimelineJsonTest`). Android does not use the timeline: its
+worker still renders the current snapshot.
+
+### iOS
+
+The lesson widget (small, medium, Lock Screen rectangular and inline) and the
+day widget (medium, large) read the App Group file schedule-timeline-v1.json,
+which the app's `ScheduleTimelineWriter` computes with
+`ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow; WidgetKit switches between the precomputed entries, so
+Swift takes no time decision. The app writes on sign-in and sign-out, widget
+option changes, every return to the foreground, a changed cached schedule and
+sport actions. Degradation: no seven-minute pending sport refresh. The day
+widget shows the rows that fit, completed lessons leave first. In the demo
+session the widgets show the demo state. The QR widget and the details:
+[iOS app](../ios.md#widgets).
 
 ## QR widget
 
@@ -68,7 +124,7 @@ Expiry is passive: an expired code stops being emitted (known gap).
 The widget, its worker and its renderer stay in `:app`; the pass, the cache and
 the per-widget reveal state (`qr_widget_state_<appWidgetId>`) are the shared
 `QrCodeRepository` and `QrWidgetStateStore` of `:shared:feature-qr`, which the
-widget reads through `QrWidgetEntryPoint` and `di/bridge/QrBridge.kt`. The
+widget reads from Koin through `KoinStarter`. The
 widget and the pass screen share one repository and one cached pass; see
 [QR pass](qr.md#data).
 
