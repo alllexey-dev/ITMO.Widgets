@@ -4,8 +4,8 @@ import SwiftUI
 
 /// Fixture mode of the shell (IO-06b): placeholder roots, and in a Debug build a fixture session gate and demo
 /// banner without Kotlin. The placeholders stand in for the CMP screens the feature cards host (IO-09x; the QR pass is
-/// CMP since IO-21, the home feed since IO-09a, the Me tab since IO-09e), so they draw their own top bar under the
-/// compose chrome.
+/// CMP since IO-21, the home feed since IO-09a, the Me tab since IO-09e, the schedule since IO-09b), so they draw
+/// their own top bar under the compose chrome.
 enum ShellFixtures {
     /// The launch argument that picks a fixture session instead of the shared one:
     /// `-itmoShellSession loading|signed-out|demo|signed-in`.
@@ -25,7 +25,6 @@ enum ShellFixtures {
 /// Compose root.
 struct FixtureRootScreen: View {
     let tab: ShellTab
-    let router: AppRouter
 
     var body: some View {
         FixtureComposeScreen(title: tab.title) {
@@ -33,8 +32,6 @@ struct FixtureRootScreen: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("shell.root.\(tab.rawValue)")
-        // The schedule root marks each `today` route, so UI tests can see it arrive.
-        .accessibilityValue(tab == .schedule && router.todayRequest > 0 ? "today-\(router.todayRequest)" : "")
     }
 }
 

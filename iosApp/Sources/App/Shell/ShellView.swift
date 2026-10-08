@@ -19,7 +19,9 @@ struct ShellView: View {
             }
             .task { await session.follow() }
             .sheet(item: $router.sheet) { sheet in
+                // Route sheets open further routes and answer their opener through the router (IO-09b).
                 ShellSheetView(sheet: sheet)
+                    .environment(router)
             }
     }
 
@@ -90,8 +92,8 @@ struct ShellStack: View {
         }
     }
 
-    /// The tab's root: the Compose home feed (IO-09a) and Me tab (IO-09e), a fixture root for a tab whose IO card has
-    /// not hosted it yet.
+    /// The tab's root: the Compose home feed (IO-09a), Me tab (IO-09e) and schedule (IO-09b), a fixture root for a
+    /// tab whose IO card has not hosted it yet.
     @ViewBuilder
     private var root: some View {
         switch tab {
@@ -99,8 +101,10 @@ struct ShellStack: View {
             HomeScreen(router: router)
         case .me:
             MeTabScreen(router: router)
-        case .recordbook, .schedule, .sport:
-            FixtureRootScreen(tab: tab, router: router)
+        case .schedule:
+            ScheduleScreen(router: router)
+        case .recordbook, .sport:
+            FixtureRootScreen(tab: tab)
         }
     }
 
@@ -109,7 +113,8 @@ struct ShellStack: View {
     }
 }
 
-/// A shell sheet: half height first, full height on a drag. The web sign-in brings its own stack (`WebLoginSheet`).
+/// A shell sheet: half height first, full height on a drag. The web sign-in brings its own stack (`WebLoginSheet`),
+/// a route sheet its own content and detents (`Routes.sheetView`).
 struct ShellSheetView: View {
     let sheet: ShellSheet
     @Environment(\.dismiss) private var dismiss
@@ -118,6 +123,7 @@ struct ShellSheetView: View {
         switch sheet {
         case .linkUnavailable: messageSheet
         case let .webLogin(code): WebLoginSheet(code: code)
+        case let .route(destination): Routes.sheetView(for: destination)
         }
     }
 

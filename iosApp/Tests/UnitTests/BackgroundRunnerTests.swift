@@ -19,7 +19,7 @@ final class BackgroundRunnerTests: XCTestCase {
 
         XCTAssertEqual(report.steps.map(\.key), ["widget-snapshots", "schedule-changes"])
         XCTAssertEqual(report.resultOf(key: "widget-snapshots"), .done)
-        // The hosted tests' session has no ITMO.ID token, and the schedule data graph arrives with IO-09b.
+        // The hosted tests' session has no ITMO.ID token, so the schedule data graph's check skips.
         XCTAssertEqual(report.resultOf(key: "schedule-changes"), .skipped)
     }
 

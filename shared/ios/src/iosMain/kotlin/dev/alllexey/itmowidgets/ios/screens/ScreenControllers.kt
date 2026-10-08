@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.ios.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeUIViewController
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
@@ -14,12 +15,15 @@ import platform.UIKit.UIViewController
  * `itmoComposeView` gives a Fragment on Android. Each feature's IO card adds `screens/<Feature>Screens.kt` with
  * Swift-facing factories that call it; feature modules never build a `ComposeUIViewController` themselves.
  *
+ * [opaque] false lets the SwiftUI container show where [content] paints nothing (a sheet's background).
+ *
  * `koinViewModel()` inside [content] resolves into the `ViewModelStore` and saved state that Compose Multiplatform
  * gives each controller, not into a Swift-owned `ScreenViewModelStore`. Needs the started graph (`startKoinIos`).
  */
-internal fun screenController(content: @Composable () -> Unit): UIViewController {
+@OptIn(ExperimentalComposeUiApi::class)
+internal fun screenController(opaque: Boolean = true, content: @Composable () -> Unit): UIViewController {
     val actions = IosKoin.koin().get<PlatformActions>()
-    return ComposeUIViewController {
+    return ComposeUIViewController(configure = { this.opaque = opaque }) {
         CompositionLocalProvider(LocalPlatformActions provides actions) {
             ItmoTheme(content = content)
         }

@@ -254,17 +254,39 @@ final class RouterTests: XCTestCase {
     func testNotOnIosRouteOpensNothing() {
         let router = readyRouter()
         let routes: [any AppRoute] = [
-            AppRoutes.DebugTools.shared, AppRoutes.IcsExport.shared, AppRoutes.FriendSelector(selectedIsu: 0),
+            AppRoutes.DebugTools.shared, AppRoutes.IcsExport.shared, AppRoutes.CancelBookingConfirm(lessonId: 42),
         ]
 
         for route in routes {
             XCTAssertEqual(router.open(route), .notOnIOS, "\(route)")
         }
-        let picker = AppRoutes.FriendSelector(selectedIsu: 0)
-        XCTAssertEqual(router.open(picker) { (_: Int) in XCTFail("no screen, no callback") }, .notOnIOS)
-        router.deliver(1, from: picker)
+        let export = AppRoutes.IcsExport.shared
+        XCTAssertEqual(router.open(export) { (_: Int) in XCTFail("no screen, no callback") }, .notOnIOS)
+        router.deliver(1, from: export)
         XCTAssertEqual(router.path(of: .home), [])
         XCTAssertNil(router.sheet)
+    }
+
+    /// A Compose sheet key (IO-09b): one sheet above the shell, whose answer reaches its opener once, and which a
+    /// screen it opens replaces.
+    func testRouteSheetOpensAboveTheShellAndAnswersItsOpener() {
+        let router = readyRouter()
+        router.selectedTab = .schedule
+        let picker = AppRoutes.FriendSelector(selectedIsu: 100_001)
+        var answers: [Int32?] = []
+
+        XCTAssertEqual(router.open(picker) { (pick: FriendPick) in answers.append(pick.user?.isu) }, .opened)
+
+        XCTAssertEqual(router.sheet, .route(ShellDestination(picker)))
+        XCTAssertEqual(router.path(of: .schedule), [], "a sheet is not pushed")
+        XCTAssertEqual(router.open(AppRoutes.FriendSelector(selectedIsu: 0)), .ignored, "one sheet at a time")
+        router.deliver(FriendPick(user: nil), from: picker)
+        router.deliver(FriendPick(user: nil), from: picker)
+        XCTAssertEqual(answers, [nil])
+
+        XCTAssertEqual(router.open(AppRoutes.UserProfile(isu: 100_001)), .opened)
+        XCTAssertNil(router.sheet, "a profile opens in the sheet's place")
+        XCTAssertEqual(router.path(of: .schedule), [ShellDestination(AppRoutes.UserProfile(isu: 100_001))])
     }
 
     func testGateRoutesNeverOpen() {
@@ -401,7 +423,7 @@ final class RouterTests: XCTestCase {
 
     /// `RouteTarget` without its view factories.
     private enum TargetKind: Equatable {
-        case tab(ShellTab), gate, compose, swiftUI, sheet(ShellSheet), notOnIOS
+        case tab(ShellTab), gate, compose, swiftUI, sheet(ShellSheet), composeSheet, notOnIOS
 
         init(_ target: RouteTarget) {
             switch target {
@@ -410,6 +432,7 @@ final class RouterTests: XCTestCase {
             case .compose: self = .compose
             case .swiftUI: self = .swiftUI
             case let .sheet(sheet): self = .sheet(sheet)
+            case .composeSheet: self = .composeSheet
             case .notOnIOS: self = .notOnIOS
             }
         }
@@ -454,13 +477,13 @@ final class RouterTests: XCTestCase {
             (AppRoutes.UserFriends(isu: 100_001, name: ""), .compose),
             (AppRoutes.UserSearch.shared, .compose),
             (AppRoutes.UserProfile(isu: 100_001), .compose),
-            (AppRoutes.UserSchedule(isu: 100_001, name: ""), .notOnIOS),
+            (AppRoutes.UserSchedule(isu: 100_001, name: ""), .compose),
             (AppRoutes.UserSport(isu: 100_001, name: ""), .notOnIOS),
-            (AppRoutes.ScheduleChanges.shared, .notOnIOS),
+            (AppRoutes.ScheduleChanges.shared, .compose),
             (AppRoutes.QrPass.shared, .compose),
             (AppRoutes.MyItmoWeb.shared, .swiftUI),
             (period, .notOnIOS),
-            (AppRoutes.FriendSelector(selectedIsu: 0), .notOnIOS),
+            (AppRoutes.FriendSelector(selectedIsu: 0), .composeSheet),
             (AppRoutes.SheetScores(args: scores), .notOnIOS),
             (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),
             (AppRoutes.ReviewEditor(args: teacher), .notOnIOS),
@@ -468,8 +491,8 @@ final class RouterTests: XCTestCase {
             (AppRoutes.LinkEditor(args: links, linkId: nil), .notOnIOS),
             (AppRoutes.IcsExport.shared, .notOnIOS),
             (AppRoutes.LinkActions(args: links, linkId: "link-1"), .notOnIOS),
-            (AppRoutes.LessonDetails(args: lesson), .notOnIOS),
-            (AppRoutes.PendingSportDetails(args: pendingSport), .notOnIOS),
+            (AppRoutes.LessonDetails(args: lesson), .composeSheet),
+            (AppRoutes.PendingSportDetails(args: pendingSport), .composeSheet),
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .notOnIOS),
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),
             (AppRoutes.LinkUnavailable.shared, .sheet(.linkUnavailable)),
