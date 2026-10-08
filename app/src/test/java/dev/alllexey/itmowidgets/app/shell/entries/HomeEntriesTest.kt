@@ -115,6 +115,7 @@ class HomeEntriesTest {
                     single<HomeCardRenderer>(hintCardsQualifier) { HintHomeCardRenderer }
                 },
                 socialTestModule(),
+                scheduleTestModule(),
             )
         }.koin
         compose.setContent {

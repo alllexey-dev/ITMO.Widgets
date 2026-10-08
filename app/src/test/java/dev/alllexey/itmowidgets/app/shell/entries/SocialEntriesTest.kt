@@ -61,7 +61,7 @@ class SocialEntriesTest {
 
     @Before
     fun startGraph() {
-        koin = startKoin { modules(socialTestModule(history)) }.koin
+        koin = startKoin { modules(socialTestModule(history), scheduleTestModule()) }.koin
     }
 
     @Test

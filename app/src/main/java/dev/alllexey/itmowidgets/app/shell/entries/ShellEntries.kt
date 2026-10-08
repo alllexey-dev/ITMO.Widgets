@@ -23,11 +23,13 @@ fun shellEntries(debugTools: Boolean = BuildConfig.DEBUG): EntryRegistry = entry
     entry<AppRoutes.TabRoot> { key, navigator ->
         when (key.tab) {
             AppTab.HOME -> HomeTabRoot(navigator)
+            AppTab.SCHEDULE -> ScheduleTabRoot(navigator)
             AppTab.ME -> MeTabRoot(navigator)
-            AppTab.RECORDBOOK, AppTab.SCHEDULE, AppTab.SPORT -> UnregisteredTabRoot(key)
+            AppTab.RECORDBOOK, AppTab.SPORT -> UnregisteredTabRoot(key)
         }
     }
     homeEntries()
+    scheduleEntries()
     socialEntries()
     accountEntries(debugTools)
 }

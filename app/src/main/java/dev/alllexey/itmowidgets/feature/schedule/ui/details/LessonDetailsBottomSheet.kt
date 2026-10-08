@@ -1,9 +1,11 @@
 package dev.alllexey.itmowidgets.feature.schedule.ui.details
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,8 +56,8 @@ class LessonDetailsBottomSheet : ItmoBottomSheetFragment() {
     /** What the body asks of the host; instrumented tests call it to check the effects without the Compose tree. */
     @VisibleForTesting
     internal val actions = LessonDetailsActions(
-        onMap = { mapDestination()?.let(::openMap) },
-        onLink = ::openLink,
+        onMap = { mapDestination()?.let { requireContext().openLessonMap(it, requireView()) } },
+        onLink = { url -> requireContext().openLessonLink(url, requireView()) },
         onProfile = ::openProfile,
         onClose = ::onCloseRequest,
     )
@@ -91,25 +93,7 @@ class LessonDetailsBottomSheet : ItmoBottomSheetFragment() {
         openUserProfile(isu)
     }
 
-    private fun mapDestination(): MapDestination? {
-        buildings.find(lesson.buildingId, lesson.mainBuildingId, lesson.building)?.let { return it.toMapDestination() }
-        val building = lesson.building ?: return null
-        return MapDestination(label = Building(building).shortTitle(requireContext()), address = building)
-    }
-
-    private fun openMap(destination: MapDestination) {
-        if (!MapLauncher.open(requireContext(), destination)) {
-            Snackbar.make(requireView(), R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun openLink(url: String) {
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
-        } catch (_: ActivityNotFoundException) {
-            Snackbar.make(requireView(), R.string.link_open_failed, Snackbar.LENGTH_SHORT).show()
-        }
-    }
+    private fun mapDestination(): MapDestination? = buildings.lessonMapDestination(lesson, requireContext())
 
     companion object {
         const val TAG = "LessonDetailsBottomSheet"
@@ -122,12 +106,43 @@ class LessonDetailsBottomSheet : ItmoBottomSheetFragment() {
             newInstance(lesson.toDetailsArgs(date))
 
         fun newInstance(args: LessonDetailsArgs): LessonDetailsBottomSheet = LessonDetailsBottomSheet().apply {
-            arguments = Bundle().apply {
-                putNavigationArgs(ARG_LESSON, args)
-                putLong(LessonDetailsViewModel.ARG_PAIR_ID, args.pairId)
-                putString(LessonDetailsViewModel.ARG_DATE, args.date)
-                UserScreenArgs.profileIsu(args.teacherIsu)?.let { putInt(LessonDetailsViewModel.ARG_TEACHER_ISU, it) }
-            }
+            arguments = args.viewModelArgs().apply { putNavigationArgs(ARG_LESSON, args) }
         }
+    }
+}
+
+/**
+ * The [LessonDetailsViewModel] arguments of this lesson: its occurrence and, when it is a valid ISU, its teacher.
+ * Shared by [LessonDetailsBottomSheet] and the Compose shell's lesson entry.
+ */
+internal fun LessonDetailsArgs.viewModelArgs(): Bundle = Bundle().apply {
+    putLong(LessonDetailsViewModel.ARG_PAIR_ID, pairId)
+    putString(LessonDetailsViewModel.ARG_DATE, date)
+    UserScreenArgs.profileIsu(teacherIsu)?.let { putInt(LessonDetailsViewModel.ARG_TEACHER_ISU, it) }
+}
+
+/**
+ * Where the map hand-off of [lesson] points: the directory's building, else the schedule's own building text; null
+ * when the lesson names no building. Shared by [LessonDetailsBottomSheet] and the Compose shell's lesson entry.
+ */
+internal fun BuildingDirectory.lessonMapDestination(lesson: LessonDetailsArgs, context: Context): MapDestination? {
+    find(lesson.buildingId, lesson.mainBuildingId, lesson.building)?.let { return it.toMapDestination() }
+    val building = lesson.building ?: return null
+    return MapDestination(label = Building(building).shortTitle(context), address = building)
+}
+
+/** Opens [destination] in a `geo:` handler; without one a snackbar on [anchor] says so. */
+internal fun Context.openLessonMap(destination: MapDestination, anchor: View) {
+    if (!MapLauncher.open(this, destination)) {
+        Snackbar.make(anchor, R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()
+    }
+}
+
+/** Opens the lesson's meeting [url]; without a handler a snackbar on [anchor] says so. */
+internal fun Context.openLessonLink(url: String, anchor: View) {
+    try {
+        startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    } catch (_: ActivityNotFoundException) {
+        Snackbar.make(anchor, R.string.link_open_failed, Snackbar.LENGTH_SHORT).show()
     }
 }
