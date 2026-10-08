@@ -11,7 +11,7 @@ import org.junit.runners.Suite
 
 /**
  * The instrumented tests of `MainActivity`'s navigation: entry intents and App Links, session and first-run routing,
- * the demo session, the launcher shortcuts, the QR tile, notifications and the tab swipe. Every card that changes the
+ * the demo session, the launcher shortcuts, the QR tile, notifications, the tab swipe and the window insets. Every card that changes the
  * shell runs it on a pool emulator (`scripts/verify.sh ui dev.alllexey.itmowidgets.app.shell.ShellSuite`). A member
  * whose navigation assertions read `ShellProbe` runs in every shell `ShellModeRule` knows.
  */
@@ -24,5 +24,6 @@ import org.junit.runners.Suite
     QrTileFlowTest::class,
     FcmNotificationFlowTest::class,
     TabSwipeTest::class,
+    ShellInsetsTest::class,
 )
 class ShellSuite

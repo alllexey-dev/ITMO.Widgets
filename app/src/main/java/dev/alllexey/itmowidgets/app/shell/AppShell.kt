@@ -1,5 +1,14 @@
 package dev.alllexey.itmowidgets.app.shell
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -72,21 +81,33 @@ internal fun ShellContent(
     }
 
     CompositionLocalProvider(LocalResultEventBus provides rememberResultEventBus()) {
-        when (surface) {
-            ShellSurface.Progress -> GateProgress()
-            ShellSurface.Auth, ShellSurface.Onboarding -> gate.single().Content()
-            is ShellSurface.Tabs -> ShellDisplay(
-                tabRoots = tabRoots,
-                selected = state.tab,
-                contextual = contextual,
-                navigator = navigator,
-                demoBanner = surface.demoBanner,
-                onDemoSignIn = onDemoSignIn,
-                modifier = modifier,
-            )
+        Box(Modifier.fillMaxSize().windowInsetsPadding(shellInsets)) {
+            when (surface) {
+                ShellSurface.Progress -> GateProgress()
+                ShellSurface.Auth, ShellSurface.Onboarding -> gate.single().Content()
+                is ShellSurface.Tabs -> ShellDisplay(
+                    tabRoots = tabRoots,
+                    selected = state.tab,
+                    contextual = contextual,
+                    navigator = navigator,
+                    demoBanner = surface.demoBanner,
+                    onDemoSignIn = onDemoSignIn,
+                    modifier = modifier,
+                )
+            }
         }
     }
 }
+
+/**
+ * What the shell pads around every surface, as the legacy `MainActivity` padded its root: the status bar on top, the
+ * system bars and a display cutout at the sides. Entries draw no window insets of their own there (`AppTopBar`). The
+ * bottom stays edge to edge: the bar pads the navigation bar, a gate or overlay screen its own end. Sheets and dialogs
+ * are windows of their own with their own insets.
+ */
+internal val shellInsets: WindowInsets
+    @Composable get() = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+        .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
 
 /**
  * The selected tab's root and the contextual stack in one `NavDisplay`. The shell's own scene is the tab-root scene:
