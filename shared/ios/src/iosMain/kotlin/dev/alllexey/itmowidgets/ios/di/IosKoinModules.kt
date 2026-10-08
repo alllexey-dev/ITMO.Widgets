@@ -27,6 +27,8 @@ import dev.alllexey.itmowidgets.feature.settings.di.settingsIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import dev.alllexey.itmowidgets.feature.social.di.socialIosModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
+import dev.alllexey.itmowidgets.feature.sport.di.sportIosModule
+import dev.alllexey.itmowidgets.feature.sport.di.sportModule
 import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppStoreListing
@@ -67,9 +69,11 @@ object IosKoinModules {
         // site (IO-09e).
         socialModule, socialIosModule(inviteUrl()), meModule,
         // The schedule tab, another user's schedule, the changes, the lesson and pending sport sheets and the friend
-        // picker; the iOS ports keep the calendar, the teacher tones and the pending sport empty until their cards
-        // (IO-09b).
+        // picker; the iOS ports keep the calendar and the teacher tones empty until their cards (IO-09b).
         scheduleModule, scheduleDataModule, scheduleIosModule(), friendSelectorModule,
+        // The sport tab, its details sheet and another user's sport; the lessons' friends come through the friend
+        // picker's `FriendRepository` above (IO-09c).
+        sportModule, sportIosModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record (T13), the build's site until then. */

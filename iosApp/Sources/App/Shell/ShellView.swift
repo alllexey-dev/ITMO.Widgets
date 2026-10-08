@@ -92,18 +92,20 @@ struct ShellStack: View {
         }
     }
 
-    /// The tab's root: the Compose home feed (IO-09a), Me tab (IO-09e) and schedule (IO-09b), a fixture root for a
-    /// tab whose IO card has not hosted it yet.
+    /// The tab's root: the Compose home feed (IO-09a), sport tab (IO-09c), Me tab (IO-09e) and schedule (IO-09b), a
+    /// fixture root for a tab whose IO card has not hosted it yet.
     @ViewBuilder
     private var root: some View {
         switch tab {
         case .home:
             HomeScreen(router: router)
+        case .sport:
+            SportTabScreen(router: router)
         case .me:
             MeTabScreen(router: router)
         case .schedule:
             ScheduleScreen(router: router)
-        case .recordbook, .sport:
+        case .recordbook:
             FixtureRootScreen(tab: tab)
         }
     }

@@ -158,6 +158,11 @@ final class AppRouter {
         results.removeValue(forKey: RouteKey(route))?(result)
     }
 
+    /// Whether a request waits for `tab`'s root; a root that takes requests observes it and then consumes it.
+    func hasRequest(of tab: ShellTab) -> Bool {
+        requests[tab] != nil
+    }
+
     /// The request waiting for `tab`'s root, handed out once.
     func consumeRequest(of tab: ShellTab) -> TabRequest? {
         requests.removeValue(forKey: tab)

@@ -204,3 +204,46 @@ sheet's results and the bottom-tab round trip; `SportMyScreenTest`,
 `MainActivityDeepLinkTest` opens `/sport/1` and `/sport/p/1` on `Запись`,
 `DemoModeFlowTest` walks both pages, and `SportSessionBindingsTest` checks that
 screens, cleaners, home cards and widgets share one graph.
+
+## iOS
+
+The iOS app ([iOS app](../ios.md)) hosts the same `SportRoute` as the root of
+the sport tab: `SportTabScreen` (`iosApp/Sources/Features/Sport/`) through
+`sportViewController` (`shared/ios`, `screens/SportScreens.kt`), with
+`sportModule`, `sportIosModule` and `friendSelectorModule` in
+`IosKoinModules`. The ViewModels live in the Compose controller's store, so
+`Запись` keeps its week and filters while the tab's root stays alive. Both
+pages, the filter dialogs and the week strip are the shared ones; weeks move by
+the strip's arrows and tabs by the native tab bar only.
+
+- Details sheet: a booking or lesson asks the Swift host for its sheet, a
+  SwiftUI `.sheet` at the large detent (Android's 90 % sheet) hosting
+  `SportDetailsSheet` through `sportDetailsViewController`; the system drag
+  indicator sits over the shared header, and the grouped sheet background
+  shows under the home indicator. `SportTabState` carries the sheet's booking
+  action back to the page that opened it, as `SportFragment`'s result does,
+  and the page asks for the cancellation's confirmation itself.
+- Effects: sharing sends `share_sport_text` with `ShareLinkFactory`'s
+  `/sport/<id>` link, or `/sport/p/<id>` for a predicted lesson, through the
+  system share sheet (`SportShares`, `PlatformActions`); a building opens in
+  Apple Maps; a teacher or a friend closes the sheet and opens the profile on
+  the sport stack.
+- Shared lessons: a `TabRequest.SportLesson` (a `/sport/<id>` link through the
+  router, a sport notification) is consumed by `SportTabScreen` and opens the
+  lesson on `Запись`.
+- Another user's sport: `AppRoutes.UserSport` from a profile opens
+  `UserSportRoute` through `userSportViewController`; its ViewModel reads the
+  ISU and name from a `SavedStateHandle` the iOS route builds
+  (`UserSportIosRoute`).
+- Graph: `sportIosModule` binds `SportApi` from the one `BackendClient`, empty
+  debug ports (no developer tools on iOS) and `SportShares`;
+  `scheduleDataModule` gives the schedule refresh after a booking. Loading
+  `sportModule` also gives the schedule its pending sport rows, puts the sport
+  card on the iOS home feed and the sport repositories in the sign-out
+  cleaners.
+- Tests: `SportIosModuleTest` (`scripts/ios/test.sh kn :shared:feature-sport`:
+  the graph resolves, the demo answers and refuses a booking with no request,
+  the share texts name the build's site and parse back) and `SportUITests` on
+  the demo session (a booking's details and its close, the share sheet, the
+  demo refusal of a booking, the section dialog and the week arrows, another
+  user's sport, `Мой спорт` at AX1 to its last card).
