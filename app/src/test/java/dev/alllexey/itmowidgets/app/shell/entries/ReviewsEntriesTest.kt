@@ -57,7 +57,7 @@ class ReviewsEntriesTest {
     @get:Rule(order = 1)
     val compose = createAndroidComposeRule<ComponentActivity>()
 
-    /** A tab whose root is not registered yet, so no tab root needs its own graph. */
+    /** The recordbook tab: its root reads [RecordbookTestGraph]'s synthetic recordbook. */
     private val navigator = Nav3AppNavigator(ShellBackStack(AppTab.RECORDBOOK))
     private lateinit var koin: Koin
 
@@ -71,6 +71,7 @@ class ReviewsEntriesTest {
                     viewModel { ReviewEditorViewModel(get<SavedStateHandle>(), reviews, lessons) }
                     viewModel { ReportReviewViewModel(get<SavedStateHandle>(), reviews) }
                 },
+                RecordbookTestGraph().module(),
             )
         }.koin
     }
