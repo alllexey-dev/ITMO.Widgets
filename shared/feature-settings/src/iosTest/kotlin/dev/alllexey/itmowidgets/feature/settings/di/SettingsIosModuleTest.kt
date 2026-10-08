@@ -9,14 +9,18 @@ import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.platform.IosPlatformCapabilities
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
+import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.feature.settings.data.IosWidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
@@ -135,7 +139,8 @@ class SettingsIosModuleTest {
 
     /**
      * The account module's types (`accountIosModule`, `authDataModule`), the onboarding flag, the recordbook graph's
-     * mark tracking (`recordbookModule`), the app's directories under [root], and no main queue (the test blocks it).
+     * mark tracking (`recordbookModule`), the schedule data graph's change tracking and calendar sync
+     * (`scheduleDataModule`), the app's directories under [root], and no main queue (the test blocks it).
      */
     private fun standIns(): Module = module {
         single<DemoMode> { FakeDemoMode(active = true) }
@@ -155,6 +160,8 @@ class SettingsIosModuleTest {
         single<SessionRepository> { FakeSessionRepository(SessionState.SignedOut) }
         single<OnboardingRepository> { FakeOnboardingRepository(completed = true) }
         single<MarkTracking> { FakeMarkTracking() }
+        single<ScheduleChangeTracking> { FakeScheduleChangeTracking() }
+        single<CalendarSync> { FakeCalendarSync() }
         single<AppDirectories> {
             object : AppDirectories {
                 override val files = root / "files"

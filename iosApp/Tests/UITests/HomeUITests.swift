@@ -36,8 +36,8 @@ final class HomeUITests: XCTestCase {
         let hint = element(app, "home_card_hint_widgets")
         XCTAssertTrue(hint.waitForExistence(timeout: stepTimeout))
 
-        // The widget hint is the feed's first card here, so its close button is the first one.
-        element(app, "home_card_dismiss").tap()
+        // The schedule cards come first since IO-09b, so the close button is the one inside the hint.
+        closeButton(app, of: hint).tap()
 
         XCTAssertTrue(hint.waitForNonExistence(timeout: stepTimeout))
         app.terminate()
@@ -97,8 +97,13 @@ final class HomeUITests: XCTestCase {
         let app = XCUIApplication.itmo(arguments: [Self.forgetHints] + ax1)
         app.launch()
         waitForFeed(app)
-        XCTAssertTrue(element(app, "home_card_hint_widgets").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "demo-feed-ax1")
+        // The schedule cards come first since IO-09b; the hint follows them below the fold.
+        let hint = element(app, "home_card_hint_widgets")
+        for _ in 0..<4 where !hint.exists {
+            element(app, "home_feed").swipeUp()
+        }
+        XCTAssertTrue(hint.waitForExistence(timeout: stepTimeout))
 
         // The feed scrolls: its end comes clear of the buttons, and the buttons of the demo banner and the tab bar.
         element(app, "home_feed").swipeUp()
@@ -122,6 +127,15 @@ final class HomeUITests: XCTestCase {
             _ = feed.waitForExistence(timeout: 0.5)
         }
         XCTAssertTrue(feed.exists || empty.exists, "the feed never left its loading state")
+    }
+
+    /// The close button inside `card`: every closable card's button has the same tag.
+    private func closeButton(_ app: XCUIApplication, of card: XCUIElement) -> XCUIElement {
+        let buttons = app.descendants(matching: .any).matching(identifier: "home_card_dismiss")
+        let inside = (0..<buttons.count).map { buttons.element(boundBy: $0) }.first { button in
+            card.frame.contains(CGPoint(x: button.frame.midX, y: button.frame.midY))
+        }
+        return inside ?? buttons.firstMatch
     }
 
     private func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {

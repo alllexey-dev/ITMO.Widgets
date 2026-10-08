@@ -40,6 +40,9 @@ targets:
       # The sign-in screen's logo (IO-07b): the shared module's drawable by path, never a copy.
       - path: ../shared/feature-account/src/commonMain/composeResources/drawable/auth_logo.webp
         buildPhase: resources
+      # The known ITMO buildings of the lesson sheet's map (IO-09b): Android's raw resource by path, never a copy.
+      - path: ../app/src/main/res/raw/itmo_buildings.json
+        buildPhase: resources
       # The widget sources without their @main bundle, so the hosted tests reach the timelines and entry views
       # (recipe ios-snapshot-test); the app never registers them.
       - path: Extensions/Widgets

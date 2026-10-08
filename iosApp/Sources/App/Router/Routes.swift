@@ -14,6 +14,9 @@ enum RouteTarget {
     case swiftUI(@MainActor () -> AnyView)
     /// A sheet above the shell.
     case sheet(ShellSheet)
+    /// A Compose sheet's content from its `screens/<Feature>Screens.kt` factory in a SwiftUI sheet above the shell
+    /// (`ShellSheet.route`); the content draws its own title and close button, the SwiftUI view sets the detents.
+    case composeSheet(@MainActor () -> AnyView)
     /// No iOS screen: a feature whose IO card has not mapped it yet, or never (the debug tools). Such a route has
     /// no entry point on iOS (App Review 2.1) and opening it does nothing.
     case notOnIOS
@@ -23,7 +26,7 @@ enum RouteTarget {
         switch self {
         case .compose: .compose
         case .swiftUI: .native
-        case .tab, .gate, .sheet, .notOnIOS: nil
+        case .tab, .gate, .sheet, .composeSheet, .notOnIOS: nil
         }
     }
 }
@@ -57,7 +60,16 @@ enum Routes {
     static func view(for destination: ShellDestination) -> some View {
         switch target(for: destination.route) {
         case let .compose(make), let .swiftUI(make): make()
-        case .tab, .gate, .sheet, .notOnIOS: EmptyView()
+        case .tab, .gate, .sheet, .composeSheet, .notOnIOS: EmptyView()
+        }
+    }
+
+    /// The content of a route sheet (`ShellSheet.route`); a key that is no sheet renders nothing.
+    @MainActor
+    @ViewBuilder
+    static func sheetView(for destination: ShellDestination) -> some View {
+        if case let .composeSheet(make) = target(for: destination.route) {
+            make()
         }
     }
 

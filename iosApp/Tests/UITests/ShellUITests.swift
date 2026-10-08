@@ -48,9 +48,8 @@ final class ShellUITests: XCTestCase {
 
         app.open(try XCTUnwrap(URL(string: "itmowidgets://route/today")))
 
-        let schedule = element(app, "shell.root.schedule")
-        XCTAssertTrue(schedule.waitForExistence(timeout: stepTimeout))
-        XCTAssertEqual(schedule.value as? String, "today-1")
+        XCTAssertTrue(element(app, "shell.root.schedule").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, ScheduleUITests.todayTag).waitForExistence(timeout: stepTimeout))
     }
 
     func testUnknownRouteExplainsTheLinkInASheet() throws {

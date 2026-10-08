@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.network.BackendOrigin
 import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
+import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.home.data.PlacedWidgetKinds
 import dev.alllexey.itmowidgets.feature.home.di.homeIosModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
@@ -17,6 +18,9 @@ import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookIosModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleChangesIosModule
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleDataModule
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleIosModule
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleWidgetIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsIosModule
@@ -62,6 +66,10 @@ object IosKoinModules {
         // The me tab, friends, search, profiles and a user's friends; the invitation names the App Store page or the
         // site (IO-09e).
         socialModule, socialIosModule(inviteUrl()), meModule,
+        // The schedule tab, another user's schedule, the changes, the lesson and pending sport sheets and the friend
+        // picker; the iOS ports keep the calendar, the teacher tones and the pending sport empty until their cards
+        // (IO-09b).
+        scheduleModule, scheduleDataModule, scheduleIosModule(), friendSelectorModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record (T13), the build's site until then. */

@@ -132,15 +132,18 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Its session gate and demo banner follow
 the shared `SessionRepository` (see Core graph). The home root is LH-2's Compose feed (`HomeScreen`, IO-09a), the me
 root LA-3's Compose Me tab (`MeTabScreen`, IO-09e) with the entry to settings and the sign-out (the route's
-confirmation, `SessionRepository.signOut()`); until the other IO-09x cards host theirs, the other roots are
-placeholders (`FixtureRootScreen`).
+confirmation, `SessionRepository.signOut()`), the schedule root L10's Compose schedule (`ScheduleScreen`, IO-09b);
+until the other IO-09x cards host theirs, the other roots are placeholders (`FixtureRootScreen`).
 
 - Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
   sport, me. The recordbook is declared but hidden until IO-09d2 (no placeholder reaches App Review); home is
   selected at launch. The container is one type, `Shell/ShellTabs.swift` (a `TabView`). Tabs switch by the native
   tab bar only, with no swipe between them (owner decision 2026-10-06; IO-SW1 dropped, see design.md "Tab swipe").
-- Stacks and sheets. Each tab has one `NavigationStack` whose path the router holds; sheets open at the medium
-  detent and drag to large.
+- Stacks and sheets. Each tab has one `NavigationStack` whose path the router holds; the shell's own sheets open at
+  the medium detent and drag to large. A sheet key of a feature (`RouteTarget.composeSheet`: the lesson, pending
+  sport and friend picker sheets, IO-09b) is one `ShellSheet.route` above the shell whose SwiftUI view hosts the
+  Compose sheet content and sets the detents (`.large` for Android's tall sheets, with the system's drag indicator);
+  the content draws its own title and close button. One sheet at a time; a screen opened from a sheet replaces it.
 - Session gate. `ShellSession` maps `SessionRepository.state` and `OnboardingGateViewModel`'s flag through
   `SessionGateway` onto `ShellGate.surface`, as Android's shell: `Initializing` and `SigningOut` show the loading
   gate, `SignedOut` and `ReauthenticationRequired` the sign-in screen (see Sign-in), a signed-in session the
@@ -165,7 +168,7 @@ placeholders (`FixtureRootScreen`).
   callbacks.
 - Route map. `Routes.target(for:)` switches exhaustively over `RouteFeature` (`shared/ios`, `IosRoutes`) and
   delegates each key to its feature's `Routes+<Feature>.swift`, which returns a Compose screen, a SwiftUI screen, a
-  sheet, a tab, the gate, or "not on iOS". A feature card changes only its own file; a key no feature claims fails
+  shell sheet, a Compose sheet, a tab, the gate, or "not on iOS". A feature card changes only its own file; a key no feature claims fails
   `RouterTests.testEveryRegisteredRouteHasAFeature`, and `testEveryRouteKindHasItsTarget` pins the target of every
   key. "Not on iOS" keys (recordbook, reviews, resources, calendar until IO-09d2, IO-09f and IO-15b map them, the
   debug tools for good, and every screen of a feature whose IO card has not merged) have no entry point and open
@@ -204,11 +207,10 @@ the root page, its privacy row the privacy page.
 - System state. On appear and on every return to the app the screen reports the notification permission and
   Background App Refresh to the ViewModel. The notification row asks for the permission while iOS has never asked,
   then opens the app's notification settings.
-- Not yet real on iOS (`shared/feature-settings/src/iosMain/.../data/IosPendingChecks.kt`): the schedule change
-  switch is stored where the check reads it, and the background runner runs the check once the schedule data is in
-  the iOS graph (IO-09b, see Background refresh); the calendar sync is a stand-in behind
-  its hidden rows until IO-15b. Mark tracking is the recordbook graph's (IO-09d1), which schedules nothing until
-  IO-09d3, behind its hidden page. "Пройти знакомство заново" resets the shared flag,
+- The schedule change switch and the calendar sync are the schedule data graph's (`scheduleDataModule`, IO-09b):
+  the background runner runs the change check (see Background refresh); the calendar sync never turns on, since
+  `scheduleIosModule` gives it no phone calendar and its rows stay hidden until IO-15b. Mark tracking is the
+  recordbook graph's (IO-09d1), which schedules nothing until IO-09d3, behind its hidden page. "Пройти знакомство заново" resets the shared flag,
   which the shell's gate reads (IO-07b). Widget pages draw no preview above their rows.
 - Diagnostics. The journal lists `AppDiagnostics`' records, newest first, with a stack trace folded under its
   record; the share sheet takes the plain-text journal (and copies it), clearing asks first.
@@ -483,8 +485,8 @@ day's rows, tomorrow's once today is over when that option is on. A tap opens `i
 - Degradation: no seven-minute pending sport refresh (WidgetKit allows about 40 to 70 reloads a day); a pending row
   stays until the app writes again or its entry ends.
 - The writer starts with the graph (`scheduleWidgetIosModule`) and resolves the provider and the cached schedule at
-  each write, so until the schedule data graph and the pending sport rows are in the iOS graph (IO-09b, IO-09c) a
-  write logs why it could not load and the widgets stay unavailable.
+  each write from the schedule data graph (IO-09b); until the sport graph is in the iOS graph (IO-09c) the
+  timeline has no pending sport rows (`scheduleIosModule`'s stand-in).
 - `ITMOWidgetsTests/ScheduleTimelineTests` decodes LS-3's fixture and picks Kotlin's `entryAt` entry at sampled
   instants; `SnapshotTests/WidgetSnapshotTests` holds lesson, break, pending sport, empty, tomorrow, signed out,
   demo and unavailable states, light and dark (AX1 for the small and the large family), long names at the narrowest
@@ -553,9 +555,9 @@ used, often hours apart, never with Background App Refresh off or in Low Power M
   thread = the channel, identifier `<channel>-<id>`, texts from the catalog. A schedule change found between 00:00
   and 06:00 Moscow time is handed to the system for 06:00 at once (a calendar trigger) and counts as delivered;
   Android keeps it for its first run after 06:00, which iOS might not give for hours.
-- The schedule change step resolves the check and its repository from the graph at each run: until the schedule
-  data is in the iOS graph (`scheduleDataModule`, IO-09b) it finds none and is skipped.
-  `scheduleChangesIosModule` already binds the check's iOS ports (`IosScheduleChangeNotifier`, the scheduler).
+- The schedule change step resolves the check and its repository from the graph at each run (`scheduleDataModule`,
+  in the graph since IO-09b); `scheduleChangesIosModule` binds the check's iOS ports (`IosScheduleChangeNotifier`,
+  the scheduler).
 - Debug. A Debug build launched with `-itmoRunRefresh` runs the entry point once more after the session is read,
   prints `Refresh: <step>=<result> ...`, and posts a fixture schedule change notification (`ScheduleChangeFixture`,
   catalog texts), since tests cannot force the scheduler. On the simulator Xcode's
@@ -659,7 +661,11 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   `screens/<Feature>Screens.kt` with the factories Swift calls (`qrPassViewController(onBack:)`). A CMP screen's
   `koinViewModel()` uses the store Compose Multiplatform gives each controller, whose `SavedStateHandle` is empty: a
   route whose ViewModel reads its key's arguments gets them from its feature's iOS route, which resolves the Koin
-  definition in that store with a `SavedStateHandle` of the arguments (`UserProfileIosRoute`, IO-09e).
+  definition in that store with a `SavedStateHandle` of the arguments (`UserProfileIosRoute`, IO-09e;
+  `UserScheduleIosRoute`, `LessonDetailsIosRoute`, `FriendSelectorIosRoute`, IO-09b).
+- Requests into a hosted route. A tab root that takes requests from the shell returns a Kotlin handle with its
+  controller (`ScheduleRootScreen`: `showToday()` for the `today` entry route, `showFriend(user:)` for the friend
+  picker's answer), backed by an unlimited channel, as Android's Fragment results.
 - Hosting. `ComposeHost { factory() }` (`Sources/Bridge/ComposeHost.swift`) makes the controller once and ignores
   the safe area, so the surface runs under the status bar and the tab bar and Compose's `WindowInsets` report them;
   the factory pads its content by `WindowInsets.safeDrawing` (the kit's top bar draws no insets). A SwiftUI
@@ -668,9 +674,17 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   the QR pass sets the screen to full brightness while it is visible and the scene is active and restores the
   user's level otherwise (master P8); the home feed opens the widget instruction sheet, asks for notifications and
   says `error_demo_unavailable` when the router refuses a key in the demo, as the Me tab and the social screens do
-  (`SocialMessages`, which also puts a copied ISU on the clipboard with `person_isu_copied`). `onBack` and other callbacks are Swift
-  closures (`dismiss()`, `router.open(_:)`). Compose maps
-  `testTag` to the accessibility identifier, so UI tests find a route's parts by its test tags.
+  (`SocialMessages`, which also puts a copied ISU on the clipboard with `person_isu_copied`), and the schedule's
+  hosts say `schedule_map_unavailable` and `link_open_failed` when no app takes a map or a link (`ScheduleMessages`).
+  `onBack` and other callbacks are Swift closures (`dismiss()`, `router.open(_:)`). Compose maps `testTag` to the
+  accessibility identifier, so UI tests find a route's parts by its test tags.
+- Sheets. A Compose sheet's content is hosted the same way inside a SwiftUI `.sheet`, never as a Compose
+  `ModalBottomSheet` in a controller: the factory builds a see-through controller (`screenController(opaque =
+  false)`) and pads only the sides and the home indicator (Compose still reports the status bar the sheet starts
+  below); the kit's `SheetScaffold` draws its iOS header on the grouped sheet background, and the Swift view sets the
+  same background (`systemGroupedBackground`), the detents and the drag indicator and passes `dismiss()` as the
+  content's close. The shell's sheet gets the router in its environment, so a sheet opens further keys and answers
+  its opener (`deliver(_:from:)`).
 - `ITMOWidgetsTests/BridgeTests` checks the graph start, a `StateFlow` update re-rendering a hosted SwiftUI view,
   the ViewModel cleared when the view leaves the hierarchy, and events as Swift enums, over `BridgeProbeViewModel`, a
   probe in `shared/ios` that no screen uses.
@@ -686,6 +700,7 @@ stays under its about 30 MB limit by linking no Kotlin; these figures are the ap
 | Launch on home (fixture roots, Koin graph and the shared session started) | 72 MB | IO-21, 2026-10-07 |
 | After visiting the 4 tabs and opening the QR pass (the first Compose screen) | 79 to 87 MB | IO-21, 2026-10-07 |
 | Launch on home (the Compose home feed with its hints, other roots fixtures) | 81 MB | IO-09a, 2026-10-07 |
+| Launch on home, then the Compose schedule tab and the `today` route (schedule data graph loaded) | 81 MB (peak 89 MB) | IO-09b, 2026-10-08 |
 
 ## Build and test
 
