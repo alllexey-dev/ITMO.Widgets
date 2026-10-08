@@ -282,10 +282,11 @@ private fun DebugToolsEntry(onBack: () -> Unit) {
 
 /**
  * The system photo picker, then the square crop screen (`SpoilerCropActivity`), as `SpoilerImagePicker` runs them for
- * a Fragment; a device without a picker answers [SpoilerCropResult.Failed].
+ * a Fragment; a device without a picker answers [SpoilerCropResult.Failed]. The first-run flow and the QR widget's
+ * settings page pick with it.
  */
 @Composable
-private fun rememberSpoilerImagePicker(onResult: (SpoilerCropResult) -> Unit): () -> Unit {
+internal fun rememberSpoilerImagePicker(onResult: (SpoilerCropResult) -> Unit): () -> Unit {
     val currentOnResult by rememberUpdatedState(onResult)
     val crop = rememberLauncherForActivityResult(ActivityRoutes.spoilerCrop()) { currentOnResult(it) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->

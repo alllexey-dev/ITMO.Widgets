@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.resources.ui
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -63,9 +64,7 @@ class LinkActionsBottomSheet : ItmoBottomSheetFragment() {
     }
 
     private fun copyLink(url: String) {
-        val copied = requireContext().copyToClipboard(getString(R.string.links_copy), url) {
-            Toast.makeText(requireContext(), R.string.links_copied, Toast.LENGTH_SHORT).show()
-        }
+        val copied = requireContext().copySubjectLink(url)
         // The sheet closes whether or not the system confirmed the copy itself.
         if (copied) dismiss()
     }
@@ -98,3 +97,9 @@ class LinkActionsBottomSheet : ItmoBottomSheetFragment() {
             LinkActionsBottomSheet().apply { arguments = args.toArguments(linkId) }
     }
 }
+
+/** Copies a link's [url]; below Android 13 a toast confirms it. False when the device has no clipboard. */
+internal fun Context.copySubjectLink(url: String): Boolean =
+    copyToClipboard(getString(R.string.links_copy), url) {
+        Toast.makeText(this, R.string.links_copied, Toast.LENGTH_SHORT).show()
+    }

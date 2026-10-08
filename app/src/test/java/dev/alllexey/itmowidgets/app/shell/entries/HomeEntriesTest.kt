@@ -125,6 +125,7 @@ class HomeEntriesTest {
                 socialTestModule(),
                 scheduleTestModule(),
                 SportTestGraph(sportScope).module(),
+                settingsTestModule(),
             )
         }.koin
         compose.setContent {

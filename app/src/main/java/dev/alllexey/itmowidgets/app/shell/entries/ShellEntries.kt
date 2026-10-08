@@ -34,6 +34,9 @@ fun shellEntries(debugTools: Boolean = BuildConfig.DEBUG): EntryRegistry = entry
     socialEntries()
     accountEntries(debugTools)
     sportEntries()
+    settingsEntries()
+    resourcesEntries()
+    reviewsEntries()
 }
 
 /** The placeholder of a tab whose root is not registered yet, tagged as the registry's own placeholder. */
