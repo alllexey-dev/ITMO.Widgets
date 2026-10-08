@@ -61,6 +61,10 @@ import dev.alllexey.itmowidgets.feature.social.ui.home.FriendRequestsHomeCardRen
 import dev.alllexey.itmowidgets.feature.sport.ui.home.SportHomeCardRenderer
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import kotlin.time.Instant
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.LocalDate
@@ -68,6 +72,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -98,6 +103,9 @@ class HomeEntriesTest {
 
     private val navigator = Nav3AppNavigator()
 
+    /** The sport rows go through the sport redirect, whose holder finds no booking here. */
+    private val sportScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     @Before
     fun startGraph() {
         val clock = FakeClock(Instant.fromEpochMilliseconds(0))
@@ -116,6 +124,7 @@ class HomeEntriesTest {
                 },
                 socialTestModule(),
                 scheduleTestModule(),
+                SportTestGraph(sportScope).module(),
             )
         }.koin
         compose.setContent {
@@ -126,6 +135,9 @@ class HomeEntriesTest {
         }
         compose.waitForIdle()
     }
+
+    @After
+    fun stopSportScope() = sportScope.cancel()
 
     @Test
     fun homeTabRootRendersTheFeed() {

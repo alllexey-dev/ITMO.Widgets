@@ -27,6 +27,11 @@ import dev.alllexey.itmowidgets.feature.social.ui.friends.FriendsTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.list.UserListTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.search.UserSearchTestTags
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -59,10 +64,17 @@ class SocialEntriesTest {
     private val history = RecordingHistory()
     private lateinit var koin: Koin
 
+    /** The schedule root's sport rows go through the sport redirect, whose holder finds no booking here. */
+    private val sportScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     @Before
     fun startGraph() {
-        koin = startKoin { modules(socialTestModule(history), scheduleTestModule()) }.koin
+        val sport = SportTestGraph(sportScope).holderModule()
+        koin = startKoin { modules(socialTestModule(history), scheduleTestModule(), sport) }.koin
     }
+
+    @After
+    fun stopSportScope() = sportScope.cancel()
 
     @Test
     fun theSocialScreensRenderAndCloseThemselves() {

@@ -41,18 +41,22 @@ internal fun HomeTabRoot(navigator: Nav3AppNavigator) {
         activity?.onHomeNotificationResult(granted, viewModel)
     }
     val hints = remember(context, notifications) { HomeHints(context, notifications) }
+    val sport = rememberSportDetailsRedirect()
     DisposableEffect(hints, viewModel) {
         hints.start(viewModel::onScreenResumed)
         onDispose { hints.stop() }
     }
-    val actions = remember(navigator, hints) { homeActions(navigator, hints) }
+    val actions = remember(navigator, hints, sport) { homeActions(navigator, hints, sport) }
     HomeRoute(actions, viewModel)
 }
 
-/** The routes of the home cards (route map rows 3, 6, 8, 13, 16, 19-21, S11, S12). */
-private fun homeActions(navigator: Nav3AppNavigator, hints: HomeHints) = HomeActions(
-    onLesson = { navigator.open(AppRoutes.LessonDetails(it)) },
-    onPendingSport = { navigator.open(AppRoutes.PendingSportDetails(it)) },
+/**
+ * The routes of the home cards (route map rows 3, 6, 8, 13, 16, 19-21, S11, S12); a sport row goes through [sport],
+ * which opens the sport tab's sheet when it finds the booking.
+ */
+private fun homeActions(navigator: Nav3AppNavigator, hints: HomeHints, sport: SportDetailsRedirect) = HomeActions(
+    onLesson = { sport.openLesson(navigator, it) },
+    onPendingSport = { sport.openPendingSport(navigator, it) },
     onOpenSport = { navigator.select(AppTab.SPORT) },
     onOpenFriends = { navigator.open(AppRoutes.Friends) },
     onOpenUser = { isu -> UserScreenArgs.profileIsu(isu.toLong())?.let { navigator.open(AppRoutes.UserProfile(it)) } },

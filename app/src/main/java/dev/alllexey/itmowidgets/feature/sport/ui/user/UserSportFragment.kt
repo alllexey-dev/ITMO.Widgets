@@ -1,19 +1,16 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.user
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
+import dev.alllexey.itmowidgets.feature.sport.ui.common.openSportMap
 import org.koin.android.ext.android.inject
 
 /**
@@ -35,12 +32,8 @@ class UserSportFragment : Fragment() {
             )
         }
 
+    /** Without a map app nothing opens. */
     private fun openMap(booking: SportBooking) {
-        val address = booking.extractBuildingAddress() ?: return
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW, "geo:0,0?q=${Uri.encode(address)}".toUri()))
-        } catch (_: ActivityNotFoundException) {
-            // No map app: nothing opens.
-        }
+        booking.extractBuildingAddress()?.let { requireContext().openSportMap(it) }
     }
 }

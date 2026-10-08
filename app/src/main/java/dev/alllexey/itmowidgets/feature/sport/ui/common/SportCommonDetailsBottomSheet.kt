@@ -1,33 +1,24 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.common
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
 import android.content.res.ColorStateList
-import android.net.Uri
 import android.os.Bundle
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.google.android.material.shape.MaterialShapeDrawable
 import dagger.hilt.android.AndroidEntryPoint
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
-import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
-import dev.alllexey.itmowidgets.core.ui.shareText
 import dev.alllexey.itmowidgets.designsystem.host.ItmoBottomSheetFragment
 import dev.alllexey.itmowidgets.designsystem.host.SheetHeight
 import dev.alllexey.itmowidgets.designsystem.host.SheetSpec
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportShareTarget
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsActions
@@ -119,19 +110,7 @@ class SportCommonDetailsBottomSheet : ItmoBottomSheetFragment() {
     }
 
     private fun share(target: SportShareTarget) {
-        val link = when (target) {
-            is SportShareTarget.Lesson -> shareLinks.sportLesson(target.lessonId)
-            is SportShareTarget.Prediction -> shareLinks.predictedSportLesson(target.prototypeLessonId)
-        }
-        val timing = SportSessionTiming(
-            DateTexts.parseOffsetInstant(item.start),
-            DateTexts.parseOffsetInstant(item.end),
-            timeProvider
-        )
-        shareText(
-            getString(R.string.share_sport_title),
-            getString(R.string.share_sport_text, item.sectionName, timing.shareDate(), link)
-        )
+        requireContext().shareSportLesson(item, target, shareLinks, timeProvider)
     }
 
     /** The profile is a contextual screen above the tabs; the sheet has nothing to add once it opens. */
@@ -141,12 +120,7 @@ class SportCommonDetailsBottomSheet : ItmoBottomSheetFragment() {
     }
 
     private fun openMap(address: String) {
-        val uri = "geo:0,0?q=${Uri.encode(address)}".toUri()
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW, uri))
-        } catch (_: ActivityNotFoundException) {
-            Toast.makeText(requireContext(), R.string.sport_map_unavailable, Toast.LENGTH_SHORT).show()
-        }
+        requireContext().openSportMapOrSay(address)
     }
 
     companion object {

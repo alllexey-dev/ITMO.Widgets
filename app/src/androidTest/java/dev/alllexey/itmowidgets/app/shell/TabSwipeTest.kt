@@ -71,13 +71,16 @@ class TabSwipeTest {
         awaitTab(AppTab.HOME)
         assertTrue(ShellProbe.current().swipeEnabled)
 
-        listOf(AppTab.SPORT, AppTab.ME, AppTab.ME).forEach { tab ->
+        // On sport the first swipe moves its own pager (`Мой спорт` -> `Запись`, and back), the next one the tab.
+        listOf(AppTab.SPORT, AppTab.SPORT, AppTab.ME, AppTab.ME).forEach { tab ->
             swipe(towardsNext = true)
             awaitTab(tab)
+            TestUi.settle(SETTLE_MILLIS)
         }
-        listOf(AppTab.SPORT, AppTab.HOME, AppTab.SCHEDULE, AppTab.RECORDBOOK, AppTab.RECORDBOOK).forEach { tab ->
+        listOf(AppTab.SPORT, AppTab.SPORT, AppTab.HOME, AppTab.SCHEDULE, AppTab.RECORDBOOK, AppTab.RECORDBOOK).forEach { tab ->
             swipe(towardsNext = false)
             awaitTab(tab)
+            TestUi.settle(SETTLE_MILLIS)
         }
         swipe(towardsNext = true)
         swipe(towardsNext = true)
@@ -89,6 +92,9 @@ class TabSwipeTest {
         awaitTab(AppTab.HOME)
         swipe(towardsNext = true)
         awaitTab(AppTab.SPORT)
+        // The first swipe on sport moves its own pager to `Запись`; the next one reaches Me.
+        swipe(towardsNext = true)
+        TestUi.settle(SETTLE_MILLIS)
         swipe(towardsNext = true)
         awaitTab(AppTab.ME)
         swipe(towardsNext = false)
