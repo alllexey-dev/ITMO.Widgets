@@ -169,3 +169,64 @@ Google one, with `_SYNC_ID` rows and copies the sync adapter writes back) and
 `SettingsNavigationTest` for the rows, every state of the `.ics` sheet (in a
 light and a dark appearance, with the area height kept) and the permission
 dialog.
+
+## iOS
+
+The iOS app has both ways, on the same `Расписание` settings page:
+`IosPlatformCapabilities.calendarExport` is on, so the shared provider lists
+the switch and `Выгрузить в .ics` there, and the SwiftUI settings form renders
+them. The events, the planner, the sync file and `DefaultCalendarSync` are the
+shared ones above; iOS adds only the platform side
+(`shared/feature-schedule/src/iosMain/.../data/calendar/`,
+`calendarIosModule`, `iosApp/Sources/Features/Calendar/`).
+
+- Access. Turning the switch on asks EventKit for full access to events
+  (`EKEventStore.requestFullAccessToEvents`, `CalendarAccess`) with the
+  purpose string `NSCalendarsFullAccessUsageDescription`
+  (`ios_calendar_full_access_usage`): write-only access can neither create a
+  calendar nor read the app's events back. Granted, the sync turns on; a
+  refusal in the system prompt leaves the switch off with `Нет доступа к
+  календарю`; a refusal for good (or a restriction) shows `Доступ к
+  календарю`, `Чтобы записывать пары в календарь телефона.` with `Открыть
+  настройки` (the app's page in Settings) and `Не сейчас`. iOS shows the
+  system prompt only once.
+- Calendar. `EventKitPhoneCalendars` over `SystemEventStore`
+  (`platform.EventKit` called from Kotlin/Native) creates `ITMO.Widgets` in
+  the iCloud source, else the local one, colour `calendar_app`; never in an
+  Exchange, Google or subscribed source. After a reinstall a calendar of that
+  title in those sources is adopted, so a second one never appears. Events are
+  busy, have no alarms, carry `Europe/Moscow` and the tag line in their notes,
+  which the sweeps read as on Android.
+- Ids. EventKit names calendars and events by strings; `EventKitIdStore`
+  numbers them for `PhoneCalendars` in `<noBackup>/calendar_eventkit/ids.json` (`AppDirectories.noBackup`)
+  (format 1, a damaged or newer file starts empty), so the shared sync file
+  keeps its numbers. When EventKit gives an event a new identifier (an iCloud
+  sync), the tagged event takes over the number of the gone one, so the sync
+  neither deletes the lesson nor inserts it twice.
+- Work. The sync is the `calendar-sync` step of the app's one refresh task
+  (`RefreshStepKeys.CALENDAR_SYNC`, after schedule changes, see
+  [`docs/ios.md`](../ios.md#background-refresh)), with Android's two hours:
+  it runs at launch, on every return to the app and on the system's wakes once
+  its period has passed. Turning on and a pull on the own schedule make the
+  step due at once (`RefreshTaskCalendarScheduler.runOnce`), as
+  `calendar-sync-now`. A turned-off sync skips the step; sign-out deletes the
+  calendar through the shared `SessionDataCleaner`.
+- `.ics`. `IosIcsFileExport` writes the same file into the app's temporary
+  directory (`tmp/ics`, only the latest kept); `IcsExportSheet` (SwiftUI over
+  `IcsExportViewModel`) shows the same states and texts as Android, `Свои
+  даты` as two date pickers (`Первый день`, `Последний день`, `Выбрать`), and
+  `Отправить` is a `ShareLink` of a `public.calendar-event` (`text/calendar`)
+  file. The share sheet holds Calendar and Files, so there is no `Открыть в
+  календаре` button.
+- Demo: turning on says `Недоступно в демо`, as on Android; nothing asks
+  EventKit or My ITMO.
+- Tests: `EventKitCalendarSyncTest` (the shared sync over a fake event store:
+  the calendar created once, idempotent re-syncs, updates in place, renumbered
+  and lost events, turning off, sign-out, a deleted calendar, an earlier
+  install's calendar), `IosIcsFileExportTest`,
+  `RefreshTaskCalendarSchedulerTest` and `ScheduleIosModuleTest` in
+  `shared/feature-schedule` iosTest; `ITMOWidgetsTests/CalendarTests` (access
+  decisions, the purpose string, the settings rows, the sheet's ViewModel and,
+  with access granted to the simulator, the calendar made and removed in
+  EventKit); `CalendarSnapshotTests` for every state of the sheet and
+  `SettingsSnapshotTests.testScheduleWithTheCalendarDeleted` for the rows.

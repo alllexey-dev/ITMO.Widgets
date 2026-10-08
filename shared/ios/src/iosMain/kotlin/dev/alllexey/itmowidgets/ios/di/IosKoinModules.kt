@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookIosModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
+import dev.alllexey.itmowidgets.feature.schedule.di.calendar.calendarIosModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleChangesIosModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleDataModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleIosModule
@@ -69,11 +70,13 @@ object IosKoinModules {
         // site (IO-09e).
         socialModule, socialIosModule(inviteUrl()), meModule,
         // The schedule tab, another user's schedule, the changes, the lesson and pending sport sheets and the friend
-        // picker; the iOS ports keep the calendar and the teacher tones empty until their cards (IO-09b).
+        // picker; the iOS ports keep the teacher tones empty until their card (IO-09b).
         scheduleModule, scheduleDataModule, scheduleIosModule(), friendSelectorModule,
         // The sport tab, its details sheet and another user's sport; the lessons' friends come through the friend
         // picker's `FriendRepository` above (IO-09c).
         sportModule, sportIosModule,
+        // The calendar sync over EventKit with its refresh step and the `.ics` file (IO-15b).
+        calendarIosModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record (T13), the build's site until then. */

@@ -8,19 +8,24 @@ import UserNotifications
 ///
 /// The screen feeds the ViewModel what only iOS knows, on appear and on every return to the app: the notification
 /// permission and Background App Refresh. It answers the page's events with system pages, the router and a short
-/// message at the bottom; the events of rows iOS does not list (the tile, the custom spoiler, the calendar) never come.
+/// message at the bottom; the calendar switch asks for calendar access (`CalendarAccess`) and the `.ics` row opens
+/// `IcsExportSheet` (IO-15b). The events of rows iOS does not list (the tile, the custom spoiler) never come.
 struct SettingsScreen: View {
     @State private var model: ObservableViewModel<SettingsViewModel, SettingsUiState>
     @State private var system = SettingsSystemState()
     @State private var pendingToggles: [SettingRowId: Bool] = [:]
     @State private var message: SettingsMessage?
     @State private var showsBackgroundHint = false
+    @State private var showsCalendarRationale = false
+    @State private var showsIcsExport = false
+    private let calendarAccess: CalendarAccess
     @Environment(AppRouter.self) private var router
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
 
     /// [page] is a `SettingsPage` name, `AppRoutes.Settings.page`; an unknown one opens the root.
-    init(page: String) {
+    init(page: String, calendarAccess: CalendarAccess = CalendarAccess()) {
+        self.calendarAccess = calendarAccess
         _model = State(initialValue: ObservableViewModel(state: \.uiState) { store in
             let parameters: [Any?] = settingsPageParameters(page: page)
             guard let model = store.resolve(type: SettingsViewModel.self, parameters: parameters) as? SettingsViewModel
@@ -81,6 +86,12 @@ struct SettingsScreen: View {
         } message: {
             Text(verbatim: AppStrings.string("ios_background_refresh_off"))
         }
+        .calendarAccessRationale(isPresented: $showsCalendarRationale) {
+            open(UIApplication.openSettingsURLString)
+        }
+        .sheet(isPresented: $showsIcsExport) {
+            IcsExportSheet()
+        }
         .accessibilityIdentifier("settings.page.\(model.state.page.name.lowercased())")
     }
 
@@ -119,7 +130,11 @@ struct SettingsScreen: View {
         case let .showError(failure):
             pendingToggles = [:]
             show(AppErrorTextsKt.toUiText(failure.error).resolved)
-        case .chooseCustomSpoiler, .resetCustomSpoiler, .requestQrTile, .requestCalendarAccess, .openIcsExport:
+        case .requestCalendarAccess:
+            Task { await turnCalendarSyncOn() }
+        case .openIcsExport:
+            showsIcsExport = true
+        case .chooseCustomSpoiler, .resetCustomSpoiler, .requestQrTile:
             // Rows `PlatformCapabilities` hides on iOS.
             break
         }
@@ -129,6 +144,21 @@ struct SettingsScreen: View {
     private func show(_ text: String) {
         message = SettingsMessage(text: text)
         AccessibilityNotification.Announcement(text).post()
+    }
+
+    /// The sync turns on with full access; a refusal just now says so, a refusal for good shows the rationale with
+    /// the app's page in Settings. The switch goes back off unless the sync turns on.
+    private func turnCalendarSyncOn() async {
+        switch await calendarAccess.turnOn() {
+        case .granted:
+            model.viewModel.onCalendarAccessGranted()
+        case .refused:
+            pendingToggles = [:]
+            show(AppStrings.string("calendar_access_denied"))
+        case .rationale:
+            pendingToggles = [:]
+            showsCalendarRationale = true
+        }
     }
 
     /// Asks once while iOS has never asked; after that only Settings can change the answer.

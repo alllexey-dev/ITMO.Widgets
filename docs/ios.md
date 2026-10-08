@@ -175,9 +175,9 @@ roots are placeholders (`FixtureRootScreen`).
   delegates each key to its feature's `Routes+<Feature>.swift`, which returns a Compose screen, a SwiftUI screen, a
   shell sheet, a Compose sheet, a tab, the gate, or "not on iOS". A feature card changes only its own file; a key no feature claims fails
   `RouterTests.testEveryRegisteredRouteHasAFeature`, and `testEveryRouteKindHasItsTarget` pins the target of every
-  key. "Not on iOS" keys (recordbook, reviews, resources, calendar until IO-09d2, IO-09f and IO-15b map them, the
-  debug tools for good, and every screen of a feature whose IO card has not merged) have no entry point and open
-  nothing.
+  key. "Not on iOS" keys (recordbook, reviews, resources until IO-09d2 and IO-09f map them, the `.ics` export,
+  which the settings screen presents itself, the debug tools for good, and every screen of a feature whose IO card
+  has not merged) have no entry point and open nothing.
 - Route results. A screen that answers its opener (the friend picker answers the schedule) is opened with
   `open(_:onResult:)` and answers with `deliver(_:from:)`; the router holds the callback until then.
 
@@ -205,7 +205,8 @@ the root page, its privacy row the privacy page.
   value. Rows carry `settings.row.<SettingRowId.key>`. Nothing renders until the page is `loaded`, so stored values
   never animate in.
 - Platform rows. The page providers hide what `PlatformCapabilities` does not offer: the recordbook page (mark
-  tracking), the calendar rows, the quick settings tile, the spoiler animation and the custom spoiler image.
+  tracking), the quick settings tile, the spoiler animation and the custom spoiler image. The calendar rows are on
+  since IO-15b.
 - iOS copy. `SettingsIosCopy` replaces the shared texts that name Android with `strings_ios*.xml` rows: the
   notification values and the background work row, which is Background App Refresh on iOS
   (`IosBackgroundWorkAccess` reads `UIApplication.backgroundRefreshStatus`) and opens the app's page in Settings.
@@ -213,8 +214,11 @@ the root page, its privacy row the privacy page.
   Background App Refresh to the ViewModel. The notification row asks for the permission while iOS has never asked,
   then opens the app's notification settings.
 - The schedule change switch and the calendar sync are the schedule data graph's (`scheduleDataModule`, IO-09b):
-  the background runner runs the change check (see Background refresh); the calendar sync never turns on, since
-  `scheduleIosModule` gives it no phone calendar and its rows stay hidden until IO-15b. Mark tracking is the
+  the background runner runs the change check and the calendar sync (see Background refresh). The calendar switch
+  asks EventKit for full access in Swift (`Features/Calendar/CalendarAccess`, the system prompt once, then a
+  rationale that opens the app's page in Settings); `calendarIosModule` gives the sync the phone's calendars over
+  EventKit and the `.ics` file, which `IcsExportSheet` shares with a `ShareLink`
+  ([calendar](features/calendar.md#ios)). Mark tracking is the
   recordbook graph's (IO-09d1), which schedules nothing until IO-09d3, behind its hidden page. "Пройти знакомство заново" resets the shared flag,
   which the shell's gate reads (IO-07b). Widget pages draw no preview above their rows.
 - Diagnostics. The journal lists `AppDiagnostics`' records, newest first, with a stack trace folded under its
@@ -539,15 +543,16 @@ used, often hours apart, never with Background App Refresh off or in Low Power M
 - Steps. Each feature binds its `RefreshStep` (`shared/core`, iosMain, `core/work/RefreshSteps.kt`) under its key in
   its iOS module; the runner takes them in `RefreshStepKeys.ORDER`, where each later check adds one line: widget
   snapshots (`scheduleWidgetIosModule`: `ScheduleTimelineWriter` publishes the schedule timeline), schedule changes
-  (`scheduleChangesIosModule`: `ScheduleChangesRefresh`, LT-1's `ScheduleChangesCheck`, then the quiet hours), then
-  marks with the BARS renewal (IO-09d3) and the calendar sync (IO-15b) when they come. A bound step without a place
+  (`scheduleChangesIosModule`: `ScheduleChangesRefresh`, LT-1's `ScheduleChangesCheck`, then the quiet hours), marks
+  with the BARS renewal (IO-09d3) when it comes, then the calendar sync (`calendarIosModule`: `DefaultCalendarSync.run`
+  every two hours; turning it on makes the step due at once). A bound step without a place
   in the order fails the start.
 - Deadline. The system gives the task about 30 s and cancels the Swift task when it expires, which cancels the
   Kotlin run; the runner stops its steps after 25 s (`BackgroundRunner.DEADLINE`), cancels the one running and
   leaves the rest for the next run, then lets the posted notifications reach the system and asks for the next
   wake, also when cut or cancelled.
-- Periods. A check keeps its Android period (schedule changes: two hours) in `UserDefaultsRefreshStepLog`: a launch,
-  a foreground or an early wake within it leaves the check out, so My ITMO gets no more requests from an iPhone than
+- Periods. A check keeps its Android period (schedule changes and the calendar sync: two hours) in
+  `UserDefaultsRefreshStepLog`: a launch, a foreground or an early wake within it leaves the check out, so My ITMO gets no more requests from an iPhone than
   from an Android phone. A retry (a network failure, or a step that threw) comes back after 15 minutes at most twice,
   then waits for the next period, Android's backoff; a skipped check (signed out, switched off) is tried on the next
   run. The widget snapshots run every time.

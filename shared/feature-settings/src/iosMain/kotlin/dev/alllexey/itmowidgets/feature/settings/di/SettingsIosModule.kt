@@ -9,7 +9,9 @@ import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
+import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
+import kotlinx.datetime.LocalDate
 import org.koin.dsl.module
 
 /**
@@ -20,7 +22,7 @@ import org.koin.dsl.module
  * `onboardingDataModule`.
  *
  * The schedule change switch and the calendar sync are the schedule data graph's (`scheduleDataModule`, loaded since
- * IO-09b); the calendar rows stay hidden by `PlatformCapabilities` until IO-15b binds the phone's calendar. Mark
+ * IO-09b); the phone's calendar and the `.ics` export behind the calendar rows are `calendarIosModule`'s (IO-15b). Mark
  * tracking is `recordbookModule`'s (IO-09d1), with no scheduler until IO-09d3; its page stays hidden until then.
  */
 val settingsIosModule = module {
@@ -39,6 +41,19 @@ val settingsIosModule = module {
  */
 fun settingsPageParameters(page: String): List<Any> =
     listOf(SavedStateHandle(mapOf(SettingsPage.ARGUMENT to SettingsPage.fromArgument(page).name)))
+
+/**
+ * The Koin parameters of the `.ics` sheet's `IcsExportViewModel` (IO-15b): a fresh `SavedStateHandle`, since a SwiftUI
+ * store has no saved-state registry; the sheet starts at the range choice.
+ */
+fun icsExportParameters(): List<Any> = listOf(SavedStateHandle())
+
+/**
+ * «Свои даты» of the `.ics` sheet from SwiftUI's date pickers: [start] and [end] are ISO days (`2026-10-05`), since
+ * Swift has no `LocalDate`. The days are the ones the user picked, so no time zone is involved.
+ */
+fun pickIcsExportDates(viewModel: IcsExportViewModel, start: String, end: String) =
+    viewModel.onDates(LocalDate.parse(start), LocalDate.parse(end))
 
 /** iOS has no quick settings. */
 private object NoQuickSettingsTile : QuickSettingsTileAccess {

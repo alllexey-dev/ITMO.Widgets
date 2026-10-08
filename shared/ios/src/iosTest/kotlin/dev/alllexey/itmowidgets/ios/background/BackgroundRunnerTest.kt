@@ -181,7 +181,11 @@ class BackgroundRunnerTest {
 
     @Test
     fun theBoundStepsRunInTheFixedOrderAndAnUnplacedStepIsAWiringError() {
-        val bound = listOf(step(RefreshStepKeys.SCHEDULE_CHANGES), step(RefreshStepKeys.WIDGET_SNAPSHOTS))
+        val bound = listOf(
+            step(RefreshStepKeys.CALENDAR_SYNC),
+            step(RefreshStepKeys.SCHEDULE_CHANGES),
+            step(RefreshStepKeys.WIDGET_SNAPSHOTS),
+        )
 
         assertEquals(RefreshStepKeys.ORDER, IosBackgroundRefresh.ordered(bound).map { it.key })
         assertFailsWith<IllegalArgumentException> { IosBackgroundRefresh.ordered(bound + step("unplaced")) }
