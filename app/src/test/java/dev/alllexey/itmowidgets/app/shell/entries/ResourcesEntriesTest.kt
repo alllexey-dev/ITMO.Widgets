@@ -72,7 +72,7 @@ class ResourcesEntriesTest {
     @get:Rule(order = 1)
     val compose = createAndroidComposeRule<ComponentActivity>()
 
-    /** A tab whose root is not registered yet, so no tab root needs its own graph. */
+    /** The recordbook tab: its root reads [RecordbookTestGraph]'s synthetic recordbook. */
     private val navigator = Nav3AppNavigator(ShellBackStack(AppTab.RECORDBOOK))
     private val links = FakeSubjectLinksRepository().apply {
         state.value = SubjectLinksState.Content(
@@ -92,6 +92,7 @@ class ResourcesEntriesTest {
                     viewModel { SubjectLinksViewModel(get<SavedStateHandle>(), links) }
                     viewModel { LinkEditorViewModel(get<SavedStateHandle>(), links) }
                 },
+                RecordbookTestGraph().module(),
             )
         }.koin
     }
