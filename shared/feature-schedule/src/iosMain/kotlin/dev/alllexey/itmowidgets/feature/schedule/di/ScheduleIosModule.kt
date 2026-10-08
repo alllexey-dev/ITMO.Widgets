@@ -4,18 +4,13 @@ import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
-import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
-import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.MarkedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import kotlin.time.Instant
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import org.koin.core.module.Module
@@ -31,9 +26,8 @@ import platform.Foundation.NSBundle
  *
  * Until their IO cards ship, the other ports answer without a request and without data: no phone calendar
  * ([UnofferedPhoneCalendars], IO-15b binds EventKit), no teacher tones while iOS does not offer reviews
- * ([UnofferedTeacherLevels], IO-09f loads `reviewsModule`), no pending sport rows ([NoPendingSportBookings], IO-09c
- * loads `sportModule`). Each card that ships the real binding removes the stand-in here, since the graph refuses an
- * override.
+ * ([UnofferedTeacherLevels], IO-09f loads `reviewsModule`). Each card that ships the real binding removes the
+ * stand-in here, since the graph refuses an override; the pending sport rows come from `sportModule` (IO-09c).
  */
 fun scheduleIosModule(buildingsJson: () -> String? = ::bundledBuildings): Module = module {
     single<ScheduleApi> { get<BackendClient>().schedule }
@@ -41,7 +35,6 @@ fun scheduleIosModule(buildingsJson: () -> String? = ::bundledBuildings): Module
     single<PhoneCalendars> { UnofferedPhoneCalendars }
     single<CalendarSyncScheduler> { UnofferedCalendarSyncScheduler }
     single<TeacherLevelsRepository> { UnofferedTeacherLevels }
-    single<PendingSportBookingsRepository> { NoPendingSportBookings }
 }
 
 /** A missing or damaged file leaves the map hand-off on the raw building text, as for an unknown building. */
@@ -95,14 +88,6 @@ private object UnofferedCalendarSyncScheduler : CalendarSyncScheduler {
 /** No tone dot next to a teacher while iOS does not offer reviews (`PlatformCapabilities.reviews`, App Review 1.2). */
 private object UnofferedTeacherLevels : TeacherLevelsRepository {
     override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = emptyMap()
-}
-
-/** No queued or predicted sport in the schedule, its home card or its widgets until the sport graph is loaded. */
-private object NoPendingSportBookings : PendingSportBookingsRepository {
-    override fun observePendingBookings(): Flow<AppResult<List<PendingSportBooking>>> =
-        flowOf(AppResult.Success(emptyList()))
-
-    override suspend fun refresh() = Unit
 }
 
 private const val TAG = "ScheduleIos"

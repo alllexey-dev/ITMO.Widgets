@@ -478,7 +478,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.UserSearch.shared, .compose),
             (AppRoutes.UserProfile(isu: 100_001), .compose),
             (AppRoutes.UserSchedule(isu: 100_001, name: ""), .compose),
-            (AppRoutes.UserSport(isu: 100_001, name: ""), .notOnIOS),
+            (AppRoutes.UserSport(isu: 100_001, name: ""), .compose),
             (AppRoutes.ScheduleChanges.shared, .compose),
             (AppRoutes.QrPass.shared, .compose),
             (AppRoutes.MyItmoWeb.shared, .swiftUI),

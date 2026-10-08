@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
@@ -47,6 +48,8 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import okio.FileSystem
@@ -63,7 +66,8 @@ import platform.UIKit.UIViewController
  * The schedule routes' graph as the iOS app starts it (`IosKoinModules`): the core module, [scheduleModule],
  * [scheduleDataModule] and [scheduleIosModule] on the demo session, with the account types, the settings data
  * (`settingsDataModule` on iOS), the change notifier and scheduler (`scheduleChangesIosModule` over the system's
- * centres), the session's tokens and the simulator test binary's device stood in.
+ * centres), the pending sport rows (`sportModule`), the session's tokens and the simulator test binary's device
+ * stood in.
  */
 class ScheduleIosModuleTest {
 
@@ -100,7 +104,6 @@ class ScheduleIosModuleTest {
     fun theStandInsAnswerWithoutDataUntilTheirCardsShip() = runTest {
         val koin = graph { BUILDINGS }
 
-        assertEquals(AppResult.Success(emptyList()), koin.get<PendingSportBookingsRepository>().getPendingBookings())
         assertEquals(emptyMap(), koin.get<TeacherLevelsRepository>().levels(setOf(USER)))
         assertFalse(koin.get<PhoneCalendars>().hasAccess())
         assertNull(koin.get<PhoneCalendars>().findOwn())
@@ -165,6 +168,8 @@ class ScheduleIosModuleTest {
         single<AppNotifier> { RecordingAppNotifier() }
         single<ScheduleChangeNotifier> { SilentNotifier }
         single<ScheduleChangesScheduler> { IdleScheduler }
+        // `sportModule` in the app (IO-09c), a feature this module cannot read.
+        single<PendingSportBookingsRepository> { NoPendingSport }
     }
 
     /** A counting engine, directories and the App Group under the test's temporary directory, no main queue. */
@@ -191,6 +196,13 @@ class ScheduleIosModuleTest {
             )
         }
         single<AppDispatchers> { AppDispatchers(Dispatchers.Default, Dispatchers.Default, Dispatchers.Default) }
+    }
+
+    private object NoPendingSport : PendingSportBookingsRepository {
+        override fun observePendingBookings(): Flow<AppResult<List<PendingSportBooking>>> =
+            flowOf(AppResult.Success(emptyList()))
+
+        override suspend fun refresh() = Unit
     }
 
     private object SilentNotifier : ScheduleChangeNotifier {

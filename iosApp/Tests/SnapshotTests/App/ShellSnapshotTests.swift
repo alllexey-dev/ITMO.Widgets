@@ -7,15 +7,16 @@ import XCTest
 /// The shell on fixtures (IO-06b) in all four appearances: a fixture root's stack with the demo banner, the
 /// signed-out gate and the damaged-link sheet. The tab bar is system chrome drawn with materials a layer render
 /// misses, so it is left to `ShellUITests` screenshots and the stacks are rendered without it; so are the Compose
-/// screens, whose Metal layer a snapshot misses: the QR pass (`QrPassUITests`), the home feed (`HomeUITests`) and the
-/// schedule (`ScheduleUITests`).
+/// screens, whose Metal layer a snapshot misses: the QR pass (`QrPassUITests`), the home feed (`HomeUITests`), the
+/// schedule (`ScheduleUITests`) and the sport tab (`SportUITests`).
 @MainActor
 final class ShellSnapshotTests: XCTestCase {
     /// A full screen at the matrix width: the banner sits at the bottom.
     private let screenHeight: CGFloat = 640
 
-    func testSportInDemo() {
-        assertAppearances(of: stack(.sport, mountedRouter(), isDemo: true), named: "sport-demo", height: screenHeight)
+    func testRecordbookInDemo() {
+        let shell = stack(.recordbook, mountedRouter(), isDemo: true)
+        assertAppearances(of: shell, named: "recordbook-demo", height: screenHeight)
     }
 
     func testSignedOutGate() {

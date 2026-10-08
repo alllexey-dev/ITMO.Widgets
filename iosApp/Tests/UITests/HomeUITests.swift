@@ -35,6 +35,7 @@ final class HomeUITests: XCTestCase {
         waitForFeed(app)
         let hint = element(app, "home_card_hint_widgets")
         XCTAssertTrue(hint.waitForExistence(timeout: stepTimeout))
+        reveal(element(app, "home_hint_action"), in: app)
 
         // The schedule cards come first since IO-09b, so the close button is the one inside the hint.
         closeButton(app, of: hint).tap()
@@ -55,8 +56,10 @@ final class HomeUITests: XCTestCase {
         waitForFeed(app)
         let hint = element(app, "home_card_hint_widgets")
         XCTAssertTrue(hint.waitForExistence(timeout: stepTimeout))
+        let action = element(app, "home_hint_action")
+        reveal(action, in: app)
 
-        element(app, "home_hint_action").tap()
+        action.tap()
 
         let sheet = element(app, "home.widgetHowTo")
         XCTAssertTrue(sheet.waitForExistence(timeout: stepTimeout))
@@ -127,6 +130,20 @@ final class HomeUITests: XCTestCase {
             _ = feed.waitForExistence(timeout: 0.5)
         }
         XCTAssertTrue(feed.exists || empty.exists, "the feed never left its loading state")
+    }
+
+    /// Scrolls the feed until `target` can be tapped: the schedule (IO-09b) and sport (IO-09c) cards come first, so
+    /// the hint can start under the tab bar. A tap during the fling only stops it, so this waits for the feed to rest.
+    private func reveal(_ target: XCUIElement, in app: XCUIApplication) {
+        for _ in 0..<4 where !target.isHittable {
+            element(app, "home_feed").swipeUp()
+        }
+        var resting = CGRect.null
+        for _ in 0..<10 where target.frame != resting {
+            resting = target.frame
+            RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+        }
+        XCTAssertTrue(target.isHittable, "the feed never brought \(target) into reach")
     }
 
     /// The close button inside `card`: every closable card's button has the same tag.

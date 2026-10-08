@@ -4,8 +4,8 @@ import SwiftUI
 
 /// Fixture mode of the shell (IO-06b): placeholder roots, and in a Debug build a fixture session gate and demo
 /// banner without Kotlin. The placeholders stand in for the CMP screens the feature cards host (IO-09x; the QR pass is
-/// CMP since IO-21, the home feed since IO-09a, the Me tab since IO-09e, the schedule since IO-09b), so they draw
-/// their own top bar under the compose chrome.
+/// CMP since IO-21, the home feed since IO-09a, the sport tab since IO-09c, the Me tab since IO-09e, the schedule
+/// since IO-09b), so they draw their own top bar under the compose chrome.
 enum ShellFixtures {
     /// The launch argument that picks a fixture session instead of the shared one:
     /// `-itmoShellSession loading|signed-out|demo|signed-in`.
