@@ -182,7 +182,7 @@ only among installed instances of that same format:
 
 - `Изменения расписания` turns on the background check of the own schedule
   for changes, its notifications, the home card and the marks in the schedule
-  ([schedule changes](features/schedule.md#schedule-changes)). It is enabled by
+  ([schedule changes](features/schedule-changes.md)). It is enabled by
   default and stored as `schedule_changes_enabled` (absent means on). It does
   not need `Подключение к ITMO.Widgets`: the check talks only to My ITMO.
 - Switching it off cancels the background work and forgets the snapshot; the
@@ -207,7 +207,7 @@ only among installed instances of that same format:
   refresh widgets; a failed save preserves the previous value and does not refresh.
 - `Синхронизация с календарём` keeps the own schedule of today and the next
   28 days in the app's own calendar `ITMO.Widgets` on the phone
-  ([calendar](features/schedule.md#calendar)); there is no calendar choice and
+  ([calendar](features/calendar.md)); there is no calendar choice and
   Google-account calendars are never written. Off by default; the state lives
   in `filesDir/calendar_sync/state.json`, not in DataStore, so it is a device
   setting outside backups. It does not need `Подключение к ITMO.Widgets` or
@@ -223,7 +223,7 @@ only among installed instances of that same format:
   page). Granted, it turns on into `ITMO.Widgets`. Turning it off
   deletes that calendar with its events.
 - `Выгрузить в .ics` (`ic_download`, `Файл с парами за выбранный период`)
-  opens the export sheet ([`.ics` export](features/schedule.md#ics-export)).
+  opens the export sheet ([`.ics` export](features/calendar.md#ics-export)).
 - The page is an offline settings category with three untitled groups: the
   schedule-changes switch with `Работа в фоне`, the auto-sign switch with a
   footer that explains the user-services requirement and that pending entries
