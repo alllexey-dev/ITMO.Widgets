@@ -131,3 +131,28 @@ place, the link picker, touch targets); the Roborazzi goldens are
 `RecordbookSubjectScreen_{session,credit,sport,bars,sheet,offer,binding,loading,error}`
 and the sections' `Subject*Preview*`, with the samples in
 `RecordbookSubjectPreviewSamples`.
+
+## iOS
+
+The iOS app hosts the same `RecordbookSubjectRoute` for
+`AppRoutes.RecordbookSubject`, pushed on the recordbook stack:
+`RecordbookSubjectView` (`iosApp/Sources/Features/Recordbook/`) through
+`recordbookSubjectPage` (`shared/ios`, `screens/RecordbookScreens.kt`); the
+ViewModel reads the page's arguments from a `SavedStateHandle` the iOS route
+builds (`RecordbookSubjectIosRoute`). The page draws its own header with
+`К зачётке`, and the edge swipe goes back too.
+
+- Exits: a teacher with a usable ISU opens the person profile on the same
+  stack; the connected sheet and an LMS page open in the system browser
+  (`link_open_failed` when nothing takes them); `Изменить итог` opens
+  [`Мои баллы`](sheet-scores.md#ios); `Войти в БАРС` of a BARS snackbar opens the BARS
+  sign-in sheet, after which the page loads again.
+- Links: while iOS does not offer subject links (`PlatformCapabilities.reviews`
+  off until IO-09f) the route gets `linksEnabled = false`: `subjectHubItems`
+  keeps only the course's LMS page under `Ссылки` (no section without one) and
+  drops `Чаты`, and `recordbookIosModule` binds a `SubjectLinksRepository`
+  stand-in that answers `CustomServicesDisabled` with no request. The teacher
+  tones stay empty (`scheduleIosModule`'s stand-in) until then too.
+- Tests: `SubjectHubItemsTest` covers `linksEnabled = false`;
+  `RecordbookUITests` opens the demo's algorithms page with its control points
+  and sheet total and checks that no links or chats section shows.

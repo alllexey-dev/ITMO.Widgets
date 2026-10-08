@@ -184,3 +184,24 @@ the `SubjectSheetTotal*` and `RecordbookSubjectScreen_{sheet,offer}` goldens;
 `GoogleSheetUrlTest` in `:shared:core`. Instrumented:
 `SubjectLinksVisualTest.actionsSheetOffersMyScoresOnlyForAGoogleSheet`. No real
 sheet is opened; names and ISUs are made up.
+
+## iOS
+
+On iOS `Мои баллы` (`AppRoutes.SheetScores`) is the shared `SheetScoresSheet`
+in a SwiftUI sheet above the shell (`SheetScoresSheetView`,
+`sheetScoresViewController` in `shared/ios`, `SheetScoresIosRoute`), half height
+first with the system drag indicator; it closes itself once the total is saved,
+and a failed save shows its text in a banner over the sheet. The ViewModel
+reads the sheet's arguments from a `SavedStateHandle` the iOS route builds.
+
+- Downloading: `PublicSheetClient` runs on `darwinHttpEngine()` (no cookies, no
+  cache) with the common client's policy: HTTPS only, no redirect to HTTP;
+  `SheetHtmlGrid` parses with Ksoup in common code. Storage is the same
+  `filesDir/sheet_scores` under the app's files directory.
+- The subject page's connected total, `Открыть таблицу`, `Изменить итог` and
+  `Отключить` work as on Android. The offer to connect a sheet and the sheet
+  link picker come from the subject's links, which iOS does not load before
+  IO-09f ([subject page](subject-page.md#ios)), so until then a sheet shows on
+  iOS only once connected (the demo's algorithms total).
+- Tests: `RecordbookUITests` opens `Мои баллы` from the demo's total and closes
+  it by a drag.

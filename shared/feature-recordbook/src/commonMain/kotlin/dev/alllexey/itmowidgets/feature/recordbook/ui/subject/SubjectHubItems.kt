@@ -81,13 +81,22 @@ sealed interface SubjectHubItem {
 /**
  * The whole subject page as one list (2.2's `SubjectHubAdapter.submitContent`): the result with the sheet total, links,
  * chats, controls, teachers and the nearest lessons. Every list section is a heading over one connected group.
+ *
+ * Without [linksEnabled] (`PlatformCapabilities.reviews` off: a platform that does not offer subject links yet) the
+ * links section keeps only the course's LMS page and the chats go, so no shared link, vote or link sheet is offered.
  */
-fun subjectHubItems(state: RecordbookSubjectUiState.Content): List<SubjectHubItem> {
+fun subjectHubItems(state: RecordbookSubjectUiState.Content, linksEnabled: Boolean = true): List<SubjectHubItem> {
     val hub = state.hub
     return buildList {
         if (state.subject.isPhysicalEducation) add(SubjectHubItem.SportOverview(state.subject, state.sport))
         else add(SubjectHubItem.Hero(state.subject, state.gradeStep, hub.sheet))
-        if (hub.resourceScope != null) {
+        if (hub.resourceScope != null && !linksEnabled) {
+            val lms = hub.chips.visible.filterIsInstance<SubjectLinkChip.Lms>()
+            if (lms.isNotEmpty()) {
+                add(SubjectHubItem.Section(CoreRes.string.links_title))
+                addGroup(lms.map { chip -> { position: GroupPosition -> SubjectHubItem.Lms(chip.url, position) } })
+            }
+        } else if (hub.resourceScope != null) {
             add(SubjectHubItem.Section(CoreRes.string.links_title))
             addGroup(buildList {
                 hub.chips.visible.forEach { chip ->
@@ -105,7 +114,7 @@ fun subjectHubItems(state: RecordbookSubjectUiState.Content): List<SubjectHubIte
                 }
             })
         }
-        if (hub.chats.isNotEmpty()) {
+        if (linksEnabled && hub.chats.isNotEmpty()) {
             add(SubjectHubItem.Section(CoreRes.string.links_chats))
             addGroup(hub.chats.map { link -> { position: GroupPosition -> SubjectHubItem.Chat(link, position) } })
         }

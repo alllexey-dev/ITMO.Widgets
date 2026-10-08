@@ -11,18 +11,17 @@ final class ShellUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testTabsFollowAndroidOrderWithoutRecordbook() {
+    func testTabsFollowAndroidOrder() {
         let app = XCUIApplication.itmo()
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
 
         let buttons = app.tabBars.firstMatch.buttons
-        XCTAssertEqual(buttons.count, 4)
-        for (index, root) in ["schedule", "home", "sport", "me"].enumerated() {
+        XCTAssertEqual(buttons.count, XCUIApplication.shellTabs.count)
+        for (index, root) in XCUIApplication.shellTabs.enumerated() {
             buttons.element(boundBy: index).tap()
             XCTAssertTrue(element(app, "shell.root.\(root)").waitForExistence(timeout: stepTimeout), root)
         }
-        XCTAssertFalse(element(app, "shell.root.recordbook").exists)
         attachScreenshot(named: "me")
     }
 
@@ -30,7 +29,7 @@ final class ShellUITests: XCTestCase {
         let app = XCUIApplication.itmo()
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
-        app.tabBars.firstMatch.buttons.element(boundBy: 2).tap()
+        app.selectTab("sport")
         XCTAssertTrue(element(app, "shell.root.sport").waitForExistence(timeout: stepTimeout))
 
         app.open(try XCTUnwrap(URL(string: "itmowidgets://route/qr_pass")))
@@ -117,7 +116,7 @@ final class ShellUITests: XCTestCase {
         let app = XCUIApplication.itmo()
         app.launch()
         XCTAssertTrue(element(app, "kit.demoBanner").waitForExistence(timeout: rootTimeout))
-        app.tabBars.firstMatch.buttons.element(boundBy: 3).tap()
+        app.selectTab("me")
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
 
         let signOut = element(app, "sign_out_row")

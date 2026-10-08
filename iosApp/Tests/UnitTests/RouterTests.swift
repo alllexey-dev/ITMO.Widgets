@@ -212,12 +212,36 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.sheet, .linkUnavailable)
     }
 
-    func testEntryRouteOfHiddenTabIsDropped() throws {
+    func testRecordbookEntryRouteSelectsTheRecordbookTab() throws {
         let router = readyRouter()
         let recordbook = IosRoutes.shared.entryRoute(action: AppEntryIntents.shared.ACTION_OPEN_RECORDBOOK)
 
-        XCTAssertFalse(router.open(entry: try XCTUnwrap(recordbook)))
-        XCTAssertNil(router.pendingRoute, "a route to a hidden tab would wait forever")
+        XCTAssertTrue(router.open(entry: try XCTUnwrap(recordbook)))
+        XCTAssertEqual(router.selectedTab, .recordbook)
+        XCTAssertNil(router.pendingRoute)
+    }
+
+    func testSubjectPageIsPushedAndItsSheetsOpenAboveTheShell() {
+        let router = readyRouter()
+        router.selectedTab = .recordbook
+        let subject = AppRoutes.RecordbookSubject(args: RecordbookSubjectArgs(
+            entryId: 11, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: nil, barsType: nil,
+            barsIdentifier: nil
+        ))
+        let invalid = AppRoutes.RecordbookSubject(args: RecordbookSubjectArgs(
+            entryId: 0, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: nil, barsType: nil,
+            barsIdentifier: nil
+        ))
+        let scores = AppRoutes.SheetScores(args: SheetScoresArgs(
+            subjectId: 5, subjectName: "Subject", periodKey: "2026/2027:1", url: "https://example.com/s", step: .total
+        ))
+
+        XCTAssertEqual(router.open(invalid), .notOnIOS, "a subject without valid arguments opens nothing")
+        XCTAssertEqual(router.open(subject), .opened)
+        XCTAssertEqual(router.open(scores), .opened)
+
+        XCTAssertEqual(router.path(of: .recordbook), [ShellDestination(subject)])
+        XCTAssertEqual(router.sheet, .route(ShellDestination(scores)))
     }
 
     // MARK: In-app routes
@@ -239,8 +263,8 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.open(AppRoutes.TabRoot(tab: .sport)), .opened)
         XCTAssertEqual(router.selectedTab, .sport)
 
-        XCTAssertEqual(router.open(AppRoutes.TabRoot(tab: .recordbook)), .notOnIOS)
-        XCTAssertEqual(router.selectedTab, .sport)
+        XCTAssertEqual(router.open(AppRoutes.TabRoot(tab: .recordbook)), .opened)
+        XCTAssertEqual(router.selectedTab, .recordbook)
     }
 
     func testOneSheetAtATime() {
@@ -364,7 +388,7 @@ final class RouterTests: XCTestCase {
             ("itmowidgets://route/sport", EntryRoute(tab: .sport)),
             ("itmowidgets://route/me", EntryRoute(tab: .me)),
             ("ITMOWIDGETS://ROUTE/qr_pass", qrPassEntry),
-            ("itmowidgets://route/recordbook", linkUnavailableEntry),
+            ("itmowidgets://route/recordbook", EntryRoute(tab: .recordbook)),
             ("itmowidgets://route/", linkUnavailableEntry),
             ("itmowidgets://route/qr_pass/extra", linkUnavailableEntry),
             ("itmowidgets://other/qr_pass", nil),
@@ -384,9 +408,9 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    func testTabsFollowAndroidOrderWithRecordbookHidden() {
+    func testTabsFollowAndroidOrder() {
         XCTAssertEqual(ShellTab.allCases, [.recordbook, .schedule, .home, .sport, .me])
-        XCTAssertEqual(ShellTab.visible, [.schedule, .home, .sport, .me])
+        XCTAssertEqual(ShellTab.visible, ShellTab.allCases, "every tab has its screen since IO-09d2")
         XCTAssertEqual(ShellTab.launch, .home)
         XCTAssertEqual(ShellTab.allCases.map(\.appTab), [.recordbook, .schedule, .home, .sport, .me])
         XCTAssertEqual(ShellTab.allCases.map { ShellTab($0.appTab) }, ShellTab.allCases)
@@ -472,7 +496,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.Settings(page: "ROOT"), .swiftUI),
             (AppRoutes.Diagnostics.shared, .swiftUI),
             (AppRoutes.DebugTools.shared, .notOnIOS),
-            (AppRoutes.RecordbookSubject(args: subject), .notOnIOS),
+            (AppRoutes.RecordbookSubject(args: subject), .compose),
             (AppRoutes.Friends.shared, .compose),
             (AppRoutes.UserFriends(isu: 100_001, name: ""), .compose),
             (AppRoutes.UserSearch.shared, .compose),
@@ -482,9 +506,9 @@ final class RouterTests: XCTestCase {
             (AppRoutes.ScheduleChanges.shared, .compose),
             (AppRoutes.QrPass.shared, .compose),
             (AppRoutes.MyItmoWeb.shared, .swiftUI),
-            (period, .notOnIOS),
+            (period, .composeSheet),
             (AppRoutes.FriendSelector(selectedIsu: 0), .composeSheet),
-            (AppRoutes.SheetScores(args: scores), .notOnIOS),
+            (AppRoutes.SheetScores(args: scores), .composeSheet),
             (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),
             (AppRoutes.ReviewEditor(args: teacher), .notOnIOS),
             (AppRoutes.SubjectLinks(args: links), .notOnIOS),

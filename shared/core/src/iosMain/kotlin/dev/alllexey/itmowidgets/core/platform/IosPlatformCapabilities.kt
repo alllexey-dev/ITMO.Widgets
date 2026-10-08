@@ -5,18 +5,18 @@ package dev.alllexey.itmowidgets.core.platform
  * entry points stay hidden (App Review 2.1). Never on iOS: the quick settings tile, Android's battery and Xiaomi
  * background screens, the GitHub update channel, the animated QR widget and the custom spoiler image.
  *
- * - [PlatformCapabilities.recordbook]: IO-09d2; [PlatformCapabilities.marks]: IO-09d3, with the settings
- *   recordbook page.
+ * - [PlatformCapabilities.recordbook]: on since IO-09d2 (the tab, the subject page and `Мои баллы`);
+ *   [PlatformCapabilities.marks]: IO-09d3, with the settings recordbook page and the new-marks home card.
  * - [PlatformCapabilities.calendarExport]: on since IO-15b, the settings calendar rows over EventKit and the `.ics`
  *   sheet.
- * - [PlatformCapabilities.reviews]: IO-09f.
+ * - [PlatformCapabilities.reviews]: IO-09f, with the subject page's links.
  */
 val IosPlatformCapabilities = PlatformCapabilities(
     quickSettingsTile = false,
     backgroundWorkSettings = false,
     updateChannel = false,
     calendarExport = true,
-    recordbook = false,
+    recordbook = true,
     marks = false,
     reviews = false,
     qrWidgetAnimation = false,

@@ -47,7 +47,8 @@ final class StableIdentifiersTests: XCTestCase {
         XCTAssertEqual(RouteURL.scheme, "itmowidgets")
         XCTAssertEqual(
             RouteURL.ids.compactMap { RouteURL.url(id: $0)?.absoluteString },
-            ["schedule", "home", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
+            // The recordbook's URL since IO-09d2 made its tab visible.
+            ["recordbook", "schedule", "home", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
         )
     }
 

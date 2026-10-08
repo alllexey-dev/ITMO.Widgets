@@ -2,10 +2,11 @@
 
 The iOS client is a SwiftUI shell around the shared Compose Multiplatform screens, with WidgetKit extensions and a
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
-umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with the Compose home feed, sport
-tab and Me tab and placeholder roots for the other tabs, gated on the shared session with the sign-in screen and the
-first-run flow (see Shell and routes, Sign-in), the QR pass, the home feed, the sport tab with its details sheet and
-another user's sport, the Me tab and the social screens are its Compose screens, the widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets;
+umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with a Compose root in each of
+the five tabs (recordbook, schedule, home, sport, me), gated on the shared session with the sign-in screen and the
+first-run flow (see Shell and routes, Sign-in); the QR pass, the recordbook with its subject page and sheets, the
+schedule, the home feed, the sport tab with its details sheet and another user's sport, the Me tab and the social
+screens are its Compose screens, the widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets;
 App Shortcuts and quick actions in System entries) and the notification service passes notifications through
 unchanged.
 
@@ -130,20 +131,22 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 ## Shell and routes
 
 The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Its session gate and demo banner follow
-the shared `SessionRepository` (see Core graph). The home root is LH-2's Compose feed (`HomeScreen`, IO-09a), the
-sport root LP-6's Compose sport tab (`SportTabScreen`, IO-09c), the me root LA-3's Compose Me tab (`MeTabScreen`,
-IO-09e) with the entry to settings and the sign-out (the route's confirmation, `SessionRepository.signOut()`), the
-schedule root L10's Compose schedule (`ScheduleScreen`, IO-09b); until the other IO-09x cards host theirs, the other
-roots are placeholders (`FixtureRootScreen`).
+the shared `SessionRepository` (see Core graph). The recordbook root is L12's Compose recordbook
+(`RecordbookTabScreen`, IO-09d2), the home root LH-2's Compose feed (`HomeScreen`, IO-09a), the sport root LP-6's
+Compose sport tab (`SportTabScreen`, IO-09c), the me root LA-3's Compose Me tab (`MeTabScreen`, IO-09e) with the
+entry to settings and the sign-out (the route's confirmation, `SessionRepository.signOut()`), the schedule root L10's
+Compose schedule (`ScheduleScreen`, IO-09b); no tab has a placeholder root any more.
 
 - Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
-  sport, me. The recordbook is declared but hidden until IO-09d2 (no placeholder reaches App Review); home is
-  selected at launch. The container is one type, `Shell/ShellTabs.swift` (a `TabView`). Tabs switch by the native
+  sport, me. A tab shows only while iOS offers its feature (`ShellTab.isAvailable`: the recordbook follows
+  `PlatformCapabilities.recordbook`, on since IO-09d2), so no placeholder reaches App Review; home is selected at
+  launch. The container is one type, `Shell/ShellTabs.swift` (a `TabView`). Tabs switch by the native
   tab bar only, with no swipe between them (owner decision 2026-10-06; IO-SW1 dropped, see design.md "Tab swipe").
 - Stacks and sheets. Each tab has one `NavigationStack` whose path the router holds; the shell's own sheets open at
   the medium detent and drag to large. A sheet key of a feature (`RouteTarget.composeSheet`: the lesson, pending
-  sport and friend picker sheets, IO-09b) is one `ShellSheet.route` above the shell whose SwiftUI view hosts the
-  Compose sheet content and sets the detents (`.large` for Android's tall sheets, with the system's drag indicator);
+  sport and friend picker sheets, IO-09b; the recordbook's period picker and `Мои баллы`, IO-09d2) is one
+  `ShellSheet.route` above the shell whose SwiftUI view hosts the Compose sheet content and sets the detents (`.large`
+  for Android's tall sheets, `.medium` and `.large` for its default ones, with the system's drag indicator);
   the content draws its own title and close button. One sheet at a time; a screen opened from a sheet replaces it.
   A screen's own sheet (the sport details, IO-09c) is a SwiftUI `.sheet` of its Swift host hosting the shared sheet
   content, never a Compose `ModalBottomSheet`: Android's tall sheet is the large detent, the system drag indicator
@@ -175,15 +178,16 @@ roots are placeholders (`FixtureRootScreen`).
   delegates each key to its feature's `Routes+<Feature>.swift`, which returns a Compose screen, a SwiftUI screen, a
   shell sheet, a Compose sheet, a tab, the gate, or "not on iOS". A feature card changes only its own file; a key no feature claims fails
   `RouterTests.testEveryRegisteredRouteHasAFeature`, and `testEveryRouteKindHasItsTarget` pins the target of every
-  key. "Not on iOS" keys (recordbook, reviews, resources until IO-09d2 and IO-09f map them, the `.ics` export,
-  which the settings screen presents itself, the debug tools for good, and every screen of a feature whose IO card
-  has not merged) have no entry point and open nothing.
-- Route results. A screen that answers its opener (the friend picker answers the schedule) is opened with
-  `open(_:onResult:)` and answers with `deliver(_:from:)`; the router holds the callback until then.
+  key. "Not on iOS" keys (reviews, resources until IO-09f maps them, the `.ics` export, which the settings screen
+  presents itself, the debug tools for good, and every screen of a feature whose IO card has not merged) have no
+  entry point and open nothing.
+- Route results. A screen that answers its opener (the friend picker answers the schedule, the period picker the
+  recordbook) is opened with `open(_:onResult:)` and answers with `deliver(_:from:)`; the router holds the callback
+  until then.
 
 | Route id | URL | Opens |
 |---|---|---|
-| `schedule`, `home`, `sport`, `me` | `itmowidgets://route/<root>` | that root as it is |
+| `recordbook`, `schedule`, `home`, `sport`, `me` | `itmowidgets://route/<root>` | that root as it is |
 | `qr_pass` | `itmowidgets://route/qr_pass` | the QR pass above home (QR widget, Control, quick action) |
 | `today` | `itmowidgets://route/today` | the schedule root on today (App Shortcut, quick action) |
 | any other id | `itmowidgets://route/<id>` | the damaged-link sheet above home (`app_link_unavailable_*`) |
@@ -376,10 +380,11 @@ process, BARS on a Darwin engine of its own (no cookies, cache or redirects, nev
   same `state` yields a code.
 - Sign-in sheet. `BarsLoginSheet` is Android's `BarsLoginActivity` over the shared `BarsLoginViewModel`, whose
   `SavedStateHandle` is a Koin parameter (`BarsLoginParameters.fresh()`), so each sheet keeps one `state`. A retry
-  also clears WebKit's cookies, as Android clears `CookieManager`. No screen opens it until the recordbook reaches
-  iOS (IO-09d2); in a Debug build `-itmoBarsLogin` presents it, and `-itmoBarsRenew foreground|background` replaces
-  the saved header with one BARS rejects and renews it through the hidden view or the cookie copy
-  (`BarsSessionCheck`, which logs only the header's length and expiry).
+  also clears WebKit's cookies, as Android clears `CookieManager`. The recordbook list and the subject page open
+  it from their BARS snackbar and load again after a completed sign-in (IO-09d2); in a Debug build
+  `-itmoBarsLogin` presents it, and `-itmoBarsRenew foreground|background` replaces the saved header with one BARS
+  rejects and renews it through the hidden view or the cookie copy (`BarsSessionCheck`, which logs only the
+  header's length and expiry).
 - Until the mark check runs on iOS (IO-09d3) the marks scheduler does nothing; a BARS answer still turns "Оценки
   БАРС" on.
 
@@ -619,6 +624,10 @@ sign-out cleaners.
   refresh after a booking and `friendSelectorModule` the lessons' friends (`FriendRepository` over social's
   repository). `sportModule` replaces the schedule's empty pending sport rows, and the sport card joins the home feed
   (IO-09c).
+- Recordbook screens. `recordbookModule`'s four ViewModels and the subject page's loaders run on the schedule data
+  graph's own lessons and refresh, the sport graph's score and `scheduleIosModule`'s empty teacher tones;
+  `recordbookIosModule` adds a `SubjectLinksRepository` stand-in that offers no links and asks nothing until IO-09f
+  loads `resourcesModule` (IO-09d2).
 - `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
   controller for the share sheet.
 - Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`; dev
@@ -629,8 +638,9 @@ sign-out cleaners.
   with its type and stack frames, written at once to the JSON file diagnostics-crash-v1.json in the no-backup directory, which
   the next launch shows first and deletes. Swift crashes never pass Kotlin and are not recorded.
 - `PlatformCapabilities` is `IosPlatformCapabilities`: everything off until the IO card that ships a feature turns
-  it on (recordbook IO-09d2, marks IO-09d3, calendar IO-15b, reviews IO-09f); the quick settings tile, Android's
-  battery and Xiaomi screens, the update channel, the animated QR widget and the custom spoiler image stay off.
+  it on (calendar export on since IO-15b, recordbook since IO-09d2; marks IO-09d3, reviews and subject links
+  IO-09f); the quick settings tile, Android's battery and Xiaomi screens, the update channel, the animated QR widget
+  and the custom spoiler image stay off.
 - `PlatformActions`: the share sheet (the title is not shown: iOS's sheet has none), links (t.me in Telegram when
   installed), Apple Maps (`maps.apple.com`, the pin or the address) and the app's pages in Settings.
 - `IosCoreGraph` runs the module in a Koin application of its own for hosted tests (`ITMOWidgetsTests/SessionTests`);
@@ -676,12 +686,14 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   `koinViewModel()` uses the store Compose Multiplatform gives each controller, whose `SavedStateHandle` is empty: a
   route whose ViewModel reads its key's arguments gets them from its feature's iOS route, which resolves the Koin
   definition in that store with a `SavedStateHandle` of the arguments (`UserProfileIosRoute`, IO-09e;
-  `UserScheduleIosRoute`, `LessonDetailsIosRoute`, `FriendSelectorIosRoute`, IO-09b; `UserSportIosRoute`, IO-09c).
+  `UserScheduleIosRoute`, `LessonDetailsIosRoute`, `FriendSelectorIosRoute`, IO-09b; `UserSportIosRoute`, IO-09c;
+  `RecordbookSubjectIosRoute`, `SheetScoresIosRoute`, IO-09d2).
   A Swift host that keeps state for its route across the route's life holds a Kotlin object the factory reads
   (`SportTabState`: the sport tab's shared lessons and the details sheet's results).
 - Requests into a hosted route. A tab root that takes requests from the shell returns a Kotlin handle with its
   controller (`ScheduleRootScreen`: `showToday()` for the `today` entry route, `showFriend(user:)` for the friend
-  picker's answer), backed by an unlimited channel, as Android's Fragment results.
+  picker's answer; `RecordbookPage`: `send(request:)` for the period picker's answer and `barsSignedIn()` after the
+  BARS sign-in sheet), backed by an unlimited channel, as Android's Fragment results.
 - Hosting. `ComposeHost { factory() }` (`Sources/Bridge/ComposeHost.swift`) makes the controller once and ignores
   the safe area, so the surface runs under the status bar and the tab bar and Compose's `WindowInsets` report them;
   the factory pads its content by `WindowInsets.safeDrawing` (the kit's top bar draws no insets). A SwiftUI
@@ -718,6 +730,7 @@ stays under its about 30 MB limit by linking no Kotlin; these figures are the ap
 | Launch on home (the Compose home feed with its hints, other roots fixtures) | 81 MB | IO-09a, 2026-10-07 |
 | Launch on home, then the Compose schedule tab and the `today` route (schedule data graph loaded) | 81 MB (peak 89 MB) | IO-09b, 2026-10-08 |
 | The sport tab open from home, both pages loaded (Compose `SportRoute`, launched by XCUITest) | 106 MB (peak 108 MB) | IO-09c, 2026-10-08 |
+| The recordbook tab open from home through `itmowidgets://route/recordbook` (Compose `RecordbookRoute`, `simctl launch`); home and the sport tab measured the same way in the same session: 162 MB and 154 MB | 149 to 154 MB (peak 153 to 192 MB) | IO-09d2, 2026-10-08 |
 
 ## Build and test
 

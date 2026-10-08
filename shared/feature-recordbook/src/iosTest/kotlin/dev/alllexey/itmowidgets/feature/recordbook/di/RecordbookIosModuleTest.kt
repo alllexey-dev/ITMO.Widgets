@@ -1,17 +1,34 @@
 package dev.alllexey.itmowidgets.feature.recordbook.di
 
+import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
+import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
+import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
+import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.SecureStore
@@ -32,7 +49,14 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.KeychainItmoIdCooki
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebKitCookie
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebViewBarsSilentLogin
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksCheck
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.BarsLoginViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.ui.handleEntries
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
@@ -49,19 +73,27 @@ import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import okio.FileSystem
 import okio.Path
+import kotlinx.datetime.LocalDate
 import org.koin.core.Koin
+import org.koin.core.annotation.KoinInternalApi
 import org.koin.core.module.Module
 import org.koin.core.parameter.parametersOf
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import platform.UIKit.UIViewController
 
-/** The recordbook graph on its iOS ports, as `IosKoinModules` loads it, with the session's types faked. */
+/**
+ * The recordbook graph on its iOS ports, as `IosKoinModules` loads it, with the session's types and the subject page's
+ * ports from other features (the schedule's lessons, the sport score, the teacher tones) faked.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecordbookIosModuleTest {
 
@@ -143,13 +175,106 @@ class RecordbookIosModuleTest {
         assertEquals(2, host.cookieReads)
     }
 
-    private fun graph(): Koin = koinApplication {
+    /**
+     * Koin's `verify()` is JVM-only; on Kotlin/Native every definition is resolved instead, each with the arguments the
+     * Swift hosts give the subject page and `Мои баллы` (unused by the others), on the demo session. The background
+     * mark check ([MarksCheck]) waits for its notifier, which IO-09d3 binds with the check.
+     */
+    @OptIn(KoinInternalApi::class)
+    @Test
+    fun everyDefinitionOfTheRecordbookScreensResolvesWithoutARequest() {
+        val koin = graph(demo = true)
+        val definitions = koin.instanceRegistry.instances.values.map { it.beanDefinition }.distinct()
+            .filter { it.primaryType != MarksCheck::class }
+
+        definitions.forEach { definition ->
+            koin.get<Any>(definition.primaryType, definition.qualifier) { parametersOf(screenArguments()) }
+        }
+
+        koin.get<RecordbookViewModel> { parametersOf(SavedStateHandle()) }
+        koin.get<RecordbookSubjectViewModel> { parametersOf(screenArguments()) }
+        koin.get<SheetScoresViewModel> { parametersOf(screenArguments()) }
+        assertEquals(emptyList(), requests)
+        koin.close()
+    }
+
+    @Test
+    fun theDemoAnswersTheRecordbookWithoutARequest() = runTest {
+        val koin = graph(demo = true)
+
+        val programs = koin.get<RecordbookRepository>().getPrograms()
+
+        val program = assertIs<AppResult.Success<List<RecordbookProgram>>>(programs).value.single()
+        assertEquals(DemoStudy.PROGRAM_ID, program.id)
+        assertTrue(program.periods.isNotEmpty())
+        assertEquals(emptyList(), requests)
+        koin.close()
+    }
+
+    @Test
+    fun theSubjectLinksAreNotOfferedAndAskNothing() = runTest {
+        val koin = graph()
+        val links = koin.get<SubjectLinksRepository>()
+
+        assertEquals(SubjectLinksState.Error(AppError.CustomServicesDisabled), links.observe(SCOPE).first())
+        assertEquals(emptyList(), links.observeRestrictions().first())
+        assertEquals(null, links.peek(SCOPE))
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), links.refresh(SCOPE))
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), links.vote(SCOPE, "link", 1))
+        assertEquals(emptyList(), requests)
+        koin.close()
+    }
+
+    /** The subject page's and the sheet's arguments in one handle: the keys of the two never collide. */
+    private fun screenArguments(): SavedStateHandle =
+        SavedStateHandle(mapOf(*SUBJECT.handleEntries(), *SCORES.handleEntries()))
+
+    private fun graph(demo: Boolean = false): Koin = koinApplication {
         allowOverride(true)
-        modules(iosCoreModule(host, ORIGIN), recordbookModule, recordbookIosModule(host), testDevice())
+        modules(
+            iosCoreModule(host, ORIGIN),
+            recordbookModule,
+            recordbookIosModule(host),
+            testDevice(demo),
+            subjectPagePorts(),
+        )
     }.koin
 
+    /**
+     * What the subject page reads from other features' graphs in the app: the own lessons and their refresh
+     * (`scheduleDataModule`), the sport score (`sportModule`) and the teacher tones (`scheduleIosModule`'s stand-in).
+     */
+    private fun subjectPagePorts(): Module = module {
+        single<SubjectLessonsGateway> {
+            object : SubjectLessonsGateway {
+                override fun observeOwnLessons(start: LocalDate, end: LocalDate): Flow<List<SubjectLesson>> =
+                    flowOf(emptyList())
+            }
+        }
+        single<ScheduleRefreshGateway> {
+            object : ScheduleRefreshGateway {
+                override suspend fun refreshOwnSchedule(startDate: LocalDate, endDate: LocalDate) =
+                    AppResult.Success(Unit)
+            }
+        }
+        single<SportScoreRepository> {
+            object : SportScoreRepository {
+                override suspend fun getScorePeriods(): AppResult<List<SportScorePeriod>> =
+                    AppResult.Success(emptyList())
+
+                override suspend fun getScoreSummary(semesterId: Long): AppResult<SportScoreSummary> =
+                    AppResult.Failure(AppError.NotFound)
+            }
+        }
+        single<TeacherLevelsRepository> {
+            object : TeacherLevelsRepository {
+                override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = emptyMap()
+            }
+        }
+    }
+
     /** The session's types (the account module's), a counting engine, the test's own directories and no Keychain. */
-    private fun testDevice(): Module = module {
+    private fun testDevice(demo: Boolean = false): Module = module {
         val engine = MockEngine { request ->
             requests += request.url.toString()
             respondError(HttpStatusCode.ServiceUnavailable)
@@ -180,7 +305,7 @@ class RecordbookIosModuleTest {
             )
         }
         single<AppDispatchers> { AppDispatchers(Dispatchers.Default, Dispatchers.Default, Dispatchers.Default) }
-        single<DemoMode> { FakeDemoMode() }
+        single<DemoMode> { FakeDemoMode(active = demo) }
         single<SessionRepository> { FakeSessionRepository(SessionState.SignedOut) }
         single<CurrentUserProvider> {
             object : CurrentUserProvider {
@@ -223,6 +348,20 @@ class RecordbookIosModuleTest {
         const val ISU = 123456
         const val KEYCHAIN_CLEANER = "KeychainSessionDataCleaner"
         val USER = CurrentUser(isu = ISU, name = null, pictureUrl = null)
+        val SCOPE = ResourceScope(5, "Subject", "2026/2027:1")
+        val SUBJECT = RecordbookSubjectArgs(
+            entryId = 11,
+            programId = DemoStudy.PROGRAM_ID,
+            semester = 3,
+            studyYear = "2026/2027",
+        )
+        val SCORES = SheetScoresArgs(
+            subjectId = 5,
+            subjectName = "Subject",
+            periodKey = "2026/2027:1",
+            url = "https://docs.google.com/spreadsheets/d/x",
+            step = SheetScoresArgs.Step.TOTAL,
+        )
     }
 }
 

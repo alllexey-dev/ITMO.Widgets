@@ -173,7 +173,7 @@ final class ScheduleUITests: XCTestCase {
         let app = XCUIApplication.itmo()
         app.launch()
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
-        app.tabBars.firstMatch.buttons.element(boundBy: 3).tap()
+        app.selectTab("me")
         XCTAssertTrue(element(app, "friends_row").waitForExistence(timeout: stepTimeout))
         element(app, "friends_row").tap()
         let friend = element(app, "user_list_row_\(Self.ivan)")
@@ -232,10 +232,10 @@ final class ScheduleUITests: XCTestCase {
     private static let close = "Закрыть"
     private static let returnToMine = "Вернуться к своему"
 
-    /// The schedule tab, the first of the bar while the recordbook has no tab, and its list or state.
+    /// The schedule tab and its list or state.
     private func openSchedule(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
-        app.tabBars.firstMatch.buttons.element(boundBy: 0).tap()
+        app.selectTab("schedule")
         XCTAssertTrue(element(app, "shell.root.schedule").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "schedule_list").waitForExistence(timeout: rootTimeout), "the list never loaded")
     }
