@@ -148,7 +148,8 @@ background:
   (`view_link_vote_pill.xml`: a 32 dp pill inside 48 dp arrow targets).
 - Captions put a second fact on a second line or join facts with a comma; no
   « · ». The last row that leads further (`Все ссылки, N`, `Все пары, N`,
-  `Добавить ссылку`) is `item_group_action_row.xml`.
+  `Добавить ссылку`) is the kit's `GroupActionRow` or, on the subject page,
+  `SubjectActionRow` (`ui/subject/SubjectLinks.kt` of `:shared:feature-recordbook`).
 
 Chips, date tiles and avatars have their own geometry. Vertical padding is
 symmetric; height grows with content and font scale. Clipped text is fixed
@@ -209,7 +210,7 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
 | Screen | Contract |
 |---|---|
 | Compose screens | `AppRefreshBox`: indicator `primary` on a `background` container |
-| XML lists: home, schedule, both sport tabs and a friend's sport, friends and a user's friends, recordbook and the subject page | `applyAppRefreshColors()` from `core/ui/RefreshAppearance.kt`: indicator `colorPrimary`, background `android.R.attr.colorBackground` |
+| XML lists: home, schedule, both sport tabs and a friend's sport, friends and a user's friends | `applyAppRefreshColors()` from `core/ui/RefreshAppearance.kt`: indicator `colorPrimary`, background `android.R.attr.colorBackground` |
 | ITMO.ID web sign-in | Explicit exception: library default indicator. The window follows the app theme (light or dark); only the ITMO.ID page inside it is light |
 
 - First load without any cache: a skeleton (`core/ui/SkeletonView`, styles
@@ -360,8 +361,8 @@ both platforms.
 | `ToneDot` | The review tone dot, an empty slot until the tone arrives | `bg_teacher_level_dot.xml` with `ImageView.bindLevel` | Same |
 | `Avatar` | A photo from the given URL through the host's image loader, initials otherwise | `core/ui/AvatarView.kt` | Same |
 | `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | `core/ui/ConnectedGroup.kt` (`View.bindGroupPosition`) | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
-| `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | `item_section_heading.xml`; `item_recordbook_control_group.xml` | A section header in `secondaryLabel` at UIKit's insets |
-| `GroupActionRow` | The last row of a group that leads further | `item_group_action_row.xml` | A cell with the icon in the tint and the disclosure indicator |
+| `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | `item_section_heading.xml`; the subject page's `SubjectControlGroupHeading` | A section header in `secondaryLabel` at UIKit's insets |
+| `GroupActionRow` | The last row of a group that leads further | the subject page's `SubjectActionRow` (`Все ссылки`, `Добавить ссылку`, `Все пары`) | A cell with the icon in the tint and the disclosure indicator |
 | `LinkRow`, `VotePill` | A link with its own badge or the vote pill | `item_subject_link.xml`, `core/ui/SubjectLinkRow.kt`, `view_link_vote_pill.xml` | A cell; the vote arrows are 44 pt targets, the pill on `tertiarySystemFill` |
 | `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | the user row of the XML social lists; rows with `bindSelectionAccessibility` | A cell with the disclosure indicator; the selection is the checkmark accessory with the selection haptic |
 | `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | `Card.SettingsGroup` and `item_setting_row.xml`, `item_setting_toggle.xml`, `item_setting_divider.xml` | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
@@ -369,7 +370,7 @@ both platforms.
 | `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | the handle and header of each sheet layout | No handle (the host's grabber); the header is the sheet's navigation bar ([Platform styles](#platform-styles)) |
 | `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link | `MaterialAlertDialogBuilder` dialogs | Compose-drawn iOS alerts with capsule buttons; no hero icon |
 | `ScoreRing` | The sport score ring | `core/ui/CircularProgressBar.kt` | Same |
-| `GradeScale` | A 0-100 bar with grade ticks | `feature/recordbook/ui/GradeScaleView.kt` | Same |
+| `GradeScale` | A 0-100 bar with grade ticks | the result card of the subject page (`ui/subject/SubjectHero.kt` of `:shared:feature-recordbook`) | Same |
 | `TimelineMarker`, `TimelineLine` | The schedule timeline | `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule` | Same |
 | `StepsIndicator` | Progress dots of a flow | `OnboardingStepsView`, the first-run flow's dot strip | A `UIPageControl` row of equal dots, the current one in the tint |
 
@@ -659,25 +660,29 @@ settings, and restore them if a separate test explicitly changes them.
   the new-change dot of the schedule changes history and adds `Новое` at the
   start of the row's TalkBack description.
   A total from a connected sheet stands where the points would be while the
-  official points are empty: `sheet_mark` (`ic_table`, 16 dp,
-  `colorOnSurfaceVariant`, 4 dp before the value) and the value (`titleMedium`,
-  one line, at most 96 dp) in `score_group` (`wrap_content`, at least 64 dp),
-  without the bar; TalkBack reads `Из таблицы: …`.
-- Subject page: `feature/recordbook/ui/SubjectHubAdapter.kt` (the result card
-  with `GradeScaleView` and the sheet total, then connected groups of links,
-  chats, controls, teachers and lessons), `res/layout/item_subject_hero.xml`,
-  `res/layout/item_recordbook_control.xml`,
-  `res/layout/item_recordbook_control_group.xml`.
-- Connected groups: `core/ui/ConnectedGroup.kt`, `res/layout/item_section_heading.xml`,
-  `res/layout/item_group_action_row.xml`; link rows `res/layout/item_subject_link.xml`
+  official points are empty: the table mark (`RecordbookTestTags.SHEET_MARK`,
+  `ic_table`, 16 dp, `onSurfaceVariant`, 4 dp before the value) and the value
+  (`titleMedium`, one line, at most 96 dp) in the row's score group (at least
+  64 dp wide), without the bar; TalkBack reads `Из таблицы: …`.
+- Subject page: `RecordbookSubjectScreen` of `:shared:feature-recordbook`
+  (`ui/subject/RecordbookSubjectScreen.kt`): a header with the back button, the
+  subject name in up to two lines (`titleMedium`) and the assessment with the
+  semester, then one `LazyColumn` of the result card (`SubjectHero` with the
+  kit's `GradeScale` and the sheet total), `SectionHeading`s over connected
+  groups of links, chats, controls (`SubjectControlRow`,
+  `SubjectControlGroupHeading`), teachers and lessons, in the files of
+  `ui/subject/`.
+- Connected groups: `core/ui/ConnectedGroup.kt`, `res/layout/item_section_heading.xml`;
+  link rows `res/layout/item_subject_link.xml`
   with `res/layout/view_link_vote_pill.xml`, bound by `core/ui/SubjectLinkRow.kt`.
-- Sheet total on the subject page: `res/layout/item_subject_sheet_score.xml`
-  included at the bottom of the result card under a hairline (`ic_table`, the
+- Sheet total on the subject page: `SubjectSheetTotal`
+  (`ui/subject/SubjectSheetTotal.kt` of `:shared:feature-recordbook`) at the
+  bottom of the result card under a hairline (`ic_table`, the
   value in `titleMedium`, `путь, лист «Лист»` and a status line in
   `bodySmall`, the status under the 48 dp `⋮` so it never wraps beside it, the
   glyph in line with the card's content edge; failures in `colorError`), or the
-  text button `Мои баллы из таблицы` with `ic_table` in its place, bound in
-  `feature/recordbook/ui/SubjectHubAdapter.kt`.
+  text button `Мои баллы из таблицы` with `ic_table` in its place; several
+  sheet links ask `Какая таблица?` in the kit's `ChoiceDialog`.
 - The «Мои баллы» sheet: `SheetScoresSheet` of `:shared:feature-recordbook`
   (`ui/sheets/SheetScoresSheet.kt`) on the kit's `SheetScaffold` (handle, title,
   subject, one bounded area of at least 288 dp for loading, failures and the
@@ -720,7 +725,8 @@ settings, and restore them if a separate test explicitly changes them.
 - Tone dot: `res/drawable/bg_teacher_level_dot.xml` tinted by
   `core/ui/TeacherLevelTone.kt` (`ImageView.bindLevel`), in the lesson sheet's
   teacher fact (`fact_mark` in `res/layout/item_sport_detail_fact.xml`) and the
-  subject page's teacher rows (`level_dot` in `res/layout/item_subject_teacher.xml`);
+  subject page's teacher rows (the kit's `ToneDot` in `SubjectTeacherRow` of
+  `:shared:feature-recordbook`);
   its place is reserved where a late dot would otherwise move the row.
 - Review editor: Compose in `:shared:feature-reviews` (`feature/reviews/ui/ReviewEditorSheet.kt`),
   hosted by `feature/reviews/ui/ReviewEditorBottomSheet.kt`. A form sheet without a handle
@@ -760,5 +766,6 @@ settings, and restore them if a separate test explicitly changes them.
   the `Изменения` block (divider, heading, `было → стало` lines) in
   `feature/schedule/ui/details/LessonDetailsSections.kt` of `:shared:feature-schedule` and
   the informational flow row between teacher and place of the kit's `DetailsHeader`.
-- Visual tests: `feature/recordbook/RecordbookVisualTest.kt`; the links sheets are JVM tests and the
-  `:shared:feature-resources` goldens.
+- Visual tests: the `RecordbookScreen_*`, `RecordbookSubjectScreen_*`, `Subject*` and
+  `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`; the links sheets are JVM tests
+  and the `:shared:feature-resources` goldens.

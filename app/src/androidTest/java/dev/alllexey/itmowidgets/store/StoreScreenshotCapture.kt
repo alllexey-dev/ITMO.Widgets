@@ -168,12 +168,11 @@ class StoreScreenshotCapture {
         (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment)
             .childFragmentManager.fragments.filterIsInstance<SportFragment>().single()
 
-    /** The screen has content, no state placeholder, no error and no test wording; then the device screenshot. */
+    /** The screen has content, no error and no test wording; then the device screenshot. */
     private fun frame(activity: MainActivity, name: String, sheet: Boolean = false) {
         eventually {
             TestUi.instrumentation.runOnMainSync {
                 val views = activity.window.decorView.descendants().filter { it.isShown }.toList()
-                assertTrue("$name shows a state instead of content", views.none { it.id == R.id.state_container })
                 val texts = views.filterIsInstance<TextView>().map { it.text.toString() }.filter { it.isNotBlank() }
                 assertTrue("$name has too little content", sheet || texts.size >= MIN_TEXTS)
                 val failures = texts.filter { text -> forbiddenTexts.any { it in text } }

@@ -29,7 +29,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.StringResource
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 
-/** One row of the subject page (port of `SubjectHubAdapter`'s `DetailItem`, LR-4a1). */
+/** One row of the subject page (port of 2.2's `SubjectHubAdapter.DetailItem`, LR-4a1). */
 sealed interface SubjectHubItem {
     /** The result with the own sheet total, or the offer to connect one, at its bottom. */
     data class Hero(
@@ -79,7 +79,7 @@ sealed interface SubjectHubItem {
 }
 
 /**
- * The whole subject page as one list (`SubjectHubAdapter.submitContent`): the result with the sheet total, links,
+ * The whole subject page as one list (2.2's `SubjectHubAdapter.submitContent`): the result with the sheet total, links,
  * chats, controls, teachers and the nearest lessons. Every list section is a heading over one connected group.
  */
 fun subjectHubItems(state: RecordbookSubjectUiState.Content): List<SubjectHubItem> {

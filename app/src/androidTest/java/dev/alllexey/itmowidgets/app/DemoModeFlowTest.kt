@@ -13,7 +13,6 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.fragment.app.DialogFragment
 import androidx.navigation.fragment.NavHostFragment
 import androidx.test.espresso.Espresso.pressBack
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
@@ -149,10 +148,8 @@ class DemoModeFlowTest {
                 it.openScreen(AppScreen.RECORDBOOK_SUBJECT, args.toBundle())
             }
             shot(activity, "subject")
-            scenario.onActivity { main ->
-                main.window.decorView.descendants().first { it.id == R.id.vote_up && it.isShown }.performClick()
-            }
-            eventually { onView(withText(R.string.error_demo_unavailable)).check(matches(isDisplayed())) }
+            scenario.onActivity(::voteOnFirstLink)
+            eventually { assertComposedText(activity, R.string.error_demo_unavailable) }
             open(scenario) { it.openSubjectLinks(SubjectLinksArgs(algorithms.id, algorithms.name, scope)) }
             Screenshots.capture(DIRECTORY, "links") { settle() }
             assertLinksSheetShows(activity, "Баллы потока")
@@ -197,8 +194,7 @@ class DemoModeFlowTest {
                 val views = activity.window.decorView.descendants().filter { it.isShown }.toList()
                 val composed = views.filterIsInstance<ViewRootForTest>()
                     .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }
-                val states = views.filter { it.id == R.id.state_container } +
-                    composed.filter { it.config.getOrNull(SemanticsProperties.TestTag) == CONTENT_STATE_TAG }
+                val states = composed.filter { it.config.getOrNull(SemanticsProperties.TestTag) == CONTENT_STATE_TAG }
                 assertTrue("$name shows a state instead of content", states.isEmpty())
                 val texts = views.filterIsInstance<TextView>().map { it.text.toString() } +
                     composed.flatMap { node -> node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } }
@@ -221,6 +217,28 @@ class DemoModeFlowTest {
             }
         checkNotNull(row.config[SemanticsActions.OnClick].action) { "the lesson row has no click" }.invoke()
     }
+
+    /** The subject page is Compose (LR-4b): the first link's up arrow votes by its semantics click. */
+    private fun voteOnFirstLink(activity: MainActivity) {
+        val label = activity.getString(R.string.links_vote_up)
+        val arrow = composedNodes(activity).first { node ->
+            node.layoutInfo.isPlaced && label in node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty()
+        }
+        checkNotNull(arrow.config[SemanticsActions.OnClick].action) { "the vote arrow has no click" }.invoke()
+    }
+
+    /** A Compose screen or snackbar on [activity] shows the text of [text]. */
+    private fun assertComposedText(activity: MainActivity, text: Int) = TestUi.instrumentation.runOnMainSync {
+        val expected = activity.getString(text)
+        assertTrue(
+            "nothing shows $expected",
+            composedNodes(activity).any { node -> node.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text == expected } },
+        )
+    }
+
+    private fun composedNodes(activity: MainActivity): List<SemanticsNode> =
+        activity.window.decorView.descendants().filter { it.isShown }.filterIsInstance<ViewRootForTest>()
+            .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }.toList()
 
     /** The links sheet's Compose list, in the sheet's own dialog window, shows a row titled [title] on screen. */
     private fun assertLinksSheetShows(activity: MainActivity, title: String) {
@@ -271,8 +289,8 @@ class DemoModeFlowTest {
         const val DIRECTORY = "demo-check"
 
         /**
-         * The test tag of DS-03a's `ContentState`, the Compose counterpart of `R.id.state_container` (the tag itself
-         * is L08's hand-in to `ContentState`).
+         * The test tag of DS-03a's `ContentState`, the Compose counterpart of the View screens' former
+         * `state_container` (the tag itself is L08's hand-in to `ContentState`).
          */
         const val CONTENT_STATE_TAG = "ContentState"
     }

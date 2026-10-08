@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.site
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.os.bundleOf
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -272,11 +271,8 @@ class SiteScreenshotCapture {
                 // The list is Compose (LR-3): the row opens by its semantics click.
                 RecordbookSemantics.openSubject(scenario, "Алгоритмы", ::settle)
                 capture("subject-scores")
-                // One page now: the second shot is its lower half with teachers and lessons.
-                scenario.onActivity { activity ->
-                    val list = activity.findViewById<RecyclerView>(R.id.recycler_view)
-                    list.scrollToPosition(list.adapter!!.itemCount - 1)
-                }
+                // One page: the second shot is its lower half with teachers and lessons, scrolled by semantics (LR-4b).
+                scenario.onActivity(RecordbookSemantics::scrollSubjectToEnd)
                 settle()
                 capture("subject-schedule")
             }

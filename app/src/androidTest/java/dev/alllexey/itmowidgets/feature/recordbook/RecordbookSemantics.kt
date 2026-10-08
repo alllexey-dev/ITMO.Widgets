@@ -10,13 +10,15 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.test.core.app.ActivityScenario
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookTestTags
+import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.RecordbookSubjectTestTags
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 
 /**
- * The Compose list of `RecordbookFragment` in the preview host, read through its `ComposeView`'s semantics owner:
- * `:app`'s instrumented tests have no `ui-test-junit4`, so the hub cases open a subject by its row's description
- * and a semantics click (LR-3). Main thread only, apart from [openSubject].
+ * The Compose list of `RecordbookFragment` and the subject page in the preview host, read through their
+ * `ComposeView`'s semantics owner: `:app`'s instrumented tests have no `ui-test-junit4`, so the captures open a
+ * subject by its row's description and a semantics click (LR-3) and scroll the page by its list's semantics (LR-4b).
+ * Main thread only, apart from [openSubject].
  */
 object RecordbookSemantics {
 
@@ -63,5 +65,18 @@ object RecordbookSemantics {
         fail("No subject row shows $namePart")
     }
 
+    /**
+     * Scrolls the open subject page to its end, as a fling would: a lazy list does not tell its row count through
+     * semantics, so the scroll runs further than any page and stops at the last row.
+     */
+    fun scrollSubjectToEnd(activity: RecordbookPreviewActivity) {
+        val page = checkNotNull(activity.supportFragmentManager.findFragmentByTag(SUBJECT_TAG)).requireView()
+        val list = nodes(page).first { it.config.getOrNull(SemanticsProperties.TestTag) == RecordbookSubjectTestTags.LIST }
+        list.config[SemanticsActions.ScrollBy].action?.invoke(0f, list.boundsInRoot.height * PAGES_TO_END)
+    }
+
+    /** The tag `RecordbookPreviewActivity.openScreen` gives the subject page. */
+    private const val SUBJECT_TAG = "detail"
     private const val MAX_STEPS = 20
+    private const val PAGES_TO_END = 20
 }

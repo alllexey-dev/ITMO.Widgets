@@ -16,8 +16,7 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /*
- * The texts of a sheet reading for Compose (the View helpers of `SheetScoreTexts.kt` in :app say the same until the
- * subject hub is ported).
+ * The texts of a sheet reading: the sheet and the subject page's sheet total read them.
  */
 
 /** What a failed reading says; null for [SheetStatus.OK]. */

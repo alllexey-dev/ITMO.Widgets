@@ -169,8 +169,18 @@ internal fun RecordbookErrorSnackbars(
     onBarsLogin: () -> Unit,
 ) {
     val content = state as? RecordbookUiState.Content
-    val refreshError = content?.refreshError
-    val barsError = content?.barsError
+    RecordbookErrorSnackbars(content?.refreshError, content?.barsError, snackbars, onRetry, onBarsLogin)
+}
+
+/** [RecordbookErrorSnackbars] of any page that keeps its data on screen: the list and the subject page. */
+@Composable
+internal fun RecordbookErrorSnackbars(
+    refreshError: AppError?,
+    barsError: AppError?,
+    snackbars: SnackbarHostState,
+    onRetry: () -> Unit,
+    onBarsLogin: () -> Unit,
+) {
     LaunchedEffect(refreshError, barsError, snackbars) {
         val (message, action, perform) = when {
             refreshError != null -> Triple(

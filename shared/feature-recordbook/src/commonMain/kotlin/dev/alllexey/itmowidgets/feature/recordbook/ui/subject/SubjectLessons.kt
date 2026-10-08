@@ -55,8 +55,8 @@ import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
- * One of the nearest lessons (`item_subject_lesson.xml`): the day and the time on the left, the type's dot with the
- * type, room and building, and the teacher under them. The row is informational.
+ * One of the nearest lessons (2.2's `item_subject_lesson.xml`): the day and the time on the left, the type's dot with
+ * the type, room and building, and the teacher under them. The row is informational.
  */
 @Composable
 fun SubjectLessonRow(item: SubjectHubItem.Lesson) {
@@ -129,7 +129,7 @@ fun SubjectAllLessonsRow(item: SubjectHubItem.AllLessons, onClick: () -> Unit) {
 }
 
 /**
- * The lessons section while it has no lessons to show (`item_subject_message.xml`): a spinner while the schedule
+ * The lessons section while it has no lessons to show (2.2's `item_subject_message.xml`): a spinner while the schedule
  * loads, the failure with a retry, or that the subject was not found in the next four weeks.
  */
 @Composable
@@ -194,7 +194,7 @@ private fun lessonTypeColor(typeId: Int): Color {
 private const val LIST_SEPARATOR = ", "
 private const val BUILDING_MAX_LENGTH = 10
 
-/** `item_subject_lesson.xml` and `item_subject_message.xml`: a connected group's 56 dp row. */
+/** 2.2's `item_subject_lesson.xml` and `item_subject_message.xml`: a connected group's 56 dp row. */
 private val LessonMinHeight = 56.dp
 
 /** The date column's `minWidth`. */

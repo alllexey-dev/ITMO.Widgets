@@ -90,8 +90,8 @@ fifteen subjects, so no search or filters.
   bar of their share of 100: error colour with an attention reason, the sport
   colour for PE, otherwise the status colour. Bars draw their value without
   animation.
-- A subject with unread new marks has an 8 dp `colorPrimary` dot `new_mark`
-  after its name until its page is opened
+- A subject with unread new marks has an 8 dp `primary` dot
+  (`RecordbookTestTags.NEW_MARK`) after its name until its page is opened
   ([mark tracking](#in-the-recordbook)).
 - A subject without My ITMO or BARS points, final grade or no-show shows the
   total of its connected sheet instead of `—`: `ic_table` and the value, no bar
@@ -102,15 +102,21 @@ subject's own `discipline_id` comes with the reloaded official subject.
 
 ## Subject page
 
-`RecordbookSubjectFragment` is one page without tabs: the toolbar holds the
-subject name and `<assessment kind>, N семестр`; below it one pull-to-refresh
-list drawn by `SubjectHubAdapter`. Every list section is a heading in
+`RecordbookSubjectRoute` (`ui/subject/RecordbookSubjectScreen.kt` in
+`:shared:feature-recordbook`, hosted by `RecordbookSubjectFragment`, the
+overlay destination `recordbook_subject`) is one page without tabs: the header
+holds the back button, the subject name in up to two lines and
+`<assessment kind>, N семестр` (only `N семестр` while the subject loads or
+failed); below it one pull-to-refresh `LazyColumn` over `subjectHubItems`, one
+stable key per row (`subjectHubKeys`). The first load without a cache shows
+list placeholders under the header, a failed one `Не удалось загрузить` with
+`Повторить` in the same area. Every list section is a `SectionHeading` in
 `colorPrimary` over one connected group of rows
 ([design](../design.md#connected-groups)); nothing on the page is separated
 by « · ». In this order:
 
-1. The result card (`item_subject_hero.xml`, `Card.Hero`): points, the grade
-   badge once a final result exists, and `GradeScaleView`, a bar on the 100
+1. The result card (`SubjectHero`, the hero card): points, the grade
+   badge once a final result exists, and the kit's `GradeScale`, a bar on the 100
    scale with a tick at the lowest whole score of each grade, labelled by its
    letter (E 60, D 68, C 75, B 84, A 91; a plain credit has one `зачёт` tick at
    60). While the result is open the hint names the next step, `до 4C ещё 3` or
@@ -131,8 +137,8 @@ by « · ». In this order:
    profile. A recordbook-only teacher without ISU remains informational, including
    past periods, PE and unmatched subjects; no identifier is guessed by name.
    With `Подключение к ITMO.Widgets` a row with an ISU shows the tone of the
-   teacher's AI summary as a 10 dp dot before the chevron (`level_dot` in
-   `item_subject_teacher.xml`); `RecordbookSubjectViewModel` asks
+   teacher's AI summary as a 10 dp dot before the chevron (`ToneDot` in
+   `SubjectTeacherRow`); `RecordbookSubjectViewModel` asks
    `TeacherLevelsRepository` whenever the set of teacher ISUs changes and keeps
    the answer in `SubjectHubState.teacherLevels`
    ([teacher levels](reviews.md#teacher-levels)). A row with an ISU but no level
@@ -145,7 +151,7 @@ above 67 3D, 60 and above 3E, below 60 unsatisfactory; a plain credit
 (`Зачёт`, not graded) has the single threshold 60. Hints count whole points,
 so a strict threshold is aimed at the next whole score.
 
-A control row (`item_recordbook_control.xml`, a row of a connected group)
+A control row (`SubjectControlRow`, a row of a connected group)
 shows the name and `score / maximum` with a thin bar relative to its maximum:
 error colour below the minimum, green once the minimum is met or the maximum
 reached, primary otherwise. Requirements appear only when broken: `минимум N`
@@ -167,7 +173,7 @@ first control:
   the number. `ControlGroupKind` names the known kinds through string resources
   (`Лабораторные`, `Контрольные`, `Практические`, `Домашние задания`); any other
   title keeps the source text.
-- A group is a heading (`item_recordbook_control_group.xml`: the title in
+- A group is a heading (`SubjectControlGroupHeading`: the title in
   `titleSmall`, the sum of its known scores out of the sum of known maxima at
   the end, `—` while nothing is graded) and a `ниже минимума` label when any
   graded control in it is under its positive minimum. Its controls follow as
@@ -206,6 +212,13 @@ programs, subjects per `(programId, semester)` and controls per entry
 opened a second time never shows the skeleton; the sport card waits for the
 refresh.
 
+A failed refresh keeps the page and shows a snackbar with `Повторить`; a failed
+vote on a link says why in a short snackbar (`RecordbookSubjectEvent.VoteFailed`).
+The host opens links outside the app, the link sheets (`Все ссылки`, `Добавить
+ссылку`, a long press on a link), `Мои баллы`, a teacher's profile and the BARS
+sign-in through `RecordbookSubjectExits`, and refreshes the page after a
+completed sign-in.
+
 ## BARS overlay
 
 The header has a `БАРС` filter chip (off by default, DataStore, cleared on
@@ -221,9 +234,10 @@ teachers, PE and sport stay MyITMO.
   until BARS answers (the load on entry, a period change and the switch itself
   wait silently), journals are requested in parallel, and the note appears only
   after a successful BARS response for that period.
-- A BARS failure keeps the MyITMO list and shows a snackbar; when the ITMO.ID
-  session has ended the snackbar offers `Войти в БАРС` (`BarsLoginActivity`).
-  Nothing is silently substituted in either direction.
+- A BARS failure keeps the MyITMO list or subject page and shows a snackbar
+  (`RecordbookErrorSnackbars`, shared by both screens); when the ITMO.ID session
+  has ended the snackbar offers `Войти в БАРС` (`BarsLoginActivity`, opened by
+  the host). Nothing is silently substituted in either direction.
 - Changing the period while the chip is on changes the saved period in web BARS
   as well: it is a server-side setting with no stateless read.
 
@@ -606,9 +620,9 @@ advancing in `RecordbookViewModelTest`, `RecordbookBarsOverlayTest` and
 `BackgroundChecksTest` and `RecordbookSubjectArgsTest`. In `:app`:
 `MainActivityIntentRoutingTest`, and for the two graphs `RecordbookBridgeTest`,
 `RecordbookBindingsTest`, `BackgroundCheckGraphTest` and
-`HomeSourcesGraphTest`. Instrumented: `MarksWorkTest` (the app's
-`WorkManager` through the debug `MarksTestEntryPoint`), `MarksNotificationTest`,
-`RecordbookVisualTest.newMarksShowADotUntilTheSubjectOpens`; the marks card
+`HomeSourcesGraphTest`; the dot on the Compose list in `RecordbookScreenTest`.
+Instrumented: `MarksWorkTest` (the app's `WorkManager` through the debug
+`MarksTestEntryPoint`) and `MarksNotificationTest`; the marks card
 is in `HomeScreenTest` and the `HomeScreenshotTest` goldens. They use synthetic subjects and restore the
 WorkManager state they found.
 
@@ -704,10 +718,10 @@ read up to the limit. Addresses and bodies never reach the log or an exception.
 
 ### On the subject page
 
-At the bottom of the result card (`item_subject_hero.xml`, bound in
-`SubjectHubAdapter`), under a hairline:
+At the bottom of the result card (`SubjectSheetTotal` in `SubjectHero`'s sheet
+slot), under a hairline:
 
-- A connection: `item_subject_sheet_score.xml` included in the card, with
+- A connection: a row of the card, with
   `ic_table`, the value (`titleMedium`, `—` when empty), `путь, лист «Лист»`
   (`sheetCaption`: the levels of a header path joined by ` › `, the tab name
   only when it has one) and a status line: `Обновлено в HH:mm` today or
@@ -720,8 +734,8 @@ At the bottom of the result card (`item_subject_hero.xml`, bound in
   `Отключить`. The row has no surface of its own.
 - No connection but sheet links: the text button `Мои баллы из таблицы` with
   `ic_table` in the same place. One sheet link opens the connection for it;
-  several ask `Какая таблица?` first: own links (`, моя`), the pinned one,
-  `SCORES`, the rest by rank, one entry per address.
+  several ask `Какая таблица?` first in the kit's `ChoiceDialog`: own links
+  (`, моя`), the pinned one, `SCORES`, the rest by rank, one entry per address.
 - Without controls the `My ITMO не присылает детализацию…` card is not shown
   when the card has either row (the sheet is the detail); a failure to load
   the controls stays.
@@ -734,7 +748,8 @@ At the bottom of the result card (`item_subject_hero.xml`, bound in
 downloads, and passes the totals of the selected period
 (`Content.sheetTotals` by `discipline_id`). `sheetFallback` keeps a total only
 for a non-PE subject without a no-show, a final grade and My ITMO or BARS
-points. The row then shows `sheet_mark` (`ic_table`, 16 dp) and the value
+points. The row then shows the table mark (`RecordbookTestTags.SHEET_MARK`,
+`ic_table`, 16 dp) and the value
 (`titleMedium`, one line, at most 96 dp) without the bar; TalkBack reads
 `Из таблицы: 66,3`.
 
@@ -789,17 +804,19 @@ every failure in one area, the row, tab and total picks, the name search) and
 the `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`; the sheet cases of `MarkTrackingRepositoryImplTest`,
 `MarksCheckTest`, `DefaultMarkTrackingTest`, `MarkNewsRulesTest`,
 `RecordbookSubjectViewModelTest`, `RecordbookViewModelTest` and
-`RecordbookDisplayedScoreTest`; `GoogleSheetUrlTest` in `:shared:core`.
-Instrumented: the sheet cases of `RecordbookVisualTest` and
+`RecordbookDisplayedScoreTest`; the subject page's row, menu and offer in
+`SubjectHubSectionsTest`, the link picker in `RecordbookSubjectScreenTest` and
+the `SubjectSheetTotal*` and `RecordbookSubjectScreen_{sheet,offer}` goldens;
+`GoogleSheetUrlTest` in `:shared:core`. Instrumented:
 `SubjectLinksVisualTest.actionsSheetOffersMyScoresOnlyForAGoogleSheet`. No real
 sheet is opened; names and ISUs are made up.
 
 ## Verification
 
 ```bash
-./gradlew :app:testGithubDebugUnitTest
-./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.RecordbookVisualTest
-./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.work.MarksWorkTest,dev.alllexey.itmowidgets.feature.recordbook.MarksNotificationTest
+scripts/verify.sh quick
+scripts/verify.sh shots feature-recordbook -Pshots.appearance=full
+ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui MarksWorkTest,MarksNotificationTest
 ```
 
 Unit tests cover the Retrofit paths through an in-memory interceptor, nullable
@@ -810,17 +827,20 @@ scale and next-step hints (`RecordbookGradeScaleTest`), control groups
 attention reasons and the session-only summary (`RecordbookViewModelTest`), the
 subject context resolver, the binding store and every subject-page state of
 `RecordbookSubjectViewModel`, including links, chats and `Все пары`, and mark
-tracking ([Tests](#tests) above). Visual tests
-run the real Fragments in `RecordbookPreviewActivity` with synthetic data
-(`RecordbookPreviewFixtures`): compact rows, `Требуют внимания` with PE, the
-summary only in the session, the one-page subject with its hint, `Ссылки` as
-a connected group of three rows ranked by score with votes and `Все ссылки, N`,
-a vote from the page, chats with the own one marked `моя`,
-`Добавить ссылку` without links, expanded groups, two lessons and `Все пары`,
-a past period with its own link and PE without links, the dot of unread marks until the subject
-opens, and the sheet total in every state, the connect hint and the list
-fallback; the connection sheet is covered on the JVM (`SheetScoresSheetTest`). Add
-`-Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full` and
-`-Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true` for all
-four appearances and the PNGs (see
-[Running the visual tests](../design.md#running-the-visual-tests)).
+tracking ([Tests](#tests) above).
+
+The screens are Compose Multiplatform in `:shared:feature-recordbook`, checked
+on the JVM: host tests run the stateless screens with synthetic data
+(`RecordbookScreenTest`, `RecordbookPeriodSheetTest`, `SheetScoresSheetTest`,
+`RecordbookSubjectScreenTest`, `SubjectHubSectionsTest`, `SubjectHubItemsTest`:
+rows, states, retries, snackbars, `Все пары` opening in place, the link
+picker, touch targets) and Roborazzi goldens in `screenshots/` cover every
+screen and section in all four appearances: the list (`RecordbookScreen_*`), the
+period sheet, the subject page (`RecordbookSubjectScreen_{session,credit,sport,
+bars,sheet,offer,binding,loading,error}`), its sections (`Subject*Preview*`)
+and the sheet (`SheetScoresSheet_*`). The samples are
+`ui/preview/RecordbookPreviewSamples` and `RecordbookSubjectPreviewSamples`. The
+debug `RecordbookPreviewActivity` with `RecordbookPreviewFixtures` remains only
+for the site screenshots (`SiteScreenshotCapture`) and the Koin host checks
+(`RecordbookKoinHostsTest`); it uses in-memory repositories, its own link fixture
+`RecordbookPreviewLinks` included, and never reads a session.
