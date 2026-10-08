@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.testing.ShellProbe
+import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.Base64
 import kotlinx.coroutines.runBlocking
@@ -51,7 +52,9 @@ class FcmNotificationFlowTest {
         runBlocking { dependencies.servicesOptIn().setCustomServicesEnabled(false) }
         // Notification routing is what this test is about; the first-run flow would hold the window.
         runBlocking { onboarding.complete() }
-        dependencies.tokens().clearTokens()
+        // Signed out in memory too: the repository reads the token store only once per process, and the pass of
+        // another shell may have signed in before.
+        TestSession.signOut()
         val manager = context.getSystemService(NotificationManager::class.java)
         instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
         try {

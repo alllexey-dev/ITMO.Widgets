@@ -24,14 +24,16 @@ fun shellEntries(debugTools: Boolean = BuildConfig.DEBUG): EntryRegistry = entry
         when (key.tab) {
             AppTab.HOME -> HomeTabRoot(navigator)
             AppTab.SCHEDULE -> ScheduleTabRoot(navigator)
+            AppTab.SPORT -> SportTabRoot(navigator)
             AppTab.ME -> MeTabRoot(navigator)
-            AppTab.RECORDBOOK, AppTab.SPORT -> UnregisteredTabRoot(key)
+            AppTab.RECORDBOOK -> UnregisteredTabRoot(key)
         }
     }
     homeEntries()
     scheduleEntries()
     socialEntries()
     accountEntries(debugTools)
+    sportEntries()
 }
 
 /** The placeholder of a tab whose root is not registered yet, tagged as the registry's own placeholder. */

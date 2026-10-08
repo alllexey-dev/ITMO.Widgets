@@ -18,6 +18,8 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.navOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.app.shell.ShellHost
+import dev.alllexey.itmowidgets.app.shell.ShellMode
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.ScheduleTodayRequest
@@ -40,7 +42,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGateViewModel
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateGateViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
+import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
+import dev.alllexey.itmowidgets.feature.update.navigation.UpdateRoutes
 import dev.alllexey.itmowidgets.feature.update.ui.InstallStateWatcher
 import dev.alllexey.itmowidgets.feature.update.ui.toScreenArguments
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -53,6 +57,11 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+/**
+ * The app's one activity. [ShellMode.current] picks its body once per `onCreate`: the Navigation 3 shell
+ * ([ShellHost], which then does everything below on its own) or the Fragment shell this class runs itself, with the
+ * bottom bar, the overlay host and the sheets of [MainNavigationCoordinator].
+ */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), AppNavigator {
 
@@ -77,8 +86,15 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     /** True while [revealResolvedGraph] executes the graph's transactions; see there. */
     private var executingGraphTransactions = false
 
+    /** The Navigation 3 body; null while this activity runs the Fragment shell. */
+    private var shell: ShellHost? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (ShellMode.current(this) == ShellMode.NAV3) {
+            shell = ShellHost(this, updateRoute = UpdateRoutes::of, featureRoutes = FEATURE_ROUTES)
+            return
+        }
         if (savedInstanceState != null) {
             restoreRoute(savedInstanceState)
         } else {
@@ -237,17 +253,19 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        // The shell took the intent through its own listener in super.
+        if (shell != null) return
         acceptIntent(intent)
         renderSession(sessionRepository.state.value)
     }
 
     override fun onResume() {
         super.onResume()
-        installState.start(::offerRestart)
+        if (shell == null) installState.start(::offerRestart)
     }
 
     override fun onPause() {
-        installState.stop()
+        if (shell == null) installState.stop()
         super.onPause()
     }
 
@@ -262,11 +280,16 @@ class MainActivity : AppCompatActivity(), AppNavigator {
 
     override fun onResumeFragments() {
         super.onResumeFragments()
+        if (shell != null) return
         // An intent can arrive after onSaveInstanceState. Apply it only once transactions are safe.
         renderSession(sessionRepository.state.value)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        if (shell != null) {
+            super.onSaveInstanceState(outState)
+            return
+        }
         val route = routes.pending
         outState.putInt(PENDING_ROOT, route?.rootDestination ?: 0)
         outState.putInt(PENDING_USER, route?.userIsu ?: 0)
@@ -422,6 +445,9 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     }
 
     companion object {
+        /** The feature modules' keys the Navigation 3 shell saves with its back stack and pending route. */
+        private val FEATURE_ROUTES = listOf(UpdateRoutes.registration, SportRoutes.registration)
+
         private const val SPORT_TYPE_ID = 11
         private const val PENDING_USER = "pending_user_isu"
         private const val PENDING_ROOT = "pending_root_destination"

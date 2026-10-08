@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.app
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -11,8 +12,11 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.ShellModeRule
+import dev.alllexey.itmowidgets.app.shell.ShellTags
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
@@ -32,7 +36,7 @@ import org.junit.runner.RunWith
 
 /**
  * Session and first-run routing of the real `MainActivity`. Navigation is read through `ShellProbe`, so each body runs
- * in every shell [ShellModeRule] knows; the bar is still tapped by its legacy menu ids.
+ * in every shell [ShellModeRule] knows; the bar is tapped by its legacy menu ids or its Compose test tags.
  */
 @RunWith(AndroidJUnit4::class)
 class MainActivitySessionRoutingTest {
@@ -123,6 +127,8 @@ class MainActivitySessionRoutingTest {
                 selectTab(tab)
                 eventually { assertTabRoot(tab) }
             }
+            // The Compose shell turns its Back handler on with the frame after the tap, as a finger never outruns.
+            TestUi.settle(SETTLE_MILLIS)
             scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
             eventually { assertTabRoot(AppTab.HOME) }
         }
@@ -145,8 +151,24 @@ class MainActivitySessionRoutingTest {
 
     /** A tap on [tab] in the bar, repeated until the tab shows: right after the first-run flow a tap can get lost. */
     private fun selectTab(tab: AppTab) = eventually {
-        if (ShellProbe.current().tab != tab) onView(withId(TAB_ITEMS.getValue(tab))).perform(click())
+        if (ShellProbe.current().tab != tab) {
+            when (shells.mode) {
+                ShellModeRule.Mode.LEGACY -> onView(withId(TAB_ITEMS.getValue(tab))).perform(click())
+                ShellModeRule.Mode.NAV3 -> tapComposeTab(tab)
+            }
+        }
         assertEquals(tab, ShellProbe.current().tab)
+    }
+
+    /** The Compose bar's item of [tab], tapped through its semantics click (no compose test rule here). */
+    private fun tapComposeTab(tab: AppTab) = TestUi.instrumentation.runOnMainSync {
+        val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+            .filterIsInstance<MainActivity>().single()
+        val item = activity.window.decorView.descendants()
+            .filterIsInstance<ViewRootForTest>()
+            .flatMap { it.semanticsOwner.rootSemanticsNode.subtree() }
+            .first { it.config.getOrNull(SemanticsProperties.TestTag) == ShellTags.tab(tab) }
+        checkNotNull(item.config[SemanticsActions.OnClick].action).invoke()
     }
 
     /** The Compose flow tagged `onboarding_root` is on screen, read through semantics (no compose test rule here). */
@@ -176,6 +198,7 @@ class MainActivitySessionRoutingTest {
     private companion object {
         const val RETRY_COUNT = 20
         const val RETRY_DELAY_MILLIS = 100L
+        const val SETTLE_MILLIS = 300L
         val TABS = ShellSurface.Tabs(demoBanner = false)
 
         /** The legacy bar's menu items. */

@@ -1,20 +1,14 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.common
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import dagger.hilt.android.AndroidEntryPoint
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SportLessonRequest
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
@@ -68,9 +62,7 @@ class SportFragment : Fragment() {
         onOpenBooking = { booking -> openDetails(SportPage.MY, booking) },
         onOpenLesson = { lesson, busy -> openDetails(SportPage.SIGN, lesson, busy) },
         onOpenMap = { booking -> openMap(booking) },
-        onTemplateLesson = {
-            Toast.makeText(requireContext(), R.string.debug_sport_lesson_action_disabled, Toast.LENGTH_SHORT).show()
-        },
+        onTemplateLesson = { requireContext().showTemplateLessonNotice() },
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -149,13 +141,9 @@ class SportFragment : Fragment() {
             .show(childFragmentManager, SportCommonDetailsBottomSheet.TAG)
     }
 
+    /** Without a map app the menu item does nothing, as before. */
     private fun openMap(booking: SportBooking) {
-        val address = booking.extractBuildingAddress() ?: return
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW, "geo:0,0?q=${Uri.encode(address)}".toUri()))
-        } catch (_: ActivityNotFoundException) {
-            // No map app: the menu item does nothing, as before.
-        }
+        booking.extractBuildingAddress()?.let { requireContext().openSportMap(it) }
     }
 
     private data class PageRequest(val page: SportPage, val animate: Boolean)
