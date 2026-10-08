@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -44,11 +45,17 @@ class DiagnosticsFragment : Fragment() {
             DiagnosticsScreen(state, actions, viewModel::formatTime, snackbarHostState = snackbars)
         }
 
-    /** Android 13 and later confirm a copy themselves; before that the screen says so. */
     private fun copyJournal() {
-        requireContext().copyToClipboard(getString(R.string.diagnostics_title), viewModel.exportText()) {
-            val message = getString(R.string.diagnostics_copied)
+        requireContext().copyDiagnosticsJournal(viewModel.exportText()) { message ->
             viewLifecycleOwner.lifecycleScope.launch { snackbars.showSnackbar(message) }
         }
     }
+}
+
+/**
+ * Puts the [journal] on the clipboard. Android 13 and later confirm a copy themselves; before that [onCopied] gets
+ * the screen's own message.
+ */
+internal fun Context.copyDiagnosticsJournal(journal: String, onCopied: (message: String) -> Unit) {
+    copyToClipboard(getString(R.string.diagnostics_title), journal) { onCopied(getString(R.string.diagnostics_copied)) }
 }

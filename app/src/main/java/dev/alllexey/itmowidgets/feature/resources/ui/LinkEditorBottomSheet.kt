@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.resources.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.view.ViewTreeObserver
@@ -56,17 +57,9 @@ class LinkEditorBottomSheet : ItmoBottomSheetFragment() {
                 if (!hasFocus) return
                 val listener = this
                 view.post { view.viewTreeObserver.removeOnWindowFocusChangeListener(listener) }
-                if (getView() != null) pasteClipboardLink()
+                if (getView() != null) viewModel.pasteClipboardLink(requireContext())
             }
         })
-    }
-
-    /** Only a single https link the app would open goes into an empty address field. */
-    private fun pasteClipboardLink() {
-        if (viewModel.uiState.value.url.isNotEmpty()) return
-        val text = requireContext().clipboardText()?.trim() ?: return
-        if (text.any(Char::isWhitespace) || !HttpsNavigationPolicy.isNavigable(text)) return
-        viewModel.onUrlChanged(text)
     }
 
     companion object {
@@ -78,4 +71,15 @@ class LinkEditorBottomSheet : ItmoBottomSheetFragment() {
         fun newInstance(args: SubjectLinksArgs, linkId: String? = null) =
             LinkEditorBottomSheet().apply { arguments = args.toArguments(linkId) }
     }
+}
+
+/**
+ * Only a single https link the app would open goes into an empty address field. Clipboard reads need window focus,
+ * so a new link's sheet calls this once its window first has it.
+ */
+internal fun LinkEditorViewModel.pasteClipboardLink(context: Context) {
+    if (uiState.value.url.isNotEmpty()) return
+    val text = context.clipboardText()?.trim() ?: return
+    if (text.any(Char::isWhitespace) || !HttpsNavigationPolicy.isNavigable(text)) return
+    onUrlChanged(text)
 }

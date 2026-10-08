@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.ui
 
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -12,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
@@ -89,19 +91,12 @@ class SettingsFragment : Fragment() {
     private var dialogs = SettingsDialogState()
 
     private val spoilerImagePicker = SpoilerImagePicker(this) { result ->
-        when (result) {
-            is SpoilerCropResult.Image -> spoilerViewModel.saveImage(result.uri.toString())
-            SpoilerCropResult.Failed -> showImageError()
-            SpoilerCropResult.Cancelled -> Unit
-        }
+        spoilerViewModel.onCustomSpoilerCropped(result, ::showImageError)
     }
 
     private val notificationPermissionLauncher =
         registerForActivityResult(RequestNotificationPermission()) { granted ->
-            requireActivity().openNotificationSettingsIfLocked(granted)
-            viewModel.onNotificationPermissionChanged(
-                NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()
-            )
+            requireActivity().onSettingsNotificationPermission(granted, viewModel)
         }
 
     /** The calendar permission dialog is on screen for turning sync on; survives recreation. */
@@ -111,15 +106,10 @@ class SettingsFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
             if (!pendingCalendarAccess) return@registerForActivityResult
             pendingCalendarAccess = false
-            if (results.isNotEmpty() && results.values.all { it }) {
-                viewModel.onCalendarAccessGranted()
-                return@registerForActivityResult
-            }
-            // A refusal without a dialog means the permission is locked; only the app's system page can undo that.
-            if (!shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)) {
-                showCalendarAccessDialog(locked = true)
-            } else {
-                Snackbar.make(requireView(), R.string.calendar_access_denied, Snackbar.LENGTH_SHORT).show()
+            when (requireActivity().calendarAccessAnswer(results)) {
+                CalendarAccessAnswer.GRANTED -> viewModel.onCalendarAccessGranted()
+                CalendarAccessAnswer.LOCKED -> showCalendarAccessDialog(locked = true)
+                CalendarAccessAnswer.DENIED -> requireView().showCalendarAccessDenied()
             }
         }
 
@@ -192,11 +182,7 @@ class SettingsFragment : Fragment() {
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach { event ->
                 when (event) {
-                    SettingsEvent.WidgetsRefreshStarted -> Snackbar.make(
-                        requireView(),
-                        R.string.settings_refresh_widgets_started,
-                        Snackbar.LENGTH_SHORT
-                    ).show()
+                    SettingsEvent.WidgetsRefreshStarted -> requireView().showWidgetsRefreshStarted()
                     SettingsEvent.OpenNotificationSettings -> requireContext().openAppNotificationSettings()
                     SettingsEvent.RequestNotificationPermission ->
                         requireContext().requestNotifications(notificationPermissionLauncher)
@@ -242,13 +228,8 @@ class SettingsFragment : Fragment() {
         spoilerViewModel.events
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach { event ->
-                val message = when (event) {
-                    CustomSpoilerEvent.SAVED -> R.string.settings_qr_custom_image_saved
-                    CustomSpoilerEvent.RESET -> R.string.settings_qr_custom_image_reset
-                    CustomSpoilerEvent.FAILED -> R.string.settings_qr_custom_image_failed
-                }
                 if (event != CustomSpoilerEvent.FAILED) widgetPreview?.refresh()
-                Snackbar.make(requireView(), message, Snackbar.LENGTH_LONG).show()
+                requireView().showCustomSpoilerEvent(event)
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
@@ -312,21 +293,12 @@ class SettingsFragment : Fragment() {
         view?.let { Snackbar.make(it, R.string.settings_qr_custom_image_failed, Snackbar.LENGTH_LONG).show() }
     }
 
-    /** Granted: straight on. Otherwise a short explanation first when Android suggests one, then the system dialog. */
     private fun requestCalendarAccess() {
-        val context = requireContext()
-        val granted = CALENDAR_PERMISSIONS.all {
-            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        when (requireActivity().calendarAccessStep()) {
+            CalendarAccessStep.GRANTED -> viewModel.onCalendarAccessGranted()
+            CalendarAccessStep.ASK -> askCalendarAccess()
+            CalendarAccessStep.EXPLAIN -> showCalendarAccessDialog(locked = false)
         }
-        if (granted) {
-            viewModel.onCalendarAccessGranted()
-            return
-        }
-        if (!shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)) {
-            askCalendarAccess()
-            return
-        }
-        showCalendarAccessDialog(locked = false)
     }
 
     private fun askCalendarAccess() {
@@ -346,9 +318,68 @@ class SettingsFragment : Fragment() {
         const val PREVIEW_STATE = "widget_preview_state"
         const val PENDING_CALENDAR_ACCESS = "pending_calendar_access"
         const val DIALOG = "settings_dialog"
-        val CALENDAR_PERMISSIONS = arrayOf(
-            android.Manifest.permission.READ_CALENDAR,
-            android.Manifest.permission.WRITE_CALENDAR
-        )
+    }
+}
+
+/** The two permissions calendar sync needs, asked together. */
+internal val CALENDAR_PERMISSIONS = arrayOf(
+    android.Manifest.permission.READ_CALENDAR,
+    android.Manifest.permission.WRITE_CALENDAR
+)
+
+/** How turning calendar sync on starts: straight on, the system dialog, or a short explanation first. */
+internal enum class CalendarAccessStep { GRANTED, ASK, EXPLAIN }
+
+/** Granted: straight on. Otherwise a short explanation first when Android suggests one, then the system dialog. */
+internal fun Activity.calendarAccessStep(): CalendarAccessStep = when {
+    CALENDAR_PERMISSIONS.all { ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED } ->
+        CalendarAccessStep.GRANTED
+    !ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.WRITE_CALENDAR) ->
+        CalendarAccessStep.ASK
+    else -> CalendarAccessStep.EXPLAIN
+}
+
+/** What the system dialog's [results] mean: sync goes on, the locked explanation, or a short denial message. */
+internal enum class CalendarAccessAnswer { GRANTED, LOCKED, DENIED }
+
+internal fun Activity.calendarAccessAnswer(results: Map<String, Boolean>): CalendarAccessAnswer = when {
+    results.isNotEmpty() && results.values.all { it } -> CalendarAccessAnswer.GRANTED
+    // A refusal without a dialog means the permission is locked; only the app's system page can undo that.
+    !ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.WRITE_CALENDAR) ->
+        CalendarAccessAnswer.LOCKED
+    else -> CalendarAccessAnswer.DENIED
+}
+
+/** The notification dialog's answer: a lock opens the system page, and the row follows the system switch. */
+internal fun Activity.onSettingsNotificationPermission(granted: Boolean, viewModel: SettingsViewModel) {
+    openNotificationSettingsIfLocked(granted)
+    viewModel.onNotificationPermissionChanged(NotificationManagerCompat.from(this).areNotificationsEnabled())
+}
+
+/** Turning calendar sync on was refused once more; the dialog may still appear next time. */
+internal fun View.showCalendarAccessDenied() {
+    Snackbar.make(this, R.string.calendar_access_denied, Snackbar.LENGTH_SHORT).show()
+}
+
+internal fun View.showWidgetsRefreshStarted() {
+    Snackbar.make(this, R.string.settings_refresh_widgets_started, Snackbar.LENGTH_SHORT).show()
+}
+
+/** What became of the custom spoiler image: saved, reset or failed. */
+internal fun View.showCustomSpoilerEvent(event: CustomSpoilerEvent) {
+    val message = when (event) {
+        CustomSpoilerEvent.SAVED -> R.string.settings_qr_custom_image_saved
+        CustomSpoilerEvent.RESET -> R.string.settings_qr_custom_image_reset
+        CustomSpoilerEvent.FAILED -> R.string.settings_qr_custom_image_failed
+    }
+    Snackbar.make(this, message, Snackbar.LENGTH_LONG).show()
+}
+
+/** The picked and cropped spoiler image is saved; [onFailed] says a failed pick or crop; a cancel does nothing. */
+internal fun CustomSpoilerViewModel.onCustomSpoilerCropped(result: SpoilerCropResult, onFailed: () -> Unit) {
+    when (result) {
+        is SpoilerCropResult.Image -> saveImage(result.uri.toString())
+        SpoilerCropResult.Failed -> onFailed()
+        SpoilerCropResult.Cancelled -> Unit
     }
 }

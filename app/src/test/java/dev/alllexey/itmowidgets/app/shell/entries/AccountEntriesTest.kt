@@ -135,6 +135,8 @@ class AccountEntriesTest {
     fun startGraph() {
         koin = startKoin {
             modules(
+                // First, so this test's own widget previews override the settings graph's.
+                settingsTestModule(),
                 module {
                     viewModel { AuthViewModel(sessions, TimeSource.Monotonic) }
                     viewModel { MeViewModel(sessions, EmptySocial, FakeCustomServicesRepository(enabled = true)) }
