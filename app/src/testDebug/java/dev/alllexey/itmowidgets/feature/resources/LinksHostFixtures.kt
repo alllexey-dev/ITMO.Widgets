@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.resources
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -49,8 +48,8 @@ internal object LinksHostFixtures {
     )
 
     /** A repository with [fixture] and the connection, handed to Koin for every links view model of the test. */
-    fun install(): MemorySubjectLinksRepository {
-        val repository = MemorySubjectLinksRepository().apply {
+    fun install(): LinksHostRepository {
+        val repository = LinksHostRepository().apply {
             servicesEnabled = true
             snapshots.value = mapOf(SCOPE.key to fixture())
         }

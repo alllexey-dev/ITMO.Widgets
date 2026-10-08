@@ -34,7 +34,7 @@ display order:
 
 A chat is an ordinary link with category `CHAT`; it never joins the short
 list of the subject page and is listed in its own block. Labels, icons and visibility texts live in
-`core/ui/SubjectLinkTexts.kt`, so the recordbook and the sheets share them.
+`core/resources/SubjectLinkTexts.kt` of `:shared:core`, so the recordbook and the sheets share them.
 
 | Visibility | Label | Who sees it |
 |---|---|---|
@@ -79,11 +79,10 @@ then every other non-chat link of the period, own and shared alike, by
 A link is shown once. While the page is open the order it has shown stays
 (`core/presentation/StableOrder`): a vote changes a score in place but neither moves a
 row nor changes which three are shown; a new screen or a pull ranks afresh, and
-a link seen for the first time follows the shown ones. A row (`item_subject_link.xml`, bound by
-`core/ui/SubjectLinkRow.kt`) has the category symbol, the title (or the
-category name) and the host on the second line. Own and others' links share
+a link seen for the first time follows the shown ones. A row (the kit's `LinkRow`) has the category
+symbol, the title (or the category name) and the host on the second line. Own and others' links share
 the style: an own link is told only by the `моя` badge, another student's
-link has the vote pill `▲ N ▼` (`view_link_vote_pill.xml`) whose arrows vote
+link has the vote pill `▲ N ▼` (the kit's `VotePill`) whose arrows vote
 from the page like in the sheet (`RecordbookSubjectViewModel.voteLink`; tapping
 the current arrow takes the vote back, one vote at a time, a failure is a
 snackbar). Without the connection or under a `VOTE` restriction the pill keeps

@@ -145,7 +145,7 @@ background:
 - Own and others' items share the row style; an own one is told by a small
   `моя` badge (`colorSecondaryContainer`), never by a different surface or
   outline. Others' links carry the compact vote pill `▲ N ▼`
-  (`view_link_vote_pill.xml`: a 32 dp pill inside 48 dp arrow targets).
+  (the kit's `VotePill`: a 32 dp pill inside 48 dp arrow targets).
 - Captions put a second fact on a second line or join facts with a comma; no
   « · ». The last row that leads further (`Все ссылки, N`, `Все пары, N`,
   `Добавить ссылку`) is the kit's `GroupActionRow` or, on the subject page,
@@ -363,7 +363,7 @@ both platforms.
 | `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | `core/ui/ConnectedGroup.kt` (`View.bindGroupPosition`) | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
 | `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | `item_section_heading.xml`; the subject page's `SubjectControlGroupHeading` | A section header in `secondaryLabel` at UIKit's insets |
 | `GroupActionRow` | The last row of a group that leads further | the subject page's `SubjectActionRow` (`Все ссылки`, `Добавить ссылку`, `Все пары`) | A cell with the icon in the tint and the disclosure indicator |
-| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | `item_subject_link.xml`, `core/ui/SubjectLinkRow.kt`, `view_link_vote_pill.xml` | A cell; the vote arrows are 44 pt targets, the pill on `tertiarySystemFill` |
+| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | The v2.2 XML link row and its vote pill | A cell; the vote arrows are 44 pt targets, the pill on `tertiarySystemFill` |
 | `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | the user row of the XML social lists; rows with `bindSelectionAccessibility` | A cell with the disclosure indicator; the selection is the checkmark accessory with the selection haptic |
 | `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | `Card.SettingsGroup` and `item_setting_row.xml`, `item_setting_toggle.xml`, `item_setting_divider.xml` | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
 | `DetailsHeader` | The head of every details sheet | `view_details_header.xml`, `core/ui/DetailsHeader.kt` | Title 2 semibold, secondary text and icons in `secondaryLabel`, the map button a tinted capsule |
@@ -673,8 +673,8 @@ settings, and restore them if a separate test explicitly changes them.
   `SubjectControlGroupHeading`), teachers and lessons, in the files of
   `ui/subject/`.
 - Connected groups: `core/ui/ConnectedGroup.kt`, `res/layout/item_section_heading.xml`;
-  link rows `res/layout/item_subject_link.xml`
-  with `res/layout/view_link_vote_pill.xml`, bound by `core/ui/SubjectLinkRow.kt`.
+  link rows are the kit's `LinkRow` with its `VotePill`
+  (`components/rows/LinkRow.kt`, `components/rows/VotePill.kt` of `:shared:designsystem`).
 - Sheet total on the subject page: `SubjectSheetTotal`
   (`ui/subject/SubjectSheetTotal.kt` of `:shared:feature-recordbook`) at the
   bottom of the result card under a hairline (`ic_table`, the
@@ -697,8 +697,8 @@ settings, and restore them if a separate test explicitly changes them.
   `bodyLarge`, days `bodySmall`, chevron), hosted by
   `feature/settings/ui/IcsExportBottomSheet.kt`.
 - Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt` (connected
-  groups per category), `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`,
-  `res/layout/item_subject_link.xml`.
+  groups per category), `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`;
+  rows are the kit's `LinkRow`.
 - Person profile: Compose in `:shared:feature-social`
   (`feature/social/ui/profile/UserProfileScreen.kt`): the hero `ProfileHero.kt`
   (`Card.Hero`: avatar, name, one short line, the ISU number with a copy symbol
