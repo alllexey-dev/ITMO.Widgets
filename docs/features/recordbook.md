@@ -229,3 +229,35 @@ The debug `RecordbookPreviewActivity` with `RecordbookPreviewFixtures` remains o
 for the site screenshots (`SiteScreenshotCapture`) and the Koin host checks
 (`RecordbookKoinHostsTest`); it uses in-memory repositories, its own link fixture
 `RecordbookPreviewLinks` included, and never reads a session.
+
+## iOS
+
+The iOS app ([iOS app](../ios.md)) hosts the same `RecordbookRoute` as the
+first tab's root, in Android's tab order, since `PlatformCapabilities.recordbook`
+is on there: `RecordbookTabScreen` (`iosApp/Sources/Features/Recordbook/`)
+through `recordbookRootPage` (`shared/ios`, `screens/RecordbookScreens.kt`), with
+`recordbookModule` and `recordbookIosModule` in `IosKoinModules`. The tab's
+ViewModel lives in the Compose controller's store, so the period and the list
+stay while the tab's root stays alive.
+
+- Period picker: `AppRoutes.RecordbookPeriod` is a Compose sheet above the shell
+  (`RecordbookPeriodSheetView`, `recordbookPeriodViewController`), half height
+  first with the system drag indicator; a pick answers the tab root through the
+  router (`open(_:onResult:)`, `deliver(_:from:)`) and the root's
+  `RecordbookPage` hands it to the ViewModel, as Android's `ResultEffect` does.
+- BARS: the snackbar's `Войти в БАРС` opens IO-09d1's `BarsLoginSheet`;
+  after a completed sign-in the list loads again (`RecordbookPage.barsSignedIn`).
+  In the demo the chip's overlay says `Недоступно в демо`, as on Android.
+- A subject opens [its page](subject-page.md#ios) only with valid arguments.
+- Demo: `DemoRecordbook` answers the list, the subject pages and the demo sheet
+  total with no request.
+- Not yet on iOS: the new-marks dot, the marks card and the settings page wait
+  for mark tracking (`PlatformCapabilities.marks`, IO-09d3); a notification's
+  subject arguments and the BARS sign-in entry route still open only the tab.
+- Tests: `RecordbookIosModuleTest` (`scripts/ios/test.sh kn
+  :shared:feature-recordbook`: every definition of the screens resolves on the
+  demo session, the demo recordbook answers, the subject links stand-in asks
+  nothing, all with no request) and `RecordbookUITests` on the demo session (the
+  list and an earlier period through the picker, the picker's close and drag,
+  the BARS demo refusal, the subject page and `Мои баллы`, the list at AX1 to
+  its last subject).

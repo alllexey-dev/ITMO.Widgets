@@ -108,6 +108,41 @@ class SubjectHubItemsTest {
     }
 
     @Test
+    fun `without subject links only the LMS page stays and the chats go`() {
+        val items = subjectHubItems(fullState(), linksEnabled = false)
+
+        assertEquals(
+            listOf(SubjectHubItem.Lms(LMS, GroupPosition.Single)),
+            items.sectionAfter(CoreRes.string.links_title),
+        )
+        assertEquals(emptyList(), items.filter { it is SubjectHubItem.Link || it is SubjectHubItem.Chat })
+        assertEquals(
+            listOf(
+                CoreRes.string.links_title,
+                Res.string.subject_controls_title,
+                Res.string.subject_teachers_title,
+                Res.string.subject_lessons_title,
+            ),
+            items.filterIsInstance<SubjectHubItem.Section>().map { it.title },
+        )
+    }
+
+    @Test
+    fun `without subject links or an LMS page the links section goes`() {
+        val state = fullState().withHub {
+            copy(chips = chips.copy(visible = chips.visible.filterIsInstance<SubjectLinkChip.Link>()))
+        }
+
+        val titles = subjectHubItems(state, linksEnabled = false)
+            .filterIsInstance<SubjectHubItem.Section>().map { it.title }
+
+        assertEquals(
+            listOf(Res.string.subject_controls_title, Res.string.subject_teachers_title, Res.string.subject_lessons_title),
+            titles,
+        )
+    }
+
+    @Test
     fun `collapsed lessons end with all lessons and the full count`() {
         val lessons = subjectHubItems(fullState()).sectionAfter(Res.string.subject_lessons_title)
 
@@ -310,7 +345,7 @@ class SubjectHubItemsTest {
                 chips = SubjectLinkChips(
                     listOf(
                         SubjectLinkChip.Link(link("a", scope, LinkCategory.SCORES)),
-                        SubjectLinkChip.Lms("https://lms.itmo.ru/course/1"),
+                        SubjectLinkChip.Lms(LMS),
                         SubjectLinkChip.Link(link("b", scope, LinkCategory.MATERIALS)),
                     ),
                     moreCount = 3,
@@ -348,6 +383,7 @@ class SubjectHubItemsTest {
         const val PE = "Физическая культура и спорт (элективная)"
         const val TEACHER = "Иванова Мария Сергеевна"
         const val SHEET_URL = "https://docs.google.com/spreadsheets/d/x"
+        const val LMS = "https://lms.itmo.ru/course/1"
         val MOSCOW = TimeZone.of("Europe/Moscow")
     }
 }

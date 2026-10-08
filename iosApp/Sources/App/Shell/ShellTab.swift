@@ -1,3 +1,5 @@
+import Shared
+
 /// A root of the tab bar, in the order of Android's `res/menu/bottom_nav.xml`.
 enum ShellTab: String, CaseIterable, Identifiable, Hashable {
     case recordbook
@@ -14,8 +16,9 @@ enum ShellTab: String, CaseIterable, Identifiable, Hashable {
 
     var id: String { rawValue }
 
-    /// The recordbook has no screen on iOS until IO-09d2; App Review rejects placeholders, so it has no entry point.
-    var isAvailable: Bool { self != .recordbook }
+    /// Whether iOS offers the tab: the recordbook follows `PlatformCapabilities.recordbook` (on since IO-09d2), so a
+    /// tab without its screen never shows as a placeholder (App Review 2.1).
+    var isAvailable: Bool { self != .recordbook || IosPlatformCapabilitiesKt.IosPlatformCapabilities.recordbook }
 
     var title: String { AppStrings.string(titleKey) }
 

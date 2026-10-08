@@ -102,7 +102,7 @@ final class SportUITests: XCTestCase {
         let app = XCUIApplication.itmo()
         app.launch()
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
-        app.tabBars.firstMatch.buttons.element(boundBy: 3).tap()
+        app.selectTab("me")
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
         element(app, "friends_row").tap()
         let friend = element(app, "user_list_row_\(Self.ivan)")
@@ -155,7 +155,7 @@ final class SportUITests: XCTestCase {
 
     private func openSport(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
-        app.tabBars.firstMatch.buttons.element(boundBy: 2).tap()
+        app.selectTab("sport")
         XCTAssertTrue(element(app, "shell.root.sport").waitForExistence(timeout: stepTimeout))
     }
 

@@ -150,7 +150,7 @@ final class SocialUITests: XCTestCase {
 
     private func openMe(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
-        app.tabBars.firstMatch.buttons.element(boundBy: 3).tap()
+        app.selectTab("me")
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
     }
 

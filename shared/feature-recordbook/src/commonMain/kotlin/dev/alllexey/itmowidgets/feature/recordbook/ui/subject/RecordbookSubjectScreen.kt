@@ -136,12 +136,14 @@ class RecordbookSubjectActions(
  * The subject page with its Koin ViewModel (the ViewModel loads on creation from the cached subject). A failed
  * refresh or BARS journal and a failed vote show in snackbars; everything outside the page goes to [exits].
  * [semester] is the page's argument, shown under the subject's name. Android hosts it in `RecordbookSubjectFragment`.
+ * [linksEnabled] is the platform's `PlatformCapabilities.reviews` (always on Android, see [subjectHubItems]).
  */
 @Composable
 fun RecordbookSubjectRoute(
     semester: Int,
     exits: RecordbookSubjectExits,
     viewModel: RecordbookSubjectViewModel = koinViewModel(),
+    linksEnabled: Boolean = true,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
@@ -155,7 +157,7 @@ fun RecordbookSubjectRoute(
     )
     RecordbookSubjectEventSnackbars(viewModel.events, snackbars)
     val actions = remember(viewModel, exits) { subjectActions(viewModel, exits) }
-    RecordbookSubjectScreen(state, semester, actions, snackbarHostState = snackbars)
+    RecordbookSubjectScreen(state, semester, actions, snackbarHostState = snackbars, linksEnabled = linksEnabled)
 }
 
 /** The ViewModel's half of [RecordbookSubjectActions]; the link sheets and `Мои баллы` take the current scope. */
@@ -216,6 +218,7 @@ internal fun RecordbookSubjectEventSnackbars(events: Flow<RecordbookSubjectEvent
  *
  * The first load without a cache shows list placeholders under the header, a failed one the error with a retry in the
  * same area; a pull shows the indicator over the list. Several sheet links ask which one to connect, own ones marked.
+ * [linksEnabled] as in [subjectHubItems].
  */
 @Composable
 fun RecordbookSubjectScreen(
@@ -225,6 +228,7 @@ fun RecordbookSubjectScreen(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    linksEnabled: Boolean = true,
 ) {
     var sheetLinks by remember { mutableStateOf<List<SheetLinkOption>?>(null) }
     val connectSheet: (List<SheetLinkOption>) -> Unit = { links ->
@@ -253,7 +257,7 @@ fun RecordbookSubjectScreen(
                     )
                     is RecordbookSubjectUiState.Content ->
                         AppRefreshBox(state.refreshing, actions.onRefresh, Modifier.fillMaxSize()) {
-                            SubjectHubList(state, actions, connectSheet, listState)
+                            SubjectHubList(state, actions, connectSheet, listState, linksEnabled)
                         }
                 }
             }
@@ -324,8 +328,9 @@ private fun SubjectHubList(
     actions: RecordbookSubjectActions,
     onConnectSheet: (List<SheetLinkOption>) -> Unit,
     listState: LazyListState,
+    linksEnabled: Boolean,
 ) {
-    val items = remember(state) { subjectHubItems(state) }
+    val items = remember(state, linksEnabled) { subjectHubItems(state, linksEnabled) }
     val keys = remember(items) { subjectHubKeys(items) }
     val sheetActions = remember(actions, onConnectSheet) {
         SubjectSheetActions(

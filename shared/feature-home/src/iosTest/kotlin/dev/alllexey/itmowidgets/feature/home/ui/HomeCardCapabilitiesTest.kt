@@ -30,7 +30,7 @@ class HomeCardCapabilitiesTest {
 
     @Test
     fun marksNeedTheRecordbookTabTheCardOpens() {
-        val withoutRecordbook = IosPlatformCapabilities.copy(marks = true)
+        val withoutRecordbook = IosPlatformCapabilities.copy(marks = true, recordbook = false)
         val withRecordbook = withoutRecordbook.copy(recordbook = true)
 
         assertTrue(listOf(marks).offeredBy(withoutRecordbook).isEmpty())

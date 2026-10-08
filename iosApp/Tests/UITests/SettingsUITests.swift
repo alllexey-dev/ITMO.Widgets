@@ -114,7 +114,7 @@ final class SettingsUITests: XCTestCase {
 
     private func openSettings(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
-        app.tabBars.firstMatch.buttons.element(boundBy: 3).tap()
+        app.selectTab("me")
         // The settings row of the Compose Me tab (`MeTestTags.SETTINGS_ROW`, IO-09e).
         let entry = element(app, "settings_row")
         XCTAssertTrue(entry.waitForExistence(timeout: stepTimeout))

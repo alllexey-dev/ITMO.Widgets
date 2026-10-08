@@ -55,7 +55,8 @@ object IosKoinModules {
         authModule, onboardingDataModule, onboardingModule,
         // The SwiftUI settings and diagnostics over the shared pages (IO-08a); IO-07b's screens write the same data.
         settingsDataModule, settingsModule, settingsIosModule,
-        // The recordbook graph with the BARS session on WebKit and the Keychain (IO-09d1); no screen yet (IO-09d2).
+        // The recordbook graph with the BARS session on WebKit and the Keychain (IO-09d1); the tab, the subject page
+        // and `Мои баллы` with the subject links left out until IO-09f (IO-09d2).
         recordbookModule, recordbookIosModule(platform),
         // The schedule widgets' App Group timeline and the schedule widget refresh port (IO-10b).
         scheduleWidgetIosModule,

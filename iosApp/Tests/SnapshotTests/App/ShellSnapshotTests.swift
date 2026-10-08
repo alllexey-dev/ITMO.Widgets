@@ -4,20 +4,15 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// The shell on fixtures (IO-06b) in all four appearances: a fixture root's stack with the demo banner, the
-/// signed-out gate and the damaged-link sheet. The tab bar is system chrome drawn with materials a layer render
-/// misses, so it is left to `ShellUITests` screenshots and the stacks are rendered without it; so are the Compose
-/// screens, whose Metal layer a snapshot misses: the QR pass (`QrPassUITests`), the home feed (`HomeUITests`), the
-/// schedule (`ScheduleUITests`) and the sport tab (`SportUITests`).
+/// The shell on fixtures (IO-06b) in all four appearances: the signed-out gate and the damaged-link sheet. The tab bar
+/// is system chrome drawn with materials a layer render misses, so it is left to `ShellUITests` screenshots; so are the
+/// tab stacks, whose roots are all Compose screens a snapshot misses (Metal): the recordbook (`RecordbookUITests`), the
+/// schedule (`ScheduleUITests`), the home feed (`HomeUITests`), the sport tab (`SportUITests`), the Me tab
+/// (`SocialUITests`) and the QR pass (`QrPassUITests`). The demo banner is `DesignSystemSnapshotTests`'.
 @MainActor
 final class ShellSnapshotTests: XCTestCase {
     /// A full screen at the matrix width: the banner sits at the bottom.
     private let screenHeight: CGFloat = 640
-
-    func testRecordbookInDemo() {
-        let shell = stack(.recordbook, mountedRouter(), isDemo: true)
-        assertAppearances(of: shell, named: "recordbook-demo", height: screenHeight)
-    }
 
     func testSignedOutGate() {
         let shell = ShellView(router: AppRouter(), session: ShellSession(state: .signedOut))
@@ -26,16 +21,5 @@ final class ShellSnapshotTests: XCTestCase {
 
     func testLinkUnavailableSheet() {
         assertAppearances(of: ShellSheetView(sheet: .linkUnavailable), named: "sheet", height: 400)
-    }
-
-    private func stack(_ tab: ShellTab, _ router: AppRouter, isDemo: Bool) -> some View {
-        ShellStack(tab: tab, router: router, isDemo: isDemo, leaveDemo: {})
-    }
-
-    private func mountedRouter() -> AppRouter {
-        let router = AppRouter()
-        router.sessionChanged(ShellSessionState.signedIn.sessionState, onboarding: .passed)
-        router.shellMounted(true)
-        return router
     }
 }
