@@ -2,8 +2,9 @@ import XCTest
 
 /// A tapped notification routes by its payload type (IO-13a): the Debug fixture (`-itmoNotificationFixture`) posts a
 /// local notification shaped like Backend's push in the demo session, the test taps its banner and the shell opens
-/// the tab the payload names. The first run answers iOS's notification dialog. On a fresh simulator the notification
-/// daemon answers its first requests only after a minute or two, so the dialog and the banner get a long timeout.
+/// the tab the payload names, a friendship with the actor's profile on the me tab (IO-09e). The first run answers
+/// iOS's notification dialog. On a fresh simulator the notification daemon answers its first requests only after a
+/// minute or two, so the dialog and the banner get a long timeout.
 final class NotificationTapUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let bannerTimeout: TimeInterval = 180
@@ -17,8 +18,8 @@ final class NotificationTapUITests: XCTestCase {
         tapFixture("sport", title: Self.sportTitle, opens: "shell.root.sport")
     }
 
-    func testAFriendshipTapOpensTheMeTab() {
-        tapFixture("friendship", title: Self.friendsTitle, opens: "shell.root.me")
+    func testAFriendshipTapOpensTheActorsProfile() {
+        tapFixture("friendship", title: Self.friendsTitle, opens: "social.profile")
     }
 
     private func tapFixture(_ fixture: String, title: String, opens root: String) {

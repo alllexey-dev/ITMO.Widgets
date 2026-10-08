@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.diagnostics.IosAppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.OsLogAppLog
+import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.network.BackendClientFactory
 import dev.alllexey.itmowidgets.core.network.BackendOrigin
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
@@ -71,15 +72,16 @@ import org.koin.dsl.module
 
 /**
  * The core bindings of the iOS app process, what `:app`'s Hilt modules and `CoreBridge` give Android: storage, the
- * session, both network clients over one Darwin engine and Core 2.0's users API, time, dispatchers, logs with the
- * crash journal, the Backend gate, platform actions and capabilities, and the session cleaners. Koin is the only graph
+ * session, both network clients over one Darwin engine and Core 2.0's users API, time, dispatchers, the application
+ * scope, logs with the crash journal, the Backend gate, platform actions and capabilities, the share links and the
+ * session cleaners. Koin is the only graph
  * on iOS, so each type is defined here once.
  *
  * Not here (one graph per binding): `DemoMode` and `SessionRepository` come from the account module (KM-11h1, loaded
  * by IO-21); ports still in `:app` (`AppNotifier`, `FcmTokenSync`) are bound by the card that needs them.
  *
- * [backendOrigin] is the build's Backend, from the app's Info.plist ([BackendOrigin]); [appVersion] its marketing
- * version ([AppBundleVersion]).
+ * [backendOrigin] is the build's Backend, from the app's Info.plist ([BackendOrigin]), and the site the share links
+ * name, as Android's `WIDGETS_BASE_URL` is both; [appVersion] its marketing version ([AppBundleVersion]).
  */
 fun iosCoreModule(
     host: IosCoreHost,
@@ -87,6 +89,7 @@ fun iosCoreModule(
     appVersion: String = AppBundleVersion.fromMainBundle()
 ): Module = module {
     single<WidgetReloader> { host }
+    single { ShareLinkFactory(backendOrigin) }
     single<PlatformActions> { IosPlatformActions(host) }
     single<PlatformCapabilities> { IosPlatformCapabilities }
 
@@ -98,6 +101,8 @@ fun iosCoreModule(
     } binds arrayOf(AppDiagnostics::class)
     single<Clock> { Clock.System }
     single<AppDispatchers> { systemAppDispatchers() }
+    // The application scope, as Android's `CoroutinesModule`: work a screen starts that must outlive it.
+    single<CoroutineScope> { CoroutineScope(SupervisorJob() + get<AppDispatchers>().default) }
     single<AcademicTimeProvider> {
         DefaultAcademicTimeProvider(get(), TimeZone.of(ACADEMIC_TIME_ZONE), NoAcademicTimeOverride)
     }

@@ -112,8 +112,8 @@ final class ShellUITests: XCTestCase {
         XCTAssertTrue(element(app, "shell.gate.signedOut").waitForExistence(timeout: stepTimeout))
     }
 
-    /// The shared session (IO-07a): the me root's sign-out ends the demo through `SessionRepository`, and the gate
-    /// shows the sign-in screen instead of the tabs (IO-07b).
+    /// The shared session (IO-07a): the Compose Me tab's sign-out (IO-09e) ends the demo through `SessionRepository`
+    /// after the route's confirmation, and the gate shows the sign-in screen instead of the tabs (IO-07b).
     func testSignOutOfTheSharedDemoOpensTheSignInPage() {
         let app = XCUIApplication.itmo()
         app.launch()
@@ -121,8 +121,13 @@ final class ShellUITests: XCTestCase {
         app.tabBars.firstMatch.buttons.element(boundBy: 3).tap()
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
 
-        element(app, "me.signOut").tap()
-        let confirm = element(app, "me.signOut.confirm")
+        let signOut = element(app, "sign_out_row")
+        if !signOut.waitForExistence(timeout: stepTimeout) || !signOut.isHittable { element(app, "main").swipeUp() }
+        signOut.tap()
+        // `me_sign_out` on the dialog's confirm button, the row's text too: the button is the one without the row's tag.
+        let confirm = app.buttons
+            .matching(NSPredicate(format: "label == %@ AND identifier != %@", Self.signOutLabel, "sign_out_row"))
+            .firstMatch
         XCTAssertTrue(confirm.waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "sign-out-confirm")
         confirm.tap()
@@ -131,6 +136,9 @@ final class ShellUITests: XCTestCase {
         XCTAssertFalse(app.tabBars.firstMatch.exists)
         XCTAssertFalse(element(app, "kit.demoBanner").exists)
     }
+
+    /// `me_sign_out`: the Compose texts are Russian on an English iPhone.
+    private static let signOutLabel = "Выйти"
 
     private func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {
         app.descendants(matching: .any)[identifier].firstMatch

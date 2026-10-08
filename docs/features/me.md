@@ -89,3 +89,30 @@ sign-out). Goldens: the five `MeScreen` previews in
 and click `MeTestTags.SETTINGS_ROW` through its semantics. The store frame
 `10-me` sets `MeFragment.releaseLook`, so a debug build shows the release
 screen without the developer tools row. `MeRulesTest` keeps the row debug only.
+
+## iOS
+
+The iOS app ([iOS app](../ios.md)) hosts the same `MeRoute` as the root of the
+me tab: `MeTabScreen` (`iosApp/Sources/Features/Social/`) through
+`meViewController` (`shared/ios`, `screens/SocialScreens.kt`), with
+`meModule`, `socialModule` and `socialIosModule` in `IosKoinModules`. There is
+no top bar, as on Android; the content keeps clear of the status bar, the tab
+bar and the demo banner.
+
+- Rows open the shared keys through the Swift router, as Android's
+  `meActions`: friends, search and a profile are the social Compose routes on
+  the me stack ([Social](social.md)), the settings and privacy rows the
+  SwiftUI settings pages, the web sign-in the shell's sheet; the demo refuses
+  the web sign-in with `error_demo_unavailable` (`SocialMessages`).
+- No developer tools row: `showDebugTools` is false on iOS.
+- The share button sends `share_profile_text` with
+  `ShareLinkFactory.profile` through the system share sheet (`SocialShares`,
+  `PlatformActions`); the share links name the build's site, the Backend
+  origin of `BackendBaseURL`. GitHub opens in Safari, Telegram in the
+  Telegram app when installed, else in Safari (`IosPlatformActions.openLink`).
+- Sign-out asks in the route's own `ConfirmDialog`, then
+  `SessionRepository.signOut()` returns the app to the sign-in screen.
+- Tests: `SocialUITests` on the demo session (the profile header and groups,
+  no developer tools row, the tab at AX1 down to the sign-out), the
+  `ShellUITests` sign-out of the demo and the `SettingsUITests` entry through
+  `MeTestTags.SETTINGS_ROW`.

@@ -42,7 +42,7 @@ final class DeviceRegistrationTests: XCTestCase {
 
     // MARK: Taps
 
-    func testAFriendshipTapOpensTheMeTabForTheActorsProfile() throws {
+    func testAFriendshipTapOpensTheActorsProfileOnTheMeTab() throws {
         let route = NotificationTaps.entryRoute(userInfo: userInfo(.friendship))
 
         XCTAssertEqual(route, EntryRoute(
@@ -52,6 +52,7 @@ final class DeviceRegistrationTests: XCTestCase {
         let router = readyRouter()
         XCTAssertTrue(router.open(entry: try XCTUnwrap(route)))
         XCTAssertEqual(router.selectedTab, .me)
+        XCTAssertEqual(router.path(of: .me), [ShellDestination(AppRoutes.UserProfile(isu: 100_002))])
     }
 
     func testASportTapOpensItsLessonOnTheSportTab() throws {

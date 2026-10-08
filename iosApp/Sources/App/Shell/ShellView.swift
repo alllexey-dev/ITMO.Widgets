@@ -44,8 +44,7 @@ struct ShellView: View {
                     tab: tab,
                     router: router,
                     isDemo: demo,
-                    leaveDemo: { session.signOut() },
-                    signOut: { session.signOut() }
+                    leaveDemo: { session.signOut() }
                 )
             }
             .onAppear { router.shellMounted(true) }
@@ -70,8 +69,6 @@ struct ShellStack: View {
     @Bindable var router: AppRouter
     let isDemo: Bool
     let leaveDemo: () -> Void
-    /// The sign-out of the me root; none in snapshot tests.
-    var signOut: (() -> Void)?
 
     var body: some View {
         // The banner sits under the stack, not in a `safeAreaInset`: the inset never reaches the screens a stack
@@ -93,14 +90,17 @@ struct ShellStack: View {
         }
     }
 
-    /// The tab's root: the Compose home feed (IO-09a), a fixture root for a tab whose IO card has not hosted it yet.
+    /// The tab's root: the Compose home feed (IO-09a) and Me tab (IO-09e), a fixture root for a tab whose IO card has
+    /// not hosted it yet.
     @ViewBuilder
     private var root: some View {
         switch tab {
         case .home:
             HomeScreen(router: router)
-        case .recordbook, .schedule, .sport, .me:
-            FixtureRootScreen(tab: tab, router: router, signOut: signOut)
+        case .me:
+            MeTabScreen(router: router)
+        case .recordbook, .schedule, .sport:
+            FixtureRootScreen(tab: tab, router: router)
         }
     }
 

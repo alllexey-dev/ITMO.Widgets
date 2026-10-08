@@ -2,12 +2,14 @@ package dev.alllexey.itmowidgets.ios.di
 
 import dev.alllexey.itmowidgets.core.di.iosBackgroundModule
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
+import dev.alllexey.itmowidgets.core.network.BackendOrigin
 import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.home.data.PlacedWidgetKinds
 import dev.alllexey.itmowidgets.feature.home.di.homeIosModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
+import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
@@ -19,12 +21,16 @@ import dev.alllexey.itmowidgets.feature.schedule.di.scheduleWidgetIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsIosModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
+import dev.alllexey.itmowidgets.feature.social.di.socialIosModule
+import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
+import dev.alllexey.itmowidgets.feature.update.domain.AppStoreListing
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import dev.alllexey.itmowidgets.ios.IosPlatform
 import org.koin.core.module.Module
+import platform.Foundation.NSBundle
 
 /**
  * Every Koin module of the iOS app process, what `KoinModules` is on Android. One line per feature: its bindings live
@@ -53,5 +59,13 @@ object IosKoinModules {
         // The notifier, the app refresh task and the schedule change check's iOS ports and step (IO-14); the runner
         // is `IosBackgroundRefresh`, started after the graph.
         iosBackgroundModule, scheduleChangesIosModule,
+        // The me tab, friends, search, profiles and a user's friends; the invitation names the App Store page or the
+        // site (IO-09e).
+        socialModule, socialIosModule(inviteUrl()), meModule,
     )
+
+    /** The App Store page of the bundle's `AppStoreID` once the app has a record (T13), the build's site until then. */
+    private fun inviteUrl(): String =
+        AppStoreListing.url(NSBundle.mainBundle.objectForInfoDictionaryKey("AppStoreID") as? String)
+            ?: BackendOrigin.fromMainBundle()
 }

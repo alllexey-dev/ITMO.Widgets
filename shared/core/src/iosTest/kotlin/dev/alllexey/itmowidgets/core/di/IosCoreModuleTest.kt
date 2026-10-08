@@ -8,6 +8,9 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.diagnostics.IosAppDiagnostics
+import dev.alllexey.itmowidgets.core.navigation.AppLink
+import dev.alllexey.itmowidgets.core.navigation.AppLinks
+import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.platform.IosPlatformCapabilities
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
@@ -84,6 +87,10 @@ class IosCoreModuleTest {
         assertSame(koin.get<KeychainSecureStore>(), koin.get<SecureStore>())
         assertSame(koin.get<IosAppDiagnostics>(), koin.get<AppDiagnostics>())
         assertEquals(IosPlatformCapabilities, koin.get<PlatformCapabilities>())
+        // A shared profile link names the build's site and parses back as the app's link.
+        val link = koin.get<ShareLinkFactory>().profile(100_001)
+        assertEquals("$ORIGIN/u/100001", link)
+        assertEquals(AppLink.Profile(100_001), AppLinks.parse(link))
         koin.close()
     }
 

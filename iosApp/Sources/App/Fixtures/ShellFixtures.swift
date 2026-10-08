@@ -4,7 +4,8 @@ import SwiftUI
 
 /// Fixture mode of the shell (IO-06b): placeholder roots, and in a Debug build a fixture session gate and demo
 /// banner without Kotlin. The placeholders stand in for the CMP screens the feature cards host (IO-09x; the QR pass is
-/// CMP since IO-21, the home feed since IO-09a), so they draw their own top bar under the compose chrome.
+/// CMP since IO-21, the home feed since IO-09a, the Me tab since IO-09e), so they draw their own top bar under the
+/// compose chrome.
 enum ShellFixtures {
     /// The launch argument that picks a fixture session instead of the shared one:
     /// `-itmoShellSession loading|signed-out|demo|signed-in`.
@@ -20,47 +21,15 @@ enum ShellFixtures {
     }
 }
 
-/// A tab root: the tab's title in its own top bar and the tab's empty state; me has the settings and the sign-out
-/// (with Android's confirmation) until the Compose Me tab is hosted.
+/// A tab root: the tab's title in its own top bar and the tab's empty state, until the tab's IO card hosts its
+/// Compose root.
 struct FixtureRootScreen: View {
     let tab: ShellTab
     let router: AppRouter
-    var signOut: (() -> Void)?
-
-    @State private var confirmsSignOut = false
 
     var body: some View {
         FixtureComposeScreen(title: tab.title) {
             ItmoEmptyView(symbol: tab.symbol, title: tab.title)
-            if tab == .me {
-                ItmoProgressButton(title: AppStrings.string("settings_title"), symbol: .settings) {
-                    router.open(AppRoutes.Settings(page: AppRoutes.Settings.companion.ROOT_PAGE))
-                }
-                .padding(.horizontal, ItmoSpacing.screenMargin)
-                .accessibilityIdentifier("me.openSettings")
-            }
-            if tab == .me, let signOut {
-                ItmoProgressButton(title: AppStrings.string("me_sign_out"), symbol: .logout) {
-                    confirmsSignOut = true
-                }
-                .padding(.horizontal, ItmoSpacing.screenMargin)
-                .accessibilityIdentifier("me.signOut")
-                .confirmationDialog(
-                    Text(verbatim: AppStrings.string("me_sign_out_confirm_title")),
-                    isPresented: $confirmsSignOut,
-                    titleVisibility: .visible
-                ) {
-                    Button(role: .destructive, action: signOut) {
-                        Text(verbatim: AppStrings.string("me_sign_out"))
-                    }
-                    .accessibilityIdentifier("me.signOut.confirm")
-                    Button(role: .cancel) {} label: {
-                        Text(verbatim: AppStrings.string("common_cancel"))
-                    }
-                } message: {
-                    Text(verbatim: AppStrings.string("me_sign_out_confirm_message"))
-                }
-            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("shell.root.\(tab.rawValue)")
