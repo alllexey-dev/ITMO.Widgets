@@ -60,7 +60,11 @@ Everything here describes the current state of the apps. History is in
 - [Home and quick actions](features/home.md) — the home feed of cards, the QR
   pass, the quick-settings tile, the app shortcuts and the My ITMO entry.
 - [Schedule](features/schedule.md) — academic schedule, friends' schedules,
-  pending sport rows, lesson details, schedule changes checked on the device.
+  pending sport rows, lesson details.
+- [Schedule changes](features/schedule-changes.md) — the background check of
+  the own schedule on the device, the notification, the marks and the history.
+- [Calendar](features/calendar.md) — the kept synchronization into the phone's
+  calendar and the one-off `.ics` export.
 - [Friend selector](features/friend-selector.md) — the sheet that picks whose
   schedule is shown: recent chips, friends and people search, the result.
 - [Sport](features/sport.md) — catalog, bookings, queues, cards and details.

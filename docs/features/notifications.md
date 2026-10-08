@@ -93,7 +93,7 @@ it, the activity selects the profile root and opens `USER_PROFILE` once.
 A local notification, not a push: `ScheduleChangesCheck` in
 `feature/schedule` decides it after every background run and
 `AndroidScheduleChangeNotifier` shows it (the rules are in
-[schedule](schedule.md#notification)).
+[schedule changes](schedule-changes.md#notification)).
 
 - One summary notification in `schedule_changes` with the tag
   `schedule_changes` and id 1, so a new one replaces the previous. The title is

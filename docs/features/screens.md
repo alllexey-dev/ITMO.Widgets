@@ -102,7 +102,7 @@ Feature doc: [Recordbook](recordbook.md).
 
 ## Schedule
 
-Feature doc: [Schedule](schedule.md).
+Feature docs: [Schedule](schedule.md), [Schedule changes](schedule-changes.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
@@ -179,7 +179,7 @@ Feature doc: [Web sign-in](web-login.md).
 
 ## Settings
 
-Feature doc: [Settings](../settings.md).
+Feature docs: [Settings](../settings.md), [Calendar](calendar.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
