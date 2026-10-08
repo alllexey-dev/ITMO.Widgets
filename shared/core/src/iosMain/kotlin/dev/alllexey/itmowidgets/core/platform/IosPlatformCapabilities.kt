@@ -6,7 +6,8 @@ package dev.alllexey.itmowidgets.core.platform
  * background screens, the GitHub update channel, the animated QR widget and the custom spoiler image.
  *
  * - [PlatformCapabilities.recordbook]: on since IO-09d2 (the tab, the subject page and `Мои баллы`);
- *   [PlatformCapabilities.marks]: IO-09d3, with the settings recordbook page and the new-marks home card.
+ *   [PlatformCapabilities.marks]: on since IO-09d3 (the background mark check, the settings recordbook page and the
+ *   new-marks home card).
  * - [PlatformCapabilities.calendarExport]: on since IO-15b, the settings calendar rows over EventKit and the `.ics`
  *   sheet.
  * - [PlatformCapabilities.reviews]: IO-09f, with the subject page's links.
@@ -17,7 +18,7 @@ val IosPlatformCapabilities = PlatformCapabilities(
     updateChannel = false,
     calendarExport = true,
     recordbook = true,
-    marks = false,
+    marks = true,
     reviews = false,
     qrWidgetAnimation = false,
     qrCustomSpoiler = false,

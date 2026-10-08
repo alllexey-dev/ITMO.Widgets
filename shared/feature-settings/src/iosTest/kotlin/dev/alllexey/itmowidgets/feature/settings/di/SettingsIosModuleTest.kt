@@ -95,7 +95,7 @@ class SettingsIosModuleTest {
     }
 
     @Test
-    fun theRootHidesTheRecordbookPageUntilMarkTrackingShips() {
+    fun theRootListsTheRecordbookPageSinceMarkTrackingShipped() {
         val koin = graph()
         val state = SettingsPageState(
             local = LocalSettings(),
@@ -111,7 +111,7 @@ class SettingsIosModuleTest {
             .filterIsInstance<SettingItem.Navigation>()
             .map { it.page }
 
-        assertFalse(SettingsPage.RECORDBOOK in pages)
+        assertTrue(SettingsPage.RECORDBOOK in pages)
         assertTrue(SettingsPage.MAINTENANCE in pages)
         koin.close()
     }

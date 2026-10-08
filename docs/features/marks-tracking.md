@@ -299,3 +299,57 @@ Instrumented: `MarksWorkTest` (the app's `WorkManager` through the debug
 `MarksTestEntryPoint`) and `MarksNotificationTest`; the marks card
 is in `HomeScreenTest` and the `HomeScreenshotTest` goldens. They use synthetic subjects and restore the
 WorkManager state they found.
+The iOS tests are listed in [iOS](#ios).
+
+## iOS
+
+The iOS app runs the same check: `MarksCheck`, the comparison, the unread
+subjects, `MarkDigests` and the BARS read are the shared ones above, and
+`PlatformCapabilities.marks` is on, so the settings page, the home card and
+the dots show. iOS adds only the platform side
+(`shared/feature-recordbook/src/iosMain/.../data/marks/`, bound in
+`recordbookIosModule`).
+
+- Work. The check is the `marks` step of the app's one refresh task
+  (`RefreshStepKeys.MARKS`, after the schedule changes and before the calendar
+  sync, see [`docs/ios.md`](../ios.md#background-refresh)) with Android's three
+  hours (`RefreshStepKeys.MARKS_PERIOD`) and Android's retries. It runs at
+  launch, on every return to the app and on the system's wakes once its period
+  has passed. `RefreshTaskMarksScheduler` is the `MarksScheduler`: `runOnce` (a
+  switch turned on, BARS turning on by itself) makes the step due at once and
+  asks the running app for a run, as `marks-check-now`; `cancel` does nothing,
+  since the check skips itself signed out or with every switch off.
+- Degradation. iOS picks the moments of the background refresh from how the
+  app is used, often hours apart, and never runs it with Background App
+  Refresh off or in Low Power Mode, so there is no exact three-hour rhythm; the
+  check also runs on every return to the app. The settings row `Обновление
+  контента` (Background App Refresh) shows while it is off for the app.
+- BARS. In the background BARS renews only through the ITMO.ID cookies
+  (`BarsCookieSilentLogin` over `KeychainItmoIdCookies`), never the hidden
+  WebKit view. No cookies or ITMO.ID's `LOGIN_REQUIRED` end the session with
+  one `Войдите в БАРС`; a network failure is retried and never prompts, as on
+  Android.
+- Notification. `IosMarksNotifier` posts Android's two notifications through
+  `IosAppNotifier` on the thread `marks` (`marks-1` for `Новые оценки` with the
+  subject names, `marks-2` for `Войдите в БАРС`), texts by catalog key. A tap
+  carries Android's entry action; on iOS both still open only the recordbook
+  tab (no subject arguments, no BARS sign-in route yet, see
+  [recordbook](recordbook.md#ios)), where the snackbar offers `Войти в БАРС`.
+- Quiet hours. `MarksRefresh` runs the check, then hands marks and the
+  reminder found between 00:00 and 06:00 Moscow time to the system for 06:00
+  at once (a calendar trigger); they count as delivered, as the schedule
+  change step does. Android keeps them for its first run after 06:00.
+- Demo: the home card and the dots show the demo's unread subjects; the check
+  asks nothing.
+- Debug: a Debug build launched with `-itmoRunRefresh` also posts a fixture
+  digest (`MarksFixture`, four demo subjects).
+- Tests: `MarksRefreshTest` (an ended BARS session prompts once, a failure
+  retries without a prompt, night marks and the reminder at 06:00, a skipped
+  check), `RefreshTaskMarksSchedulerTest` and `RecordbookIosModuleTest` in
+  `shared/feature-recordbook` iosTest; `BackgroundRunnerTest` (`shared/ios`:
+  the mark check after the schedule changes within the deadline, its
+  three-hour period); `ITMOWidgetsTests/BackgroundRunnerTests` (the step in
+  the app graph, the fixture digest by catalog key),
+  `SnapshotTests/SettingsSnapshotTests` (the recordbook page),
+  `UITests/HomeUITests` (the marks card in the demo) and
+  `UITests/SettingsUITests`.

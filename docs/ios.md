@@ -222,14 +222,15 @@ the root page, its privacy row the privacy page.
   asks EventKit for full access in Swift (`Features/Calendar/CalendarAccess`, the system prompt once, then a
   rationale that opens the app's page in Settings); `calendarIosModule` gives the sync the phone's calendars over
   EventKit and the `.ics` file, which `IcsExportSheet` shares with a `ShareLink`
-  ([calendar](features/calendar.md#ios)). Mark tracking is the
-  recordbook graph's (IO-09d1), which schedules nothing until IO-09d3, behind its hidden page. "Пройти знакомство заново" resets the shared flag,
+  ([calendar](features/calendar.md#ios)). Mark tracking is the recordbook graph's (IO-09d1) with its `Зачётка`
+  page since IO-09d3: the switches run the mark check of the background runner
+  ([mark tracking](features/marks-tracking.md#ios)). "Пройти знакомство заново" resets the shared flag,
   which the shell's gate reads (IO-07b). Widget pages draw no preview above their rows.
 - Diagnostics. The journal lists `AppDiagnostics`' records, newest first, with a stack trace folded under its
   record; the share sheet takes the plain-text journal (and copies it), clearing asks first.
-- Tests. `SnapshotTests/SettingsSnapshotTests` (the root, schedule and QR widget pages from the providers in the
-  app's graph, and every row type with long values), `ITMOWidgetsTests/SettingsTests`, `UITests/SettingsUITests`
-  (a switch survives a relaunch), and `SettingsIosModuleTest` on the simulator.
+- Tests. `SnapshotTests/SettingsSnapshotTests` (the root, schedule, recordbook and QR widget pages from the
+  providers in the app's graph, and every row type with long values), `ITMOWidgetsTests/SettingsTests`,
+  `UITests/SettingsUITests` (a switch survives a relaunch), and `SettingsIosModuleTest` on the simulator.
 
 ## Identifiers
 
@@ -385,8 +386,9 @@ process, BARS on a Darwin engine of its own (no cookies, cache or redirects, nev
   `-itmoBarsLogin` presents it, and `-itmoBarsRenew foreground|background` replaces the saved header with one BARS
   rejects and renews it through the hidden view or the cookie copy (`BarsSessionCheck`, which logs only the
   header's length and expiry).
-- Until the mark check runs on iOS (IO-09d3) the marks scheduler does nothing; a BARS answer still turns "Оценки
-  БАРС" on.
+- The mark check (IO-09d3) reads BARS in the background through the cookie renewal only (`BarsCookieSilentLogin`
+  over the Keychain cookies), never the hidden view; no cookies or ITMO.ID's `LOGIN_REQUIRED` end the session with
+  one `Войдите в БАРС` ([mark tracking](features/marks-tracking.md#ios)).
 
 Sign-out. Three `SessionDataCleaner`s run with the shared ones, on sign-out and before every sign-in or demo start:
 the Keychain (every item of the service), the App Group container and WebKit's website data, which Swift removes
@@ -549,14 +551,15 @@ used, often hours apart, never with Background App Refresh off or in Low Power M
   its iOS module; the runner takes them in `RefreshStepKeys.ORDER`, where each later check adds one line: widget
   snapshots (`scheduleWidgetIosModule`: `ScheduleTimelineWriter` publishes the schedule timeline), schedule changes
   (`scheduleChangesIosModule`: `ScheduleChangesRefresh`, LT-1's `ScheduleChangesCheck`, then the quiet hours), marks
-  with the BARS renewal (IO-09d3) when it comes, then the calendar sync (`calendarIosModule`: `DefaultCalendarSync.run`
-  every two hours; turning it on makes the step due at once). A bound step without a place
+  with the BARS renewal (`recordbookIosModule`: `MarksRefresh`, KM-11b2's `MarksCheck`, then the quiet hours; every
+  three hours, a switch turned on makes the step due at once), then the calendar sync (`calendarIosModule`:
+  `DefaultCalendarSync.run` every two hours; turning it on makes the step due at once). A bound step without a place
   in the order fails the start.
 - Deadline. The system gives the task about 30 s and cancels the Swift task when it expires, which cancels the
   Kotlin run; the runner stops its steps after 25 s (`BackgroundRunner.DEADLINE`), cancels the one running and
   leaves the rest for the next run, then lets the posted notifications reach the system and asks for the next
   wake, also when cut or cancelled.
-- Periods. A check keeps its Android period (schedule changes and the calendar sync: two hours) in
+- Periods. A check keeps its Android period (schedule changes and the calendar sync: two hours, marks: three) in
   `UserDefaultsRefreshStepLog`: a launch, a foreground or an early wake within it leaves the check out, so My ITMO gets no more requests from an iPhone than
   from an Android phone. A retry (a network failure, or a step that threw) comes back after 15 minutes at most twice,
   then waits for the next period, Android's backoff; a skipped check (signed out, switched off) is tried on the next
@@ -566,21 +569,24 @@ used, often hours apart, never with Background App Refresh off or in Low Power M
   a run, `cancel` does nothing (one task for all checks; a check whose switch is off skips itself). The simulator
   refuses the request (logged).
 - Notifications. `IosAppNotifier` posts through `UNUserNotificationCenter` (`docs/features/notifications.md`, iOS):
-  thread = the channel, identifier `<channel>-<id>`, texts from the catalog. A schedule change found between 00:00
-  and 06:00 Moscow time is handed to the system for 06:00 at once (a calendar trigger) and counts as delivered;
-  Android keeps it for its first run after 06:00, which iOS might not give for hours.
+  thread = the channel, identifier `<channel>-<id>`, texts from the catalog. A schedule change, new marks or the
+  BARS reminder found between 00:00 and 06:00 Moscow time are handed to the system for 06:00 at once (a calendar
+  trigger) and count as delivered; Android keeps them for its first run after 06:00, which iOS might not give for
+  hours.
 - The schedule change step resolves the check and its repository from the graph at each run (`scheduleDataModule`,
   in the graph since IO-09b); `scheduleChangesIosModule` binds the check's iOS ports (`IosScheduleChangeNotifier`,
   the scheduler).
 - Debug. A Debug build launched with `-itmoRunRefresh` runs the entry point once more after the session is read,
-  prints `Refresh: <step>=<result> ...`, and posts a fixture schedule change notification (`ScheduleChangeFixture`,
-  catalog texts), since tests cannot force the scheduler. On the simulator Xcode's
+  prints `Refresh: <step>=<result> ...`, and posts a fixture schedule change notification (`ScheduleChangeFixture`)
+  and a fixture marks digest (`MarksFixture`), both with catalog texts, since tests cannot force the scheduler. On
+  the simulator Xcode's
   `e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"dev.alllexey.itmowidgets.refresh"]`
   also starts the task while the app is paused in the debugger.
 - Tests: `BackgroundRunnerTest` (`shared/ios`, `scripts/ios/test.sh kn :shared:ios`: order, deadline, period skip,
-  retries, overlapping runs, cancellation) with fake steps, `ScheduleChangesRefreshTest`, `IosAppNotifierTest`,
-  `AppRefreshSchedulerTest`, and the hosted `ITMOWidgetsTests/BackgroundRunnerTests` (the app graph's steps in order,
-  the fixture post by catalog key, the Info.plist keys).
+  retries, overlapping runs, cancellation, the mark check after the schedule changes) with fake steps,
+  `ScheduleChangesRefreshTest`, `MarksRefreshTest`, `IosAppNotifierTest`, `AppRefreshSchedulerTest`, and the hosted
+  `ITMOWidgetsTests/BackgroundRunnerTests` (the app graph's steps in order, the fixture posts by catalog key, the
+  Info.plist keys).
 
 ## Core graph
 
@@ -638,7 +644,7 @@ sign-out cleaners.
   with its type and stack frames, written at once to the JSON file diagnostics-crash-v1.json in the no-backup directory, which
   the next launch shows first and deletes. Swift crashes never pass Kotlin and are not recorded.
 - `PlatformCapabilities` is `IosPlatformCapabilities`: everything off until the IO card that ships a feature turns
-  it on (calendar export on since IO-15b, recordbook since IO-09d2; marks IO-09d3, reviews and subject links
+  it on (calendar export on since IO-15b, recordbook since IO-09d2, marks since IO-09d3; reviews and subject links
   IO-09f); the quick settings tile, Android's battery and Xiaomi screens, the update channel, the animated QR widget
   and the custom spoiler image stay off.
 - `PlatformActions`: the share sheet (the title is not shown: iOS's sheet has none), links (t.me in Telegram when

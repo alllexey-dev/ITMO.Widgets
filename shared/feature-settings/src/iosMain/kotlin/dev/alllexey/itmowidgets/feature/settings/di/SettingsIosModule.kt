@@ -23,7 +23,7 @@ import org.koin.dsl.module
  *
  * The schedule change switch and the calendar sync are the schedule data graph's (`scheduleDataModule`, loaded since
  * IO-09b); the phone's calendar and the `.ics` export behind the calendar rows are `calendarIosModule`'s (IO-15b). Mark
- * tracking is `recordbookModule`'s (IO-09d1), with no scheduler until IO-09d3; its page stays hidden until then.
+ * tracking is `recordbookModule`'s (IO-09d1), scheduled on the app refresh task since IO-09d3, which shows its page.
  */
 val settingsIosModule = module {
     single<WidgetRefreshRequester> { IosWidgetRefreshRequester(get()) }

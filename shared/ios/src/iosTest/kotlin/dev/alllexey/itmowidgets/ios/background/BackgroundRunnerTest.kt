@@ -183,12 +183,57 @@ class BackgroundRunnerTest {
     fun theBoundStepsRunInTheFixedOrderAndAnUnplacedStepIsAWiringError() {
         val bound = listOf(
             step(RefreshStepKeys.CALENDAR_SYNC),
+            step(RefreshStepKeys.MARKS),
             step(RefreshStepKeys.SCHEDULE_CHANGES),
             step(RefreshStepKeys.WIDGET_SNAPSHOTS),
         )
 
         assertEquals(RefreshStepKeys.ORDER, IosBackgroundRefresh.ordered(bound).map { it.key })
         assertFailsWith<IllegalArgumentException> { IosBackgroundRefresh.ordered(bound + step("unplaced")) }
+    }
+
+    @Test
+    fun theMarkCheckRunsAfterTheScheduleChangesWithinTheDeadline() = runTest {
+        val schedule = slowStep(RefreshStepKeys.SCHEDULE_CHANGES, RefreshStepKeys.SCHEDULE_CHANGES_PERIOD, 10.seconds)
+        val marks = slowStep(RefreshStepKeys.MARKS, RefreshStepKeys.MARKS_PERIOD, 10.seconds)
+        val runner = runner(*IosBackgroundRefresh.ordered(listOf(marks, schedule)).toTypedArray())
+
+        val report = runner.run()
+
+        assertEquals(listOf(RefreshStepKeys.SCHEDULE_CHANGES, RefreshStepKeys.MARKS, "settle", "reschedule"), events)
+        assertEquals(StepResult.DONE, report.resultOf(RefreshStepKeys.MARKS))
+        assertTrue(testScheduler.currentTime.milliseconds < BackgroundRunner.DEADLINE)
+    }
+
+    @Test
+    fun aSlowScheduleCheckLeavesTheMarkCheckToTheNextRun() = runTest {
+        val schedule = slowStep(RefreshStepKeys.SCHEDULE_CHANGES, RefreshStepKeys.SCHEDULE_CHANGES_PERIOD, 20.seconds)
+        val marks = slowStep(RefreshStepKeys.MARKS, RefreshStepKeys.MARKS_PERIOD, 10.seconds)
+        val runner = runner(schedule, marks)
+
+        val cut = runner.run()
+        val next = runner.run()
+
+        assertEquals(StepResult.DONE, cut.resultOf(RefreshStepKeys.SCHEDULE_CHANGES))
+        assertEquals(StepResult.CUT, cut.resultOf(RefreshStepKeys.MARKS))
+        assertEquals(StepResult.NOT_DUE, next.resultOf(RefreshStepKeys.SCHEDULE_CHANGES))
+        assertEquals(StepResult.DONE, next.resultOf(RefreshStepKeys.MARKS), "a cut check runs on the next wake")
+    }
+
+    @Test
+    fun theMarkCheckKeepsAndroidsThreeHoursAcrossWakesAndForegrounds() = runTest {
+        val runner = runner(step(RefreshStepKeys.MARKS, period = RefreshStepKeys.MARKS_PERIOD))
+
+        runner.run()
+        clock.advanceBy(2.hours)
+        val foreground = runner.run()
+        clock.advanceBy(1.hours)
+        val due = runner.run()
+
+        assertEquals(StepResult.NOT_DUE, foreground.resultOf(RefreshStepKeys.MARKS))
+        assertEquals(StepResult.DONE, due.resultOf(RefreshStepKeys.MARKS))
+        assertEquals(2, events.count { it == RefreshStepKeys.MARKS })
+        assertEquals(3.hours, RefreshStepKeys.MARKS_PERIOD)
     }
 
     private fun runner(vararg steps: RefreshStep, log: AppLog = RecordingLog()) = BackgroundRunner(
@@ -205,6 +250,13 @@ class BackgroundRunnerTest {
             events += key
             outcome
         }
+
+    /** A check of [key] that takes [duration] of the runner's time. */
+    private fun slowStep(key: String, period: Duration, duration: Duration) = RefreshStep(key, period) {
+        delay(duration)
+        events += key
+        CheckOutcome.DONE
+    }
 
     private class InMemoryStepLog : RefreshStepLog {
         private val due = mutableMapOf<String, Pair<Instant, Int>>()

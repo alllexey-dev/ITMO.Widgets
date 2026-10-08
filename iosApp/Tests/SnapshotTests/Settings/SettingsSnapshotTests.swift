@@ -4,13 +4,13 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// Settings pages in all four appearances (IO-08a): the root and two deep pages exactly as the shared page providers
+/// Settings pages in all four appearances (IO-08a): the root and the deep pages exactly as the shared page providers
 /// build them on iOS (the app's graph, iOS capabilities, fixed page states), and a page of every row type with long
 /// values. The form scrolls, so each appearance gets a height that holds the whole page.
 final class SettingsSnapshotTests: XCTestCase {
     func testRoot() {
         let state = SettingsFixtures.page(.root, SettingsFixtures.pageState(notificationsGranted: false))
-        assertPage(state, named: "root", height: 900, ax1Height: 1250)
+        assertPage(state, named: "root", height: 960, ax1Height: 1350)
     }
 
     func testScheduleWithBackgroundRefreshOff() {
@@ -31,6 +31,27 @@ final class SettingsSnapshotTests: XCTestCase {
             )
         )
         assertPage(state, named: "schedule-calendar", height: 760, ax1Height: 1150)
+    }
+
+    /// The mark checks (IO-09d3) after the account's first BARS answer: the three switches and the footer.
+    func testRecordbook() {
+        let state = SettingsFixtures.page(
+            .recordbook,
+            SettingsFixtures.pageState(
+                notificationsGranted: true,
+                local: SettingsFixtures.localSettings(barsMarksEnabled: KotlinBoolean(bool: true))
+            )
+        )
+        assertPage(state, named: "recordbook", height: 380, ax1Height: 500)
+    }
+
+    /// Before any BARS answer (no BARS switch), with Background App Refresh and the notifications off.
+    func testRecordbookWithNotificationsAndBackgroundRefreshOff() {
+        let state = SettingsFixtures.page(
+            .recordbook,
+            SettingsFixtures.pageState(notificationsGranted: false, backgroundWorkRestricted: true)
+        )
+        assertPage(state, named: "recordbook-off", height: 440, ax1Height: 720)
     }
 
     func testQrWidget() {
@@ -78,7 +99,8 @@ enum SettingsFixtures {
     static func pageState(
         notificationsGranted: Bool,
         backgroundWorkRestricted: Bool = false,
-        calendar: CalendarSyncState = CalendarSyncState(enabled: false, problem: nil)
+        calendar: CalendarSyncState = CalendarSyncState(enabled: false, problem: nil),
+        local: LocalSettings = SettingsFixtures.local
     ) -> SettingsPageState {
         SettingsPageState(
             local: local,
@@ -101,28 +123,37 @@ enum SettingsFixtures {
         return SettingsUiState(page: page, sections: sections, loaded: true, previewSettings: nil)
     }
 
-    static let local = LocalSettings(
-        customServicesEnabled: true,
-        scheduleWidget: ScheduleWidgetSettings(
-            compact: CompactScheduleWidgetSettings(showNextLessonEarly: true, hideTeacher: false, textSize: .normal),
-            full: FullScheduleWidgetSettings(
-                hideTeacher: false,
-                hidePastLessons: false,
-                showTomorrowWhenTodayIsOver: false,
-                textSize: .normal
-            )
-        ),
-        qrWidget: QrWidgetSettings(dynamicColors: true, spoilerEnabled: true, animationType: .circle),
-        sport: SportDisplaySettings(hideTeacherSelector: true, hideTimeSelector: true),
-        showSportAutoSign: false,
-        scheduleChangesEnabled: true,
-        myItmoMarksEnabled: true,
-        barsMarksEnabled: nil,
-        sheetMarksEnabled: true,
-        hiddenHomeCards: [],
-        backgroundWorkHintShown: false,
-        qrTileAdded: false
-    )
+    static let local = localSettings()
+
+    /// A fresh install's values; `barsMarksEnabled` is set once the account's first BARS answer came.
+    static func localSettings(barsMarksEnabled: KotlinBoolean? = nil) -> LocalSettings {
+        LocalSettings(
+            customServicesEnabled: true,
+            scheduleWidget: ScheduleWidgetSettings(
+                compact: CompactScheduleWidgetSettings(
+                    showNextLessonEarly: true,
+                    hideTeacher: false,
+                    textSize: .normal
+                ),
+                full: FullScheduleWidgetSettings(
+                    hideTeacher: false,
+                    hidePastLessons: false,
+                    showTomorrowWhenTodayIsOver: false,
+                    textSize: .normal
+                )
+            ),
+            qrWidget: QrWidgetSettings(dynamicColors: true, spoilerEnabled: true, animationType: .circle),
+            sport: SportDisplaySettings(hideTeacherSelector: true, hideTimeSelector: true),
+            showSportAutoSign: false,
+            scheduleChangesEnabled: true,
+            myItmoMarksEnabled: true,
+            barsMarksEnabled: barsMarksEnabled,
+            sheetMarksEnabled: true,
+            hiddenHomeCards: [],
+            backgroundWorkHintShown: false,
+            qrTileAdded: false
+        )
+    }
 
     /// Every row type, enabled and disabled, with the longest realistic texts.
     static var longValues: SettingsUiState {
