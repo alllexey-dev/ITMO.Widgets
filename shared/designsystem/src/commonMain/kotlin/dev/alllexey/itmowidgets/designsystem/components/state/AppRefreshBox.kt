@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.designsystem.components.state
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -9,11 +10,16 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicatorDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +40,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -42,6 +50,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
+import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingShapes
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoHapticEvent
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoHaptics
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
@@ -97,11 +106,7 @@ private fun MaterialRefreshBox(
         state = state,
         indicator = {
             if (ItmoTheme.expressive) {
-                PullToRefreshDefaults.LoadingIndicator(
-                    state = state,
-                    isRefreshing = refreshing,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                )
+                ExpressiveRefreshIndicator(state, refreshing, Modifier.align(Alignment.TopCenter))
             } else {
                 PullToRefreshDefaults.Indicator(
                     state = state,
@@ -114,6 +119,58 @@ private fun MaterialRefreshBox(
         },
         content = content,
     )
+}
+
+/**
+ * `PullToRefreshDefaults.LoadingIndicator` with two fixes, both measured on a device (M3-FIX1). The turning shape
+ * morphs through [ItmoLoadingShapes] (no wobble around its centre), and the pull's shape is drawn at
+ * [ItmoLoadingShapes.pullToSpinScale], so the handoff keeps the shape's size instead of shrinking it by a seventh while
+ * the two cross-fade. The turning indicator starts at 90 degrees and the pull's SoftBurst rests at 180; -90 puts the
+ * first SoftBurst onto the last one (it repeats every 36 degrees). Past the threshold the pull turns as upstream's
+ * does; with reduced motion the handoff is a cut.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ExpressiveRefreshIndicator(state: PullToRefreshState, refreshing: Boolean, modifier: Modifier) {
+    val containerColor = PullToRefreshDefaults.loadingIndicatorContainerColor
+    val color = PullToRefreshDefaults.loadingIndicatorColor
+    val fill = Modifier.requiredSize(LoadingIndicatorDefaults.ContainerWidth, LoadingIndicatorDefaults.ContainerHeight)
+    val fade = if (rememberReducedMotion()) snap() else MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    PullToRefreshDefaults.IndicatorBox(
+        state = state,
+        isRefreshing = refreshing,
+        modifier = modifier.size(LoadingIndicatorDefaults.ContainerWidth, LoadingIndicatorDefaults.ContainerHeight),
+        containerColor = containerColor,
+        elevation = PullToRefreshDefaults.LoadingIndicatorElevation,
+    ) {
+        Crossfade(targetState = refreshing, animationSpec = fade) { turning ->
+            if (turning) {
+                ContainedLoadingIndicator(
+                    modifier = fill.graphicsLayer { rotationZ = SPIN_START_DEGREES },
+                    containerColor = containerColor,
+                    indicatorColor = color,
+                    polygons = ItmoLoadingShapes.indeterminate,
+                )
+            } else {
+                ContainedLoadingIndicator(
+                    progress = { state.distanceFraction },
+                    modifier = fill
+                        .graphicsLayer {
+                            scaleX = ItmoLoadingShapes.pullToSpinScale
+                            scaleY = ItmoLoadingShapes.pullToSpinScale
+                        }
+                        .drawWithContent {
+                            val over = state.distanceFraction - 1f
+                            if (over > 0f) rotate(-over * OVER_PULL_DEGREES) { this@drawWithContent.drawContent() }
+                            else drawContent()
+                        },
+                    containerColor = containerColor,
+                    indicatorColor = color,
+                    polygons = ItmoLoadingShapes.determinate,
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -278,6 +335,12 @@ private fun DrawScope.drawSpokes(count: Int, color: Color) {
 }
 
 private const val SPOKES = 8
+
+/** Lines the turning indicator's first SoftBurst up with the pull's last one (see [ExpressiveRefreshIndicator]). */
+private const val SPIN_START_DEGREES = -90f
+
+/** Upstream's turn of the pull past the threshold: half a turn per threshold distance. */
+private const val OVER_PULL_DEGREES = 180f
 
 /** UIScrollView's rubber-band constant: the content moves `(1 - 1 / (x * c / d + 1)) * d` for a pull `x`. */
 private const val RUBBER_BAND = 0.55f
