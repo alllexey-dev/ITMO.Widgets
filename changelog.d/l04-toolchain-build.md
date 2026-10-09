@@ -30,3 +30,9 @@
   (`scripts/ui-report.py`): a ShellSuite member that fails inside the suite
   and passes standalone afterwards now fails the run and is listed with its
   suite, run number and shell, where Gradle's reports kept only the last run.
+- `scripts/ship-check.sh` reads stages 2, 4, 5 and 6 from the CI checks
+  `verify-quick`, `android-ui` and `android-ship` of the head SHA (`--wait`
+  polls until they finish) and runs only the version and release build
+  stages locally; `--local` keeps the all-local run, and `summary.md` links
+  the CI run of each stage. `scripts/test-ship-check.sh` covers it against a
+  `gh` stub.
