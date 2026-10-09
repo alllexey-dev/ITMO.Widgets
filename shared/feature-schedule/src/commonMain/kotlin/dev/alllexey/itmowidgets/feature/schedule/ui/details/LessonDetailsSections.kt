@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -39,6 +38,7 @@ import dev.alllexey.itmowidgets.core.text.textResource
 import dev.alllexey.itmowidgets.core.text.userDisplayName
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
+import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
 import dev.alllexey.itmowidgets.designsystem.components.header.DetailsFact
 import dev.alllexey.itmowidgets.designsystem.components.header.DetailsHeader
 import dev.alllexey.itmowidgets.designsystem.components.header.DetailsMapAction
@@ -220,7 +220,7 @@ internal fun LessonNoteSection(note: String) {
 }
 
 /**
- * `friends_card`: absent without the opt-in; a spinner while loading; the error with `Повторить`; "nobody" for an
+ * `friends_card`: absent without the opt-in; the loading indicator while loading; the error with `Повторить`; "nobody" for an
  * empty answer; otherwise the count in the heading and a row per friend that opens their profile.
  */
 @Composable
@@ -234,12 +234,11 @@ internal fun LessonFriendsSection(state: LessonFriendsState, actions: LessonDeta
     LessonSection(title, Modifier.testTag(LessonDetailsTestTags.FRIENDS)) {
         when (state) {
             LessonFriendsState.Disabled -> Unit
-            LessonFriendsState.Loading -> CircularProgressIndicator(
+            LessonFriendsState.Loading -> ItmoLoadingIndicator(
                 Modifier
                     .padding(top = ItmoTheme.spacing.content)
                     .size(ProgressSize)
                     .testTag(LessonDetailsTestTags.FRIENDS_PROGRESS),
-                strokeWidth = ProgressStroke,
             )
             is LessonFriendsState.Error -> {
                 FriendsMessage(stringResource(state.error.textResource()))
@@ -322,6 +321,5 @@ private val FactIconSize = 20.dp
 /** `Widget.Material3.Button`'s `iconSize`. */
 private val ButtonIconSize = 18.dp
 
-/** `friends_progress`: a 24 dp indicator with a 3 dp track. */
+/** `friends_progress`'s 24 dp, now the kit's loading indicator for a section wait. */
 private val ProgressSize = 24.dp
-private val ProgressStroke = 3.dp
