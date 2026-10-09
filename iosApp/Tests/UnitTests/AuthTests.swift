@@ -213,9 +213,12 @@ final class AuthTests: XCTestCase {
     }
 
     /// Loads local HTML as `page` (its origin and URL) that runs `script`, then reports the load through a test
-    /// handler, and waits for that report.
+    /// handler, and waits for that report. The wait is the page's own message, so it ends as soon as WebKit has run
+    /// the page's scripts, however long a cold web content process takes to start on a loaded CI simulator;
+    /// `safetyNet` only bounds a page that never reports.
     private func load(page: String, script: String) async throws {
-        let reporter = PageLoadReporter()
+        let loaded = expectation(description: "\(page) reported its load")
+        let reporter = PageLoadReporter(page: page) { loaded.fulfill() }
         let controller = browser.webView.configuration.userContentController
         controller.add(reporter, name: PageLoadReporter.name)
         defer { controller.removeScriptMessageHandler(forName: PageLoadReporter.name) }
@@ -227,11 +230,14 @@ final class AuthTests: XCTestCase {
         </body></html>
         """
         browser.webView.loadHTMLString(html, baseURL: URL(string: page))
-        await waitUntil { reporter.loaded.contains(page) }
+        await fulfillment(of: [loaded], timeout: Self.safetyNet)
         XCTAssertEqual(browser.webView.url?.absoluteString, page)
     }
 
-    private func waitUntil(timeout: TimeInterval = 5, _ condition: () -> Bool) async {
+    /// The upper bound of a wait that ends on its event or condition: never reached by a passing test.
+    private static let safetyNet: TimeInterval = 60
+
+    private func waitUntil(timeout: TimeInterval = safetyNet, _ condition: () -> Bool) async {
         let deadline = Date().addingTimeInterval(timeout)
         while !condition(), Date() < deadline {
             try? await Task.sleep(for: .milliseconds(10))
@@ -274,13 +280,21 @@ private final class FakeSessionGateway: SessionGateway {
     }
 }
 
-/// Collects the pages that reported their load.
+/// Reports, once, that `page` posted its load.
 @MainActor
 private final class PageLoadReporter: NSObject, WKScriptMessageHandler {
     static let name = "itmoTestPageLoaded"
-    private(set) var loaded: [String] = []
+    private let page: String
+    private var onLoad: (() -> Void)?
+
+    init(page: String, onLoad: @escaping () -> Void) {
+        self.page = page
+        self.onLoad = onLoad
+    }
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
-        if let href = message.body as? String { loaded.append(href) }
+        guard message.body as? String == page else { return }
+        onLoad?()
+        onLoad = nil
     }
 }
