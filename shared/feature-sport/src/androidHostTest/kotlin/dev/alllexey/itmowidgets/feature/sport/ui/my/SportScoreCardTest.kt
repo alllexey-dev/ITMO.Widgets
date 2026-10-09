@@ -93,6 +93,21 @@ class SportScoreCardTest {
     }
 
     @Test
+    fun theStatusGrowsInAfterTheCountersStartAndSettlesAtItsFullSize() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        setContent { Card(score(48, 20)) }
+        mainClock.advanceTimeByFrame()
+        val start = statusWidth()
+
+        mainClock.advanceTimeBy(2_000)
+        val settled = statusWidth()
+        assertTrue(start < settled * 0.9f, "the status starts smaller: $start of $settled")
+
+        mainClock.advanceTimeBy(1_000)
+        assertEquals(settled, statusWidth(), "the status rests at its full size")
+    }
+
+    @Test
     fun theStatusSaysHowManyPointsAreLeftUntilThePass() = runComposeUiTest {
         var score by mutableStateOf(score(48, 20))
         setContent { Card(score, animated = false) }
@@ -131,6 +146,10 @@ class SportScoreCardTest {
 
     private fun ComposeUiTest.number(tag: String): Int =
         onNodeWithTag(tag).fetchSemanticsNode().config[SemanticsProperties.Text].single().text.toInt()
+
+    /** The status text's drawn width: the chip's scale shows in its bounds, its layout size does not change. */
+    private fun ComposeUiTest.statusWidth(): Float =
+        onNodeWithText("Ещё 32 балла").fetchSemanticsNode().boundsInRoot.width
 
     private fun score(attendances: Int, bonus: Int) = SportScore(attendances, bonus, emptyList())
 

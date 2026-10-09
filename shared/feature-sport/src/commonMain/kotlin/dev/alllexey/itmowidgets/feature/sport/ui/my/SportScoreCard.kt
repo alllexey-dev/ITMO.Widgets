@@ -47,6 +47,7 @@ import dev.alllexey.itmowidgets.shared.feature.sport.sport_score_bonus_value
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_score_passed_status
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_score_title
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -61,9 +62,10 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_history
  * The `Мой спорт` score card: the title and the status chip, then the ring with the total and the attendance and
  * bonus lines. The total is attendance plus at most 40 bonus points, a UI formula rather than an official rule.
  *
- * With [animated], the counters count up from their previous values (from zero at first) over
- * `ItmoTheme.motion.progressMillis`, the ring fills alike, and the status chip scales in after a short delay whenever
- * it first shows or flips; under reduced motion, and without [animated], everything shows its end state at once.
+ * The ring is the page's hero. With [animated], the counters count up from their previous values (from zero at first)
+ * over `ItmoTheme.motion.progressMillis`, in step with the ring's fill, and the status chip grows and fades in on
+ * [ItmoTheme.heroMotionScheme]'s springs after a short delay whenever it first shows or flips; under reduced motion,
+ * and without [animated], everything shows its end state at once.
  *
  * With a [collapse] state the card shrinks into a compact bar of the title and the status as the list under it
  * scrolls (see [SportScoreCollapsingLayout]); its measured size stays the expanded one and only the clip, the
@@ -187,17 +189,21 @@ private fun ScoreHeader(score: SportScore, animate: Boolean) {
 @Composable
 private fun StatusChip(score: SportScore, animate: Boolean) {
     val passed = score.passed
-    val motion = ItmoTheme.motion
-    val appearance = remember { Animatable(if (animate) 0f else 1f) }
+    val hero = ItmoTheme.heroMotionScheme
+    val scale = remember { Animatable(if (animate) STATUS_START_SCALE else 1f) }
+    val alpha = remember { Animatable(if (animate) 0f else 1f) }
     // Keyed on the status itself: the chip comes in when it first shows and when it flips, not on every new score.
     LaunchedEffect(passed, animate) {
         if (!animate) {
-            appearance.snapTo(1f)
+            scale.snapTo(1f)
+            alpha.snapTo(1f)
             return@LaunchedEffect
         }
-        appearance.snapTo(0f)
+        scale.snapTo(STATUS_START_SCALE)
+        alpha.snapTo(0f)
         delay(STATUS_DELAY_MILLIS)
-        appearance.animateTo(1f, tween(motion.emphasisMillis, easing = motion.easing))
+        launch { scale.animateTo(1f, hero.defaultSpatialSpec()) }
+        launch { alpha.animateTo(1f, hero.defaultEffectsSpec()) }
     }
     val colors = ItmoTheme.colorScheme
     val container = if (passed) colors.primaryContainer else colors.secondaryContainer
@@ -206,10 +212,9 @@ private fun StatusChip(score: SportScore, animate: Boolean) {
         Modifier
             .testTag(SportScoreCardTestTags.STATUS)
             .graphicsLayer {
-                val progress = appearance.value
-                alpha = progress
-                scaleX = STATUS_START_SCALE + (1f - STATUS_START_SCALE) * progress
-                scaleY = scaleX
+                this.alpha = alpha.value.coerceIn(0f, 1f)
+                scaleX = scale.value
+                scaleY = scale.value
             }
             .background(container, StatusShape)
             .padding(horizontal = ItmoTheme.spacing.content, vertical = StatusVerticalPadding),
@@ -371,6 +376,7 @@ private fun rememberAnimatedCounts(target: SportScoreCounts, animate: Boolean): 
         from = from.towards(to, progress.value)
         to = target
         progress.snapTo(0f)
+        // The duration and curve of `ScoreRing`'s fill, so the numbers land with the ring rather than on a spring.
         progress.animateTo(1f, tween(motion.progressMillis, easing = motion.easing))
     }
     val fraction = progress.value
