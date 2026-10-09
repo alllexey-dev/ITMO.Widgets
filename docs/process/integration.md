@@ -121,6 +121,11 @@ next to it, and any FAIL makes the exit code non-zero:
    the 2.2 data directory from `app/src/androidTest/assets/upgrade-2.2/` and runs `adb install -r` with the
    head `githubDebug`. The stage passes when 30 s after the start there is no `FATAL EXCEPTION`, the process is
    alive and every seeded file is either present or migrated with a format marker.
+6. the shrunk app on `emulator-5554`: `githubMinifiedSmoke` and `playMinifiedSmoke` (the release build type's R8
+   and resource shrinking, debug-signed, pointed at dev) are each installed fresh and started; the stage passes
+   when the sign-in screen shows within 30 s, no `FATAL EXCEPTION` follows and the process is alive. Debug builds
+   never run R8, so only this stage sees a crash of the shrunk app, such as two Koin keys merged into one class
+   (`app/proguard-rules.pro`, "Class identity").
 
 `--no-device` runs stages 1-3, as a lane does for its own PR. Device stages refuse every serial except
 `emulator-5554` and any worktree other than the integrator's. The release-signed upgrade belongs to the owner at

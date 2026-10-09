@@ -13,6 +13,10 @@
 #               report (ShellSuite members run twice) are listed under the table
 #   5 upgrade   install the v2.2 githubDebug on emulator-5554, seed the 2.2 data directory of
 #               app/src/androidTest/assets/upgrade-2.2/, `adb install -r` the head githubDebug and start it
+#   6 shrunk    the release R8 and resource shrinking on the device: install githubMinifiedSmoke and
+#               playMinifiedSmoke (release build type, debug-signed, pointed at dev) fresh on emulator-5554, start
+#               each and wait for the sign-in screen without a FATAL EXCEPTION. Debug builds never run R8, so this is
+#               what catches a startup crash only the shrunk app has (R8-FIX1: two Koin keys merged into one class)
 #
 # --no-device runs stages 1-3. --central passes -PmyItmoApiFromCentral=true to stage 3. --keep-going runs every
 # selected stage after a FAIL (default: stop at the first one). --only picks stages (device stages still need the
@@ -35,6 +39,8 @@ HEAD_ACTIVITY=.app.MainActivity
 DEVICE_SERIAL=emulator-5554
 V22_TAG=v2.2
 SMOKE_WAIT_SECONDS=30
+# Stage 6: how long the app keeps running after the sign-in screen shows, for a crash in work started after it.
+SHRUNK_SETTLE_SECONDS=5
 
 refuse() { printf '%s: %s\n' "$me" "$*" >&2; exit 2; }
 note() { printf '%s: %s\n' "$me" "$*" >&2; }
@@ -48,6 +54,7 @@ wt=${ITMO_WT:-$HOME/proj/.wt}
 verify_sh="$root/scripts/verify.sh"
 adb="$ANDROID_HOME/platform-tools/adb"
 assets="$root/app/src/androidTest/assets/upgrade-2.2"
+sign_in_strings="$root/shared/feature-account/src/commonMain/composeResources/values/strings_auth.xml"
 
 usage() {
   sed -n '2,2p' "$0" | sed 's/^# //' >&2
@@ -63,7 +70,7 @@ while [ $# -gt 0 ]; do
     --only)
       [ $# -gt 1 ] || usage
       only=",$2,"
-      [[ $2 =~ ^[1-5](,[1-5])*$ ]] || refuse "--only takes stage numbers 1-5, got '$2'"
+      [[ $2 =~ ^[1-6](,[1-6])*$ ]] || refuse "--only takes stage numbers 1-6, got '$2'"
       shift
       ;;
     -h | --help) usage ;;
@@ -88,7 +95,7 @@ if selected 3 && [ -e "$root/keystore.properties" ]; then
 fi
 
 # Device stages: emulator-5554 only, only from the integrator's worktree, only if it really is an emulator.
-if selected 4 || selected 5; then
+if selected 4 || selected 5 || selected 6; then
   [ -z "${ANDROID_SERIAL:-}" ] || [ "$ANDROID_SERIAL" = "$DEVICE_SERIAL" ] ||
     refuse "device stages run only on $DEVICE_SERIAL, not '$ANDROID_SERIAL' (use --no-device)"
   git_dir=$(git rev-parse --absolute-git-dir 2> /dev/null) || refuse "not a git worktree"
@@ -292,6 +299,33 @@ dev_sh() { # keeps the remote exit status (adb shell protocol v2)
   return "$rc"
 }
 
+# Device time now, in the format `logcat -T` takes; adb shell joins its arguments into one remote command line, so
+# arguments with spaces are quoted for it.
+device_now() { dev_sh "date '+%m-%d %H:%M:%S.000'"; }
+
+# Passes when no FATAL EXCEPTION of the app was logged since <since> and the app's process is alive.
+started_cleanly() { # since
+  local log pid ok=0
+  if ! log=$(dev_sh "logcat -d -b crash,main -T '$1'"); then
+    echo "FAIL: logcat since $1"
+    ok=1
+  elif printf '%s\n' "$log" | grep -A 3 'FATAL EXCEPTION' | grep -Eq "Process: $PACKAGE[,:]"; then
+    echo "FAIL: FATAL EXCEPTION since the start:"
+    printf '%s\n' "$log" | grep -A 30 'FATAL EXCEPTION'
+    ok=1
+  else
+    echo "ok: no FATAL EXCEPTION for $PACKAGE since the start"
+  fi
+  pid=$(dev_sh pidof "$PACKAGE")
+  if [ -z "$pid" ]; then
+    echo "FAIL: $PACKAGE is not running"
+    ok=1
+  else
+    echo "ok: $PACKAGE alive (pid $pid)"
+  fi
+  return "$ok"
+}
+
 # Prints the path of the v2.2 githubDebug APK, building it once in a detached worktree at the tag.
 v22_apk() {
   local tag_sha cache work slot java17
@@ -342,7 +376,7 @@ seeded_sums() {
 }
 
 stage_upgrade() {
-  local old_apk head_apk tmp=/data/local/tmp/ship-upgrade-2.2 since log rel dir found f pid ok=0
+  local old_apk head_apk tmp=/data/local/tmp/ship-upgrade-2.2 since rel dir found f ok=0
   old_apk=$(v22_apk) || return 1
   echo "v2.2 APK: $old_apk"
   "$verify_sh" run -- :app:assembleGithubDebug || return 1
@@ -371,28 +405,11 @@ stage_upgrade() {
 
   echo "install -r the head githubDebug ($sha) and start $HEAD_ACTIVITY"
   dev install -r "$head_apk" || return 1
-  # adb shell joins its arguments into one remote command line, so arguments with spaces are quoted for it.
-  since=$(dev_sh "date '+%m-%d %H:%M:%S.000'") || return 1
+  since=$(device_now) || return 1
   dev_sh am start -W -n "$PACKAGE/$HEAD_ACTIVITY" || return 1
   sleep "$SMOKE_WAIT_SECONDS"
 
-  if ! log=$(dev_sh "logcat -d -b crash,main -T '$since'"); then
-    echo "FAIL: logcat since $since"
-    ok=1
-  elif printf '%s\n' "$log" | grep -A 3 'FATAL EXCEPTION' | grep -Eq "Process: $PACKAGE[,:]"; then
-    echo "FAIL: FATAL EXCEPTION within ${SMOKE_WAIT_SECONDS}s:"
-    printf '%s\n' "$log" | grep -A 30 'FATAL EXCEPTION'
-    ok=1
-  else
-    echo "ok: no FATAL EXCEPTION for $PACKAGE within ${SMOKE_WAIT_SECONDS}s"
-  fi
-  pid=$(dev_sh pidof "$PACKAGE")
-  if [ -z "$pid" ]; then
-    echo "FAIL: $PACKAGE is not running after ${SMOKE_WAIT_SECONDS}s"
-    ok=1
-  else
-    echo "ok: $PACKAGE alive (pid $pid)"
-  fi
+  started_cleanly "$since" || ok=1
 
   # Durable 2.2 files stay where 2.2 left them, or a store migrated them and its new file carries a format marker.
   # Caches (cache/) may be read or dropped and are not checked.
@@ -421,6 +438,52 @@ EOF
   return "$ok"
 }
 
+# ---- 6 shrunk --------------------------------------------------------------------------------------------
+
+# The sign-in button's text, read from its resource so the check follows the copy.
+sign_in_text() {
+  sed -n 's:.*<string name="auth_login_itmo_id">\(.*\)</string>.*:\1:p' "$sign_in_strings" | head -n 1
+}
+
+# Polls the window hierarchy for <text> until SMOKE_WAIT_SECONDS have passed.
+wait_for_text() { # text
+  local deadline=$(($(date +%s) + SMOKE_WAIT_SECONDS))
+  while [ "$(date +%s)" -lt "$deadline" ]; do
+    if dev_sh "uiautomator dump /sdcard/ship-window.xml > /dev/null 2>&1 && cat /sdcard/ship-window.xml" 2> /dev/null |
+      grep -qF "text=\"$1\""; then
+      return 0
+    fi
+    sleep 2
+  done
+  return 1
+}
+
+stage_shrunk() {
+  local text flavor apk since ok=0
+  text=$(sign_in_text)
+  [ -n "$text" ] || { echo "FAIL: no auth_login_itmo_id in $sign_in_strings"; return 1; }
+  "$verify_sh" run -- :app:assembleGithubMinifiedSmoke :app:assemblePlayMinifiedSmoke || return 1
+  for flavor in github play; do
+    apk="$root/app/build/outputs/apk/$flavor/minifiedSmoke/app-$flavor-minifiedSmoke.apk"
+    [ -f "$apk" ] || { echo "FAIL: no $flavor minifiedSmoke APK at $apk"; ok=1; continue; }
+    echo "install $flavor minifiedSmoke ($sha) fresh and start $HEAD_ACTIVITY"
+    dev uninstall "$PACKAGE" > /dev/null 2>&1
+    dev install "$apk" || { ok=1; continue; }
+    since=$(device_now) || return 1
+    dev_sh am start -W -n "$PACKAGE/$HEAD_ACTIVITY" || { ok=1; continue; }
+    if wait_for_text "$text"; then
+      echo "ok: $flavor: sign-in screen (\"$text\") shown"
+      sleep "$SHRUNK_SETTLE_SECONDS"
+    else
+      echo "FAIL: $flavor: no sign-in screen (\"$text\") within ${SMOKE_WAIT_SECONDS}s"
+      ok=1
+    fi
+    started_cleanly "$since" || ok=1
+  done
+  dev_sh rm -f /sdcard/ship-window.xml
+  return "$ok"
+}
+
 # ---- main ------------------------------------------------------------------------------------------------
 
 write_summary
@@ -429,6 +492,7 @@ run_stage 2 full stage_full
 run_stage 3 release stage_release
 run_stage 4 ui stage_ui
 run_stage 5 upgrade stage_upgrade
+run_stage 6 shrunk stage_shrunk
 
 note "summary: $summary"
 cat "$summary" >&2
