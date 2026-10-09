@@ -10,7 +10,8 @@ package dev.alllexey.itmowidgets.core.platform
  *   new-marks home card).
  * - [PlatformCapabilities.calendarExport]: on since IO-15b, the settings calendar rows over EventKit and the `.ics`
  *   sheet.
- * - [PlatformCapabilities.reviews]: IO-09f, with the subject page's links.
+ * - [PlatformCapabilities.reviews]: on since IO-09f, the teacher reviews on the profile with their editor and report,
+ *   the subject page's links with all links, the link editor, a link's actions and its report, and the teacher tones.
  */
 val IosPlatformCapabilities = PlatformCapabilities(
     quickSettingsTile = false,
@@ -19,7 +20,7 @@ val IosPlatformCapabilities = PlatformCapabilities(
     calendarExport = true,
     recordbook = true,
     marks = true,
-    reviews = false,
+    reviews = true,
     qrWidgetAnimation = false,
     qrCustomSpoiler = false,
 )

@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.core.work.AppRefreshScheduler
 import dev.alllexey.itmowidgets.core.work.RefreshStepLog
@@ -69,9 +70,9 @@ import platform.UIKit.UIViewController
  * The schedule routes' graph as the iOS app starts it (`IosKoinModules`): the core module, [scheduleModule],
  * [scheduleDataModule], [scheduleIosModule] and `calendarIosModule` on the demo session, with the account types, the
  * settings data (`settingsDataModule` on iOS), the change notifier and scheduler (`scheduleChangesIosModule` over the
- * system's centres), the pending sport rows (`sportModule`), the app refresh task and its step log (the background
- * module), the session's tokens and the simulator test binary's device stood in. The test binary has no calendar
- * access, as before the system prompt.
+ * system's centres), the pending sport rows (`sportModule`), the teacher tones (`reviewsModule`), the app refresh task
+ * and its step log (the background module), the session's tokens and the simulator test binary's device stood in. The
+ * test binary has no calendar access, as before the system prompt.
  */
 class ScheduleIosModuleTest {
 
@@ -100,15 +101,6 @@ class ScheduleIosModuleTest {
         koin.get<ScheduleViewModel> { parametersOf(SavedStateHandle(mapOf(ScheduleViewModel.ARG_USER_ISU to USER))) }
         koin.get<ScheduleChangesViewModel> { parametersOf(SavedStateHandle()) }
         koin.get<LessonDetailsViewModel> { parametersOf(SavedStateHandle(lessonArguments())) }
-        assertEquals(emptyList(), requests)
-        koin.close()
-    }
-
-    @Test
-    fun theStandInsAnswerWithoutDataUntilTheirCardsShip() = runTest {
-        val koin = graph { BUILDINGS }
-
-        assertEquals(emptyMap(), koin.get<TeacherLevelsRepository>().levels(setOf(USER)))
         assertEquals(emptyList(), requests)
         koin.close()
     }
@@ -180,8 +172,9 @@ class ScheduleIosModuleTest {
         single<AppNotifier> { RecordingAppNotifier() }
         single<ScheduleChangeNotifier> { SilentNotifier }
         single<ScheduleChangesScheduler> { IdleScheduler }
-        // `sportModule` in the app (IO-09c), a feature this module cannot read.
+        // `sportModule` (IO-09c) and `reviewsModule` (IO-09f) in the app, features this module cannot read.
         single<PendingSportBookingsRepository> { NoPendingSport }
+        single<TeacherLevelsRepository> { FakeTeacherLevelsRepository() }
         single { AppRefreshScheduler({ _, _ -> }, get(), get()) }
         single<RefreshStepLog> { NoStepLog }
     }

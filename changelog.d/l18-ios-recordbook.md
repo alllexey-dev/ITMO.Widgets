@@ -8,6 +8,3 @@
   points, teachers and nearest lessons; a teacher opens the profile, the sheet
   total opens the table in Safari and «Изменить итог» opens «Мои баллы» in a
   native sheet.
-- Until iOS offers subject links, the subject page shows no «Ссылки» and
-  «Чаты» sections (only a course's LMS page), so a table is offered on iOS only
-  once it is connected.

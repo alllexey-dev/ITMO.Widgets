@@ -2,8 +2,8 @@ import XCTest
 
 /// The me tab and the social screens on the shared demo session (IO-09e): LA-3's Compose Me tab as the root of the me
 /// stack, people search with Compose's text field on the system keyboard, the person profile with the demo's refusal
-/// of a friendship action and no reviews section while iOS does not offer reviews (IO-09f), the friends list and a
-/// user's friends, the home feed's friend-requests card, and the Me tab at the accessibility text size AX1. Compose maps `testTag` to the accessibility
+/// of a friendship action and a teacher's reviews section (IO-09f, `ReviewsLinksUITests` covers its editor and
+/// report), the friends list and a user's friends, the home feed's friend-requests card, and the Me tab at the accessibility text size AX1. Compose maps `testTag` to the accessibility
 /// identifier (`MeTestTags`, `UserSearchTestTags`, `UserListTestTags`, `UserProfileTestTags`); the texts are Russian
 /// on an English iPhone. The ISUs are the demo set's (`DemoPeople`).
 final class SocialUITests: XCTestCase {
@@ -57,7 +57,7 @@ final class SocialUITests: XCTestCase {
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
     }
 
-    func testTeacherProfileHasNoReviewsSection() {
+    func testTeacherProfileShowsTheReviewsSection() {
         let app = XCUIApplication.itmo()
         app.launch()
         openMe(app)
@@ -70,10 +70,12 @@ final class SocialUITests: XCTestCase {
         row.tap()
 
         XCTAssertTrue(element(app, "user_profile_hero").waitForExistence(timeout: stepTimeout))
-        element(app, "user_profile_list").swipeUp()
+        // The section is the last of a lazy list: it exists once scrolled near.
+        let reviews = element(app, "user_profile_reviews")
+        for _ in 0..<6 where !reviews.exists { element(app, "user_profile_list").swipeUp(velocity: .slow) }
         attachScreenshot(named: "teacher-profile")
-        XCTAssertFalse(element(app, "user_profile_reviews").exists, "no reviews before IO-09f (App Review 1.2)")
-        XCTAssertFalse(element(app, "user_profile_write_review").exists)
+        XCTAssertTrue(reviews.waitForExistence(timeout: stepTimeout), "the reviews section (IO-09f)")
+        XCTAssertTrue(element(app, "user_profile_write_review").exists)
     }
 
     func testFriendsOpenAProfileAndItsFriends() {

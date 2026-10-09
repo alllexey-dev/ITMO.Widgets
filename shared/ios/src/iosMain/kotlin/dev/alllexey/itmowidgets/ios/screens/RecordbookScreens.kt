@@ -85,8 +85,9 @@ fun recordbookRootPage(
 /**
  * The subject page (`AppRoutes.RecordbookSubject`), as Android's `RecordbookSubjectEntry` hosts it: the sheet and LMS
  * links open in the system ([linkFailed] when nothing takes them, `link_open_failed`), `Мои баллы` and a teacher's
- * profile open through [open], the BARS sign-in is the Swift sheet ([barsLogin]). The links section shows only while
- * iOS offers subject links (`PlatformCapabilities.reviews`, IO-09f); until then the link keys are not on iOS.
+ * profile open through [open], the BARS sign-in is the Swift sheet ([barsLogin]). The links section shows while iOS
+ * offers subject links (`PlatformCapabilities.reviews`, on since IO-09f): `Все ссылки`, the editor and a link's actions
+ * (a long press) open through [open] as SwiftUI sheets.
  */
 fun recordbookSubjectPage(
     args: RecordbookSubjectArgs,

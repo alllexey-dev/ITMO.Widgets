@@ -2,8 +2,8 @@ import Shared
 import SwiftUI
 
 /// One subject (`AppRoutes.RecordbookSubject`, from the recordbook): L12's Compose subject page
-/// (`recordbookSubjectPage`, IO-09d2). The scores sheet and a teacher's profile open through the router, the sheet
-/// and LMS links in the system, the BARS sign-in in IO-09d1's sheet; the links section waits for IO-09f.
+/// (`recordbookSubjectPage`, IO-09d2). The scores sheet, a teacher's profile and the links sheets (IO-09f) open
+/// through the router, the sheet, LMS and subject links in the system, the BARS sign-in in IO-09d1's sheet.
 struct RecordbookSubjectView: View {
     let args: RecordbookSubjectArgs
     @Environment(\.dismiss) private var dismiss

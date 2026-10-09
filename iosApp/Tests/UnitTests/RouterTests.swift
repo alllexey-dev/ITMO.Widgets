@@ -275,6 +275,19 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.sheet, .linkUnavailable)
     }
 
+    /// A links sheet that leads on opens the next one in its place (IO-09f), where a plain open is ignored.
+    func testReplaceSheetOpensTheNextSheetInThePlaceOfTheShownOne() {
+        let router = readyRouter()
+        let links = SubjectLinksArgs(subjectId: 5, subjectName: "Subject", periodKey: "2026/2027:1")
+        let actions = AppRoutes.LinkActions(args: links, linkId: "link-1")
+        let editor = AppRoutes.LinkEditor(args: links, linkId: "link-1")
+
+        XCTAssertEqual(router.open(actions), .opened)
+        XCTAssertEqual(router.open(editor), .ignored, "one sheet at a time")
+        XCTAssertEqual(router.replaceSheet(with: editor), .opened)
+        XCTAssertEqual(router.sheet, .route(ShellDestination(editor)))
+    }
+
     func testNotOnIosRouteOpensNothing() {
         let router = readyRouter()
         let routes: [any AppRoute] = [
@@ -510,13 +523,14 @@ final class RouterTests: XCTestCase {
             (AppRoutes.FriendSelector(selectedIsu: 0), .composeSheet),
             (AppRoutes.SheetScores(args: scores), .composeSheet),
             (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),
-            (AppRoutes.ReviewEditor(args: teacher), .notOnIOS),
-            (AppRoutes.SubjectLinks(args: links), .notOnIOS),
-            (AppRoutes.LinkEditor(args: links, linkId: nil), .notOnIOS),
+            (AppRoutes.ReviewEditor(args: teacher), .composeSheet),
+            (AppRoutes.SubjectLinks(args: links), .composeSheet),
+            (AppRoutes.LinkEditor(args: links, linkId: nil), .composeSheet),
             (AppRoutes.IcsExport.shared, .notOnIOS),
-            (AppRoutes.LinkActions(args: links, linkId: "link-1"), .notOnIOS),
+            (AppRoutes.LinkActions(args: links, linkId: "link-1"), .composeSheet),
             (AppRoutes.LessonDetails(args: lesson), .composeSheet),
             (AppRoutes.PendingSportDetails(args: pendingSport), .composeSheet),
+            // The reports are Compose dialogs inside the surface that asks for them (IO-09f).
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .notOnIOS),
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),
             (AppRoutes.LinkUnavailable.shared, .sheet(.linkUnavailable)),

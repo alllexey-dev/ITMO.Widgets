@@ -4,17 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.network.darwinHttpEngine
-import dev.alllexey.itmowidgets.core.resources.LinkCategory
-import dev.alllexey.itmowidgets.core.resources.LinkVisibility
-import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
-import dev.alllexey.itmowidgets.core.resources.ResourceScope
-import dev.alllexey.itmowidgets.core.resources.SubjectLink
-import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
-import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
-import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
-import dev.alllexey.itmowidgets.core.resources.UserRestriction
-import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.work.AppRefreshScheduler
 import dev.alllexey.itmowidgets.core.work.RefreshStep
 import dev.alllexey.itmowidgets.core.work.RefreshStepKeys
@@ -35,8 +24,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -57,9 +44,7 @@ import org.koin.dsl.module
  * refresh task as its scheduler, and the runner's step under [RefreshStepKeys.MARKS] with Android's three hours.
  * BARS renews there through the ITMO.ID cookies only (`BarsCookieSilentLogin`), never the hidden WebView.
  *
- * The subject page's links are [UnofferedSubjectLinks] while iOS does not offer subject links
- * (`PlatformCapabilities.reviews`, IO-09f loads `resourcesModule` and removes the stand-in, since the graph refuses
- * an override); the teacher tones are `scheduleIosModule`'s stand-in until then.
+ * The subject page's links come from `resourcesModule` and the teacher tones from `reviewsModule` (IO-09f).
  */
 fun recordbookIosModule(host: BarsWebHost): Module = module {
     single<HttpClientEngine>(barsEngineQualifier) { darwinHttpEngine() }
@@ -81,8 +66,6 @@ fun recordbookIosModule(host: BarsWebHost): Module = module {
         val refresh = get<MarksRefresh>()
         RefreshStep(RefreshStepKeys.MARKS, RefreshStepKeys.MARKS_PERIOD) { refresh.run() }
     }
-
-    single<SubjectLinksRepository> { UnofferedSubjectLinks }
 }
 
 /**
@@ -92,47 +75,4 @@ fun recordbookIosModule(host: BarsWebHost): Module = module {
  */
 object BarsLoginParameters {
     fun fresh(): List<Any> = listOf(SavedStateHandle())
-}
-
-/**
- * The subject links while iOS does not offer them (App Review 1.2): no cache, no request, every answer
- * `CustomServicesDisabled` and no restrictions. The page hides the links (`linksEnabled`), and without a links answer a
- * sheet is offered only once connected; the flows still emit once, so the page's links-and-sheets stream starts.
- */
-private object UnofferedSubjectLinks : SubjectLinksRepository {
-    private val unoffered = AppResult.Failure(AppError.CustomServicesDisabled)
-
-    override fun observe(scope: ResourceScope): Flow<SubjectLinksState> =
-        flowOf(SubjectLinksState.Error(AppError.CustomServicesDisabled))
-
-    override fun peek(scope: ResourceScope): SubjectLinksSnapshot? = null
-
-    override suspend fun refresh(scope: ResourceScope): AppResult<Unit> = unoffered
-
-    override suspend fun save(
-        scope: ResourceScope,
-        id: String,
-        category: LinkCategory,
-        url: String,
-        title: String?,
-        visibility: LinkVisibility,
-        flowId: Long?,
-    ): AppResult<SubjectLink> = unoffered
-
-    override suspend fun delete(scope: ResourceScope, id: String): AppResult<Unit> = unoffered
-
-    override suspend fun pin(scope: ResourceScope, id: String?): AppResult<Unit> = unoffered
-
-    override suspend fun vote(scope: ResourceScope, id: String, value: Int): AppResult<Unit> = unoffered
-
-    override suspend fun report(
-        scope: ResourceScope,
-        id: String,
-        reason: ResourceReportReason,
-        comment: String?,
-    ): AppResult<Unit> = unoffered
-
-    override fun observeRestrictions(): Flow<List<UserRestriction>> = flowOf(emptyList())
-
-    override suspend fun refreshRestrictions(): AppResult<Unit> = unoffered
 }

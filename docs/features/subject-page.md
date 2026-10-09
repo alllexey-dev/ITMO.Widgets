@@ -147,12 +147,12 @@ builds (`RecordbookSubjectIosRoute`). The page draws its own header with
   (`link_open_failed` when nothing takes them); `Изменить итог` opens
   [`Мои баллы`](sheet-scores.md#ios); `Войти в БАРС` of a BARS snackbar opens the BARS
   sign-in sheet, after which the page loads again.
-- Links: while iOS does not offer subject links (`PlatformCapabilities.reviews`
-  off until IO-09f) the route gets `linksEnabled = false`: `subjectHubItems`
-  keeps only the course's LMS page under `Ссылки` (no section without one) and
-  drops `Чаты`, and `recordbookIosModule` binds a `SubjectLinksRepository`
-  stand-in that answers `CustomServicesDisabled` with no request. The teacher
-  tones stay empty (`scheduleIosModule`'s stand-in) until then too.
+- Links: `PlatformCapabilities.reviews` is on since IO-09f, so the route gets
+  `linksEnabled = true` and shows `Ссылки` and `Чаты` as on Android; a link's
+  actions (a long press), `Все ссылки` and the editor open as SwiftUI sheets
+  ([subject links](resources.md#ios)), and the teacher rows carry their tones.
+  A platform without links gets `linksEnabled = false`: `subjectHubItems` keeps
+  only the course's LMS page under `Ссылки` and drops `Чаты`.
 - Tests: `SubjectHubItemsTest` covers `linksEnabled = false`;
-  `RecordbookUITests` opens the demo's algorithms page with its control points
-  and sheet total and checks that no links or chats section shows.
+  `RecordbookUITests` opens the demo's algorithms page with its control points,
+  sheet total, links and chats; `ReviewsLinksUITests` the links sheets.

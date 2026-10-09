@@ -235,6 +235,46 @@ links stay available. The repository is a `SessionDataCleaner`: it cancels and
 joins calls in flight before the next account's token appears, deletes the
 file and memory state, and drops late answers of the previous session.
 
+## iOS
+
+The iOS app (IO-09f, [iOS app](../ios.md)) hosts the same Compose sheets of
+`:shared:feature-resources` in SwiftUI sheets above the shell, through the
+factories of `shared/ios` (`screens/ResourcesScreens.kt`) and the Swift hosts in
+`iosApp/Sources/Features/Resources/LinkSheets.swift`; `Routes+Resources.swift`
+maps `AppRoutes.SubjectLinks`, `LinkEditor` and `LinkActions`. The graph loads
+`resourcesModule` with `resourcesIosModule` (Core 2.0's links area from the one
+`BackendClient`), and `PlatformCapabilities.reviews` is on, so the
+[subject page](subject-page.md#ios) shows its links and chats as on Android.
+
+- Entries: a link row of the subject page opens the link, a long press its
+  actions; `Все ссылки` and `Добавить ссылку` open their sheets.
+- Sheets: one router sheet at a time. All links show a link's actions and the
+  editor over the list, as Android stacks them; there the editor and
+  `Мои баллы` replace the actions. From the subject page the actions sheet
+  opens the editor and `Мои баллы` in its own place
+  (`AppRouter.replaceSheet(with:)`). The author's profile closes every sheet and
+  opens on the tab's stack. The editor opens at full height, the others at half
+  height; each has the system drag indicator, since a drag that starts on the
+  Compose content scrolls it.
+- Reports: `Пожаловаться` shows the report dialog as the Compose dialog over
+  the actions sheet, with its own links view model; an accepted report closes
+  both, a failure shows under the comment. `AppRoutes.ReportLink` has no iOS
+  surface of its own.
+- Effects: links open through `PlatformActions` (`link_open_failed` when nothing
+  takes them); a copied address goes to `UIPasteboard` with `links_copied` over
+  the sheet, which stays, since iOS confirms no copy itself. A new link's
+  address starts empty: iOS asks before an app reads the clipboard, so the
+  editor does not read it unasked. Failures show as a banner over the sheet with
+  the text of Android's snackbar.
+- Pre-moderation, restrictions and reports are Backend's and work unchanged;
+  there is no iOS-only moderation UI. The demo shows `DemoSubjectLinks` and
+  refuses every change (`error_demo_unavailable`) with no request.
+- Tests: `ResourcesIosModuleTest` (`scripts/ios/test.sh kn
+  :shared:feature-resources`: the graph resolves with the hosts' arguments, the
+  demo answers and refuses with no request) and `ReviewsLinksUITests` on the
+  demo session (all links, a vote, a new and an own link in the editor, a
+  link's report, the sheets at AX1).
+
 ## Not in the app
 
 There is no screen listing one's own links across subjects, no home-feed card

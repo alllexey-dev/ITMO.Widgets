@@ -14,9 +14,7 @@ import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
-import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
-import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
@@ -36,6 +34,7 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.InMemorySecureStore
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
@@ -89,7 +88,6 @@ import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -243,20 +241,6 @@ class RecordbookIosModuleTest {
         koin.close()
     }
 
-    @Test
-    fun theSubjectLinksAreNotOfferedAndAskNothing() = runTest {
-        val koin = graph()
-        val links = koin.get<SubjectLinksRepository>()
-
-        assertEquals(SubjectLinksState.Error(AppError.CustomServicesDisabled), links.observe(SCOPE).first())
-        assertEquals(emptyList(), links.observeRestrictions().first())
-        assertEquals(null, links.peek(SCOPE))
-        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), links.refresh(SCOPE))
-        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), links.vote(SCOPE, "link", 1))
-        assertEquals(emptyList(), requests)
-        koin.close()
-    }
-
     /** The subject page's and the sheet's arguments in one handle: the keys of the two never collide. */
     private fun screenArguments(): SavedStateHandle =
         SavedStateHandle(mapOf(*SUBJECT.handleEntries(), *SCORES.handleEntries()))
@@ -274,7 +258,8 @@ class RecordbookIosModuleTest {
 
     /**
      * What the subject page reads from other features' graphs in the app: the own lessons and their refresh
-     * (`scheduleDataModule`), the sport score (`sportModule`) and the teacher tones (`scheduleIosModule`'s stand-in).
+     * (`scheduleDataModule`), the sport score (`sportModule`), the teacher tones (`reviewsModule`) and the subject
+     * links (`resourcesModule`).
      */
     private fun subjectPagePorts(): Module = module {
         single<SubjectLessonsGateway> {
@@ -303,6 +288,7 @@ class RecordbookIosModuleTest {
                 override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = emptyMap()
             }
         }
+        single<SubjectLinksRepository> { FakeSubjectLinksRepository() }
     }
 
     /** The session's types (the account module's), a counting engine, the test's own directories and no Keychain. */
@@ -384,7 +370,6 @@ class RecordbookIosModuleTest {
         const val ISU = 123456
         const val KEYCHAIN_CLEANER = "KeychainSessionDataCleaner"
         val USER = CurrentUser(isu = ISU, name = null, pictureUrl = null)
-        val SCOPE = ResourceScope(5, "Subject", "2026/2027:1")
         val SUBJECT = RecordbookSubjectArgs(
             entryId = 11,
             programId = DemoStudy.PROGRAM_ID,
