@@ -207,6 +207,17 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `persisted switch and choice values show in the first frame`() {
+        compose.mainClock.autoAdvance = false
+        state = page(SettingSection(null, listOf(toggle(true), choice())))
+        compose.setContent { Themed { SettingsScreen(state, actions, widgetPreview = {}) } }
+
+        compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key).assertIsOn()
+        compose.onNodeWithTag(SettingRowId.QR_ANIMATION.key).assert(hasText("Плавное исчезновение", substring = true))
+        assertTrue(toggles.isEmpty())
+    }
+
+    @Test
     fun `a scrolled position survives recreation when the rows arrive after it`() {
         val rows = (1..30).map { index ->
             toggle(index % 2 == 0).copy(id = SettingRowId.entries[index - 1], title = text("Настройка $index"))

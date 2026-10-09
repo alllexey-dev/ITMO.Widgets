@@ -25,8 +25,7 @@ import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarBack
-import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
-import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicatorSize
+import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsActionRow
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsChoiceRow
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
@@ -217,14 +216,16 @@ private fun SettingRow(item: SettingItem, actions: SettingsActions, dialogs: Set
     }
 }
 
-/** `settings_progress`: the one loading state of settings, read as `settings_loading`. */
+/**
+ * `settings_progress`: the one loading state of settings, read as `settings_loading`. Backend answers within a few
+ * seconds, so it is the kit's short-wait indicator (the large spinner under the iOS style).
+ */
 @Composable
 private fun PrivacyProgress(modifier: Modifier) {
     val description = stringResource(Res.string.settings_loading)
-    ItmoActivityIndicator(
+    ItmoLoadingIndicator(
         modifier
             .testTag(SettingsTestTags.PROGRESS)
             .semantics { contentDescription = description },
-        size = ItmoActivityIndicatorSize.Large,
     )
 }
