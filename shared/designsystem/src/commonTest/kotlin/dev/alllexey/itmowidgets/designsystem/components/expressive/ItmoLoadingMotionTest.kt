@@ -59,6 +59,20 @@ class ItmoLoadingMotionTest {
         assertEquals(126, cycle)
     }
 
+    /** The indicator opens on the first shape, still for the length of the hand-off cross-fade (about 165 ms). */
+    @Test
+    fun theIndicatorOpensRestingOnTheFirstShape() {
+        val start = ItmoLoadingMotion.frame(ItmoLoadingMotion.START_STEPS, shapes)
+        val firstMove = ItmoLoadingMotion.frame(-EPSILON_STEPS, shapes)
+
+        assertEquals(shapes - 1, start.morphIndex)
+        assertEquals(1f, start.morphProgress)
+        assertTrue(abs(turn(LoadingFrame(0, 0f, 0f), start)) < OPENING_DEGREES, "${start.degrees}")
+        assertEquals(1f, firstMove.morphProgress)
+        assertTrue(abs(turn(start, firstMove)) < OPENING_DEGREES, "${turn(start, firstMove)}")
+        assertTrue(-ItmoLoadingMotion.START_STEPS * ItmoLoadingMotion.STEP_MILLIS >= CROSS_FADE_MILLIS)
+    }
+
     /** The morph never leaves the shapes: the angle overshoots slightly, the morph progress stays within 0..1. */
     @Test
     fun morphProgressStaysWithinTheShapes() {
@@ -150,6 +164,9 @@ class ItmoLoadingMotionTest {
         const val EPSILON_STEPS = 1e-4f
         const val SEAM_DEGREES = 0.05f
         const val SEAM_MORPH = 1e-3f
+
+        const val OPENING_DEGREES = 1.5f
+        const val CROSS_FADE_MILLIS = 165f
 
         const val STEP_SAMPLES = 650
         const val PROGRESS_SAMPLES = 20

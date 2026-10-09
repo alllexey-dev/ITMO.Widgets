@@ -79,8 +79,8 @@ private fun rememberSteps(shapeCount: Int): State<Float> {
     if (rememberReducedMotion()) return remember { AtRest }
     val cycle = ItmoLoadingMotion.cycleSteps(shapeCount)
     return rememberInfiniteTransition(label = "loadingIndicator").animateFloat(
-        initialValue = 0f,
-        targetValue = cycle.toFloat(),
+        initialValue = ItmoLoadingMotion.START_STEPS,
+        targetValue = ItmoLoadingMotion.START_STEPS + cycle,
         animationSpec = infiniteRepeatable(tween(cycle * ItmoLoadingMotion.STEP_MILLIS, easing = LinearEasing)),
         label = "loadingSteps",
     )
@@ -110,6 +110,14 @@ internal object ItmoLoadingMotion {
 
     /** The web indicator's curve: a quick start, a slight overshoot of the angle (1.4 %) and a soft landing. */
     val StepEasing = CubicBezierEasing(0.38f, 1.21f, 0.22f, 1f)
+
+    /**
+     * Where the indicator's time starts: 30 % before the first step, in the still tail of the step that lands on the
+     * first shape (1.3 degrees past its angle, the curve's overshoot), so the shape rests for 195 ms before it first
+     * moves. The pull-to-refresh hand-off cross-fades the pulled shape into a still one, not into one already turning
+     * at full speed (a double image).
+     */
+    const val START_STEPS = -0.3f
 
     /** Steps after which the angle repeats modulo a full turn: 18 * 140 = 7 * 360 degrees. */
     private const val TURN_STEPS = 18
