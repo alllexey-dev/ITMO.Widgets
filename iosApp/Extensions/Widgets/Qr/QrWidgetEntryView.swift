@@ -1,21 +1,23 @@
 import SwiftUI
 import WidgetKit
 
-/// One entry of the QR widget. The whole tile is one surface, as Android's widget bitmap is: the code is always dark
-/// on white in both themes (turnstile scanners read nothing else), the other states follow the system theme. A tap
-/// outside the spoiler button opens the QR pass in the app (`QrWidget.passURL`).
+/// One entry of the QR widget. The whole tile is one surface, as Android's widget bitmap is: the code and the spoiler
+/// take the QR widget options (`QrWidgetStyle`), dark on light in both themes (turnstile scanners read nothing else);
+/// the other states follow the system theme. A tap outside the spoiler button opens the QR pass in the app
+/// (`QrWidget.passURL`).
 ///
-/// Degradations against Android: the reveal has no circle animation (WidgetKit animates only between entries), and
-/// a custom spoiler image is v2.4.
+/// Degradations against Android: the reveal fades instead of the circle (WidgetKit animates only between entries),
+/// and there is no custom spoiler image (iOS has no picker for it).
 struct QrWidgetEntryView: View {
     let entry: QrWidgetEntry
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.widgetRenderingMode) private var renderingMode
 
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(tile.background)
+            .background(style.fullColor ? tile.background : .clear)
             .containerBackground(for: .widget) { tile.background }
             .widgetURL(QrWidget.passURL)
     }
@@ -28,8 +30,10 @@ struct QrWidgetEntryView: View {
         case .spoiler:
             Button(intent: RevealQrIntent()) { spoiler }
                 .buttonStyle(.plain)
+                .transition(style.revealTransition.transition)
         case let .revealed(matrix, demo):
             code(matrix, demo: demo)
+                .transition(style.revealTransition.transition)
         case .expired:
             message(symbol: .refresh, text: Text(.iosWidgetQrExpired))
         }
@@ -58,8 +62,7 @@ struct QrWidgetEntryView: View {
 
     private func code(_ matrix: [[Bool]], demo: Bool) -> some View {
         VStack(spacing: Layout.captionPadding / 2) {
-            QrModulesShape(matrix: matrix)
-                .fill(tile.foreground)
+            modules(matrix)
                 .aspectRatio(1, contentMode: .fit)
                 .accessibilityElement()
                 .accessibilityLabel(Text(.widgetQrCodeDescription))
@@ -68,6 +71,16 @@ struct QrWidgetEntryView: View {
             }
         }
         .padding(Layout.codePadding)
+    }
+
+    /// The code itself; on a tinted or clear home screen the modules are holes in a light plate.
+    @ViewBuilder
+    private func modules(_ matrix: [[Bool]]) -> some View {
+        if style.fullColor {
+            QrModulesShape(matrix: matrix).fill(tile.foreground)
+        } else {
+            QrPlateShape(matrix: matrix).fill(Color.white, style: FillStyle(eoFill: true))
+        }
     }
 
     private func message(symbol: AppSymbol, text: Text) -> some View {
@@ -91,45 +104,17 @@ struct QrWidgetEntryView: View {
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
+    private var style: QrWidgetStyle {
+        QrWidgetStyle(entry: entry, dark: colorScheme == .dark, fullColor: renderingMode == .fullColor)
+    }
+
     private var tile: QrWidgetTile {
-        if case .revealed = entry.content { return .code }
-        return colorScheme == .dark ? .dark : .light
+        style.tile
     }
 
     private enum Layout {
         /// Around the code: Android's 8 dp widget padding plus the code's quiet zone.
         static let codePadding: CGFloat = 14
         static let captionPadding: CGFloat = 8
-    }
-}
-
-/// The two colours of a QR widget tile and the noise shades between them.
-struct QrWidgetTile {
-    let backgroundRGB: (red: Double, green: Double, blue: Double)
-    let foregroundRGB: (red: Double, green: Double, blue: Double)
-
-    /// The code: black on white in every theme.
-    static let code = QrWidgetTile(backgroundRGB: (1, 1, 1), foregroundRGB: (0, 0, 0))
-    static let light = code
-    /// The system's dark grouped surface with white, for the states that show no code.
-    static let dark = QrWidgetTile(backgroundRGB: (0.11, 0.11, 0.118), foregroundRGB: (1, 1, 1))
-
-    var background: Color {
-        Color(red: backgroundRGB.red, green: backgroundRGB.green, blue: backgroundRGB.blue)
-    }
-
-    var foreground: Color {
-        Color(red: foregroundRGB.red, green: foregroundRGB.green, blue: foregroundRGB.blue)
-    }
-
-    /// Shade `index` of `QrNoisePattern.shadeCount`, evenly between the background and the foreground.
-    func shade(_ index: Int) -> Color {
-        let fraction = Double(index + 1) / Double(QrNoisePattern.shadeCount + 1)
-        func mix(_ from: Double, _ to: Double) -> Double { from + (to - from) * fraction }
-        return Color(
-            red: mix(backgroundRGB.red, foregroundRGB.red),
-            green: mix(backgroundRGB.green, foregroundRGB.green),
-            blue: mix(backgroundRGB.blue, foregroundRGB.blue)
-        )
     }
 }

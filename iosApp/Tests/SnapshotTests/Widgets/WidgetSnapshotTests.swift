@@ -3,9 +3,10 @@ import WidgetKit
 import XCTest
 @testable import ITMOWidgets
 
-/// The widget entry views at their family size: the QR widget (IO-10a) in all four appearances, the lesson and the
-/// day widget (IO-10b) light and dark, AX1 where a family has the least room. WidgetKit's container background is
-/// ignored outside a widget, so each entry view paints its own tile; the home screen clips the corners.
+/// The widget entry views at their family size: the QR widget (IO-10a) in all four appearances with Android's default
+/// options, without dynamic colours and on a tinted home screen (IO-FIX-QRW), the lesson and the day widget (IO-10b)
+/// light and dark, AX1 where a family has the least room. WidgetKit's container background is ignored outside a
+/// widget, so each entry view paints its own tile; the home screen clips the corners.
 final class WidgetSnapshotTests: XCTestCase {
     /// The fixture's generation time: 2026-09-01T08:00:30Z, so the spoiler's noise never changes.
     private let date = Date(timeIntervalSince1970: 1_788_249_630)
@@ -20,6 +21,26 @@ final class WidgetSnapshotTests: XCTestCase {
 
     func testQrRevealedInDemo() throws {
         assertQr(.revealed(matrix: try fixtureMatrix(), demo: true), named: "demo")
+    }
+
+    /// Dynamic colours off: the code and the spoiler are black on white in both themes, Android's static colours.
+    func testQrWithoutDynamicColours() throws {
+        let off = QrWidgetAppearance(spoiler: true, dynamicColors: false, animation: .circle)
+        assertQr(.spoiler, appearance: off, named: "spoiler", appearances: [.light, .dark])
+        assertQr(
+            .revealed(matrix: try fixtureMatrix(), demo: false), appearance: off, named: "revealed",
+            appearances: [.light, .dark]
+        )
+    }
+
+    /// The tinted home screen keeps only alpha: the code is holes in a light plate, without the tile's background.
+    func testQrRevealedOnATintedHomeScreen() throws {
+        assertQr(
+            .revealed(matrix: try fixtureMatrix(), demo: false),
+            renderingMode: .accented,
+            named: "accented",
+            appearances: [.dark]
+        )
     }
 
     func testQrExpired() {
@@ -217,14 +238,19 @@ final class WidgetSnapshotTests: XCTestCase {
 
     private func assertQr(
         _ content: QrWidgetContent,
+        appearance: QrWidgetAppearance = .standard,
+        renderingMode: WidgetRenderingMode = .fullColor,
         named name: String,
+        appearances: [SnapshotAppearance] = SnapshotAppearance.all,
         file: StaticString = #filePath,
         testName: String = #function,
         line: UInt = #line
     ) {
         assertAppearances(
-            of: QrWidgetEntryView(entry: QrWidgetEntry(date: date, content: content)),
+            of: QrWidgetEntryView(entry: QrWidgetEntry(date: date, content: content, appearance: appearance))
+                .environment(\.widgetRenderingMode, renderingMode),
             named: name,
+            appearances: appearances,
             width: WidgetSizes.small.width,
             height: WidgetSizes.small.height,
             file: file,

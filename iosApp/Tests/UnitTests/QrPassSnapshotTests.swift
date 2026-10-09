@@ -18,6 +18,29 @@ final class QrPassSnapshotTests: XCTestCase {
         XCTAssertEqual(snapshot.matrix[0].prefix(7), [true, true, true, true, true, true, true])
         XCTAssertEqual(snapshot.matrix[1].prefix(7), [true, false, false, false, false, false, true])
         XCTAssertEqual(snapshot.matrix[3].prefix(7), [true, false, true, true, true, false, true])
+        // The writer's defaults for nothing stored: Android's.
+        XCTAssertEqual(snapshot.appearance, .standard)
+    }
+
+    func testTheWidgetOptionsFollowTheFile() throws {
+        let read = try XCTUnwrap(QrPassSnapshot.decode(fixture(with: [
+            "spoiler": false, "dynamicColors": false, "animation": "NONE",
+        ])))
+        XCTAssertEqual(read.appearance, QrWidgetAppearance(spoiler: false, dynamicColors: false, animation: .none))
+        XCTAssertEqual(read.matrix, try XCTUnwrap(QrPassSnapshot.decode(fixture())).matrix)
+
+        let fade = try XCTUnwrap(QrPassSnapshot.decode(fixture(with: ["animation": "FADE"])))
+        XCTAssertEqual(fade.appearance.animation, .fade)
+    }
+
+    func testAbsentOrUnknownWidgetOptionsAreAndroidsDefaults() throws {
+        let absent = try XCTUnwrap(QrPassSnapshot.decode(fixture(with: [
+            "spoiler": nil, "dynamicColors": nil, "animation": nil,
+        ])))
+        XCTAssertEqual(absent.appearance, .standard, "a file without the options, as builds before IO-FIX-QRW wrote")
+
+        let unknown = try XCTUnwrap(QrPassSnapshot.decode(fixture(with: ["animation": "SPIRAL"])))
+        XCTAssertEqual(unknown.appearance.animation, .circle, "a newer animation falls back to the default")
     }
 
     func testTheFileNameIsTheVersionedSnapshotName() {
@@ -58,5 +81,16 @@ final class QrPassSnapshotTests: XCTestCase {
     private func fixture() throws -> Data {
         let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "qr-pass-v1", withExtension: "json"))
         return try Data(contentsOf: url)
+    }
+
+    /// The fixture with `fields` of its value replaced; a nil removes the field.
+    private func fixture(with fields: [String: Any?]) throws -> Data {
+        var envelope = try XCTUnwrap(JSONSerialization.jsonObject(with: fixture()) as? [String: Any])
+        var value = try XCTUnwrap(envelope["value"] as? [String: Any])
+        for (key, field) in fields {
+            value[key] = field
+        }
+        envelope["value"] = value
+        return try JSONSerialization.data(withJSONObject: envelope)
     }
 }
