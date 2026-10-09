@@ -11,8 +11,8 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Corner radii and card geometry in dp: the M3E corner scale (MDC 1.13's M3 scale plus `largeIncreased`,
- * `extraLargeIncreased` and `extraExtraLarge`) and the app's named shapes from `res/values/dimens.xml`
- * (`DesignTokensParityTest` keeps them equal).
+ * `extraLargeIncreased` and `extraExtraLarge`) and the app's named shapes. `res/values/dimens.xml` keeps the View
+ * screens' copies; `DesignTokensParityTest` keeps the shared ones equal and lists the M3E divergences.
  */
 object ShapeTokens {
     val ExtraSmall: Dp = 4.dp
@@ -27,8 +27,11 @@ object ShapeTokens {
     /** `Card.Content`, `Card.CompactSummary` and the settings cards. */
     val CardContent: Dp = LargeIncreased
 
-    /** `Card.Summary`: off the scale on purpose until the M3E values (03 Q6). */
-    val CardSummary: Dp = 24.dp
+    /**
+     * `Card.Summary`, the sport score card, as `cardHero` while it is the page's hero (owner, item 14 Q2 (a)); the
+     * View screens keep 24 dp (`design_card_radius_summary`).
+     */
+    val CardSummary: Dp = ExtraLarge
 
     /** `Card.Hero`. */
     val CardHero: Dp = ExtraLarge

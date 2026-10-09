@@ -25,18 +25,21 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class ItmoExpressiveSwitchTest {
     @Test
-    fun switchIsOffByDefaultAndHeroesAnimateLikeComponents() = runComposeUiTest {
+    fun switchIsOnByDefaultAndOffHeroesAnimateLikeComponents() = runComposeUiTest {
+        var byDefault: Boolean? = null
         var expressive: Boolean? = null
         var hero: MotionScheme? = null
         var components: MotionScheme? = null
         setContent {
-            ItmoTheme {
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) { byDefault = ItmoTheme.expressive }
+            ItmoTheme(expressive = false) {
                 expressive = ItmoTheme.expressive
                 hero = ItmoTheme.heroMotionScheme
                 components = MaterialTheme.motionScheme
             }
         }
 
+        assertEquals(true, byDefault)
         assertEquals(false, expressive)
         assertSame(components, hero)
     }

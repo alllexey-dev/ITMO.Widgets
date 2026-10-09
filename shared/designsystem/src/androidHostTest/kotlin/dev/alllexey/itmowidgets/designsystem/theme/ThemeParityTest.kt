@@ -10,6 +10,10 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
+import com.google.android.material.color.utilities.DynamicColor
+import com.google.android.material.color.utilities.Hct
+import com.google.android.material.color.utilities.MaterialDynamicColors
+import com.google.android.material.color.utilities.SchemeTonalSpot
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -23,7 +27,9 @@ import com.google.android.material.R as MaterialR
  * The Compose scheme of [ItmoTheme] equals, ARGB for ARGB, the MDC View theme the app's screens use, for every colour
  * role they read today: the 19 `?color*` attrs in `res` and every `R.attr.color*` read in Kotlin.
  * `colorControlHighlight` (the View ripple, black 12 % / white 20 %) has no scheme role; Compose ripples derive
- * from the content colour.
+ * from the content colour. The static scheme is the one divergence (owner, item 14 Q1): the brand blue's TonalSpot
+ * scheme, checked against MDC's own `SchemeTonalSpot`, while the View screens and widgets keep the M3 baseline on
+ * API 26-30, which [baselineColorScheme] still equals.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -42,9 +48,16 @@ class ThemeParityTest {
         assertParity(ColorSource.Platform, dark = true, viewTheme(MaterialR.style.Theme_Material3_DynamicColors_DayNight))
 
     @Test
-    fun `static light equals the baseline theme of API 26 to 30`() = assertParity(
-        ColorSource.Static,
-        dark = false,
+    fun `static light is MDC's TonalSpot scheme of the brand seed`() = assertBrand(dark = false)
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun `static dark is MDC's TonalSpot scheme of the brand seed`() = assertBrand(dark = true)
+
+    @Test
+    fun `baseline light equals the View theme of API 26 to 30`() = assertParity(
+        baselineColorScheme(dark = false),
+        "baseline dark=false",
         viewTheme(MaterialR.style.Theme_Material3_DayNight),
         belowApi35 = mapOf(
             Role.OnPrimaryContainer to MaterialR.color.m3_ref_palette_primary10,
@@ -56,8 +69,11 @@ class ThemeParityTest {
 
     @Test
     @Config(qualifiers = "+night")
-    fun `static dark equals the baseline theme of API 26 to 30`() =
-        assertParity(ColorSource.Static, dark = true, viewTheme(MaterialR.style.Theme_Material3_DayNight))
+    fun `baseline dark equals the View theme of API 26 to 30`() = assertParity(
+        baselineColorScheme(dark = true),
+        "baseline dark=true",
+        viewTheme(MaterialR.style.Theme_Material3_DayNight),
+    )
 
     @Test
     fun `seed light equals the content-based DynamicColors theme`() =
@@ -71,30 +87,27 @@ class ThemeParityTest {
     @Test
     fun `dynamic light keeps the tone 10 error container below API 35`() {
         val view = viewTheme(MaterialR.style.Theme_Material3_DayNight)
-        val scheme = staticColorScheme(dark = false).withViewThemeRoles(dark = false, sdk = 34)
+        val scheme = baselineColorScheme(dark = false).withViewThemeRoles(dark = false, sdk = 34)
         assertEquals(
             view.getColor(MaterialR.color.m3_ref_palette_error10).hex(),
             scheme.onErrorContainer.toArgb().hex(),
         )
     }
 
+    private fun assertParity(source: ColorSource, dark: Boolean, view: Context) =
+        assertParity(themeScheme(source, dark), "$source dark=$dark", view)
+
     /**
      * [belowApi35]: roles whose View value on API 26-30 is another palette colour than on the test's SDK 35. MDC's
-     * `values-v35` moves the light baseline on-container roles from tone 10 to tone 30; the static scheme serves only
-     * API 26-30 and iOS, so it keeps tone 10.
+     * `values-v35` moves the light baseline on-container roles from tone 10 to tone 30; the baseline scheme serves
+     * only API 26-30, so it keeps tone 10.
      */
     private fun assertParity(
-        source: ColorSource,
-        dark: Boolean,
+        composed: ColorScheme,
+        label: String,
         view: Context,
         belowApi35: Map<Role, Int> = emptyMap(),
     ) {
-        var scheme: ColorScheme? = null
-        compose.setContent {
-            ItmoTheme(dark = dark, colorSource = source) { scheme = MaterialTheme.colorScheme }
-        }
-        compose.waitForIdle()
-        val composed = checkNotNull(scheme) { "ItmoTheme did not compose" }
         val mismatches = Role.entries.mapNotNull { role ->
             val expected = belowApi35[role]?.let(view::getColor)
                 ?: view.attrArgb(role.attr) ?: view.attrArgb(role.platformTwin)
@@ -102,8 +115,69 @@ class ThemeParityTest {
             val actual = role.of(composed).toArgb()
             if (expected == actual) null else "${role.name}: view ${expected.hex()} / compose ${actual.hex()}"
         }
-        assertEquals("$source dark=$dark", emptyList<String>(), mismatches)
+        assertEquals(label, emptyList<String>(), mismatches)
     }
+
+    /** Every role [ItmoTheme]'s static scheme shares with MDC's 2021 `SchemeTonalSpot` of [BRAND_SEED]. */
+    private fun assertBrand(dark: Boolean) {
+        val composed = themeScheme(ColorSource.Static, dark)
+        val mdc = SchemeTonalSpot(Hct.fromInt(BRAND_SEED), dark, 0.0)
+        val colors = MaterialDynamicColors()
+        val mismatches = brandRoles(colors).mapNotNull { (name, role, dynamic) ->
+            val expected = dynamic.getArgb(mdc)
+            val actual = role(composed).toArgb()
+            if (expected == actual) null else "$name: MDC ${expected.hex()} / compose ${actual.hex()}"
+        }
+        assertEquals("brand dark=$dark", emptyList<String>(), mismatches)
+    }
+
+    private fun themeScheme(source: ColorSource, dark: Boolean): ColorScheme {
+        var scheme: ColorScheme? = null
+        compose.setContent {
+            ItmoTheme(dark = dark, colorSource = source) { scheme = MaterialTheme.colorScheme }
+        }
+        compose.waitForIdle()
+        return checkNotNull(scheme) { "ItmoTheme did not compose" }
+    }
+
+    private fun brandRoles(
+        colors: MaterialDynamicColors,
+    ): List<Triple<String, (ColorScheme) -> androidx.compose.ui.graphics.Color, DynamicColor>> = listOf(
+        Triple("primary", { it.primary }, colors.primary()),
+        Triple("onPrimary", { it.onPrimary }, colors.onPrimary()),
+        Triple("primaryContainer", { it.primaryContainer }, colors.primaryContainer()),
+        Triple("onPrimaryContainer", { it.onPrimaryContainer }, colors.onPrimaryContainer()),
+        Triple("inversePrimary", { it.inversePrimary }, colors.inversePrimary()),
+        Triple("secondary", { it.secondary }, colors.secondary()),
+        Triple("onSecondary", { it.onSecondary }, colors.onSecondary()),
+        Triple("secondaryContainer", { it.secondaryContainer }, colors.secondaryContainer()),
+        Triple("onSecondaryContainer", { it.onSecondaryContainer }, colors.onSecondaryContainer()),
+        Triple("tertiary", { it.tertiary }, colors.tertiary()),
+        Triple("onTertiary", { it.onTertiary }, colors.onTertiary()),
+        Triple("tertiaryContainer", { it.tertiaryContainer }, colors.tertiaryContainer()),
+        Triple("onTertiaryContainer", { it.onTertiaryContainer }, colors.onTertiaryContainer()),
+        Triple("error", { it.error }, colors.error()),
+        Triple("onError", { it.onError }, colors.onError()),
+        Triple("errorContainer", { it.errorContainer }, colors.errorContainer()),
+        Triple("onErrorContainer", { it.onErrorContainer }, colors.onErrorContainer()),
+        Triple("background", { it.background }, colors.background()),
+        Triple("onBackground", { it.onBackground }, colors.onBackground()),
+        Triple("surface", { it.surface }, colors.surface()),
+        Triple("onSurface", { it.onSurface }, colors.onSurface()),
+        Triple("surfaceVariant", { it.surfaceVariant }, colors.surfaceVariant()),
+        Triple("onSurfaceVariant", { it.onSurfaceVariant }, colors.onSurfaceVariant()),
+        Triple("inverseSurface", { it.inverseSurface }, colors.inverseSurface()),
+        Triple("inverseOnSurface", { it.inverseOnSurface }, colors.inverseOnSurface()),
+        Triple("outline", { it.outline }, colors.outline()),
+        Triple("outlineVariant", { it.outlineVariant }, colors.outlineVariant()),
+        Triple("surfaceDim", { it.surfaceDim }, colors.surfaceDim()),
+        Triple("surfaceBright", { it.surfaceBright }, colors.surfaceBright()),
+        Triple("surfaceContainerLowest", { it.surfaceContainerLowest }, colors.surfaceContainerLowest()),
+        Triple("surfaceContainerLow", { it.surfaceContainerLow }, colors.surfaceContainerLow()),
+        Triple("surfaceContainer", { it.surfaceContainer }, colors.surfaceContainer()),
+        Triple("surfaceContainerHigh", { it.surfaceContainerHigh }, colors.surfaceContainerHigh()),
+        Triple("surfaceContainerHighest", { it.surfaceContainerHighest }, colors.surfaceContainerHighest()),
+    )
 
     private fun viewTheme(style: Int): Context = ContextThemeWrapper(ApplicationProvider.getApplicationContext(), style)
 

@@ -31,6 +31,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -73,10 +76,15 @@ private fun ConnectedGroup(options: List<String>, selectedIndex: Int, choose: (I
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
         options.forEachIndexed { index, label ->
+            val checked = index == selectedIndex
             ToggleButton(
-                checked = index == selectedIndex,
+                checked = checked,
                 onCheckedChange = { choose(index) },
-                modifier = Modifier.weight(1f),
+                // A single choice: TalkBack reads a radio button and its selection, as for the other two styles.
+                modifier = Modifier.weight(1f).semantics {
+                    role = Role.RadioButton
+                    selected = checked
+                },
                 shapes = connectedShapes(index, options.lastIndex),
             ) { OptionLabel(label) }
         }

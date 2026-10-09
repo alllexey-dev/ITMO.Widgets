@@ -8,11 +8,21 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.dynamicColorScheme
 
+/** The launcher, shortcut and `lesson_type_lecture` blue: the seed of [staticColorScheme]. */
+internal const val BRAND_SEED: Int = 0xFF4984E2.toInt()
+
 /**
- * The static scheme, pinned to MDC 1.13's `Theme.Material3.Light`/`Dark` values rather than to material3's defaults,
- * so a material3 bump cannot repaint API 26-30 or iOS before the M3E token change.
+ * The static scheme of API 26-30 and iOS (owner, item 14 Q1 (b)): the TonalSpot variant of the 2021 spec from
+ * [BRAND_SEED], Material's default way to build a scheme from a brand colour. Android 12+ keeps the wallpaper's.
  */
-internal fun staticColorScheme(dark: Boolean): ColorScheme = if (dark) StaticDark else StaticLight
+internal fun staticColorScheme(dark: Boolean): ColorScheme = if (dark) BrandDark else BrandLight
+
+/**
+ * The M3 baseline (`#6750A4` family), pinned to MDC 1.13's `Theme.Material3.Light`/`Dark` values: what the View
+ * screens and widgets still draw on API 26-30, and the roles MDC's DynamicColors theme leaves at baseline
+ * ([withViewThemeRoles]).
+ */
+internal fun baselineColorScheme(dark: Boolean): ColorScheme = if (dark) BaselineDark else BaselineLight
 
 /**
  * MDC's `DynamicColorsOptions.setContentBasedSource(seed)`: the Content variant of the 2021 spec. TonalSpot or the
@@ -25,7 +35,18 @@ internal fun seededColorScheme(argb: Int, dark: Boolean): ColorScheme = dynamicC
     specVersion = ColorSpec.SpecVersion.SPEC_2021,
 )
 
-private val StaticLight = lightColorScheme(
+private val BrandLight = brandColorScheme(dark = false)
+
+private val BrandDark = brandColorScheme(dark = true)
+
+private fun brandColorScheme(dark: Boolean): ColorScheme = dynamicColorScheme(
+    seedColor = Color(BRAND_SEED),
+    isDark = dark,
+    style = PaletteStyle.TonalSpot,
+    specVersion = ColorSpec.SpecVersion.SPEC_2021,
+)
+
+private val BaselineLight = lightColorScheme(
     primary = Color(0xFF6750A4),
     onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFFEADDFF),
@@ -76,7 +97,7 @@ private val StaticLight = lightColorScheme(
     onTertiaryFixedVariant = Color(0xFF633B48),
 )
 
-private val StaticDark = darkColorScheme(
+private val BaselineDark = darkColorScheme(
     primary = Color(0xFFD0BCFF),
     onPrimary = Color(0xFF381E72),
     primaryContainer = Color(0xFF4F378B),

@@ -28,7 +28,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class ItmoNavigationBarTest {
     @Test
-    fun tabsAreNamedSelectableTargetsAndOnlyTheSelectedOneShowsItsLabel() = runComposeUiTest {
+    fun tabsAreNamedSelectableTargetsAndEveryOneShowsItsLabel() = runComposeUiTest {
         var selected by mutableIntStateOf(0)
         setContent {
             ItmoTheme {
@@ -51,7 +51,7 @@ class ItmoNavigationBarTest {
         onNodeWithContentDescription(SPORT).assertIsSelected()
         onNodeWithContentDescription(HOME).assertIsNotSelected()
         onNodeWithText(SPORT, useUnmergedTree = true).assertExists()
-        onNodeWithText(HOME, useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithText(HOME, useUnmergedTree = true).assertExists()
         assertTouchTargets()
         assertTrue(onNodeWithTag(BAR).getBoundsInRoot().height >= NavigationBarTokens.MinHeight)
     }

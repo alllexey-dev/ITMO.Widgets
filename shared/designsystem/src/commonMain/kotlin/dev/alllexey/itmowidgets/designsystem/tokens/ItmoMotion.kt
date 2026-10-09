@@ -30,7 +30,7 @@ data class ItmoMotion(
     val pulseMinAlpha: Float,
     /** Material's standard easing `(0.2, 0, 0, 1)`. */
     val easing: Easing,
-    /** What Material components animate with: `MotionScheme.standard()` until the M3E token change. */
+    /** What Material components animate with: `MotionScheme.standard()`; only heroes take the expressive scheme. */
     val scheme: MotionScheme,
 ) {
     companion object {
