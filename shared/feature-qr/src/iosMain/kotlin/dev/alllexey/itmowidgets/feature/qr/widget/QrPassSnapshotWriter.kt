@@ -2,7 +2,9 @@ package dev.alllexey.itmowidgets.feature.qr.widget
 
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
+import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.SnapshotFile
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
@@ -11,6 +13,9 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.KSerializer
@@ -37,15 +42,39 @@ data class QrPassSnapshot(
     @SerialName("demo") val demo: Boolean,
     /** One string per row from the top, one character per module from the left: `1` dark, `0` light. */
     @SerialName("matrix") val matrix: List<String>,
+    /** `settings_qr_spoiler_title`: the widget shows the code only after a tap. */
+    @SerialName("spoiler") val spoiler: Boolean,
+    /** `settings_qr_dynamic_colors_title`: the widget draws the code and the spoiler in the app's scheme. */
+    @SerialName("dynamicColors") val dynamicColors: Boolean,
+    /** `settings_qr_animation_title`, a [QrAnimationType] name (a stable identifier). */
+    @SerialName("animation") val animation: String,
 )
 
 /**
- * Keeps [FILE] on the pass that [QrCodeRepository] holds: every new valid pass is written with its expiry and the QR
- * widget kind is reloaded. Nothing is written while there is no valid pass; on sign-out the App Group cleaner removes
- * the file and the cleared cache emits nothing new, so the file stays gone. Times come from the wall [clock].
+ * The QR widget options of the settings page. Android keeps them global, so one value serves every placed widget;
+ * the widget extension reads them from the pass snapshot.
+ */
+data class QrWidgetAppearance(
+    val spoiler: Boolean,
+    val dynamicColors: Boolean,
+    val animation: QrAnimationType,
+) {
+    companion object {
+        /** The options while nothing is stored: Android's defaults. */
+        val Default = QrWidgetAppearance(spoiler = true, dynamicColors = true, animation = QrAnimationType.CIRCLE)
+    }
+}
+
+/**
+ * Keeps [FILE] on the pass that [QrCodeRepository] holds and on the QR widget options of [settings]: every new valid
+ * pass and every changed option is written with the pass's expiry and the QR widget kind is reloaded, so a changed
+ * switch reaches placed widgets at once. Nothing is written while there is no valid pass; on sign-out the App Group
+ * cleaner removes the file and the cleared cache emits nothing new, so the file stays gone until the next pass.
+ * Times come from the wall [clock].
  */
 class QrPassSnapshotWriter(
     private val repository: QrCodeRepository,
+    private val settings: QrSettingsPreferences,
     private val writer: AppGroupSnapshotWriter,
     private val demo: DemoMode,
     private val clock: Clock,
@@ -53,13 +82,13 @@ class QrPassSnapshotWriter(
 ) {
     private val generator = QrCodeGenerator()
 
-    /** Follows the repository's pass in [scope] until the scope ends. */
-    fun launchIn(scope: CoroutineScope): Job = repository.observeQrHex()
-        .onEach(::publish)
+    /** Follows the repository's pass and the widget options in [scope] until the scope ends. */
+    fun launchIn(scope: CoroutineScope): Job = combine(repository.observeQrHex(), appearance(), ::Pair)
+        .onEach { (hex, appearance) -> publish(hex, appearance) }
         .launchIn(scope)
 
-    /** Writes the snapshot of [hex] when it is still the repository's valid pass. */
-    suspend fun publish(hex: String) {
+    /** Writes the snapshot of [hex] with [appearance] when [hex] is still the repository's valid pass. */
+    suspend fun publish(hex: String, appearance: QrWidgetAppearance) {
         val pass = repository.currentQr()?.takeIf { it.hex == hex } ?: return
         val snapshot = try {
             QrPassSnapshot(
@@ -67,6 +96,9 @@ class QrPassSnapshotWriter(
                 expiresAt = Instant.fromEpochMilliseconds(pass.expiresAtMillis),
                 demo = demo.isActive(),
                 matrix = matrixOf(pass.hex),
+                spoiler = appearance.spoiler,
+                dynamicColors = appearance.dynamicColors,
+                animation = appearance.animation.name,
             )
         } catch (error: IllegalArgumentException) {
             // A pass longer than a version 1 code holds: the screen shows its error state, the widget keeps nothing.
@@ -81,6 +113,13 @@ class QrPassSnapshotWriter(
             log.warn(TAG, "Could not write the QR pass snapshot", error)
         }
     }
+
+    private fun appearance(): Flow<QrWidgetAppearance> = combine(
+        settings.observeQrSpoilerEnabled(),
+        settings.observeQrDynamicColorsEnabled(),
+        settings.observeQrSpoilerAnimationType(),
+        ::QrWidgetAppearance,
+    ).distinctUntilChanged()
 
     private fun matrixOf(hex: String): List<String> {
         val code = generator.generate(hex)

@@ -134,3 +134,25 @@ struct SplitMix64: RandomNumberGenerator {
         return z ^ (z >> 31)
     }
 }
+
+/// The code as holes in a light plate, for the tinted and clear home screens, where the system keeps only alpha: a
+/// filled module would come out as light as its background. Fill it with `FillStyle(eoFill: true)`: the plate is one
+/// layer, each module (fillets included) a second one inside it, so the modules stay empty and read dark on light.
+struct QrPlateShape: Shape {
+    let matrix: [[Bool]]
+
+    /// The plate's margin around the code, in modules: the quiet zone the tile's background gives in full colour.
+    static let quietZone = 2
+
+    func path(in rect: CGRect) -> Path {
+        let count = matrix.count
+        guard count > 0 else { return Path() }
+        let side = min(rect.width, rect.height)
+        let module = side / CGFloat(count + 2 * Self.quietZone)
+        let plate = CGRect(x: rect.midX - side / 2, y: rect.midY - side / 2, width: side, height: side)
+        let margin = module * CGFloat(Self.quietZone)
+        var path = Path(roundedRect: plate, cornerRadius: module)
+        path.addPath(QrModulesShape(matrix: matrix).path(in: plate.insetBy(dx: margin, dy: margin)))
+        return path
+    }
+}
