@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.qr.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,10 +16,14 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -36,6 +42,7 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonSt
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeUiState
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeImage
@@ -54,6 +61,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
 import dev.alllexey.itmowidgets.shared.designsystem.ic_refresh
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
@@ -73,6 +81,10 @@ object QrPassTestTags {
  * The QR pass: a square area of at most 300 dp that shows the code, the loading indicator or the empty and error
  * state, the instruction under it and a refresh button that never moves between states. Stateless; [QrPassRoute]
  * feeds it. Failed refreshes of a still valid pass show in [snackbarHostState].
+ *
+ * The code is the flow's hero: one that arrives while the screen is open (after the loading state, or a new code
+ * after a refresh) grows and fades in on [ItmoTheme.heroMotionScheme]; a code already there on the first frame, and
+ * every code under reduced motion, shows at once.
  */
 @Composable
 fun QrPassScreen(
@@ -105,6 +117,8 @@ private fun QrPassBody(state: QrCodeUiState, onRefresh: () -> Unit, modifier: Mo
     val content = state as? QrCodeUiState.Content
     val matrix = rememberQrMatrix(content?.code?.hex)
     val showsCode = content != null && matrix != null
+    val firstFrame = remember { FirstFrame() }
+    SideEffect { firstFrame.passed = true }
     // fillMaxSize before verticalScroll keeps the viewport as the minimum height, so the column centres in it.
     Column(
         modifier
@@ -116,13 +130,15 @@ private fun QrPassBody(state: QrCodeUiState, onRefresh: () -> Unit, modifier: Mo
     ) {
         Box(Modifier.passArea().testTag(QrPassTestTags.AREA), contentAlignment = Alignment.Center) {
             when {
-                content != null && matrix != null -> {
+                content != null && matrix != null -> key(content.code.hex) {
                     val description = stringResource(Res.string.qr_pass_image_description)
+                    val reveal = rememberHeroReveal(animate = firstFrame.passed)
                     QrCodeImage(
                         matrix,
                         qrColors(content.useDynamicColors),
                         Modifier
                             .fillMaxSize()
+                            .heroReveal(reveal)
                             .testTag(QrPassTestTags.IMAGE)
                             .semantics {
                                 contentDescription = description
@@ -184,6 +200,43 @@ private fun PassState(title: String, description: String) {
     )
 }
 
+/** False until the screen's first composition is applied; a code composed before that needs no reveal. */
+private class FirstFrame {
+    var passed = false
+}
+
+/** Scale and alpha of a code's reveal, at their end values when nothing animates. */
+private class HeroReveal(
+    val scale: Animatable<Float, AnimationVector1D>,
+    val alpha: Animatable<Float, AnimationVector1D>,
+)
+
+/**
+ * Starts the reveal of a code that has just entered the composition: scale on the hero's spatial spring (it may
+ * overshoot), alpha on its effects spring. Without [animate], or under reduced motion, both start at their end.
+ */
+@Composable
+private fun rememberHeroReveal(animate: Boolean): HeroReveal {
+    val run = animate && !rememberReducedMotion()
+    val scheme = ItmoTheme.heroMotionScheme
+    val reveal = remember {
+        HeroReveal(Animatable(if (run) REVEAL_START_SCALE else 1f), Animatable(if (run) 0f else 1f))
+    }
+    LaunchedEffect(reveal) {
+        if (!run) return@LaunchedEffect
+        launch { reveal.scale.animateTo(1f, scheme.defaultSpatialSpec()) }
+        launch { reveal.alpha.animateTo(1f, scheme.defaultEffectsSpec()) }
+    }
+    return reveal
+}
+
+/** Applies [reveal] in a layer read in the draw phase; the code's layout size and semantics stay as they are. */
+private fun Modifier.heroReveal(reveal: HeroReveal): Modifier = graphicsLayer {
+    scaleX = reveal.scale.value
+    scaleY = reveal.scale.value
+    alpha = reveal.alpha.value.coerceIn(0f, 1f)
+}
+
 /** The module matrix of [hex], or null when there is none or it does not fit a version 1 code. */
 @Composable
 private fun rememberQrMatrix(hex: String?): List<List<Boolean>>? = remember(hex) {
@@ -204,3 +257,6 @@ private fun Modifier.passArea(): Modifier = layout { measurable, constraints ->
 
 private const val AREA_WIDTH_FRACTION = 0.8f
 private val AreaMaxSize = 300.dp
+
+/** Where a revealed code starts growing from, as a fraction of its size. */
+private const val REVEAL_START_SCALE = 0.85f
