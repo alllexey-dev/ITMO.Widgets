@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonSt
 import dev.alllexey.itmowidgets.designsystem.components.charts.StepsIndicator
 import dev.alllexey.itmowidgets.designsystem.gesture.tabSwipeBlocked
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingStep
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiState
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetKind
@@ -84,6 +85,9 @@ data class OnboardingActions(
  * lesson at the widget's own height, the day list in its bounded 160 dp area (`WidgetPreviewFactory` on Android).
  * [notificationPermissionIsRuntime] is false where the system has no notification dialog (Android before 13), so the
  * notifications step offers the settings page from the start.
+ *
+ * A step change slides the pager on the components' standard spatial spring (`ItmoTheme.motion.scheme`); under
+ * reduced motion the new step shows at once. The flow has no hero.
  */
 @Composable
 fun OnboardingScreen(
@@ -96,8 +100,14 @@ fun OnboardingScreen(
 ) {
     val steps = state.steps
     val pager = rememberPagerState(initialPage = state.stepIndex) { steps.size }
+    val reducedMotion = rememberReducedMotion()
+    val pageSpec = ItmoTheme.motion.scheme.defaultSpatialSpec<Float>()
     LaunchedEffect(pager, state.stepIndex) {
-        if (pager.currentPage != state.stepIndex) pager.animateScrollToPage(state.stepIndex)
+        when {
+            pager.currentPage == state.stepIndex -> Unit
+            reducedMotion -> pager.scrollToPage(state.stepIndex)
+            else -> pager.animateScrollToPage(state.stepIndex, animationSpec = pageSpec)
+        }
     }
     Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxSize()) {
