@@ -1,24 +1,39 @@
-# Material 3 Expressive
+# Design system and Material 3 Expressive
 
-- The Compose screens take the owner's Material 3 Expressive values in one
-  token change: below Android 12 and on iOS the app is painted in the brand
-  blue `#4984E2` (TonalSpot) instead of the M3 baseline purple, every tab of
-  the bottom navigation shows its label, `cardSummary` is 28 dp, and the
-  expressive components (loading indicator, pull-to-refresh, connected button
-  group, wavy progress for heroes, hero avatar mask) are on. Widgets, the QR
-  tile, shortcut and notification icons keep their palette.
-- The expressive loading indicator turns about its own centre: it morphs
-  through Material's shapes with Cookie9Sided and Pentagon swapped for
-  Cookie12Sided and Clover4Leaf (`ItmoLoadingShapes`), so the shape no longer
-  wobbles by about 3 px. In pull-to-refresh the pulled shape keeps its size
-  and angle when it hands over to the turning one, without the double image.
-- The expressive loading indicator no longer twitches every 650 ms: it is
-  the app's own `ItmoMorphingIndicator` (Material's size and colours), whose
-  morph and turn ride one eased animation per step (the web indicator's
-  curve, 112.5 degrees per shape) instead of a spring that stops short and
-  snaps; the shape turns about its centroid and opens at rest, so the
-  pull-to-refresh hand-off stays still.
+- `:shared:designsystem` is the one source of the look: `ItmoTheme` (colour
+  scheme with wallpaper, brand or seeded source, extended colours, shapes,
+  spacing, type with emphasized twins, motion schemes) and a kit of stateless
+  components (top bar, navigation bar, content states, skeleton,
+  pull-to-refresh, buttons, pills, avatars, connected groups, settings, user
+  and link rows, details header, sheets, dialogs, menu, score ring, grade
+  scale, timeline, steps indicator) that every Compose screen builds from.
+  `shared/designsystem/tokens/itmo-tokens.json` exports the tokens for the
+  iOS client and the web app.
+- On iOS the kit draws an iOS style (`ItmoPlatformStyle.Ios`): Apple's text
+  styles, UIKit spacing and radii, inset-grouped rows, a switch, segmented
+  control, activity indicator, alerts and menus like UIKit's, and haptics;
+  Android's look is unchanged by it.
+- Screens are checked by JVM screenshot baselines (Roborazzi) in four
+  appearances, the kit and the QR pass also in three iOS ones:
+  `scripts/verify.sh shots <module>|app|all`, run by CI on every PR.
+- The app takes the owner's Material 3 Expressive values in one token change:
+  below Android 12 and on iOS it is painted in the brand blue `#4984E2`
+  (TonalSpot) instead of the M3 baseline purple, every tab of the bottom
+  navigation shows its label, and the PE sport card is 28 dp round. Android
+  12+ keeps the wallpaper's colours.
+- Each feature then took one expressive pass: a few hero moments on the hero
+  motion scheme (the QR pass reveal, the lesson in progress with a wavy bar on
+  home, the sport status chip, the subject result card's emphasized points and
+  scale fill, the profile hero's cookie-shaped avatar), the expressive loading
+  indicator for short waits and in pull-to-refresh, the friend picker's scope
+  as a connected button group, and springs instead of fixed tweens. Under
+  reduced motion everything shows its end state at once.
+- The expressive loading indicator is the app's own `ItmoMorphingIndicator`:
+  it morphs through Material's shapes without Cookie9Sided and Pentagon
+  (`ItmoLoadingShapes`), turns about the shape's centre on one eased step per
+  shape, and hands over from the pulled shape in pull-to-refresh without a
+  jump in size or angle.
 - The days of the «Запись» week strip no longer flash grey when the
-  selection moves to or from a day without lessons: the day card fades the
-  alpha of its own container colour instead of blending it with transparent
-  black.
+  selection moves to or from a day without lessons.
+- Widgets, the QR tile, shortcut and notification icons and the ITMO.ID and
+  BARS pages keep their v2.2 look.

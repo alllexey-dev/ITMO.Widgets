@@ -1,12 +1,15 @@
 # Design guide
 
-One visual language across the Android application, grown from the screens the
-user already likes: the schedule and the sport cards. Quiet surfaces, compact
-layout, clear hierarchy, small meaningful accents. This is the target contract
-for every screen. Compose screens take every value from `ItmoTheme` in
-`:shared:designsystem` ([Tokens](#tokens)); XML screens keep the v2.2 look from
-the app theme and `res/values` until their port deletes them, and their card
-styles are pinned by `DesignCardResourcesTest`.
+One visual language across the application, grown from the screens the user
+already likes: the schedule and the sport cards. Quiet surfaces, compact layout,
+clear hierarchy, small meaningful accents. This is the contract for every
+screen. Screens are Compose Multiplatform: they take every value from
+`ItmoTheme` in `:shared:designsystem` ([Tokens](#tokens)) and their parts from
+its kit ([Shared components](#shared-components)). Views remain only where the
+system or a library draws: the home-screen widgets, the quick-settings tile,
+shortcut and notification icons, the WebView slots of the ITMO.ID and BARS
+sign-in pages and the spoiler image crop screen. They keep the v2.2 look from
+the app theme and `res/values` ([System surfaces](#system-surfaces)).
 
 ## Principle
 
@@ -17,13 +20,12 @@ styles are pinned by `DesignCardResourcesTest`.
 - Hierarchy comes from surfaces, typography and spacing, not shadows.
 - Never stack a filled surface, a coloured stroke, a large status, a badge and a
   decorative progress on one element.
-- Screens that already work keep their look. Screens move to Compose
+- Screens that already worked kept their look. They moved to Compose
   Multiplatform ([ADR 0017](decisions/0017-cmp-ui-in-common-main.md)) as parity
-  ports: a port matches its XML screen against a JVM reference capture and lists
-  every deliberate deviation in its PR. The Material 3 Expressive look arrived
-  as one token change ([ADR 0021](decisions/0021-m3-expressive-order.md)),
-  not screen by screen. Unification does not mean a redesign or features
-  outside the roadmap.
+  ports, each matched against a JVM capture of its XML screen. The Material 3
+  Expressive look then arrived as one token change and one expressive pass per
+  feature ([ADR 0021](decisions/0021-m3-expressive-order.md)), not screen by
+  screen. Unification does not mean a redesign or features outside the roadmap.
 
 ## Tokens
 
@@ -37,9 +39,9 @@ Components and screens read tokens only through `ItmoTheme.*`. No raw colour,
 `.dp` spacing or font size outside `shared/designsystem`; experimental and
 expressive Material APIs only inside it, behind `Itmo*` wrappers.
 
-| Slot | Contents and today's values |
+| Slot | Contents and values |
 |---|---|
-| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (default): dynamic colour on Android 12+, otherwise, and on iOS, the static brand scheme (`ColorSource.Static`: the TonalSpot variant of the 2021 spec from the brand blue `#4984E2`). `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests). On Android 12+ the outline-variant and error roles stay MDC's baseline ones, as the View screens show them |
+| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (default): dynamic colour on Android 12+, otherwise, and on iOS, the static brand scheme (`ColorSource.Static`: the TonalSpot variant of the 2021 spec from the brand blue `#4984E2`). `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests). On Android 12+ the outline-variant and error roles stay MDC's baseline ones, as the View theme shows them |
 | `ItmoTheme.extendedColors` | The app's own colours beside the scheme, one slot per entry of `res/values{,-night}/colors.xml`: lesson types, recordbook passed, sport scores and conditions, teacher levels. Derived per scheme: sport condition containers (the accent mixed 12 % over `surfaceContainerLowest`) and teacher levels (harmonized towards `primary`). In dark, lesson types keep their light values |
 | `ItmoTheme.shapes` | Corner scale `extraSmall` 4, `small` 8, `medium` 12, `large` 16, `largeIncreased` 20, `extraLarge` 28, `extraLargeIncreased` 32, `extraExtraLarge` 48 dp, `full`; card family `cardContent` 20, `cardSummary` 28, `cardHero` 28, `scheduleDay` 16 dp; connected groups 20 dp outer, 4 dp inner, 2 dp gap; stroke 1 dp, elevation 0 dp |
 | `ItmoTheme.spacing` | `related` 4, `compact` 8, `content` 12, `group` 16, `section` 24, `screenMargin` 16, `cardPadding` 16, `summaryPadding` 20, `touchTarget` 48, `fabStackClearance` 152, `statePadding` 32, `stateIcon` 64, `stateInlineIcon` 56 dp |
@@ -54,13 +56,12 @@ expressive Material APIs only inside it, behind `Itmo*` wrappers.
 - Reduced motion: `rememberReducedMotion()` is true when the system animator
   duration scale is 0 (iOS reports false until its host reads Reduce Motion); a
   kit animation then shows its end state at once.
-- Parity with the XML screens is tested: `DesignTokensParityTest` (`:app`) keeps
-  extended colours, spacing and shapes equal to `res/values` except its listed
-  M3E divergences (`design_card_radius_summary` stays 24 dp for the View
-  screens), `ThemeParityTest` the dynamic and seeded schemes and the M3
-  baseline that the View screens and widgets keep on API 26-30 (and the brand
-  static scheme against MDC's `SchemeTonalSpot`), and `TypographyParityTest`
-  the type scale.
+- Parity with the View resources is tested: `DesignTokensParityTest` (`:app`)
+  keeps extended colours, spacing and shapes equal to `res/values` except its
+  listed M3E divergences (`design_card_radius_summary` stays 24 dp in
+  `res/values`), `ThemeParityTest` the dynamic and seeded schemes and the M3
+  baseline that the widgets keep on API 26-30 (and the brand static scheme
+  against MDC's `SchemeTonalSpot`), and `TypographyParityTest` the type scale.
 - `shared/designsystem/tokens/itmo-tokens.json` exports the tokens (static light
   and dark schemes by role, extended colours with the derivation rules, shapes,
   spacing, type, motion; colours `#RRGGBB`, sizes dp or sp, durations ms;
@@ -72,26 +73,25 @@ expressive Material APIs only inside it, behind `Itmo*` wrappers.
 
 ## Colour and surfaces
 
-Material 3 colour roles, named here by their token; the XML theme attribute
-stands in parentheses while XML screens remain. Compose reads them from
-`ItmoTheme.colorScheme`, XML screens from the app theme on
-`Theme.Material3.DynamicColors.DayNight`, with the same values on Android 12+.
-Below Android 12 Compose takes the brand static scheme while XML screens and
-widgets keep the M3 baseline `#6750A4`; only the window background follows the
-brand scheme there (`theme_static_background`), so no seam shows behind the
-status bar of a Compose screen. Every screen must work in light, dark
-and dynamic palettes; never assume the wallpaper.
+Material 3 colour roles, named here by their `ItmoTheme.colorScheme` token. On
+Android 12+ the screens take the wallpaper's dynamic scheme, the same values the
+View theme (`Theme.Material3.DynamicColors.DayNight`) gives the remaining Views.
+Below Android 12 the screens take the brand static scheme while the widgets keep
+the M3 baseline `#6750A4`; the window background follows the brand scheme there
+(`theme_static_background`), so no seam shows behind the status bar. Every
+screen must work in light, dark and dynamic palettes; never assume the
+wallpaper.
 
 | Role | Rule |
 |---|---|
-| Screen background | `surface` (`colorSurface`); never override the window background with a fixed colour |
-| Ordinary card | `surfaceContainerLow` (`colorSurfaceContainerLow`), elevation 0 dp |
-| Nested neutral panel | a surface-container level such as `surfaceContainerHighest` (`colorSurfaceContainerHighest`) |
-| Primary text | `onSurface` (`colorOnSurface`) |
-| Metadata and decorative icons | `onSurfaceVariant` (`colorOnSurfaceVariant`) |
-| Action, current item, small accent | `primary` (`colorPrimary`) |
-| Selected contextual surface | `secondaryContainer` with `onSecondaryContainer` (`colorSecondaryContainer`, `colorOnSecondaryContainer`) |
-| Quiet stroke and divider | `outlineVariant` (`colorOutlineVariant`) |
+| Screen background | `surface`; never override the window background with a fixed colour |
+| Ordinary card | `surfaceContainerLow`, elevation 0 dp |
+| Nested neutral panel | a surface-container level such as `surfaceContainerHighest` |
+| Primary text | `onSurface` |
+| Metadata and decorative icons | `onSurfaceVariant` |
+| Action, current item, small accent | `primary` |
+| Selected contextual surface | `secondaryContainer` with `onSecondaryContainer` |
+| Quiet stroke and divider | `outlineVariant` |
 
 `on…Container` colours are used only on their container. Do not fill large
 cards with `primary` to make them prominent; the user rejects heavy tonal
@@ -103,10 +103,10 @@ The tone of a teacher's AI summary is such a stable colour of meaning:
 `teacher_level_*` from red to green (`very_negative`, `negative`, `mixed`,
 `positive`, `very_positive`, light `#D32F2F`, `#E06C00`, `#B58900`, `#689F38`,
 `#2E7D32`, dark `#FF6E6E`, `#FFA24C`, `#FFD54F`, `#AED581`, `#4CAF50`),
-only harmonized towards the primary colour (`core/ui/TeacherLevelTone.kt`;
-`teacherLevel*` in `ItmoTheme.extendedColors`), so
-every palette keeps five distinct tones. The dot is decorative; its row says
-the tone in words.
+only harmonized towards the primary colour (`teacherLevel*` in
+`ItmoTheme.extendedColors`, drawn by the kit's `ToneDot`), so every palette
+keeps five distinct tones. The dot is decorative; its row says the tone in
+words.
 
 ## Geometry and the card family
 
@@ -122,15 +122,20 @@ The grid is 4 dp. Compactness never shrinks the touch target.
 | Minimum touch target | 48 × 48 dp |
 | Card elevation | 0 dp |
 
+The card family below names the variants the docs and the kit's KDoc refer to;
+their shapes are `ItmoTheme.shapes` tokens. Under the iOS style every card and
+group takes 26 pt ([Platform styles](#platform-styles)).
+
 | Variant | Shape | Use |
 |---|---|---|
-| `Card.Content` | 20 dp radius, no stroke | Subject, control, user rows |
-| `Card.Content.Outlined` | 20 dp radius, 1 dp `colorOutlineVariant` | Sport lesson and booking cards, debug cards |
-| `Card.Content.Tonal` | 20 dp radius, no stroke, `colorSurfaceContainerLow` | The AI summary of a teacher's reviews above the reviews |
-| `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius; `cardSummary` 28 dp in Compose | Recordbook summary; PE sport card |
-| `Card.Hero` | 28 dp radius, no stroke, `colorSurfaceContainer` | The subject result and the person on a profile, above the page's connected groups |
-| `Card.SettingsGroup` | 20 dp radius, no stroke, inner dividers | One card per settings or profile group, never per row |
-| `Card.ScheduleDay` | 16 dp radius, 16 dp between days | A day of lessons with its timeline |
+| `Card.Content` | `cardContent` 20 dp, `surfaceContainerLow`, no stroke | Subject, control and user rows; home feed cards (the kit's `FeedCard`) |
+| `Card.Content.Outlined` | 20 dp, 1 dp `outlineVariant` | Sport lesson and booking cards, home hints (`FeedCard(outlined = true)`), debug cards |
+| `Card.Content.Tonal` | 20 dp, `surfaceContainerLow`, no stroke | The AI summary of a teacher's reviews above the reviews |
+| `Card.CompactSummary` | `cardContent` 20 dp | The recordbook summary row |
+| `Card.Summary` | `cardSummary` 28 dp, 20 dp padding | The PE sport score card (`SportScoreCard`) |
+| `Card.Hero` | `cardHero` 28 dp, `surfaceContainer`, no stroke | The subject result and the person on a profile, above the page's connected groups |
+| `Card.SettingsGroup` | 20 dp, no stroke, inner dividers | One card per settings or profile group, never per row (the kit's `SettingsGroup`) |
+| `Card.ScheduleDay` | `scheduleDay` 16 dp, 16 dp between days | A day of lessons with its timeline (`ScheduleDayCard`) |
 
 ### Connected groups
 
@@ -138,24 +143,23 @@ A list section of a contextual page (the subject page, the links sheet) is a
 heading over one connected group, not a card per row and not rows on the bare
 background:
 
-- The heading (`item_section_heading.xml`): `titleSmall` in `colorPrimary`,
-  16 dp in from the group's edge, 24 dp above (16 dp in a sheet, 8 dp for the
-  first one), 8 dp below; `accessibilityHeading`.
-- The rows: one surface, `colorSurfaceContainerLow` (the surface of schedule
-  days; `colorSurfaceContainerHigh` inside a sheet, which is itself
-  `colorSurfaceContainerLow`), 2 dp apart
-  (`design_group_gap`); the first and the last row round 20 dp outside
-  (`design_group_radius_outer`), every corner between rows is 4 dp
-  (`design_group_radius_inner`). `core/ui/ConnectedGroup.kt`
-  (`GroupPosition`, `View.bindGroupPosition`) draws a row by its position
-  (single, first, middle, last) with a ripple of the same shape, so a
-  RecyclerView row needs no decoration. A row is at least 56 dp high with
-  16 dp of content padding.
-- A sub-heading inside a section (a control group) is `titleSmall` in
-  `colorOnSurface` with its value at the end and starts a group of its own; a
-  group right after another group without a heading keeps 12 dp to it.
+- The heading (the kit's `SectionHeading`): `titleSmall` in `primary`, 16 dp
+  in from the group's edge, 24 dp above (16 dp in a sheet, 8 dp for the first
+  one), 8 dp below; a heading for TalkBack.
+- The rows: one surface, `surfaceContainerLow` (the surface of schedule days;
+  `surfaceContainerHigh` inside a sheet, which is itself `surfaceContainerLow`),
+  2 dp apart; the first and the last row round 20 dp outside, every corner
+  between rows is 4 dp (the `ItmoTheme.shapes` group tokens).
+  `Modifier.connectedGroupItem(position, surface)` draws a row by its
+  `GroupPosition` (single, first, middle, last) on its `GroupSurface` and clips
+  it, so a `clickable` after it ripples in the same shape. A row is at least
+  56 dp high with 16 dp of content padding.
+- A sub-heading inside a section (a control group, the kit's
+  `SectionSubheading`) is `titleSmall` in `onSurface` with its value at the end
+  and starts a group of its own; a group right after another group without a
+  heading keeps 12 dp to it.
 - Own and others' items share the row style; an own one is told by a small
-  `моя` badge (`colorSecondaryContainer`), never by a different surface or
+  `моя` badge (`secondaryContainer`), never by a different surface or
   outline. Others' links carry the compact vote pill `▲ N ▼`
   (the kit's `VotePill`: a 32 dp pill inside 48 dp arrow targets).
 - Captions put a second fact on a second line or join facts with a comma; no
@@ -220,17 +224,15 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
 
 | Screen | Contract |
 |---|---|
-| Compose screens | `AppRefreshBox`: indicator `primary` on a `background` container |
-| XML lists: home, schedule, both sport tabs and a friend's sport, friends and a user's friends | `applyAppRefreshColors()` from `core/ui/RefreshAppearance.kt`: indicator `colorPrimary`, background `android.R.attr.colorBackground` |
-| ITMO.ID web sign-in | Explicit exception: library default indicator. The window follows the app theme (light or dark); only the ITMO.ID page inside it is light |
+| Every screen with pull-to-refresh | The kit's `AppRefreshBox`: the contained expressive loading indicator ([Expressive components](#expressive-components)) |
+| ITMO.ID web sign-in | Explicit exception: the WebView slot's `SwipeRefreshLayout` with the library default indicator. The window follows the app theme (light or dark); only the ITMO.ID page inside it is light |
 
-- First load without any cache: a skeleton (`core/ui/SkeletonView`, styles
-  `Widget.ItmoWidgets.Skeleton.List` and `.Cards`) in the bounded content area
-  that the content will take, pulsing between 55 % and full opacity every 1.2 s
-  and static when the system has animations off; no flash of an empty state
-  before it. A screen that has a cached answer never shows it: the cache renders
-  in the first frame and the refresh reports through the pull-to-refresh
-  indicator over the content.
+- First load without any cache: the kit's `Skeleton` (`SkeletonStyle.List` or
+  `.Cards`) in the bounded content area that the content will take, pulsing
+  between 55 % and full opacity every 1.2 s and static when the system has
+  animations off; no flash of an empty state before it. A screen that has a
+  cached answer never shows it: the cache renders in the first frame and the
+  refresh reports through the pull-to-refresh indicator over the content.
 - Refresh: existing data and scroll position stay. Only a refresh the user asked
   for (pull-to-refresh, `Повторить`) shows the indicator; the automatic refresh
   on entry, on resume, after a period change or the BARS switch is silent and
@@ -248,8 +250,8 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
 
 One family with two sizes: a full state in the content area (64 dp icon) and a
 compact one inside a section (56 dp icon), each with optional icon, title,
-description and optional action. `Widget.ItmoWidgets.ContentState.*` styles hold
-the geometry.
+description and optional action: the kit's `ContentState` and
+`ContentStateLoading` (`ContentStateSize.Full` and `.Compact`).
 
 - Loading, content, empty and error occupy the same bounded area.
 - Empty has a title; a description only when the reason or the next step is
@@ -259,8 +261,8 @@ the geometry.
   filled; a text button is fine in a compact secondary message.
 - A refresh error with data on screen keeps the data and shows a snackbar with
   retry. Toasts are not used for recoverable errors.
-- List and placeholder switch atomically after `submitList` completes; no message
-  under the previous list on an intermediate frame.
+- One state drives the whole area, so list and placeholder switch in one frame;
+  no message under the previous list on an intermediate frame.
 
 ## Screen behaviour
 
@@ -268,21 +270,23 @@ the geometry.
   not recreate the screen or lose scroll position. Root selection or reselection
   closes the whole overlay stack.
 - Motion explains a change and honours the system animator scale (scale 0
-  shows the end state at once). Compose components move with springs from
-  `MotionScheme.standard()`; fixed durations come from `ItmoTheme.motion`. The
-  XML screens use the same values: 180 to 300 ms for transitions and reveals
-  (the sport month label 180 ms, screen slides and the shared axis 220 ms, the
-  sport status 260 ms, the QR settings preview 300 ms) and 700 or 1000 ms for a
-  progress that fills (the sport score). Do not animate unchanged text or flash
-  the screen on refresh. Sport tabs switch by
-  tap and pager gesture; the sport date strip moves only with its arrows
-  ([Tab swipe](#tab-swipe), rules 3 and 4); the month label animates only when
-  the month changes.
-- Every mutable visual property is set on rebind. Past schedule days keep content
-  alpha 0.72; today and future days 1.0; inner lesson rows get no second alpha layer.
+  shows the end state at once). Components move with springs from
+  `MotionScheme.standard()` (`ItmoTheme.motion.scheme`), hero moments with
+  `ItmoTheme.heroMotionScheme`; the few fixed durations come from
+  `ItmoTheme.motion`. The sport week strip and the score card's status move on
+  springs (standard scheme; the status on the hero scheme); the sport score
+  ring and its counters keep a 700 ms fill. A colour that appears or
+  disappears fades its own alpha; never animate a colour to or from
+  `Color.Transparent`, which is transparent black and greys the colour half
+  way. Do not animate unchanged text or flash the screen on refresh. Sport
+  tabs switch by tap and pager gesture; the sport date strip moves only with
+  its arrows ([Tab swipe](#tab-swipe), rules 3 and 4); the month label
+  animates only when the month changes.
+- Past schedule days fade their card content once to 0.72 (`ScheduleDayCard`);
+  today and future days 1.0; inner lesson rows get no second alpha layer.
 - Schedule timeline markers: a hollow neutral circle for a lesson not yet
   started, a filled dot for a past one, a circle with an inner dot in
-  `colorPrimary` for the next official lesson in the loaded range, a filled accent
+  `primary` for the next official lesson in the loaded range, a filled accent
   marker for the lesson in progress. Markers are 12 dp in a 14 dp stable area and
   cover the line with the day surface. Auto-sign rows use the same row and a
   short text note, not a separate card style. States recompute on return and at
@@ -291,7 +295,7 @@ the geometry.
   a visible minimum for every non-zero sector, identical geometry on the first
   and later frames, and values above 100 do not remove the gap.
 - The friend picker is modal: recent chips, bounded search, the whole row as the
-  target, explicit confirmation. Selection is a `colorSecondaryContainer` row
+  target, explicit confirmation. Selection is a `secondaryContainer` row
   surface; a closed schedule shows a lock and leads to the profile.
 - Settings and the profile use quiet group cards with stable row updates.
 - Widgets and the QR pass keep their own launcher-adapted palette and readability
@@ -299,12 +303,13 @@ the geometry.
 - The home feed shows only cards with something to say, in a fixed order, each
   on `Card.Content` with rows of at least 48 dp; hints use `Card.Content.Outlined`
   and close with a trailing icon button. The lesson in progress is told
-  by its time in `colorPrimary`, a filled badge and a thin progress line under
-  the row, never by a filled row. Pull-to-refresh keeps the
-  cards; one snackbar reports a partial failure. The `Мой ИТМО` FAB stays at the
-  bottom end and the list reserves space under it: a list under a stack of FABs
-  (home, schedule) ends with `design_fab_stack_clearance` of bottom padding and
-  `clipToPadding="false"`, so its last item scrolls clear of them.
+  by its time in `primary`, a filled badge and a thin progress line under
+  the row (the wavy hero bar, [Expressive components](#expressive-components)),
+  never by a filled row. Pull-to-refresh keeps the cards; one snackbar reports
+  a partial failure. The `Мой ИТМО` FAB stays at the bottom end and the list
+  reserves space under it: a list under a stack of FABs (home, schedule) ends
+  with `ItmoTheme.spacing.fabStackClearance` of bottom content padding, so its
+  last item scrolls clear of them.
 
 ### Tab swipe
 
@@ -359,45 +364,58 @@ drawing its own variant. The last column says how a component looks under the
 iOS style ([Platform styles](#platform-styles)); "Same" means one drawing on
 both platforms.
 
-| Component | Use | Replaces | On iOS |
-|---|---|---|---|
-| `AppTopBar`, `AppTopBarAction` | Contextual screen: back or close, a title of up to two lines (one over an optional one-line subtitle, such as the My ITMO page's host), trailing actions | `MaterialToolbar` and the hand-built contextual headers | The inline navigation bar: one centred line of headline, the navigation button and the actions in the tint, a hairline when content scrolls under it |
-| `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs; a label on every tab, the FILL 1 icon on the selected one | `BottomNavigationView` (`Widget.ItmoWidgets.BottomNavigationView`) | Not used: the SwiftUI shell's native tab bar |
-| `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | `Widget.ItmoWidgets.ContentState.*` layouts | The action is a button capsule; loading is the large activity indicator |
-| `Skeleton` | First load without a cache, list or cards | `core/ui/SkeletonView.kt` | Shapes in `systemFill`, cards with the inset group's corners; geometry and pulse stay |
-| `AppRefreshBox` | Pull-to-refresh that the user asked for | `SwipeRefreshLayout` with `applyAppRefreshColors()` | Behaves as `UIRefreshControl`: the content follows the pull, the spinner's spokes above it, the refresh haptic at the threshold |
-| `ProgressButton` | A button with its own progress, same size, second tap ignored | `core/ui/ButtonProgress.kt` | A `UIButton` capsule: filled is prominent, tonal and outlined are bordered, text is plain; a press dims it |
-| `ButtonRow` | Two buttons side by side, stacked at full width when the labels do not fit | `core/ui/ButtonRow.kt` | Its buttons take the `ProgressButton` capsules |
-| `Pill` | The `моя` badge, a count, a status in its tone over a 12 % wash | `bg_home_badge` and the badge and status pill views | Capsules in the iOS type |
-| `ToneDot` | The review tone dot, an empty slot until the tone arrives | `bg_teacher_level_dot.xml` with `ImageView.bindLevel` | Same |
-| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise | `core/ui/AvatarView.kt` | Same |
-| `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | `core/ui/ConnectedGroup.kt` (`View.bindGroupPosition`) | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
-| `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | `item_section_heading.xml`; the subject page's `SubjectControlGroupHeading` | A section header in `secondaryLabel` at UIKit's insets |
-| `GroupActionRow` | The last row of a group that leads further | the subject page's `SubjectActionRow` (`Все ссылки`, `Добавить ссылку`, `Все пары`) | A cell with the icon in the tint and the disclosure indicator |
-| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | The v2.2 XML link row and its vote pill | A cell; the vote arrows are 44 pt targets, the pill on `tertiarySystemFill` |
-| `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | the user row of the XML social lists; rows with `bindSelectionAccessibility` | A cell with the disclosure indicator; the selection is the checkmark accessory with the selection haptic |
-| `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | `Card.SettingsGroup` and `item_setting_row.xml`, `item_setting_toggle.xml`, `item_setting_divider.xml` | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
-| `DetailsHeader` | The head of every details sheet | `view_details_header.xml`, `core/ui/DetailsHeader.kt` | Title 2 semibold, secondary text and icons in `secondaryLabel`, the map button a tinted capsule |
-| `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | the handle and header of each sheet layout | No handle (the host's grabber); the header is the sheet's navigation bar ([Platform styles](#platform-styles)) |
-| `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link | `MaterialAlertDialogBuilder` dialogs | Compose-drawn iOS alerts with capsule buttons; no hero icon |
-| `ScoreRing` | The sport score ring | `core/ui/CircularProgressBar.kt` | Same |
-| `GradeScale` | A 0-100 bar with grade ticks | the result card of the subject page (`ui/subject/SubjectHero.kt` of `:shared:feature-recordbook`) | Same |
-| `TimelineMarker`, `TimelineLine` | The schedule timeline | `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule` | Same |
-| `StepsIndicator` | Progress dots of a flow | `OnboardingStepsView`, the first-run flow's dot strip | A `UIPageControl` row of equal dots, the current one in the tint |
+| Component | Use | On iOS |
+|---|---|---|
+| `AppTopBar`, `AppTopBarAction` | Contextual screen: back or close, a title of up to two lines (one over an optional one-line subtitle, such as the My ITMO page's host), trailing actions | The inline navigation bar: one centred line of headline, the navigation button and the actions in the tint, a hairline when content scrolls under it |
+| `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs; a label on every tab, the FILL 1 icon on the selected one | Not used: the SwiftUI shell's native tab bar |
+| `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | The action is a button capsule; loading is the large activity indicator |
+| `Skeleton` | First load without a cache, list or cards | Shapes in `systemFill`, cards with the inset group's corners; geometry and pulse stay |
+| `AppRefreshBox` | Pull-to-refresh that the user asked for | Behaves as `UIRefreshControl`: the content follows the pull, the spinner's spokes above it, the refresh haptic at the threshold |
+| `FeedCard`, `ClosableFeedCard`, `FeedCardHeader`, `FeedRowBadge`, `FeedCloseButton` | A home feed card (`Card.Content`, outlined for hints): its header, a row's label and the trailing close button | Same, on the iOS tokens |
+| `ProgressButton` | A button with its own progress, same size, second tap ignored | A `UIButton` capsule: filled is prominent, tonal and outlined are bordered, text is plain; a press dims it |
+| `ItmoSwitch` | An on/off switch; with no callback it only shows the state and the row carries the toggle | A `UISwitch` in the accent with the toggle haptic |
+| `ItmoActivityIndicator` | A small inline wait that must not change its slot (a switch's slot, a row) | `UIActivityIndicatorView`, medium or large |
+| `ButtonRow` | Two buttons side by side, stacked at full width when the labels do not fit | Its buttons take the `ProgressButton` capsules |
+| `Pill` | The `моя` badge, a count, a status in its tone over a 12 % wash | Capsules in the iOS type |
+| `ToneDot` | The review tone dot, an empty slot until the tone arrives | Same |
+| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise | Same |
+| `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
+| `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | A section header in `secondaryLabel` at UIKit's insets |
+| `GroupActionRow` | The last row of a group that leads further | A cell with the icon in the tint and the disclosure indicator |
+| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | A cell; the vote arrows are 44 pt targets, the pill on `tertiarySystemFill` |
+| `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | A cell with the disclosure indicator; the selection is the checkmark accessory with the selection haptic |
+| `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
+| `DetailsHeader` | The head of every details sheet | Title 2 semibold, secondary text and icons in `secondaryLabel`, the map button a tinted capsule |
+| `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | No handle (the host's grabber); the header is the sheet's navigation bar ([Platform styles](#platform-styles)) |
+| `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link | Compose-drawn iOS alerts with capsule buttons; no hero icon |
+| `InfoDialog` | A message with one button | An iOS alert whose one capsule is the preferred action |
+| `ItmoMenu` | The one menu of actions anchored to its parent, groups with separators, destructive items in the error colour | A context-menu panel drawn in Compose |
+| `ScoreRing` | The sport score ring | Same |
+| `GradeScale` | A 0-100 bar with grade ticks | Same |
+| `TimelineMarker`, `TimelineLine` | The schedule timeline | Same |
+| `StepsIndicator` | Progress dots of a flow | A `UIPageControl` row of equal dots, the current one in the tint |
 
 Experimental and expressive Material components reach screens only through
-`Itmo*` wrappers in `shared/designsystem`, so a material3 line switch stays in
-the module.
+`Itmo*` wrappers in `shared/designsystem` (`designsystem/components/expressive/`),
+so a material3 line switch stays in the module. `ItmoTheme(expressive)` is the
+one switch; heroes read `ItmoTheme.heroMotionScheme`. Where each is used:
+[Expressive components](#expressive-components).
 
-XML screens that are not ported yet keep XML, Material components and their
-helpers. That shared layer is deliberately small: card variants, named
-dimensions, refresh helper, content-state styles, the accessible selection row
-(`bindSelectionAccessibility`), the
-contextual screen header and the details-sheet header
-(`view_details_header.xml`: title, kind, date with the time range and duration,
-teacher, flow, place, map button) that every bottom sheet with a session starts
-with. Shared helpers belong to `core/ui`; screen-specific behaviour to
-`feature/<name>/ui`. Extract only rules that genuinely repeat; do not build a
+| Wrapper | Use | On iOS |
+|---|---|---|
+| `ItmoLoadingIndicator` | A wait shorter than about 5 s outside a button; `contained` in pull-to-refresh | `UIActivityIndicatorView` |
+| `ItmoButtonGroup` | A single choice of two to four short options with a selection required | `UISegmentedControl` with the selection haptic |
+| `ItmoWavyProgress` | Determinate progress of a hero only, linear or circular | A plain `UIProgressView` |
+| `ItmoHeroAvatar` | The person profile hero's avatar under the `MaterialShapes` mask | The round `Avatar` |
+| `ItmoSplitButton` | A primary action with a menu of its variants | A capsule with a chevron half that opens `ItmoMenu` |
+| `ItmoFabMenu` | A FAB that opens a menu of actions above it | A round filled toggle that opens `ItmoMenu` |
+| `ItmoFloatingToolbar` | More than two icon actions floating over the content, never docked with the navigation bar | An opaque capsule of tinted icons |
+
+Sheets and dialogs reach the Android window through the kit's hosts in
+`designsystem/host/` (`ItmoBottomSheetFragment` hosts a `SheetScaffold` body);
+on iOS a SwiftUI `.sheet` hosts the same body. Shared helpers that are not
+drawing (texts, formatters) belong to `:shared:core`; screen-specific parts to
+the feature's `ui/`. Extract only rules that genuinely repeat; do not build a
 universal renderer.
 
 ## Platform styles
@@ -476,46 +494,99 @@ screen do not change between styles.
   with SF but not in the JVM capture is a finding of that screen; the
   `ios-narrow` baseline is the JVM's guard for long text.
 
+### SwiftUI screens (iOS)
+
+SwiftUI-owned screens (the shell, settings, sign-in, the first-run flow, the
+web sign-in, the update offer) and the system surfaces (widgets, the Control,
+quick actions) follow Apple's HIG: native controls tinted with the shared
+tokens (`Tokens.generated.swift`: `ItmoColor`, `Font.itmo`, `ItmoSpacing`),
+Dynamic Type text styles, no fixed sizes. The Compose screens draw the kit's
+iOS style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
+
+- Icons: SF Symbols through `AppSymbol` (generated from `docs/design/icons.tsv`)
+  on SwiftUI and system surfaces; Material Symbols Rounded in Compose
+  ([ADR 0028](decisions/0028-strings-and-icons.md)).
+- Chrome rule: a Compose route draws its own top bar and hides the navigation
+  bar (edge swipe back stays on); a SwiftUI screen keeps the native bar. Sheets
+  are SwiftUI `.sheet`s with system detents and drag indicator hosting the
+  shared sheet content, never a Compose `ModalBottomSheet`.
+- Tabs switch by the native tab bar only ([Tab swipe](#tab-swipe)).
+
+Details: [iOS app](ios.md#design-system).
+
 ## Expressive components
 
 The Material 3 Expressive look arrived as one token change
 ([ADR 0021](decisions/0021-m3-expressive-order.md)): the owner's answers below,
-the brand static scheme and the expressive switch on. Each feature takes the
-rules below in one expressive pass over its ported screens, through the
-`Itmo*` wrappers only.
-Behaviour, semantics, strings and stable identifiers do not change in a pass.
+the brand static scheme and the expressive switch on. Every feature then took
+the rules below in one expressive pass over its screens, through the `Itmo*`
+wrappers only; a new screen follows them from the start. Behaviour, semantics,
+strings and stable identifiers do not change for the look.
 
 - **Intensity: Foundational.** The quiet surfaces stay. Emphasis comes from
   type, shape and motion on a few elements, never from colour fills.
-- **At most two hero moments per flow.** The candidates: the QR pass reveal,
-  the person profile hero, the sport score ring and the lesson in progress on
-  home; the subject result card stays the only hero of the subject page. Only a
-  hero gets expressive motion, wavy progress, emphasized display type or a
-  `MaterialShapes` mask (the profile avatar only). A list row never does.
-- **Loading.** `LoadingIndicator` for a wait shorter than about 5 s (a section,
-  a sheet, a dialog), the contained `LoadingIndicator` in pull-to-refresh
-  (`AppRefreshBox`). Never inside a button: `ProgressButton` keeps its small
-  circular indicator. First loads keep the skeleton. Determinate progress in
-  dense rows stays a flat linear bar; a wavy one only for a hero.
-- **Tabs and toggles.** The sport tabs become secondary tabs or a connected
-  button group; tabs stay only where the content swipes. A segmented toggle
-  (the friend picker's scope) becomes a connected button group, single-select
-  with a selection required; so may a single-select chip set of up to four
-  options. Filter chips stay chips. Detail screens get no tabs.
+- **At most two hero moments per flow.** Only a hero gets expressive motion,
+  wavy progress, emphasized display type or a `MaterialShapes` mask (the
+  profile avatar only). A list row never does. The heroes:
+  - the QR pass: a code that arrives while the screen is open grows and fades
+    in on the hero motion scheme (`QrPassScreen`);
+  - the lesson in progress on home, the home flow's second hero: its elapsed
+    share is `ItmoWavyProgress`; every other schedule row keeps plain type and
+    no progress;
+  - the sport score card: the ring keeps its 700 ms fill, the status chip grows
+    in on the hero springs (`SportScoreCard`);
+  - the subject result card, the subject page's one hero: the points in
+    emphasized `headlineMedium`, and a score that arrives while the page is
+    open fills the grade scale on the hero springs (`rememberSubjectHeroFill`,
+    held outside the list);
+  - the person profile hero: `ItmoHeroAvatar` under the nine-sided cookie and
+    the name in emphasized `titleLarge`, revealed when the person arrives
+    while the screen is open (`ProfileHeroReveal`).
+
+  A hero that is already there on the first frame, and every hero under
+  reduced motion, shows at once; scrolling it away and back never replays it.
+  Onboarding, sign-in, settings, the links and reviews sheets and the schedule
+  tab have no hero.
+- **Loading.** `ItmoLoadingIndicator` for a wait shorter than about 5 s outside
+  a button (a section, a sheet, a dialog: the lesson sheet's friends, the
+  privacy audiences, the sign-in session check), the contained one in
+  pull-to-refresh (`AppRefreshBox`). Both are the app's
+  `ItmoMorphingIndicator`: Material's `LoadingIndicator` size and colours,
+  morphing through `ItmoLoadingShapes` (Material's sequence without the
+  odd-symmetric Cookie9Sided and Pentagon) about the shape's centroid, every
+  650 ms one shape and 112.5 degrees on one eased curve `(0.38, 1.21, 0.22, 1)`
+  (the web indicator's), without Material's spring snap. It opens resting on
+  its first shape; under reduced motion it stays on it. In pull-to-refresh the
+  pulled shape is drawn at the turning shape's size, so the handoff keeps size
+  and angle. Never inside a button: `ProgressButton` keeps its small circular
+  indicator, and an inline wait that must keep its slot (the services opt-in
+  switch) keeps `ItmoActivityIndicator`. First loads keep the skeleton.
+  Determinate progress in dense rows (recordbook scores, the people search
+  load-more edge, the My ITMO page load) stays a flat linear bar.
+- **Tabs and toggles.** Tabs stay only where the content swipes: the sport tabs
+  are secondary tabs over their pager. A segmented toggle becomes
+  `ItmoButtonGroup`, single-select with a selection required (the friend
+  picker's scope); so may a single-select chip set of up to four options.
+  Filter chips stay chips (the BARS chip, link categories, review subjects),
+  and a choice in a dialog or with second lines stays radios. Detail screens
+  get no tabs.
 - **Buttons and toolbars.** A split button only where a primary action has a
-  menu of variants (the `.ics` export and its ranges). A floating toolbar only
-  for more than two actions, never docked together with the navigation bar.
+  menu of variants; none does today (the `.ics` sheet is a choice of ranges,
+  each showing its days). A floating toolbar only for more than two actions,
+  never docked together with the navigation bar; top bars with up to two
+  actions stay top bars. The FAB pairs stay two stacked FABs (below).
 - **Motion in spring terms.** Components take `MotionScheme.standard()`;
   `MotionScheme.expressive()` only for hero moments; fixed tweens become
-  springs; contextual screens and sheets follow predictive back. Under reduced
-  motion the end state shows at once.
+  springs (the schedule's scroll-to-top FAB, the sport week strip and score
+  collapse, the onboarding step change); contextual screens and sheets follow
+  predictive back. Under reduced motion the end state shows at once.
 - **Shapes.** Connected groups already have the expressive connected-list shape
   (`largeIncreased` 20 dp outside, `extraSmall` 4 dp inside) and keep it.
-- **Not yet.** Flexible app bars, expressive list items, the `SearchBar` state
-  and `BottomAppBar` are missing from the pinned material3 line
-  (`1.12.0-alpha03`) and wait for the next line; no Android-only actuals stand
+- **Not used yet.** Flexible app bars, expressive list items, the `SearchBar`
+  state and `FlexibleBottomAppBar` exist on the pinned material3 line
+  (`1.12.0-alpha03`) but are not used by choice; no Android-only actuals stand
   in for them unless the owner asks.
-- **Out of the pass.** Widgets, the quick-settings tile, shortcut and
+- **Out of the look.** Widgets, the quick-settings tile, shortcut and
   notification icons keep their own palette; WebViews and the ITMO.ID page stay
   as they are.
 
@@ -548,14 +619,14 @@ only. Compilation is not visual verification.
   at before it is committed.
 - **Four appearances** (light; dark; a seeded palette at font scale 1.3 on a
   320 dp width; dark with another seed at 1.3 on 320 dp) for the kit, always,
-  and for a feature's screens on its last port; once recorded, every run
-  verifies them.
-- **Ports.** Before a screen is ported, a JVM reference capture of its XML
-  screen is recorded under the future preview's name; the port's re-record diff
-  is the parity diff.
+  and for every feature's screens; once recorded, every run verifies them. The
+  kit and the QR pass also record the three iOS appearances
+  ([Platform styles](#platform-styles)).
+- **A look change** (a token, a kit component, a pass) re-records the affected
+  baselines in one PR; the re-record diff is the review.
 - **Emulator** only for Android-only surfaces: widgets, the quick-settings tile,
-  shortcuts, WebView, notifications and the instrumented tests of screens not
-  ported yet, through `scripts/verify.sh ui` on a pool emulator.
+  shortcuts, WebView, notifications and the platform tests, through
+  `scripts/verify.sh ui` on a pool emulator.
 - **Release candidate.** The full matrix: `scripts/verify.sh shots all --gallery <dir>`
   plus an emulator pass that covers
   - light and dark theme, at least one non-default Material You palette on
@@ -575,17 +646,17 @@ Screenshot tests run on the JVM (Roborazzi on Robolectric) from each module's
 `@Preview`s:
 
 ```bash
-scripts/verify.sh shots <module>                  # compare shared/<module>: light and dark (the kit: all four)
+scripts/verify.sh shots <module>                  # compare shared/<module>: every recorded appearance
 scripts/verify.sh shots <module> --record         # re-record after a deliberate change, then look at every PNG
 scripts/verify.sh shots <module> --record -Pshots.appearance=full   # also the two narrow appearances
-scripts/verify.sh shots app                       # :app: XML reference captures and the harness proof
+scripts/verify.sh shots app                       # :app: the shell chrome and the debug screens
 scripts/verify.sh shots all                       # every module plus :app, what CI runs
 scripts/verify.sh shots all --gallery <dir>       # every capture in four appearances into <dir>, no compare
 ```
 
 - Baselines live in `<module>/screenshots/` as `<Preview>_<appearance>.png`
-  (`<Preview>_<state>_<appearance>.png` for a named preview state); XML
-  references of screens not ported yet are listed in
+  (`<Preview>_<state>_<appearance>.png` for a named preview state); captures
+  that no preview renders (the shell chrome of `:app`) are listed in
   `<module>/screenshots/references.txt`. A run also fails on a stale baseline
   or a preview without one.
 - A failed comparison writes `<name>_compare.png` (reference, diff, new) to
@@ -597,10 +668,14 @@ scripts/verify.sh shots all --gallery <dir>       # every capture in four appear
   anti-aliasing of curved edges and text between arm64 and x86_64; one changed
   pixel still fails.
 - Galleries are for review only; never copy a gallery PNG into `screenshots/`.
+- `-Pshots.variant=<set>[,<set>...] -Pshots.out=<absolute dir>` renders the
+  previews in light and dark with the named M3E candidate sets of
+  `M3eValues.kt` into contact sheets instead of comparing; it served the
+  owner's value decision and changes no baseline.
 
 Instrumented tests stay for what only a device shows: widgets, the
-quick-settings tile, WebView, notifications and the platform list, plus the
-visual tests of screens not ported yet. They run on a pool emulator through
+quick-settings tile, WebView, notifications and the platform list
+(`app/src/androidTest/platform-tests.txt`). They run on a pool emulator through
 `scripts/verify.sh ui`, never with bare `adb` or Gradle commands against a
 shared device:
 
@@ -654,18 +729,42 @@ settle when switching appearances. Wait for feedback dismissal after retry.
 These are local host overrides: preserve the emulator's global theme/font
 settings, and restore them if a separate test explicitly changes them.
 
+## System surfaces
+
+The surfaces the system draws stay Views and keep the v2.2 look; neither the
+M3E token change nor the expressive passes touched them.
+
+- Widgets: RemoteViews with their own launcher-adapted palette (the
+  `widget_*` colours: the wallpaper's on Android 12+, the M3 baseline
+  `#6750A4` below); on Android 12+ they follow the launcher's widget corner
+  radius. Rules in [Widgets](features/widgets.md).
+- The quick-settings tile icon `res/drawable/ic_tile_qr.xml` (Material Symbols
+  `qr_code`, white, no theme tint: SystemUI colours tile icons and resolves no
+  app theme attributes).
+- The shortcut icons `res/drawable/ic_shortcut_qr.xml` and
+  `ic_shortcut_today.xml`: adaptive icons without a tint (white background like
+  the launcher icon, `qr_code` and `schedule` 36 dp in `#4984E2` in the safe
+  zone of the 108 dp foreground); notification icons are system-tinted masks.
+- The WebView slots of the ITMO.ID and BARS sign-in pages and the spoiler
+  image crop screen keep the View theme around content the app does not draw.
+
 ## Reference implementations
 
-- Schedule day: `feature/schedule/ui/list/ScheduleDayCard.kt` and `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule`.
-- Sport cards: the `Мой спорт` booking card `SportBookingCard`, the `Запись` lesson card `SportLessonCard` in
-  `:shared:feature-sport`, details sheet `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt`.
-- Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsScreen.kt` in `:shared:feature-settings`.
-- System surfaces: the quick-settings tile icon `res/drawable/ic_tile_qr.xml`
-  (Material Symbols `qr_code`, white, no theme tint: SystemUI colours tile icons
-  and resolves no app theme attributes); the shortcut icons
-  `res/drawable/ic_shortcut_qr.xml` and `ic_shortcut_today.xml`, adaptive icons
-  without a tint (white background like the launcher icon, `qr_code` and
-  `schedule` 36 dp in `#4984E2` in the safe zone of the 108 dp foreground).
+Compose screens that show a rule of this guide best; the kit parts they use are
+in [Shared components](#shared-components).
+
+- Schedule day: `ScheduleDayCard` and the rows of
+  `feature/schedule/ui/list/ScheduleRows.kt` in `:shared:feature-schedule`
+  (`ui/list/`).
+- Sport cards: the `Мой спорт` score card `SportScoreCard` (`Card.Summary`, the
+  sport flow's hero) and booking card `SportBookingCard`, the `Запись` lesson
+  card `SportLessonCard` and week strip `SportWeekStrip`, the details sheet
+  `SportDetailsSheetContent` (`ui/details/`) in `:shared:feature-sport`.
+- Settings and profile groups: `SettingsScreen` in `:shared:feature-settings`
+  (`feature/settings/ui/SettingsScreen.kt`) and `MeScreen` in
+  `:shared:feature-account`, on the kit's `SettingsGroup` and `SettingsRow`.
+- QR pass: `QrPassScreen` in `:shared:feature-qr` (`feature/qr/ui/`), the hero
+  reveal of [Expressive components](#expressive-components).
 - Recordbook row: `SubjectRow` in `feature/recordbook/ui/RecordbookScreen.kt` of
   `:shared:feature-recordbook` (name, metadata, a number with a thin bar or a
   grade badge). The name and the new-mark dot for unread marks share a
@@ -686,15 +785,16 @@ settings, and restore them if a separate test explicitly changes them.
   groups of links, chats, controls (`SubjectControlRow`,
   `SubjectControlGroupHeading`), teachers and lessons, in the files of
   `ui/subject/`.
-- Connected groups: `core/ui/ConnectedGroup.kt`, `res/layout/item_section_heading.xml`;
-  link rows are the kit's `LinkRow` with its `VotePill`
-  (`components/rows/LinkRow.kt`, `components/rows/VotePill.kt` of `:shared:designsystem`).
+- Connected groups: the kit's `Modifier.connectedGroupItem` and
+  `SectionHeading` (`components/groups/` of `:shared:designsystem`); link rows
+  are the kit's `LinkRow` with its `VotePill` (`components/rows/LinkRow.kt`,
+  `components/rows/VotePill.kt`).
 - Sheet total on the subject page: `SubjectSheetTotal`
   (`ui/subject/SubjectSheetTotal.kt` of `:shared:feature-recordbook`) at the
   bottom of the result card under a hairline (`ic_table`, the
   value in `titleMedium`, `путь, лист «Лист»` and a status line in
   `bodySmall`, the status under the 48 dp `⋮` so it never wraps beside it, the
-  glyph in line with the card's content edge; failures in `colorError`), or the
+  glyph in line with the card's content edge; failures in `error`), or the
   text button `Мои баллы из таблицы` with `ic_table` in its place; several
   sheet links ask `Какая таблица?` in the kit's `ChoiceDialog`.
 - The «Мои баллы» sheet: `SheetScoresSheet` of `:shared:feature-recordbook`
@@ -710,9 +810,9 @@ settings, and restore them if a separate test explicitly changes them.
   an empty range and failures; the ranges are connected-group rows: title
   `bodyLarge`, days `bodySmall`, chevron), hosted by
   `feature/settings/ui/IcsExportBottomSheet.kt`.
-- Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt` (connected
-  groups per category), `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`;
-  rows are the kit's `LinkRow`.
+- Link sheets: `SubjectLinksSheet` (connected groups per category),
+  `LinkEditorSheet` and `LinkActionsSheet` in `:shared:feature-resources`
+  (`feature/resources/ui/`); rows are the kit's `LinkRow`.
 - Person profile: Compose in `:shared:feature-social`
   (`feature/social/ui/profile/UserProfileScreen.kt`): the hero `ProfileHero.kt`
   (`Card.Hero`: avatar, name, one short line, the ISU number with a copy symbol
@@ -726,7 +826,7 @@ settings, and restore them if a separate test explicitly changes them.
   `⋮`; the full text; a footer: on the left who wrote it in `bodyMedium`, a
   named author or the source as a link, otherwise `Анонимный отзыв`, and under
   it the verification in `bodySmall`, `Вёл у автора` with a 16 dp `ic_check` in
-  `colorPrimary` or a muted `Не подтверждён`; on the right the kit's vote pill
+  `primary` or a muted `Не подтверждён`; on the right the kit's vote pill
   centred on that column; 12 dp under the footer,
   16 dp under a row that ends with its text), `OwnTeacherReviewRow.kt` (`мой`,
   a status pill as a 12 % wash of its tone: content-based palettes make
@@ -736,28 +836,28 @@ settings, and restore them if a separate test explicitly changes them.
   and cons as icon rows, tag chips and five scales
   collapsed behind the text button `Подробнее`/`Свернуть` whose 48 dp target
   reaches into the card padding).
-- Tone dot: `res/drawable/bg_teacher_level_dot.xml` tinted by
-  `core/ui/TeacherLevelTone.kt` (`ImageView.bindLevel`), in the lesson sheet's
-  teacher fact (`fact_mark` in `res/layout/item_sport_detail_fact.xml`) and the
-  subject page's teacher rows (the kit's `ToneDot` in `SubjectTeacherRow` of
-  `:shared:feature-recordbook`);
-  its place is reserved where a late dot would otherwise move the row.
+- Tone dot: the kit's `ToneDot`, in the teacher row of the kit's
+  `DetailsHeader` (`DetailsTeacher.tone`) in the lesson sheet and in
+  the subject page's teacher rows (`SubjectTeacherRow` of
+  `:shared:feature-recordbook`); its place is reserved (`reserveTone`) where a
+  late dot would otherwise move the row.
 - Review editor: Compose in `:shared:feature-reviews` (`feature/reviews/ui/ReviewEditorSheet.kt`),
   hosted by `feature/reviews/ui/ReviewEditorBottomSheet.kt`. A form sheet without a handle
   that cannot be dragged or dismissed outside: Back and the close button ask
   `Не сохранять отзыв?` only when something changed. The title has a second line
   with the teacher's short name; subject suggestions are filter chips that mark
   the picked one.
-- Clickable teacher fact in details headers: `res/layout/item_sport_detail_fact.xml`,
-  `core/ui/DetailsHeader.kt` (`bindAction` resets chevron, ripple, touch target
-  and accessibility action when the identifier is absent).
-- Avatar image failure: `core/ui/AvatarView.kt` keeps current initials ready and
-  guards the posted Glide fallback against a newer binding or successful load.
+- Clickable teacher fact in details headers: the kit's `DetailsHeader`; only a
+  teacher with an id gets `onClick`, and with it the chevron, the touch target
+  and the TalkBack action.
+- Avatar image failure: the kit's `Avatar` shows the initials until the photo
+  loads and whenever it fails; each URL is its own request, so a late failure
+  of an earlier URL never replaces a newer photo.
 - Friend picker: Compose in `:shared:feature-social`
   (`feature/friendselector/ui/FriendSelectorSheetContent.kt`) on the kit sheet host,
   `FriendSelectorDialogFragment` at 90 % height. Rows are the kit's `UserSelectionRow`
   with `onOpen` (a closed schedule ends in a lock and opens the profile, a long
-  press opens it from any row); the chosen row lies on `colorSecondaryContainer`;
+  press opens it from any row); the chosen row lies on `secondaryContainer`;
   the scope is `ItmoButtonGroup`.
 - Home feed: Compose in `:shared:feature-home`
   (`feature/home/ui/HomeScreen.kt`, each card in its feature's `ui/home`), see
@@ -775,11 +875,11 @@ settings, and restore them if a separate test explicitly changes them.
   one TalkBack node. Day titles are `titleSmall` in `onSurfaceVariant` headings
   above their rows; an empty history is the kit's `ContentState` with
   `ic_history`. On lesson cards the
-  mark `change_indicator` (`ic_edit_calendar`, 16 dp, `colorPrimary`) after the
+  mark `change_indicator` (`ic_edit_calendar`, 16 dp, `primary`) after the
   video-call mark in `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule`; in the lesson sheet
   the `Изменения` block (divider, heading, `было → стало` lines) in
   `feature/schedule/ui/details/LessonDetailsSections.kt` of `:shared:feature-schedule` and
   the informational flow row between teacher and place of the kit's `DetailsHeader`.
-- Visual tests: the `RecordbookScreen_*`, `RecordbookSubjectScreen_*`, `Subject*` and
-  `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`; the links sheets are JVM tests
-  and the `:shared:feature-resources` goldens.
+- Visual tests: every module's goldens under `<module>/screenshots/`, for
+  example the `RecordbookScreen_*`, `RecordbookSubjectScreen_*`, `Subject*` and
+  `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`.
