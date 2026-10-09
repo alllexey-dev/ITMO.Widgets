@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -41,6 +40,7 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialogSurface
+import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthUiState
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
@@ -75,7 +75,7 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * The sign-in screen (`auth`): the logo, the app name, what the app does, the ITMO.ID sign-in and the refresh-token
- * sign-in, with the notices under them. While the session is checked only a spinner shows. The logo is the hidden
+ * sign-in, with the notices under them. While the session is checked only the loading indicator shows. The logo is the hidden
  * demo entry: every tap goes to [onLogoTap] through a plain pointer handler, not a click, so accessibility services
  * never stop on it. [onSignInWithToken] gets the token typed into the refresh-token dialog; the token lives in that
  * dialog's composition only and is dropped when the dialog closes.
@@ -96,7 +96,7 @@ fun AuthScreen(
     ) {
         if (state.initializing) {
             val description = stringResource(CoreRes.string.auth_initializing)
-            CircularProgressIndicator(
+            ItmoLoadingIndicator(
                 Modifier
                     .align(Alignment.Center)
                     .testTag(AuthTestTags.PROGRESS)
@@ -191,13 +191,12 @@ private fun AuthContent(
         )
         if (state.manualLoginInProgress || state.sessionTransitionInProgress) {
             val description = stringResource(CoreRes.string.auth_signing_in)
-            CircularProgressIndicator(
+            ItmoLoadingIndicator(
                 Modifier
                     .padding(top = ItmoTheme.spacing.compact)
                     .size(ManualProgressSize)
                     .testTag(AuthTestTags.MANUAL_PROGRESS)
                     .semantics { contentDescription = description },
-                strokeWidth = ManualProgressStroke,
             )
         }
         Text(
@@ -343,5 +342,5 @@ private val ScreenPadding = 24.dp
 private val TopPadding = 64.dp
 private val BottomPadding = 32.dp
 private val ButtonsTopPadding = 32.dp
+/** The XML `manual_login_progress`'s 32 dp, now the kit's loading indicator for a short wait. */
 private val ManualProgressSize = 32.dp
-private val ManualProgressStroke = 3.dp
