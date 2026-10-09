@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.sport.ui.sign
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -78,7 +77,8 @@ object SportWeekStripTestTags {
  * The weeks sit in a [HorizontalPager] that only the arrows move ([SportSignUiState.Content.selectedWeekIndex] after
  * [onPreviousWeek] or [onNextWeek]); a horizontal swipe moves neither the week nor the bottom tabs
  * ([tabSwipeBlocked], design.md "Tab swipe" rule 4). A day is picked by a tap ([onSelectDate]). The month label fades
- * in when the month changes and the newly selected day scales in, both skipped under reduced motion.
+ * in when the month changes and the newly selected day scales in, on the standard motion scheme's springs like the
+ * week change after an arrow; all of it is skipped under reduced motion.
  */
 @Composable
 fun SportWeekStrip(
@@ -141,7 +141,7 @@ private fun MonthLabel(month: String, modifier: Modifier) {
         shown = month
         if (changed && animate) {
             alpha.snapTo(MonthStartAlpha)
-            alpha.animateTo(1f, tween(motion.quickMillis, easing = motion.easing))
+            alpha.animateTo(1f, motion.scheme.fastEffectsSpec())
         }
     }
     Text(
@@ -196,7 +196,7 @@ private fun WeekPager(weeks: List<List<CalendarDay>>, selectedWeekIndex: Int, on
         if (animate) {
             pagerState.animateScrollToPage(
                 selectedWeekIndex,
-                animationSpec = tween(motion.standardMillis, easing = motion.easing),
+                animationSpec = motion.scheme.defaultSpatialSpec(),
             )
         } else {
             pagerState.scrollToPage(selectedWeekIndex)
@@ -253,7 +253,7 @@ private fun DayCell(day: CalendarDay, onSelectDate: (LocalDate) -> Unit, modifie
         day.hasAvailableLessons -> colors.secondaryContainer to colors.onSecondaryContainer
         else -> Color.Transparent to colors.onSurface
     }
-    val colorSpec = if (animate) tween<Color>(motion.standardMillis, easing = motion.easing) else snap()
+    val colorSpec = if (animate) motion.scheme.fastEffectsSpec<Color>() else snap()
     val cardColor by animateColorAsState(targetCard, colorSpec)
     val textColor by animateColorAsState(targetText, colorSpec)
     val scale = remember { Animatable(1f) }
@@ -263,7 +263,7 @@ private fun DayCell(day: CalendarDay, onSelectDate: (LocalDate) -> Unit, modifie
         wasSelected = day.isSelected
         if (newlySelected && animate) {
             scale.snapTo(SelectedStartScale)
-            scale.animateTo(1f, tween(motion.standardMillis, easing = motion.easing))
+            scale.animateTo(1f, motion.scheme.fastSpatialSpec())
         }
     }
     val quiet = !day.isSelected && !day.isToday && !day.hasAvailableLessons && !day.hasLessons

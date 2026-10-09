@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.sport.ui.my
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyListState
@@ -137,7 +136,7 @@ fun rememberSportScoreCollapseState(listState: LazyListState): SportScoreCollaps
     val motion = ItmoTheme.motion
     val reducedMotion = rememberReducedMotion()
     SideEffect {
-        state.settleSpec = if (reducedMotion) null else tween(motion.standardMillis, easing = motion.easing)
+        state.settleSpec = if (reducedMotion) null else motion.scheme.defaultSpatialSpec()
     }
     return state
 }
