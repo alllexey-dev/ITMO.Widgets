@@ -18,3 +18,9 @@
   `shared/backend-client/CONTRACT.md`.
 - Areas still on Core 1.x (`itmo-widgets-core` 1.7.0, frozen) keep it until
   they move to Core 2.0.
+- Every request to Backend carries `X-App-Version`
+  (`<versionName> (<build>); <platform>; <distribution>`, e.g.
+  `2.3.0-beta.1 (20291); android; github`) from `ClientVersion`: Android
+  builds it from `BuildConfig` and the flavor, iOS from the bundle
+  (`appstore`, or `dev` for a debug binary). MyItmoApi and other hosts never
+  get it.

@@ -45,7 +45,7 @@ class PushDeviceRegistrationTest {
     private var alerts = true
 
     private val registration = PushDeviceRegistration(
-        devices = BackendClient(ORIGIN, AccessTokenSource { "synthetic-access" }, engine).device,
+        devices = BackendClient(ORIGIN, AccessTokenSource { "synthetic-access" }, engine, null).device,
         device = device,
         registrations = registrations,
         gate = gate,

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.systemAppDispatchers
@@ -20,6 +21,7 @@ import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.network.darwinHttpEngine
 import dev.alllexey.itmowidgets.core.platform.AppBundleVersion
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
+import dev.alllexey.itmowidgets.core.platform.IosClientVersion
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.platform.IosPlatformActions
 import dev.alllexey.itmowidgets.core.platform.IosPlatformCapabilities
@@ -81,12 +83,14 @@ import org.koin.dsl.module
  * by IO-21); ports still in `:app` (`AppNotifier`, `FcmTokenSync`) are bound by the card that needs them.
  *
  * [backendOrigin] is the build's Backend, from the app's Info.plist ([BackendOrigin]), and the site the share links
- * name, as Android's `WIDGETS_BASE_URL` is both; [appVersion] its marketing version ([AppBundleVersion]).
+ * name, as Android's `WIDGETS_BASE_URL` is both; [appVersion] its marketing version ([AppBundleVersion]);
+ * [clientVersion] the build every Backend request names in `X-App-Version` ([IosClientVersion]).
  */
 fun iosCoreModule(
     host: IosCoreHost,
     backendOrigin: String = BackendOrigin.fromMainBundle(),
-    appVersion: String = AppBundleVersion.fromMainBundle()
+    appVersion: String = AppBundleVersion.fromMainBundle(),
+    clientVersion: ClientVersion = IosClientVersion.fromMainBundle()
 ): Module = module {
     single<WidgetReloader> { host }
     single { ShareLinkFactory(backendOrigin) }
@@ -145,7 +149,9 @@ fun iosCoreModule(
             refreshGuard = get<CrossProcessLock>().myItmoRefreshGuard()
         )
     }
-    single<BackendClient> { BackendClientFactory.create(backendOrigin, get<MyItmoClient>().tokens, get()) }
+    single<BackendClient> {
+        BackendClientFactory.create(backendOrigin, get<MyItmoClient>().tokens, get(), clientVersion)
+    }
     single<UsersApi> { get<BackendClient>().users }
 
     // An open set: each contribution is qualified (recipe koin-module).

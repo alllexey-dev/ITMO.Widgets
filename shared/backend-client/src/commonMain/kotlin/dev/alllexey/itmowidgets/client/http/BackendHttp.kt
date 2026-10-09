@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.client.http
 
 import dev.alllexey.itmowidgets.client.AccessTokenSource
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.json.BackendJson
 import io.ktor.client.HttpClient
@@ -26,9 +27,15 @@ import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The HTTP core every `Ktor<Area>Api` calls. It owns the status-first decoding: a non-2xx status becomes a typed
- * [BackendException] before the body is decoded, so an HTML 502 or an empty 401 never crashes the decoder.
+ * [BackendException] before the body is decoded, so an HTML 502 or an empty 401 never crashes the decoder. Every
+ * request carries [version] as [ClientVersion.HEADER] when the holder gave one.
  */
-internal class BackendHttp(baseUrl: String, private val tokens: AccessTokenSource, engine: HttpClientEngine) {
+internal class BackendHttp(
+    baseUrl: String,
+    private val tokens: AccessTokenSource,
+    engine: HttpClientEngine,
+    private val version: ClientVersion?,
+) {
     private val origin = URLBuilder(baseUrl).build()
 
     private val client = HttpClient(engine) {
@@ -65,6 +72,7 @@ internal class BackendHttp(baseUrl: String, private val tokens: AccessTokenSourc
                     route.query.forEach { (name, value) -> if (value != null) parameters.append(name, value) }
                 }
                 if (token != null) header(HttpHeaders.Authorization, "Bearer $token")
+                if (version != null) header(ClientVersion.HEADER, version.headerValue)
                 route.body?.let {
                     contentType(ContentType.Application.Json)
                     setBody(it.value, it.type)
