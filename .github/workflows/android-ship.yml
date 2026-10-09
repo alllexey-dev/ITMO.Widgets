@@ -97,9 +97,10 @@ jobs:
           set -o pipefail
           scripts/ci-emulator.sh wait --cutout none | tee -a "$GITHUB_ENV"
 
+      # --local: every selected stage runs here (ship-check.sh would otherwise read stages 5 and 6 from this check).
       - name: ship-check.sh --only ${{ matrix.only }}
         run: |
-          flags="--keep-going --only ${{ matrix.only }}"
+          flags="--local --keep-going --only ${{ matrix.only }}"
           [ "${{ matrix.device }}" = true ] || flags="--no-device $flags"
           scripts/ship-check.sh $flags
 
@@ -162,12 +163,12 @@ jobs:
             dir="parts/ship-part-$part/$sha"
             if [ ! -f "$dir/summary.md" ]; then
               echo "::error::part $part left no summary (missing run)"
-              rows="$rows| $part | MISSING | - | - |"$'\n'
+              rows="$rows| $part | MISSING | - | - | - |"$'\n'
               ok=1
               continue
             fi
             cp "$dir"/*.log "$out/" 2> /dev/null || true
-            rows="$rows$(grep -E '^\| [0-9] ' "$dir/summary.md")"$'\n'
+            rows="$rows$(grep -E '^\| [0-9] ' "$dir/summary.md" | sed "s#| local |#| CI run $RUN_URL |#")"$'\n'
             head=$(sed -n 's/^- Head: `\(.*\)`$/\1/p' "$dir/summary.md")
             started=$(sed -n 's/^- Started: //p' "$dir/summary.md")
           done
@@ -175,9 +176,10 @@ jobs:
             printf '# Ship check %s\n\n' "$sha"
             printf -- '- Head: `%s`\n' "${head:-unknown}"
             printf -- '- Worktree: `%s`\n' "$RUN_URL"
-            printf -- '- Mode: ci (android-ship: stages 1, 3, 5, 6; stage 2 is verify-quick, stage 4 is android-ui)\n'
+            printf -- '- Mode: android-ship\n'
+            printf -- '- Source: stages 1, 3, 5, 6 in this CI run; stage 2 is the verify-quick check, 4 android-ui\n'
             printf -- '- Started: %s\n\n' "${started:-unknown}"
-            printf '| Stage | Result | Time | Log |\n|---|---|---|---|\n'
+            printf '| Stage | Result | Time | Source | Log |\n|---|---|---|---|---|\n'
             printf '%s' "$rows" | grep . | sort
           } > "$out/summary.md"
           cat "$out/summary.md" >> "$GITHUB_STEP_SUMMARY"
