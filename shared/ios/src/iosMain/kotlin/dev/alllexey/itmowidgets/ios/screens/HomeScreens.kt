@@ -27,7 +27,7 @@ import platform.UIKit.UIViewController
 
 /**
  * The home tab's root (`AppRoutes.TabRoot(HOME)`), LH-2's route as Android's shell hosts it, with the renderers of the
- * kinds iOS offers (`offeredBy`: no new-marks card before IO-09d3). Cards and buttons open their keys through [open],
+ * kinds iOS offers (`offeredBy`: the new-marks card since IO-09d3). Cards and buttons open their keys through [open],
  * the Swift router, as Android's `homeActions` does: a key iOS has no screen for yet opens nothing. The two hints
  * only the platform can act on go to Swift: [showWidgetHowTo] (iOS lets no app place a widget, so the hint explains
  * how) and [requestNotifications] (the system dialog, or the app's notification settings once iOS has asked); the

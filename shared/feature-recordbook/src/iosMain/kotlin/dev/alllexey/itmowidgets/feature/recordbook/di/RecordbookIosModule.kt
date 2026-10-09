@@ -15,6 +15,9 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.work.AppRefreshScheduler
+import dev.alllexey.itmowidgets.core.work.RefreshStep
+import dev.alllexey.itmowidgets.core.work.RefreshStepKeys
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionCheck
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebHost
@@ -23,6 +26,11 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookieExportO
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.KeychainItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebViewBarsSilentLogin
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.IosMarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksRefresh
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MorningMarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.RefreshTaskMarksScheduler
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +41,8 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 /**
@@ -43,8 +53,9 @@ import org.koin.dsl.module
  * keeps the one `BarsClient`, `BarsTokenStore` (`bars_tokens.enc`, a Keychain item through `SecureStore`) and
  * `OwnerBoundBarsStorage` of the process.
  *
- * Until the mark check runs on iOS (IO-09d3) nothing is scheduled: a BARS answer still turns "Оценки БАРС" on through
- * `BarsMarksActivation`, which needs the scheduler and the graph's notifier (`iosBackgroundModule`, IO-14).
+ * The background mark check (IO-09d3): its notifier over `iosBackgroundModule`'s `IosAppNotifier` (IO-14), the app
+ * refresh task as its scheduler, and the runner's step under [RefreshStepKeys.MARKS] with Android's three hours.
+ * BARS renews there through the ITMO.ID cookies only (`BarsCookieSilentLogin`), never the hidden WebView.
  *
  * The subject page's links are [UnofferedSubjectLinks] while iOS does not offer subject links
  * (`PlatformCapabilities.reviews`, IO-09f loads `resourcesModule` and removes the stand-in, since the graph refuses
@@ -63,9 +74,13 @@ fun recordbookIosModule(host: BarsWebHost): Module = module {
     }
     factoryOf(::BarsSessionCheck)
 
-    // IO-09d3 binds the background mark check's scheduler and removes this line; the notifier is IO-14's
-    // `iosBackgroundModule`.
-    single<MarksScheduler> { UnscheduledMarks }
+    single { IosMarksNotifier(get()) } binds arrayOf(MarksNotifier::class, MorningMarksNotifier::class)
+    single<MarksScheduler> { RefreshTaskMarksScheduler(get<AppRefreshScheduler>(), get()) }
+    single { MarksRefresh(get(), get(), get(), get(), get(), get()) }
+    single(named(RefreshStepKeys.MARKS)) {
+        val refresh = get<MarksRefresh>()
+        RefreshStep(RefreshStepKeys.MARKS, RefreshStepKeys.MARKS_PERIOD) { refresh.run() }
+    }
 
     single<SubjectLinksRepository> { UnofferedSubjectLinks }
 }
@@ -120,12 +135,4 @@ private object UnofferedSubjectLinks : SubjectLinksRepository {
     override fun observeRestrictions(): Flow<List<UserRestriction>> = flowOf(emptyList())
 
     override suspend fun refreshRestrictions(): AppResult<Unit> = unoffered
-}
-
-private object UnscheduledMarks : MarksScheduler {
-    override fun ensurePeriodic() = Unit
-
-    override fun runOnce() = Unit
-
-    override fun cancel() = Unit
 }

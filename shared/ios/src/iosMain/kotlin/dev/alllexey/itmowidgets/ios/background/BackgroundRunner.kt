@@ -11,6 +11,8 @@ import dev.alllexey.itmowidgets.core.work.MAX_RETRIES
 import dev.alllexey.itmowidgets.core.work.RefreshStep
 import dev.alllexey.itmowidgets.core.work.RefreshStepKeys
 import dev.alllexey.itmowidgets.core.work.RefreshStepLog
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.IosMarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksFixture
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.IosScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangeFixture
 import dev.alllexey.itmowidgets.ios.di.IosKoin
@@ -217,6 +219,20 @@ suspend fun postFixtureScheduleChange(center: LocalNotificationCenter) {
 
 /** [postFixtureScheduleChange] to the app's notification centre. */
 suspend fun postFixtureScheduleChange() = postFixtureScheduleChange(IosKoin.koin().get<LocalNotificationCenter>())
+
+/**
+ * Debug builds' `-itmoRunRefresh`: posts a synthetic marks digest (`MarksFixture`) through the marks notifier to
+ * [center], so the marks notification is visible without new marks.
+ */
+suspend fun postFixtureMarkDigest(center: LocalNotificationCenter) {
+    val koin = IosKoin.koin()
+    val notifier = IosAppNotifier(center, koin.get(), koin.get())
+    IosMarksNotifier(notifier).showDigest(MarksFixture.digest, target = null)
+    notifier.awaitPosts()
+}
+
+/** [postFixtureMarkDigest] to the app's notification centre. */
+suspend fun postFixtureMarkDigest() = postFixtureMarkDigest(IosKoin.koin().get<LocalNotificationCenter>())
 
 /** Every return of the app from the background. */
 private fun applicationForegrounds(): Flow<Unit> = callbackFlow {

@@ -11,14 +11,14 @@ final class SettingsUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testRootOpensFromMeWithoutTheRecordbookPage() {
+    func testRootOpensFromMeWithTheRecordbookPage() {
         let app = XCUIApplication.itmo(session: .demo)
         app.launch()
         openSettings(app)
 
         XCTAssertTrue(element(app, "settings.row.page_services").exists)
         XCTAssertTrue(element(app, "settings.row.notifications").exists)
-        XCTAssertFalse(element(app, "settings.row.page_recordbook").exists, "mark tracking is not on iOS yet")
+        XCTAssertTrue(element(app, "settings.row.page_recordbook").exists, "mark tracking is on iOS since IO-09d3")
         XCTAssertTrue(app.navigationBars.firstMatch.exists, "a SwiftUI screen uses the stack's navigation bar")
         attachScreenshot(named: "root")
     }
@@ -66,6 +66,17 @@ final class SettingsUITests: XCTestCase {
 
         element(app, "ics.close").tap()
         XCTAssertTrue(element(app, "settings.page.schedule").waitForExistence(timeout: stepTimeout))
+    }
+
+    /// The mark checks (IO-09d3): My ITMO and the sheets; BARS joins with the account's first BARS answer.
+    func testTheRecordbookPageListsTheMarkChecks() {
+        let app = XCUIApplication.itmo(session: .demo)
+        app.launch()
+        openPage(app, "recordbook")
+
+        XCTAssertTrue(settingsSwitch(app, "myitmo_marks").exists)
+        XCTAssertTrue(settingsSwitch(app, "sheet_marks").exists)
+        attachScreenshot(named: "recordbook")
     }
 
     func testQrWidgetPageListsOnlyWhatIosOffers() {

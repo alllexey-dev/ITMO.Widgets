@@ -3,13 +3,13 @@ import Shared
 import SwiftUI
 
 /// The app refresh task of iOS (IO-14): the system wakes the app in the background now and then, and each wake runs
-/// the Kotlin `BackgroundRunner` (widget snapshots, then the schedule change check) within its deadline; the runner
-/// asks for the next wake at the end. `start()` (in `App.init`, after the graph) also runs it at launch and on every
-/// return to the foreground, so Swift only starts it and hands it the system's task.
+/// the Kotlin `BackgroundRunner` (widget snapshots, then the schedule change, marks and calendar steps) within its
+/// deadline; the runner asks for the next wake at the end. `start()` (in `App.init`, after the graph) also runs it at
+/// launch and on every return to the foreground, so Swift only starts it and hands it the system's task.
 ///
 /// The system decides when the task runs and may delay it by hours; with Background App Refresh off or in Low Power
 /// Mode it never runs. A Debug build launched with `-itmoRunRefresh` runs the entry point once more after the session
-/// is read and posts a fixture schedule change notification (tests cannot force the scheduler).
+/// is read and posts a fixture schedule change and a fixture marks digest (tests cannot force the scheduler).
 enum BackgroundRefresh {
     /// The task's identifier, also in the app's `BGTaskSchedulerPermittedIdentifiers` (`StableIdentifiersTests`).
     static let taskIdentifier = AppRefreshScheduler.companion.TASK_IDENTIFIER
@@ -46,7 +46,7 @@ enum BackgroundRefresh {
     }
 
     #if DEBUG
-    /// Runs the entry point and posts the fixture change when the launch arguments ask for it; nothing otherwise.
+    /// Runs the entry point and posts the fixtures when the launch arguments ask for it; nothing otherwise.
     static func runIfRequested(arguments: [String] = CommandLine.arguments) {
         guard arguments.contains(runArgument) else { return }
         Task {
@@ -55,6 +55,8 @@ enum BackgroundRefresh {
             }
             try? await postFixtureScheduleChange()
             print("Refresh: posted the fixture schedule change")
+            try? await postFixtureMarkDigest()
+            print("Refresh: posted the fixture marks digest")
         }
     }
     #endif

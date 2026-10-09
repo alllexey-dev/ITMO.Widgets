@@ -7,6 +7,9 @@ import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
+import dev.alllexey.itmowidgets.core.notification.IosAppNotifier
+import dev.alllexey.itmowidgets.core.notification.LocalNotificationCenter
+import dev.alllexey.itmowidgets.core.notification.LocalNotificationRequest
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
@@ -36,6 +39,11 @@ import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.InMemorySecureStore
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
+import dev.alllexey.itmowidgets.core.work.AppRefreshScheduler
+import dev.alllexey.itmowidgets.core.work.CheckOutcome
+import dev.alllexey.itmowidgets.core.work.RefreshStep
+import dev.alllexey.itmowidgets.core.work.RefreshStepKeys
+import dev.alllexey.itmowidgets.core.work.RefreshStepLog
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsClient
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
@@ -49,7 +57,12 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.KeychainItmoIdCooki
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebKitCookie
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebViewBarsSilentLogin
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.IosMarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksCheck
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MorningMarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.RefreshTaskMarksScheduler
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.BarsLoginViewModel
@@ -71,6 +84,8 @@ import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -86,6 +101,7 @@ import org.koin.core.Koin
 import org.koin.core.annotation.KoinInternalApi
 import org.koin.core.module.Module
 import org.koin.core.parameter.parametersOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import platform.UIKit.UIViewController
@@ -177,15 +193,14 @@ class RecordbookIosModuleTest {
 
     /**
      * Koin's `verify()` is JVM-only; on Kotlin/Native every definition is resolved instead, each with the arguments the
-     * Swift hosts give the subject page and `Мои баллы` (unused by the others), on the demo session. The background
-     * mark check ([MarksCheck]) waits for its notifier, which IO-09d3 binds with the check.
+     * Swift hosts give the subject page and `Мои баллы` (unused by the others), on the demo session, the background
+     * mark check ([MarksCheck]) and its step included.
      */
     @OptIn(KoinInternalApi::class)
     @Test
     fun everyDefinitionOfTheRecordbookScreensResolvesWithoutARequest() {
         val koin = graph(demo = true)
         val definitions = koin.instanceRegistry.instances.values.map { it.beanDefinition }.distinct()
-            .filter { it.primaryType != MarksCheck::class }
 
         definitions.forEach { definition ->
             koin.get<Any>(definition.primaryType, definition.qualifier) { parametersOf(screenArguments()) }
@@ -194,6 +209,23 @@ class RecordbookIosModuleTest {
         koin.get<RecordbookViewModel> { parametersOf(SavedStateHandle()) }
         koin.get<RecordbookSubjectViewModel> { parametersOf(screenArguments()) }
         koin.get<SheetScoresViewModel> { parametersOf(screenArguments()) }
+        assertEquals(emptyList(), requests)
+        koin.close()
+    }
+
+    @Test
+    fun theMarkCheckIsAStepOfTheAppRefreshTaskWithAndroidsThreeHours() = runTest {
+        val koin = graph()
+
+        val step = koin.get<RefreshStep>(named(RefreshStepKeys.MARKS))
+
+        assertEquals(RefreshStepKeys.MARKS, step.key)
+        assertEquals(3.hours, step.period)
+        assertIs<RefreshTaskMarksScheduler>(koin.get<MarksScheduler>())
+        assertIs<IosMarksNotifier>(koin.get<MarksNotifier>())
+        assertSame(koin.get<MarksNotifier>(), koin.get<MorningMarksNotifier>())
+        // The test session holds no ITMO.ID token: the check skips without a request.
+        assertEquals(CheckOutcome.SKIPPED, withContext(Dispatchers.Default) { step.action() })
         assertEquals(emptyList(), requests)
         koin.close()
     }
@@ -287,8 +319,12 @@ class RecordbookIosModuleTest {
             }
         }
         single<SecureStore> { secrets }
-        // The app graph's notifier is `iosBackgroundModule`'s (IO-14); this graph posts nothing.
+        // The app graph's notifier, refresh task and step log are `iosBackgroundModule`'s (IO-14); this graph posts
+        // and schedules nothing.
         single<AppNotifier> { SilentNotifier }
+        single { IosAppNotifier(SilentCenter, get(), get()) }
+        single { AppRefreshScheduler({ _, _ -> }, Clock.System, get()) }
+        single<RefreshStepLog> { NoStepLog }
         single<AppDirectories> {
             object : AppDirectories {
                 override val files = root / "files"
@@ -363,6 +399,26 @@ class RecordbookIosModuleTest {
             step = SheetScoresArgs.Step.TOTAL,
         )
     }
+}
+
+private object SilentCenter : LocalNotificationCenter {
+    override fun add(request: LocalNotificationRequest) = Unit
+
+    override fun remove(identifier: String) = Unit
+
+    override fun removeAll() = Unit
+}
+
+private object NoStepLog : RefreshStepLog {
+    override fun dueAt(key: String): Instant? = null
+
+    override fun retries(key: String): Int = 0
+
+    override fun record(key: String, dueAt: Instant, retries: Int) = Unit
+
+    override fun forget(key: String) = Unit
+
+    override fun forgetAll() = Unit
 }
 
 private object SilentNotifier : AppNotifier {

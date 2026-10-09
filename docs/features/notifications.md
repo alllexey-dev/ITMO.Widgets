@@ -191,5 +191,6 @@ notifications through the same contract; pushes come with the push card
 - A tap opens the app; the notification carries Android's entry action
   (`ACTION_OPEN_SCHEDULE_CHANGES`) for the route, which the tap handler of
   IO-13a opens.
-- Until the schedule data reaches the iOS graph (IO-09b) the check finds no
-  data and posts nothing; the marks check joins with IO-09d3.
+- The marks digest and the `Войдите в БАРС` reminder are Android's
+  (`IosMarksNotifier`, thread `marks`, IO-09d3), with the same delays and the
+  same 06:00 hand-over ([mark tracking](marks-tracking.md#ios)).

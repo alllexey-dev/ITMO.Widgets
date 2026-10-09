@@ -251,9 +251,10 @@ stay while the tab's root stays alive.
 - A subject opens [its page](subject-page.md#ios) only with valid arguments.
 - Demo: `DemoRecordbook` answers the list, the subject pages and the demo sheet
   total with no request.
-- Not yet on iOS: the new-marks dot, the marks card and the settings page wait
-  for mark tracking (`PlatformCapabilities.marks`, IO-09d3); a notification's
-  subject arguments and the BARS sign-in entry route still open only the tab.
+- Mark tracking is on since IO-09d3 (`PlatformCapabilities.marks`): the
+  new-mark dots, the marks card and the settings page
+  ([mark tracking](marks-tracking.md#ios)). A notification's subject arguments
+  and the BARS sign-in entry route still open only the tab.
 - Tests: `RecordbookIosModuleTest` (`scripts/ios/test.sh kn
   :shared:feature-recordbook`: every definition of the screens resolves on the
   demo session, the demo recordbook answers, the subject links stand-in asks

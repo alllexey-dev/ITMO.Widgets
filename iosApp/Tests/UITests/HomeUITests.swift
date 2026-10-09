@@ -1,8 +1,8 @@
 import XCTest
 
 /// The home tab on the shared demo session (IO-09a): LH-2's Compose feed as the root of the home stack, its hints
-/// (the widget hint's instruction sheet, a closed hint that stays closed across a relaunch), the QR and My ITMO
-/// buttons, and the feed at the accessibility text size AX1. Compose maps `testTag` to the accessibility identifier
+/// (the widget hint's instruction sheet, a closed hint that stays closed across a relaunch), the new-marks card
+/// (IO-09d3), the QR and My ITMO buttons, and the feed at the accessibility text size AX1. Compose maps `testTag` to the accessibility identifier
 /// (`HomeTestTags`, `HomeCardTestTags`); the texts are Russian on an English iPhone. A launch with
 /// `-itmoForgetHomeHints` starts with every hint the simulator's state shows: no widget is placed there, so the widget
 /// hint always shows.
@@ -21,12 +21,31 @@ final class HomeUITests: XCTestCase {
         app.launch()
         waitForFeed(app)
 
-        XCTAssertTrue(element(app, "home_card_hint_widgets").waitForExistence(timeout: stepTimeout))
-        XCTAssertFalse(element(app, "home_card_marks").exists, "no new-marks card before mark tracking ships")
+        XCTAssertTrue(scrollTo(element(app, "home_card_hint_widgets"), in: app))
         XCTAssertTrue(element(app, "home_qr_fab").isHittable)
         XCTAssertTrue(element(app, "home_web_fab").isHittable)
         XCTAssertFalse(app.navigationBars.firstMatch.exists, "the feed has no top bar, as on Android")
         attachScreenshot(named: "demo-feed")
+    }
+
+    /// The new-marks card (IO-09d3): the demo's two unread subjects, and a tap opens the recordbook tab.
+    func testDemoFeedShowsTheNewMarksCardThatOpensTheRecordbook() {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        waitForFeed(app)
+        let marks = element(app, "home_card_marks")
+        XCTAssertTrue(scrollTo(marks, in: app), "the demo has unread marks")
+        reveal(marks, in: app)
+        // Compose merges the card into one element whose label is its description, title first.
+        XCTAssertTrue(
+            marks.label.contains(Self.newMarksTitle) || app.staticTexts[Self.newMarksTitle].exists,
+            marks.label
+        )
+        attachScreenshot(named: "marks-card")
+
+        marks.tap()
+
+        XCTAssertTrue(element(app, "shell.root.recordbook").waitForExistence(timeout: stepTimeout))
     }
 
     func testClosedHintStaysClosedAfterARelaunch() {
@@ -34,7 +53,7 @@ final class HomeUITests: XCTestCase {
         app.launch()
         waitForFeed(app)
         let hint = element(app, "home_card_hint_widgets")
-        XCTAssertTrue(hint.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(scrollTo(hint, in: app))
         reveal(element(app, "home_hint_action"), in: app)
 
         // The schedule cards come first since IO-09b, so the close button is the one inside the hint.
@@ -55,7 +74,7 @@ final class HomeUITests: XCTestCase {
         app.launch()
         waitForFeed(app)
         let hint = element(app, "home_card_hint_widgets")
-        XCTAssertTrue(hint.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(scrollTo(hint, in: app))
         let action = element(app, "home_hint_action")
         reveal(action, in: app)
 
@@ -117,6 +136,9 @@ final class HomeUITests: XCTestCase {
         XCTAssertLessThanOrEqual(qr.frame.maxY, element(app, "kit.demoBanner").frame.minY)
     }
 
+    /// The new-marks card's title, `marks_new_title`.
+    private static let newMarksTitle = "Новые оценки"
+
     /// The demo refusal, `error_demo_unavailable`.
     private static let demoUnavailable = "Недоступно в демо"
 
@@ -130,6 +152,15 @@ final class HomeUITests: XCTestCase {
             _ = feed.waitForExistence(timeout: 0.5)
         }
         XCTAssertTrue(feed.exists || empty.exists, "the feed never left its loading state")
+    }
+
+    /// Scrolls the feed until `target` exists: the feed is lazy, so a card below the fold (the hints under the
+    /// schedule, sport and new-marks cards) has no element until it comes near the screen.
+    private func scrollTo(_ target: XCUIElement, in app: XCUIApplication) -> Bool {
+        for _ in 0..<6 where !target.exists {
+            element(app, "home_feed").swipeUp()
+        }
+        return target.waitForExistence(timeout: stepTimeout)
     }
 
     /// Scrolls the feed until `target` can be tapped: the schedule (IO-09b) and sport (IO-09c) cards come first, so

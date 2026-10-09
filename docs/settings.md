@@ -267,6 +267,16 @@ Google Sheets.
 - Below the switches, `Работа в фоне` appears while at least one of the three is on and
   Android restricts the app in the background ([background work](#background-work)).
 
+### iOS
+
+The iOS app lists `Зачётка` since IO-09d3 (`PlatformCapabilities.marks`), after
+`Расписание`, with the same switches, keys, defaults and footer, rendered by
+the SwiftUI settings form. The switches run the `marks` step of the app's one
+refresh task instead of WorkManager work
+([mark tracking](features/marks-tracking.md#ios)); the background work row
+is `Обновление контента` (Background App Refresh), shown while it is off for
+the app, and opens the app's page in Settings.
+
 ## Background work
 
 On some devices background checks work only when the app may run without

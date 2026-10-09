@@ -19,8 +19,8 @@ class HomeCardCapabilitiesTest {
     private val mixed = FakeRenderer(setOf(HomeCardKind.MARKS, HomeCardKind.SPORT))
 
     @Test
-    fun iosDropsTheNewMarksCardUntilMarkTrackingShips() {
-        val offered = listOf(marks, hints, mixed).offeredBy(IosPlatformCapabilities)
+    fun withoutMarkTrackingThePlatformDropsTheNewMarksCard() {
+        val offered = listOf(marks, hints, mixed).offeredBy(IosPlatformCapabilities.copy(marks = false))
 
         assertEquals(2, offered.size)
         assertSame<HomeCardRenderer>(hints, offered[0], "a renderer of offered kinds stays itself")
@@ -38,10 +38,12 @@ class HomeCardCapabilitiesTest {
     }
 
     @Test
-    fun everyOtherKindIsOnIos() {
-        HomeCardKind.entries.filter { it != HomeCardKind.MARKS }.forEach { kind ->
+    fun everyKindIsOnIosSinceMarkTrackingShipped() {
+        HomeCardKind.entries.forEach { kind ->
             assertTrue(IosPlatformCapabilities.offers(kind), kind.name)
         }
+        val renderers = listOf<HomeCardRenderer>(marks, hints, mixed)
+        assertEquals(renderers, renderers.offeredBy(IosPlatformCapabilities))
     }
 
     private class FakeRenderer(override val kinds: Set<HomeCardKind>) : HomeCardRenderer {
