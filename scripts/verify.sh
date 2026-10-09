@@ -184,6 +184,13 @@ run_quick() {
     report=$("$root/scripts/test-ui-report.sh" 2>&1) || { printf '%s\n' "$report" >&2; return 1; }
     printf '%s\n' "$report" | tail -n 1 >&2
   fi
+  # ship-check's CI source on a scratch repository and a gh stub: a few seconds, no Gradle, no network (TC-CI2).
+  if [ -e "$root/scripts/test-ship-check.sh" ]; then
+    local ship
+    note "scripts/test-ship-check.sh (outside any slot)"
+    ship=$("$root/scripts/test-ship-check.sh" 2>&1) || { printf '%s\n' "$ship" >&2; return 1; }
+    printf '%s\n' "$ship" | tail -n 1 >&2
+  fi
   gradle_part android verifyQuick
 }
 
