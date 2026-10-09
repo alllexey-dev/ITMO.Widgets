@@ -26,8 +26,8 @@ android {
 
     defaultConfig {
         applicationId = "dev.alllexey.itmowidgets"
-        versionCode = 20290
-        versionName = "2.3-SNAPSHOT"
+        versionCode = 20291
+        versionName = "2.3.0-beta.1"
         resValue("string", "app_version", versionName!!)
 
         // ActivityScenario.launchActivityForResult waits the full lifecycle timeout (45 s) on
