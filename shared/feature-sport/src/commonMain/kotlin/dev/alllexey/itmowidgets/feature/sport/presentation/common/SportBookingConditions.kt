@@ -28,19 +28,21 @@ data class SportBookingConditions(
     val restrictions: List<SportBookingRestriction>
 ) {
     fun evaluate(now: Instant): SportBookingAvailability {
+        // A prediction is never a booking, whatever its prototype says.
+        val booked = signed && isReal
         val started = DateTexts.parseOffsetInstant(start) <= now
         val blockers = buildList {
             addAll(restrictions)
             if (started) add(SportBookingRestriction(SportBookingObstacle.STARTED))
             // A false API flag without an explanation is not permission to offer auto-sign.
-            if (isReal && !signed && !canSignIn && !full && isEmpty()) {
+            if (isReal && !booked && !canSignIn && !full && isEmpty()) {
                 add(SportBookingRestriction(SportBookingObstacle.UNKNOWN))
             }
         }.distinct()
-        val manual = isReal && !signed && canSignIn && hasPlaces && blockers.isEmpty() && !full
-        val mayWait = !signed && blockers.isEmpty() && (!isReal || full)
+        val manual = isReal && !booked && canSignIn && hasPlaces && blockers.isEmpty() && !full
+        val mayWait = !booked && blockers.isEmpty() && (!isReal || full)
         val action = when {
-            signed && isReal -> SportBookingAction.CANCEL
+            booked -> SportBookingAction.CANCEL
             manual -> SportBookingAction.SIGN
             hasActiveQueue -> SportBookingAction.CANCEL_AUTO
             mayWait -> SportBookingAction.AUTO

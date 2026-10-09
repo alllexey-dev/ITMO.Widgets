@@ -75,6 +75,22 @@ class SportDemoGateTest {
     }
 
     @Test
+    fun `a prediction of a booked lesson is not a booking`() = runTest {
+        val schedule = SportScheduleRepositoryImpl(data, myItmo, time, NoTemplates, demo, dispatchers)
+
+        schedule.refreshSportSchedule()
+        data.refreshSportQueueEntries()
+        data.refreshSportQueues()
+        data.refreshFriendsBookings()
+        val lessons = schedule.observeSportSchedule().first().valueOrNull().orEmpty()
+
+        val booked = lessons.filter { it.isLessonReal && it.signed }.map { it.lessonId }.toSet()
+        val repeats = lessons.filter { !it.isLessonReal && it.lessonId in booked }
+        assertTrue(repeats.isNotEmpty())
+        assertTrue(lessons.none { !it.isLessonReal && it.signed })
+    }
+
+    @Test
     fun `own bookings, points and limits come from the demo set`() = runTest {
         val bookings = SportBookingRepositoryImpl(backend, data, myItmo, sportApi, time, demo, dispatchers)
 

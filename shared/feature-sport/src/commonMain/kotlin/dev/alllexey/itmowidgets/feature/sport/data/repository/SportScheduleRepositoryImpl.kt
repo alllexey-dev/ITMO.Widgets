@@ -137,6 +137,8 @@ class SportScheduleRepositoryImpl(
                             UnavailableReason.LessonInPast, UnavailableReason.TimeConflict) }
                     prototype.copy(
                         isLessonReal = false,
+                        // the user's booking of the prototype is not a booking of its repeat
+                        signed = false,
                         start = prototype.predictedStart(),
                         end = prototype.predictedEnd(),
                         signEntry = autoSignEntry,

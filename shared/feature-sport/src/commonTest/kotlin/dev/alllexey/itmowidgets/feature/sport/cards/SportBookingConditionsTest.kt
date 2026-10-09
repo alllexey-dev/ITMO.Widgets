@@ -33,6 +33,16 @@ class SportBookingConditionsTest {
         assertFalse(prediction.bookingConditions().evaluate(now).manual)
     }
 
+    @Test fun predictionOfABookedLessonIsNotABookingAndCanBeWaitedFor() {
+        val prediction = lesson.copy(isLessonReal = false, signed = true, canSignIn = true)
+        val result = prediction.bookingConditions().evaluate(now)
+        assertEquals(SportBookingAction.AUTO, result.action)
+        assertTrue(result.mayWait)
+        assertFalse(result.manual)
+        val queued = prediction.copy(signEntry = SportCardFixtures.entry()).bookingConditions().evaluate(now)
+        assertEquals(SportBookingAction.CANCEL_AUTO, queued.action)
+    }
+
     @Test fun allOfficialEligibilityRestrictionsPreventOfferingNewAutoSignEvenWithFullFirstOrLast() {
         val blockers = listOf(UnavailableReason.TimeConflict, UnavailableReason.DailyLimitReached,
             UnavailableReason.WeeklyLimitReached, UnavailableReason.CreditAchieved, UnavailableReason.SelectionFailed,
