@@ -39,6 +39,24 @@ profile uses the same compact surfaces, with a settings entry and a separate,
 confirmed sign-out action. Privacy is available only inside settings.
 A category appears only when its functionality is delivered.
 
+### iOS
+
+The iOS app renders the same pages from the same page model
+(`SettingsViewModel`, one page per `AppRoutes.Settings` key) as SwiftUI forms
+pushed on the Me tab's stack; the Me tab's settings row opens the root, its
+privacy row the privacy page ([iOS app](ios.md#settings-and-diagnostics)).
+Nothing renders until the page is loaded, so stored values never animate in.
+Rows a platform does not offer are hidden through `PlatformCapabilities`: on
+iOS the quick settings tile, the spoiler animation and the custom spoiler
+image. The notification row says `Разрешены в iOS` or `Запрещены в iOS`, asks
+for the permission while iOS has never asked, then opens the app's
+notification settings. The background work row is `Обновление контента`
+(Background App Refresh): it shows while a background check is on and
+Background App Refresh is off or restricted for the app, and opens the app's
+page in Settings. Widget pages show no live preview. The error journal shares
+the plain-text journal through the share sheet; a Kotlin crash shows on the
+next launch, Swift crashes are not recorded.
+
 ## Account and services
 
 - `Подключение к ITMO.Widgets` enables Backend-dependent features. It is disabled
@@ -165,6 +183,14 @@ only among installed instances of that same format:
   device and survives sign-out; removing the tile from the shade clears it and
   brings the row back.
 
+### iOS
+
+The iOS QR widget page lists `Динамические цвета` and `Скрывать QR-код за
+спойлером` without the preview, the animation and the custom image rows. The
+iOS widget does not follow either switch yet: the spoiler stays on and the
+code is dark on white ([degradations](ios.md#degradations)). A custom spoiler
+image is v2.4.
+
 ## Home screen
 
 - `Главный экран` lists one switch per feed card: `Расписание на сегодня`,
@@ -233,6 +259,15 @@ only among installed instances of that same format:
   show device calendars) and `Выгрузить в .ics`. An untitled group after another
   one keeps the group gap
   (`design_spacing_group`) above its card.
+
+### iOS
+
+The iOS schedule page has the same rows. `Синхронизация с календарём` asks
+for full calendar access (EventKit) once; after a refusal for good it shows
+`Доступ к календарю` with `Открыть настройки`, which opens the app's page in
+Settings ([calendar](features/calendar.md#ios)). `Выгрузить в .ics` shares the
+file through the share sheet. The change check runs as a step of the app's
+background refresh, so `Работа в фоне` is `Обновление контента` there.
 
 ## Recordbook
 

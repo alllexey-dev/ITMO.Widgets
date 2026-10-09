@@ -137,8 +137,9 @@ code; only the system surfaces are its own.
   widget at once), revealed (the demo pass labelled «Демо-режим»), expired
   («Нажмите, чтобы обновить», opens the app, which writes a new pass).
   Degradations: no circle animation on reveal, the code is always black on
-  white, no custom spoiler image and no iOS setting for the spoiler yet
-  (always on).
+  white, no custom spoiler image (v2.4). Settings and the first-run flow show
+  the spoiler and dynamic colour switches, but the widget does not follow them
+  yet: the spoiler stays on ([degradations](../ios.md#degradations)).
 - Control «QR-пропуск» (`dev.alllexey.itmowidgets.control.qr`) in Control
   Center, on the Lock Screen and on the Action button: the counterpart of the
   tile. It opens the app on the pass and cannot draw the code; there is no

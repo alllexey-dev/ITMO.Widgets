@@ -168,8 +168,9 @@ arguments that survive the intent) and the prompt with its sign-in tap.
 ## iOS
 
 The iOS app ([iOS app](../ios.md#background-refresh)) posts the local
-notifications through the same contract; pushes come with the push card
-(IO-13a).
+notifications through the same contract. Push registration and the tap
+routing of Backend pushes are in place ([iOS app](../ios.md#notifications));
+the APNs token, and with it any push, needs the Apple account (gate T13).
 
 - `IosAppNotifier` (`shared/core`, iosMain) is the iOS `AppNotifier`: one
   `UNUserNotificationCenter` request per notification, identifier
@@ -188,9 +189,11 @@ notifications through the same contract; pushes come with the push card
   A change found between 00:00 and 06:00 Moscow time is handed to the system
   at once for 06:00 (a calendar trigger), so it does not wait for the next
   wake after the quiet hours.
-- A tap opens the app; the notification carries Android's entry action
-  (`ACTION_OPEN_SCHEDULE_CHANGES`) for the route, which the tap handler of
-  IO-13a opens.
+- A tap opens the app. The notification carries Android's entry action
+  (`ACTION_OPEN_SCHEDULE_CHANGES`) in `userInfo["action"]`, but the tap
+  handler routes only a push's `data` envelope (a friendship event to the
+  profile, a sport booking to its lesson), so a local notification opens the
+  app where it was ([degradations](../ios.md#degradations)).
 - The marks digest and the `Войдите в БАРС` reminder are Android's
   (`IosMarksNotifier`, thread `marks`, IO-09d3), with the same delays and the
   same 06:00 hand-over ([mark tracking](marks-tracking.md#ios)).

@@ -355,6 +355,38 @@ a `/u/` link. `SocialRulesTest` (`:konsist`) keeps personality models in
 `feature/social/data` and `UserSharing` in data mappers and demo data.
 See [visual test commands](../design.md#running-the-visual-tests).
 
+## iOS
+
+The iOS app ([iOS app](../ios.md)) hosts the same routes of
+`:shared:feature-social` as Compose screens on the tab's stack:
+`FriendsRoute`, `UserSearchRoute`, `UserProfileRoute` and `UserFriendsRoute`
+through the factories of `shared/ios` (`screens/SocialScreens.kt`), with
+`socialModule` and `socialIosModule` in `IosKoinModules`. The Swift hosts are
+in `iosApp/Sources/Features/Social/`; `Routes+Social.swift` maps
+`AppRoutes.Friends`, `UserSearch`, `UserProfile` and `UserFriends`.
+
+- Entries: the Me tab's rows ([profile tab](me.md#ios)), the home
+  friend-requests card, a tap on a friendship push and a profile link of a
+  `/u/<ISU>` shape handed to the router. `https` links do not reach the app
+  yet ([degradations](../ios.md#degradations)).
+- Arguments: the profile and a user's friends read `UserScreenArgs` from a
+  `SavedStateHandle` the iOS route builds (`UserProfileIosRoute`,
+  `UserFriendsIosRoute` in `src/iosMain`), as Android's destination gives it.
+- Exits: profiles, a user's friends, settings, the schedule and the sport of
+  another user open through the router. Sharing goes through `SocialShares`
+  and `PlatformActions`: the profile link (`ShareLinkFactory`) and the
+  invitation with the App Store page, or the site while the app has no App
+  Store record. Copying the ISU confirms with `person_isu_copied`, since iOS
+  shows no confirmation itself.
+- Reviews: the teacher's reviews, the summary, the editor and the report are
+  on since `PlatformCapabilities.reviews` turned on ([reviews](reviews.md#ios)).
+- Search uses Compose's text field on the system keyboard.
+- Tests: `SocialIosModuleTest` (`scripts/ios/test.sh kn :shared:feature-social`:
+  the graph resolves, the demo answers with no request) and
+  `UITests/SocialUITests` on the demo session (search, a profile and the demo
+  refusal of a friendship action, friends and a user's friends, the home card,
+  the Me tab).
+
 ## Not implemented yet
 
 Blocking (Backend has no block model), live privacy audiences on the profile

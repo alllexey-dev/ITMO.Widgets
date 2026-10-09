@@ -149,6 +149,29 @@ the app.
 - The app never sends its token to the browser. The browser gets its own
   session cookie from Backend after the approval.
 
+## iOS
+
+`WebLoginSheet` (`iosApp/Sources/Features/WebLogin/`) is the sheet in SwiftUI
+over the same `WebLoginViewModel`, the shell sheet of `AppRoutes.WebLogin`,
+opened from the Me tab's row ([iOS app](../ios.md#data-sharing)). The demo
+session refuses the route with `error_demo_unavailable`.
+
+- Scanner: VisionKit's `DataScannerViewController`, QR codes only, full screen
+  under a close button. Unlike Play services it needs the camera: iOS asks
+  once with `NSCameraUsageDescription` (`ios_web_login_camera_usage`). A
+  refused camera, a device without the scanner (the simulator) or a scanner
+  that stops shows `web_login_scanner_unavailable`, and typing still works.
+- The field types upper case without autocorrection and submits with the
+  keyboard's Go; the states, errors and texts are the shared ones above.
+- The ViewModel gets a fresh `SavedStateHandle` (`WebLoginIosParameters`): a
+  reopened sheet starts with an empty field.
+- Debug fixture: `-itmoWebLoginFixture` opens the sheet on the tabs, answers
+  from `WebLoginIosFixture` (code `ABCD2345`, no Backend) and hands the
+  fixture's QR link to the scan button.
+- Tests: `WebLoginIosModuleTest` (simulator), `ITMOWidgetsTests/AccountTests`,
+  `SnapshotTests/AccountSnapshotTests` (every state in four appearances),
+  `UITests/WebLoginUITests`.
+
 ## Tests
 
 - JVM: `WebLoginCodeTest` (codes, links, rejected hosts and paths),

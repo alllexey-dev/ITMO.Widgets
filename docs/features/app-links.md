@@ -87,6 +87,22 @@ negated id of a predicted booking). Debug template lessons have negative ids
 and are never shared. The shared date is absolute, because the recipient reads
 it on another day.
 
+## iOS
+
+The iOS app ([iOS app](../ios.md#shell-and-routes)) parses links with the same
+`AppLinks` and `EntryRouteParser` (`RouteURL` hands an `https` URL to
+`IosRoutes.linkRoute`), and its router runs the same routes as the table
+above once the session is ready. Today only the app's own URL scheme reaches
+it: `itmowidgets://route/<id>` from widgets, the Control, App Shortcuts and
+quick actions. `https` links on these hosts open the site, because Universal
+Links need the associated domains of a signed build after gate T13
+([degradations](../ios.md#degradations)).
+
+Sharing works as on Android through the system share sheet
+(`PlatformActions.shareText`): the profile link from the Me tab and a
+profile, the sport lesson link from its card; the invitation names the App
+Store page once the app has one, else the site.
+
 ## Verification and the site
 
 `itmo-widgets-web` serves `site/.well-known/assetlinks.json` on both hosts: one

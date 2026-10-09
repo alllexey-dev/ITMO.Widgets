@@ -281,3 +281,41 @@ or the official cache.
   field of an updated lesson, or the single line of an added or cancelled one
   (`Добавлена: пн, 7 сентября, 08:20`). Without a change the block is gone;
   the header above it never moves.
+
+## iOS
+
+The iOS app ([iOS app](../ios.md)) shows the same schedule on the same shared
+code: `ScheduleRoute` is the root of the schedule tab's stack, hosted by
+`ScheduleScreen` (`iosApp/Sources/Features/Schedule/`) through
+`scheduleRootScreen` (`shared/ios`, `screens/ScheduleScreens.kt`), with
+`scheduleModule`, `scheduleDataModule`, `scheduleIosModule`,
+`scheduleChangesIosModule` and `calendarIosModule` in `IosKoinModules`. The
+route draws its own chrome and keeps clear of the bars and the demo banner.
+
+- A lesson opens the lesson sheet (`AppRoutes.LessonDetails`) from the
+  schedule, another user's schedule and the home card, as a full-height
+  SwiftUI sheet around `LessonDetailsSheetRoute`, with the teacher's tone dot
+  and `Друзья на паре` as on Android. `Открыть на карте` hands the place to
+  Apple Maps (`PlatformActions.openMap`): the pin of a known building from the
+  same `itmo_buildings.json` (bundled by path), else the building text. The
+  meeting link opens in Safari; when nothing takes either, the sheet says
+  `schedule_map_unavailable` or `link_open_failed`.
+- A queued or predicted sport row opens the schedule's pending sport sheet,
+  whose sport button selects the sport tab ([sport](sport.md#ios)).
+- `Расписание друзей` opens the friend picker as a sheet; its choice comes back
+  to the schedule through the router ([friend selector](friend-selector.md#ios)).
+- The `today` entry route (the App Shortcut and the quick action) puts the own
+  schedule back on today, as `ScheduleTodayRequest` does on Android; a lesson
+  widget's tap opens the schedule tab as it is.
+- Another user's schedule (`AppRoutes.UserSchedule`, from a profile) and the
+  changes (`AppRoutes.ScheduleChanges`, from the home card) open on the
+  selected tab's stack ([schedule changes](schedule-changes.md#ios)).
+- The calendar sync and the `.ics` export are on ([calendar](calendar.md#ios)).
+- The lesson and day widgets read the timeline the app writes
+  ([widgets](widgets.md#ios)).
+- Tests: `ScheduleIosModuleTest` (the graph resolves with no request, the
+  bundled buildings; `scripts/ios/test.sh kn :shared:feature-schedule`) and
+  `UITests/ScheduleUITests` on the demo session (days from today, the lesson
+  sheet with friends and the Maps hand-off, a drag down closing it, the picker
+  round trip and a profile from it, the `today` route, changes from home, a
+  lesson from home, another user's schedule, AX1).

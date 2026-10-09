@@ -103,6 +103,30 @@ screenshots) walks this set through the real `MainActivity`, and the debug
 previews of `:shared:feature-social` keep their own edge cases for the visual
 tests.
 
+## iOS
+
+The iOS app ([iOS app](../ios.md)) runs the same demo session on the same
+shared data set.
+
+- Entry: the same five taps on the sign-in logo (`DemoEntryTaps` in
+  `AuthViewModel`); the logo is hidden from VoiceOver. On success a success
+  haptic and a VoiceOver announcement of `Демо-режим` replace the toast, then
+  `SessionRepository.startDemo()` replaces the screen.
+- The demo skips the first-run flow, as on Android, and shows the tabs with
+  the demo banner (`demo_banner_text` and its sign-in button, which signs out
+  of the demo) above the tab bar. Every shared repository checks `DemoMode`
+  before a request and `IosBackendGate` never lets the demo call Backend, so
+  every screen opens with zero network calls; the router refuses keys that
+  need a real account (`error_demo_unavailable`).
+- Widgets read the demo from session-v1.json: the QR widget shows the demo
+  pass labelled `Демо-режим`, the schedule widgets their demo state.
+- Debug builds: `-itmoDemo` opens the demo at launch, `-itmoSignedOut` starts
+  signed out, `-itmoOnboarding` shows the first-run flow over the demo. Most
+  UI tests run on the demo session.
+- Tests: `UITests/OnboardingUITests` (five taps open the demo),
+  `UITests/ShellUITests` (the banner and its sign-out) and every feature's UI
+  tests, which run on the demo.
+
 ## Tests
 
 - JVM: `DemoEntryTapsTest`, the demo cases of `SessionRepositoryImplTest` and

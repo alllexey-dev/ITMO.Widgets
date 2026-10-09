@@ -235,3 +235,37 @@ app's `WorkManager` through the debug `ScheduleChangesTestEntryPoint`),
 `ScheduleChangesNotificationTest`; the marks and the block are covered by the
 `ScheduleList*` and `LessonDetailsContent_change` goldens. They use synthetic `pairId`s and
 dates and restore the WorkManager state they found.
+
+## iOS
+
+The iOS app ([iOS app](../ios.md#background-refresh)) runs the same
+`ScheduleChangesCheck`, comparison, store and digest; only the work and the
+notification are its own (`shared/feature-schedule/src/iosMain/.../data/changes/`,
+bound in `scheduleChangesIosModule`).
+
+- Work. The check is the `schedule-changes` step of the app's one refresh task
+  with Android's two hours and Android's retries: it runs at launch, on every
+  return to the app and on the system's wakes once its period has passed.
+  `ScheduleChangesRefresh` resolves the check from the schedule data graph at
+  each run; a switch turned on makes the step due at once.
+- Degradation. iOS picks the moments of the background refresh from how the
+  app is used, often hours apart, and never runs it with Background App
+  Refresh off or in Low Power Mode, so a change can arrive hours later than on
+  Android. The settings row `Обновление контента` shows while Background App
+  Refresh is off for the app; Android's battery and Xiaomi rows do not exist.
+- Notification. `IosScheduleChangeNotifier` posts Android's digest through
+  `IosAppNotifier` (same title, text and sound rule). A change found between
+  00:00 and 06:00 Moscow time is handed to the system for 06:00 at once (a
+  calendar trigger) and counts as delivered. A tap opens the app without a
+  route for now ([degradations](../ios.md#degradations)); the history opens
+  from the home card.
+- The marks in the schedule, the lesson sheet's `Изменения` and the history
+  screen are the shared Compose ones (`AppRoutes.ScheduleChanges`,
+  `scheduleChangesViewController`).
+- Debug: a Debug build launched with `-itmoRunRefresh` runs the refresh once
+  and posts a fixture change notification (`ScheduleChangeFixture`); there is
+  no `Проверить изменения расписания` button.
+- Tests: `ScheduleChangesRefreshTest` (`scripts/ios/test.sh kn
+  :shared:feature-schedule`), `BackgroundRunnerTest` (`shared/ios`),
+  `ITMOWidgetsTests/BackgroundRunnerTests` (the step in the app graph, the
+  fixture by catalog key) and `UITests/ScheduleUITests` (changes from home).
