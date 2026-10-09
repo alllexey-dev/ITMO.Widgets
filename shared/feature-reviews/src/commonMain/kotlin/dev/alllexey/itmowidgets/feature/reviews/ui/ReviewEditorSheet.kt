@@ -250,7 +250,10 @@ private fun SubjectField(value: TextFieldValue, error: ReviewFieldError?, onEdit
     )
 }
 
-/** Subjects of the viewer's own lessons with the teacher; the chip of the typed subject shows as picked. */
+/**
+ * Subjects of the viewer's own lessons with the teacher; the chip of the typed subject shows as picked. A picked chip
+ * clears again and the subject may be typed freely, so these stay filter chips and not a button group.
+ */
 @Composable
 private fun Suggestions(suggestions: List<String>, current: String, onPick: (String) -> Unit) {
     val scroll = rememberScrollState()

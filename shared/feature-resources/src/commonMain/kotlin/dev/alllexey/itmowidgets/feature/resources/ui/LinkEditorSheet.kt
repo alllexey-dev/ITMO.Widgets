@@ -296,7 +296,10 @@ private fun LinkFieldError.message() = when (this) {
     LinkFieldError.TITLE_TOO_LONG -> Res.string.links_title_too_long
 }
 
-/** One chip per category in declaration order; a category picked by the user or guessed from the site scrolls into view. */
+/**
+ * One chip per category in declaration order; a category picked by the user or guessed from the site scrolls into view.
+ * Nine options and none picked on a new link, so they stay filter chips and not a button group.
+ */
 @Composable
 private fun CategoryChips(selected: LinkCategory?, url: String, onSelect: (LinkCategory) -> Unit) {
     val list = rememberLazyListState()
@@ -342,7 +345,10 @@ private fun CategoryChips(selected: LinkCategory?, url: String, onSelect: (LinkC
     }
 }
 
-/** `Кто видит`: the whole row is the target, at least a touch target high; a second line in bodyMedium. */
+/**
+ * `Кто видит`: the whole row is the target, at least a touch target high; a second line in bodyMedium. The flow's
+ * schedule name and the second lines do not fit a button group, so the choice stays a radio list.
+ */
 @Composable
 private fun AudienceRows(state: LinkEditorUiState, onSelect: (LinkAudienceOption) -> Unit) {
     val selected = state.selected
