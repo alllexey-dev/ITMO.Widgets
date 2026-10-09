@@ -12,7 +12,18 @@ import org.junit.Assert.assertTrue
 object TestUi {
     val instrumentation get() = InstrumentationRegistry.getInstrumentation()
 
-    fun idle() = instrumentation.waitForIdleSync()
+    /**
+     * Waits until the main thread has nothing left to do, like `waitForIdleSync`, but fails after [timeoutSeconds]
+     * instead of hanging the whole run: an animation that never ends keeps drawing frames and the thread never idles.
+     */
+    fun idle(timeoutSeconds: Long = IDLE_TIMEOUT_SECONDS) {
+        val idle = CountDownLatch(1)
+        instrumentation.waitForIdle(idle::countDown)
+        assertTrue(
+            "The main thread did not go idle in $timeoutSeconds s: an endless animation is drawing frames",
+            idle.await(timeoutSeconds, TimeUnit.SECONDS)
+        )
+    }
 
     /** Idle sync, a fixed sleep for animations and the compositor, idle sync again. */
     fun settle(milliseconds: Long) {
@@ -60,4 +71,6 @@ object TestUi {
         }
         assertTrue(message, committed.await(5, TimeUnit.SECONDS))
     }
+
+    private const val IDLE_TIMEOUT_SECONDS = 60L
 }

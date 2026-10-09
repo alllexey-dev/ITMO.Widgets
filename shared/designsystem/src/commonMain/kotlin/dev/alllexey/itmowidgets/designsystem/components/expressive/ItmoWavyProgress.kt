@@ -32,6 +32,11 @@ enum class ItmoWavyProgressShape { Linear, Circular }
  * in progress); dense rows keep a flat linear bar. [progress] is read in the draw phase, 0..1. With
  * [ItmoTheme.expressive] the track waves; otherwise it is today's flat indicator.
  *
+ * The wave stands still (`waveSpeed = 0.dp`): Material's default slides it forever, an infinite animation that keeps
+ * drawing frames while the bar is on screen, even under an overlay, so the main thread never goes idle (the
+ * instrumented suite hung in `Instrumentation.waitForIdleSync` under the home feed's lesson in progress). The bar only
+ * moves when [progress] changes.
+ *
  * Under the iOS style it is a plain `UIProgressView` whatever the switch says: a capsule track in `systemFill` with
  * the progress in the tint over it, [IosMetrics.progressBarHeight] thick, no wave, no gap and no stop indicator; the
  * circular form is a ring of the same track and stroke.
@@ -50,13 +55,13 @@ fun ItmoWavyProgress(
     val expressive = ItmoTheme.expressive
     when (shape) {
         ItmoWavyProgressShape.Linear -> if (expressive) {
-            LinearWavyProgressIndicator(progress, modifier)
+            LinearWavyProgressIndicator(progress, modifier, waveSpeed = 0.dp)
         } else {
             LinearProgressIndicator(progress, modifier)
         }
 
         ItmoWavyProgressShape.Circular -> if (expressive) {
-            CircularWavyProgressIndicator(progress, modifier)
+            CircularWavyProgressIndicator(progress, modifier, waveSpeed = 0.dp)
         } else {
             CircularProgressIndicator(progress, modifier)
         }
