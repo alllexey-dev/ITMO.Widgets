@@ -23,7 +23,7 @@ The whole change, from the privacy boundary to a screen, is the
 
 ## Areas
 
-`BackendClient(baseUrl, tokens, engine)` exposes one API per Backend area. Each lives in its own package under
+`BackendClient(baseUrl, tokens, engine, version)` exposes one API per Backend area. Each lives in its own package under
 `dev.alllexey.itmowidgets.client`, and its `*Api` KDoc holds the status codes and `error.code`s an app handles. The
 push decoder needs no client instance.
 
@@ -113,6 +113,22 @@ internal. The status is mapped before the body is decoded, so an HTML 502 or an 
 `code` is Backend's `error.code` (`restricted`, `permission_denied`, `access_denied`, `not_found`,
 `invalid_request`, `unauthorized`, `csrf`) or `null` when the error body is empty or not Backend's envelope. The
 server `message` is never kept: user-visible text belongs to the apps. Tokens, headers and bodies are never logged.
+
+## Request headers
+
+Besides what Ktor and the engine add (`Accept`, `Content-Type`, the engine's `User-Agent`), the client sets these
+headers on every request. Only `BackendClient` sets them, so MyItmoApi and other clients on the same engine never
+send them.
+
+| Header | Value | Source |
+|---|---|---|
+| `Authorization` | `Bearer <access token>`, absent without a token | `AccessTokenSource`, asked per request |
+| `X-App-Version` | `<versionName> (<build>); <platform>; <distribution>`, absent when `version` is `null` | `ClientVersion` |
+
+`X-App-Version` names the build only, in printable ASCII: Android sends
+`<versionName> (<versionCode>); android; github|play` (`NetworkModule.provideClientVersion`), iOS
+`<CFBundleShortVersionString> (<CFBundleVersion>); ios; appstore|dev` (`IosClientVersion`, `dev` for a debug
+binary). No user, device or OS data. Backend ignores unknown headers; BK-VER1 reads it.
 
 ## Engines and iOS
 

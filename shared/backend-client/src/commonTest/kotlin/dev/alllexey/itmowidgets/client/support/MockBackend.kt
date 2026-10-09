@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.client.support
 
 import dev.alllexey.itmowidgets.client.AccessTokenSource
 import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.http.BackendHttp
 import dev.alllexey.itmowidgets.client.http.BackendRoute
 import io.ktor.client.engine.mock.MockEngine
@@ -21,15 +22,16 @@ const val TEST_BASE_URL = "https://backend.test"
 class MockBackend(
     tokens: AccessTokenSource = AccessTokenSource { null },
     baseUrl: String = TEST_BASE_URL,
+    version: ClientVersion? = null,
     private val handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData = {
         ok("""{"success":true}""")
     },
 ) {
     val engine = MockEngine { request -> handler(request) }
 
-    internal val http = BackendHttp(baseUrl, tokens, engine)
+    internal val http = BackendHttp(baseUrl, tokens, engine, version)
 
-    val client = BackendClient(baseUrl, tokens, engine)
+    val client = BackendClient(baseUrl, tokens, engine, version)
 
     val requests: List<HttpRequestData> get() = engine.requestHistory
 

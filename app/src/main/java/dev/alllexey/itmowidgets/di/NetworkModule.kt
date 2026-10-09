@@ -9,6 +9,7 @@ import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.app.AppApi
 import dev.alllexey.itmowidgets.client.device.DeviceApi
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
@@ -54,14 +55,28 @@ object NetworkModule {
     @BackendBaseUrl
     fun provideBackendBaseUrl(): String = BuildConfig.WIDGETS_BASE_URL
 
-    /** Core 2.0. Its token comes from the 2.x client's `tokens`, the only refresher and writer of the session. */
+    /** This build as Backend sees it in `X-App-Version`: `<versionName> (<versionCode>); android; <flavor>`. */
+    @Provides
+    fun provideClientVersion(): ClientVersion =
+        ClientVersion(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString(), "android", BuildConfig.FLAVOR)
+
+    /**
+     * Core 2.0. Its token comes from the 2.x client's `tokens`, the only refresher and writer of the session; every
+     * request, workers' and FCM's included, carries [version].
+     */
     @Provides
     @Singleton
     fun provideBackendClient(
         @BackendBaseUrl baseUrl: String,
         myItmo: MyItmoClient,
-        engine: HttpClientEngine
-    ): BackendClient = BackendClientFactory.create(baseUrl = baseUrl, tokens = myItmo.tokens, engine = engine)
+        engine: HttpClientEngine,
+        version: ClientVersion
+    ): BackendClient = BackendClientFactory.create(
+        baseUrl = baseUrl,
+        tokens = myItmo.tokens,
+        engine = engine,
+        version = version
+    )
 
     @Provides
     fun provideUsersApi(client: BackendClient): UsersApi = client.users
