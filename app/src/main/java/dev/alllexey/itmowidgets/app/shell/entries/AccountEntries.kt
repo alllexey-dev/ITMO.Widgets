@@ -218,8 +218,8 @@ private fun WebLoginEntry(onClose: () -> Unit) {
 
 /**
  * My ITMO in the browser (row 22): one [MyItmoBrowser] whose history, page and failure survive recreation in this
- * entry's saved state, as in `MyItmoWebFragment`'s. Back goes back in the browser's history first and closes the
- * screen only when there is none.
+ * entry's saved state, as in `MyItmoWebFragment`'s. Back goes back in the browser's history first; without history
+ * the shell's overlay handler takes it, so the predictive gesture previews closing the screen.
  */
 @Composable
 private fun MyItmoWebEntry(onClose: () -> Unit) {
@@ -242,7 +242,7 @@ private fun MyItmoWebEntry(onClose: () -> Unit) {
         )
     }
     val browser = rememberSaveable(saver = saver) { MyItmoBrowser(openExternal).apply { restore(null) } }
-    BackHandler { if (!browser.goBack()) onClose() }
+    BackHandler(enabled = browser.canGoBack) { if (!browser.goBack()) onClose() }
     LifecycleResumeEffect(browser) {
         browser.onResume()
         onPauseOrDispose { browser.onPause() }

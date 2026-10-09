@@ -32,7 +32,9 @@ the screen's `MyItmoWebState` from the WebView callbacks:
   trusted page) and the overflow «Ещё» with «Открыть в браузере» (opens
   `https://my.itmo.ru/` outside the app). The bar shows no subtitle.
 - Back goes through the web history first and leaves the screen when there is
-  none; the close button leaves at once.
+  none; the close button leaves at once. In the Compose shell the entry takes
+  Back only while `MyItmoBrowser.canGoBack`, so without history the system
+  back gesture previews closing the screen like any other overlay.
 - One WebView per Fragment view: built in the `AndroidView` factory, kept in
   every state (the slot is never removed from composition), destroyed when the
   composition releases it or in `onDestroyView`. Recreation restores the web

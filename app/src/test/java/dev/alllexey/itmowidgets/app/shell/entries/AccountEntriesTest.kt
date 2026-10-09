@@ -2,13 +2,18 @@ package dev.alllexey.itmowidgets.app.shell.entries
 
 import android.app.Activity
 import android.content.Context
+import android.view.View
+import android.view.ViewGroup
+import android.webkit.WebView
 import android.widget.Toast
+import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -79,6 +84,7 @@ import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateArgs
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateViewModel
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateTestTags
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
+import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebTestTags
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginSheetTestTags
@@ -242,6 +248,45 @@ class AccountEntriesTest {
         assertTrue(navigator.state.overlays.isEmpty())
     }
 
+    /**
+     * The web history takes Back first; without history the entry's handler is off, so the shell's overlay handler,
+     * the one that follows the predictive gesture, closes the screen.
+     */
+    @Test
+    fun backOnMyItmoGoesBackInTheWebHistoryThenLeavesItToTheOverlayGesture() {
+        show()
+        act { open(AppRoutes.MyItmoWeb) }
+        val page = webView(compose.activity.window.decorView)
+        compose.runOnIdle {
+            // The shadow keeps no history of its own loads: the home page, then a second one.
+            shadowOf(page).pushEntryToHistory(MyItmoWebPolicy.HOME_URL)
+            shadowOf(page).pushEntryToHistory(SECOND_PAGE)
+            assertTrue(page.canGoBack())
+            shadowOf(page).webViewClient.doUpdateVisitedHistory(page, SECOND_PAGE, false)
+        }
+        compose.waitForIdle()
+
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+        assertEquals(1, shadowOf(page).goBackInvocations)
+        assertEquals(listOf<AppRoute>(AppRoutes.MyItmoWeb), navigator.state.overlays)
+
+        val bar = compose.onNodeWithTag(MyItmoWebTestTags.RELOAD).getBoundsInRoot()
+        val width = compose.activity.window.decorView.width / compose.density.density
+        compose.runOnIdle {
+            compose.activity.onBackPressedDispatcher.dispatchOnBackStarted(backEvent(0f))
+            compose.activity.onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(0.5f))
+        }
+        compose.waitForIdle()
+        val moved = compose.onNodeWithTag(MyItmoWebTestTags.RELOAD).getBoundsInRoot().left - bar.left
+        assertEquals(width / 2, moved.value, 1f)
+
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+        assertEquals(1, shadowOf(page).goBackInvocations)
+        assertTrue(navigator.state.overlays.isEmpty())
+    }
+
     @Test
     fun theDemoSessionRefusesTheWebSignInAndMyItmo() {
         navigator.guard = { route -> ShellGate.check(route, SessionState.SignedIn(user = null, demo = true), PASSED) }
@@ -329,6 +374,16 @@ class AccountEntriesTest {
         assertEquals(tag, overlays, navigator.state.overlays)
         assertEquals(tag, floating, navigator.state.floating)
         act { select(AppTab.ME) }
+    }
+
+    private fun backEvent(progress: Float) = BackEventCompat(0f, 0f, progress, BackEventCompat.EDGE_LEFT)
+
+    private fun webView(view: View): WebView = checkNotNull(findWebView(view)) { "no WebView on the screen" }
+
+    private fun findWebView(view: View): WebView? = when (view) {
+        is WebView -> view
+        is ViewGroup -> (0 until view.childCount).firstNotNullOfOrNull { findWebView(view.getChildAt(it)) }
+        else -> null
     }
 
     /** What `ShellHost` shows for a refusal. */
@@ -420,6 +475,7 @@ class AccountEntriesTest {
     private companion object {
         const val DEMO_TAPS = 5
         const val CODE = "ABCD2345"
+        const val SECOND_PAGE = "https://my.itmo.ru/test/second"
         val PASSED = OnboardingStatus.PASSED
         val UPDATE = AppUpdate(AppVersionName("2.2.0"), AppVersionName("2.3.0"), note = "", unsupported = false)
     }

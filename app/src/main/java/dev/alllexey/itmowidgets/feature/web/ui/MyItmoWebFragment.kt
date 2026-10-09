@@ -154,8 +154,8 @@ fun openExternalPage(context: Context, url: String, onFailed: () -> Unit) {
 /**
  * One My ITMO browser: at most one WebView at a time, the last official page, the failure and the saved history, and
  * the screen state derived from the WebView's callbacks. A host creates the WebView through [create] and releases it
- * through [release], forwards resume and pause, Back through [goBack], and saves and restores through [save] and
- * [restore]. [openExternal] opens a page outside the official hosts; [onBrowserCreated] and [interceptRequest] are the
+ * through [release], forwards resume and pause, Back through [goBack] (while [canGoBack]), and saves and restores
+ * through [save] and [restore]. [openExternal] opens a page outside the official hosts; [onBrowserCreated] and [interceptRequest] are the
  * debug hosts' hooks.
  */
 class MyItmoBrowser(
@@ -171,6 +171,13 @@ class MyItmoBrowser(
     var lastTrustedUrl by mutableStateOf(MyItmoWebPolicy.HOME_URL)
         private set
     var screenState by mutableStateOf(MyItmoWebState.Loading)
+        private set
+
+    /**
+     * Whether the shown WebView has history to go back to. While it is false a host leaves Back to the screen's own
+     * handler, so the predictive gesture previews leaving the screen.
+     */
+    var canGoBack by mutableStateOf(false)
         private set
 
     /** The WebView while a host shows it. */
@@ -203,6 +210,7 @@ class MyItmoBrowser(
         onBrowserCreated(page)
         val saved = browserState
         if (!failed && (saved == null || page.restoreState(saved) == null)) loadPage()
+        syncHistory()
     }
 
     fun loadPage() {
@@ -222,6 +230,7 @@ class MyItmoBrowser(
         if (page == null || !page.canGoBack()) return false
         failed = false
         page.goBack()
+        syncHistory()
         return true
     }
 
@@ -235,6 +244,7 @@ class MyItmoBrowser(
     fun release(page: WebView) {
         if (web !== page) return
         web = null
+        canGoBack = false
         browserState = Bundle().also { page.saveState(it) }
         page.stopLoading()
         page.webViewClient = WebViewClient()
@@ -276,6 +286,10 @@ class MyItmoBrowser(
                     MyItmoWebPolicy.Navigation.BLOCKED -> { if (request.isForMainFrame) showError(); true }
                 }
 
+            override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
+                if (web === view) syncHistory()
+            }
+
             override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
                 if (web !== view) return
                 if (url == null || !MyItmoWebPolicy.isInternal(url)) {
@@ -316,6 +330,10 @@ class MyItmoBrowser(
                 }
             }
         }
+    }
+
+    private fun syncHistory() {
+        canGoBack = web?.canGoBack() == true
     }
 
     private fun showError() {
