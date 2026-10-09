@@ -47,7 +47,9 @@ class KmpRulesTest {
             "androidx.datastore.core.",
             "androidx.datastore.preferences.core.",
             "androidx.annotation.",
-            "androidx.collection."
+            "androidx.collection.",
+            // graphics-shapes is multiplatform; CMP material3 exposes its RoundedPolygon through MaterialShapes.
+            "androidx.graphics.shapes."
         )
 
         /** Compose APIs that exist only on Android. */
