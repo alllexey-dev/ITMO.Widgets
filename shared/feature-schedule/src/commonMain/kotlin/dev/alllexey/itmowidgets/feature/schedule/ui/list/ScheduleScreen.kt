@@ -89,8 +89,9 @@ object ScheduleScreenTestTags {
 /**
  * The schedule list (port of `fragment_schedule.xml`): the selected friend's card above, then the day cards keyed by
  * date under a pull to refresh, placeholder cards on a first load, the empty or error state in the list's place.
- * Two FABs at the bottom end: back to the top once the reader is past the third day, and the friends picker while
- * [ScheduleScreenState.canPickFriend]. [listState] belongs to the host, which scrolls it to today; failed refreshes
+ * Two stacked FABs at the bottom end, the owner's M3E decision rather than a FAB menu or a floating toolbar
+ * (design.md, Expressive components): back to the top once the reader is past the third day, appearing on the
+ * standard motion scheme's springs, and the friends picker while [ScheduleScreenState.canPickFriend]. [listState] belongs to the host, which scrolls it to today; failed refreshes
  * of a shown list go to [snackbarHostState]. Stateless; [ScheduleRoute] wires it to its ViewModel.
  */
 @Composable
@@ -102,6 +103,7 @@ fun ScheduleScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scope = rememberCoroutineScope()
+    val motion = ItmoTheme.motion.scheme
     val pastThirdDay by remember(listState) { derivedStateOf { listState.firstVisibleItemIndex > TOP_BUTTON_AFTER } }
     Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxSize()) {
@@ -119,8 +121,8 @@ fun ScheduleScreen(
         ) {
             AnimatedVisibility(
                 visible = state.body is ScheduleScreenBody.Days && pastThirdDay,
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut(),
+                enter = scaleIn(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec()),
+                exit = scaleOut(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec()),
             ) {
                 FloatingActionButton(
                     onClick = { scope.launch { listState.animateScrollToItem(0) } },

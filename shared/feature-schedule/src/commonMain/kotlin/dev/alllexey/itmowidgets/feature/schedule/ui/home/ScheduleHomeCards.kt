@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -38,6 +37,7 @@ import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.cards.ClosableFeedCard
 import dev.alllexey.itmowidgets.designsystem.components.cards.FeedCard
 import dev.alllexey.itmowidgets.designsystem.components.cards.FeedRowBadge
+import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoWavyProgress
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.core.schedule_changes_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_calendar
@@ -111,7 +111,11 @@ private fun ScheduleCard(card: HomeScheduleCardUi, actions: HomeCardActions, mod
     }
 }
 
-/** The lesson in progress is told by its time, its badge and how far it has run, not by a fill. */
+/**
+ * The lesson in progress is told by its time, its badge and how far it has run, not by a fill. It is the home flow's
+ * hero next to the QR pass (design.md, Expressive components), so its progress is [ItmoWavyProgress]; every other row
+ * stays plain.
+ */
 @Composable
 private fun ScheduleRow(row: HomeScheduleRowUi, actions: HomeCardActions) {
     val focused = row.progress != null
@@ -163,9 +167,9 @@ private fun ScheduleRow(row: HomeScheduleRowUi, actions: HomeCardActions) {
                 overflow = TextOverflow.Ellipsis,
             )
             row.progress?.let { progress ->
-                LinearProgressIndicator(
+                ItmoWavyProgress(
                     progress = { progress },
-                    modifier = Modifier.fillMaxWidth().padding(top = RowPaddingVertical).height(RowProgressHeight),
+                    modifier = Modifier.fillMaxWidth().padding(top = RowPaddingVertical),
                 )
             }
         }
@@ -217,4 +221,3 @@ private val RowPaddingVertical = 6.dp
 private val TimeColumnMinWidth = 48.dp
 private val TypeBarWidth = 4.dp
 private val TypeBarShape = RoundedCornerShape(2.dp)
-private val RowProgressHeight = 3.dp
