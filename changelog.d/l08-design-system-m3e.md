@@ -7,3 +7,8 @@
   expressive components (loading indicator, pull-to-refresh, connected button
   group, wavy progress for heroes, hero avatar mask) are on. Widgets, the QR
   tile, shortcut and notification icons keep their palette.
+- The expressive loading indicator turns about its own centre: it morphs
+  through Material's shapes with Cookie9Sided and Pentagon swapped for
+  Cookie12Sided and Clover4Leaf (`ItmoLoadingShapes`), so the shape no longer
+  wobbles by about 3 px. In pull-to-refresh the pulled shape keeps its size
+  and angle when it hands over to the turning one, without the double image.
