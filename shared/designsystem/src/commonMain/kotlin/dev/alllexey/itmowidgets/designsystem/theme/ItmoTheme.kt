@@ -31,12 +31,13 @@ import dev.alllexey.itmowidgets.designsystem.tokens.toMaterialShapes
 
 /**
  * The app's Material theme for Compose: the scheme from [colorSource] in [dark] or light mode, the app's own colours,
- * shapes, spacing, type and motion. Until the M3E token change the values equal what the View screens get from
- * `Theme.Material3.DynamicColors.DayNight` and `res/values/dimens.xml`.
+ * shapes, spacing, type and motion, at the owner's M3E values (item 14, M3-02): the brand static scheme below
+ * Android 12 and on iOS, `cardSummary` on the M3E scale, the expressive switch on.
  *
  * [expressive] is the one switch of the kit's Material 3 Expressive variants ([ItmoTheme.expressive]): the loading
  * indicator, the pull-to-refresh indicator, the connected button group, wavy progress, the hero avatar mask and
- * [ItmoTheme.heroMotionScheme]. It stays off until the M3E token change turns it on for every screen at once.
+ * [ItmoTheme.heroMotionScheme]. It is on for every screen; previews and tests turn it off to show the standard
+ * component next to the expressive one.
  *
  * [platformStyle] is the look of the kit ([ItmoPlatformStyle]): Material on Android, iOS on iOS. The iOS style brings
  * Apple's type scale, UIKit's spacing, radii and touch target and the iOS colour slot, and ignores [expressive]: the
@@ -46,7 +47,7 @@ import dev.alllexey.itmowidgets.designsystem.tokens.toMaterialShapes
 fun ItmoTheme(
     dark: Boolean = isSystemInDarkTheme(),
     colorSource: ColorSource = ColorSource.Platform,
-    expressive: Boolean = false,
+    expressive: Boolean = true,
     platformStyle: ItmoPlatformStyle = defaultPlatformStyle(),
     content: @Composable () -> Unit,
 ) {
@@ -160,7 +161,7 @@ object ItmoTheme {
         @ReadOnlyComposable
         get() = LocalItmoIosColors.current
 
-    /** True when the kit's expressive variants are on (`ItmoTheme(expressive = true)`); false until the M3E change. */
+    /** True when the kit's expressive variants are on: the default of [ItmoTheme], Material style only. */
     val expressive: Boolean
         @Composable
         @ReadOnlyComposable

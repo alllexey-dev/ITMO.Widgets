@@ -20,8 +20,8 @@ styles are pinned by `DesignCardResourcesTest`.
 - Screens that already work keep their look. Screens move to Compose
   Multiplatform ([ADR 0017](decisions/0017-cmp-ui-in-common-main.md)) as parity
   ports: a port matches its XML screen against a JVM reference capture and lists
-  every deliberate deviation in its PR. The Material 3 Expressive look arrives
-  later as one token change ([ADR 0021](decisions/0021-m3-expressive-order.md)),
+  every deliberate deviation in its PR. The Material 3 Expressive look arrived
+  as one token change ([ADR 0021](decisions/0021-m3-expressive-order.md)),
   not screen by screen. Unification does not mean a redesign or features
   outside the roadmap.
 
@@ -31,28 +31,36 @@ styles are pinned by `DesignCardResourcesTest`.
 is the one source of design values for Compose. Its schema has the Material 3
 Expressive shape from the start (extended colours, a corner scale with
 `largeIncreased`, emphasized type, `MotionScheme`), so component APIs do not
-change when the values do; the values are v2.2's until the M3E token change.
+change when the values do; the values are the owner's M3E answers (item 14),
+taken in one token change before the shell port.
 Components and screens read tokens only through `ItmoTheme.*`. No raw colour,
 `.dp` spacing or font size outside `shared/designsystem`; experimental and
 expressive Material APIs only inside it, behind `Itmo*` wrappers.
 
 | Slot | Contents and today's values |
 |---|---|
-| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (default): dynamic colour on Android 12+, otherwise, and on iOS, the static M3 baseline scheme (the `#6750A4` family that API 26-30 get from `Theme.Material3.DynamicColors.DayNight`). `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests) |
-| `ItmoTheme.extendedColors` | The app's own colours beside the scheme, one slot per entry of `res/values{,-night}/colors.xml`: lesson types, recordbook passed, sport scores and conditions, teacher levels. Derived per scheme: sport condition containers (the accent mixed 12 % over `surfaceContainerLowest`) and teacher levels (harmonized towards `primary`). In dark, lesson types keep their light values until the M3E change |
-| `ItmoTheme.shapes` | Corner scale `extraSmall` 4, `small` 8, `medium` 12, `large` 16, `largeIncreased` 20, `extraLarge` 28, `extraLargeIncreased` 32, `extraExtraLarge` 48 dp, `full`; card family `cardContent` 20, `cardSummary` 24, `cardHero` 28, `scheduleDay` 16 dp; connected groups 20 dp outer, 4 dp inner, 2 dp gap; stroke 1 dp, elevation 0 dp |
+| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (default): dynamic colour on Android 12+, otherwise, and on iOS, the static brand scheme (`ColorSource.Static`: the TonalSpot variant of the 2021 spec from the brand blue `#4984E2`). `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests). On Android 12+ the outline-variant and error roles stay MDC's baseline ones, as the View screens show them |
+| `ItmoTheme.extendedColors` | The app's own colours beside the scheme, one slot per entry of `res/values{,-night}/colors.xml`: lesson types, recordbook passed, sport scores and conditions, teacher levels. Derived per scheme: sport condition containers (the accent mixed 12 % over `surfaceContainerLowest`) and teacher levels (harmonized towards `primary`). In dark, lesson types keep their light values |
+| `ItmoTheme.shapes` | Corner scale `extraSmall` 4, `small` 8, `medium` 12, `large` 16, `largeIncreased` 20, `extraLarge` 28, `extraLargeIncreased` 32, `extraExtraLarge` 48 dp, `full`; card family `cardContent` 20, `cardSummary` 28, `cardHero` 28, `scheduleDay` 16 dp; connected groups 20 dp outer, 4 dp inner, 2 dp gap; stroke 1 dp, elevation 0 dp |
 | `ItmoTheme.spacing` | `related` 4, `compact` 8, `content` 12, `group` 16, `section` 24, `screenMargin` 16, `cardPadding` 16, `summaryPadding` 20, `touchTarget` 48, `fabStackClearance` 152, `statePadding` 32, `stateIcon` 64, `stateInlineIcon` 56 dp |
 | `ItmoTheme.typography`, `ItmoTheme.emphasizedTypography` | The 15 M3 type roles at MDC 1.13's `TextAppearance.Material3.*` values on the system font, each with an emphasized twin; pinned, so a material3 bump cannot change a ported screen's text |
-| `ItmoTheme.motion` | Durations `quick` 180, `standard` 220, `emphasis` 260, `reveal` 300, `progress` 700, `progressSlow` 1000 ms; the skeleton pulse 1200 ms down to alpha 0.55; easing `(0.2, 0, 0, 1)`; Material's `MotionScheme.standard()` for components until the M3E change |
+| `ItmoTheme.motion` | Durations `quick` 180, `standard` 220, `emphasis` 260, `reveal` 300, `progress` 700, `progressSlow` 1000 ms; the skeleton pulse 1200 ms down to alpha 0.55; easing `(0.2, 0, 0, 1)`; Material's `MotionScheme.standard()` for components, `MotionScheme.expressive()` only for heroes (`ItmoTheme.heroMotionScheme`) |
 
-- `cardSummary` (24 dp) is off the corner scale on purpose: it is named so the
-  M3E change can move it with the rest.
+- `cardSummary` is `extraLarge` (28 dp) like `cardHero` while the PE sport card
+  is its page's hero; if it stops being the hero it becomes 20 dp.
+- `ItmoTheme(expressive = true)` is the default: the expressive variants of
+  [Expressive components](#expressive-components) are on for every Material
+  screen.
 - Reduced motion: `rememberReducedMotion()` is true when the system animator
   duration scale is 0 (iOS reports false until its host reads Reduce Motion); a
   kit animation then shows its end state at once.
 - Parity with the XML screens is tested: `DesignTokensParityTest` (`:app`) keeps
-  extended colours, spacing and shapes equal to `res/values`, `ThemeParityTest`
-  the static scheme and `TypographyParityTest` the type scale.
+  extended colours, spacing and shapes equal to `res/values` except its listed
+  M3E divergences (`design_card_radius_summary` stays 24 dp for the View
+  screens), `ThemeParityTest` the dynamic and seeded schemes and the M3
+  baseline that the View screens and widgets keep on API 26-30 (and the brand
+  static scheme against MDC's `SchemeTonalSpot`), and `TypographyParityTest`
+  the type scale.
 - `shared/designsystem/tokens/itmo-tokens.json` exports the tokens (static light
   and dark schemes by role, extended colours with the derivation rules, shapes,
   spacing, type, motion; colours `#RRGGBB`, sizes dp or sp, durations ms;
@@ -67,8 +75,12 @@ expressive Material APIs only inside it, behind `Itmo*` wrappers.
 Material 3 colour roles, named here by their token; the XML theme attribute
 stands in parentheses while XML screens remain. Compose reads them from
 `ItmoTheme.colorScheme`, XML screens from the app theme on
-`Theme.Material3.DynamicColors.DayNight`, with the same values. Every screen
-must work in light, dark and dynamic palettes; never assume the wallpaper.
+`Theme.Material3.DynamicColors.DayNight`, with the same values on Android 12+.
+Below Android 12 Compose takes the brand static scheme while XML screens and
+widgets keep the M3 baseline `#6750A4`; only the window background follows the
+brand scheme there (`theme_static_background`), so no seam shows behind the
+status bar of a Compose screen. Every screen must work in light, dark
+and dynamic palettes; never assume the wallpaper.
 
 | Role | Rule |
 |---|---|
@@ -115,7 +127,7 @@ The grid is 4 dp. Compactness never shrinks the touch target.
 | `Card.Content` | 20 dp radius, no stroke | Subject, control, user rows |
 | `Card.Content.Outlined` | 20 dp radius, 1 dp `colorOutlineVariant` | Sport lesson and booking cards, debug cards |
 | `Card.Content.Tonal` | 20 dp radius, no stroke, `colorSurfaceContainerLow` | The AI summary of a teacher's reviews above the reviews |
-| `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary; PE sport card |
+| `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius; `cardSummary` 28 dp in Compose | Recordbook summary; PE sport card |
 | `Card.Hero` | 28 dp radius, no stroke, `colorSurfaceContainer` | The subject result and the person on a profile, above the page's connected groups |
 | `Card.SettingsGroup` | 20 dp radius, no stroke, inner dividers | One card per settings or profile group, never per row |
 | `Card.ScheduleDay` | 16 dp radius, 16 dp between days | A day of lessons with its timeline |
@@ -199,10 +211,9 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
 - Selection is shown by a check or a container surface plus `selected` or
   `checkable` state for TalkBack, and the whole row is the target. A closed or
   private row never looks selectable.
-- The bottom navigation shows the label of the selected tab only
-  (`labelVisibilityMode="selected"`, `NavigationBarTokens.LabelsOnSelectedOnly`;
-  an open option, see [Expressive components](#expressive-components)); no large
-  titles above root content. Contextual screens use a back button and a concise
+- The bottom navigation shows a label on every tab, as M3E asks
+  (`NavigationBarTokens.LabelsOnSelectedOnly` is false); a long label ellipsizes
+  instead of overlapping its neighbours. No large titles above root content. Contextual screens use a back button and a concise
   title (`AppTopBar`).
 
 ## Refresh and loading
@@ -351,7 +362,7 @@ both platforms.
 | Component | Use | Replaces | On iOS |
 |---|---|---|---|
 | `AppTopBar`, `AppTopBarAction` | Contextual screen: back or close, a title of up to two lines (one over an optional one-line subtitle, such as the My ITMO page's host), trailing actions | `MaterialToolbar` and the hand-built contextual headers | The inline navigation bar: one centred line of headline, the navigation button and the actions in the tint, a hairline when content scrolls under it |
-| `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs; the FILL 1 icon and the label on the selected tab | `BottomNavigationView` (`Widget.ItmoWidgets.BottomNavigationView`) | Not used: the SwiftUI shell's native tab bar |
+| `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs; a label on every tab, the FILL 1 icon on the selected one | `BottomNavigationView` (`Widget.ItmoWidgets.BottomNavigationView`) | Not used: the SwiftUI shell's native tab bar |
 | `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | `Widget.ItmoWidgets.ContentState.*` layouts | The action is a button capsule; loading is the large activity indicator |
 | `Skeleton` | First load without a cache, list or cards | `core/ui/SkeletonView.kt` | Shapes in `systemFill`, cards with the inset group's corners; geometry and pulse stay |
 | `AppRefreshBox` | Pull-to-refresh that the user asked for | `SwipeRefreshLayout` with `applyAppRefreshColors()` | Behaves as `UIRefreshControl`: the content follows the pull, the spinner's spokes above it, the refresh haptic at the threshold |
@@ -467,10 +478,11 @@ screen do not change between styles.
 
 ## Expressive components
 
-The Material 3 Expressive look arrives as one token change
-([ADR 0021](decisions/0021-m3-expressive-order.md)); until then every value in
-this guide is v2.2's. After it, each feature takes the rules below in one
-expressive pass over its ported screens, through the `Itmo*` wrappers only.
+The Material 3 Expressive look arrived as one token change
+([ADR 0021](decisions/0021-m3-expressive-order.md)): the owner's answers below,
+the brand static scheme and the expressive switch on. Each feature takes the
+rules below in one expressive pass over its ported screens, through the
+`Itmo*` wrappers only.
 Behaviour, semantics, strings and stable identifiers do not change in a pass.
 
 - **Intensity: Foundational.** The quiet surfaces stay. Emphasis comes from
@@ -507,14 +519,16 @@ Behaviour, semantics, strings and stable identifiers do not change in a pass.
   notification icons keep their own palette; WebViews and the ITMO.ID page stay
   as they are.
 
-Three values are open options. Screens keep today's value until the owner's
-answer is recorded with the M3E token change:
+The owner decided the open values with the token change (item 14,
+2026-10-09):
 
-| Option | Today | Alternatives |
+| Question | Decision | Not taken |
 |---|---|---|
-| FAB pairs on home (`Мой ИТМО` and the QR pass) and the schedule (scroll to top and friends) | Two stacked FABs | A FAB menu; a floating toolbar |
-| Navigation labels | On the selected tab only | On every tab, as M3E asks |
-| `cardSummary` radius | 24 dp, off the corner scale | 28 dp where the card is the page hero (the PE sport card), 20 dp otherwise; 20 dp everywhere |
+| Static colours below Android 12 and on iOS | The brand blue `#4984E2`, TonalSpot variant; Android 12+ keeps the wallpaper's. Widgets keep `#6750A4` | The M3 baseline `#6750A4`; the brand blue's Content variant |
+| FAB pairs on home (`Мой ИТМО` and the QR pass) and the schedule (scroll to top and friends) | Two stacked FABs: the QR pass stays one tap | A FAB menu; a floating toolbar |
+| Navigation labels | On every tab, as M3E asks | On the selected tab only |
+| `cardSummary` radius | 28 dp while the PE sport card is its page's hero; 20 dp if it stops being one | 20 dp; 24 dp off the scale |
+| Intensity | Foundational: the expressive switch on, components on the standard motion scheme, expressive motion for at most two heroes per flow | The switch off; expressive motion for every component |
 
 ## Verification tiers
 
