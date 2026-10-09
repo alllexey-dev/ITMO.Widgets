@@ -73,6 +73,23 @@ class DesignTokensParityTest {
         assertEquals("28dp", ShapeTokens.CardSummary.resource())
     }
 
+    @Test
+    fun `the window background below API 31 equals the static scheme's background`() {
+        listOf("values" to "light", "values-night" to "dark").forEach { (directory, mode) ->
+            val window = elements(directory, "theme_colors", "color").getValue("theme_static_background")
+            assertEquals("$directory theme_static_background", staticBackground(mode), argb(window))
+        }
+    }
+
+    /** `color.scheme.<mode>.background` of the token export, as eight upper-case hex digits. */
+    private fun staticBackground(mode: String): String {
+        val json = listOf(File(TOKENS), File("../$TOKENS")).first { it.isFile }.readText()
+        val scheme = json.substring(json.indexOf("\"scheme\""))
+        val roles = scheme.substring(scheme.indexOf("\"$mode\""))
+        val value = Regex("\"background\": \"(#[0-9A-F]{6})\"").find(roles)?.groupValues?.get(1)
+        return argb(checkNotNull(value) { "no $mode background in $TOKENS" })
+    }
+
     private fun assertParity(tokens: ExtendedColorTokens, colors: Map<String, String>) {
         val shared = colors.keys.filterNot(::isResourceOnly).toSortedSet()
         assertEquals("colors.xml entries without a token slot", shared, slots(tokens).keys.toSortedSet())
@@ -139,6 +156,10 @@ class DesignTokensParityTest {
     }
 
     private fun Int.hex() = "%08X".format(this)
+
+    private companion object {
+        const val TOKENS = "shared/designsystem/tokens/itmo-tokens.json"
+    }
 
     /** `16dp`, or `0.5dp` for a fractional token, as a dimen resource writes it. */
     private fun Dp.resource(): String = if (value % 1f == 0f) "${value.toInt()}dp" else "${value}dp"

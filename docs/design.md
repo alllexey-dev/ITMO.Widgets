@@ -77,7 +77,9 @@ stands in parentheses while XML screens remain. Compose reads them from
 `ItmoTheme.colorScheme`, XML screens from the app theme on
 `Theme.Material3.DynamicColors.DayNight`, with the same values on Android 12+.
 Below Android 12 Compose takes the brand static scheme while XML screens and
-widgets keep the M3 baseline `#6750A4`. Every screen must work in light, dark
+widgets keep the M3 baseline `#6750A4`; only the window background follows the
+brand scheme there (`theme_static_background`), so no seam shows behind the
+status bar of a Compose screen. Every screen must work in light, dark
 and dynamic palettes; never assume the wallpaper.
 
 | Role | Rule |

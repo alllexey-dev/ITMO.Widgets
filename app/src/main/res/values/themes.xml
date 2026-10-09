@@ -1,6 +1,15 @@
 <resources>
 
-    <style name="Base.AppTheme" parent="Theme.Material3.DynamicColors.DayNight">
+    <!--
+        API 26-30: the window behind the Compose screens takes the brand static scheme's background
+        (ItmoTheme's ColorSource.Static, M3-02), so the status bar strip shows no seam. values-v31 keeps
+        the wallpaper's dynamic background.
+    -->
+    <style name="Platform.AppTheme" parent="Theme.Material3.DynamicColors.DayNight">
+        <item name="android:colorBackground">@color/theme_static_background</item>
+    </style>
+
+    <style name="Base.AppTheme" parent="Platform.AppTheme">
         <item name="android:windowDisablePreview">true</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>

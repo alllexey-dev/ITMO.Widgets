@@ -1,0 +1,4 @@
+<resources>
+    <!-- background of the brand static scheme (itmo-tokens.json); DesignTokensParityTest keeps them equal. -->
+    <color name="theme_static_background">#F9F9FF</color>
+</resources>

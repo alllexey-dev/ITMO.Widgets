@@ -1,0 +1,6 @@
+<resources>
+
+    <!-- API 31+: the wallpaper's dynamic colours, background included (values/themes.xml). -->
+    <style name="Platform.AppTheme" parent="Theme.Material3.DynamicColors.DayNight" />
+
+</resources>
