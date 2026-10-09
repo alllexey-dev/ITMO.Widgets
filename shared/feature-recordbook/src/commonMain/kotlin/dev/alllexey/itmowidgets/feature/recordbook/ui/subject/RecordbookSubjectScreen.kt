@@ -58,6 +58,7 @@ import dev.alllexey.itmowidgets.designsystem.components.state.Skeleton
 import dev.alllexey.itmowidgets.designsystem.components.state.SkeletonStyle
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookProgress
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectEvent
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
@@ -235,6 +236,8 @@ fun RecordbookSubjectScreen(
         val single = links.singleOrNull()
         if (single != null) actions.onConnectSheet(single) else if (links.isNotEmpty()) sheetLinks = links
     }
+    val content = state as? RecordbookSubjectUiState.Content
+    val heroFill = rememberSubjectHeroFill(content?.let { RecordbookProgress(it.subject.score).value })
     Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxSize()) {
             SubjectHeader(state, semester, actions.onBack)
@@ -257,7 +260,7 @@ fun RecordbookSubjectScreen(
                     )
                     is RecordbookSubjectUiState.Content ->
                         AppRefreshBox(state.refreshing, actions.onRefresh, Modifier.fillMaxSize()) {
-                            SubjectHubList(state, actions, connectSheet, listState, linksEnabled)
+                            SubjectHubList(state, actions, connectSheet, listState, linksEnabled, heroFill)
                         }
                 }
             }
@@ -329,6 +332,7 @@ private fun SubjectHubList(
     onConnectSheet: (List<SheetLinkOption>) -> Unit,
     listState: LazyListState,
     linksEnabled: Boolean,
+    heroFill: () -> Double?,
 ) {
     val items = remember(state, linksEnabled) { subjectHubItems(state, linksEnabled) }
     val keys = remember(items) { subjectHubKeys(items) }
@@ -350,17 +354,23 @@ private fun SubjectHubList(
         ),
     ) {
         items(items.size, key = { keys[it] }, contentType = { items[it]::class }) { index ->
-            SubjectHubRow(items[index], actions, sheetActions)
+            SubjectHubRow(items[index], actions, sheetActions, heroFill)
         }
     }
 }
 
 @Composable
-private fun SubjectHubRow(item: SubjectHubItem, actions: RecordbookSubjectActions, sheetActions: SubjectSheetActions) {
+private fun SubjectHubRow(
+    item: SubjectHubItem,
+    actions: RecordbookSubjectActions,
+    sheetActions: SubjectSheetActions,
+    heroFill: () -> Double?,
+) {
     when (item) {
         is SubjectHubItem.Hero -> SubjectHero(
             item.subject,
             item.step,
+            fill = heroFill,
             sheet = item.sheet?.let { sheet -> { SubjectSheetTotal(sheet, sheetActions) } },
         )
         is SubjectHubItem.SportOverview -> SubjectSportOverview(item.subject, item.sport, onRetry = actions.onRetry)

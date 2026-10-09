@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui.subject
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -9,6 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +27,7 @@ import dev.alllexey.itmowidgets.designsystem.components.charts.GradeScale
 import dev.alllexey.itmowidgets.designsystem.components.charts.GradeScaleTick
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookGradeScale
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookAssessmentKind
@@ -48,12 +53,16 @@ import org.jetbrains.compose.resources.stringResource
  * The result card at the top of a subject page (2.2's `item_subject_hero.xml`): the points out of 100 with the final
  * grade once it is set, the grade scale filled in the result's colour and the hint to the next grade. TalkBack reads
  * the result as one description. [sheet] is the own sheet total or the offer to connect one (LR-4a2), at the bottom.
+ *
+ * The card is the subject page's one hero: the points take the emphasized type, and the scale is filled to [fill],
+ * which the page animates with [rememberSubjectHeroFill]; by default it is the subject's points as they are.
  */
 @Composable
 fun SubjectHero(
     subject: RecordbookSubject,
     step: GradeStep?,
     modifier: Modifier = Modifier,
+    fill: () -> Double? = { RecordbookProgress(subject.score).value },
     sheet: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val progress = RecordbookProgress(subject.score)
@@ -81,7 +90,7 @@ fun SubjectHero(
                 Text(
                     points,
                     color = ItmoTheme.colorScheme.onSurface,
-                    style = ItmoTheme.typography.headlineMedium.tabular(),
+                    style = ItmoTheme.emphasizedTypography.headlineMedium.tabular(),
                 )
                 Text(
                     stringResource(Res.string.subject_score_out_of),
@@ -91,12 +100,7 @@ fun SubjectHero(
                 )
                 if (final) HeroGradeBadge(subject, Modifier.padding(start = ItmoTheme.spacing.compact))
             }
-            GradeScale(
-                score = progress.value,
-                ticks = gradeTicks(subject),
-                fillColor = subject.status.progressColor(),
-                modifier = Modifier.padding(top = ItmoTheme.spacing.content),
-            )
+            HeroScale(fill, gradeTicks(subject), subject.status.progressColor())
             if (hint != null) {
                 Text(
                     hint,
@@ -108,6 +112,50 @@ fun SubjectHero(
         }
         sheet?.invoke(this)
     }
+}
+
+/** The grade scale read from [fill] in its own scope, so a running fill recomposes only the scale. */
+@Composable
+private fun HeroScale(fill: () -> Double?, ticks: List<GradeScaleTick>, color: Color) {
+    GradeScale(
+        score = fill(),
+        ticks = ticks,
+        fillColor = color,
+        modifier = Modifier.padding(top = ItmoTheme.spacing.content),
+    )
+}
+
+/**
+ * The fill of the result card's scale for [score] (0-100 or none), remembered by the page outside its list so a card
+ * scrolled away and back does not replay it. A score that arrives while the page is open (after the first load, or a
+ * changed one after a refresh or the BARS switch) fills from where the scale stood on the hero's spatial spring; the
+ * score on the page's first frame, and every score under reduced motion, shows at once.
+ */
+@Composable
+internal fun rememberSubjectHeroFill(score: Double?): () -> Double? {
+    val firstFrame = remember { FirstFrame() }
+    SideEffect { firstFrame.passed = true }
+    val run = firstFrame.passed && !rememberReducedMotion()
+    val target = score?.takeIf { it.isFinite() }?.coerceIn(0.0, MAX_SCORE)
+    val scheme = ItmoTheme.heroMotionScheme
+    val animatable = remember { Animatable(target?.toFloat() ?: 0f) }
+    LaunchedEffect(animatable, target) {
+        when {
+            target == null -> animatable.snapTo(0f)
+            run -> animatable.animateTo(target.toFloat(), scheme.defaultSpatialSpec())
+            else -> animatable.snapTo(target.toFloat())
+        }
+    }
+    return if (run && target != null) {
+        { animatable.value.toDouble() }
+    } else {
+        { target }
+    }
+}
+
+/** False until the page's first composition is applied; a score shown before that needs no fill. */
+private class FirstFrame {
+    var passed = false
 }
 
 /** «до 4C ещё 3» or «до зачёта ещё 8»; whole points are shown without a fraction. */
@@ -168,6 +216,7 @@ private fun HeroGradeBadge(subject: RecordbookSubject, modifier: Modifier) {
 private fun TextStyle.tabular(): TextStyle = copy(fontFeatureSettings = TABULAR_FIGURES)
 
 private const val FULL_SCORE = "100"
+private const val MAX_SCORE = 100.0
 private const val DESCRIPTION_SEPARATOR = ". "
 private const val TABULAR_FIGURES = "tnum"
 
