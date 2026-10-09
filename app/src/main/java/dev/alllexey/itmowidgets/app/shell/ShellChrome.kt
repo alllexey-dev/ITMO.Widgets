@@ -13,6 +13,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -291,7 +292,13 @@ private fun OverlayLayer(overlays: List<NavEntry<AppRoute>>, backOffset: (Any) -
         contentKey = { it.entry?.contentKey },
         label = "overlays",
     ) { top ->
-        val entry = top.entry ?: return@AnimatedContent
+        val entry = top.entry
+        if (entry == null) {
+            // No overlay still fills the layer: AnimatedContent animates its size between the states, so an empty
+            // state would shrink the last overlay's pop (and grow the first push) towards the centre, clipped.
+            Spacer(Modifier.fillMaxSize())
+            return@AnimatedContent
+        }
         // A Surface takes every touch, so nothing reaches the covered tab through empty space.
         Surface(
             Modifier

@@ -1,8 +1,10 @@
 package dev.alllexey.itmowidgets.app.shell
 
 import android.app.Dialog
+import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.ComponentDialog
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
@@ -12,6 +14,7 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -24,6 +27,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.OpenDecision
+import dev.alllexey.itmowidgets.core.navigation.ShellBackStack
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
@@ -242,6 +246,103 @@ class AppShellTest {
         assertEquals(0, shownDialogs().size)
     }
 
+    /**
+     * A profile opened from a sheet (2.2: the sheet dismisses first) slides in from the end and, on Back, out to the
+     * end over the tab, full height on every frame: the layer never animates its size between no overlay and one.
+     */
+    @Test
+    fun theOnlyOverlayOpenedFromASheetSlidesInAndOutHorizontallyAtFullSize() {
+        show()
+        act { open(AppRoutes.IcsExport) }
+        assertEquals(1, shownDialogs().size)
+        val profile = AppRoutes.UserProfile(ShellSamples.ISU)
+
+        val push = framesOf(profile) { navigator.open(profile) }
+
+        assertTrue(navigator.state.floating.isEmpty())
+        assertEquals(0, shownDialogs().size)
+        assertSlidesAtFullSize(push, towardsEnd = false)
+
+        val pop = framesOf(profile) { navigator.back() }
+
+        assertSlidesAtFullSize(pop, towardsEnd = true)
+        compose.onNodeWithTag(ShellTags.overlay(profile.toString())).assertDoesNotExist()
+        sheet(AppRoutes.IcsExport).assertDoesNotExist()
+        assertEquals(ShellBackStack(), navigator.state)
+        compose.onNodeWithTag(ShellTags.BAR).assertIsDisplayed()
+    }
+
+    /**
+     * The predictive Back gesture on that profile moves it with the finger at full height, a cancel puts it back, and
+     * a committed gesture slides it on to the end from where the finger let go.
+     */
+    @Test
+    fun aPredictiveBackOnTheOverlayFromASheetFollowsTheFingerAndPopsFromThere() {
+        show()
+        act { open(AppRoutes.IcsExport) }
+        val profile = AppRoutes.UserProfile(ShellSamples.ISU)
+        act { open(profile) }
+        val window = compose.onRoot().fetchSemanticsNode().boundsInRoot
+        val dispatcher = compose.activity.onBackPressedDispatcher
+        val overlay = { compose.onNodeWithTag(ShellTags.overlay(profile.toString())).fetchSemanticsNode().boundsInRoot }
+
+        dragBack(HALF)
+        assertEquals(window.width * HALF, overlay().left, 1f)
+        assertEquals(window.height, overlay().height, 0.5f)
+        compose.runOnIdle { dispatcher.dispatchOnBackCancelled() }
+        compose.waitForIdle()
+        assertEquals(0f, overlay().left, 0.5f)
+        assertEquals(listOf<AppRoute>(profile), navigator.state.overlays)
+
+        dragBack(HALF)
+        val pop = framesOf(profile) { dispatcher.onBackPressed() }
+
+        val placed = pop.filter { it.width > 0f }
+        assertTrue("the pop slides on from the finger: $pop", placed.isNotEmpty())
+        placed.forEach { frame ->
+            assertTrue("never behind the finger: $pop", frame.left >= window.width * HALF - 1f)
+            assertEquals("full height on every frame: $pop", window.height, frame.height, 0.5f)
+        }
+        assertEquals(placed.map { it.left }.sorted(), placed.map { it.left })
+        assertEquals(ShellBackStack(), navigator.state)
+    }
+
+    private fun dragBack(progress: Float) {
+        val dispatcher = compose.activity.onBackPressedDispatcher
+        compose.runOnIdle {
+            dispatcher.dispatchOnBackStarted(BackEventCompat(0f, 0f, 0f, BackEventCompat.EDGE_LEFT))
+            dispatcher.dispatchOnBackProgressed(BackEventCompat(0f, 0f, progress, BackEventCompat.EDGE_LEFT))
+        }
+        compose.waitForIdle()
+    }
+
+    /** The bounds of [route]'s overlay on every frame after [command], with the main clock paused, until it settles. */
+    private fun framesOf(route: AppRoute, command: () -> Unit): List<Rect> {
+        compose.mainClock.autoAdvance = false
+        compose.runOnUiThread(command)
+        val frames = (0 until MAX_FRAMES).mapNotNull {
+            compose.mainClock.advanceTimeByFrame()
+            compose.onAllNodesWithTag(ShellTags.overlay(route.toString())).fetchSemanticsNodes()
+                .singleOrNull()?.boundsInRoot
+        }
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        return frames
+    }
+
+    /** [frames] of an overlay that is placed: one slide, full height and pinned to the window's end on each. */
+    private fun assertSlidesAtFullSize(frames: List<Rect>, towardsEnd: Boolean) {
+        val window = compose.onRoot().fetchSemanticsNode().boundsInRoot
+        val placed = frames.filter { it.width > 0f }
+        assertTrue("the overlay slides over several frames: $frames", placed.count { it.left > 0f } >= MIN_SLIDE_FRAMES)
+        placed.forEach { frame ->
+            assertEquals("full height on every frame: $frames", window.height, frame.height, 0.5f)
+            assertEquals("pinned to the end on every frame: $frames", window.right, frame.right, 0.5f)
+        }
+        val lefts = placed.map { it.left }
+        assertEquals("one direction: $lefts", if (towardsEnd) lefts.sorted() else lefts.sortedDescending(), lefts)
+    }
+
     @Test
     fun aSecondOpenOfTheSameScreenOrSheetOpensNothing() {
         show()
@@ -341,4 +442,11 @@ class AppShellTest {
 
     private fun SemanticsNodeInteraction.fetchText(): String =
         fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
+
+    private companion object {
+        /** Well past the 220 ms slide at 16 ms a frame. */
+        const val MAX_FRAMES = 40
+        const val MIN_SLIDE_FRAMES = 4
+        const val HALF = 0.5f
+    }
 }
