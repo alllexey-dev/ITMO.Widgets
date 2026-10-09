@@ -1,7 +1,9 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.sign
 
+import androidx.compose.animation.Animatable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,9 +24,11 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,6 +74,8 @@ object SportWeekStripTestTags {
     const val NEXT = "sport_week_strip_next"
 
     fun day(date: LocalDate): String = "sport_week_strip_day_$date"
+
+    fun dayCard(date: LocalDate): String = "sport_week_strip_day_card_$date"
 }
 
 /**
@@ -254,7 +260,7 @@ private fun DayCell(day: CalendarDay, onSelectDate: (LocalDate) -> Unit, modifie
         else -> Color.Transparent to colors.onSurface
     }
     val colorSpec = if (animate) motion.scheme.fastEffectsSpec<Color>() else snap()
-    val cardColor by animateColorAsState(targetCard, colorSpec)
+    val cardColor by animateContainerColorAsState(targetCard, colorSpec)
     val textColor by animateColorAsState(targetText, colorSpec)
     val scale = remember { Animatable(1f) }
     var wasSelected by remember { mutableStateOf(day.isSelected) }
@@ -299,6 +305,7 @@ private fun DayCell(day: CalendarDay, onSelectDate: (LocalDate) -> Unit, modifie
                     scaleY = scale.value
                 }
                 .background(cardColor, ItmoTheme.shapes.medium)
+                .testTag(SportWeekStripTestTags.dayCard(day.date))
                 .clearAndSetSemantics {},
             contentAlignment = Alignment.Center,
         ) {
@@ -310,6 +317,29 @@ private fun DayCell(day: CalendarDay, onSelectDate: (LocalDate) -> Unit, modifie
             )
         }
     }
+}
+
+/**
+ * [target] animated with [spec], where a transparent [target] means "no container" rather than a colour to blend
+ * with: [Color.Transparent] is transparent black, and half way to it a container turns grey. The colour shown fades
+ * its own alpha out instead, and a new colour on an invisible card starts from itself at zero alpha, so every frame
+ * is a tint of a real container colour.
+ */
+@Composable
+private fun animateContainerColorAsState(target: Color, spec: AnimationSpec<Color>): State<Color> {
+    val color = remember { Animatable(target) }
+    val currentSpec by rememberUpdatedState(spec)
+    LaunchedEffect(target) {
+        when {
+            target.alpha == 0f -> color.animateTo(color.value.copy(alpha = 0f), currentSpec)
+            color.value.alpha == 0f -> {
+                color.snapTo(target.copy(alpha = 0f))
+                color.animateTo(target, currentSpec)
+            }
+            else -> color.animateTo(target, currentSpec)
+        }
+    }
+    return color.asState()
 }
 
 @Composable
