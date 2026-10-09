@@ -15,7 +15,7 @@
 - The expressive loading indicator no longer twitches every 650 ms: it is
   the app's own `ItmoMorphingIndicator` (Material's size and colours), whose
   morph and turn ride one eased animation per step (the web indicator's
-  curve, 140 degrees per shape) instead of a spring that stops short and
+  curve, 112.5 degrees per shape) instead of a spring that stops short and
   snaps; the shape turns about its centroid and opens at rest, so the
   pull-to-refresh hand-off stays still.
 - The days of the «Запись» week strip no longer flash grey when the
