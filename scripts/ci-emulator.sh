@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # ci-emulator.sh start                        GitHub Actions only: KVM, the API 35 image, the AVD, boot in the background
-# ci-emulator.sh wait [--cutout tall|none]    wait for the boot, unlock, apply the cutout; prints ANDROID_SERIAL=...
+# ci-emulator.sh wait [--cutout tall|none] [--animations on|off]   wait for the boot, unlock, apply the cutout and
+#                                             the animation scales; prints ANDROID_SERIAL=...
 # ci-emulator.sh logcat <file>                capture `logcat -v threadtime` into <file> in the background
 #
 # The emulator of android-ui.yml and android-ship.yml (L04 TC-CI1). Local runs use scripts/emulator.sh and its pool.
@@ -8,7 +9,8 @@
 # - Runs only with CI=true and GITHUB_ACTIONS=true: it writes a udev rule with sudo and installs SDK packages.
 # - The AVD mirrors the pool AVD of scripts/emulator.sh (Pixel 7 geometry: 1080x2400 at 420 dpi, 2 GB RAM, 4 cores,
 #   hardware keyboard, no skin and so no cutout) on system-images;android-35;google_apis;x86_64, the x86_64 twin of
-#   the pool's arm64 image. Animations stay as the image ships them, as on the pool emulators.
+#   the pool's arm64 image. Animations stay as the image ships them, as on the pool emulators, unless
+#   `wait --animations off` sets the window, transition and animator scales to 0.
 # - `start` returns right after the launch, so the job builds while the emulator boots; every boot is cold
 #   (-no-snapshot), so no state leaks between runs. The port is 5560, a pool port: verify.sh ui refuses 5554.
 # - `wait --cutout tall` enables com.android.internal.display.cutout.emulation.tall, the tall cutout overlay,
@@ -112,17 +114,22 @@ cmd_start() {
 dev_sh() { "$adb" -s "$SERIAL" shell "$@" 2> /dev/null | tr -d '\r'; }
 
 cmd_wait() {
-  local cutout=none deadline t0 pid
+  local cutout=none animations=on deadline t0 pid scale
   while [ $# -gt 0 ]; do
     case "$1" in
       --cutout)
         cutout=${2:-}
         shift 2 || die "--cutout needs tall or none"
         ;;
+      --animations)
+        animations=${2:-}
+        shift 2 || die "--animations needs on or off"
+        ;;
       *) die "unknown argument '$1'" ;;
     esac
   done
   case "$cutout" in tall | none) ;; *) die "--cutout takes tall or none, got '$cutout'" ;; esac
+  case "$animations" in on | off) ;; *) die "--animations takes on or off, got '$animations'" ;; esac
   t0=$(date +%s)
   deadline=$((t0 + BOOT_TIMEOUT))
   pid=$(cat "$state_dir/pid" 2> /dev/null)
@@ -137,6 +144,12 @@ cmd_wait() {
   note "booted after $(($(date +%s) - t0))s of waiting"
   dev_sh input keyevent 82 > /dev/null
   dev_sh wm dismiss-keyguard > /dev/null
+  if [ "$animations" = off ]; then
+    for scale in window_animation_scale transition_animation_scale animator_duration_scale; do
+      dev_sh settings put global "$scale" 0
+    done
+    note "animations off"
+  fi
   if [ "$cutout" = tall ]; then
     dev_sh cmd overlay enable com.android.internal.display.cutout.emulation.tall > /dev/null
     until dev_sh cmd overlay list | grep -q '\[x\] com.android.internal.display.cutout.emulation.tall'; do
