@@ -30,13 +30,29 @@ val sharedPaths = modulePaths.filter { it.startsWith(":shared:") }
 val conventionPaths = modulePaths.filter { it == ":app" || (it.startsWith(":shared:") && it != ":shared:ios") }
 val buildLogic = gradle.includedBuild("build-logic")
 
+// verifyQuick is exactly the union of its parts; android-ci.yml runs each part as a job of its own, in parallel.
+val verifyQuickParts = mapOf(
+    "verifyQuickUnitApp" to listOf(
+        ":app:itmoVerifyQuick",
+        ":konsist:test",
+        buildLogic.task(":convention:test"),
+        buildLogic.task(":strings:test"),
+    ),
+    "verifyQuickUnitShared" to conventionPaths.filter { it != ":app" }.map { "$it:itmoVerifyQuick" },
+    "verifyQuickLint" to listOf(":app:lintGithubDebug"),
+    "verifyQuickAssemble" to listOf(":app:assembleGithubDebug", ":app:assemblePlayDebug"),
+).map { (name, parts) ->
+    tasks.register(name) {
+        group = "verification"
+        description = "One part of verifyQuick; android-ci.yml runs it as a job of its own."
+        dependsOn(parts)
+    }
+}
+
 val verifyQuick = tasks.register("verifyQuick") {
     group = "verification"
     description = "Unit and host tests of every module, Konsist, build-logic tests, lintGithubDebug, both debug APKs."
-    dependsOn(conventionPaths.map { "$it:itmoVerifyQuick" })
-    dependsOn(":konsist:test")
-    dependsOn(buildLogic.task(":convention:test"), buildLogic.task(":strings:test"))
-    dependsOn(":app:lintGithubDebug", ":app:assembleGithubDebug", ":app:assemblePlayDebug")
+    dependsOn(verifyQuickParts)
 }
 
 tasks.register("verifyFull") {

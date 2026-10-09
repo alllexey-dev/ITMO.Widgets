@@ -1,5 +1,6 @@
-# Every PR into and every push to `v2.3/next` and `master`: scripts/verify.sh quick, then the iOS klibs.
-# `verify-quick` is the required check of the ruleset, `integrate merge` and `promote`; never rename it.
+# Every PR into and every push to `v2.3/next` and `master`: scripts/verify.sh quick and the Android part of full,
+# split into parallel jobs (L04 TC-CI1), and the iOS klibs. `verify-quick` is the aggregate job and the required
+# check of the ruleset, `integrate merge` and `promote`; never rename it. It passes only when every part passed.
 # Only always-running jobs live here: scheduled and advisory jobs go to android-nightly.yml,
 # because a skipped job still leaves a `skipped` check run on the SHA.
 name: android-ci
@@ -19,88 +20,101 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  CI: "true"
+
 jobs:
-  verify-quick:
+  # The Gradle-free part of verify.sh quick: docs and changelog drift, the module generator, the ui-report parser.
+  checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      # The JDK gradle/gradle-daemon-jvm.properties asks for (JetBrains 21), installed up front so the daemon
-      # never auto-provisions it from api.foojay.io during the build.
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          distribution: jetbrains
-          java-version: 21
+      - name: verify.sh checks
+        run: scripts/verify.sh checks
 
-      # Basic (MIT) cache provider; only `v2.3/next` writes the cache, everything else reads it.
-      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-        with:
-          cache-provider: basic
-          cache-read-only: ${{ github.ref != 'refs/heads/v2.3/next' }}
-
-      # Gradle uses only the JDK above: a criteria mismatch fails loudly instead of downloading a toolchain.
-      - name: Gradle toolchain without auto-download
-        run: |
-          mkdir -p "$GRADLE_USER_HOME"
-          {
-            echo "org.gradle.java.installations.auto-download=false"
-            echo "org.gradle.java.installations.paths=$JAVA_HOME"
-          } >> "$GRADLE_USER_HOME/gradle.properties"
-          "$JAVA_HOME/bin/java" -version
-
-      # MyItmoApi 2.x at gradle/myitmoapi.ref as the composite build (ADR 0024). checkout only writes
-      # inside the workspace, so the tree moves out of it: Konsist scans every source set under the root.
-      - name: MyItmoApi ref
-        id: myitmoapi
-        run: echo "ref=$(head -n 1 gradle/myitmoapi.ref | tr -d ' \t\r')" >> "$GITHUB_OUTPUT"
-
+  # The parts of the root verifyQuick (build.gradle.kts), each on a runner of its own, plus lintPlayDebug, which
+  # makes the union the Android part of verify.sh full. `cache` names the job's build cache line.
+  gradle:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: unit-app, tasks: verifyQuickUnitApp }
+          - { name: unit-shared, tasks: verifyQuickUnitShared }
+          - { name: lint-github, tasks: verifyQuickLint }
+          - { name: lint-play, tasks: ":app:lintPlayDebug" }
+          - { name: assemble, tasks: verifyQuickAssemble }
+    steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: alllexey-dev/my-itmo-api
-          ref: ${{ steps.myitmoapi.outputs.ref }}
-          path: myitmoapi
           persist-credentials: false
 
-      - name: MyItmoApi out of the workspace
-        run: |
-          mv myitmoapi "$RUNNER_TEMP/myitmoapi"
-          echo "MYITMOAPI_DIR=$RUNNER_TEMP/myitmoapi" >> "$GITHUB_ENV"
-
-      # Resolves the wrapper distribution and the settings and build plugins (foojay-resolver-convention among
-      # them) before verify.sh, with retries: on a Gradle cache miss a plugin portal hiccup costs a retry, not
-      # the job.
-      - name: Resolve Gradle plugins
-        run: |
-          for attempt in 1 2 3; do
-            ./gradlew --quiet help && exit 0
-            echo "::warning::Gradle plugin resolution failed (attempt $attempt of 3)"
-            sleep $((attempt * 20))
-          done
-          exit 1
+      - uses: ./.github/actions/android-setup
+        with:
+          build-cache: ${{ matrix.name }}
 
       # No secrets: google-services.json is tracked, release stays unsigned, Core and MyItmoApi 1.x
-      # come from Maven Central. scripts/check-docs.sh runs first inside verify.sh once it exists.
-      - name: verify.sh quick
-        env:
-          CI: "true"
-        run: scripts/verify.sh quick
+      # come from Maven Central.
+      - name: verify.sh run -- ${{ matrix.tasks }}
+        run: scripts/verify.sh run -- ${{ matrix.tasks }}
 
-      # Roborazzi on the JVM (ADR 0022): every module's baselines, compared, never recorded here.
-      - name: verify.sh shots all
+      - uses: ./.github/actions/build-cache-save
+        with:
+          build-cache: ${{ matrix.name }}
+
+      - name: Upload test and lint reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reports-${{ matrix.name }}
+          path: |
+            */build/reports/
+            */build/test-results/
+            shared/*/build/reports/
+            shared/*/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Roborazzi on the JVM (ADR 0022): every module's baselines, compared, never recorded here, in three shards of
+  # `verify.sh shots all` (every third module of its list each).
+  shots:
+    name: shots ${{ matrix.shard }}/3
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/android-setup
+        with:
+          build-cache: shots-${{ matrix.shard }}
+
+      - name: verify.sh shots all --shard ${{ matrix.shard }}/3
         id: shots
-        env:
-          CI: "true"
-        run: scripts/verify.sh shots all
+        run: scripts/verify.sh shots all --shard ${{ matrix.shard }}/3
+
+      - uses: ./.github/actions/build-cache-save
+        with:
+          build-cache: shots-${{ matrix.shard }}
 
       # Only a failed comparison uploads: <name>_compare.png (reference, diff, new), <name>_actual.png, the report.
       - name: Upload screenshot diffs
         if: failure() && steps.shots.outcome == 'failure'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: screenshot-diffs
+          name: screenshot-diffs-${{ matrix.shard }}
           path: |
             app/build/outputs/roborazzi/
             app/build/reports/roborazzi/
@@ -110,6 +124,16 @@ jobs:
             shared/*/build/test-results/roborazzi/
           if-no-files-found: ignore
           retention-days: 14
+
+  klibs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/android-setup
 
       # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version; only `v2.3/next` writes the cache.
       - name: Kotlin/Native version
@@ -125,8 +149,6 @@ jobs:
 
       # iOS klibs compile on Linux x86_64 without Xcode (SP-10); never link* or *Test on Apple targets here.
       - name: verify.sh klibs
-        env:
-          CI: "true"
         run: scripts/verify.sh klibs
 
       - name: Save ~/.konan
@@ -136,15 +158,16 @@ jobs:
           path: ~/.konan
           key: ${{ steps.konan-cache.outputs.cache-primary-key }}
 
-      - name: Upload test and lint reports
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: verify-quick-reports
-          path: |
-            */build/reports/
-            */build/test-results/
-            shared/*/build/reports/
-            shared/*/build/test-results/
-          if-no-files-found: ignore
-          retention-days: 14
+  # The required check: green only when every part above is green; a failed, skipped or cancelled part fails it.
+  verify-quick:
+    needs: [checks, gradle, shots, klibs]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every part passed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          printf '%s' "$RESULTS" | jq -r 'to_entries[] | "- \(.key): \(.value.result)"' | tee -a "$GITHUB_STEP_SUMMARY"
+          printf '%s' "$RESULTS" | jq -e 'all(.[]; .result == "success")' > /dev/null
