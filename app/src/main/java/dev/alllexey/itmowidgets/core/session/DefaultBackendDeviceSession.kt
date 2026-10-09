@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.core.session
 
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.device.DeviceApi
 import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.client.device.RegisterDeviceRequest
@@ -14,6 +15,9 @@ import kotlinx.coroutines.withContext
  * The push registration of this installation through Core 2.0. It names the platform and leaves `alertsAllowed`
  * absent: Backend reads that as allowed, which is what every Android row meant before 2.3. Whether the user allowed
  * notifications on this device never decides it.
+ *
+ * Backend records the build from the request's `X-App-Version` ([version]); the stored registration keeps it, so
+ * `DefaultFcmTokenSync` registers once more after an update.
  */
 class DefaultBackendDeviceSession(
     private val gate: BackendGate,
@@ -22,7 +26,8 @@ class DefaultBackendDeviceSession(
     private val deviceName: String,
     private val currentUser: CurrentUserProvider,
     private val demo: DemoMode,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
+    private val version: ClientVersion
 ) : BackendDeviceSession {
 
     override suspend fun registerCurrentDevice() {
@@ -39,7 +44,7 @@ class DefaultBackendDeviceSession(
                     platform = DevicePlatform.ANDROID
                 )
             )
-            utilityStorage.setRegisteredFirebaseToken(fcmToken, ownerIsu)
+            utilityStorage.setRegisteredFirebaseToken(fcmToken, ownerIsu, version.headerValue)
         }
     }
 

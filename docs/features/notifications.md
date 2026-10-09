@@ -50,7 +50,10 @@ payloads above 4 KB are dropped.
 
 `DefaultFcmTokenSync` fetches the current SDK token, stores it in `UtilityStorage`
 and registers the device with Backend when services are on, the user is signed
-in and the registered token or owner differs. It runs from `FcmTokenWorker` on
+in and the registered token, owner or build differs. The build is the
+`X-App-Version` Backend records on registration (`ClientVersion`), stored with
+the registration, so the first start after an update registers exactly once and
+an unchanged start sends nothing. It runs from `FcmTokenWorker` on
 application start and on `onNewToken`, and directly on sign-in and on enabling
 services. Disabling services unregisters the device first; sign-out unregisters
 before clearing credentials.

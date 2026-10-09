@@ -463,11 +463,12 @@ service's work with IO-12a.
   user's own device name). Nothing reaches Backend in the demo, without the opt-in (`BackendGate.mayCallBackend()`),
   without a signed-in ISU or without a token; `IosPushDevice` has none until Swift passes one to `updateToken`, so
   today nothing is registered. `PushRegistrationPreferences` keeps what Backend last accepted (token, owner,
-  alerts); sign-out and turning the services off unregister that token and forget it.
+  alerts, the `X-App-Version` build); sign-out and turning the services off unregister that token and forget it.
 - Foreground refresh. Each return to the foreground (`scenePhase == .active`, so also after the permission dialog)
   runs `PushForegroundRefresh` (`PushRefresh.run()`): it reads the notification settings (authorized, provisional
   or ephemeral count as allowed), which session-v1.json's `alertsAllowed` follows, then syncs, which registers
-  again only when the token, the owner or the alerts answer changed. A failure is logged, never thrown into Swift.
+  again only when the token, the owner, the alerts answer or the build changed (once after an update). A failure
+  is logged, never thrown into Swift.
 - Taps. `ITMOWidgetsAppDelegate` (`@UIApplicationDelegateAdaptor`) runs `PushLaunch`, which makes `NotificationTaps`
   the notification center's delegate before launch ends. A tap reads the `data` envelope from `userInfo`
   (`NotificationTapRoutes`) and hands the route to `AppRouter.open(entry:)`; a tap that launched the app waits until

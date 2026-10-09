@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.core.network.BackendClientFactory
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
@@ -138,7 +139,10 @@ class DemoNetworkGateTest {
         val utility = UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2").also {
             it.setFirebaseToken("demo-token")
         }
-        val devices = DefaultBackendDeviceSession(gate, utility, backendClient.device, "Pixel", user, demo, dispatchers)
+        val devices = DefaultBackendDeviceSession(
+            gate, utility, backendClient.device, "Pixel", user, demo, dispatchers,
+            ClientVersion("2.3.0", "20300", "android", "github")
+        )
         val identity = DefaultBackendIdentitySync(
             unusedContext(), gate, unreachableSession.tokens, unreachableTokens, backendClient.users, RecordingDiagnostics(), demo,
             dispatchers

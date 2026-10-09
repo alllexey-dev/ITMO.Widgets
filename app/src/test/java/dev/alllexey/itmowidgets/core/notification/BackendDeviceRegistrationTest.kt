@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.core.notification
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.core.network.Core2Harness
 import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.contractFixture
@@ -48,9 +49,11 @@ class BackendDeviceRegistrationTest {
         fixture.device.registerCurrentDevice()
         assertEquals("synthetic-token", fixture.utility.getRegisteredFirebaseToken())
         assertEquals(123456, fixture.utility.getRegisteredFirebaseOwner())
+        assertEquals(fixture.version.headerValue, fixture.utility.getRegisteredFirebaseAppVersion())
         fixture.device.unregisterCurrentDevice()
         assertNull(fixture.utility.getRegisteredFirebaseToken())
         assertNull(fixture.utility.getRegisteredFirebaseOwner())
+        assertNull(fixture.utility.getRegisteredFirebaseAppVersion())
         assertEquals(
             listOf("POST /api/device/register-device", "DELETE /api/device/current"),
             fixture.harness.requests.map { "${it.method.value} ${it.url.encodedPath}" }
@@ -138,13 +141,14 @@ class BackendDeviceRegistrationTest {
         val settings = ServicesOptInPreferences(MemoryPreferences())
         val utility = UtilityStorage(MemoryPreferences(), "test")
         var owner: Int? = 123456
+        val version = ClientVersion("2.3.0", "20300", "android", "github")
         val harness = Core2Harness(session(), backend = answer)
         val device = DefaultBackendDeviceSession(
             DefaultBackendGate(settings, demo), utility, harness.client.device, "Synthetic device",
             object : CurrentUserProvider {
                 override suspend fun getCurrentUser() = owner?.let { CurrentUser(it, "Synthetic user", null) }
             },
-            demo, mainDispatcherRule.appDispatchers
+            demo, mainDispatcherRule.appDispatchers, version
         )
 
         suspend fun prepare() {
