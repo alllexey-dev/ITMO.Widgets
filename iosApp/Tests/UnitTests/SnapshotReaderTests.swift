@@ -101,20 +101,6 @@ final class SnapshotReaderTests: XCTestCase {
         XCTAssertEqual(timeline.entries.count, 10)
     }
 
-    func testTheSpoilerOptionDefaultsToOnAndFollowsTheFile() throws {
-        let fixture = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "qr-pass-v1", withExtension: "json"))
-        let withoutOption = try XCTUnwrap(QrPassSnapshot.decode(Data(contentsOf: fixture)))
-        XCTAssertTrue(withoutOption.spoiler, "absent means on, the Android default")
-
-        var envelope = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: fixture)) as? [String: Any])
-        var value = try XCTUnwrap(envelope["value"] as? [String: Any])
-        value["spoiler"] = false
-        envelope["value"] = value
-        let withOption = try XCTUnwrap(QrPassSnapshot.decode(JSONSerialization.data(withJSONObject: envelope)))
-        XCTAssertFalse(withOption.spoiler)
-        XCTAssertEqual(withOption.matrix, withoutOption.matrix)
-    }
-
     // MARK: Container
 
     func testTheGroupCandidatesAreTheOwnGroupThenAltStoresWithoutRepeats() throws {

@@ -187,9 +187,12 @@ only among installed instances of that same format:
 
 The iOS QR widget page lists `Динамические цвета` and `Скрывать QR-код за
 спойлером` without the preview, the animation and the custom image rows. The
-iOS widget does not follow either switch yet: the spoiler stays on and the
-code is dark on white ([degradations](ios.md#degradations)). A custom spoiler
-image is v2.4.
+iOS widget follows both switches, and a change reaches placed widgets at once:
+without the spoiler the code shows straight away; with dynamic colours the
+code and the spoiler take the app's colours for the widget's theme, dark on
+light in both, without them black on white. The code fades in instead of the
+circle, which iOS cannot draw ([degradations](ios.md#degradations)). A custom
+spoiler image is v2.4.
 
 ## Home screen
 
