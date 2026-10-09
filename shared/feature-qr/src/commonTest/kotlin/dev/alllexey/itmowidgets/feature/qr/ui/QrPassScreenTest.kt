@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -96,6 +98,37 @@ class QrPassScreenTest {
         onNodeWithTag(QrPassTestTags.IMAGE).assertDoesNotExist()
     }
 
+    @Test
+    fun aCodeThatArrivesGrowsInAndOneThereFromTheStartShowsAtOnce() = runComposeUiTest {
+        var state by mutableStateOf<QrCodeUiState>(QrCodeUiState.Content(Pass))
+        mainClock.autoAdvance = false
+        setContent { ItmoTheme { QrPassScreen(state, onRefresh = {}, onBack = {}) } }
+        mainClock.advanceTimeByFrame()
+        assertImageFillsTheArea("a code on the first frame")
+
+        state = QrCodeUiState.Content(QrCodeSnapshot("ITMO-NEXT", 3_600_000))
+        Snapshot.sendApplyNotifications()
+        mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeByFrame()
+        val area = onNodeWithTag(QrPassTestTags.AREA).getBoundsInRoot()
+        val growing = onNodeWithTag(QrPassTestTags.IMAGE).getBoundsInRoot()
+        assertTrue(
+            growing.width < area.width - Tolerance,
+            "a new code starts smaller: ${growing.width} of ${area.width}",
+        )
+        onNodeWithContentDescription("QR-код пропуска").assertExists()
+
+        mainClock.advanceTimeBy(REVEAL_SETTLE_MILLIS)
+        assertImageFillsTheArea("a revealed code")
+    }
+
+    private fun ComposeUiTest.assertImageFillsTheArea(message: String) {
+        val area = onNodeWithTag(QrPassTestTags.AREA).getBoundsInRoot()
+        val image = onNodeWithTag(QrPassTestTags.IMAGE).getBoundsInRoot()
+        assertClose(area.width, image.width, "$message: width")
+        assertClose(area.height, image.height, "$message: height")
+    }
+
     private fun assertClose(expected: Dp, actual: Dp, message: String) =
         assertTrue(abs(expected.value - actual.value) <= Tolerance.value, "$message: expected $expected, got $actual")
 
@@ -118,5 +151,8 @@ class QrPassScreenTest {
 
         /** Pixel rounding of the area's side. */
         val Tolerance = 1.dp
+
+        /** Longer than the expressive spatial spring needs to settle. */
+        const val REVEAL_SETTLE_MILLIS = 2_000L
     }
 }
