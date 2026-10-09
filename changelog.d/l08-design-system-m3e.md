@@ -18,3 +18,7 @@
   curve, 140 degrees per shape) instead of a spring that stops short and
   snaps; the shape turns about its centroid and opens at rest, so the
   pull-to-refresh hand-off stays still.
+- The days of the «Запись» week strip no longer flash grey when the
+  selection moves to or from a day without lessons: the day card fades the
+  alpha of its own container colour instead of blending it with transparent
+  black.
