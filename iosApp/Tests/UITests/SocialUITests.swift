@@ -117,8 +117,26 @@ final class SocialUITests: XCTestCase {
         XCTAssertTrue(element(app, "user_profile_primary").waitForExistence(timeout: stepTimeout))
         app.buttons[QrPassUITests.backLabel].tap()
 
-        element(app, "home_friends_all").tap()
+        let all = element(app, "home_friends_all")
+        revealOnHome(all, in: app)
+        all.tap()
         XCTAssertTrue(element(app, "social.friends").waitForExistence(timeout: stepTimeout))
+    }
+
+    /// Scrolls the home feed until `target` can be tapped and waits for the feed to rest: the card is the last one
+    /// before the hints, so its "all requests" button can start under the demo banner, and a tap during the fling
+    /// only stops it.
+    private func revealOnHome(_ target: XCUIElement, in app: XCUIApplication) {
+        XCTAssertTrue(target.waitForExistence(timeout: stepTimeout))
+        for _ in 0..<4 where !target.isHittable {
+            element(app, "home_feed").swipeUp()
+        }
+        var resting = CGRect.null
+        for _ in 0..<10 where target.frame != resting {
+            resting = target.frame
+            RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+        }
+        XCTAssertTrue(target.isHittable, "the feed never brought \(target) into reach")
     }
 
     func testMeTabAtAccessibilityTextSize() {
