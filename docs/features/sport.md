@@ -118,9 +118,10 @@ missing lesson shows `Занятие недоступно`. See [app-links.md](a
 `SportBookingConditions` is the deterministic local offer policy shared by cards
 and details. Academic intersections only warn; official booking conflicts,
 quotas, selection, credit and health-group restrictions block a new offer; a full
-or unpublished lesson can be waited for. Explicit MyITMO denial is a definite
-restriction even without an enum mapping; only a missing explanation is
-"unknown". Predictions carry inferred restrictions marked as coming from the
+or unpublished lesson can be waited for. A prediction is never a booking: it
+does not inherit the prototype's registration, and `signed` counts only for a
+real lesson. Explicit MyITMO denial is a definite restriction even without an
+enum mapping; only a missing explanation is "unknown". Predictions carry inferred restrictions marked as coming from the
 previous lesson. Condition categories use stable accents (green permission, blue
 waiting, amber warning, red denial) plus a label and icon.
 

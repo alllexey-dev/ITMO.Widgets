@@ -13,3 +13,7 @@
   an address.
 - Signing out also forgets the auto-sign limits, the queue list and friends'
   bookings of the sport tab, so the next account never sees them.
+- The prediction of a lesson you are booked on is no longer shown as booked:
+  it offers auto-sign again, with the «Прогноз» status and the occupancy,
+  instead of a bare «Недоступно» and «Вы записаны» in the details
+  (`SportScheduleRepositoryImpl`, `SportBookingConditions`).
