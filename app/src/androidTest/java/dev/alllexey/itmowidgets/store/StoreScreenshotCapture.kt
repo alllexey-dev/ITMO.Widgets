@@ -35,6 +35,7 @@ import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
+import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreenTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
 import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
 import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
@@ -98,7 +99,7 @@ class StoreScreenshotCapture {
 
             open(scenario, AppTab.SCHEDULE) { it.select(AppTab.SCHEDULE) }
             frame(activity, "02-schedule")
-            scenario.onActivity(::openAlgorithmsLesson)
+            openAlgorithmsLesson(scenario)
             settle()
             eventually { assertNotNull("the lesson sheet is not shown", ShellProbe.current().floating) }
             frame(activity, "03-lesson", sheet = true)
@@ -176,13 +177,37 @@ class StoreScreenshotCapture {
         awaitShown(AppTab.SPORT)
     }
 
-    /** The schedule's first placed Algorithms row opens its lesson sheet by its semantics click. */
-    private fun openAlgorithmsLesson(activity: MainActivity) {
-        val row = activity.composedNodes().first { node ->
-            node.tag.orEmpty().startsWith(ScheduleListTestTags.LESSON_PREFIX) &&
-                node.texts().any { DemoStudy.ALGORITHMS.name in it }
+    /**
+     * The next Algorithms lecture (Tuesday 08:20 in the demo week, the stream with three friends) opens its lesson
+     * sheet by its semantics click. The list opens on today, so on most days the row is days below the fold: the
+     * list scrolls down until the row sits inside it.
+     */
+    private fun openAlgorithmsLesson(scenario: ActivityScenario<MainActivity>) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val lecture = context.getString(R.string.schedule_lesson_type_lecture)
+        repeat(LESSON_SCROLLS) {
+            var opened = false
+            scenario.onActivity { main ->
+                val nodes = main.composedNodes()
+                val listNode = nodes.first { it.tag == ScheduleScreenTestTags.LIST }
+                val list = listNode.boundsInWindow
+                val row = nodes.firstOrNull { node ->
+                    node.tag.orEmpty().startsWith(ScheduleListTestTags.LESSON_PREFIX) &&
+                        node.boundsInWindow.center.y in list.top..list.bottom &&
+                        node.texts().let { texts -> lecture in texts && texts.any { DemoStudy.ALGORITHMS.name in it } }
+                }
+                if (row != null) {
+                    checkNotNull(row.config[SemanticsActions.OnClick].action) { "the lesson row has no click" }.invoke()
+                    opened = true
+                } else {
+                    val scroll = checkNotNull(listNode.config[SemanticsActions.ScrollBy].action) { "no list scroll" }
+                    scroll.invoke(0f, list.height * LESSON_SCROLL_SHARE)
+                }
+            }
+            if (opened) return
+            settle()
         }
-        checkNotNull(row.config[SemanticsActions.OnClick].action) { "the lesson row has no click" }.invoke()
+        throw AssertionError("no Algorithms lecture within $LESSON_SCROLLS scrolls of the schedule")
     }
 
     /** The demo session's tabs show [tab] with exactly [overlays] above it and no sheet or dialog. */
@@ -299,6 +324,8 @@ class StoreScreenshotCapture {
         const val QR_MIN_TEXTS = 1
         const val REVIEWS_SCROLL_DP = 420
         const val FEED_END_PX = 10_000f
+        const val LESSON_SCROLLS = 16
+        const val LESSON_SCROLL_SHARE = 0.6f
         const val TEST_WORDING = "Тест"
 
         /** The test tag of DS-03a's `ContentState`, as `DemoModeFlowTest` reads it. */
