@@ -37,9 +37,10 @@ import org.junit.runner.RunWith
 
 /**
  * Nothing the activity's window shows draws under the status bar or into a side's system bar or cutout: every text of
- * a tab root and of an overlay screen lies inside the safe area, as the legacy root's padding kept it in 2.2. Sheets
- * and dialogs are windows of their own and are not read. Runs in the demo session in every shell [ShellModeRule]
- * knows.
+ * a tab root and of an overlay screen lies inside the safe area. The Compose shell keeps clear of the system bars and
+ * the display cutout; the legacy pass checks only the system bars, which is all `MainActivity`'s legacy root pads
+ * (2.2 parity, a debug fallback since release builds run the Compose shell). Sheets and dialogs are windows of their
+ * own and are not read. Runs in the demo session in every shell [ShellModeRule] knows.
  */
 @RunWith(AndroidJUnit4::class)
 class ShellInsetsTest {
@@ -116,8 +117,7 @@ class ShellInsetsTest {
     private fun assertTextInsideTheSafeArea(what: String) = eventually {
         onActivity { activity ->
             val decor = activity.window.decorView
-            val insets = checkNotNull(ViewCompat.getRootWindowInsets(decor))
-                .getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val insets = checkNotNull(ViewCompat.getRootWindowInsets(decor)).getInsets(safeAreaTypes())
             assertTrue("the emulator shows a status bar", insets.top > 0)
             val texts = visibleTexts(decor)
             assertTrue("$what shows text", texts.isNotEmpty())
@@ -130,6 +130,12 @@ class ShellInsetsTest {
                 outside.isEmpty(),
             )
         }
+    }
+
+    /** The legacy root pads by the system bars only (as in 2.2); the Compose shell also by the cutout. */
+    private fun safeAreaTypes(): Int = when (shell.mode) {
+        ShellModeRule.Mode.LEGACY -> WindowInsetsCompat.Type.systemBars()
+        ShellModeRule.Mode.NAV3 -> WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
     }
 
     /** The texts of the shown Compose roots with their bounds in the window, clipped by their ancestors. */
