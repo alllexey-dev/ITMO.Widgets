@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.app.shell
 
 import android.app.Dialog
+import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.ComponentDialog
 import androidx.compose.ui.geometry.Rect
@@ -271,6 +272,50 @@ class AppShellTest {
         compose.onNodeWithTag(ShellTags.BAR).assertIsDisplayed()
     }
 
+    /**
+     * The predictive Back gesture on that profile moves it with the finger at full height, a cancel puts it back, and
+     * a committed gesture slides it on to the end from where the finger let go.
+     */
+    @Test
+    fun aPredictiveBackOnTheOverlayFromASheetFollowsTheFingerAndPopsFromThere() {
+        show()
+        act { open(AppRoutes.IcsExport) }
+        val profile = AppRoutes.UserProfile(ShellSamples.ISU)
+        act { open(profile) }
+        val window = compose.onRoot().fetchSemanticsNode().boundsInRoot
+        val dispatcher = compose.activity.onBackPressedDispatcher
+        val overlay = { compose.onNodeWithTag(ShellTags.overlay(profile.toString())).fetchSemanticsNode().boundsInRoot }
+
+        dragBack(HALF)
+        assertEquals(window.width * HALF, overlay().left, 1f)
+        assertEquals(window.height, overlay().height, 0.5f)
+        compose.runOnIdle { dispatcher.dispatchOnBackCancelled() }
+        compose.waitForIdle()
+        assertEquals(0f, overlay().left, 0.5f)
+        assertEquals(listOf<AppRoute>(profile), navigator.state.overlays)
+
+        dragBack(HALF)
+        val pop = framesOf(profile) { dispatcher.onBackPressed() }
+
+        val placed = pop.filter { it.width > 0f }
+        assertTrue("the pop slides on from the finger: $pop", placed.isNotEmpty())
+        placed.forEach { frame ->
+            assertTrue("never behind the finger: $pop", frame.left >= window.width * HALF - 1f)
+            assertEquals("full height on every frame: $pop", window.height, frame.height, 0.5f)
+        }
+        assertEquals(placed.map { it.left }.sorted(), placed.map { it.left })
+        assertEquals(ShellBackStack(), navigator.state)
+    }
+
+    private fun dragBack(progress: Float) {
+        val dispatcher = compose.activity.onBackPressedDispatcher
+        compose.runOnIdle {
+            dispatcher.dispatchOnBackStarted(BackEventCompat(0f, 0f, 0f, BackEventCompat.EDGE_LEFT))
+            dispatcher.dispatchOnBackProgressed(BackEventCompat(0f, 0f, progress, BackEventCompat.EDGE_LEFT))
+        }
+        compose.waitForIdle()
+    }
+
     /** The bounds of [route]'s overlay on every frame after [command], with the main clock paused, until it settles. */
     private fun framesOf(route: AppRoute, command: () -> Unit): List<Rect> {
         compose.mainClock.autoAdvance = false
@@ -402,5 +447,6 @@ class AppShellTest {
         /** Well past the 220 ms slide at 16 ms a frame. */
         const val MAX_FRAMES = 40
         const val MIN_SLIDE_FRAMES = 4
+        const val HALF = 0.5f
     }
 }
