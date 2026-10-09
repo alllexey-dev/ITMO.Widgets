@@ -498,8 +498,8 @@ class SettingsNavigationTest {
                     Screenshots.capture("settings-screenshots", "settings-qr-tile-${spec.name}") { settle() }
 
                     scenario.onActivity { settingsViewModel(it).onQrTileResult(QrTileAddResult.FAILED) }
-                    settle()
-                    onView(withText(R.string.settings_qr_tile_failed)).check(matches(isDisplayed()))
+                    // A short snackbar: polled at once, not after a settle that a slow emulator can stretch past it.
+                    TestUi.eventually { onView(withText(R.string.settings_qr_tile_failed)).check(matches(isDisplayed())) }
 
                     scenario.onActivity { settingsViewModel(it).onQrTileResult(QrTileAddResult.ADDED) }
                     settle()
