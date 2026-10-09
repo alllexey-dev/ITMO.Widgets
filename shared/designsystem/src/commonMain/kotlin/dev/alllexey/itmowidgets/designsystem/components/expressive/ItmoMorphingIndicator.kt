@@ -105,22 +105,25 @@ internal object ItmoLoadingMotion {
     /** Material's morph interval. */
     const val STEP_MILLIS = 650
 
-    /** The web indicator's turn per shape: Material's quarter turn plus its global rotation's share of a step. */
-    const val STEP_DEGREES = 140f
+    /**
+     * The turn per shape: the owner's 20 % slower take on the web indicator's 140 degrees (Material's quarter turn plus
+     * its global rotation's share of a step); 112.5 keeps the angle repeating after a whole number of steps.
+     */
+    const val STEP_DEGREES = 112.5f
 
     /** The web indicator's curve: a quick start, a slight overshoot of the angle (1.4 %) and a soft landing. */
     val StepEasing = CubicBezierEasing(0.38f, 1.21f, 0.22f, 1f)
 
     /**
      * Where the indicator's time starts: 30 % before the first step, in the still tail of the step that lands on the
-     * first shape (1.3 degrees past its angle, the curve's overshoot), so the shape rests for 195 ms before it first
+     * first shape (1 degree past its angle, the curve's overshoot), so the shape rests for 195 ms before it first
      * moves. The pull-to-refresh hand-off cross-fades the pulled shape into a still one, not into one already turning
      * at full speed (a double image).
      */
     const val START_STEPS = -0.3f
 
-    /** Steps after which the angle repeats modulo a full turn: 18 * 140 = 7 * 360 degrees. */
-    private const val TURN_STEPS = 18
+    /** Steps after which the angle repeats modulo a full turn: 16 * 112.5 = 5 * 360 degrees. */
+    private const val TURN_STEPS = 16
 
     /** Steps after which both the shape and the angle repeat, so the infinite animation restarts seamlessly. */
     fun cycleSteps(shapeCount: Int): Int = lcm(shapeCount, TURN_STEPS)

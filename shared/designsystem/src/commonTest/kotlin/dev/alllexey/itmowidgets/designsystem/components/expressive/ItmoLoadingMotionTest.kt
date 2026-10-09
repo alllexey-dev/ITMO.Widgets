@@ -43,7 +43,7 @@ class ItmoLoadingMotionTest {
         }
     }
 
-    /** The web indicator's rhythm: one shape and 140 degrees per 650 ms step, starting on the first shape at rest. */
+    /** The rhythm: one shape and 112.5 degrees per 650 ms step, starting on the first shape at rest. */
     @Test
     fun everyStepMorphsOneShapeAndTurnsTheWebIndicatorsAngle() {
         assertEquals(LoadingFrame(0, 0f, 0f), ItmoLoadingMotion.frame(0f, shapes))
@@ -56,7 +56,7 @@ class ItmoLoadingMotionTest {
             assertEquals(ItmoLoadingMotion.STEP_DEGREES, turn(start, end), SEAM_DEGREES)
         }
         assertEquals(650, ItmoLoadingMotion.STEP_MILLIS)
-        assertEquals(126, cycle)
+        assertEquals(112, cycle)
     }
 
     /** The indicator opens on the first shape, still for the length of the hand-off cross-fade (about 165 ms). */
@@ -157,8 +157,8 @@ class ItmoLoadingMotionTest {
     private companion object {
         const val FULL_TURN = 360f
 
-        /** The curve's top speed is 3.18 x the mean: 0.68 degrees and 0.0049 of a morph per millisecond. */
-        const val MAX_TURN_PER_MILLI = 0.75f
+        /** The curve's top speed is 3.18 x the mean: 0.55 degrees and 0.0049 of a morph per millisecond. */
+        const val MAX_TURN_PER_MILLI = 0.6f
         const val MAX_MORPH_PER_MILLI = 0.0055f
 
         const val EPSILON_STEPS = 1e-4f
