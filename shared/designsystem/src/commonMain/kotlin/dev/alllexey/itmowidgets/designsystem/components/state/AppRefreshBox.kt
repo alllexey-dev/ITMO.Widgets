@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingShapes
+import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoMorphingIndicator
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoHapticEvent
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoHaptics
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
@@ -122,12 +123,12 @@ private fun MaterialRefreshBox(
 }
 
 /**
- * `PullToRefreshDefaults.LoadingIndicator` with two fixes, both measured on a device (M3-FIX1). The turning shape
- * morphs through [ItmoLoadingShapes] (no wobble around its centre), and the pull's shape is drawn at
- * [ItmoLoadingShapes.pullToSpinScale], so the handoff keeps the shape's size instead of shrinking it by a seventh while
- * the two cross-fade. The turning indicator starts at 90 degrees and the pull's SoftBurst rests at 180; -90 puts the
- * first SoftBurst onto the last one (it repeats every 36 degrees). Past the threshold the pull turns as upstream's
- * does; with reduced motion the handoff is a cut.
+ * `PullToRefreshDefaults.LoadingIndicator` with fixes measured on a device (M3-FIX1, M3-FIX2). The turning shape is
+ * the app's [ItmoMorphingIndicator] (no wobble around its centre, no snap between steps), and the pull's shape is
+ * drawn at [ItmoLoadingShapes.pullToSpinScale], so the handoff keeps the shape's size instead of shrinking it by a
+ * seventh while the two cross-fade. The turning indicator starts on SoftBurst at 0 degrees and the pull's SoftBurst
+ * rests at 180, the same outline (it repeats every 36 degrees). Past the threshold the pull turns as upstream's does;
+ * with reduced motion the handoff is a cut.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -145,12 +146,7 @@ private fun ExpressiveRefreshIndicator(state: PullToRefreshState, refreshing: Bo
     ) {
         Crossfade(targetState = refreshing, animationSpec = fade) { turning ->
             if (turning) {
-                ContainedLoadingIndicator(
-                    modifier = fill.graphicsLayer { rotationZ = SPIN_START_DEGREES },
-                    containerColor = containerColor,
-                    indicatorColor = color,
-                    polygons = ItmoLoadingShapes.indeterminate,
-                )
+                ItmoMorphingIndicator(color = color, modifier = fill, containerColor = containerColor)
             } else {
                 ContainedLoadingIndicator(
                     progress = { state.distanceFraction },
@@ -335,9 +331,6 @@ private fun DrawScope.drawSpokes(count: Int, color: Color) {
 }
 
 private const val SPOKES = 8
-
-/** Lines the turning indicator's first SoftBurst up with the pull's last one (see [ExpressiveRefreshIndicator]). */
-private const val SPIN_START_DEGREES = -90f
 
 /** Upstream's turn of the pull past the threshold: half a turn per threshold distance. */
 private const val OVER_PULL_DEGREES = 180f

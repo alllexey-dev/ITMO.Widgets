@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.designsystem.components.expressive
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicatorDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,7 +23,7 @@ import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import kotlin.test.Test
 
-@OptIn(ExperimentalTestApi::class)
+@OptIn(ExperimentalTestApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ItmoLoadingIndicatorTest {
     @Test
@@ -44,6 +46,25 @@ class ItmoLoadingIndicatorTest {
                     .assertWidthIsEqualTo(IosMetrics.activityIndicatorLarge)
                     .assertHeightIsEqualTo(IosMetrics.activityIndicatorLarge)
             }
+        }
+    }
+
+    @Test
+    fun expressiveMaterialDrawsTheMorphingIndicatorAtMaterialsSizeAsAnIndeterminateProgress() = runComposeUiTest {
+        setContent {
+            ItmoTheme(expressive = true, platformStyle = ItmoPlatformStyle.Material) {
+                Row {
+                    ItmoLoadingIndicator(Modifier.testTag(PLAIN))
+                    ItmoLoadingIndicator(Modifier.testTag(CONTAINED), contained = true)
+                }
+            }
+        }
+
+        listOf(PLAIN, CONTAINED).forEach {
+            onNodeWithTag(it)
+                .assert(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
+                .assertWidthIsEqualTo(LoadingIndicatorDefaults.ContainerWidth)
+                .assertHeightIsEqualTo(LoadingIndicatorDefaults.ContainerHeight)
         }
     }
 
