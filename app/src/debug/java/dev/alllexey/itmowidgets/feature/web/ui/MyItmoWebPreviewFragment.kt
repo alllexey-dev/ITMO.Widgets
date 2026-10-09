@@ -7,7 +7,6 @@ import android.webkit.WebView
 import dev.alllexey.itmowidgets.BuildConfig
 import java.io.ByteArrayInputStream
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 /** Synthetic transport only; every request is intercepted so no fixture reaches an external service. */
@@ -18,7 +17,7 @@ class MyItmoWebPreviewFragment : MyItmoWebFragment() {
 
     override fun interceptRequest(request: WebResourceRequest): WebResourceResponse {
         check(BuildConfig.DEBUG)
-        gate?.await(30, TimeUnit.SECONDS)
+        gate?.let { held -> hold(held, request.isForMainFrame) }
         val error = failMainFrame && request.isForMainFrame
         if (request.isForMainFrame) mainRequests.incrementAndGet()
         if (error) errorResponses.incrementAndGet()
@@ -38,10 +37,23 @@ class MyItmoWebPreviewFragment : MyItmoWebFragment() {
             ByteArrayInputStream(html.toByteArray()))
     }
 
+    /** Waits for [held] without a deadline: a timed wait let the page load while a slow device was still settling. */
+    private fun hold(held: CountDownLatch, mainFrame: Boolean) {
+        if (mainFrame) heldMainFrames.incrementAndGet()
+        try {
+            held.await()
+        } finally {
+            if (mainFrame) heldMainFrames.decrementAndGet()
+        }
+    }
+
     companion object {
         val mainRequests = AtomicInteger()
         val errorResponses = AtomicInteger()
+        /** Main-frame requests waiting at [gate] now; while one waits, the browser stays in its loading state. */
+        val heldMainFrames = AtomicInteger()
         @Volatile var failMainFrame = false
+        /** Holds every request until it is counted down; a test that sets it counts it down in a `finally`. */
         @Volatile var gate: CountDownLatch? = null
     }
 }

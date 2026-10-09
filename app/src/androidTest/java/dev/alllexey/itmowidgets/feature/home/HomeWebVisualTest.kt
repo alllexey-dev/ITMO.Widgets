@@ -51,6 +51,7 @@ class HomeWebVisualTest {
                         HomeSemantics.click(HomeSemantics.root(it), HomeTestTags.WEB_FAB)
                     }
                     settle()
+                    awaitHeldMainFrame()
                     scenario.onActivity {
                         assertEquals(R.id.my_itmo_web, it.navigation.overlayHost!!.navController.currentDestination!!.id)
                         assertTrue(it.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment is MyItmoWebPreviewFragment)
@@ -157,6 +158,14 @@ class HomeWebVisualTest {
             .mapNotNull { it.config.getOrNull(SemanticsActions.OnClick) }
             .single()
         assertTrue(retry.action?.invoke() == true)
+    }
+
+    /** The home page's request waits at the gate, so the loading line stays until the test opens it. */
+    private fun awaitHeldMainFrame() = TestUi.eventually(
+        attempts = 200,
+        message = "The main frame did not reach the gate: requests=${MyItmoWebPreviewFragment.mainRequests.get()}",
+    ) {
+        assertEquals(1, MyItmoWebPreviewFragment.heldMainFrames.get())
     }
 
     private fun await(scenario: ActivityScenario<SettingsNavigationTestActivity>, predicate: (SettingsNavigationTestActivity) -> Boolean) {

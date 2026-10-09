@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -138,6 +139,7 @@ class RecordbookEntriesTest {
         recordbook.bars = AppResult.Failure(AppError.Unauthorized)
         show()
 
+        awaitText(BARS_LOGIN)
         compose.onNodeWithText(BARS_LOGIN).performClick()
         compose.waitForIdle()
 
@@ -163,9 +165,17 @@ class RecordbookEntriesTest {
         compose.waitForIdle()
     }
 
+    /**
+     * Waits for a snackbar's [text]: the snackbar takes its message and action from compose-resources' suspend
+     * `getString`, which loads a string the first time on `Dispatchers.Default`, so `waitForIdle` can return before it.
+     */
+    private fun awaitText(text: String) =
+        compose.waitUntil(TIMEOUT_MS) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+
     private fun sheet(route: AppRoute) = compose.onNodeWithTag(BottomSheetSceneStrategy.tag(route.toString()))
 
     private companion object {
+        const val TIMEOUT_MS = 5_000L
         const val BARS_LOGIN = "Войти в БАРС"
         const val BARS_LOGIN_ACTIVITY = "dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity"
         val SUBJECT = RecordbookSubjectArgs(
