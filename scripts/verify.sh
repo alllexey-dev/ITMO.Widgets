@@ -34,6 +34,11 @@
 #   instead of ANDROID_SERIAL and only with CI=true: locally it would create an AVD.
 # - Never runs --stop, publishToMavenLocal, connected* outside ui, or install*/uninstall* tasks.
 # - The last line of a finished run is `VERIFY A <mode> PASS|FAIL <secs>s <sha7>[+dirty]`.
+# - ui ends in scripts/ui-report.py (TC-UIREPORT): while Gradle runs, the device's TestRunner log is captured
+#   after a marker line, and every run of every test is listed, so a suite member that fails inside ShellSuite and
+#   passes standalone later (AGP's XML, HTML and "Finished <n> tests" keep only the last run) still fails the
+#   mode. A failed run is named with its suite or "standalone", "run k of n" and the ShellModeRule shell. Gradle's
+#   `FAILED` lines count too, so the managed device (no log capture) is covered.
 # - Exit code: 0 pass, 1 fail, 2 refused (usage, missing harness, unsafe device); refusals print no VERIFY line.
 
 set -u
@@ -171,6 +176,13 @@ run_quick() {
     note "scripts/test-new-feature-module.sh (outside any slot)"
     out=$("$root/scripts/test-new-feature-module.sh" 2>&1) || { printf '%s\n' "$out" >&2; return 1; }
     printf '%s\n' "$out" | tail -n 1 >&2
+  fi
+  # The ui-report parser on seeded logs: well under a second, no Gradle, no device (TC-UIREPORT).
+  if [ -e "$root/scripts/test-ui-report.sh" ]; then
+    local report
+    note "scripts/test-ui-report.sh (outside any slot)"
+    report=$("$root/scripts/test-ui-report.sh" 2>&1) || { printf '%s\n' "$report" >&2; return 1; }
+    printf '%s\n' "$report" | tail -n 1 >&2
   fi
   gradle_part android verifyQuick
 }
@@ -374,14 +386,78 @@ run_ui() {
     done
     classes=${classes#,}
   fi
+  local device=""
   if [ "$task" = :app:connectedGithubDebugAndroidTest ]; then
     check_device
+    device=$ANDROID_SERIAL
     note "running on $ANDROID_SERIAL: ${classes:-all instrumentation tests}"
   else
     note "running on the managed device $MANAGED_DEVICE: $classes"
   fi
+  ui_report_start "$device"
   gradle_part android "$task" ${extra[@]+"${extra[@]}"} \
-    ${classes:+"-Pandroid.testInstrumentationRunnerArguments.class=$classes"}
+    ${classes:+"-Pandroid.testInstrumentationRunnerArguments.class=$classes"} 2>&1 | tee "$ui_dir/gradle"
+  ui_report_finish "${PIPESTATUS[0]}"
+}
+
+# ---- ui report (TC-UIREPORT) -----------------------------------------------------------------------------
+
+ui_dir="" ui_logcat_pid="" ui_marker=""
+ui_cleanup() {
+  [ -z "$ui_logcat_pid" ] || kill "$ui_logcat_pid" 2> /dev/null
+  [ -z "$ui_dir" ] || rm -rf "$ui_dir"
+}
+
+# Starts the TestRunner log capture of serial $1 (none for the managed device) and waits for its marker line.
+ui_report_start() {
+  local serial=$1 adb="${ANDROID_HOME:-}/platform-tools/adb" tries=0
+  ui_dir=$(mktemp -d "${TMPDIR:-/tmp}/verify-ui.XXXXXX") || refuse "cannot create a temporary directory"
+  trap ui_cleanup EXIT
+  : > "$ui_dir/logcat"
+  [ -n "$serial" ] || return 0
+  ui_marker="itmo-verify-ui-start $$-$(date +%s)"
+  "$adb" -s "$serial" logcat -v raw -s TestRunner:V -T 1 > "$ui_dir/logcat" 2> /dev/null &
+  ui_logcat_pid=$!
+  # The reader may attach after the first marker; the report starts after the last one it saw.
+  while [ "$tries" -lt 20 ]; do
+    "$adb" -s "$serial" shell log -t TestRunner "'$ui_marker'" > /dev/null 2>&1
+    grep -qF "$ui_marker" "$ui_dir/logcat" 2> /dev/null && return 0
+    tries=$((tries + 1))
+    sleep 0.5
+  done
+  note "warning: the TestRunner log of $serial shows no marker; the ui report reads Gradle's output only"
+  kill "$ui_logcat_pid" 2> /dev/null
+  ui_logcat_pid=""
+  : > "$ui_dir/logcat"
+}
+
+# Stops the capture, prints the report and returns Gradle's code $1, or 1 when the report found a failed run.
+ui_report_finish() {
+  local rc=$1 report_rc tries=0
+  if [ -n "$ui_logcat_pid" ]; then
+    # logcat delivers the last lines a moment after the instrumentation exits.
+    while [ "$tries" -lt 10 ] && ! tail -n 1 "$ui_dir/logcat" | grep -q '^run finished:'; do
+      tries=$((tries + 1))
+      sleep 0.5
+    done
+    kill "$ui_logcat_pid" 2> /dev/null
+    wait "$ui_logcat_pid" 2> /dev/null
+    ui_logcat_pid=""
+  fi
+  if ! command -v python3 > /dev/null 2>&1; then
+    note "warning: no python3, so no ui report; the verdict is Gradle's"
+    return "$rc"
+  fi
+  python3 -I "$root/scripts/ui-report.py" --root "$root" --marker "${ui_marker:-itmo-verify-ui-start}" \
+    --logcat "$ui_dir/logcat" --gradle "$ui_dir/gradle" >&2
+  report_rc=$?
+  if [ "$report_rc" -eq 1 ] && [ "$rc" -eq 0 ]; then
+    note "Gradle passed, but the ui report lists a failed run (a later run of the same test hid it)"
+    rc=1
+  elif [ "$report_rc" -gt 1 ]; then
+    note "warning: scripts/ui-report.py exited $report_rc; the verdict is Gradle's"
+  fi
+  return "$rc"
 }
 
 # ---- run -------------------------------------------------------------------------------------------------

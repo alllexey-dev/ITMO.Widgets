@@ -25,3 +25,8 @@
   as before; OkHttp is 5.5.0.
 - One lint configuration covers `:app` and the shared modules, and
   `.editorconfig` mirrors the project code style.
+- `verify.sh ui` (and ship-check stage 4) reads every run of every
+  instrumentation test from the device's TestRunner log
+  (`scripts/ui-report.py`): a ShellSuite member that fails inside the suite
+  and passes standalone afterwards now fails the run and is listed with its
+  suite, run number and shell, where Gradle's reports kept only the last run.

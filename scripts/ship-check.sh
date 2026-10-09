@@ -9,7 +9,8 @@
 #   2 full      scripts/verify.sh full (unit tests incl. StableIdentifiersTest and Konsist, both lints, assembles)
 #   3 release   unsigned :app:assembleGithubRelease :app:bundlePlayRelease and both process*ReleaseManifest through
 #               `verify.sh run --`, then SKIP_BUILD=1 scripts/check-play-policy.sh
-#   4 ui        scripts/verify.sh ui all on emulator-5554, UpgradeFrom22Test included
+#   4 ui        scripts/verify.sh ui all on emulator-5554, UpgradeFrom22Test included; the failed runs of its ui
+#               report (ShellSuite members run twice) are listed under the table
 #   5 upgrade   install the v2.2 githubDebug on emulator-5554, seed the 2.2 data directory of
 #               app/src/androidTest/assets/upgrade-2.2/, `adb install -r` the head githubDebug and start it
 #
@@ -108,6 +109,7 @@ out_dir="$wt/run/ship/$sha"
 mkdir -p "$out_dir" || refuse "cannot create $out_dir"
 summary="$out_dir/summary.md"
 rows=""
+ui_failures=""
 failed=""
 started=$(date +%s)
 
@@ -120,6 +122,10 @@ write_summary() {
     printf -- '- Started: %s\n\n' "$(date -r "$started" '+%Y-%m-%d %H:%M:%S %z')"
     printf '| Stage | Result | Time | Log |\n|---|---|---|---|\n'
     printf '%b' "$rows"
+    if [ -n "$ui_failures" ]; then
+      printf '\n## Failed instrumentation runs (stage 4, scripts/ui-report.py)\n\n'
+      printf '%s\n' "$ui_failures" | sed 's/^ui-report: *FAIL /- /'
+    fi
   } > "$summary"
 }
 
@@ -143,6 +149,7 @@ run_stage() { # n name function
     verdict=FAIL
     failed=1
   fi
+  [ "$n" != 4 ] || ui_failures=$(grep '^ui-report: *FAIL ' "$log")
   printf '%s: stage %s %s %s\n' "$me" "$n" "$name" "$verdict" | tee -a "$log" >&2
   rows="$rows| $n $name | $verdict | $(($(date +%s) - t0))s | \`$(basename "$log")\` |\n"
   write_summary
