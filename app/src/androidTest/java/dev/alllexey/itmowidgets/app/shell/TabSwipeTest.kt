@@ -25,6 +25,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
+import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportWeekStripTestTags
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -42,8 +43,9 @@ import org.junit.runner.RunWith
 /**
  * The tab swipe on the real `MainActivity` in the demo session (design.md "Tab swipe"): through all five roots and
  * back, Back after swipes, an App Link while on another tab, and the sport segments handing the swipe over. Swipes
- * start inside the content, away from the system's back edges. Only the Compose shell has the swipe: the legacy pass
- * of [ShellModeRule] is skipped by an assumption, so these cases run from SH-1b9's switch on.
+ * start inside the tab content, away from the system's back edges, at a height read from the screen's geometry, so no
+ * status bar or cutout height moves them onto content that keeps drags from the tabs. Only the Compose shell has the
+ * swipe: the legacy pass of [ShellModeRule] is skipped by an assumption, so these cases run from SH-1b9's switch on.
  */
 @RunWith(AndroidJUnit4::class)
 class TabSwipeTest {
@@ -163,18 +165,45 @@ class TabSwipeTest {
         }
     }
 
-    /** A quick horizontal swipe across the middle 60% of the window, in from the system's back edges. */
+    /** A quick horizontal swipe across the middle 60% of the window, in from the system's back edges, at [swipeY]. */
     private fun swipe(towardsNext: Boolean) {
         val start = if (towardsNext) SWIPE_FAR else SWIPE_NEAR
         val end = if (towardsNext) SWIPE_NEAR else SWIPE_FAR
-        onView(isRoot()).perform(GeneralSwipeAction(Swipe.FAST, at(start), at(end), Press.FINGER))
+        val y = swipeY()
+        onView(isRoot()).perform(GeneralSwipeAction(Swipe.FAST, at(start, y), at(end, y), Press.FINGER))
         TestUi.idle()
     }
 
-    private fun at(fraction: Float) = CoordinatesProvider { view: View ->
+    private fun at(fraction: Float, y: Float) = CoordinatesProvider { view: View ->
         val location = IntArray(2).also(view::getLocationOnScreen)
-        floatArrayOf(location[0] + view.width * fraction, location[1] + view.height * SWIPE_HEIGHT)
+        floatArrayOf(location[0] + view.width * fraction, location[1] + y)
     }
+
+    /**
+     * The height in the window a swipe runs at: the middle of the shown tab content, or below the sport week strip
+     * when that reaches lower, since the strip keeps every drag from the tabs (design.md "Tab swipe", rule 4). Under
+     * an overlay the tab content has no semantics and the swipe runs at [SWIPE_HEIGHT] of the window.
+     */
+    private fun swipeY(): Float {
+        var y = 0f
+        onActivity { activity ->
+            val decor = activity.window.decorView
+            val shown = composeRoots(decor).flatMap { nodes(it.semanticsOwner.unmergedRootSemanticsNode).toList() }
+                .filter { it.boundsInWindow.width > 0f && it.boundsInWindow.height > 0f }
+            val content = shown.firstOrNull { it.tag == ShellTags.TAB_CONTENT }?.boundsInWindow
+            if (content == null) {
+                y = decor.height * SWIPE_HEIGHT
+                return@onActivity
+            }
+            val margin = SWIPE_MARGIN_DP * activity.resources.displayMetrics.density
+            val strip = shown.filter { it.tag == SportWeekStripTestTags.STRIP }.maxOfOrNull { it.boundsInWindow.bottom }
+            y = maxOf(content.center.y, strip?.plus(margin) ?: 0f)
+            check(y < content.bottom - margin) { "no room for a swipe between $y and the tab content's end $content" }
+        }
+        return y
+    }
+
+    private val SemanticsNode.tag: String? get() = config.getOrNull(SemanticsProperties.TestTag)
 
     private fun awaitTab(tab: AppTab) = eventually { assertEquals(tab, ShellProbe.current().tab) }
 
@@ -223,6 +252,9 @@ class TabSwipeTest {
         const val SWIPE_NEAR = 0.2f
         const val SWIPE_FAR = 0.8f
         const val SWIPE_HEIGHT = 0.45f
+
+        /** Clear of the strip's blocked bottom padding (8 dp) and of the content's end. */
+        const val SWIPE_MARGIN_DP = 24
 
         /** The sport pager's two segments (`title_sport_my`, `title_sport_sign`). */
         const val MY_SPORT = "Мой спорт"
