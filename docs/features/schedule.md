@@ -295,14 +295,14 @@ route draws its own chrome and keeps clear of the bars and the demo banner.
 - A lesson opens the lesson sheet (`AppRoutes.LessonDetails`) from the
   schedule, another user's schedule and the home card, as a full-height
   SwiftUI sheet around `LessonDetailsSheetRoute`, with the teacher's tone dot
-  and `Друзья на паре` as on Android. «Открыть на карте» hands the place to
+  and `Друзья на паре` as on Android. `Открыть на карте` hands the place to
   Apple Maps (`PlatformActions.openMap`): the pin of a known building from the
   same `itmo_buildings.json` (bundled by path), else the building text. The
   meeting link opens in Safari; when nothing takes either, the sheet says
   `schedule_map_unavailable` or `link_open_failed`.
 - A queued or predicted sport row opens the schedule's pending sport sheet,
   whose sport button selects the sport tab ([sport](sport.md#ios)).
-- «Расписание друзей» opens the friend picker as a sheet; its choice comes back
+- `Расписание друзей` opens the friend picker as a sheet; its choice comes back
   to the schedule through the router ([friend selector](friend-selector.md#ios)).
 - The `today` entry route (the App Shortcut and the quick action) puts the own
   schedule back on today, as `ScheduleTodayRequest` does on Android; a lesson
