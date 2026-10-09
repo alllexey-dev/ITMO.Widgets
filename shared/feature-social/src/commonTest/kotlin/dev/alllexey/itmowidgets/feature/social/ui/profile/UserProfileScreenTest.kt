@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -14,15 +15,20 @@ import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.width
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -34,8 +40,10 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import dev.alllexey.itmowidgets.feature.social.ui.profile.preview.UserProfilePreviewData as P
 
 @OptIn(ExperimentalTestApi::class)
@@ -285,6 +293,35 @@ class UserProfileScreenTest {
         onNodeWithContentDescription("Отзывы, 3").assertExists()
     }
 
+    @Test
+    fun aPersonWhoArrivesRevealsTheAvatarAndOneThereFromTheStartShowsAtOnce() = runComposeUiTest {
+        var state by mutableStateOf(P.friendPage)
+        mainClock.autoAdvance = false
+        setContent { ItmoTheme { UserProfileScreen(state, UserProfileActions()) } }
+        mainClock.advanceTimeByFrame()
+        val shown = avatarWidth()
+
+        state = UserProfileUiState.Loading
+        Snapshot.sendApplyNotifications()
+        mainClock.advanceTimeByFrame()
+        state = P.friendPage
+        Snapshot.sendApplyNotifications()
+        mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeByFrame()
+        val growing = avatarWidth()
+        assertTrue(growing < shown - Tolerance, "a person who arrives starts smaller: $growing of $shown")
+
+        mainClock.advanceTimeBy(REVEAL_SETTLE_MILLIS)
+        val revealed = avatarWidth()
+        assertTrue(abs(shown.value - revealed.value) <= Tolerance.value, "a revealed avatar: $revealed of $shown")
+    }
+
+    /** The width of the hero avatar's initials, which scale with the avatar's reveal. */
+    private fun ComposeUiTest.avatarWidth(): Dp =
+        onNode(hasText(INITIALS) and hasAnyAncestor(hasTestTag(UserProfileTestTags.HERO)), useUnmergedTree = true)
+            .getBoundsInRoot()
+            .width
+
     private fun ComposeUiTest.scrollTo(tag: String) {
         onNodeWithTag(UserProfileTestTags.LIST).performScrollToNode(hasTestTag(tag))
     }
@@ -303,6 +340,15 @@ class UserProfileScreenTest {
 
     private companion object {
         val TALL_PAGE = 4000.dp
+
+        /** The initials of [P.LONG_NAME], the preview person without a photo. */
+        const val INITIALS = "АК"
+
+        /** Pixel rounding of the initials' width. */
+        val Tolerance = 1.dp
+
+        /** Longer than the expressive spatial spring needs to settle. */
+        const val REVEAL_SETTLE_MILLIS = 2_000L
         val FriendshipCases = listOf(
             FriendshipCase(RelationshipState.NONE, "Добавить в друзья"),
             FriendshipCase(RelationshipState.OUTGOING, "Отменить заявку", status = "Заявка отправлена"),

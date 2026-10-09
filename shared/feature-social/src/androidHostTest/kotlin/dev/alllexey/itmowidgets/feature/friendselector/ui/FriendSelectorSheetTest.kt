@@ -29,6 +29,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -294,6 +295,33 @@ class FriendSelectorSheetTest {
     }
 
     @Test
+    fun theScopeIsAConnectedSingleChoiceWithOneOptionAlwaysChosen() = runComposeUiTest {
+        var scope by mutableStateOf(FriendSelectorScope.FRIENDS)
+        val choosing = FriendSelectorActions(
+            onScope = {
+                scope = it
+                events += "scope $it"
+            },
+        )
+        setContent {
+            Sheet { FriendSelectorSheetContent(state(FriendSelectorBody.Users(friends), scope = scope), choosing) }
+        }
+        val friendsOption = scopeOption("Друзья")
+        val allOption = scopeOption("Все")
+
+        for (option in listOf(friendsOption, allOption)) {
+            onNode(option).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+        }
+        onNode(friendsOption).assertIsSelected().performClick()
+        onNode(allOption).assertIsNotSelected().performClick()
+        waitForIdle()
+        onNode(allOption).assertIsSelected().performClick()
+        onNode(friendsOption).assertIsNotSelected()
+
+        assertEquals(listOf("scope ALL"), events)
+    }
+
+    @Test
     fun longNamesFitAtNarrowWidthAndLargeFontInEveryState() = runComposeUiTest {
         var state by mutableStateOf(state(FriendSelectorBody.Users(friends), selected = friends[0]))
         setContent { Sheet { FriendSelectorSheetContent(state, actions, query = FriendSelectorSamples.PEOPLE_QUERY) } }
@@ -319,6 +347,8 @@ class FriendSelectorSheetTest {
     }
 
     private fun ComposeUiTest.tagged(tag: String) = onNodeWithTag(tag)
+
+    private fun scopeOption(label: String) = hasText(label) and hasAnyAncestor(hasTestTag(FriendSelectorTestTags.SCOPE))
 
     /** The chips' tags in the order they stand, left to right. */
     private fun ComposeUiTest.chipTags(): List<String> = chips().map { it.first }

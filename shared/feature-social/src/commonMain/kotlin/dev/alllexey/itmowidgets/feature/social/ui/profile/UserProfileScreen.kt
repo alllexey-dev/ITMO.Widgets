@@ -107,6 +107,9 @@ object UserProfileTestTags {
  * § Person profile: the hero card, `Должности`, `Где найти`, `ITMO.Widgets`, `Учёба`, then the reviews, so late
  * reviews append under everything without moving it. The reviews section shows only while [reviewsEnabled] (always on
  * Android; the iOS host feeds it from its platform capabilities). Stateless; the route feeds it.
+ *
+ * The hero is the flow's hero moment: a person who arrives while the screen is open reveals the avatar
+ * ([rememberProfileHeroReveal]); a page already there on the first frame shows at once.
  */
 @Composable
 fun UserProfileScreen(
@@ -117,6 +120,7 @@ fun UserProfileScreen(
     listState: LazyListState = rememberLazyListState(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
+    val heroReveal = rememberProfileHeroReveal((state as? UserProfileUiState.Content)?.isu)
     Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxSize()) {
             AppTopBar(
@@ -148,7 +152,7 @@ fun UserProfileScreen(
                         rows = SKELETON_ROWS,
                     )
                     is UserProfileUiState.Error -> ProfileError(state.error, actions.onRetry)
-                    is UserProfileUiState.Content -> ProfilePage(state, actions, reviewsEnabled, listState)
+                    is UserProfileUiState.Content -> ProfilePage(state, actions, reviewsEnabled, listState, heroReveal)
                 }
             }
         }
@@ -177,6 +181,7 @@ private fun ProfilePage(
     actions: UserProfileActions,
     reviewsEnabled: Boolean,
     listState: LazyListState,
+    heroReveal: ProfileHeroReveal,
 ) {
     val facts = state.facts.groupBy(ProfileFact::kind)
     LazyColumn(
@@ -188,7 +193,7 @@ private fun ProfilePage(
             bottom = ItmoTheme.spacing.group,
         ),
     ) {
-        item(key = "hero", contentType = "hero") { ProfileHero(state, actions) }
+        item(key = "hero", contentType = "hero") { ProfileHero(state, actions, heroReveal) }
         factsItem(ProfileFactKind.POSITION, facts)
         factsItem(ProfileFactKind.ROOM, facts)
         state.social?.let { social ->

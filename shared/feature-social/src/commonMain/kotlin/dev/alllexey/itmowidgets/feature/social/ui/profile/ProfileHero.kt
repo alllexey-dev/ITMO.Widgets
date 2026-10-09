@@ -53,10 +53,11 @@ import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
  * The hero card (`item_profile_header.xml`, `Card.Hero`): the avatar with initials when there is no photo or it fails,
- * the name, one short line, the ISU number with a copy symbol and, with a social block, the friendship.
+ * the name, one short line, the ISU number with a copy symbol and, with a social block, the friendship. The flow's
+ * hero: the masked avatar plays [reveal] and the name takes the emphasized title.
  */
 @Composable
-internal fun ProfileHero(state: UserProfileUiState.Content, actions: UserProfileActions) {
+internal fun ProfileHero(state: UserProfileUiState.Content, actions: UserProfileActions, reveal: ProfileHeroReveal) {
     val name = state.displayName.asString()
     Column(
         Modifier
@@ -68,13 +69,13 @@ internal fun ProfileHero(state: UserProfileUiState.Content, actions: UserProfile
             .testTag(UserProfileTestTags.HERO),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            ItmoHeroAvatar(name, state.pictureUrl)
+            ItmoHeroAvatar(name, state.pictureUrl, Modifier.profileHeroReveal(reveal))
             Column(Modifier.weight(1f).padding(start = ItmoTheme.spacing.group)) {
                 Text(
                     name,
                     Modifier.fillMaxWidth().semantics { heading() },
                     color = ItmoTheme.colorScheme.onSurface,
-                    style = ItmoTheme.typography.titleLarge,
+                    style = ItmoTheme.emphasizedTypography.titleLarge,
                 )
                 state.headline?.text()?.let { line ->
                     Text(
