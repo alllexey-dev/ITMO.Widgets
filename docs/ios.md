@@ -2,13 +2,16 @@
 
 The iOS client is a SwiftUI shell around the shared Compose Multiplatform screens, with WidgetKit extensions and a
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
-umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with a Compose root in each of
-the five tabs (recordbook, schedule, home, sport, me), gated on the shared session with the sign-in screen and the
-first-run flow (see Shell and routes, Sign-in); the QR pass, the recordbook with its subject page and sheets, the
-schedule, the home feed, the sport tab with its details sheet and another user's sport, the Me tab and the social
-screens are its Compose screens, the widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets;
-App Shortcuts and quick actions in System entries) and the notification service passes notifications through
-unchanged.
+umbrella framework, `Shared`, built from `shared/ios/`. The app is the shell with a Compose root in each of the five
+tabs (recordbook, schedule, home, sport, me), gated on the shared session with the sign-in screen and the first-run
+flow (see Shell and routes, Sign-in). Its Compose screens are the shared ones Android shows: the QR pass, the
+recordbook with BARS, its subject page, sheets and mark tracking, the schedule with its changes and the friend
+picker, the home feed, the sport tab, the Me tab, the social screens, the teacher reviews and the subject links.
+Settings, sign-in, the first-run flow, the web sign-in, My ITMO and the update offer are SwiftUI screens over the
+shared ViewModels. The widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets; App
+Shortcuts and quick actions in System entries); one background refresh task runs the widget snapshots, the
+schedule change and mark checks and the calendar sync (Background refresh); the notification service passes
+notifications through unchanged. What iOS does differently from Android, and why, is in Degradations.
 
 ## Prerequisites
 
@@ -40,7 +43,7 @@ xcodegen --version
 | `iosApp/project.yml` | XcodeGen spec: targets, the Kotlin Run Script, the `ITMOWidgets` scheme. The generated `.xcodeproj` is ignored |
 | `iosApp/Config/` | `Base.xcconfig` (identifiers, versions, signing defaults) and one xcconfig per target |
 | `iosApp/Resources/` | `Info/` plists and the entitlements of each target, unsigned and `.signed` |
-| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `Bridge/` holds the Kotlin side's Swift glue (Swift bridge), `Features/<Feature>/` the Swift screen of each route (the QR pass's host), `Intents/` the App Shortcuts and the quick actions (System entries), `Background/` the app refresh task (Background refresh) |
+| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `App/` the app entry, the shell, the router and the Debug fixtures (Shell and routes), `Bridge/` the Kotlin side's Swift glue (Swift bridge), `DesignSystem/` the SwiftUI kit (Design system), `Features/<Feature>/` the Swift screen or host of each route, `Intents/` the App Shortcuts and the quick actions (System entries), `Background/` the app refresh task (Background refresh), `Push/` the notification taps and the permission refresh (Notifications), `Support/` string and icon resolution |
 | `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin); `<Widget>/` per widget, `Controls/` the Controls. The app target compiles these sources too, without `WidgetsBundle.swift`, so the hosted tests reach them |
 | `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin) |
 | `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images, `WidgetSnapshots/` (readers of the App Group snapshots), `Intents/` (App Intents of widget buttons and Controls, `RouteInbox`; not in the notification service) |
@@ -53,6 +56,28 @@ xcodegen --version
 
 Targets use directory globs: a new Swift file in a target directory needs no `project.yml` edit. Only the app links
 `Shared`; the extensions stay Swift-only (memory limits, ADR 0023).
+
+## Targets and processes
+
+Each bundle runs in a process of its own; they share only the App Group container and the Keychain group (Data
+sharing), never memory or a Koin graph.
+
+| Target | Bundle | Kotlin | Does |
+|---|---|---|---|
+| `ITMOWidgets` | the app | `Shared` | every screen, every network request, DataStore, the Keychain session, the App Group writers, the background refresh task, local notifications, the push registration |
+| `ITMOWidgetsWidgets` | the widget extension | none | the QR, lesson and day widgets and the QR Control; reads the App Group files on each timeline request and makes no network call; writes only qr-widget-v1.json (a reveal) |
+| `ITMOWidgetsNotificationService` | the notification service | none | delivers every notification unchanged |
+| `ITMOWidgetsTests`, `SnapshotTests` | hosted in the app | through the app | unit and snapshot tests (Build and test, Visual verification) |
+| `UITests` | the XCUITest runner | none | drives the app from outside |
+
+- The app process is the only one with DataStore and a Koin graph; an extension that needs a fact reads a
+  versioned JSON file the app wrote (session-v1.json for the session and the demo, never a token).
+- Memory: the widget extension has about 30 MB (SP-16a), which the Kotlin runtime alone would use up, so it links
+  no Kotlin; the app's own footprint is in Memory.
+- Time: the extensions compute no academic time. The app writes timelines with their instants, and WidgetKit
+  picks the entry of the moment.
+- Demo: the extensions see the demo only as `"demo": true` in session-v1.json and the snapshots; nothing in them
+  reaches the network.
 
 ## Strings and icons
 
@@ -212,9 +237,10 @@ the root page, its privacy row the privacy page.
   menu picker, a navigation row that pushes the next page's key onto the tab's stack, an action row, a read-only
   value. Rows carry `settings.row.<SettingRowId.key>`. Nothing renders until the page is `loaded`, so stored values
   never animate in.
-- Platform rows. The page providers hide what `PlatformCapabilities` does not offer: the recordbook page (mark
-  tracking), the quick settings tile, the spoiler animation and the custom spoiler image. The calendar rows are on
-  since IO-15b.
+- Platform rows. The page providers hide what `PlatformCapabilities` does not offer: the quick settings tile, the
+  spoiler animation and the custom spoiler image. The recordbook page (mark tracking) is on since IO-09d3, the
+  calendar rows since IO-15b. The QR widget page keeps its spoiler and dynamic colour switches, which the iOS
+  widget does not follow yet (Degradations).
 - iOS copy. `SettingsIosCopy` replaces the shared texts that name Android with `strings_ios*.xml` rows: the
   notification values and the background work row, which is Background App Refresh on iOS
   (`IosBackgroundWorkAccess` reads `UIApplication.backgroundRefreshStatus`) and opens the app's page in Settings.
@@ -250,7 +276,7 @@ exists in the build.
 | Keychain access group | `$(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared` (app and notification service) |
 | Marketing version | 2.3.0 for all three bundles |
 | URL scheme and route ids | `itmowidgets://route/<id>`, ids in Shell and routes |
-| Widget kinds | `dev.alllexey.itmowidgets.widget.qr` |
+| Widget kinds | `dev.alllexey.itmowidgets.widget.qr`, `dev.alllexey.itmowidgets.widget.single-lesson`, `dev.alllexey.itmowidgets.widget.day-schedule` |
 | Control kinds | `dev.alllexey.itmowidgets.control.qr` |
 | Quick action types | `dev.alllexey.itmowidgets.qr_pass`, `dev.alllexey.itmowidgets.today` (`$(PRODUCT_BUNDLE_IDENTIFIER).<route id>`) |
 | Background task | `dev.alllexey.itmowidgets.refresh` (`BGTaskSchedulerPermittedIdentifiers`, a literal as in `AppRefreshScheduler`) |
@@ -269,8 +295,8 @@ team ID is committed.
 
 ## Data sharing
 
-The iOS platform classes live in `shared/core/src/iosMain/` and run only in the app process (and, per SP-16, the
-notification service's `SharedPush`); the widget extension reads files and never links Kotlin.
+The iOS platform classes live in `shared/core/src/iosMain/` and run only in the app process; the extensions read
+files and never link Kotlin (Targets and processes).
 
 | Store | Where | Class |
 |---|---|---|
@@ -446,6 +472,9 @@ service's work with IO-12a.
   the notification center's delegate before launch ends. A tap reads the `data` envelope from `userInfo`
   (`NotificationTapRoutes`) and hands the route to `AppRouter.open(entry:)`; a tap that launched the app waits until
   the shell attaches the router. A notification that arrives in the foreground shows as a banner.
+- Local notifications (`IosAppNotifier`: schedule changes, marks, the BARS reminder) carry Android's entry action
+  in `userInfo["action"]`, but the tap handler routes only the push `data` envelope, so a tap on one opens the app
+  where it was (Degradations).
 
 | Payload type | Opens |
 |---|---|
@@ -477,7 +506,8 @@ Android keeps the widget options global, so they come from qr-pass-v1.json, not 
   expired state at the pass's deadline; a new timeline at least every hour, Android's update period.
 - The tap URL is `itmowidgets://route/qr_pass` (`widgetURL`); the spoiler alone is a `Button(intent:)`.
 - Degradations: no circle animation on reveal (WidgetKit animates only between entries); a custom spoiler image is
-  v2.4; the spoiler option has no iOS setting yet, so the spoiler is always on.
+  v2.4; the code is dark on white whatever `Динамические цвета` says; `QrPassSnapshotWriter` does not write
+  `spoiler` yet, so the spoiler stays on although settings and the first-run flow show its switch (Degradations).
 - `SnapshotTests/WidgetSnapshotTests` holds each state at the small family size (170 x 170 pt on the pinned
   iPhone, `WidgetSizes`) in the four appearances; `ITMOWidgetsTests/QrWidgetTimelineTests` the timeline.
 
@@ -732,6 +762,37 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   the ViewModel cleared when the view leaves the hierarchy, and events as Swift enums, over `BridgeProbeViewModel`, a
   probe in `shared/ios` that no screen uses.
 
+## Degradations
+
+Where iOS does less than Android, or does it differently, and why. Everything else is Android's behaviour on the
+same shared code (ADR 0016: full parity; only the debug tools stay Android-only). An open gap is a defect still to
+fix, not a decision.
+
+| Surface | On iOS | Why |
+|---|---|---|
+| Tabs | switch by the native tab bar only, no swipe between them | owner decision 2026-10-06: paging between tabs is not an iOS convention |
+| Colours | the static brand scheme on every screen | iOS has no wallpaper colours for `ColorSource.Platform` |
+| Placing a widget | the first-run flow and the home hint show how to add one | iOS lets no app place a widget |
+| QR widget reveal | the code appears without the circle animation | WidgetKit animates only between timeline entries |
+| QR widget custom spoiler image | the standard spoiler only; the settings rows are hidden | deferred to v2.4: it needs an iOS picker and crop screen and the image in the App Group |
+| QR widget spoiler and dynamic colour switches | shown in settings and the first-run flow, not followed: the spoiler stays on, the code dark on white | open gap: `QrPassSnapshotWriter` writes neither option into qr-pass-v1.json |
+| QR tile | the QR Control opens the pass; it cannot draw the code | a Control shows only a symbol and a title |
+| Pending sport rows in widgets | no seven-minute refresh; a row stays until the app writes again or its entry ends | WidgetKit allows about 40 to 70 reloads a day |
+| Day widget | shows the rows that fit, completed lessons leave first | widget views do not scroll |
+| Background checks | the schedule change, mark and calendar steps run when iOS wakes the app, at launch and on every return to it; no fixed rhythm | iOS has no WorkManager: the system picks the moments from how the app is used, never with Background App Refresh off or in Low Power Mode |
+| Quiet hours | a change or mark found between 00:00 and 06:00 is handed to the system for 06:00 at once | iOS might not wake the app soon after 06:00 |
+| BARS in the background | renewal only through the Keychain cookie copy, never the hidden WebKit view | a background run has about 30 s and no window |
+| Notification channels | one switch for all the app's notifications | iOS has no channels |
+| Tap on a local notification | opens the app without a route | open gap: the tap handler reads only the push `data` envelope, not `userInfo["action"]` |
+| Push | no device token, so nothing is registered with Backend; the notification service passes notifications through | APNs needs the paid Apple account (gate T13) |
+| App Links (`https`) | not opened; only `itmowidgets://route/<id>` | Universal Links need associated domains, which only a signed build after T13 has |
+| Web sign-in scanner | VisionKit's scanner, which asks for the camera; without it (or on the simulator) the code is typed | iOS has no Play services scanner |
+| Update offer | only the App Store page, and nothing while `APP_STORE_ID` is empty | no GitHub or Play channel on iOS; the App Store record arrives after T13 |
+| Background work settings | Background App Refresh instead of Android's battery and Xiaomi screens | those screens do not exist on iOS |
+| First-run flow | a relaunch in the middle starts at the first step | `ScreenViewModelStore` has no saved-state registry |
+| Diagnostics | Kotlin crashes show on the next launch; Swift crashes are not recorded | Swift crashes never pass Kotlin's hook |
+| Debug tools | none; Debug builds take launch arguments instead (`-itmoDemo`, `-itmoRunRefresh` and the others in this document) | ADR 0016 keeps the debug tools Android-only |
+
 ## Memory
 
 The app's physical footprint (`footprint -p <pid>`, `phys_footprint`) on the pinned simulator, Debug build, demo
@@ -777,6 +838,15 @@ scripts/ios/test.sh --cleanup                                # delete this workt
   start without it.
 - The app link prints one known warning: the ICU data object in Compose Multiplatform 1.12.1 targets iOS 18.5,
   above the 18.0 deployment target. It is harmless; the minimum stays iOS 18.0 (ADR 0023).
+
+Tiers (the iOS side of `docs/process/workflow.md`, Verification tiers):
+
+| Tier | Run | When |
+|---|---|---|
+| Card | `scripts/ios/test.sh`, plus `test.sh kn <module>` for each shared module whose `iosMain` changed and `test.sh ui <Class>` for the screens the card hosts or changes | every iOS card; a card that also touches `app/` or a `commonMain` runs `scripts/verify.sh quick` |
+| PR | `ios-check` (CI) | every PR into and push to `v2.3/next` and `master` |
+| Nightly | `ios-nightly.yml`: every shared module's `kn` tests and all of `UITests` | each night on `v2.3/next` |
+| Release | the snapshot matrix, `scripts/ios/screenshots.sh` in light and dark for review, `archive.sh` of the case that applies (Release) | before a TestFlight build or the F3 prerelease |
 
 ## CI
 

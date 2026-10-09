@@ -87,3 +87,13 @@ previews `DebugToolsScreen_{content,refresh-token-dialog,sport-score-dialog}`
 (the dialogs without their window) into `app/screenshots/` in light and dark.
 `MainNavigationTest` opens the screen in the overlay and leaves it through the
 back button's test tag. The screen has no debug host.
+
+## iOS
+
+The iOS app has no debug tools screen: the Me tab shows no developer tools row
+(`showDebugTools` is false), and ADR 0016 keeps these tools Android-only. A
+Debug build of the iOS app takes launch arguments instead (`-itmoDemo`,
+`-itmoSignedOut`, `-itmoOnboarding`, `-itmoRunRefresh`,
+`-itmoNotificationFixture`, `-itmoWebLoginFixture`, `-itmoBarsLogin`,
+`-itmoBarsRenew`, `-itmoForgetHomeHints`, `-itmoShellSession`), listed with
+what they do in [the iOS app](../ios.md). A Release build ignores them.

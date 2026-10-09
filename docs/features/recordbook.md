@@ -253,8 +253,8 @@ stay while the tab's root stays alive.
   total with no request.
 - Mark tracking is on since IO-09d3 (`PlatformCapabilities.marks`): the
   new-mark dots, the marks card and the settings page
-  ([mark tracking](marks-tracking.md#ios)). A notification's subject arguments
-  and the BARS sign-in entry route still open only the tab.
+  ([mark tracking](marks-tracking.md#ios)). A tap on a marks notification opens
+  the app without a route for now ([degradations](../ios.md#degradations)).
 - Tests: `RecordbookIosModuleTest` (`scripts/ios/test.sh kn
   :shared:feature-recordbook`: every definition of the screens resolves on the
   demo session, the demo recordbook answers, the subject links stand-in asks

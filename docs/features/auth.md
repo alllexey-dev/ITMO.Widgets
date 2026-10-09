@@ -104,6 +104,34 @@ ITMO.ID. Проверьте интернет.», `AppError.Unauthorized` (also a
 response) is «Сессию подтвердить не вышло. Войдите заново или проверьте Refresh
 token.», anything else «Вход не завершился. Попробуйте ещё раз.».
 
+## iOS
+
+The iOS app ([iOS app](../ios.md#data-sharing)) runs the same shared sign-in
+and session (`AuthViewModel`, `InteractiveLoginViewModel`,
+`SessionRepository`) under SwiftUI screens.
+
+- Screen. `AuthScreen` (`iosApp/Sources/Features/Auth/`) shows the same logo,
+  name, feature lines, `auth_login_itmo_id` and `auth_login_refresh_token`.
+  The refresh-token sign-in is a native alert with a secure field whose
+  sign-in button stays disabled while the field is blank.
+- ITMO.ID page. `ItmoSignInScreen` is a full-screen cover with a close button:
+  my.itmo.ru in a `WKWebView` on the default website data store, where the user
+  types the credentials on ITMO.ID's own pages. Android's
+  `token_refresh_interceptor.js` is bundled by path and posts the tokens
+  through a script message handler accepted only from the main frame of
+  `https://my.itmo.ru` on `/login/callback`. The main frame stays on https
+  pages; a failed page offers a retry. The website data is not cleared before
+  the page loads: sign-out has cleared it, and an expired session keeps
+  ITMO.ID's SSO cookies for the re-sign-in.
+- Session. The tokens are one Keychain item, `myitmo_tokens`, in Android's
+  five-line format before sealing; MyItmoApi's `TokenManager` refreshes them
+  under a cross-process file lock. Sign-out also clears the Keychain, the App
+  Group container and WebKit's website data.
+- The demo entry is the same five taps ([demo](demo.md#ios)).
+- Tests: `ITMOWidgetsTests/AuthTests`, `ITMOWidgetsTests/SessionTests`,
+  `ITMOWidgetsTests/KeychainTests`, `SnapshotTests/AuthSnapshotTests`,
+  `UITests/OnboardingUITests` (sign-in screen, five taps).
+
 ## Stable identifiers
 
 Quoted from `StableIdentifiersTest`: the token file `myitmo_tokens.enc` in

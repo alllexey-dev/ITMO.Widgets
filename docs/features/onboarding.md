@@ -113,6 +113,33 @@ to `Required` and the root graph returns to the flow with an empty back stack.
 The ViewModel is scoped to `OnboardingFragment`, so a replay starts on the first
 step with nothing carried over from the previous run.
 
+## iOS
+
+`OnboardingScreen` (SwiftUI, `iosApp/Sources/Features/Onboarding/`) runs the
+shared `OnboardingViewModel`; the shell reads `OnboardingGateViewModel`'s flag
+through its session gate, so an unread flag keeps the loading gate
+([iOS app](../ios.md#data-sharing)).
+
+- Steps and their order are Android's. The ViewModel gets a fresh
+  `SavedStateHandle` (`OnboardingIosParameters`), so a relaunch in the middle
+  starts at the first step.
+- Widget steps: iOS lets no app place a widget, so each shows how to add one
+  from the home screen (`ios_onboarding_widget_howto_title`,
+  `ios_onboarding_widget_howto_text`) above the same appearance rows, without
+  the custom spoiler image row and without a live preview. The QR widget does
+  not follow the spoiler switch on iOS yet
+  ([degradations](../ios.md#degradations)).
+- The notifications step asks with `UNUserNotificationCenter`, then opens the
+  app's notification settings (`onboarding_notifications_open_settings`,
+  `ios_onboarding_notifications_configure` once allowed); the status is read
+  again when the app returns to the foreground.
+- A back button above the step dots replaces the system back.
+- `Повторить первоначальную настройку` in settings resets the same flag.
+- A Debug build launched with `-itmoOnboarding` shows the flow over the demo
+  session, which otherwise skips it.
+- Tests: `ITMOWidgetsTests/OnboardingTests`,
+  `SnapshotTests/OnboardingSnapshotTests`, `UITests/OnboardingUITests`.
+
 ## Verification
 
 The screen is checked on the JVM in `:shared:feature-account`:

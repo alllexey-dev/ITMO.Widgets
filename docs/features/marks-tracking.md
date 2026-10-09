@@ -332,9 +332,10 @@ the dots show. iOS adds only the platform side
 - Notification. `IosMarksNotifier` posts Android's two notifications through
   `IosAppNotifier` on the thread `marks` (`marks-1` for `Новые оценки` with the
   subject names, `marks-2` for `Войдите в БАРС`), texts by catalog key. A tap
-  carries Android's entry action; on iOS both still open only the recordbook
-  tab (no subject arguments, no BARS sign-in route yet, see
-  [recordbook](recordbook.md#ios)), where the snackbar offers `Войти в БАРС`.
+  carries Android's entry action in `userInfo["action"]`, which the iOS tap
+  handler does not route yet, so it opens the app where it was
+  ([degradations](../ios.md#degradations)); the recordbook's snackbar offers
+  `Войти в БАРС`.
 - Quiet hours. `MarksRefresh` runs the check, then hands marks and the
   reminder found between 00:00 and 06:00 Moscow time to the system for 06:00
   at once (a calendar trigger); they count as delivered, as the schedule

@@ -77,3 +77,24 @@ scripts/verify.sh shots feature-account
 ./gradlew :app:testGithubDebugUnitTest
 ./gradlew :app:connectedPlayDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.update.ui.PlayUpdateActionTest
 ```
+
+## iOS
+
+The iOS app runs the same check and policy (`AppUpdateGateViewModel`,
+`PendingAppUpdate`) once per process on the tabs of a real session and asks
+Backend for the iOS release: `updateIosModule` binds `DevicePlatform.IOS` and
+the bundle's `CFBundleShortVersionString` (`version-info?platform=IOS`). An
+offer opens `AppUpdateScreen` (SwiftUI over `AppUpdateViewModel`) as a sheet
+with the same texts and buttons ([iOS app](../ios.md#data-sharing)).
+
+- The only channel is the App Store page
+  `https://apps.apple.com/app/id<APP_STORE_ID>` (`AppStoreListing`); no GitHub
+  or Play link, so there is no downloaded-update snackbar.
+- `APP_STORE_ID` (`iosApp/Config/Base.xcconfig`, `AppStoreID` in the app's
+  Info.plist) stays empty until the App Store record exists (gate T13);
+  without it the app never checks or offers (`AppUpdateOffer`).
+- Until Backend 1.8.0 is in production the check goes to the dev Backend
+  (`BACKEND_BASE_URL`).
+- Tests: `AppStoreListingTest`, `UpdateIosModuleTest`, `AccountIosModuleTest`
+  (simulator), `ITMOWidgetsTests/AccountTests`,
+  `SnapshotTests/AccountSnapshotTests`.
