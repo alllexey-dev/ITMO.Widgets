@@ -1,17 +1,27 @@
 #if DEBUG
 import Foundation
+import Shared
 import UserNotifications
 
-/// Debug-only local notifications shaped like Backend's pushes (`userInfo` with the `data` envelope and
-/// `recipient_isu`), so a UI test taps a real notification before the app has a push token:
-/// `-itmoNotificationFixture friendship|sport` asks for permission, then posts one a moment after launch. Every
+/// Debug-only notifications a UI test taps before the app has a push token: `-itmoNotificationFixture <kind>` asks
+/// for permission, then posts one a moment after launch. `friendship` and `sport` are local notifications shaped like
+/// Backend's pushes (`userInfo` with the `data` envelope and `recipient_isu`); `schedule-changes`, `marks` and
+/// `bars-login` go through the app's own notifier (`IosAppNotifier`) with the `userInfo` a real one carries. Every
 /// value is synthetic.
 enum NotificationFixtures {
     static let argument = "itmoNotificationFixture"
 
+    /// The pushes.
     enum Kind: String {
         case friendship
         case sport
+    }
+
+    /// The local notifications of the background checks.
+    enum LocalKind: String {
+        case scheduleChanges = "schedule-changes"
+        case marks
+        case barsLogin = "bars-login"
     }
 
     /// The fixture's `data` envelope, as Backend's payload contract spells it.
@@ -26,11 +36,27 @@ enum NotificationFixtures {
     }
 
     static func postIfRequested(_ defaults: UserDefaults = .standard) {
-        guard let kind = defaults.string(forKey: argument).flatMap(Kind.init(rawValue:)) else { return }
+        guard let name = defaults.string(forKey: argument) else { return }
+        if let kind = Kind(rawValue: name) {
+            postOnceAllowed { try await UNUserNotificationCenter.current().add(request(kind)) }
+        } else if let kind = LocalKind(rawValue: name) {
+            postOnceAllowed { try await post(kind) }
+        }
+    }
+
+    private static func postOnceAllowed(_ post: @escaping () async throws -> Void) {
         Task {
             let center = UNUserNotificationCenter.current()
             guard (try? await center.requestAuthorization(options: [.alert, .sound])) == true else { return }
-            try? await center.add(request(kind))
+            try? await post()
+        }
+    }
+
+    private static func post(_ kind: LocalKind) async throws {
+        switch kind {
+        case .scheduleChanges: try await postFixtureScheduleChange()
+        case .marks: try await postFixtureMarkDigest()
+        case .barsLogin: try await postFixtureBarsPrompt()
         }
     }
 

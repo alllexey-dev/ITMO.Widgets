@@ -75,7 +75,8 @@ enum RouteOpening: Equatable {
 /// link and notification becomes an `EntryRoute` (`EntryRouteParser`, `AppLinks`), every tap opens an `AppRoute`.
 ///
 /// An entry route waits in the shared `RouteQueue` until `ShellGate` reports the tabs and the tab bar is on screen,
-/// then runs once: it selects its tab, opens its overlay, hands its request to the tab's root and shows its alert.
+/// then runs once: it selects its tab, opens its overlay, hands its request to the tab's root, asks for its activity
+/// (the BARS sign-in, which the recordbook root shows) and shows its alert.
 /// `Routes` decides how iOS shows each key. The stacks and the sheet are plain state the shell binds to, so the tab
 /// container (`ShellTabs`) can change without touching the router.
 @MainActor
@@ -85,6 +86,9 @@ final class AppRouter {
     var sheet: ShellSheet?
     /// Bumped by each `ScheduleToday` request; the schedule root scrolls to today when it changes.
     private(set) var todayRequest = 0
+    /// Set by an entry route with the BARS sign-in activity (the BARS reminder); the recordbook root shows
+    /// `BarsLoginSheet` and takes it with `consumeBarsLogin()`, also when it appears only after the route ran.
+    private(set) var barsLoginRequested = false
 
     private var paths: [ShellTab: [ShellDestination]] = [:]
     private var requests: [ShellTab: TabRequest] = [:]
@@ -168,6 +172,12 @@ final class AppRouter {
         requests.removeValue(forKey: tab)
     }
 
+    /// Whether the BARS sign-in was asked for, answered `true` once.
+    func consumeBarsLogin() -> Bool {
+        defer { barsLoginRequested = false }
+        return barsLoginRequested
+    }
+
     // MARK: Gate
 
     /// The session gate (`ShellGate`): routes wait while the session is loading, signed out or in the first-run
@@ -182,6 +192,7 @@ final class AppRouter {
             sheet = nil
             requests = [:]
             results = [:]
+            barsLoginRequested = false
             selectedTab = .launch
         }
         drain()
@@ -212,11 +223,14 @@ final class AppRouter {
 
     /// Runs on the selected tab: a route that only names its tab opens it as it is, any other starts from the root.
     private func run(_ route: EntryRoute) {
-        guard route.overlay != nil || route.request != nil || route.alert != nil else { return }
+        guard route.overlay != nil || route.request != nil || route.activity != nil || route.alert != nil else {
+            return
+        }
         sheet = nil
         paths[selectedTab] = []
         if let overlay = route.overlay { present(overlay) }
         if let request = route.request { receive(request) }
+        if route.activity == .barsLogin { barsLoginRequested = true }
         if let alert = route.alert { present(alert) }
     }
 

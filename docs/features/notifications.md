@@ -189,11 +189,17 @@ the APNs token, and with it any push, needs the Apple account (gate T13).
   A change found between 00:00 and 06:00 Moscow time is handed to the system
   at once for 06:00 (a calendar trigger), so it does not wait for the next
   wake after the quiet hours.
-- A tap opens the app. The notification carries Android's entry action
-  (`ACTION_OPEN_SCHEDULE_CHANGES`) in `userInfo["action"]`, but the tap
-  handler routes only a push's `data` envelope (a friendship event to the
-  profile, a sport booking to its lesson), so a local notification opens the
-  app where it was ([degradations](../ios.md#degradations)).
+- A tap opens the screen the notification is about, as on Android, on a cold
+  and a warm start. The notifier writes the destination into `userInfo`
+  (`NotificationTapRoutes.userInfoOf`): Android's entry action under `action`
+  and its arguments as strings (the profile's `isu`, a subject's arguments
+  under the keys of Android's intent extras). The tap handler
+  (`NotificationTaps`) reads a push's `data` envelope first (a friendship
+  event to the profile, a sport booking to its lesson), else the action with
+  `EntryRouteParser`, and hands the route to the shell's route queue: the
+  schedule change digest opens the found changes, `Новые оценки` the
+  recordbook or the one subject's page, `Войдите в БАРС` the recordbook with
+  the BARS sign-in sheet ([iOS app](../ios.md#notifications)).
 - The marks digest and the `Войдите в БАРС` reminder are Android's
   (`IosMarksNotifier`, thread `marks`, IO-09d3), with the same delays and the
   same 06:00 hand-over ([mark tracking](marks-tracking.md#ios)).
