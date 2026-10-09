@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.onboarding.ui
 
+import android.animation.ValueAnimator
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.requiredSize
@@ -8,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ComposeUiTest
@@ -250,6 +252,48 @@ class OnboardingScreenTest {
         assertEquals(1, requests)
     }
 
+    @Test
+    fun aStepChangeSlidesToTheNextStepAndSettles() = runComposeUiTest {
+        var state by mutableStateOf(OnboardingPreviewSamples.state(OnboardingStep.COMPACT_WIDGET))
+        setContent { Screen(state) }
+        val settledLeft = onNodeWithText(COMPACT_TITLE).getBoundsInRoot().left
+
+        mainClock.autoAdvance = false
+        state = OnboardingPreviewSamples.state(OnboardingStep.FULL_WIDGET)
+        Snapshot.sendApplyNotifications()
+        repeat(SLIDE_FRAMES) { mainClock.advanceTimeByFrame() }
+        val sliding = onNodeWithText(FULL_TITLE).getBoundsInRoot().left
+        assertTrue(sliding > settledLeft, "the next step is already in place after $SLIDE_FRAMES frames")
+
+        mainClock.advanceTimeBy(SETTLE_MILLIS)
+        assertEquals(settledLeft, onNodeWithText(FULL_TITLE).getBoundsInRoot().left)
+    }
+
+    @Test
+    fun underReducedMotionTheNextStepShowsAtOnce() {
+        setDurationScale(0f)
+        try {
+            runComposeUiTest {
+                var state by mutableStateOf(OnboardingPreviewSamples.state(OnboardingStep.COMPACT_WIDGET))
+                setContent { Screen(state) }
+                val settledLeft = onNodeWithText(COMPACT_TITLE).getBoundsInRoot().left
+
+                mainClock.autoAdvance = false
+                state = OnboardingPreviewSamples.state(OnboardingStep.FULL_WIDGET)
+                Snapshot.sendApplyNotifications()
+                repeat(SLIDE_FRAMES) { mainClock.advanceTimeByFrame() }
+                assertEquals(settledLeft, onNodeWithText(FULL_TITLE).getBoundsInRoot().left)
+            }
+        } finally {
+            setDurationScale(1f)
+        }
+    }
+
+    /** `ValueAnimator.setDurationScale` is hidden; android-all has it (the animator scale of reduced motion). */
+    private fun setDurationScale(scale: Float) {
+        ValueAnimator::class.java.getMethod("setDurationScale", Float::class.javaPrimitiveType).invoke(null, scale)
+    }
+
     private companion object {
         val States: List<OnboardingUiState> = listOf(
             OnboardingPreviewSamples.state(OnboardingStep.COMPACT_WIDGET),
@@ -267,6 +311,13 @@ class OnboardingScreenTest {
         val NarrowWidth: Dp = 320.dp
         val WindowHeight: Dp = 891.dp
         const val NARROW_FONT_SCALE = 1.3f
+
+        const val COMPACT_TITLE = "Компактный виджет расписания"
+        const val FULL_TITLE = "Полный виджет расписания"
+
+        /** Few enough frames that a spring has not settled; enough for a jump to have been laid out. */
+        const val SLIDE_FRAMES = 3
+        const val SETTLE_MILLIS = 2_000L
     }
 }
 
