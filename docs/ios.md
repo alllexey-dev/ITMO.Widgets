@@ -10,8 +10,8 @@ picker, the home feed, the sport tab, the Me tab, the social screens, the teache
 Settings, sign-in, the first-run flow, the web sign-in, My ITMO and the update offer are SwiftUI screens over the
 shared ViewModels. The widget bundle holds the QR, lesson and day widgets and the QR Control (see Widgets; App
 Shortcuts and quick actions in System entries); one background refresh task runs the widget snapshots, the
-schedule change and mark checks and the calendar sync (Background refresh); the notification service passes
-notifications through unchanged. What iOS does differently from Android, and why, is in Degradations.
+schedule change and mark checks and the calendar sync (Background refresh); the notification service books the
+sport place a push announces (Notifications). What iOS does differently from Android, and why, is in Degradations.
 
 ## Prerequisites
 
@@ -45,7 +45,7 @@ xcodegen --version
 | `iosApp/Resources/` | `Info/` plists and the entitlements of each target, unsigned and `.signed` |
 | `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `App/` the app entry, the shell, the router and the Debug fixtures (Shell and routes), `Bridge/` the Kotlin side's Swift glue (Swift bridge), `DesignSystem/` the SwiftUI kit (Design system), `Features/<Feature>/` the Swift screen or host of each route, `Intents/` the App Shortcuts and the quick actions (System entries), `Background/` the app refresh task (Background refresh), `Push/` the notification taps and the permission refresh (Notifications), `Support/` string and icon resolution |
 | `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin); `<Widget>/` per widget, `Controls/` the Controls. The app target compiles these sources too, without `WidgetsBundle.swift`, so the hosted tests reach them |
-| `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin) |
+| `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin). The app target compiles these sources too, so the hosted tests drive them on fixtures |
 | `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images, `WidgetSnapshots/` (readers of the App Group snapshots), `Intents/` (App Intents of widget buttons and Controls, `RouteInbox`; not in the notification service) |
 | `iosApp/Strings/` | `strings_ios*.xml`: catalog files with copy only iOS shows |
 | `iosApp/Tests/UnitTests/` | `ITMOWidgetsTests`, hosted in the app; `Fixtures/` holds the App Group JSON the Kotlin writers' tests produce |
@@ -66,7 +66,7 @@ sharing), never memory or a Koin graph.
 |---|---|---|---|
 | `ITMOWidgets` | the app | `Shared` | every screen, every network request, DataStore, the Keychain session, the App Group writers, the background refresh task, local notifications, the push registration |
 | `ITMOWidgetsWidgets` | the widget extension | none | the QR, lesson and day widgets and the QR Control; reads the App Group files on each timeline request and makes no network call; writes only qr-widget-v1.json (a reveal) |
-| `ITMOWidgetsNotificationService` | the notification service | none | delivers every notification unchanged |
+| `ITMOWidgetsNotificationService` | the notification service | none | the sport booking of a push and its text (Notifications); reads session-v1.json and the Keychain session, refreshes it under the `myitmo-refresh` lock, calls MyITMO and Backend |
 | `ITMOWidgetsTests`, `SnapshotTests` | hosted in the app | through the app | unit and snapshot tests (Build and test, Visual verification) |
 | `UITests` | the XCUITest runner | none | drives the app from outside |
 
@@ -316,7 +316,7 @@ container, logs one warning per process and carries on; the extensions then see 
 | File | Written by | Read by | Notes |
 |---|---|---|---|
 | `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted; `myitmo-refresh` guards the token refresh |
-| session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension (`SessionFile.swift` in `iosApp/Shared/WidgetSnapshots/`), notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` is the last notification settings answer (see Notifications) |
+| session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension (`SessionFile.swift` in `iosApp/Shared/WidgetSnapshots/`), notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool, "servicesEnabled": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` is the last notification settings answer (see Notifications); `servicesEnabled` the services opt-in (`BackendGate`), absent reads as off |
 | qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass and every change of a QR widget option (`QrSettingsPreferences`) while the pass is valid; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` and `QrWidgetAppearance.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool, "dynamicColors": Bool, "animation": String}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; `spoiler`, `dynamicColors` and `animation` (a `QrAnimationType` name) are the global QR widget options, each read as Android's default (on, on, `CIRCLE`) when absent or unknown, so a file from before IO-FIX-QRW stays version 1; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`) |
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension, on a tap on the spoiler | widget extension (`QrWidgetReveal.swift`) | `{"revealedUntil": ISO 8601}`: the tap's time plus 30 s, Android's auto-hide delay; one file for every placed QR widget; never read by the app |
 | schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`, iosMain) on the session, the schedule widget options, every return to the foreground, a changed cached schedule and `ScheduleWidgetRefreshRequester` (sport); reloads `dev.alllexey.itmowidgets.widget.single-lesson` and `.day-schedule` | widget extension (`LessonTimeline.swift`) | LS-3's `ScheduleWidgetTimeline` from `ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow (academic zone): `{"version": 1, "generatedAt", "validUntil", "entries": [{"validFrom", "snapshot"}]}`, the snapshot in the keys of Android's widget snapshot, nulls omitted, defaults written; rooms and buildings are already the short titles Android's widget shows; an unavailable schedule keeps the previous file; the envelope around `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json` is what the writer writes for it (`ScheduleTimelineWriterTest`, `ScheduleTimelineTests`) |
@@ -342,7 +342,7 @@ entitlements, so Keychain tests are the hosted `ITMOWidgetsTests/KeychainTests`.
 
 | Item (account) | Written by | Read by |
 |---|---|---|
-| `myitmo_tokens` | `KeychainTokenStorage` (sign-in, and MyItmoApi's `TokenManager` on refresh) | app, notification service |
+| `myitmo_tokens` | `KeychainTokenStorage` (sign-in, and MyItmoApi's `TokenManager` on refresh); the notification service's `MyItmoAccess` on its own refresh | app, notification service |
 | `bars_tokens.enc` | `BarsTokenStore` (`"<isu>\n<header>"`, the BARS sign-in and every renewal) | app |
 | `itmo_id_cookies` | `KeychainItmoIdCookies` (the `id.itmo.ru` cookies of WebKit, merged with each replay's `Set-Cookie`) | app |
 
@@ -454,8 +454,7 @@ No GitHub or Play channel.
 
 ## Notifications
 
-Push plumbing before the Apple account (IO-13a); the APNs and FCM token arrive with IO-13b, the notification
-service's work with IO-12a.
+Push plumbing before the Apple account (IO-13a); the APNs and FCM token arrive with IO-13b.
 
 - Registration. `PushDeviceRegistration` (`shared/core/src/commonMain/.../core/notification/`) is both the
   session's `FcmTokenSync` and its `BackendDeviceSession`: it registers the token with `platform = IOS`,
@@ -493,6 +492,31 @@ service's work with IO-12a.
 | `NotificationDestination.Sport`, `UserProfile` (notices of the push handlers, none on iOS before T13) | `action` = `ACTION_OPEN_SPORT`; `ACTION_OPEN_USER_PROFILE`, `isu` | the sport tab; the me tab with the profile |
 | anything else | | nothing |
 
+- Notification service (IO-12a, Swift only: SP-16a measured a Kotlin/Native one at 21 MB peak RSS against
+  Swift's 16 MB, ADR 0023). Backend sends iOS an alert with `mutable-content`
+  ([Backend notifications](../../itmo-widgets-backend/docs/contracts/notifications.md#ios-delivery-options)); `PushHandler` decides what it shows:
+  - signed out, the demo, a `recipient_isu` other than session-v1.json's `isu`, or a sport push without
+    `servicesEnabled`: dropped (empty content, see Degradations);
+  - a friendship push: Backend's alert as it is (`loc-key`, `loc-args`);
+  - a sport push: `SportPushBooker`, Android's `SportSignPushBooker` in Swift: each lesson decoded on its own (an
+    offset date-time without seconds parses), skipped when malformed, unnamed, repeated or ended, then `POST
+    /api/sport/sign/schedule/lessons` on MyITMO. A booking marks the queue satisfied on Backend, MyITMO's refusal
+    cancels it (`POST /api/sport/<free-sign|auto-sign>/lesson/<id>/mark-satisfied|cancel`, `X-App-Version` as
+    the app), and the alert gets Android's text: `notification_sport_success` or `_failure`, then the section and
+    the Moscow start. A full lesson, or nothing left to book, is dropped, as Android shows nothing; a failure before
+    MyITMO's answer (network, the session) keeps Backend's `Освободилось место на занятии`, and Backend's next
+    attempt retries. Thread, collapse id and `userInfo` stay Backend's, so a tap opens the lesson.
+  - The token: `MyItmoAccess` reads `myitmo_tokens` (the format above) and, when the access token is valid for
+    less than 30 s, refreshes it once at ITMO.ID inside `flock` on `locks/myitmo-refresh.lock` after a re-read, as
+    MyItmoApi's `TokenManager` does, and stores the rotated session; a failure keeps the stored one. No token or
+    request is logged; URLSession runs ephemeral, without cookies, cache or redirects.
+  - When iOS ends the extension's time (`serviceExtensionTimeWillExpire`) Backend's alert is delivered; a
+    delivery happens once, whichever comes first. Bookings, queues and widgets refresh when the app runs next.
+  - `simctl push` never runs an extension (SP-23), so `ITMOWidgetsTests/NotificationServiceTests` replays the
+    Kotlin golden fixtures by path: Backend's FCM envelopes (`contract/fcm/`), MyITMO's sign-up answers and
+    KM-11c's golden `sign-outcomes.txt` and `push.txt`, plus the gates, the refresh under the lock, the Keychain
+    item shared with the Kotlin store and the time limit. The memory of the extension on a device is SP-16b's
+    (IO-12b, after T13).
 - A Debug build launched with `-itmoNotificationFixture <kind>` asks for permission and posts one notification
   (`NotificationFixtures`): `friendship` and `sport` shaped like the push two seconds later, `schedule-changes`,
   `marks` and `bars-login` at once through the app's notifier with their real `userInfo`; `NotificationTapUITests`
@@ -806,7 +830,8 @@ fix, not a decision.
 | Quiet hours | a change or mark found between 00:00 and 06:00 is handed to the system for 06:00 at once | iOS might not wake the app soon after 06:00 |
 | BARS in the background | renewal only through the Keychain cookie copy, never the hidden WebKit view | a background run has about 30 s and no window |
 | Notification channels | one switch for all the app's notifications | iOS has no channels |
-| Push | no device token, so nothing is registered with Backend; the notification service passes notifications through | APNs needs the paid Apple account (gate T13) |
+| Push | no device token, so nothing is registered with Backend; the notification service is tested on fixtures only | APNs needs the paid Apple account (gate T13) |
+| Dropped pushes | a push the notification service drops (another account, the demo, a full lesson) still shows a notification | hiding one needs the `usernotifications.filtering` entitlement, requested after T13 (ADR 0023) |
 | App Links (`https`) | not opened; only `itmowidgets://route/<id>` | Universal Links need associated domains, which only a signed build after T13 has |
 | Web sign-in scanner | VisionKit's scanner, which asks for the camera; without it (or on the simulator) the code is typed | iOS has no Play services scanner |
 | Update offer | only the App Store page, and nothing while `APP_STORE_ID` is empty | no GitHub or Play channel on iOS; the App Store record arrives after T13 |

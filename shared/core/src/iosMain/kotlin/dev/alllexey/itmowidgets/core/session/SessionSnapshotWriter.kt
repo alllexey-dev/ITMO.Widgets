@@ -17,7 +17,9 @@ data class SessionSnapshot(
     /** The demo session: the extensions show fictional data and send nothing. */
     val demo: Boolean,
     /** Whether the user allows alert notifications. */
-    val alertsAllowed: Boolean
+    val alertsAllowed: Boolean,
+    /** The ITMO.Widgets services opt-in (`BackendGate`): the notification service books and settles only with it. */
+    val servicesEnabled: Boolean
 )
 
 /** The only writer of [FILE]; the session's lifecycle effects call it on every session change. */

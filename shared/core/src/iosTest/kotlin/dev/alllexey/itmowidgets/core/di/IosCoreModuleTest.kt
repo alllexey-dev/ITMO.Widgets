@@ -108,7 +108,8 @@ class IosCoreModuleTest {
 
             koin.get<MyItmoClient>()
             koin.get<BackendClient>()
-            koin.get<SessionSnapshotWriter>().write(SessionSnapshot(isu = null, demo = true, alertsAllowed = false))
+            koin.get<SessionSnapshotWriter>()
+                .write(SessionSnapshot(isu = null, demo = true, alertsAllowed = false, servicesEnabled = false))
             koin.getAll<SessionDataCleaner>()
                 .filterNot { it is KeychainSessionDataCleaner }
                 .forEach { it.clearSessionData() }

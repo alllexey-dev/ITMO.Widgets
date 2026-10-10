@@ -34,7 +34,7 @@ class IosSessionDataCleanersTest {
     fun theAppGroupCleanerRemovesEverySnapshotButKeepsTheLocks() = runTest(dispatcher) {
         FileCrossProcessLock(directory.locks).withLock(MY_ITMO_REFRESH_LOCK) {}
         SessionSnapshotWriter(AppGroupSnapshotWriter(directory, WidgetReloader {}))
-            .write(SessionSnapshot(isu = 123456, demo = false, alertsAllowed = true))
+            .write(SessionSnapshot(isu = 123456, demo = false, alertsAllowed = true, servicesEnabled = true))
         FileSystem.SYSTEM.write(directory.file("qr-pass-v1.json")) { writeUtf8("{}") }
         FileSystem.SYSTEM.createDirectories(directory.root / "later-card")
 
@@ -55,7 +55,7 @@ class IosSessionDataCleanersTest {
         FileSystem.SYSTEM.createDirectories(library / "Preferences")
         FileSystem.SYSTEM.write(metadata) { writeUtf8("<plist/>") }
         SessionSnapshotWriter(AppGroupSnapshotWriter(directory, WidgetReloader {}))
-            .write(SessionSnapshot(isu = 123456, demo = false, alertsAllowed = true))
+            .write(SessionSnapshot(isu = 123456, demo = false, alertsAllowed = true, servicesEnabled = true))
 
         AppGroupSessionDataCleaner(directory, dispatchers).clearSessionData()
 
