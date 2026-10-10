@@ -31,8 +31,10 @@
 Achievements, messaging, posts, followers and free-window discovery are outside
 the roadmap. Do not add them opportunistically.
 
-Development happens on `master`, which builds `2.3-SNAPSHOT` (version code
-20290); the latest release is `2.2` (version code 6). The steps of a release
+Development happens on `master`, which builds `2.3-SNAPSHOT` at the code of
+the last beta (20291 after `2.3.0-beta.1`); the latest release is `2.2`
+(version code 6), the latest prerelease `2.3.0-beta.1` (tag `v2.3.0-beta.1` on
+`2e5ab822`, published 2026-10-10). The steps of a release
 and the owner's decision points are in the
 [release checklist](../process/release-checklist.md).
 
@@ -69,8 +71,11 @@ either updates the other:
   uploads while 2.3 is in development; its version codes continue 7, 8, … below
   100, and every fix is ported to `master` by hand (the ledger is kept locally).
 - From 2.3 the version code is `major*10000 + minor*100 + patch`: 2.3.0 = 20300,
-  `2.3.0-beta.N` = 20290 + N with N ≤ 9, development builds 20290. Previews ship
-  only as a GitHub `--prerelease` or a Play internal upload.
+  `2.3.0-beta.N` = 20290 + N with N ≤ 9, development builds 20290, or the last
+  beta's code once a beta is tagged. Previews ship only as a GitHub
+  `--prerelease` or a Play internal upload; `2.3.0-beta.1` went out on
+  2026-10-10 only as an APK in the Telegram channel, with no GitHub release,
+  so `releases/latest` stays `v2.2`.
 - Until the Play listing is public, GitHub is the only channel; the README and
   the site get the Google Play button only after publication.
 
@@ -81,9 +86,9 @@ the minimum Core and Backend it needs.
 
 | Client | Core | Backend | MyItmoApi | Notes |
 |---|---|---|---|---|
-| iOS 2.3 | 2.0, built in | 1.8.0 in production; the development Backend before gate R | 2.0.0 | Not released. Uses the `platform` parameter, alert pushes and account deletion of 1.8.0. |
-| 2.3 (development) | 2.0, built in (`:shared:backend-client`, decision 0026); 1.7.0 from Maven Central until it lands | 1.7.0 or later; new request fields are optional | 2.0.0 (`dev.alllexey:my-itmo-api-kmp`: JVM, Android minSdk 26 and iOS; suspend ITMO.ID, MyITMO and BARS clients in `dev.alllexey.itmoapi`), planned for M2 and not published; until then the pinned `2.0.0-SNAPSHOT` source through the composite build (decision 0024). The 1.x `dev.alllexey:my-itmo-api` stays a separate compatible line; the 1.x to 2.x mapping is in `M/docs/migration.md` | Not released. Works against production 1.7.0. |
-| 2.2 | 1.7.0 (Maven Central), including `teacherReviews` with `reviews`/`mine`/`summary` and `saveMyTeacherReview`, `deleteMyTeacherReview`, `voteTeacherReview`, `reportTeacherReview`, `teacherSummaryLevels` | 1.7.0, PostgreSQL through V10: V4 (subject links), V5 (web sessions and admin), V6, V7 (external teacher reviews), V8 (`V8__service_credentials.sql`; `my_itmo_storage` stays until a separate migration of the next release), V9 (`V9__teacher_reviews.sql`) and V10 (`V10__teacher_summaries.sql`, AI summaries and the `GEMINI_API_KEY` row) | 1.8.2 (through Core and directly; `BarsAuthHelper.requestCodeWithCookies` for the background BARS renewal of the mark check) | Released on GitHub (`github` variant); Google Play follows. Backend 1.7.0 has run on production since 2026-10-03 and stays compatible with 2.1.1. |
+| iOS 2.3 | 2.0, built in | 1.8.0, in production | 2.0.0 | Not released. Uses the `platform` parameter, alert pushes and account deletion of 1.8.0. |
+| 2.3 (development) | 2.0, built in (`:shared:backend-client`, decision 0026); 1.7.0 from Maven Central until it lands | 1.7.0 or later; new request fields are optional | 2.0.0 (`dev.alllexey:my-itmo-api-kmp`: JVM, Android minSdk 26 and iOS; suspend ITMO.ID, MyITMO and BARS clients in `dev.alllexey.itmoapi`), planned for M2 and not published; until then the pinned `2.0.0-SNAPSHOT` source through the composite build (decision 0024). The 1.x `dev.alllexey:my-itmo-api` stays a separate compatible line; the 1.x to 2.x mapping is in `M/docs/migration.md` | Not released. Works against production 1.8.0. |
+| 2.2 | 1.7.0 (Maven Central), including `teacherReviews` with `reviews`/`mine`/`summary` and `saveMyTeacherReview`, `deleteMyTeacherReview`, `voteTeacherReview`, `reportTeacherReview`, `teacherSummaryLevels` | 1.7.0, PostgreSQL through V10: V4 (subject links), V5 (web sessions and admin), V6, V7 (external teacher reviews), V8 (`V8__service_credentials.sql`; `my_itmo_storage` stays until a separate migration of the next release), V9 (`V9__teacher_reviews.sql`) and V10 (`V10__teacher_summaries.sql`, AI summaries and the `GEMINI_API_KEY` row) | 1.8.2 (through Core and directly; `BarsAuthHelper.requestCodeWithCookies` for the background BARS renewal of the mark check) | Released on GitHub (`github` variant); Google Play follows. Backend 1.7.0 ran on production from 2026-10-03 to 2026-10-10 and stays compatible with 2.1.1; 1.8.0 serves 2.2 as well. |
 | 2.1.1 | 1.2.0 | 1.2.1 (`770293b`, current groups in every profile response) | 1.8.1 | Client-only release; works against Backend 1.2.0 as well, then lesson friends may show an older group. |
 | 2.1 | 1.2.0 (Maven Central, tag `1.2.0`) | 1.2.0, commit `a70cab1` or later | 1.8.1 (Maven Central, tag `1.8.1`) | Backend 1.2.0 requires the PostgreSQL cutover; 2.0.x clients are rejected by it and are told to update through `GET /api/app/version`. |
 | 2.0.x (legacy) | 1.1.x | 1.1.6 | 1.6.0 | MariaDB backend, reciprocal friend requests, boolean privacy. |
@@ -100,8 +105,8 @@ changes only additively (decision 0030).
 
 | Backend | Content | Android and iOS served |
 |---|---|---|
-| 1.8.0 (planned) | The single Backend release of v2.3, in production at gate R: `version-info?platform=ANDROID\|IOS`, Spring Boot 4.1, V11 (drops `my_itmo_storage`), V12 `device_platform`, 401 for missing or invalid credentials (403 stays for denied access, `restricted` and `csrf`), push v2 with APNs alerts, `DELETE /api/users/me`, MyItmoApi 2.0.0. Expand-only, so the rollback to the 1.7.0 image stays image-only | Android 2.1 and later; iOS 2.3 |
-| 1.7.0 | In production since 2026-10-03 | Android 2.1 and later |
+| 1.8.0 | The single Backend release of v2.3, in production since 2026-10-10: `version-info?platform=ANDROID\|IOS`, Spring Boot 4.1, V11 (drops `my_itmo_storage`), V12 `device_platform`, 401 for missing or invalid credentials (403 stays for denied access, `restricted` and `csrf`), push v2 with APNs alerts, `DELETE /api/users/me`, MyItmoApi 2.0.0. Expand-only, so the rollback to the 1.7.0 image stays image-only | Android 2.1 and later; iOS 2.3 |
+| 1.7.0 | In production from 2026-10-03 to 2026-10-10 | Android 2.1 and later |
 
 ## What each release must not break
 
