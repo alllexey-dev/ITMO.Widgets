@@ -20,8 +20,8 @@ fun Fragment.itmoComposeView(content: @Composable () -> Unit): ComposeView = Com
 }
 
 /**
- * The one hook for host-level composition locals (platform actions, image loader) around every Fragment-hosted
- * screen. `:app` installs it once at start; until then it provides nothing.
+ * The one hook for host-level composition locals around every Fragment-hosted screen. `:app` may install it once
+ * at start; until then it provides nothing. `LocalPlatformActions` is not one of them: the shell provides it.
  */
 object ItmoComposeHost {
 
