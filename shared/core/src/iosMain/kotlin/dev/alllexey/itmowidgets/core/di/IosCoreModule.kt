@@ -93,6 +93,7 @@ fun iosCoreModule(
     clientVersion: ClientVersion = IosClientVersion.fromMainBundle()
 ): Module = module {
     single<WidgetReloader> { host }
+    single { clientVersion }
     single { ShareLinkFactory(backendOrigin) }
     single<PlatformActions> { IosPlatformActions(host) }
     single<PlatformCapabilities> { IosPlatformCapabilities }

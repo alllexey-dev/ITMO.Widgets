@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.notification
 
 import com.google.firebase.messaging.FirebaseMessaging
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
@@ -29,6 +30,10 @@ class DefaultFirebaseTokenProvider @Inject constructor() : FirebaseTokenProvider
     }
 }
 
+/**
+ * Registers this installation again only when the token, the owner or the build ([version], the `X-App-Version`
+ * Backend records) differs from what Backend last accepted: one call after an update, none on an unchanged launch.
+ */
 class DefaultFcmTokenSync @Inject constructor(
     private val tokens: FirebaseTokenProvider,
     private val utility: UtilityStorage,
@@ -36,7 +41,8 @@ class DefaultFcmTokenSync @Inject constructor(
     private val sessionTokens: SessionTokenStore,
     private val deviceSession: BackendDeviceSession,
     private val currentUser: CurrentUserProvider,
-    private val diagnostics: AppDiagnostics
+    private val diagnostics: AppDiagnostics,
+    private val version: ClientVersion
 ) : FcmTokenSync {
     private val mutex = Mutex()
 
@@ -47,7 +53,7 @@ class DefaultFcmTokenSync @Inject constructor(
             if (utility.getFirebaseToken() != token) utility.setFirebaseToken(token)
             val ownerIsu = currentUser.getCurrentUser()?.isu?.takeIf { it > 0 }
             if (gate.mayCallBackend() && sessionTokens.hasRefreshToken() && ownerIsu != null &&
-                (utility.getRegisteredFirebaseToken() != token || utility.getRegisteredFirebaseOwner() != ownerIsu)
+                registrationDiffers(token, ownerIsu)
             ) {
                 deviceSession.registerCurrentDevice()
             }
@@ -58,4 +64,9 @@ class DefaultFcmTokenSync @Inject constructor(
             throw error
         }
     }
+
+    private suspend fun registrationDiffers(token: String, ownerIsu: Int): Boolean =
+        utility.getRegisteredFirebaseToken() != token ||
+            utility.getRegisteredFirebaseOwner() != ownerIsu ||
+            utility.getRegisteredFirebaseAppVersion() != version.headerValue
 }
