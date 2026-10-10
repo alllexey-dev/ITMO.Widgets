@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.domain
 
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -23,7 +24,9 @@ data class LocalSettings(
     /** The one-time dialog about background work was offered on this device. */
     val backgroundWorkHintShown: Boolean = false,
     /** The QR pass tile is in the quick settings, as far as the app saw; a flag of the device. */
-    val qrTileAdded: Boolean = false
+    val qrTileAdded: Boolean = false,
+    /** The accent colour; the wallpaper's colours where there are any, the brand scheme elsewhere. */
+    val accentColor: AccentColor = AccentColor.WALLPAPER
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -74,6 +77,8 @@ interface SettingsRepository {
     suspend fun setBackgroundWorkHintShown()
 
     suspend fun setQrTileAdded(added: Boolean)
+
+    suspend fun setAccentColor(color: AccentColor)
 
     suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean)
 

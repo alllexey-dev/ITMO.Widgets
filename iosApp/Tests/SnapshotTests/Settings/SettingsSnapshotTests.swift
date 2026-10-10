@@ -10,7 +10,7 @@ import XCTest
 final class SettingsSnapshotTests: XCTestCase {
     func testRoot() {
         let state = SettingsFixtures.page(.root, SettingsFixtures.pageState(notificationsGranted: false))
-        assertPage(state, named: "root", height: 960, ax1Height: 1350)
+        assertPage(state, named: "root", height: 1060, ax1Height: 1500)
     }
 
     func testScheduleWithBackgroundRefreshOff() {
@@ -151,7 +151,8 @@ enum SettingsFixtures {
             sheetMarksEnabled: true,
             hiddenHomeCards: [],
             backgroundWorkHintShown: false,
-            qrTileAdded: false
+            qrTileAdded: false,
+            accentColor: .wallpaper
         )
     }
 

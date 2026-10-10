@@ -8,17 +8,22 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.painter.Painter
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialogSurface
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialogSurface
+import dev.alllexey.itmowidgets.designsystem.components.dialogs.SwatchChoiceDialog
+import dev.alllexey.itmowidgets.designsystem.components.dialogs.SwatchChoiceDialogSurface
+import dev.alllexey.itmowidgets.designsystem.theme.accentSwatch
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.shared.core.common_cancel
 import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_add
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_done
 import dev.alllexey.itmowidgets.shared.feature.settings.background_work_allow
 import dev.alllexey.itmowidgets.shared.feature.settings.background_work_dialog_message
 import dev.alllexey.itmowidgets.shared.feature.settings.background_work_later
@@ -40,8 +45,9 @@ import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 sealed interface SettingsDialog {
 
     /**
-     * The single choice of the [SettingItem.Choice] row [id]: text size, the QR animation, the privacy audiences. It
-     * shows the row as the page has it now and is not drawn while the page has no such row.
+     * The single choice of the [SettingItem.Choice] row [id]: text size, the QR animation, the privacy audiences, the
+     * colour swatches of the accent colour. It shows the row as the page has it now and is not drawn while the page
+     * has no such row.
      */
     data class Choice(val id: SettingRowId) : SettingsDialog
 
@@ -147,7 +153,12 @@ internal fun SettingsDialogBody(
         is SettingsDialog.Choice -> {
             val item = sections.asSequence().flatMap { it.items }.filterIsInstance<SettingItem.Choice>()
                 .firstOrNull { it.id == dialog.id } ?: return
-            SettingsChoice(windowed, item, onSelect = { key -> onConfirm { actions.onChoice(item.id, key) } }, onDismiss)
+            if (item.id == SettingRowId.ACCENT_COLOR) {
+                // A colour applies on tap and the dialog stays, so the whole app behind it shows the pick at once.
+                AccentChoice(windowed, item, onSelect = { key -> actions.onChoice(item.id, key) }, onDismiss)
+            } else {
+                SettingsChoice(windowed, item, onSelect = { key -> onConfirm { actions.onChoice(item.id, key) } }, onDismiss)
+            }
         }
         SettingsDialog.CustomServicesConsent -> SettingsConfirm(
             windowed = windowed,
@@ -197,6 +208,23 @@ private fun SettingsChoice(windowed: Boolean, item: SettingItem.Choice, onSelect
         ChoiceDialog(title, labels, selected, select, onDismiss, dismissLabel = dismissLabel)
     } else {
         ChoiceDialogSurface(title, labels, selected, select, onDismiss, dismissLabel = dismissLabel)
+    }
+}
+
+/** The options as colour swatches of their schemes; the done button closes. */
+@Composable
+private fun AccentChoice(windowed: Boolean, item: SettingItem.Choice, onSelect: (String) -> Unit, onDismiss: () -> Unit) {
+    val title = item.title.asString()
+    val swatches = item.options.map { option ->
+        accentSwatch(AccentColor.valueOf(option.key), option.label.asString())
+    }
+    val selected = item.options.indexOfFirst { it.key == item.selectedOptionKey }.takeIf { it >= 0 }
+    val select = { index: Int -> onSelect(item.options[index].key) }
+    val done = stringResource(Res.string.settings_accent_color_done)
+    if (windowed) {
+        SwatchChoiceDialog(title, swatches, selected, select, onDismiss, done)
+    } else {
+        SwatchChoiceDialogSurface(title, swatches, selected, select, onDismiss, done)
     }
 }
 

@@ -33,6 +33,7 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
@@ -79,6 +80,7 @@ interface CoreBridgeEntryPoint {
     fun appDirectories(): AppDirectories
     fun qrSettingsPreferences(): QrSettingsPreferences
     fun deviceHintPreferences(): DeviceHintPreferences
+    fun appearancePreferences(): AppearancePreferences
     fun homeLayoutPreferences(): HomeLayoutPreferences
     fun servicesOptInPreferences(): ServicesOptInPreferences
     fun scheduleCheckPreferences(): ScheduleCheckPreferences
@@ -154,6 +156,7 @@ val coreBridgeModule = module {
     single<AppDirectories> { CoreBridgeEntryPoint.from(androidContext()).appDirectories() }
     single<QrSettingsPreferences> { CoreBridgeEntryPoint.from(androidContext()).qrSettingsPreferences() }
     single<DeviceHintPreferences> { CoreBridgeEntryPoint.from(androidContext()).deviceHintPreferences() }
+    single<AppearancePreferences> { CoreBridgeEntryPoint.from(androidContext()).appearancePreferences() }
     single<HomeLayoutPreferences> { CoreBridgeEntryPoint.from(androidContext()).homeLayoutPreferences() }
     single<ServicesOptInPreferences> { CoreBridgeEntryPoint.from(androidContext()).servicesOptInPreferences() }
     single<ScheduleCheckPreferences> { CoreBridgeEntryPoint.from(androidContext()).scheduleCheckPreferences() }

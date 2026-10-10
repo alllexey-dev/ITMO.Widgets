@@ -23,4 +23,6 @@ data class PlatformCapabilities(
     val qrWidgetAnimation: Boolean,
     /** A custom image for the QR spoiler. */
     val qrCustomSpoiler: Boolean,
+    /** The wallpaper's colours as a choice of the accent colour setting: Android 12+ only. */
+    val wallpaperColors: Boolean,
 )

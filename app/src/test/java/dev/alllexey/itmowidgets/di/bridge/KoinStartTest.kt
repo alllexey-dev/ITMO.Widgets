@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
@@ -95,6 +96,7 @@ class KoinStartTest {
         assertSame(hilt.appDirectories(), koin.get<AppDirectories>())
         assertSame(hilt.qrSettingsPreferences(), koin.get<QrSettingsPreferences>())
         assertSame(hilt.deviceHintPreferences(), koin.get<DeviceHintPreferences>())
+        assertSame(hilt.appearancePreferences(), koin.get<AppearancePreferences>())
         assertSame(hilt.homeLayoutPreferences(), koin.get<HomeLayoutPreferences>())
         assertSame(hilt.servicesOptInPreferences(), koin.get<ServicesOptInPreferences>())
         assertSame(hilt.scheduleCheckPreferences(), koin.get<ScheduleCheckPreferences>())

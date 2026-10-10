@@ -42,6 +42,7 @@ import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.FileCrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
@@ -130,6 +131,7 @@ fun iosCoreModule(
     singleOf(::ServicesOptInPreferences)
     singleOf(::QrSettingsPreferences)
     singleOf(::DeviceHintPreferences)
+    singleOf(::AppearancePreferences)
     singleOf(::HomeLayoutPreferences)
     singleOf(::ScheduleCheckPreferences)
     singleOf(::WidgetSettingsPreferences)

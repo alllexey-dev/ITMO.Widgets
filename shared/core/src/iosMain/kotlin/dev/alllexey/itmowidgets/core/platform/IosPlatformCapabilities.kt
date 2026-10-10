@@ -23,4 +23,5 @@ val IosPlatformCapabilities = PlatformCapabilities(
     reviews = true,
     qrWidgetAnimation = false,
     qrCustomSpoiler = false,
+    wallpaperColors = false,
 )

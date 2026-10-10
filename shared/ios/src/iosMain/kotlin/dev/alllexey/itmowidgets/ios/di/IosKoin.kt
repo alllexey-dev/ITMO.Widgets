@@ -2,8 +2,11 @@
 
 package dev.alllexey.itmowidgets.ios.di
 
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.IosAppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.IosCrashHook
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
+import dev.alllexey.itmowidgets.designsystem.theme.AppColorSource
 import dev.alllexey.itmowidgets.ios.IosPlatform
 import kotlin.concurrent.Volatile
 import kotlin.reflect.KClass
@@ -11,13 +14,17 @@ import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ObjCClass
 import kotlinx.cinterop.ObjCProtocol
 import kotlinx.cinterop.getOriginalKotlinClass
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.core.Koin
 import org.koin.core.context.startKoin
 
 /**
  * Starts the app's Koin graph over [IosKoinModules] with [platform]; the first call of `App.init` after the app
- * locale. From then on a Kotlin crash lands in the error journal ([IosCrashHook]). A later call keeps the running
- * graph and its platform (the hosted tests run inside the started app) and returns false. Call it on the main thread.
+ * locale. From then on a Kotlin crash lands in the error journal ([IosCrashHook]) and Compose screens follow the
+ * stored accent colour ([AppColorSource]). A later call keeps the running graph and its platform (the hosted tests
+ * run inside the started app) and returns false. Call it on the main thread.
  */
 fun startKoinIos(platform: IosPlatform): Boolean = IosKoin.start(platform)
 
@@ -52,6 +59,10 @@ object IosKoin {
         }.koin
         started = koin
         IosCrashHook.install(koin.get<IosAppDiagnostics>())
+        // The accent colour of every Compose screen, read before the first one opens.
+        CoroutineScope(SupervisorJob() + koin.get<AppDispatchers>().main).launch {
+            AppColorSource.follow(koin.get<AppearancePreferences>().observeAccentColor())
+        }
         return true
     }
 

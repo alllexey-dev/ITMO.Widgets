@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.app.shell
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.Toast
@@ -29,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -171,6 +173,9 @@ class ShellHost(
         }
         ItmoComposeHost.locals {
             ItmoTheme {
+                // The window shows behind the system bars: it follows the accent colour as the screens do.
+                val background = ItmoTheme.colorScheme.background.toArgb()
+                SideEffect { activity.window.setBackgroundDrawable(ColorDrawable(background)) }
                 Box(Modifier.fillMaxSize()) {
                     ShellContent(navigator, registry, surface, onDemoSignIn = ::signOut)
                     SnackbarHost(
