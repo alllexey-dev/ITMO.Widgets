@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.core.notification
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.*
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -56,6 +57,45 @@ class DefaultFcmTokenSyncTest {
         assertEquals(0, fixture.registrations)
     }
 
+    @Test fun `an update registers exactly once and an unchanged launch not at all`() = runTest {
+        val fixture = Fixture()
+        fixture.settings.setCustomServicesEnabled(true)
+        fixture.sync.sync()
+        fixture.sync.sync()
+        assertEquals(1, fixture.registrations)
+
+        fixture.version = UPDATED
+        fixture.sync.sync()
+        fixture.sync.sync()
+
+        assertEquals(2, fixture.registrations)
+        assertEquals(UPDATED.headerValue, fixture.utility.getRegisteredFirebaseAppVersion())
+    }
+
+    @Test fun `a registration from before 2_3 without a recorded build registers once more`() = runTest {
+        val fixture = Fixture()
+        fixture.settings.setCustomServicesEnabled(true)
+        fixture.utility.setFirebaseToken("synthetic-token")
+        fixture.utility.setRegisteredFirebaseToken("synthetic-token", 123456)
+
+        fixture.sync.sync()
+        fixture.sync.sync()
+
+        assertEquals(1, fixture.registrations)
+    }
+
+    @Test fun `an update with the services off sends nothing`() = runTest {
+        val fixture = Fixture()
+        fixture.settings.setCustomServicesEnabled(true)
+        fixture.sync.sync()
+        fixture.settings.setCustomServicesEnabled(false)
+
+        fixture.version = UPDATED
+        fixture.sync.sync()
+
+        assertEquals(1, fixture.registrations)
+    }
+
     @Test fun `registration failure retains token and retries without needing token rotation`() = runTest {
         val fixture = Fixture()
         fixture.settings.setCustomServicesEnabled(true)
@@ -77,7 +117,10 @@ class DefaultFcmTokenSyncTest {
         var ownerIsu = 123456
         var registrations = 0
         var failRegistration = false
-        val sync = DefaultFcmTokenSync(FirebaseTokenProvider { token }, utility, DefaultBackendGate(settings, demo),
+        var version = INSTALLED
+
+        /** A new process each time, as an update restarts the app with the new build. */
+        val sync get() = DefaultFcmTokenSync(FirebaseTokenProvider { token }, utility, DefaultBackendGate(settings, demo),
             object : SessionTokenStore {
                 override fun hasRefreshToken() = signedIn
                 override fun getIdToken(): String? = null
@@ -88,12 +131,17 @@ class DefaultFcmTokenSyncTest {
                 override suspend fun registerCurrentDevice() {
                     registrations++
                     if (failRegistration) throw IOException("Synthetic network failure")
-                    utility.setRegisteredFirebaseToken(utility.getFirebaseToken(), ownerIsu)
+                    utility.setRegisteredFirebaseToken(utility.getFirebaseToken(), ownerIsu, version.headerValue)
                 }
                 override suspend fun unregisterCurrentDevice() = Unit
             }, object : CurrentUserProvider {
                 override suspend fun getCurrentUser() = if (signedIn) CurrentUser(ownerIsu, "Synthetic user", null) else null
-            }, RecordingDiagnostics())
+            }, RecordingDiagnostics(), version)
+    }
+
+    private companion object {
+        val INSTALLED = ClientVersion("2.3.0", "20300", "android", "github")
+        val UPDATED = ClientVersion("2.3.1", "20310", "android", "github")
     }
 
     private class MemoryPreferences : DataStore<Preferences> {
