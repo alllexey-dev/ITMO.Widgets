@@ -39,7 +39,8 @@
 #   GITHUB_ACTIONS=true; android-ship.yml runs --local) they run on the job's own emulator instead: ANDROID_SERIAL
 #   must name an emulator-<port> that reports ro.kernel.qemu or ro.boot.qemu, and no marker is needed. Release
 #   outputs stay unsigned: a keystore.properties in the worktree is refused. Read from CI, no stage needs a device.
-# - The v2.2 build takes JDK 17 from JAVA17_HOME, else JAVA_HOME_17_X64 (GitHub runners), else java_home.
+# - The v2.2 build takes JDK 17 from JAVA17_HOME, else JAVA_HOME_17_X64 (GitHub runners), else java_home. Stage 5
+#   prints the signer certificate of both APKs; the cached v2.2 APK is named by it and rebuilt for another key.
 # - The last line is `VERIFY A ship|ship-no-device PASS|FAIL <secs>s <sha7>` (the --local-verify format).
 # - Exit code: 0 every stage passed, 1 a stage failed, 2 refused (usage, signing config, unsafe device).
 
@@ -517,11 +518,24 @@ started_cleanly() { # since
   return "$ok"
 }
 
-# Prints the path of the v2.2 githubDebug APK, building it once in a detached worktree at the tag.
-v22_apk() {
-  local tag_sha cache work slot java17
+# Prints the SHA-256 digest of the certificate that signed <apk>, read by the newest build-tools' apksigner.
+apk_cert() { # apk
+  local signer cert
+  signer=$(printf '%s\n' "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+  [ -x "$signer" ] || { echo "FAIL: no apksigner under $ANDROID_HOME/build-tools" >&2; return 1; }
+  cert=$("$signer" verify --print-certs "$1" 2> /dev/null | grep -m 1 -oE 'certificate SHA-256 digest: [0-9a-f]{64}')
+  [ -n "$cert" ] || { echo "FAIL: no signer certificate in $1" >&2; return 1; }
+  printf '%s\n' "${cert##* }"
+}
+
+# Prints the path of the v2.2 githubDebug APK signed with <cert>. The debug key differs per machine and CI runner,
+# so the cached APK is named by its certificate; with none for <cert> it is built in a detached worktree at the tag
+# with this machine's debug key (the stage compares the result with the head).
+v22_apk() { # cert
+  local tag_sha prefix cache work slot java17 built cert
   tag_sha=$(git rev-parse "$V22_TAG^{commit}" 2> /dev/null) || { echo "FAIL: no tag $V22_TAG" >&2; return 1; }
-  cache="$wt/run/apk/$V22_TAG-${tag_sha:0:12}-githubDebug.apk"
+  prefix="$wt/run/apk/$V22_TAG-${tag_sha:0:12}-githubDebug"
+  cache="$prefix-${1:0:16}.apk"
   if [ -f "$cache" ]; then
     printf '%s\n' "$cache"
     return 0
@@ -538,14 +552,17 @@ v22_apk() {
   java17=${JAVA17_HOME:-${JAVA_HOME_17_X64:-}}
   [ -n "$java17" ] || java17=$(/usr/libexec/java_home -v 17 2> /dev/null) ||
     { echo "FAIL: no JDK 17 for the $V22_TAG build" >&2; return 1; }
-  echo "building $V22_TAG githubDebug in $work (JDK 17)" >&2
+  echo "building $V22_TAG githubDebug in $work (JDK 17): no cached APK signed with ${1:0:16}" >&2
   (
     cd "$work" &&
       JAVA_HOME=$java17 "$slot" android -- \
         bash -c 'exec ./gradlew ${ITMO_MAX_WORKERS:+--max-workers=$ITMO_MAX_WORKERS} :app:assembleGithubDebug'
   ) >&2 || return 1
+  built="$work/app/build/outputs/apk/github/debug/app-github-debug.apk"
+  cert=$(apk_cert "$built") || return 1
+  cache="$prefix-${cert:0:16}.apk"
   mkdir -p "$wt/run/apk" || return 1
-  cp "$work/app/build/outputs/apk/github/debug/app-github-debug.apk" "$cache.tmp" && mv "$cache.tmp" "$cache" || return 1
+  cp "$built" "$cache.tmp" && mv "$cache.tmp" "$cache" || return 1
   printf '%s\n' "$cache"
 }
 
@@ -569,12 +586,20 @@ seeded_sums() {
 }
 
 stage_upgrade() {
-  local old_apk head_apk tmp=/data/local/tmp/ship-upgrade-2.2 since rel dir found f ok=0
-  old_apk=$(v22_apk) || return 1
-  echo "v2.2 APK: $old_apk"
+  local old_apk head_apk old_cert head_cert tmp=/data/local/tmp/ship-upgrade-2.2 since rel dir found f ok=0
   "$verify_sh" run -- :app:assembleGithubDebug || return 1
   head_apk="$root/app/build/outputs/apk/github/debug/app-github-debug.apk"
   [ -f "$head_apk" ] || { echo "FAIL: no head githubDebug APK at $head_apk"; return 1; }
+  head_cert=$(apk_cert "$head_apk") || return 1
+  old_apk=$(v22_apk "$head_cert") || return 1
+  old_cert=$(apk_cert "$old_apk") || return 1
+  echo "v2.2 APK: $old_apk"
+  echo "certificate SHA-256 $V22_TAG: $old_cert"
+  echo "certificate SHA-256 head: $head_cert"
+  if [ "$old_cert" != "$head_cert" ]; then
+    echo "FAIL: the $V22_TAG and head githubDebug carry different debug keys, so adb install -r would be refused"
+    return 1
+  fi
 
   echo "install $V22_TAG on $DEVICE_SERIAL (fresh)"
   dev uninstall "$PACKAGE" > /dev/null 2>&1

@@ -45,3 +45,8 @@
   stages locally; `--local` keeps the all-local run, and `summary.md` links
   the CI run of each stage. `scripts/test-ship-check.sh` covers it against a
   `gh` stub.
+- Ship check stage 5 prints the signer certificate of the v2.2 and the head
+  `githubDebug` before installing and fails with both named when they
+  differ; the cached v2.2 APK is named by its certificate and rebuilt with
+  the current debug key when none matches, so `android-ship` no longer
+  depends on the Actions cache keeping the key that signed it.

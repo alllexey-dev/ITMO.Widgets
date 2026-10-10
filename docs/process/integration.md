@@ -128,7 +128,9 @@ minutes are free), in parallel jobs, so nothing heavy has to run on the laptop f
 - Caches: the Gradle home (dependencies, keyed by the build files, saved by android-ci's `app` job) and one Gradle
   build cache line per job kind (`gbc-v1-<job>-<sha>`, `.github/actions/android-setup` and `build-cache-save`)
   are written only by pushes to `v2.3/next`; PRs read their base's newest line. A run after a build file change
-  starts cold.
+  starts cold. `ship upgrade` also caches the `v2.2` `githubDebug` APK together with the runner debug key that
+  signed it (`ship-v22-apk-v2-<v2.2 sha>-<certificate digest>`) and puts that key where AGP reads the debug key
+  (`~/.config/.android/` on the runners) before the head is built; a missing or evicted entry only costs the `v2.2` build in the job, never the check.
 - Re-run: `gh run rerun <run-id> --failed`, or one job with `gh run rerun --job <job-id>` (the job ids are in
   `gh run view <run-id> --json jobs`). The aggregate job reruns with it. Locally the same shard is
   `ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui all --shard <i>/6` on a pool emulator (AndroidJUnitRunner
@@ -152,7 +154,10 @@ source and log next to it, and any FAIL makes the exit code non-zero:
    `SKIP_BUILD=1 scripts/check-play-policy.sh`. `--central` builds against MyItmoApi from Maven Central;
 4. `scripts/verify.sh ui all` on `emulator-5554`, `UpgradeFrom22Test` included;
 5. the real upgrade path on `emulator-5554`. The script installs the `v2.2` `githubDebug` APK, which is built
-   once in `~/proj/.wt/android/ship-v22` and cached in `~/proj/.wt/run/apk/`. It launches that APK once, seeds
+   in `~/proj/.wt/android/ship-v22` and cached in `~/proj/.wt/run/apk/` under the SHA-256 of its signer
+   certificate: `adb install -r` needs both APKs signed with the same debug key, so the stage builds `v2.2` again
+   whenever no cached APK carries the head's certificate, prints both certificates and fails if they still
+   differ. It launches that APK once, seeds
    the 2.2 data directory from `app/src/androidTest/assets/upgrade-2.2/` and runs `adb install -r` with the
    head `githubDebug`. The stage passes when 30 s after the start there is no `FATAL EXCEPTION`, the process is
    alive and every seeded file is either present or migrated with a format marker.
