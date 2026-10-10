@@ -24,20 +24,10 @@ env:
   CI: "true"
 
 jobs:
-  # The Gradle-free part of verify.sh quick: docs and changelog drift, the module generator, the ui-report parser.
-  checks:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: verify.sh checks
-        run: scripts/verify.sh checks
-
-  # The parts of the root verifyQuick (build.gradle.kts), each on a runner of its own, plus lintPlayDebug, which
-  # makes the union the Android part of verify.sh full. `cache` names the job's build cache line.
+  # The parts of the root verifyQuick (build.gradle.kts) on runners of their own, plus lintPlayDebug, which makes
+  # the union the Android part of verify.sh full. The app's unit tests and its APKs share one runner (they compile
+  # the same classes). The matrix name is also the job's build cache line. Fewer, longer jobs keep a PR under the
+  # 20 concurrent jobs of the free plan together with android-ui.
   gradle:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
@@ -46,11 +36,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: unit-app, tasks: verifyQuickUnitApp }
+          - { name: app, tasks: verifyQuickUnitApp verifyQuickAssemble }
           - { name: unit-shared, tasks: verifyQuickUnitShared }
           - { name: lint-github, tasks: verifyQuickLint }
           - { name: lint-play, tasks: ":app:lintPlayDebug" }
-          - { name: assemble, tasks: verifyQuickAssemble }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -127,13 +116,18 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  klibs:
+  # The Gradle-free part of verify.sh quick (docs and changelog drift, the module generator, the ui-report and
+  # ship-check tests), then the iOS klibs.
+  checks-klibs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: verify.sh checks
+        run: scripts/verify.sh checks
 
       - uses: ./.github/actions/android-setup
         with:
@@ -164,7 +158,7 @@ jobs:
 
   # The required check: green only when every part above is green; a failed, skipped or cancelled part fails it.
   verify-quick:
-    needs: [checks, gradle, shots, klibs]
+    needs: [checks-klibs, gradle, shots]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5

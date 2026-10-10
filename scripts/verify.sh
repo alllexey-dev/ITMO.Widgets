@@ -43,7 +43,8 @@
 #   after a marker line, and every run of every test is listed, so a suite member that fails inside ShellSuite and
 #   passes standalone later (AGP's XML, HTML and "Finished <n> tests" keep only the last run) still fails the
 #   mode. A failed run is named with its suite or "standalone", "run k of n" and the ShellModeRule shell. Gradle's
-#   `FAILED` lines count too, so the managed device (no log capture) is covered.
+#   `FAILED` lines count too, so the managed device (no log capture) is covered. A capture that ended before
+#   `run finished:` is replaced by the device's log buffer when that still holds the marker.
 # - Exit code: 0 pass, 1 fail, 2 refused (usage, missing harness, unsafe device); refusals print no VERIFY line.
 
 set -u
@@ -444,7 +445,7 @@ run_ui() {
 
 # ---- ui report (TC-UIREPORT) -----------------------------------------------------------------------------
 
-ui_dir="" ui_logcat_pid="" ui_marker=""
+ui_dir="" ui_logcat_pid="" ui_marker="" ui_serial=""
 ui_cleanup() {
   [ -z "$ui_logcat_pid" ] || kill "$ui_logcat_pid" 2> /dev/null
   [ -z "$ui_dir" ] || rm -rf "$ui_dir"
@@ -453,6 +454,7 @@ ui_cleanup() {
 # Starts the TestRunner log capture of serial $1 (none for the managed device) and waits for its marker line.
 ui_report_start() {
   local serial=$1 adb="${ANDROID_HOME:-}/platform-tools/adb" tries=0
+  ui_serial=$serial
   ui_dir=$(mktemp -d "${TMPDIR:-/tmp}/verify-ui.XXXXXX") || refuse "cannot create a temporary directory"
   trap ui_cleanup EXIT
   : > "$ui_dir/logcat"
@@ -485,6 +487,15 @@ ui_report_finish() {
     kill "$ui_logcat_pid" 2> /dev/null
     wait "$ui_logcat_pid" 2> /dev/null
     ui_logcat_pid=""
+    # A live capture that ended early (its adb connection dropped) misses runs; the device's log buffer, when it
+    # still holds the marker, has them all.
+    if ! grep -q '^run finished:' "$ui_dir/logcat"; then
+      "${ANDROID_HOME:-}/platform-tools/adb" -s "$ui_serial" logcat -d -v raw -s TestRunner:V > "$ui_dir/buffer" 2> /dev/null
+      if grep -qF "$ui_marker" "$ui_dir/buffer" && grep -q '^run finished:' "$ui_dir/buffer"; then
+        note "the live TestRunner capture ended early; the report reads the device's log buffer"
+        mv "$ui_dir/buffer" "$ui_dir/logcat"
+      fi
+    fi
   fi
   if ! command -v python3 > /dev/null 2>&1; then
     note "warning: no python3, so no ui report; the verdict is Gradle's"

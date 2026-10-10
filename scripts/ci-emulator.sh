@@ -150,13 +150,17 @@ cmd_wait() {
     done
     note "animations off"
   fi
+  # A log buffer that holds a whole shard, so verify.sh can reread the TestRunner events if its live capture ends.
+  dev_sh logcat -G 16M > /dev/null
   if [ "$cutout" = tall ]; then
     dev_sh cmd overlay enable com.android.internal.display.cutout.emulation.tall > /dev/null
-    until dev_sh cmd overlay list | grep -q '\[x\] com.android.internal.display.cutout.emulation.tall'; do
-      [ "$(date +%s)" -lt "$deadline" ] || die "the tall cutout overlay did not turn on" 1
+    # The overlay list flips at once; the display takes the cutout a moment later, with a configuration change
+    # that must not land inside the test run.
+    until dev_sh dumpsys display | grep -q 'DisplayCutout{insets=Rect(0, [1-9]'; do
+      [ "$(date +%s)" -lt "$deadline" ] || die "the display shows no tall cutout" 1
       sleep 1
     done
-    note "tall cutout overlay on"
+    note "tall cutout on: $(dev_sh dumpsys display | grep -o 'DisplayCutout{insets=Rect([^)]*)' | head -n 1)"
   fi
   printf 'ANDROID_SERIAL=%s\n' "$SERIAL"
 }

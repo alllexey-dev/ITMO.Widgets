@@ -88,16 +88,17 @@ runs:
 
     # Resolves the wrapper distribution, the settings and build plugins (foojay-resolver-convention among them)
     # and the plugins of the included builds before the build, with retries: on a Gradle cache miss a plugin portal
-    # hiccup costs a retry, not the job. `help` alone leaves the MyItmoApi build unconfigured.
+    # or Maven Central hiccup (a 404 for an artifact that exists) costs a retry, not the job; every attempt keeps
+    # what it downloaded. `help` alone leaves the MyItmoApi build unconfigured.
     - name: Resolve Gradle plugins
       shell: bash
       env:
         TASKS: ${{ inputs.tasks }}
       run: |
-        for attempt in 1 2 3; do
+        for attempt in 1 2 3 4 5; do
           # shellcheck disable=SC2086 # one word per task
           ./gradlew --quiet --dry-run $TASKS > /dev/null && exit 0
-          echo "::warning::Gradle plugin resolution failed (attempt $attempt of 3)"
-          sleep $((attempt * 20))
+          echo "::warning::Gradle plugin resolution failed (attempt $attempt of 5)"
+          [ "$attempt" = 5 ] || sleep $((attempt * 15))
         done
         exit 1

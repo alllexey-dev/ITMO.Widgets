@@ -111,7 +111,7 @@ minutes are free), in parallel jobs, so nothing heavy has to run on the laptop f
 
 | Check | Workflow | Runs on | Jobs | Wall time |
 |---|---|---|---|---|
-| `verify-quick` | `android-ci.yml` | every PR into and push to `v2.3/next` and `master` | `checks` (`verify.sh checks`), `unit-app`, `unit-shared`, `lint-github`, `assemble` (the parts of the root `verifyQuick`), `lint-play`, `shots 0/3`..`2/3` (`verify.sh shots all --shard`), `klibs` | WALL_CI |
+| `verify-quick` | `android-ci.yml` | every PR into and push to `v2.3/next` and `master` | `app` (unit tests and APKs), `unit-shared`, `lint-github` (the parts of the root `verifyQuick`), `lint-play`, `shots 0/3`..`2/3` (`verify.sh shots all --shard`), `checks-klibs` (`verify.sh checks`, then the iOS klibs) | WALL_CI |
 | `android-ui` | `android-ui.yml` | PRs into `v2.3/next` that touch what the app is built from, every push to `v2.3/next`, manual runs | `ui plain 0/6`..`5/6` (`verify.sh ui all --shard <i>/6`), `ui cutout 0/2`..`1/2` (`verify.sh ui ShellSuite --shard <i>/2` with the tall cutout overlay) | WALL_UI |
 | `android-ship` | `android-ship.yml` | every push to `v2.3/next`, manual runs, PRs that change it or the scripts it runs | `ship version-release` (ship check stages 1 and 3), `ship upgrade` (stage 5), `ship shrunk` (stage 6) | WALL_SHIP |
 
@@ -134,8 +134,9 @@ minutes are free), in parallel jobs, so nothing heavy has to run on the laptop f
   splits by a hash of the test names, so the shard holds the same tests) or `scripts/verify.sh shots all --shard
   <i>/3`. A manual run of another ref: `gh workflow run android-ui.yml -f ref=<ref>` (possible once the workflow
   is on the default branch).
-- The free plan runs at most 20 jobs at once across the organisation: a push to `v2.3/next` starts about 23, so
-  some shards queue for a few minutes when several PRs push together.
+- The free plan runs at most 20 jobs at once across the organisation. A PR starts 17 Linux jobs and `ios-check`,
+  a push to `v2.3/next` 3 more for `android-ship`, so shards queue for a few minutes when several PRs push
+  together.
 
 ## Ship check
 
