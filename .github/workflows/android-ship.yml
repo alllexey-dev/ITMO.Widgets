@@ -61,7 +61,9 @@ jobs:
     steps:
       # ship-check.sh keeps its summary, logs, the v2.2 worktree and the cached v2.2 APK under $ITMO_WT.
       - name: Ship check directory
-        run: echo "ITMO_WT=$RUNNER_TEMP/ship-wt" >> "$GITHUB_ENV"
+        run: |
+          echo "ITMO_WT=$RUNNER_TEMP/ship-wt" >> "$GITHUB_ENV"
+          echo "DEBUG_KEY_DIRS=$HOME/.config/.android $HOME/.android" >> "$GITHUB_ENV"
 
       # Full history: stage 1 reads the beta tags and origin/release/2.2, stage 5 builds the v2.2 tag.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -79,8 +81,10 @@ jobs:
           build-cache: ship-${{ matrix.name }}
           tasks: ${{ matrix.tasks }}
 
-      # The v2.2 APK and the debug key that signed it: the head githubDebug must carry the same key for
-      # `adb install -r`, so the key is restored before the head is built.
+      # The v2.2 APK and the debug key that signed it, cached together under a key that ends in the key's certificate
+      # digest. The key goes where AGP reads it before the head is built, so the head carries it and stage 5 finds the
+      # APK named by that certificate. Without an entry, or if the head ends up with another key, stage 5 builds v2.2
+      # in this job with the head's key: the cache only saves that build, the check never depends on it.
       - name: v2.2 commit
         id: v22
         if: matrix.name == 'upgrade'
@@ -91,10 +95,25 @@ jobs:
         if: matrix.name == 'upgrade'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: |
-            ${{ env.ITMO_WT }}/run/apk
-            ~/.android/debug.keystore
-          key: ship-v22-apk-${{ steps.v22.outputs.sha }}
+          path: ${{ env.ITMO_WT }}/run/apk
+          key: ship-v22-apk-v2-${{ steps.v22.outputs.sha }}
+          restore-keys: ship-v22-apk-v2-${{ steps.v22.outputs.sha }}-
+
+      - name: Debug key of the v2.2 APK
+        if: matrix.name == 'upgrade'
+        run: |
+          key="$ITMO_WT/run/apk/debug.keystore"
+          if [ -f "$key" ]; then
+            # AGP 8 and 9 keep the debug key in ~/.config/.android on these runners (~/.android on macOS).
+            for dir in $DEBUG_KEY_DIRS; do
+              mkdir -p "$dir"
+              cp "$key" "$dir/debug.keystore"
+            done
+            echo "debug key from the cache, certificate SHA-256:"
+            keytool -list -v -keystore "$key" -storepass android | grep 'SHA256:'
+          else
+            echo "no cached debug key: the head build creates one and stage 5 builds v2.2 with it"
+          fi
 
       # Builds what the stage installs while the emulator boots; the stage's own build is then up to date.
       - name: Build ahead of the device
@@ -114,16 +133,38 @@ jobs:
           [ "${{ matrix.device }}" = true ] || flags="--no-device $flags"
           scripts/ship-check.sh $flags
 
+      # Saves the v2.2 APK signed with this runner's debug key, with that key, unless the restored entry was exactly it.
+      - name: v2.2 APK cache key
+        id: v22-key
+        if: matrix.name == 'upgrade' && github.ref == 'refs/heads/v2.3/next'
+        env:
+          V22_SHA: ${{ steps.v22.outputs.sha }}
+        run: |
+          apk=""
+          for dir in $DEBUG_KEY_DIRS; do
+            key="$dir/debug.keystore"
+            cert=$(keytool -list -v -keystore "$key" -storepass android 2> /dev/null |
+              sed -n 's/^.*SHA256: //p' | head -n 1 | tr -d ':' | tr 'A-F' 'a-f')
+            [ -n "$cert" ] || continue
+            apk=$(find "$ITMO_WT/run/apk" -name "v2.2-*-githubDebug-${cert:0:16}.apk" | head -n 1)
+            [ -z "$apk" ] || break
+          done
+          if [ -z "$apk" ]; then
+            echo "::warning::no v2.2 APK signed with a debug key in $DEBUG_KEY_DIRS: nothing to cache"
+            exit 0
+          fi
+          find "$ITMO_WT/run/apk" -type f ! -path "$apk" -delete
+          cp "$key" "$ITMO_WT/run/apk/debug.keystore"
+          echo "key=ship-v22-apk-v2-$V22_SHA-${cert:0:16}" >> "$GITHUB_OUTPUT"
+
       - name: Save the v2.2 APK
         if: >-
-          matrix.name == 'upgrade' && github.ref == 'refs/heads/v2.3/next' &&
-          steps.v22-cache.outputs.cache-hit != 'true'
+          steps.v22-key.outputs.key != '' &&
+          steps.v22-key.outputs.key != steps.v22-cache.outputs.cache-matched-key
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: |
-            ${{ env.ITMO_WT }}/run/apk
-            ~/.android/debug.keystore
-          key: ${{ steps.v22-cache.outputs.cache-primary-key }}
+          path: ${{ env.ITMO_WT }}/run/apk
+          key: ${{ steps.v22-key.outputs.key }}
 
       - uses: ./.github/actions/build-cache-save
         with:
