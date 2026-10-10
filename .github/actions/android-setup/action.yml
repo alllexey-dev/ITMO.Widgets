@@ -11,6 +11,12 @@ inputs:
       `.github/actions/build-cache-save` with the same name saves it on `v2.3/next`.
     required: false
     default: ""
+  tasks:
+    description: >-
+      The Gradle tasks the job runs; a dry run of them resolves every plugin and included build (the MyItmoApi
+      pin's plugins as well) with retries, before the build.
+    required: false
+    default: help
 
 runs:
   using: composite
@@ -80,13 +86,17 @@ runs:
         sleep 1
         du -sh ~/.gradle/caches/build-cache-1 2> /dev/null || true
 
-    # Resolves the wrapper distribution and the settings and build plugins (foojay-resolver-convention among
-    # them) before the build, with retries: on a Gradle cache miss a plugin portal hiccup costs a retry, not the job.
+    # Resolves the wrapper distribution, the settings and build plugins (foojay-resolver-convention among them)
+    # and the plugins of the included builds before the build, with retries: on a Gradle cache miss a plugin portal
+    # hiccup costs a retry, not the job. `help` alone leaves the MyItmoApi build unconfigured.
     - name: Resolve Gradle plugins
       shell: bash
+      env:
+        TASKS: ${{ inputs.tasks }}
       run: |
         for attempt in 1 2 3; do
-          ./gradlew --quiet help && exit 0
+          # shellcheck disable=SC2086 # one word per task
+          ./gradlew --quiet --dry-run $TASKS > /dev/null && exit 0
           echo "::warning::Gradle plugin resolution failed (attempt $attempt of 3)"
           sleep $((attempt * 20))
         done

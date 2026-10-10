@@ -59,6 +59,7 @@ jobs:
       - uses: ./.github/actions/android-setup
         with:
           build-cache: ${{ matrix.name }}
+          tasks: ${{ matrix.tasks }}
 
       # No secrets: google-services.json is tracked, release stays unsigned, Core and MyItmoApi 1.x
       # come from Maven Central.
@@ -100,6 +101,7 @@ jobs:
       - uses: ./.github/actions/android-setup
         with:
           build-cache: shots-${{ matrix.shard }}
+          tasks: screenshotsVerify
 
       - name: verify.sh shots all --shard ${{ matrix.shard }}/3
         id: shots
@@ -134,6 +136,8 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/android-setup
+        with:
+          tasks: verifyIosKlibs
 
       # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version; only `v2.3/next` writes the cache.
       - name: Kotlin/Native version

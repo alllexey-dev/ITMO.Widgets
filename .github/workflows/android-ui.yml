@@ -104,6 +104,7 @@ jobs:
       - uses: ./.github/actions/android-setup
         with:
           build-cache: ui
+          tasks: ":app:assembleGithubDebug :app:assembleGithubDebugAndroidTest"
 
       - name: Build the app and test APKs
         run: scripts/verify.sh run -- :app:assembleGithubDebug :app:assembleGithubDebugAndroidTest
