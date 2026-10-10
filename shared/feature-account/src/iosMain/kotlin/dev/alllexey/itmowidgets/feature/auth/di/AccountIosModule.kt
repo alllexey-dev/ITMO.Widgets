@@ -48,6 +48,7 @@ val accountIosModule = module {
             gate = get(),
             demo = get(),
             currentUser = get(),
+            version = get(),
         )
     } binds arrayOf(FcmTokenSync::class, BackendDeviceSession::class)
     single { PushForegroundRefresh(get(), get(), get()) }

@@ -239,8 +239,8 @@ the root page, its privacy row the privacy page.
   never animate in.
 - Platform rows. The page providers hide what `PlatformCapabilities` does not offer: the quick settings tile, the
   spoiler animation and the custom spoiler image. The recordbook page (mark tracking) is on since IO-09d3, the
-  calendar rows since IO-15b. The QR widget page keeps its spoiler and dynamic colour switches, which the iOS
-  widget does not follow yet (Degradations).
+  calendar rows since IO-15b. The QR widget page keeps its spoiler and dynamic colour switches, which the QR
+  widget follows through qr-pass-v1.json (see Widgets).
 - iOS copy. `SettingsIosCopy` replaces the shared texts that name Android with `strings_ios*.xml` rows: the
   notification values and the background work row, which is Background App Refresh on iOS
   (`IosBackgroundWorkAccess` reads `UIApplication.backgroundRefreshStatus`) and opens the app's page in Settings.
@@ -317,7 +317,7 @@ container, logs one warning per process and carries on; the extensions then see 
 |---|---|---|---|
 | `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted; `myitmo-refresh` guards the token refresh |
 | session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension (`SessionFile.swift` in `iosApp/Shared/WidgetSnapshots/`), notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` is the last notification settings answer (see Notifications) |
-| qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool?}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`); `spoiler` is the global QR widget option, absent (as the writer leaves it today) means on, the Android default |
+| qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass and every change of a QR widget option (`QrSettingsPreferences`) while the pass is valid; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` and `QrWidgetAppearance.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool, "dynamicColors": Bool, "animation": String}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; `spoiler`, `dynamicColors` and `animation` (a `QrAnimationType` name) are the global QR widget options, each read as Android's default (on, on, `CIRCLE`) when absent or unknown, so a file from before IO-FIX-QRW stays version 1; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`) |
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension, on a tap on the spoiler | widget extension (`QrWidgetReveal.swift`) | `{"revealedUntil": ISO 8601}`: the tap's time plus 30 s, Android's auto-hide delay; one file for every placed QR widget; never read by the app |
 | schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`, iosMain) on the session, the schedule widget options, every return to the foreground, a changed cached schedule and `ScheduleWidgetRefreshRequester` (sport); reloads `dev.alllexey.itmowidgets.widget.single-lesson` and `.day-schedule` | widget extension (`LessonTimeline.swift`) | LS-3's `ScheduleWidgetTimeline` from `ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow (academic zone): `{"version": 1, "generatedAt", "validUntil", "entries": [{"validFrom", "snapshot"}]}`, the snapshot in the keys of Android's widget snapshot, nulls omitted, defaults written; rooms and buildings are already the short titles Android's widget shows; an unavailable schedule keeps the previous file; the envelope around `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json` is what the writer writes for it (`ScheduleTimelineWriterTest`, `ScheduleTimelineTests`) |
 | `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | each card that adds a snapshot adds its row |
@@ -463,11 +463,12 @@ service's work with IO-12a.
   user's own device name). Nothing reaches Backend in the demo, without the opt-in (`BackendGate.mayCallBackend()`),
   without a signed-in ISU or without a token; `IosPushDevice` has none until Swift passes one to `updateToken`, so
   today nothing is registered. `PushRegistrationPreferences` keeps what Backend last accepted (token, owner,
-  alerts); sign-out and turning the services off unregister that token and forget it.
+  alerts, the `X-App-Version` build); sign-out and turning the services off unregister that token and forget it.
 - Foreground refresh. Each return to the foreground (`scenePhase == .active`, so also after the permission dialog)
   runs `PushForegroundRefresh` (`PushRefresh.run()`): it reads the notification settings (authorized, provisional
   or ephemeral count as allowed), which session-v1.json's `alertsAllowed` follows, then syncs, which registers
-  again only when the token, the owner or the alerts answer changed. A failure is logged, never thrown into Swift.
+  again only when the token, the owner, the alerts answer or the build changed (once after an update). A failure
+  is logged, never thrown into Swift.
 - Taps. `ITMOWidgetsAppDelegate` (`@UIApplicationDelegateAdaptor`) runs `PushLaunch`, which makes `NotificationTaps`
   the notification center's delegate before launch ends. A tap reads the route from `userInfo`
   (`NotificationTapRoutes.entryRoute(userInfo:)`): a push's `data` envelope by its payload type, else a local
@@ -513,17 +514,26 @@ Android keeps the widget options global, so they come from qr-pass-v1.json, not 
 |---|---|---|---|
 | Signed out | no session-v1.json (or no container) | QR symbol, `schedule_widget_signed_out` | the QR pass in the app |
 | Spoiler | a valid pass, no reveal running | noise, `ios_widget_qr_reveal` | `RevealQrIntent`: the code for 30 s |
-| Revealed | a reveal running, or the spoiler option off | the code, dark on white in both themes; in the demo with `demo_entered` | the QR pass in the app |
+| Revealed | a reveal running, or the spoiler option off | the code, dark on light in both themes; in the demo with `demo_entered` | the QR pass in the app |
 | Expired | signed in, no pass or past its `expiresAt` | refresh symbol, `ios_widget_qr_expired` | the QR pass in the app |
 
 - `QrWidgetTimeline` turns the files into entries: the current state, the spoiler when the reveal ends, the
   expired state at the pass's deadline; a new timeline at least every hour, Android's update period.
 - The tap URL is `itmowidgets://route/qr_pass` (`widgetURL`); the spoiler alone is a `Button(intent:)`.
-- Degradations: no circle animation on reveal (WidgetKit animates only between entries); a custom spoiler image is
-  v2.4; the code is dark on white whatever `Динамические цвета` says; `QrPassSnapshotWriter` does not write
-  `spoiler` yet, so the spoiler stays on although settings and the first-run flow show its switch (Degradations).
+- Options (`QrWidgetStyle`, from the entry's `QrWidgetAppearance`). The spoiler option off shows the code at once.
+  The code and the spoiler noise are black on white without dynamic colours; with them they take the app's scheme
+  for the widget's theme through the math of `QrColors.resolve` (`QrWidgetTile.resolve` over the design tokens): the
+  light surface behind the darker text role, in the dark theme `onSurfaceVariant` behind the dark surface, so the
+  code stays dark on light for a scanner. Signed out and expired follow the system theme. The reveal fades in, or
+  appears at once with `NONE`.
+- Rendering modes. On the tinted and clear home screens (`widgetRenderingMode` accented) the system keeps only
+  alpha, so the tile paints no background and the code is drawn as holes in a light plate (`QrPlateShape`, a
+  quiet zone of 2 modules), which keeps it dark on light.
+- Degradations: the reveal fades instead of the circle; no custom spoiler image (Degradations).
 - `SnapshotTests/WidgetSnapshotTests` holds each state at the small family size (170 x 170 pt on the pinned
-  iPhone, `WidgetSizes`) in the four appearances; `ITMOWidgetsTests/QrWidgetTimelineTests` the timeline.
+  iPhone, `WidgetSizes`) in the four appearances, the spoiler and the code without dynamic colours, and the code on
+  a tinted home screen; `ITMOWidgetsTests/QrWidgetTimelineTests` the timeline, `QrWidgetStyleTests` each option,
+  `QrPassSnapshotTests` the options in the file.
 
 Schedule widgets (`Extensions/Widgets/Schedule/`, `StaticConfiguration`, options from the timeline file). The lesson
 widget (kind `dev.alllexey.itmowidgets.widget.single-lesson`: small, medium, Lock Screen `accessoryRectangular` and
@@ -787,9 +797,8 @@ fix, not a decision.
 | Tabs | switch by the native tab bar only, no swipe between them | owner decision 2026-10-06: paging between tabs is not an iOS convention |
 | Colours | the static brand scheme on every screen | iOS has no wallpaper colours for `ColorSource.Platform` |
 | Placing a widget | the first-run flow and the home hint show how to add one | iOS lets no app place a widget |
-| QR widget reveal | the code appears without the circle animation | WidgetKit animates only between timeline entries |
-| QR widget custom spoiler image | the standard spoiler only; the settings rows are hidden | deferred to v2.4: it needs an iOS picker and crop screen and the image in the App Group |
-| QR widget spoiler and dynamic colour switches | shown in settings and the first-run flow, not followed: the spoiler stays on, the code dark on white | open gap: `QrPassSnapshotWriter` writes neither option into qr-pass-v1.json |
+| QR widget reveal | the code fades in instead of the circle; the animation row is hidden | WidgetKit animates only between timeline entries and draws no custom shape transition |
+| QR widget custom spoiler image | the standard spoiler only; the settings rows are hidden | deferred to v2.4: it needs an iOS picker and crop screen; a 420 x 420 image in the App Group would fit the widget's memory |
 | QR tile | the QR Control opens the pass; it cannot draw the code | a Control shows only a symbol and a title |
 | Pending sport rows in widgets | no seven-minute refresh; a row stays until the app writes again or its entry ends | WidgetKit allows about 40 to 70 reloads a day |
 | Day widget | shows the rows that fit, completed lessons leave first | widget views do not scroll |

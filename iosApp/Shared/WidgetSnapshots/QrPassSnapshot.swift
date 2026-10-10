@@ -13,9 +13,8 @@ struct QrPassSnapshot: Equatable {
     let demo: Bool
     /// Rows from the top, modules from the left; `true` is dark.
     let matrix: [[Bool]]
-    /// The global "hide the code behind a spoiler" option of the QR widget (Android keeps widget options global).
-    /// Optional in the file; absent means on, the Android default.
-    var spoiler: Bool = true
+    /// The QR widget options the app wrote beside the pass; Android's defaults for any field the file lacks.
+    var appearance: QrWidgetAppearance = .standard
 
     /// The file name in the App Group container.
     static let fileName = AppGroupSnapshot.fileName("qr-pass", version: version)
@@ -44,7 +43,11 @@ struct QrPassSnapshot: Equatable {
             expiresAt: value.expiresAt,
             demo: value.demo,
             matrix: matrix,
-            spoiler: value.spoiler ?? true
+            appearance: QrWidgetAppearance(
+                spoiler: value.spoiler ?? QrWidgetAppearance.standard.spoiler,
+                dynamicColors: value.dynamicColors ?? QrWidgetAppearance.standard.dynamicColors,
+                animation: QrRevealAnimation(name: value.animation)
+            )
         )
     }
 
@@ -54,5 +57,7 @@ struct QrPassSnapshot: Equatable {
         let demo: Bool
         let matrix: [String]
         let spoiler: Bool?
+        let dynamicColors: Bool?
+        let animation: String?
     }
 }

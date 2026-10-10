@@ -8,10 +8,18 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.alllexey.itmowidgets.core.storage.DataStorePreferences
 
-/** What Backend last accepted for this installation: the push token, its owner's ISU and the alerts answer. */
-data class PushRegistration(val token: String, val ownerIsu: Int, val alertsAllowed: Boolean) {
+/**
+ * What Backend last accepted for this installation: the push token, its owner's ISU, the alerts answer and the build
+ * that registered ([appVersion], its `X-App-Version`; `null` for a registration stored before it was kept).
+ */
+data class PushRegistration(
+    val token: String,
+    val ownerIsu: Int,
+    val alertsAllowed: Boolean,
+    val appVersion: String?,
+) {
     override fun toString(): String =
-        "PushRegistration(token=<redacted>, ownerIsu=$ownerIsu, alertsAllowed=$alertsAllowed)"
+        "PushRegistration(token=<redacted>, ownerIsu=$ownerIsu, alertsAllowed=$alertsAllowed, appVersion=$appVersion)"
 }
 
 /**
@@ -26,6 +34,7 @@ class PushRegistrationPreferences(dataStore: DataStore<Preferences>) : DataStore
             token = preferences[TOKEN] ?: return null,
             ownerIsu = preferences[OWNER] ?: return null,
             alertsAllowed = preferences[ALERTS] ?: return null,
+            appVersion = preferences[APP_VERSION],
         )
     }
 
@@ -36,10 +45,13 @@ class PushRegistrationPreferences(dataStore: DataStore<Preferences>) : DataStore
                 preferences.remove(TOKEN)
                 preferences.remove(OWNER)
                 preferences.remove(ALERTS)
+                preferences.remove(APP_VERSION)
             } else {
                 preferences[TOKEN] = registration.token
                 preferences[OWNER] = registration.ownerIsu
                 preferences[ALERTS] = registration.alertsAllowed
+                val appVersion = registration.appVersion
+                if (appVersion == null) preferences.remove(APP_VERSION) else preferences[APP_VERSION] = appVersion
             }
         }
     }
@@ -48,5 +60,6 @@ class PushRegistrationPreferences(dataStore: DataStore<Preferences>) : DataStore
         val TOKEN = stringPreferencesKey("push_registered_token")
         val OWNER = intPreferencesKey("push_registered_owner")
         val ALERTS = booleanPreferencesKey("push_registered_alerts")
+        val APP_VERSION = stringPreferencesKey("push_registered_app_version")
     }
 }

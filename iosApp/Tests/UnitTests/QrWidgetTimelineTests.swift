@@ -66,14 +66,24 @@ final class QrWidgetTimelineTests: XCTestCase {
 
     func testWithTheSpoilerOffTheCodeShowsAtOnce() {
         var pass = pass(expiresIn: 600)
-        pass.spoiler = false
+        pass.appearance.spoiler = false
         XCTAssertEqual(
             QrWidgetTimeline.entries(now: now, session: session, pass: pass, reveal: nil),
             [
-                QrWidgetEntry(date: now, content: .revealed(matrix: matrix, demo: false)),
-                QrWidgetEntry(date: pass.expiresAt, content: .expired),
+                QrWidgetEntry(date: now, content: .revealed(matrix: matrix, demo: false), appearance: pass.appearance),
+                QrWidgetEntry(date: pass.expiresAt, content: .expired, appearance: pass.appearance),
             ]
         )
+    }
+
+    func testEveryEntryOfAPassCarriesItsWidgetOptions() {
+        var pass = pass(expiresIn: 600)
+        pass.appearance = QrWidgetAppearance(spoiler: true, dynamicColors: false, animation: .none)
+        let entries = QrWidgetTimeline.entries(
+            now: now, session: session, pass: pass, reveal: .startingAt(now.addingTimeInterval(-10))
+        )
+        XCTAssertEqual(entries.count, 3)
+        XCTAssertTrue(entries.allSatisfy { $0.appearance == pass.appearance })
     }
 
     func testTheDemoPassIsMarked() {

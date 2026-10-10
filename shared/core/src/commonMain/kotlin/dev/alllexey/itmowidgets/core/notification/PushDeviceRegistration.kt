@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.core.notification
 
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.device.DeviceApi
 import dev.alllexey.itmowidgets.client.device.RegisterDeviceRequest
 import dev.alllexey.itmowidgets.client.device.UnregisterDeviceRequest
@@ -16,8 +17,9 @@ import kotlinx.coroutines.sync.withLock
  * `DefaultBackendDeviceSession`. iOS uses it; Android keeps its own until it moves here.
  *
  * Nothing reaches Backend in the demo, without the opt-in ([BackendGate.mayCallBackend]), without a signed-in ISU or
- * without a push token: an empty token is never registered. [sync] registers only when the token, the owner or the
- * alerts answer differs from what Backend last accepted, so it runs on every return to the foreground.
+ * without a push token: an empty token is never registered. [sync] registers only when the token, the owner, the
+ * alerts answer or the build ([version], the `X-App-Version` Backend records) differs from what Backend last
+ * accepted, so it runs on every return to the foreground and registers once after an update.
  */
 class PushDeviceRegistration(
     private val devices: DeviceApi,
@@ -26,6 +28,7 @@ class PushDeviceRegistration(
     private val gate: BackendGate,
     private val demo: DemoMode,
     private val currentUser: CurrentUserProvider,
+    private val version: ClientVersion,
 ) : BackendDeviceSession, FcmTokenSync {
 
     private val mutex = Mutex()
@@ -54,7 +57,7 @@ class PushDeviceRegistration(
         if (demo.isActive() || !gate.mayCallBackend()) return null
         val ownerIsu = currentUser.getCurrentUser()?.isu?.takeIf { it > 0 } ?: return null
         val token = device.token().orNullIfBlank() ?: return null
-        return PushRegistration(token, ownerIsu, device.alertsAllowed())
+        return PushRegistration(token, ownerIsu, device.alertsAllowed(), version.headerValue)
     }
 
     private suspend fun register(registration: PushRegistration) {

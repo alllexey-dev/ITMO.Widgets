@@ -24,3 +24,8 @@
   builds it from `BuildConfig` and the flavor, iOS from the bundle
   (`appstore`, or `dev` for a debug binary). MyItmoApi and other hosts never
   get it.
+- After an update the app registers its device with Backend once more, so
+  Backend records the build of every device exactly: the stored registration
+  keeps the `X-App-Version` it was made with (`DefaultFcmTokenSync` on
+  Android, `PushDeviceRegistration` on iOS). An unchanged start, the demo and
+  turned-off services send nothing.
