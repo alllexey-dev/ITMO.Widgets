@@ -89,13 +89,15 @@ class SettingsRepositoryImpl(
             homeLayout.observeHiddenHomeCards(),
             deviceHints.observeBackgroundWorkHintShown(),
             deviceHints.observeQrTileAdded(),
-            appearance.observeTheme()
-        ) { hiddenHomeCards, backgroundWorkHintShown, qrTileAdded, theme ->
+            appearance.observeTheme(),
+            appearance.observeWidgetsFollowTheme()
+        ) { hiddenHomeCards, backgroundWorkHintShown, qrTileAdded, theme, widgetsFollowTheme ->
             DeviceLocalSettings(
                 hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet(),
                 backgroundWorkHintShown = backgroundWorkHintShown,
                 qrTileAdded = qrTileAdded,
-                theme = theme
+                theme = theme,
+                widgetsFollowTheme = widgetsFollowTheme
             )
         }
         // The typed combine takes at most five flows, so the three mark switches travel together.
@@ -139,7 +141,8 @@ class SettingsRepositoryImpl(
                 hiddenHomeCards = appSettings.device.hiddenHomeCards,
                 backgroundWorkHintShown = appSettings.device.backgroundWorkHintShown,
                 qrTileAdded = appSettings.device.qrTileAdded,
-                theme = appSettings.device.theme
+                theme = appSettings.device.theme,
+                widgetsFollowTheme = appSettings.device.widgetsFollowTheme
             )
         }
     }
@@ -206,6 +209,10 @@ class SettingsRepositoryImpl(
 
     override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
         appearance.updateTheme(change)
+    }
+
+    override suspend fun setWidgetsFollowTheme(enabled: Boolean) {
+        appearance.setWidgetsFollowTheme(enabled)
     }
 
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
@@ -344,5 +351,6 @@ private data class DeviceLocalSettings(
     val hiddenHomeCards: Set<HomeCardKind>,
     val backgroundWorkHintShown: Boolean,
     val qrTileAdded: Boolean,
-    val theme: ThemeSpec
+    val theme: ThemeSpec,
+    val widgetsFollowTheme: Boolean
 )

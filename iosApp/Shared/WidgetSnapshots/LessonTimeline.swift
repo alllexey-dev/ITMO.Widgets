@@ -15,6 +15,8 @@ struct LessonTimeline: Equatable, Decodable {
     let validUntil: Date
     /// Ordered by `validFrom`, the first one at `generatedAt`.
     let entries: [LessonTimelineEntry]
+    /// The app's colours while the widgets follow the theme, nil for the brand scheme (additive in version 1).
+    var palette: WidgetPalette? = nil
 
     /// The file name in the App Group container.
     static let fileName = AppGroupSnapshot.fileName("schedule-timeline", version: version)
@@ -47,7 +49,7 @@ struct LessonTimeline: Equatable, Decodable {
 
     private enum CodingKeys: String, CodingKey {
         case formatVersion = "version"
-        case generatedAt, validUntil, entries
+        case generatedAt, validUntil, entries, palette
     }
 }
 

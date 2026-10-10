@@ -8,12 +8,15 @@ import dev.alllexey.itmowidgets.shared.core.title_recordbook
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_allowed
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_checking
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_widgets
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_enabled
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_widgets_theme_title
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -33,15 +36,18 @@ class RootPageProviderTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun rootIsACompactCatalogueWithNoSwitchesOrArbitraryOptionSummaries() =
+    fun rootIsACompactCatalogueWithOneSwitchAndNoArbitraryOptionSummaries() =
         runTest(main.dispatcher) {
             val fixture = createFixture(local = LocalSettings(customServicesEnabled = true))
             advanceUntilIdle()
 
             assertEquals(SettingsPage.ROOT, fixture.viewModel.uiState.value.page)
             assertEquals(3, fixture.viewModel.uiState.value.sections.size)
-            assertEquals(12, fixture.viewModel.allItems().size)
-            assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
+            assertEquals(13, fixture.viewModel.allItems().size)
+            assertEquals(
+                listOf(SettingRowId.WIDGETS_FOLLOW_THEME),
+                fixture.viewModel.allItems().filterIsInstance<SettingItem.Toggle>().map { it.id }
+            )
             val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
             assertEquals(
                 SettingsPage.entries.filter { it != SettingsPage.ROOT },
@@ -104,5 +110,27 @@ class RootPageProviderTest {
             assertEquals(SettingsPage.SCHEDULE, pages[index - 1])
             assertEquals(SettingsPage.SPORT, pages[index + 1])
             assertEquals(UiText.Res(CoreRes.string.title_recordbook), SettingsPage.RECORDBOOK.title)
+        }
+
+    @Test
+    fun widgetsFollowTheThemeOnlyWhenTurnedOnInTheWidgetsGroup() =
+        runTest(main.dispatcher) {
+            val fixture = createFixture()
+            advanceUntilIdle()
+
+            val widgets = fixture.viewModel.uiState.value.sections.single {
+                it.title == UiText.Res(Res.string.settings_group_widgets)
+            }
+            assertEquals(SettingRowId.WIDGETS_FOLLOW_THEME, widgets.items.last().id)
+            val toggle = fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME)
+            assertEquals(UiText.Res(Res.string.settings_widgets_theme_title), toggle.title)
+            assertFalse(toggle.checked)
+
+            fixture.viewModel.onToggleChanged(SettingRowId.WIDGETS_FOLLOW_THEME, true)
+            advanceUntilIdle()
+
+            assertEquals(listOf(true), fixture.repository.widgetsFollowThemeRequests)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME).checked)
+            assertEquals(1, fixture.widgetRefresher.refreshCount)
         }
 }

@@ -5,8 +5,9 @@ import XCTest
 
 /// The widget entry views at their family size: the QR widget (IO-10a) in all four appearances with Android's default
 /// options, without dynamic colours and on a tinted home screen (IO-FIX-QRW), the lesson and the day widget (IO-10b)
-/// light and dark, AX1 where a family has the least room. WidgetKit's container background is ignored outside a
-/// widget, so each entry view paints its own tile; the home screen clips the corners.
+/// light and dark, AX1 where a family has the least room, and all three in the app's theme (DS-ACC3, the teal preset).
+/// WidgetKit's container background is ignored outside a widget, so each entry view paints its own tile; the home
+/// screen clips the corners.
 final class WidgetSnapshotTests: XCTestCase {
     /// The fixture's generation time: 2026-09-01T08:00:30Z, so the spoiler's noise never changes.
     private let date = Date(timeIntervalSince1970: 1_788_249_630)
@@ -43,6 +44,17 @@ final class WidgetSnapshotTests: XCTestCase {
         )
     }
 
+    /// `settings_widgets_theme_title` with the teal preset: the code and the spoiler in the app's palette.
+    func testQrInTheAppTheme() throws {
+        var themed = QrWidgetAppearance.standard
+        themed.palette = WidgetPaletteFixtures.teal
+        assertQr(.spoiler, appearance: themed, named: "spoiler", appearances: [.light, .dark])
+        assertQr(
+            .revealed(matrix: try fixtureMatrix(), demo: false), appearance: themed, named: "revealed",
+            appearances: [.light, .dark]
+        )
+    }
+
     func testQrExpired() {
         assertQr(.expired, named: "expired")
     }
@@ -56,6 +68,12 @@ final class WidgetSnapshotTests: XCTestCase {
     func testLessonCurrent() throws {
         try assertLesson(.snapshot(fixture(at: 0)), family: .systemSmall, named: "current", appearances: SnapshotAppearance.all)
         try assertLesson(.snapshot(fixture(at: 0)), family: .systemMedium, named: "current-medium")
+    }
+
+    func testLessonInTheAppTheme() throws {
+        try assertLesson(
+            .snapshot(fixture(at: 0)), family: .systemSmall, palette: WidgetPaletteFixtures.teal, named: "current"
+        )
     }
 
     func testLessonInABreak() throws {
@@ -98,6 +116,12 @@ final class WidgetSnapshotTests: XCTestCase {
         try assertDay(.snapshot(fixture(at: 0)), family: .systemLarge, named: "current", appearances: SnapshotAppearance.all)
     }
 
+    func testDayInTheAppTheme() throws {
+        try assertDay(
+            .snapshot(fixture(at: 0)), family: .systemMedium, palette: WidgetPaletteFixtures.teal, named: "current-medium"
+        )
+    }
+
     func testDayInABreak() throws {
         try assertDay(.snapshot(fixture(at: 2)), family: .systemLarge, named: "break")
     }
@@ -130,6 +154,7 @@ final class WidgetSnapshotTests: XCTestCase {
         _ content: LessonWidgetContent,
         family: WidgetFamily,
         size: CGSize? = nil,
+        palette: WidgetPalette? = nil,
         named name: String,
         appearances: [SnapshotAppearance] = [.light, .dark],
         file: StaticString = #filePath,
@@ -138,7 +163,9 @@ final class WidgetSnapshotTests: XCTestCase {
     ) {
         let size = size ?? Self.size(of: family)
         assertAppearances(
-            of: SingleLessonEntryView(entry: LessonWidgetEntry(date: date, content: content), family: family),
+            of: SingleLessonEntryView(
+                entry: LessonWidgetEntry(date: date, content: content, palette: palette), family: family
+            ),
             named: name,
             appearances: appearances,
             width: size.width,
@@ -153,6 +180,7 @@ final class WidgetSnapshotTests: XCTestCase {
         _ content: LessonWidgetContent,
         family: WidgetFamily,
         size: CGSize? = nil,
+        palette: WidgetPalette? = nil,
         named name: String,
         appearances: [SnapshotAppearance] = [.light, .dark],
         file: StaticString = #filePath,
@@ -161,7 +189,9 @@ final class WidgetSnapshotTests: XCTestCase {
     ) {
         let size = size ?? Self.size(of: family)
         assertAppearances(
-            of: DayScheduleEntryView(entry: LessonWidgetEntry(date: date, content: content), family: family),
+            of: DayScheduleEntryView(
+                entry: LessonWidgetEntry(date: date, content: content, palette: palette), family: family
+            ),
             named: name,
             appearances: appearances,
             width: size.width,
@@ -268,4 +298,19 @@ final class WidgetSnapshotTests: XCTestCase {
             .standardized
         return try XCTUnwrap(QrPassSnapshot.decode(Data(contentsOf: fixture))).matrix
     }
+}
+
+/// The teal preset's widget palette, `AccentColor.TEAL.widgetPalette()` of `:shared:designsystem`
+/// (`WidgetPalettesTest` pins the same values).
+enum WidgetPaletteFixtures {
+    static let teal = WidgetPalette(
+        light: WidgetColorRoles(
+            surface: 0xF4FBF8, surfaceContainer: 0xE9EFED, onSurface: 0x161D1C,
+            onSurfaceVariant: 0x3F4947, outlineVariant: 0xBEC9C6, primary: 0x006A60
+        ),
+        dark: WidgetColorRoles(
+            surface: 0x0E1513, surfaceContainer: 0x1A2120, onSurface: 0xDDE4E1,
+            onSurfaceVariant: 0xBEC9C6, outlineVariant: 0x3F4947, primary: 0x82D5C8
+        )
+    )
 }

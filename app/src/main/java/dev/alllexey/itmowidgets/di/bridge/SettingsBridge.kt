@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
+import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
@@ -19,8 +20,8 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 /**
- * Hilt to Koin for the Android side of settings: Hilt keeps constructing the widget refresher, the version and the
- * platform accesses, which `settingsModule` and `settingsDataModule` read (one graph per binding). The core contracts
+ * Hilt to Koin for the Android side of settings: Hilt keeps constructing the widget refresher, the version, the
+ * widgets' theme palette and the platform accesses, which `settingsModule` and `settingsDataModule` read (one graph per binding). The core contracts
  * come from `CoreBridge`.
  */
 @EntryPoint
@@ -30,6 +31,7 @@ interface SettingsBridgeEntryPoint {
     fun appVersion(): AppVersion
     fun backgroundWorkAccess(): BackgroundWorkAccess
     fun quickSettingsTileAccess(): QuickSettingsTileAccess
+    fun widgetPaletteSource(): WidgetPaletteSource
 
     companion object {
         fun from(context: Context): SettingsBridgeEntryPoint =
@@ -47,6 +49,7 @@ val settingsBridgeModule = module {
     factory<AppVersion> { SettingsBridgeEntryPoint.from(androidContext()).appVersion() }
     factory<BackgroundWorkAccess> { SettingsBridgeEntryPoint.from(androidContext()).backgroundWorkAccess() }
     factory<QuickSettingsTileAccess> { SettingsBridgeEntryPoint.from(androidContext()).quickSettingsTileAccess() }
+    factory<WidgetPaletteSource> { SettingsBridgeEntryPoint.from(androidContext()).widgetPaletteSource() }
 }
 
 /**

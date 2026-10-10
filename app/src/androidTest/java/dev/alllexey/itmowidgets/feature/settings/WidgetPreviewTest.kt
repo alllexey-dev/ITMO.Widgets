@@ -382,7 +382,7 @@ class WidgetPreviewTest {
             images = QrPreviewBitmapCache(QrCodeGenerator(), QrBitmapRenderer(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)), spoilers, DeviceDispatchers)
             factory = DefaultWidgetPreviewFactory(
                 images,
-                QrColorResolver(activity, PreviewQrPreferences),
+                QrColorResolver(activity, PreviewQrPreferences) { null },
                 SchedulePreviewScenario(ScheduleWidgetSelector())
             )
             // The page as SettingsFragment hosts it: SettingsScreen with the factory's View in the preview slot.
@@ -481,6 +481,9 @@ class WidgetPreviewTest {
 
         override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
             local.value = local.value.copy(theme = change(local.value.theme))
+        }
+        override suspend fun setWidgetsFollowTheme(enabled: Boolean) {
+            local.value = local.value.copy(widgetsFollowTheme = enabled)
         }
     }
 

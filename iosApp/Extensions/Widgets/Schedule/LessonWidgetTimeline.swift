@@ -16,6 +16,8 @@ enum LessonWidgetContent: Equatable {
 struct LessonWidgetEntry: TimelineEntry, Equatable {
     let date: Date
     let content: LessonWidgetContent
+    /// The app's colours while the widgets follow its theme (`LessonTimeline.palette`); nil for the brand scheme.
+    var palette: WidgetPalette? = nil
 }
 
 /// Both schedule widgets' WidgetKit timeline from the App Group files. The app precomputed every switch (lesson starts
@@ -27,17 +29,18 @@ enum LessonWidgetTimeline {
 
     /// The entries from `now`: the entry of the moment, every later one, and the unavailable state from `validUntil`.
     static func entries(now: Date, session: SessionFile?, timeline: LessonTimeline?) -> [LessonWidgetEntry] {
-        guard let session else { return [LessonWidgetEntry(date: now, content: .signedOut)] }
-        guard !session.demo else { return [LessonWidgetEntry(date: now, content: .demo)] }
+        let palette = timeline?.palette
+        guard let session else { return [LessonWidgetEntry(date: now, content: .signedOut, palette: palette)] }
+        guard !session.demo else { return [LessonWidgetEntry(date: now, content: .demo, palette: palette)] }
         guard let timeline, now < timeline.validUntil else {
-            return [LessonWidgetEntry(date: now, content: .unavailable)]
+            return [LessonWidgetEntry(date: now, content: .unavailable, palette: palette)]
         }
 
-        var entries = [LessonWidgetEntry(date: now, content: content(of: timeline.entry(at: now)))]
+        var entries = [LessonWidgetEntry(date: now, content: content(of: timeline.entry(at: now)), palette: palette)]
         for entry in timeline.entries where entry.validFrom > now {
-            entries.append(LessonWidgetEntry(date: entry.validFrom, content: .snapshot(entry.snapshot)))
+            entries.append(LessonWidgetEntry(date: entry.validFrom, content: .snapshot(entry.snapshot), palette: palette))
         }
-        entries.append(LessonWidgetEntry(date: timeline.validUntil, content: .unavailable))
+        entries.append(LessonWidgetEntry(date: timeline.validUntil, content: .unavailable, palette: palette))
         return entries
     }
 

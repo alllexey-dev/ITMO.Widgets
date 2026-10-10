@@ -1,11 +1,13 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -100,6 +102,21 @@ class WidgetsPageProviderTest {
                     fixture.viewModel.uiState.value.previewSettings
                 )
             }
+        }
+
+    @Test
+    fun previewsCarryTheAccentOnlyWhileTheWidgetsFollowTheTheme() =
+        runTest(main.dispatcher) {
+            val themed = LocalSettings(theme = ThemeSpec(accent = AccentColor.TEAL), widgetsFollowTheme = true)
+            val own = themed.copy(widgetsFollowTheme = false)
+            listOf(SettingsPage.QR_WIDGET, SettingsPage.COMPACT_SCHEDULE_WIDGET, SettingsPage.FULL_SCHEDULE_WIDGET)
+                .forEach { page ->
+                    val on = createFixture(page = page, local = themed)
+                    val off = createFixture(page = page, local = own)
+                    advanceUntilIdle()
+                    assertEquals(ThemeSpec(accent = AccentColor.TEAL), on.viewModel.uiState.value.previewSettings?.theme)
+                    assertEquals(null, off.viewModel.uiState.value.previewSettings?.theme)
+                }
         }
 
     @Test

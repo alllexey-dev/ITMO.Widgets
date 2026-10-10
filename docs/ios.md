@@ -317,9 +317,9 @@ container, logs one warning per process and carries on; the extensions then see 
 |---|---|---|---|
 | `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted; `myitmo-refresh` guards the token refresh |
 | session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension (`SessionFile.swift` in `iosApp/Shared/WidgetSnapshots/`), notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool, "servicesEnabled": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` is the last notification settings answer (see Notifications); `servicesEnabled` the services opt-in (`BackendGate`), absent reads as off |
-| qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass and every change of a QR widget option (`QrSettingsPreferences`) while the pass is valid; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` and `QrWidgetAppearance.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool, "dynamicColors": Bool, "animation": String}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; `spoiler`, `dynamicColors` and `animation` (a `QrAnimationType` name) are the global QR widget options, each read as Android's default (on, on, `CIRCLE`) when absent or unknown, so a file from before IO-FIX-QRW stays version 1; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`) |
+| qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass and every change of a QR widget option (`QrSettingsPreferences`) or of the widget theme (`AppearancePreferences.observeWidgetTheme`) while the pass is valid; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` and `QrWidgetAppearance.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool, "dynamicColors": Bool, "animation": String, "palette"?: WidgetPalette}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; `spoiler`, `dynamicColors` and `animation` (a `QrAnimationType` name) are the global QR widget options, each read as Android's default (on, on, `CIRCLE`) when absent or unknown, so a file from before IO-FIX-QRW stays version 1; `palette` (DS-ACC3, additive in version 1, `WidgetPalette.swift`) is `{"light": roles, "dark": roles}`, each `{"surface", "surfaceContainer", "onSurface", "onSurfaceVariant", "outlineVariant", "primary"}` as `0xRRGGBB` numbers, the app's scheme while `Виджеты в цвет темы` is on and absent otherwise; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`) |
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension, on a tap on the spoiler | widget extension (`QrWidgetReveal.swift`) | `{"revealedUntil": ISO 8601}`: the tap's time plus 30 s, Android's auto-hide delay; one file for every placed QR widget; never read by the app |
-| schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`, iosMain) on the session, the schedule widget options, every return to the foreground, a changed cached schedule and `ScheduleWidgetRefreshRequester` (sport); reloads `dev.alllexey.itmowidgets.widget.single-lesson` and `.day-schedule` | widget extension (`LessonTimeline.swift`) | LS-3's `ScheduleWidgetTimeline` from `ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow (academic zone): `{"version": 1, "generatedAt", "validUntil", "entries": [{"validFrom", "snapshot"}]}`, the snapshot in the keys of Android's widget snapshot, nulls omitted, defaults written; rooms and buildings are already the short titles Android's widget shows; an unavailable schedule keeps the previous file; the envelope around `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json` is what the writer writes for it (`ScheduleTimelineWriterTest`, `ScheduleTimelineTests`) |
+| schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`, iosMain) on the session, the schedule widget options and the widget theme, every return to the foreground, a changed cached schedule and `ScheduleWidgetRefreshRequester` (sport); reloads `dev.alllexey.itmowidgets.widget.single-lesson` and `.day-schedule` | widget extension (`LessonTimeline.swift`) | LS-3's `ScheduleWidgetTimeline` from `ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow (academic zone): `{"version": 1, "generatedAt", "validUntil", "entries": [{"validFrom", "snapshot"}], "palette"?}`, the snapshot in the keys of Android's widget snapshot, nulls omitted, defaults written; rooms and buildings are already the short titles Android's widget shows; `palette` is qr-pass-v1.json's (DS-ACC3, additive in version 1), the palette of the write's moment; an unavailable schedule keeps the previous file; the envelope around `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json` is what the writer writes for it (`ScheduleTimelineWriterTest`, `ScheduleTimelineTests`) |
 | `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | each card that adds a snapshot adds its row |
 
 - Snapshots hold `{"version": N, "value": ...}`. A write goes to a temporary file of its own and is renamed over
@@ -548,7 +548,9 @@ Android keeps the widget options global, so they come from qr-pass-v1.json, not 
   The code and the spoiler noise are black on white without dynamic colours; with them they take the app's scheme
   for the widget's theme through the math of `QrColors.resolve` (`QrWidgetTile.resolve` over the design tokens): the
   light surface behind the darker text role, in the dark theme `onSurfaceVariant` behind the dark surface, so the
-  code stays dark on light for a scanner. Signed out and expired follow the system theme. The reveal fades in, or
+  code stays dark on light for a scanner. While `Виджеты в цвет темы` is on, the file's `palette` replaces the
+  design tokens in that math; without dynamic colours it changes nothing. Signed out and expired follow the system
+  theme. The reveal fades in, or
   appears at once with `NONE`.
 - Rendering modes. On the tinted and clear home screens (`widgetRenderingMode` accented) the system keeps only
   alpha, so the tile paints no background and the code is drawn as holes in a light plate (`QrPlateShape`, a
@@ -579,7 +581,9 @@ day's rows, tomorrow's once today is over when that option is on. A tap opens `i
 - WidgetKit cannot scroll: the day widget shows the rows that fit its family and text size, dropping completed
   lessons first, then rows from the end (`DayScheduleRows`).
 - The widget extension compiles the design tokens (`Tokens.generated.swift`, `ItmoTheme.swift`) by path for the
-  surface, text and lesson type colours.
+  surface, text and lesson type colours. While `Виджеты в цвет темы` is on, the timeline's `palette` replaces the
+  tokens' surface, text and accent roles (`LessonWidgetColors`, through the environment of the entry view), light or
+  dark as the widget is; the lesson type colours and the Lock Screen's vibrant rendering stay.
 - Degradation: no seven-minute pending sport refresh (WidgetKit allows about 40 to 70 reloads a day); a pending row
   stays until the app writes again or its entry ends.
 - The writer starts with the graph (`scheduleWidgetIosModule`) and resolves the provider and the cached schedule at
@@ -587,7 +591,8 @@ day's rows, tomorrow's once today is over when that option is on. A tap opens `i
 - `ITMOWidgetsTests/ScheduleTimelineTests` decodes LS-3's fixture and picks Kotlin's `entryAt` entry at sampled
   instants; `SnapshotTests/WidgetSnapshotTests` holds lesson, break, pending sport, empty, tomorrow, signed out,
   demo and unavailable states, light and dark (AX1 for the small and the large family), long names at the narrowest
-  medium size (321 pt, `WidgetSizes.narrowMedium`).
+  medium size (321 pt, `WidgetSizes.narrowMedium`), and the lesson, day and QR widgets in the teal preset's palette
+  (`testLessonInTheAppTheme`, `testDayInTheAppTheme`, `testQrInTheAppTheme`).
 
 ## System entries
 

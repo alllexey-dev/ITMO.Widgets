@@ -123,6 +123,9 @@ private class MemorySettings : SettingsRepository {
     override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
         local.value = local.value.copy(theme = change(local.value.theme))
     }
+    override suspend fun setWidgetsFollowTheme(enabled: Boolean) {
+        local.value = local.value.copy(widgetsFollowTheme = enabled)
+    }
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) = Unit
     override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) = Unit
     override suspend fun setFullWidgetTeacherHidden(hidden: Boolean) = Unit

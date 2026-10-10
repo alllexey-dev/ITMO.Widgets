@@ -28,6 +28,28 @@ final class QrWidgetStyleTests: XCTestCase {
         XCTAssertNotEqual(dark, style(code, .standard, dark: false).tile)
     }
 
+    func testTheAppPaletteReplacesTheBrandSchemeOnlyWithDynamicColours() {
+        let palette = WidgetPalette(
+            light: roles(surface: 0xF4FBF8, onSurfaceVariant: 0x3F4947, onSurface: 0x161D1C),
+            dark: roles(surface: 0x0E1513, onSurfaceVariant: 0xBEC9C6, onSurface: 0xDDE4E1)
+        )
+        var themed = options()
+        themed.palette = palette
+        XCTAssertEqual(
+            style(code, themed, dark: false).tile,
+            QrWidgetTile(backgroundRGB: 0xF4FBF8, foregroundRGB: 0x161D1C)
+        )
+        // Dark: the palette's dark surface swaps with onSurfaceVariant, as the brand scheme does.
+        XCTAssertEqual(
+            style(code, themed, dark: true).tile,
+            QrWidgetTile(backgroundRGB: 0xBEC9C6, foregroundRGB: 0x0E1513)
+        )
+        // Without dynamic colours the code stays black on white whatever the theme option says.
+        var plain = options(dynamicColors: false)
+        plain.palette = palette
+        XCTAssertEqual(style(code, plain, dark: true).tile, .code)
+    }
+
     func testTheResolverMatchesTheKotlinMath() {
         // A light surface keeps its place; the darker of the two text roles draws the modules.
         XCTAssertEqual(
@@ -86,6 +108,13 @@ final class QrWidgetStyleTests: XCTestCase {
         -> QrWidgetStyle {
         let entry = QrWidgetEntry(date: date, content: content, appearance: appearance)
         return QrWidgetStyle(entry: entry, dark: dark, fullColor: true)
+    }
+
+    private func roles(surface: UInt32, onSurfaceVariant: UInt32, onSurface: UInt32) -> WidgetColorRoles {
+        WidgetColorRoles(
+            surface: surface, surfaceContainer: surface, onSurface: onSurface,
+            onSurfaceVariant: onSurfaceVariant, outlineVariant: onSurfaceVariant, primary: onSurface
+        )
     }
 
     private func options(dynamicColors: Bool = true, animation: QrRevealAnimation = .circle) -> QrWidgetAppearance {

@@ -32,8 +32,21 @@ data class WidgetAppearance(
     val qr: QrWidgetSettings = QrWidgetSettings()
 )
 
-/** Appearance inputs shared by settings and the real widget preview renderers. */
+/**
+ * Appearance inputs shared by settings and the real widget preview renderers; [theme] is the appearance the widgets
+ * draw with while they follow the app's theme, null for their own colours.
+ */
 sealed interface WidgetPreviewSettings {
-    data class Qr(val appearance: QrWidgetSettings) : WidgetPreviewSettings
-    data class Schedule(val appearance: ScheduleWidgetSettings, val format: ScheduleWidgetFormat) : WidgetPreviewSettings
+    val theme: ThemeSpec?
+
+    data class Qr(
+        val appearance: QrWidgetSettings,
+        override val theme: ThemeSpec? = null,
+    ) : WidgetPreviewSettings
+
+    data class Schedule(
+        val appearance: ScheduleWidgetSettings,
+        val format: ScheduleWidgetFormat,
+        override val theme: ThemeSpec? = null,
+    ) : WidgetPreviewSettings
 }

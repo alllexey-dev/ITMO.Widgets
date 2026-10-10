@@ -2,9 +2,12 @@ package dev.alllexey.itmowidgets.feature.qr.widget
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.AppGroupSessionDataCleaner
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
@@ -14,6 +17,7 @@ import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSourceImpl
 import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSource
 import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
+import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -44,6 +48,7 @@ class QrPassSnapshotWriterTest {
     private val demo = FakeDemoMode(active = true)
     private val remote = FakeRemote()
     private val settings = QrSettingsPreferences(InMemoryPreferencesDataStore())
+    private val appearance = AppearancePreferences(InMemoryPreferencesDataStore())
 
     @AfterTest
     fun deleteDevice() = device.delete()
@@ -109,6 +114,26 @@ class QrPassSnapshotWriterTest {
 
         val snapshot = assertNotNull(snapshotWriter().read(QrPassSnapshotWriter.FILE))
         assertEquals(written.copy(spoiler = false, dynamicColors = false, animation = "NONE"), snapshot)
+        assertEquals(4, reloads.size)
+    }
+
+    @Test
+    fun theWidgetThemeWritesTheAppPaletteAndTurningItOffDropsIt() = runTest(UnconfinedTestDispatcher()) {
+        val (repository, writer) = graph()
+        writer.launchIn(backgroundScope)
+        repository.refreshQrHex(force = true)
+        assertNull(assertNotNull(snapshotWriter().read(QrPassSnapshotWriter.FILE)).palette)
+
+        appearance.updateTheme { it.copy(accent = AccentColor.TEAL) }
+        appearance.setWidgetsFollowTheme(true)
+        assertEquals(ThemeSpec(accent = AccentColor.TEAL).widgetPalette(), snapshotWriter().read(QrPassSnapshotWriter.FILE)?.palette)
+
+        appearance.updateTheme { it.copy(accent = AccentColor.PURPLE) }
+        assertEquals(ThemeSpec(accent = AccentColor.PURPLE).widgetPalette(), snapshotWriter().read(QrPassSnapshotWriter.FILE)?.palette)
+
+        appearance.setWidgetsFollowTheme(false)
+        assertNull(snapshotWriter().read(QrPassSnapshotWriter.FILE)?.palette)
+        // The first pass, then the theme on, the new accent and the theme off; the accent alone while off writes nothing.
         assertEquals(4, reloads.size)
     }
 
@@ -187,7 +212,7 @@ class QrPassSnapshotWriterTest {
     private fun TestScope.graph(): Pair<QrCodeRepositoryImpl, QrPassSnapshotWriter> {
         val dispatchers = dispatchers()
         val repository = QrCodeRepositoryImpl(QrCodeLocalDataSourceImpl(device.directories, clock), remote, dispatchers)
-        return repository to QrPassSnapshotWriter(repository, settings, snapshotWriter(), demo, clock, log)
+        return repository to QrPassSnapshotWriter(repository, settings, appearance, snapshotWriter(), demo, clock, log)
     }
 
     private fun TestScope.dispatchers(): AppDispatchers = UnconfinedTestDispatcher(testScheduler).let {
