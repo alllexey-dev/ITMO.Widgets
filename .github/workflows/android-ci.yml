@@ -36,10 +36,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: app, tasks: verifyQuickUnitApp verifyQuickAssemble }
-          - { name: unit-shared, tasks: verifyQuickUnitShared }
-          - { name: lint-github, tasks: verifyQuickLint }
-          - { name: lint-play, tasks: ":app:lintPlayDebug" }
+          - { name: app, tasks: verifyQuickUnitApp verifyQuickAssemble, home: "true" }
+          - { name: unit-shared, tasks: verifyQuickUnitShared, home: "false" }
+          - { name: lint-github, tasks: verifyQuickLint, home: "false" }
+          - { name: lint-play, tasks: ":app:lintPlayDebug", home: "false" }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -49,6 +49,7 @@ jobs:
         with:
           build-cache: ${{ matrix.name }}
           tasks: ${{ matrix.tasks }}
+          gradle-home-writer: ${{ matrix.home }}
 
       # No secrets: google-services.json is tracked, release stays unsigned, Core and MyItmoApi 1.x
       # come from Maven Central.

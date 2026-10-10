@@ -125,9 +125,10 @@ minutes are free), in parallel jobs, so nothing heavy has to run on the laptop f
   logs; `scripts/ship-check.sh` reads stages 5 and 6 from it (see Ship check). Every shard of `android-ui` uploads
   `ui-<config>-<i>` (JUnit XML, the HTML report, logcat, the `verify.sh` output) and every Roborazzi shard that
   fails uploads its diffs.
-- Caches: the Gradle home (dependencies, keyed by the build files) and one Gradle build cache line per job kind
-  (`gbc-v1-<job>-<sha>`, `.github/actions/android-setup` and `build-cache-save`) are written only by pushes to
-  `v2.3/next`; PRs read their base's newest line. A run after a build file change starts cold.
+- Caches: the Gradle home (dependencies, keyed by the build files, saved by android-ci's `app` job) and one Gradle
+  build cache line per job kind (`gbc-v1-<job>-<sha>`, `.github/actions/android-setup` and `build-cache-save`)
+  are written only by pushes to `v2.3/next`; PRs read their base's newest line. A run after a build file change
+  starts cold.
 - Re-run: `gh run rerun <run-id> --failed`, or one job with `gh run rerun --job <job-id>` (the job ids are in
   `gh run view <run-id> --json jobs`). The aggregate job reruns with it. Locally the same shard is
   `ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui all --shard <i>/6` on a pool emulator (AndroidJUnitRunner

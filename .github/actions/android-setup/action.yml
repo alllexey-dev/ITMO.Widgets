@@ -11,6 +11,12 @@ inputs:
       `.github/actions/build-cache-save` with the same name saves it on `v2.3/next`.
     required: false
     default: ""
+  gradle-home-writer:
+    description: >-
+      `true` for the one job whose Gradle home is saved on `v2.3/next` (the cache entry is keyed by the build files
+      only, so the first job to finish would otherwise decide what every job restores).
+    required: false
+    default: "false"
   tasks:
     description: >-
       The Gradle tasks the job runs; a dry run of them resolves every plugin and included build (the MyItmoApi
@@ -28,12 +34,13 @@ runs:
         distribution: jetbrains
         java-version: 21
 
-    # Basic (MIT) cache provider: the Gradle home, keyed by the build files; only `v2.3/next` writes it. It keeps
-    # the build cache of the first push after a build file change only, so `build-cache` below carries a fresh one.
+    # Basic (MIT) cache provider: the Gradle home (dependencies, wrapper), keyed by the build files and written once
+    # per key, on `v2.3/next`, by the gradle-home-writer job (android-ci's `app`, the job with the widest
+    # dependencies). It keeps the build cache of that first push only, so `build-cache` below carries a fresh one.
     - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       with:
         cache-provider: basic
-        cache-read-only: ${{ github.ref != 'refs/heads/v2.3/next' }}
+        cache-read-only: ${{ github.ref != 'refs/heads/v2.3/next' || inputs.gradle-home-writer != 'true' }}
 
     # Gradle uses only the JDK above: a criteria mismatch fails loudly instead of downloading a toolchain.
     - name: Gradle toolchain without auto-download
