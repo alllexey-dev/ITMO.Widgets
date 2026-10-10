@@ -23,10 +23,13 @@ class SessionSnapshotWriterTest {
     /** The extensions decode these field names in Swift; a rename is a new version. */
     @Test
     fun writesSessionV1AsTheExtensionsReadIt() {
-        writer.write(SessionSnapshot(isu = 123456, demo = false, alertsAllowed = true), reloadKinds = listOf("kind"))
+        writer.write(
+            SessionSnapshot(isu = 123456, demo = false, alertsAllowed = true, servicesEnabled = true),
+            reloadKinds = listOf("kind")
+        )
 
         assertEquals(
-            """{"version":1,"value":{"isu":123456,"demo":false,"alertsAllowed":true}}""",
+            """{"version":1,"value":{"isu":123456,"demo":false,"alertsAllowed":true,"servicesEnabled":true}}""",
             FileSystem.SYSTEM.read(directory.file("session-v1.json")) { readUtf8() }
         )
         assertEquals(listOf("kind"), reloaded)
@@ -36,7 +39,7 @@ class SessionSnapshotWriterTest {
     fun readsBackWhatItWroteAndNothingWhenSignedOut() {
         assertNull(writer.read())
 
-        val demo = SessionSnapshot(isu = null, demo = true, alertsAllowed = false)
+        val demo = SessionSnapshot(isu = null, demo = true, alertsAllowed = false, servicesEnabled = false)
         writer.write(demo)
 
         assertEquals(demo, writer.read())

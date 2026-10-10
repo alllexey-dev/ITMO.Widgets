@@ -43,25 +43,27 @@ internal object NoBackendIdentitySync : BackendIdentitySync {
  * Keeps `session-v1.json` on the signed-in session, demo included: the demo start runs no lifecycle effect, and the
  * extensions learn of the demo only from this file. A sign-out needs no write: the App Group cleaner removes the
  * file, and a missing file means signed out. [alertsAllowed] is the last notification settings answer the app read
- * (`IosPushDevice`, on every return to the foreground).
+ * (`IosPushDevice`, on every return to the foreground); [servicesEnabled] the services opt-in, which the notification
+ * service checks before it books (it opens no DataStore).
  */
 internal class SessionSnapshotSync(
     private val session: SessionRepository,
     private val alertsAllowed: Flow<Boolean>,
+    private val servicesEnabled: Flow<Boolean>,
     private val writer: SessionSnapshotWriter,
     private val log: AppLog,
 ) {
 
-    fun launchIn(scope: CoroutineScope): Job = combine(session.state, alertsAllowed) { state, alerts ->
-        (state as? SessionState.SignedIn)?.let { snapshotOf(it, alerts) }
-    }
-        // Distinct over every state, so signing in again after a sign-out writes the removed file again.
-        .distinctUntilChanged()
-        .onEach(::write)
-        .launchIn(scope)
-
-    private fun snapshotOf(state: SessionState.SignedIn, alertsAllowed: Boolean) =
-        SessionSnapshot(isu = state.user?.isu, demo = state.demo, alertsAllowed = alertsAllowed)
+    fun launchIn(scope: CoroutineScope): Job =
+        combine(session.state, alertsAllowed, servicesEnabled) { state, alerts, services ->
+            (state as? SessionState.SignedIn)?.let {
+                SessionSnapshot(isu = it.user?.isu, demo = it.demo, alertsAllowed = alerts, servicesEnabled = services)
+            }
+        }
+            // Distinct over every state, so signing in again after a sign-out writes the removed file again.
+            .distinctUntilChanged()
+            .onEach(::write)
+            .launchIn(scope)
 
     private fun write(snapshot: SessionSnapshot?) {
         if (snapshot == null) return

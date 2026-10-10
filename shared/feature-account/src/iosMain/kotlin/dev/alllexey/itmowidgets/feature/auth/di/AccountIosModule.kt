@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.session.IdTokenCurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -54,7 +55,13 @@ val accountIosModule = module {
     single { PushForegroundRefresh(get(), get(), get()) }
     single<BackendIdentitySync> { NoBackendIdentitySync }
     single(createdAtStart = true) {
-        SessionSnapshotSync(get(), get<IosPushDevice>().observeAlertsAllowed(), get(), get()).also { sync ->
+        SessionSnapshotSync(
+            get(),
+            get<IosPushDevice>().observeAlertsAllowed(),
+            get<ServicesOptInPreferences>().observeCustomServicesEnabled(),
+            get(),
+            get()
+        ).also { sync ->
             sync.launchIn(CoroutineScope(SupervisorJob() + get<AppDispatchers>().main))
         }
     }
