@@ -457,6 +457,18 @@
         }
       }
     },
+    "notification_sport_place_free" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Освободилось место на занятии"
+          }
+        }
+      }
+    },
     "notification_sport_success" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",
