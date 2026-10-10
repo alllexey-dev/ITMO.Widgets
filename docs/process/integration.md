@@ -104,6 +104,41 @@ batch head or a red ship check reverts the culprit; it is never fixed forward on
 - Version lines: `versionCode` and `versionName` in `app/build.gradle.kts` change only through the integrator,
   per decision 0030.
 
+## CI
+
+Android verification of A runs on GitHub-hosted `ubuntu-latest` runners (the repository is public, so runner
+minutes are free), in parallel jobs, so nothing heavy has to run on the laptop for a PR. Three checks carry it:
+
+| Check | Workflow | Runs on | Jobs | Wall time |
+|---|---|---|---|---|
+| `verify-quick` | `android-ci.yml` | every PR into and push to `v2.3/next` and `master` | `app` (unit tests and APKs), `unit-shared`, `lint-github` (the parts of the root `verifyQuick`), `lint-play`, `shots 0/3`..`2/3` (`verify.sh shots all --shard`), `checks-klibs` (`verify.sh checks`, then the iOS klibs) | WALL_CI |
+| `android-ui` | `android-ui.yml` | PRs into `v2.3/next` that touch what the app is built from, every push to `v2.3/next`, manual runs | `ui plain 0/6`..`5/6` (`verify.sh ui all --shard <i>/6`), `ui cutout 0/2`..`1/2` (`verify.sh ui ShellSuite --shard <i>/2` with the tall cutout overlay) | WALL_UI |
+| `android-ship` | `android-ship.yml` | every push to `v2.3/next`, manual runs, PRs that change it or the scripts it runs | `ship version-release` (ship check stages 1 and 3), `ship upgrade` (stage 5), `ship shrunk` (stage 6) | WALL_SHIP |
+
+- Each check is an aggregate job: it fails when any of its jobs failed, was skipped where it had to run, or left
+  no report. The jobs of `verify-quick` together are `verify.sh full`; `android-ui` together is `verify.sh ui all`,
+  judged by `scripts/ui-report.py` per shard (every run of every test, not Gradle's last result), plus the shell on
+  a cutout. A PR that touches no app input still gets a green `android-ui`.
+- The emulators come from `scripts/ci-emulator.sh`: `system-images;android-35;google_apis;x86_64` with the pool
+  AVD's Pixel 7 geometry, cold-booted while Gradle builds, animations as the image ships them (as on the pool).
+- `android-ship` uploads `ship-<sha7>`: a summary in the ship check's format with stages 1, 3, 5 and 6, and their
+  logs; `scripts/ship-check.sh` reads stages 5 and 6 from it (see Ship check). Every shard of `android-ui` uploads
+  `ui-<config>-<i>` (JUnit XML, the HTML report, logcat, the `verify.sh` output) and every Roborazzi shard that
+  fails uploads its diffs.
+- Caches: the Gradle home (dependencies, keyed by the build files, saved by android-ci's `app` job) and one Gradle
+  build cache line per job kind (`gbc-v1-<job>-<sha>`, `.github/actions/android-setup` and `build-cache-save`)
+  are written only by pushes to `v2.3/next`; PRs read their base's newest line. A run after a build file change
+  starts cold.
+- Re-run: `gh run rerun <run-id> --failed`, or one job with `gh run rerun --job <job-id>` (the job ids are in
+  `gh run view <run-id> --json jobs`). The aggregate job reruns with it. Locally the same shard is
+  `ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui all --shard <i>/6` on a pool emulator (AndroidJUnitRunner
+  splits by a hash of the test names, so the shard holds the same tests) or `scripts/verify.sh shots all --shard
+  <i>/3`. A manual run of another ref: `gh workflow run android-ui.yml -f ref=<ref>` (possible once the workflow
+  is on the default branch).
+- The free plan runs at most 20 jobs at once across the organisation. A PR starts 17 Linux jobs and `ios-check`,
+  a push to `v2.3/next` 3 more for `android-ship`, so shards queue for a few minutes when several PRs push
+  together.
+
 ## Ship check
 
 The ship check is `scripts/ship-check.sh`, also reached through `scripts/verify.sh ship`. The integrator runs it in

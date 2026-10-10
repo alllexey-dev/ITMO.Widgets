@@ -35,8 +35,11 @@
 # - Takes no build slot itself: every Gradle run of the head goes through a scripts/verify.sh mode, and the one-time
 #   v2.2 build through `~/proj/.wt/bin/slot.sh android --` (slot.sh is re-entrant through ITMO_SLOT_HELD).
 # - Device stages run only on emulator-5554 from a worktree whose itmo-lane marker reads `integrator`; any other
-#   ANDROID_SERIAL is refused (the owner's phone shares the applicationId). Release outputs stay unsigned: a
-#   keystore.properties in the worktree is refused. Read from CI, no stage needs a device.
+#   ANDROID_SERIAL is refused (the owner's phone shares the applicationId). In GitHub Actions (CI=true and
+#   GITHUB_ACTIONS=true; android-ship.yml runs --local) they run on the job's own emulator instead: ANDROID_SERIAL
+#   must name an emulator-<port> that reports ro.kernel.qemu or ro.boot.qemu, and no marker is needed. Release
+#   outputs stay unsigned: a keystore.properties in the worktree is refused. Read from CI, no stage needs a device.
+# - The v2.2 build takes JDK 17 from JAVA17_HOME, else JAVA_HOME_17_X64 (GitHub runners), else java_home.
 # - The last line is `VERIFY A ship|ship-no-device PASS|FAIL <secs>s <sha7>` (the --local-verify format).
 # - Exit code: 0 every stage passed, 1 a stage failed, 2 refused (usage, signing config, unsafe device).
 
@@ -129,13 +132,20 @@ if selected 3 && [ -e "$root/keystore.properties" ]; then
   refuse "keystore.properties exists in $root: release outputs must stay unsigned here"
 fi
 
-# Device stages: emulator-5554 only, only from the integrator's worktree, only if it really is an emulator.
+# Device stages: emulator-5554 only, only from the integrator's worktree, only if it really is an emulator; in
+# GitHub Actions the job's own emulator instead.
 if [ "$source" = local ] && { selected 4 || selected 5 || selected 6; }; then
-  [ -z "${ANDROID_SERIAL:-}" ] || [ "$ANDROID_SERIAL" = "$DEVICE_SERIAL" ] ||
-    refuse "device stages run only on $DEVICE_SERIAL, not '$ANDROID_SERIAL' (use --no-device)"
-  git_dir=$(git rev-parse --absolute-git-dir 2> /dev/null) || refuse "not a git worktree"
-  marker=$(head -n 1 "$git_dir/itmo-lane" 2> /dev/null | tr -d ' \t\r')
-  [ "$marker" = integrator ] || refuse "device stages need the integrator's worktree (use --no-device)"
+  if [ "${CI:-}" = true ] && [ "${GITHUB_ACTIONS:-}" = true ]; then
+    [[ ${ANDROID_SERIAL:-} =~ ^emulator-[0-9]+$ ]] ||
+      refuse "device stages in CI need ANDROID_SERIAL=emulator-<port>, got '${ANDROID_SERIAL:-unset}'"
+    DEVICE_SERIAL=$ANDROID_SERIAL
+  else
+    [ -z "${ANDROID_SERIAL:-}" ] || [ "$ANDROID_SERIAL" = "$DEVICE_SERIAL" ] ||
+      refuse "device stages run only on $DEVICE_SERIAL, not '$ANDROID_SERIAL' (use --no-device)"
+    git_dir=$(git rev-parse --absolute-git-dir 2> /dev/null) || refuse "not a git worktree"
+    marker=$(head -n 1 "$git_dir/itmo-lane" 2> /dev/null | tr -d ' \t\r')
+    [ "$marker" = integrator ] || refuse "device stages need the integrator's worktree (use --no-device)"
+  fi
   [ -x "$adb" ] || refuse "no adb at $adb"
   qemu=$("$adb" -s "$DEVICE_SERIAL" shell getprop ro.kernel.qemu 2> /dev/null | tr -d ' \t\r')
   [ "$qemu" = 1 ] || qemu=$("$adb" -s "$DEVICE_SERIAL" shell getprop ro.boot.qemu 2> /dev/null | tr -d ' \t\r')
@@ -173,7 +183,8 @@ write_summary() {
     else
       printf -- '- Source: every stage local\n'
     fi
-    printf -- '- Started: %s\n\n' "$(date -r "$started" '+%Y-%m-%d %H:%M:%S %z')"
+    printf -- '- Started: %s\n\n' "$(date -r "$started" '+%Y-%m-%d %H:%M:%S %z' 2> /dev/null ||
+      date -d "@$started" '+%Y-%m-%d %H:%M:%S %z')"
     printf '| Stage | Result | Time | Source | Log |\n|---|---|---|---|---|\n'
     for n in 1 2 3 4 5 6; do
       [ -z "${row[$n]:-}" ] || printf '%s\n' "${row[$n]}"
@@ -524,7 +535,9 @@ v22_apk() {
   fi
   slot=${ITMO_SLOT_SH:-$wt/bin/slot.sh}
   [ -x "$slot" ] || slot="$root/scripts/slot.sh"
-  java17=$(/usr/libexec/java_home -v 17 2> /dev/null) || { echo "FAIL: no JDK 17 for the $V22_TAG build" >&2; return 1; }
+  java17=${JAVA17_HOME:-${JAVA_HOME_17_X64:-}}
+  [ -n "$java17" ] || java17=$(/usr/libexec/java_home -v 17 2> /dev/null) ||
+    { echo "FAIL: no JDK 17 for the $V22_TAG build" >&2; return 1; }
   echo "building $V22_TAG githubDebug in $work (JDK 17)" >&2
   (
     cd "$work" &&

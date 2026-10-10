@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# verify.sh [quick]                        root verifyQuick: every module's tests, Konsist, lintGithubDebug, APKs
+# verify.sh [quick]                        checks, then root verifyQuick: every module's tests, Konsist, lintGithubDebug, APKs
+# verify.sh checks                         the Gradle-free checks of quick: docs, generator, ui-report, ship-check tests
 # verify.sh full                           root verifyFull (both lints), then klibs
 # verify.sh klibs [<module>]               iosSimulatorArm64 klibs of every shared module, or of shared/<module>
-# verify.sh shots <module>|app|all [--record | --gallery <dir>] [-P<name>=<value>...]
+# verify.sh shots <module>|app|all [--record | --gallery <dir>] [--shard <i>/<n>] [-P<name>=<value>...]
 #                                          :shared:<module>, :app or all of them: screenshotsVerify (screenshotsRecord)
-# verify.sh ui <Class>[,<Class>...]|all    :app:connectedGithubDebugAndroidTest on a pool emulator
+# verify.sh ui <Class>[,<Class>...]|all [--shard <i>/<n>]   :app:connectedGithubDebugAndroidTest on a pool emulator
 # verify.sh ui @platform [--managed-device] the platform list under Orchestrator (pool emulator, or CI's managed device)
 # verify.sh ship                           scripts/ship-check.sh when it exists, else full + check-play-policy.sh
 # verify.sh run -- <gradle args...>        ad hoc Gradle tasks (kn slot when an argument names an iOS task)
@@ -26,6 +27,10 @@
 #   Gradle call with --continue, so one run reports every module's differences. --gallery <dir> (an absent or empty
 #   directory) renders every capture in all four appearances into <dir>/<module>/ without comparing and without
 #   touching the baselines (screenshotsRecord with -Pshots.gallery and -Pshots.appearance=full).
+# - --shard <i>/<n> (0 <= i < n) runs one of n parts, so CI spreads a mode over parallel jobs (android-ci.yml,
+#   android-ui.yml): shots all keeps every n-th module of its list starting at the i-th; ui passes AndroidJUnitRunner's
+#   numShards and shardIndex, which split the test methods by a hash of their names (a suite member and its
+#   standalone run share a shard).
 # - ui accepts FQCNs or bare class names (resolved to the one file under app/src/androidTest*/), optionally with
 #   #method. It refuses unless ANDROID_SERIAL is emulator-<port> and the device reports ro.boot.qemu (or
 #   ro.kernel.qemu) = 1; emulator-5554 only from a worktree whose itmo-lane marker reads `integrator`.
@@ -38,7 +43,8 @@
 #   after a marker line, and every run of every test is listed, so a suite member that fails inside ShellSuite and
 #   passes standalone later (AGP's XML, HTML and "Finished <n> tests" keep only the last run) still fails the
 #   mode. A failed run is named with its suite or "standalone", "run k of n" and the ShellModeRule shell. Gradle's
-#   `FAILED` lines count too, so the managed device (no log capture) is covered.
+#   `FAILED` lines count too, so the managed device (no log capture) is covered. A capture that ended before
+#   `run finished:` is replaced by the device's log buffer when that still holds the marker.
 # - Exit code: 0 pass, 1 fail, 2 refused (usage, missing harness, unsafe device); refusals print no VERIFY line.
 
 set -u
@@ -74,7 +80,7 @@ if [ "${1:-}" = __gradle ]; then
 fi
 
 usage() {
-  sed -n '2,10p' "$self" | sed 's/^# //' >&2
+  sed -n '2,11p' "$self" | sed 's/^# //' >&2
   exit 2
 }
 
@@ -85,7 +91,7 @@ mode=${1:-quick}
 [ $# -gt 0 ] && shift
 case "$mode" in
   -h | --help) usage ;;
-  quick | full | klibs | shots | ui | ship | run) ;;
+  quick | checks | full | klibs | shots | ui | ship | run) ;;
   *) note "unknown mode '$mode'"; usage ;;
 esac
 
@@ -161,11 +167,20 @@ resolve_pin() { # gradle-args of a run...
 
 no_args() { [ $# -eq 0 ] || refuse "$mode takes no arguments (got: $*)"; }
 
+# Sets shard_index and shard_count from <i>/<n>, 0 <= i < n.
+shard_index="" shard_count=""
+parse_shard() { # spec
+  [[ ${1:-} =~ ^([0-9]+)/([1-9][0-9]*)$ ]] || refuse "--shard takes <index>/<count>, got '${1:-}'"
+  shard_index=${BASH_REMATCH[1]}
+  shard_count=${BASH_REMATCH[2]}
+  [ "$shard_index" -lt "$shard_count" ] || refuse "--shard: index $shard_index is not below the count $shard_count"
+}
+
 # ---- quick, full, klibs, ship ----------------------------------------------------------------------------
 
 # The task lists live in the root build.gradle.kts (verifyQuick, verifyFull, verifyIosKlibs).
 
-run_quick() {
+run_checks() {
   if [ -e "$root/scripts/check-docs.sh" ]; then
     note "scripts/check-docs.sh (outside any slot)"
     "$root/scripts/check-docs.sh" || return 1
@@ -191,6 +206,10 @@ run_quick() {
     ship=$("$root/scripts/test-ship-check.sh" 2>&1) || { printf '%s\n' "$ship" >&2; return 1; }
     printf '%s\n' "$ship" | tail -n 1 >&2
   fi
+}
+
+run_quick() {
+  run_checks || return 1
   gradle_part android verifyQuick
 }
 
@@ -228,13 +247,18 @@ run_ship() {
 run_shots() {
   local module=${1:-} task=screenshotsVerify out rc arg gallery="" record=""
   local -a props=() projects=() tasks=()
-  [ -n "$module" ] || refuse "usage: shots <module>|app|all [--record | --gallery <dir>] [-P<name>=<value>...]"
+  [ -n "$module" ] || refuse "usage: shots <module>|app|all [--record | --gallery <dir>] [--shard <i>/<n>] [-P<name>=<value>...]"
   shift
   while [ $# -gt 0 ]; do
     arg=$1
     shift
     case "$arg" in
       --record) record=1 ;;
+      --shard)
+        [ "$module" = all ] || refuse "shots: --shard only with all"
+        parse_shard "${1:-}"
+        shift
+        ;;
       --gallery)
         [ $# -gt 0 ] && [ -n "$1" ] || refuse "shots: --gallery needs a directory"
         gallery=$1
@@ -251,7 +275,15 @@ run_shots() {
     refuse "screenshot harness not installed (no screenshotsVerify task in build-logic yet)"
   case "$module" in
     app) projects=(:app) ;;
-    all) while IFS= read -r arg; do projects+=("$arg"); done < <(shot_projects) ;;
+    all)
+      local index=0
+      while IFS= read -r arg; do
+        [ -z "$shard_count" ] || [ $((index % shard_count)) -eq "$shard_index" ] && projects+=("$arg")
+        index=$((index + 1))
+      done < <(shot_projects)
+      [ "${#projects[@]}" -gt 0 ] || refuse "shots: shard $shard_index/$shard_count has no module"
+      [ -z "$shard_count" ] || note "shots shard $shard_index/$shard_count: ${projects[*]}"
+      ;;
     *)
       [ -d "$root/shared/$module" ] || refuse "shots: no module shared/$module"
       projects=(":shared:$module")
@@ -359,7 +391,7 @@ platform_classes() {
 run_ui() {
   local spec=${1:-} item name method classes="" fqcn old_ifs task=:app:connectedGithubDebugAndroidTest
   local -a extra=()
-  [ -n "$spec" ] || refuse "usage: ui <Class>[,<Class>...]|all|@platform [--managed-device]"
+  [ -n "$spec" ] || refuse "usage: ui <Class>[,<Class>...]|all|@platform [--managed-device] [--shard <i>/<n>]"
   shift
   if [ "$spec" = @platform ]; then
     extra=(-Pitmo.orchestrator=true)
@@ -369,11 +401,15 @@ run_ui() {
       task=:app:${MANAGED_DEVICE}GithubDebugAndroidTest
       extra+=(-Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect)
     fi
-    no_args "$@"
     spec=$(platform_classes) || exit 2
-  else
-    no_args "$@"
   fi
+  if [ "${1:-}" = --shard ]; then
+    parse_shard "${2:-}"
+    shift 2
+    extra+=("-Pandroid.testInstrumentationRunnerArguments.numShards=$shard_count"
+      "-Pandroid.testInstrumentationRunnerArguments.shardIndex=$shard_index")
+  fi
+  no_args "$@"
   if [ "$spec" != all ]; then
     old_ifs=$IFS
     IFS=,
@@ -409,7 +445,7 @@ run_ui() {
 
 # ---- ui report (TC-UIREPORT) -----------------------------------------------------------------------------
 
-ui_dir="" ui_logcat_pid="" ui_marker=""
+ui_dir="" ui_logcat_pid="" ui_marker="" ui_serial=""
 ui_cleanup() {
   [ -z "$ui_logcat_pid" ] || kill "$ui_logcat_pid" 2> /dev/null
   [ -z "$ui_dir" ] || rm -rf "$ui_dir"
@@ -418,6 +454,7 @@ ui_cleanup() {
 # Starts the TestRunner log capture of serial $1 (none for the managed device) and waits for its marker line.
 ui_report_start() {
   local serial=$1 adb="${ANDROID_HOME:-}/platform-tools/adb" tries=0
+  ui_serial=$serial
   ui_dir=$(mktemp -d "${TMPDIR:-/tmp}/verify-ui.XXXXXX") || refuse "cannot create a temporary directory"
   trap ui_cleanup EXIT
   : > "$ui_dir/logcat"
@@ -450,6 +487,15 @@ ui_report_finish() {
     kill "$ui_logcat_pid" 2> /dev/null
     wait "$ui_logcat_pid" 2> /dev/null
     ui_logcat_pid=""
+    # A live capture that ended early (its adb connection dropped) misses runs; the device's log buffer, when it
+    # still holds the marker, has them all.
+    if ! grep -q '^run finished:' "$ui_dir/logcat"; then
+      "${ANDROID_HOME:-}/platform-tools/adb" -s "$ui_serial" logcat -d -v raw -s TestRunner:V > "$ui_dir/buffer" 2> /dev/null
+      if grep -qF "$ui_marker" "$ui_dir/buffer" && grep -q '^run finished:' "$ui_dir/buffer"; then
+        note "the live TestRunner capture ended early; the report reads the device's log buffer"
+        mv "$ui_dir/buffer" "$ui_dir/logcat"
+      fi
+    fi
   fi
   if ! command -v python3 > /dev/null 2>&1; then
     note "warning: no python3, so no ui report; the verdict is Gradle's"
@@ -500,6 +546,7 @@ if [ "$mode" = run ]; then resolve_pin "$@"; else resolve_pin; fi
 
 case "$mode" in
   quick) no_args "$@"; run_quick ;;
+  checks) no_args "$@"; run_checks ;;
   full) no_args "$@"; run_full ;;
   klibs) run_klibs "$@" ;;
   ship) run_ship "$@" ;;

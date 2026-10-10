@@ -1,0 +1,111 @@
+# The Gradle environment of every Android CI job (android-ci, android-ui, android-ship), after actions/checkout:
+# JetBrains 21, Gradle with the basic cache, no toolchain downloads, MyItmoApi at gradle/myitmoapi.ref, the
+# build-logic plugins resolved with retries and, with `build-cache`, that job's build cache from `v2.3/next`.
+name: android-setup
+description: JDK, Gradle, MyItmoApi pin and the per-job build cache for the Android CI jobs.
+
+inputs:
+  build-cache:
+    description: >-
+      Name of this job's build cache line (one per job kind, for example `unit-app`); empty restores none.
+      `.github/actions/build-cache-save` with the same name saves it on `v2.3/next`.
+    required: false
+    default: ""
+  gradle-home-writer:
+    description: >-
+      `true` for the one job whose Gradle home is saved on `v2.3/next` (the cache entry is keyed by the build files
+      only, so the first job to finish would otherwise decide what every job restores).
+    required: false
+    default: "false"
+  tasks:
+    description: >-
+      The Gradle tasks the job runs; a dry run of them resolves every plugin and included build (the MyItmoApi
+      pin's plugins as well) with retries, before the build.
+    required: false
+    default: help
+
+runs:
+  using: composite
+  steps:
+    # The JDK gradle/gradle-daemon-jvm.properties asks for (JetBrains 21), installed up front so the daemon
+    # never auto-provisions it from api.foojay.io during the build.
+    - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      with:
+        distribution: jetbrains
+        java-version: 21
+
+    # Basic (MIT) cache provider: the Gradle home (dependencies, wrapper), keyed by the build files and written once
+    # per key, on `v2.3/next`, by the gradle-home-writer job (android-ci's `app`, the job with the widest
+    # dependencies). It keeps the build cache of that first push only, so `build-cache` below carries a fresh one.
+    - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      with:
+        cache-provider: basic
+        cache-read-only: ${{ github.ref != 'refs/heads/v2.3/next' || inputs.gradle-home-writer != 'true' }}
+
+    # Gradle uses only the JDK above: a criteria mismatch fails loudly instead of downloading a toolchain.
+    - name: Gradle toolchain without auto-download
+      shell: bash
+      run: |
+        mkdir -p "$GRADLE_USER_HOME"
+        {
+          echo "org.gradle.java.installations.auto-download=false"
+          echo "org.gradle.java.installations.paths=$JAVA_HOME"
+        } >> "$GRADLE_USER_HOME/gradle.properties"
+        "$JAVA_HOME/bin/java" -version
+
+    # MyItmoApi 2.x at gradle/myitmoapi.ref as the composite build (ADR 0024). checkout only writes inside the
+    # workspace, so the tree moves out of it: Konsist scans every source set under the root.
+    - name: MyItmoApi ref
+      id: myitmoapi
+      shell: bash
+      run: echo "ref=$(head -n 1 gradle/myitmoapi.ref | tr -d ' \t\r')" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        repository: alllexey-dev/my-itmo-api
+        ref: ${{ steps.myitmoapi.outputs.ref }}
+        path: myitmoapi
+        persist-credentials: false
+
+    - name: MyItmoApi out of the workspace
+      shell: bash
+      run: |
+        mv myitmoapi "$RUNNER_TEMP/myitmoapi"
+        echo "MYITMOAPI_DIR=$RUNNER_TEMP/myitmoapi" >> "$GITHUB_ENV"
+
+    # The job's own build cache line: the newest entry `v2.3/next` saved for this job kind (a PR reads its base
+    # branch's caches). Unpacked over the Gradle home's copy; the stamp lets the save step keep only the entries
+    # this job read or wrote (Gradle touches an entry when it loads it).
+    - name: Restore the build cache
+      if: inputs.build-cache != ''
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.gradle/caches/build-cache-1
+        key: gbc-v1-${{ inputs.build-cache }}-${{ github.sha }}
+        restore-keys: gbc-v1-${{ inputs.build-cache }}-
+
+    - name: Build cache stamp
+      if: inputs.build-cache != ''
+      shell: bash
+      run: |
+        mkdir -p "$RUNNER_TEMP/build-cache"
+        touch "$RUNNER_TEMP/build-cache/stamp"
+        sleep 1
+        du -sh ~/.gradle/caches/build-cache-1 2> /dev/null || true
+
+    # Resolves the wrapper distribution, the settings and build plugins (foojay-resolver-convention among them)
+    # and the plugins of the included builds before the build, with retries: on a Gradle cache miss a plugin portal
+    # or Maven Central hiccup (a 404 for an artifact that exists) costs a retry, not the job; every attempt keeps
+    # what it downloaded. `help` alone leaves the MyItmoApi build unconfigured.
+    - name: Resolve Gradle plugins
+      shell: bash
+      env:
+        TASKS: ${{ inputs.tasks }}
+      run: |
+        for attempt in 1 2 3 4 5; do
+          # shellcheck disable=SC2086 # one word per task
+          ./gradlew --quiet --dry-run $TASKS > /dev/null && exit 0
+          echo "::warning::Gradle plugin resolution failed (attempt $attempt of 5)"
+          [ "$attempt" = 5 ] || sleep $((attempt * 15))
+        done
+        exit 1

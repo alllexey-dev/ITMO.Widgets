@@ -1,0 +1,52 @@
+# Saves the build cache line `android-setup` restored, on pushes to `v2.3/next` only (PR runs read, never write).
+# Only the entries this job loaded or stored are kept, so each line stays the size of one job's work: Gradle never
+# touches an entry's mtime when it loads it, but the read moves its atime (relatime), which the probe checks first.
+name: build-cache-save
+description: Save this job's Gradle build cache line on v2.3/next.
+
+inputs:
+  build-cache:
+    description: The line name given to android-setup.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # PR runs only report what a save would keep, so the probe and the sizes show up before the first push.
+    - name: Keep this job's entries
+      id: prune
+      shell: bash
+      env:
+        WRITE: ${{ github.ref == 'refs/heads/v2.3/next' }}
+      run: |
+        dir=~/.gradle/caches/build-cache-1
+        stamp="$RUNNER_TEMP/build-cache/stamp"
+        if [ ! -d "$dir" ] || [ ! -f "$stamp" ]; then
+          echo "save=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        probe=~/.gradle/atime-probe
+        echo probe > "$probe"
+        touch -a -m -d '2020-01-01 00:00:00' "$probe"
+        cat "$probe" > /dev/null
+        if [ "$(stat -c %X "$probe")" -lt "$(stat -c %Y "$stamp")" ]; then
+          rm -f "$probe"
+          echo "::warning::reads do not update atime on this runner; build cache line ${{ inputs.build-cache }} not saved"
+          echo "save=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        rm -f "$probe"
+        before=$(du -sm "$dir" | cut -f 1)
+        unused=$(find "$dir" -type f ! -anewer "$stamp" ! -newer "$stamp" | wc -l)
+        echo "build cache line ${{ inputs.build-cache }}: ${before} MB, $(find "$dir" -type f | wc -l) entries, $unused unused"
+        [ "$WRITE" = true ] || exit 0
+        find "$dir" -type f ! -anewer "$stamp" ! -newer "$stamp" -delete
+        echo "kept $(du -sm "$dir" | cut -f 1) MB"
+        echo "save=true" >> "$GITHUB_OUTPUT"
+
+    - name: Save the build cache
+      if: github.ref == 'refs/heads/v2.3/next' && steps.prune.outputs.save == 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.gradle/caches/build-cache-1
+        key: gbc-v1-${{ inputs.build-cache }}-${{ github.sha }}

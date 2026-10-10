@@ -14,12 +14,21 @@
   `klibs`, `shots`, `ui`, `ship`, `run`); `scripts/slot.sh` shares the
   machine between parallel builds and `scripts/emulator.sh` starts clean pool
   emulators, so instrumented tests never run on a phone.
-- CI: `android-ci.yml` runs `verify.sh quick`, the Roborazzi screenshot
-  comparison of every module and the iOS klibs on every PR and push to
-  `v2.3/next` and `master`; `android-nightly.yml` runs the platform
-  instrumentation tests under Android Test Orchestrator on a Gradle Managed
-  Device and an advisory dependency health report; Dependabot proposes
-  updates.
+- CI: `android-ci.yml` runs the parts of `verify.sh quick` and `full`
+  (both lints), the Roborazzi screenshot comparison in three shards and the
+  iOS klibs as parallel jobs on every PR and push to `v2.3/next` and
+  `master`, behind the one `verify-quick` check, and each job keeps its own
+  Gradle build cache line from `v2.3/next`; `android-ui.yml` runs every
+  instrumented test on GitHub's emulators, `verify.sh ui all` in six shards
+  and `ShellSuite` in two on a tall-cutout emulator, behind the
+  `android-ui` check; `android-ship.yml` runs ship check stages 1, 3, 5
+  and 6 on every push to `v2.3/next` and uploads `ship-<sha7>`;
+  `android-nightly.yml` runs the platform instrumentation tests under
+  Android Test Orchestrator on a Gradle Managed Device and an advisory
+  dependency health report; Dependabot proposes updates.
+- `verify.sh checks` runs the Gradle-free checks of `quick` alone, and
+  `verify.sh shots all` and `verify.sh ui` take `--shard <i>/<n>` to run
+  one CI shard locally.
 - The QR encoder is a Kotlin port pinned by golden matrices, Google Sheets
   grids parse with Ksoup and avatars load with Coil 3, with the same output
   as before; OkHttp is 5.5.0.
