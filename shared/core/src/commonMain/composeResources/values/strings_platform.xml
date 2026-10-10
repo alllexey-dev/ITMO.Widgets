@@ -85,4 +85,5 @@
     <string name="shortcut_qr_long">Открыть QR-пропуск</string>
     <string name="shortcut_today_short">Сегодня</string>
     <string name="shortcut_today_long">Расписание на сегодня</string>
+    <string name="notification_sport_place_free">Освободилось место на занятии</string>
 </resources>
