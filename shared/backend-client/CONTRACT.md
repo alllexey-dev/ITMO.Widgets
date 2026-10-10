@@ -128,7 +128,9 @@ send them.
 `X-App-Version` names the build only, in printable ASCII: Android sends
 `<versionName> (<versionCode>); android; github|play` (`NetworkModule.provideClientVersion`), iOS
 `<CFBundleShortVersionString> (<CFBundleVersion>); ios; appstore|dev` (`IosClientVersion`, `dev` for a debug
-binary). No user, device or OS data. Backend ignores unknown headers; BK-VER1 reads it.
+binary). No user, device or OS data. Backend ignores unknown headers; BK-VER1 reads it and records the build of a
+device exactly on `POST /api/device/register-device`, so both apps register again once the build changes
+(`DefaultFcmTokenSync` on Android, `PushDeviceRegistration` on iOS).
 
 ## Engines and iOS
 

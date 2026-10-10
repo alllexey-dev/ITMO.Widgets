@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.notification
 
 import dev.alllexey.itmowidgets.client.AccessTokenSource
 import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
@@ -44,7 +45,10 @@ class PushDeviceRegistrationTest {
     private var user: CurrentUser? = CurrentUser(isu = ISU, name = null, pictureUrl = null)
     private var alerts = true
 
-    private val registration = PushDeviceRegistration(
+    private val registration = registrationOf(INSTALLED)
+
+    /** The registration of a process of [version]; an update starts a new process over the same preferences. */
+    private fun registrationOf(version: ClientVersion) = PushDeviceRegistration(
         devices = BackendClient(ORIGIN, AccessTokenSource { "synthetic-access" }, engine).device,
         device = device,
         registrations = registrations,
@@ -53,6 +57,7 @@ class PushDeviceRegistrationTest {
         currentUser = object : CurrentUserProvider {
             override suspend fun getCurrentUser(): CurrentUser? = user
         },
+        version = version,
     )
 
     @Test
@@ -63,7 +68,47 @@ class PushDeviceRegistrationTest {
         registration.sync()
 
         assertEquals(listOf(register(alertsAllowed = true)), requests)
-        assertEquals(PushRegistration("synthetic-fcm", ISU, alertsAllowed = true), registrations.get())
+        assertEquals(
+            PushRegistration("synthetic-fcm", ISU, alertsAllowed = true, appVersion = INSTALLED.headerValue),
+            registrations.get()
+        )
+    }
+
+    @Test
+    fun anUpdateRegistersExactlyOnceAndAnUnchangedLaunchNotAtAll() = runTest {
+        device.updateToken("synthetic-fcm")
+        registration.sync()
+        registrationOf(INSTALLED).sync()
+
+        val updated = registrationOf(UPDATED)
+        updated.sync()
+        updated.sync()
+
+        assertEquals(listOf(register(alertsAllowed = true), register(alertsAllowed = true)), requests)
+        assertEquals(UPDATED.headerValue, registrations.get()?.appVersion)
+    }
+
+    @Test
+    fun aRegistrationStoredWithoutABuildRegistersOnceMore() = runTest {
+        device.updateToken("synthetic-fcm")
+        registrations.set(PushRegistration("synthetic-fcm", ISU, alertsAllowed = true, appVersion = null))
+
+        registration.sync()
+        registration.sync()
+
+        assertEquals(listOf(register(alertsAllowed = true)), requests)
+    }
+
+    @Test
+    fun anUpdateWithoutTheOptInSendsNothing() = runTest {
+        device.updateToken("synthetic-fcm")
+        registration.sync()
+        gate.optedIn.value = false
+
+        registrationOf(UPDATED).sync()
+
+        assertEquals(listOf(register(alertsAllowed = true)), requests)
+        assertEquals(INSTALLED.headerValue, registrations.get()?.appVersion)
     }
 
     @Test
@@ -201,5 +246,7 @@ class PushDeviceRegistrationTest {
         const val ORIGIN = "https://backend.test"
         const val ISU = 100001
         const val OTHER_ISU = 100002
+        val INSTALLED = ClientVersion("2.3.0", "20300", "ios", "appstore")
+        val UPDATED = ClientVersion("2.3.1", "20310", "ios", "appstore")
     }
 }

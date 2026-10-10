@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.device.DeviceApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
@@ -84,7 +85,8 @@ object SessionModule {
         currentUser: CurrentUserProvider,
         devices: DeviceApi,
         demo: DemoMode,
-        dispatchers: AppDispatchers
+        dispatchers: AppDispatchers,
+        version: ClientVersion
     ): BackendDeviceSession = DefaultBackendDeviceSession(
         gate = gate,
         utilityStorage = utilityStorage,
@@ -92,6 +94,7 @@ object SessionModule {
         devices = devices,
         demo = demo,
         dispatchers = dispatchers,
+        version = version,
         deviceName = listOf(Build.MANUFACTURER, Build.MODEL)
             .map(String::trim)
             .filter(String::isNotEmpty)

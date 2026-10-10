@@ -16,6 +16,8 @@ enum QrWidgetContent: Equatable {
 struct QrWidgetEntry: TimelineEntry, Equatable {
     let date: Date
     let content: QrWidgetContent
+    /// The options the pass was written with: the colours, and how the code appears after the spoiler.
+    var appearance: QrWidgetAppearance = .standard
 }
 
 /// The QR widget's timeline from its App Group files. Swift computes no time of its own here: the pass's deadline
@@ -31,19 +33,22 @@ enum QrWidgetTimeline {
         guard session != nil else { return [QrWidgetEntry(date: now, content: .signedOut)] }
         guard let pass, pass.expiresAt > now else { return [QrWidgetEntry(date: now, content: .expired)] }
 
+        func entry(_ date: Date, _ content: QrWidgetContent) -> QrWidgetEntry {
+            QrWidgetEntry(date: date, content: content, appearance: pass.appearance)
+        }
         let code = QrWidgetContent.revealed(matrix: pass.matrix, demo: pass.demo)
         var entries: [QrWidgetEntry]
-        if !pass.spoiler {
-            entries = [QrWidgetEntry(date: now, content: code)]
+        if !pass.appearance.spoiler {
+            entries = [entry(now, code)]
         } else if let revealedUntil = reveal?.revealedUntil, revealedUntil > now {
-            entries = [QrWidgetEntry(date: now, content: code)]
+            entries = [entry(now, code)]
             if revealedUntil < pass.expiresAt {
-                entries.append(QrWidgetEntry(date: revealedUntil, content: .spoiler))
+                entries.append(entry(revealedUntil, .spoiler))
             }
         } else {
-            entries = [QrWidgetEntry(date: now, content: .spoiler)]
+            entries = [entry(now, .spoiler)]
         }
-        entries.append(QrWidgetEntry(date: pass.expiresAt, content: .expired))
+        entries.append(entry(pass.expiresAt, .expired))
         return entries
     }
 

@@ -28,12 +28,18 @@ class UtilityStorage(
 
     suspend fun getRegisteredFirebaseOwner(): Int? = read()[REGISTERED_FIREBASE_OWNER]
 
-    suspend fun setRegisteredFirebaseToken(token: String?, ownerIsu: Int? = null) {
+    /** The `X-App-Version` of the build that last registered, `null` before the first registration of 2.3. */
+    suspend fun getRegisteredFirebaseAppVersion(): String? = read()[REGISTERED_FIREBASE_APP_VERSION]
+
+    /** What Backend last accepted; a `null` [token] forgets the owner and the app version too. */
+    suspend fun setRegisteredFirebaseToken(token: String?, ownerIsu: Int? = null, appVersion: String? = null) {
         dataStore.edit { preferences ->
             if (token == null) preferences.remove(REGISTERED_FIREBASE_TOKEN)
             else preferences[REGISTERED_FIREBASE_TOKEN] = token
             if (token == null || ownerIsu == null) preferences.remove(REGISTERED_FIREBASE_OWNER)
             else preferences[REGISTERED_FIREBASE_OWNER] = ownerIsu
+            if (token == null || appVersion == null) preferences.remove(REGISTERED_FIREBASE_APP_VERSION)
+            else preferences[REGISTERED_FIREBASE_APP_VERSION] = appVersion
         }
     }
 
@@ -85,6 +91,7 @@ class UtilityStorage(
     companion object {
         private val REGISTERED_FIREBASE_OWNER = intPreferencesKey("registered_firebase_owner")
         private val REGISTERED_FIREBASE_TOKEN = stringPreferencesKey("registered_firebase_token")
+        private val REGISTERED_FIREBASE_APP_VERSION = stringPreferencesKey("registered_firebase_app_version")
         private val FIREBASE_TOKEN = stringPreferencesKey("firebase_token")
         private val LAST_UPDATE_TIMESTAMP = longPreferencesKey("last_update_timestamp")
         private val LESSON_WIDGET_STYLE_CHANGED =
