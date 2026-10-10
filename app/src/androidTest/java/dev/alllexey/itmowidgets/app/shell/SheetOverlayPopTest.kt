@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.app.shell
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -9,6 +8,7 @@ import android.view.Choreographer
 import android.view.View
 import android.view.ViewGroup
 import android.view.inspector.WindowInspector
+import androidx.activity.BackEventCompat
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.SemanticsActions
@@ -33,6 +33,7 @@ import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -46,9 +47,11 @@ import org.junit.runner.RunWith
 /**
  * A profile opened from the lesson sheet on the real `MainActivity` in the demo session (SH-1c-FIX4): the sheet
  * dismisses as in 2.2, the profile slides in from the end, and Back slides it out to the end over the schedule, which
- * shows again without the sheet. The slide is sampled on every frame: the profile keeps the window's height and end,
- * so the overlay layer never shrinks it towards the centre. Only the Compose shell is read; the legacy shell is a
- * debug fallback with the Fragment host's own animation.
+ * shows again without the sheet. Every frame the emulator draws keeps the window's height and end, so the overlay layer
+ * never shrinks the profile towards the centre; a predictive Back held at half way shows the horizontal move on a
+ * frame that does not depend on timing. How many frames a real slide gets depends on the emulator's load, so the
+ * frame-by-frame slide is counted on a paused clock in `AppShellTest` instead. Only the Compose shell is read; the
+ * legacy shell is a debug fallback with the Fragment host's own animation.
  */
 @RunWith(AndroidJUnit4::class)
 @SdkSuppress(minSdkVersion = Build.VERSION_CODES.Q) // WindowInspector reads the sheet's window
@@ -81,7 +84,9 @@ class SheetOverlayPopTest {
         eventually { assertEquals(AppRoutes.LessonDetails(lesson), ShellProbe.current().floating) }
         TestUi.settle(SETTLE_MILLIS)
 
-        val push = sampleOverlay { clickTeacher() }
+        val push = sampleOverlay(settled = { layer, overlay -> layer != null && overlay?.atRestIn(layer) == true }) {
+            clickTeacher()
+        }
 
         eventually {
             val shown = ShellProbe.current()
@@ -89,8 +94,22 @@ class SheetOverlayPopTest {
             assertNull("the sheet dismisses as in 2.2", shown.floating)
         }
         TestUi.settle(SETTLE_MILLIS)
+        val layer = checkNotNull(push.layer) { "no overlay layer" }
+        assertTrue("the profile comes to rest at the layer's start: ${push.frames}", push.frames.last().atRestIn(layer))
 
-        val pop = sampleOverlay { activity -> activity.onBackPressedDispatcher.onBackPressed() }
+        onActivity { it.dragBack(HALF) }
+        eventually {
+            val held = checkNotNull(overlayBounds()) { "the profile is not placed" }
+            assertEquals("the profile follows the finger: $held", layer.left + layer.width * HALF, held.left, EDGE_PX)
+            assertAtFullSize(held, layer)
+        }
+        onActivity { it.onBackPressedDispatcher.dispatchOnBackCancelled() }
+        eventually { assertTrue("the cancel puts the profile back", checkNotNull(overlayBounds()).atRestIn(layer)) }
+        TestUi.settle(SETTLE_MILLIS)
+
+        val pop = sampleOverlay(settled = { _, overlay -> overlay == null }) { activity ->
+            activity.onBackPressedDispatcher.onBackPressed()
+        }
 
         eventually {
             val shown = ShellProbe.current()
@@ -98,57 +117,71 @@ class SheetOverlayPopTest {
             assertEquals(emptyList<AppRoute>(), shown.overlays)
             assertNull("the lesson sheet does not come back (2.2)", shown.floating)
         }
-        Log.i(TAG, "push ${push.frames} in ${push.layer}")
+        Log.i(TAG, "push ${push.frames} in $layer")
         Log.i(TAG, "pop ${pop.frames} in ${pop.layer}")
-        assumeTrue("animations are on", ValueAnimator.areAnimatorsEnabled())
-        // The push composes the profile in its first frames, so an emulator may drop most of them; the pop is light.
-        assertSlidesAtFullSize(push, towardsEnd = false, minMovingFrames = 1)
-        assertSlidesAtFullSize(pop, towardsEnd = true, minMovingFrames = MIN_SLIDE_FRAMES)
+        assertSlidesAtFullSize(push.frames, layer, towardsEnd = false)
+        assertSlidesAtFullSize(pop.frames, layer, towardsEnd = true)
     }
 
     /**
-     * Runs [command] on the main thread and reads the profile overlay's bounds in the window on every frame for
-     * [SAMPLE_MILLIS], with the overlay layer's bounds; frames where the overlay is not placed are dropped.
+     * Runs [command] on the main thread and reads the profile overlay's bounds in the window on every frame until
+     * [settled] holds for the overlay layer and the profile (null while not seen or not placed), with the layer's
+     * bounds.
      */
-    private fun sampleOverlay(command: (MainActivity) -> Unit): Samples {
+    private fun sampleOverlay(
+        settled: (layer: Rect?, overlay: Rect?) -> Boolean,
+        command: (MainActivity) -> Unit,
+    ): Samples {
         val frames = mutableListOf<Rect>()
         var layer: Rect? = null
         val done = CountDownLatch(1)
         onActivity { activity ->
             val choreographer = Choreographer.getInstance()
-            val until = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(SAMPLE_MILLIS)
             val sample = object : Choreographer.FrameCallback {
                 override fun doFrame(frameTimeNanos: Long) {
                     val nodes = composedNodes(activity.window.decorView)
                     nodes.firstOrNull { it.tag == ShellTags.OVERLAY_LAYER }?.let { layer = it.boundsInWindow }
-                    nodes.firstOrNull { it.tag == ShellTags.overlay(profile.toString()) }?.boundsInWindow
-                        ?.takeIf { it.width > 0f }
-                        ?.let(frames::add)
-                    if (frameTimeNanos < until) choreographer.postFrameCallback(this) else done.countDown()
+                    val overlay = nodes.placedOverlay()?.also(frames::add)
+                    if (settled(layer, overlay)) done.countDown() else choreographer.postFrameCallback(this)
                 }
             }
             command(activity)
             choreographer.postFrameCallback(sample)
         }
-        assertTrue("the frames were not sampled", done.await(SAMPLE_MILLIS * 4, TimeUnit.MILLISECONDS))
-        return Samples(frames.toList(), checkNotNull(layer) { "no overlay layer" })
+        assertTrue("the overlay did not settle: $frames", done.await(SETTLE_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS))
+        return Samples(frames.toList(), layer)
     }
 
-    private class Samples(val frames: List<Rect>, val layer: Rect)
+    private class Samples(val frames: List<Rect>, val layer: Rect?)
 
-    /** Every sampled frame keeps the layer's height and end; the start moves one way over [minMovingFrames]. */
-    private fun assertSlidesAtFullSize(samples: Samples, towardsEnd: Boolean, minMovingFrames: Int) {
-        val frames = samples.frames
-        val layer = samples.layer
-        val moving = frames.filter { it.left > layer.left + EDGE_PX && it.left < layer.right - EDGE_PX }
-        assertTrue("the profile slides over several frames: $frames", moving.size >= minMovingFrames)
-        frames.forEach { frame ->
-            assertEquals("the profile keeps the layer's top: $frames", layer.top, frame.top, EDGE_PX)
-            assertEquals("the profile keeps the layer's bottom: $frames", layer.bottom, frame.bottom, EDGE_PX)
-            assertEquals("the profile keeps the layer's end: $frames", layer.right, frame.right, EDGE_PX)
-        }
+    /** Every sampled frame keeps the layer's height and end, and the start moves one way. */
+    private fun assertSlidesAtFullSize(frames: List<Rect>, layer: Rect, towardsEnd: Boolean) {
+        frames.forEach { assertAtFullSize(it, layer, "$frames") }
         val lefts = frames.map { it.left }
         assertEquals("one direction: $lefts", if (towardsEnd) lefts.sorted() else lefts.sortedDescending(), lefts)
+    }
+
+    private fun assertAtFullSize(frame: Rect, layer: Rect, frames: String = "$frame") {
+        assertEquals("the profile keeps the layer's top: $frames", layer.top, frame.top, EDGE_PX)
+        assertEquals("the profile keeps the layer's bottom: $frames", layer.bottom, frame.bottom, EDGE_PX)
+        assertEquals("the profile keeps the layer's end: $frames", layer.right, frame.right, EDGE_PX)
+    }
+
+    private fun Rect.atRestIn(layer: Rect) = abs(left - layer.left) <= EDGE_PX
+
+    private fun List<SemanticsNode>.placedOverlay(): Rect? =
+        firstOrNull { it.tag == ShellTags.overlay(profile.toString()) }?.boundsInWindow?.takeIf { it.width > 0f }
+
+    private fun overlayBounds(): Rect? {
+        var bounds: Rect? = null
+        onActivity { bounds = composedNodes(it.window.decorView).placedOverlay() }
+        return bounds
+    }
+
+    /** A predictive Back from the start edge, held at [progress]. */
+    private fun MainActivity.dragBack(progress: Float) {
+        onBackPressedDispatcher.dispatchOnBackStarted(BackEventCompat(0f, 0f, 0f, BackEventCompat.EDGE_LEFT))
+        onBackPressedDispatcher.dispatchOnBackProgressed(BackEventCompat(0f, 0f, progress, BackEventCompat.EDGE_LEFT))
     }
 
     /** The sheet's teacher row, in the sheet's own window, by its semantics click. */
@@ -237,9 +270,9 @@ class SheetOverlayPopTest {
         const val TAG = "SheetOverlayPopTest"
         const val SETTLE_MILLIS = 500L
 
-        /** Well past the 220 ms slide and a dropped frame or two. */
-        const val SAMPLE_MILLIS = 600L
-        const val MIN_SLIDE_FRAMES = 3
+        /** Far past the 220 ms slide on a loaded emulator; the sampling stops as soon as the profile settles. */
+        const val SETTLE_TIMEOUT_MILLIS = 10_000L
+        const val HALF = 0.5f
         const val EDGE_PX = 1.5f
 
         /** The teacher row's click label (`teacher_open_profile`). */
