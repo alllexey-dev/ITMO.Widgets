@@ -28,6 +28,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -460,6 +461,21 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `the colour row opens named swatches that apply on tap and close with done`() {
+        show(SettingsPreviewData.Root)
+        compose.onNodeWithTag(SettingRowId.ACCENT_COLOR.key).performClick()
+
+        compose.onNode(swatch("Как обои")).assertIsSelected()
+        compose.onNode(swatch("Бирюзовый")).assertIsNotSelected().performClick()
+        compose.onNode(isDialog()).assertExists()
+        compose.assertTouchTargets()
+        compose.onNode(dialogButton("Готово")).performClick()
+
+        compose.onNode(isDialog()).assertDoesNotExist()
+        assertEquals(listOf(SettingRowId.ACCENT_COLOR to "TEAL"), choices)
+    }
+
+    @Test
     fun `the widget preview is composed once above the rows and does not move when they change`() {
         var created = 0
         var released = 0
@@ -520,6 +536,11 @@ class SettingsScreenTest {
     /** A radio row of the open dialog. */
     private fun dialogOption(label: String) =
         hasText(label) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton) and hasAnyAncestor(isDialog())
+
+    /** A colour swatch of the open dialog, named for TalkBack. */
+    private fun swatch(label: String) =
+        hasContentDescription(label) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton) and
+            hasAnyAncestor(isDialog())
 
     private fun dialogButton(label: String) = hasText(label) and hasClickAction() and hasAnyAncestor(isDialog())
 

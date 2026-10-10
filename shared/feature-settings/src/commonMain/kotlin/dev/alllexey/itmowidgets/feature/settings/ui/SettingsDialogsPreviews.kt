@@ -81,3 +81,9 @@ internal class SettingsDialogCalendarAccessLockedPreview {
     @Composable
     fun SettingsDialog() = SettingsDialogPreview(SettingsDialog.CalendarAccess(locked = true))
 }
+
+internal class SettingsDialogAccentColorPreview {
+    @Preview(name = "accent-color")
+    @Composable
+    fun SettingsDialog() = SettingsDialogPreview(SettingsDialog.Choice(SettingRowId.ACCENT_COLOR))
+}

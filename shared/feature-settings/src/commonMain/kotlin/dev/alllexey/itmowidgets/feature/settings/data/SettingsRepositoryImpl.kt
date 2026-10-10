@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -23,6 +24,7 @@ import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.safeEnumOf
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
@@ -49,6 +51,7 @@ class SettingsRepositoryImpl(
     private val markSources: MarkSourcePreferences,
     private val homeLayout: HomeLayoutPreferences,
     private val deviceHints: DeviceHintPreferences,
+    private val appearance: AppearancePreferences,
     private val backend: BackendGate,
     private val users: UsersApi,
     private val demo: DemoMode,
@@ -85,12 +88,14 @@ class SettingsRepositoryImpl(
         val device = combine(
             homeLayout.observeHiddenHomeCards(),
             deviceHints.observeBackgroundWorkHintShown(),
-            deviceHints.observeQrTileAdded()
-        ) { hiddenHomeCards, backgroundWorkHintShown, qrTileAdded ->
+            deviceHints.observeQrTileAdded(),
+            appearance.observeAccentColor()
+        ) { hiddenHomeCards, backgroundWorkHintShown, qrTileAdded, accentColor ->
             DeviceLocalSettings(
                 hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet(),
                 backgroundWorkHintShown = backgroundWorkHintShown,
-                qrTileAdded = qrTileAdded
+                qrTileAdded = qrTileAdded,
+                accentColor = accentColor
             )
         }
         // The typed combine takes at most five flows, so the three mark switches travel together.
@@ -133,7 +138,8 @@ class SettingsRepositoryImpl(
                 sheetMarksEnabled = appSettings.marks.sheets,
                 hiddenHomeCards = appSettings.device.hiddenHomeCards,
                 backgroundWorkHintShown = appSettings.device.backgroundWorkHintShown,
-                qrTileAdded = appSettings.device.qrTileAdded
+                qrTileAdded = appSettings.device.qrTileAdded,
+                accentColor = appSettings.device.accentColor
             )
         }
     }
@@ -196,6 +202,10 @@ class SettingsRepositoryImpl(
 
     override suspend fun setQrTileAdded(added: Boolean) {
         deviceHints.setQrTileAdded(added)
+    }
+
+    override suspend fun setAccentColor(color: AccentColor) {
+        appearance.setAccentColor(color)
     }
 
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
@@ -333,5 +343,6 @@ private data class MarkLocalSettings(
 private data class DeviceLocalSettings(
     val hiddenHomeCards: Set<HomeCardKind>,
     val backgroundWorkHintShown: Boolean,
-    val qrTileAdded: Boolean
+    val qrTileAdded: Boolean,
+    val accentColor: AccentColor
 )

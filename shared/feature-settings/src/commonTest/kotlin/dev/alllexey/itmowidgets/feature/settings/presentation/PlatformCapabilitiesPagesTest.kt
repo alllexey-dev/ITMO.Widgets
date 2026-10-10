@@ -35,6 +35,7 @@ class PlatformCapabilitiesPagesTest {
         reviews = false,
         qrWidgetAnimation = false,
         qrCustomSpoiler = false,
+        wallpaperColors = false,
     )
 
     @BeforeTest

@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipher
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
@@ -138,6 +139,12 @@ abstract class StorageModule {
         fun provideDeviceHintPreferences(
             @AppPreferences dataStore: DataStore<Preferences>
         ): DeviceHintPreferences = DeviceHintPreferences(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideAppearancePreferences(
+            @AppPreferences dataStore: DataStore<Preferences>
+        ): AppearancePreferences = AppearancePreferences(dataStore)
 
         @Provides
         @Singleton

@@ -32,7 +32,8 @@ import dev.alllexey.itmowidgets.designsystem.tokens.toMaterialShapes
 /**
  * The app's Material theme for Compose: the scheme from [colorSource] in [dark] or light mode, the app's own colours,
  * shapes, spacing, type and motion, at the owner's M3E values (item 14, M3-02): the brand static scheme below
- * Android 12 and on iOS, `cardSummary` on the M3E scale, the expressive switch on.
+ * Android 12 and on iOS, `cardSummary` on the M3E scale, the expressive switch on. Without a [colorSource] it follows
+ * the user's accent colour setting ([AppColorSource]).
  *
  * [expressive] is the one switch of the kit's Material 3 Expressive variants ([ItmoTheme.expressive]): the loading
  * indicator, the pull-to-refresh indicator, the connected button group, wavy progress, the hero avatar mask and
@@ -46,13 +47,12 @@ import dev.alllexey.itmowidgets.designsystem.tokens.toMaterialShapes
 @Composable
 fun ItmoTheme(
     dark: Boolean = isSystemInDarkTheme(),
-    colorSource: ColorSource = ColorSource.Platform,
+    colorSource: ColorSource = AppColorSource.current,
     expressive: Boolean = true,
     platformStyle: ItmoPlatformStyle = defaultPlatformStyle(),
     content: @Composable () -> Unit,
 ) {
-    val platform = if (colorSource == ColorSource.Platform) platformColorScheme(dark) else null
-    val scheme = platform ?: remember(colorSource, dark) { generatedColorScheme(colorSource, dark) }
+    val scheme = colorSchemeOf(colorSource, dark)
     val extended = remember(scheme, dark) { ExtendedColorTokens.of(dark).resolve(scheme) }
     val tokens = StyleTokens.of(platformStyle)
     CompositionLocalProvider(
@@ -199,8 +199,9 @@ private class StyleTokens(val shapes: ItmoShapes, val spacing: ItmoSpacing, val 
     }
 }
 
-private fun generatedColorScheme(colorSource: ColorSource, dark: Boolean): ColorScheme = when (colorSource) {
+internal fun generatedColorScheme(colorSource: ColorSource, dark: Boolean): ColorScheme = when (colorSource) {
     is ColorSource.Seed -> seededColorScheme(colorSource.argb, dark)
+    is ColorSource.Accent -> accentColorScheme(colorSource.argb, dark)
     ColorSource.Platform, ColorSource.Static -> staticColorScheme(dark)
 }
 

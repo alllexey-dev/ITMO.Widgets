@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
@@ -76,6 +77,7 @@ class SettingsModuleTest {
         MarkSourcePreferences::class,
         HomeLayoutPreferences::class,
         DeviceHintPreferences::class,
+        AppearancePreferences::class,
         BackendGate::class,
         UsersApi::class,
         DemoMode::class,
