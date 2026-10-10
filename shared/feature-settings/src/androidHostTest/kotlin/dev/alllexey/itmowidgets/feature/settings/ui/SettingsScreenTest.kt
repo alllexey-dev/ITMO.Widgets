@@ -462,7 +462,7 @@ class SettingsScreenTest {
 
     @Test
     fun `the colour row opens named swatches that apply on tap and close with done`() {
-        show(SettingsPreviewData.Root)
+        show(SettingsPreviewData.Appearance)
         compose.onNodeWithTag(SettingRowId.ACCENT_COLOR.key).performClick()
 
         compose.onNode(swatch("Как обои")).assertIsSelected()
@@ -473,6 +473,29 @@ class SettingsScreenTest {
 
         compose.onNode(isDialog()).assertDoesNotExist()
         assertEquals(listOf(SettingRowId.ACCENT_COLOR to "TEAL"), choices)
+    }
+
+    @Test
+    fun `the palette styles say what they do and a pick closes the dialog`() {
+        show(SettingsPreviewData.Appearance)
+        compose.onNodeWithTag(SettingRowId.THEME_PALETTE.key).performClick()
+
+        compose.onNode(dialogOption("Спокойная")).assertIsSelected()
+        compose.onNode(hasText("Самые насыщенные цвета из выбранного") and hasAnyAncestor(isDialog())).assertExists()
+        compose.onNode(dialogOption("Яркая")).performClick()
+
+        compose.onNode(isDialog()).assertDoesNotExist()
+        assertEquals(listOf(SettingRowId.THEME_PALETTE to "VIBRANT"), choices)
+    }
+
+    @Test
+    fun `only the appearance page shows the sample, as one element`() {
+        show(SettingsPreviewData.Appearance)
+        compose.onNodeWithTag(SettingsTestTags.THEME_SAMPLE).assert(hasContentDescription("Пример оформления"))
+        compose.onNodeWithText("Записаться").assertDoesNotExist()
+
+        update(SettingsPreviewData.Root)
+        compose.onNodeWithTag(SettingsTestTags.THEME_SAMPLE).assertDoesNotExist()
     }
 
     @Test

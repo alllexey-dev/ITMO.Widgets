@@ -613,18 +613,6 @@
         }
       }
     },
-    "settings_appearance_summary" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Цвет, стиль палитры и контраст"
-          }
-        }
-      }
-    },
     "settings_appearance_title" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",

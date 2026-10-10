@@ -41,7 +41,7 @@ expressive Material APIs only inside it, behind `Itmo*` wrappers.
 
 | Slot | Contents and values |
 |---|---|
-| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (the default of `AppColorSource`): dynamic colour on Android 12+, otherwise, and on iOS, the static brand scheme (`ColorSource.Static`: the TonalSpot variant of the 2021 spec from the brand blue `#4984E2`). `ColorSource.Accent` builds the same variant from a `Цвет оформления` preset. `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests). On Android 12+ the outline-variant and error roles stay MDC's baseline ones, as the View theme shows them |
+| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (the default of `AppColorSource`): dynamic colour on Android 12+, otherwise, and on iOS, the static brand scheme (`ColorSource.Static`: the TonalSpot variant of the 2021 spec from the brand blue `#4984E2`). `ColorSource.Theme` resolves the stored appearance (`resolveColorScheme`). `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests). On Android 12+ the outline-variant and error roles stay MDC's baseline ones, as the View theme shows them |
 | `ItmoTheme.extendedColors` | The app's own colours beside the scheme, one slot per entry of `res/values{,-night}/colors.xml`: lesson types, recordbook passed, sport scores and conditions, teacher levels. Derived per scheme: sport condition containers (the accent mixed 12 % over `surfaceContainerLowest`) and teacher levels (harmonized towards `primary`). In dark, lesson types keep their light values |
 | `ItmoTheme.shapes` | Corner scale `extraSmall` 4, `small` 8, `medium` 12, `large` 16, `largeIncreased` 20, `extraLarge` 28, `extraLargeIncreased` 32, `extraExtraLarge` 48 dp, `full`; card family `cardContent` 20, `cardSummary` 28, `cardHero` 28, `scheduleDay` 16 dp; connected groups 20 dp outer, 4 dp inner, 2 dp gap; stroke 1 dp, elevation 0 dp |
 | `ItmoTheme.spacing` | `related` 4, `compact` 8, `content` 12, `group` 16, `section` 24, `screenMargin` 16, `cardPadding` 16, `summaryPadding` 20, `touchTarget` 48, `fabStackClearance` 152, `statePadding` 32, `stateIcon` 64, `stateInlineIcon` 56 dp |
@@ -82,17 +82,40 @@ the M3 baseline `#6750A4`; the window background follows the brand scheme there
 screen must work in light, dark and dynamic palettes; never assume the
 wallpaper.
 
-The user picks the seed in `Цвет оформления` ([settings](settings.md#appearance)):
+The user picks the colours on `Оформление` ([settings](settings.md#appearance)),
+stored as one `ThemeSpec` (accent, custom colour, palette style, contrast,
+black background). `resolveColorScheme(spec, dark, wallpaper)` in
+`designsystem/theme/ThemeSchemes.kt` is the one way from it to a scheme:
 `ItmoTheme` without a `colorSource` reads `AppColorSource.current`, which the
-app hosts feed from the stored `AccentColor` at start. `Как обои` is
-`ColorSource.Platform` (today's default), `Фирменный` is `ColorSource.Static`,
-and the six presets are `ColorSource.Accent` seeds built with the brand
-scheme's recipe (TonalSpot, 2021 spec), so each keeps the brand's contrast:
-`Бирюзовый` `#009688`, `Зелёный` `#43A047`, `Янтарный` `#FFA000`, `Красный`
-`#E53935`, `Розовый` `#D81B60`, `Фиолетовый` `#8E24AA`. TonalSpot keeps only a
-seed's hue, so a grey preset is not offered. The View screens that remain, the
-widgets, the QR tile, notifications and the launcher icon keep their colours.
-`AccentSamplesPreview` shows a sample screen in four seeds in every appearance.
+app hosts feed from `AppearancePreferences.observeTheme()` at start, and the
+widgets call the same function with `wallpaperPalette(context)` (null below
+Android 12).
+
+- The seed: `Как обои` the wallpaper's (`system_accent1_500`, the brand blue
+  without one), `Фирменный` the brand blue `#4984E2`, `Свой цвет` the user's,
+  and six presets around the brand blue: `Бирюзовый` `#009688`, `Зелёный`
+  `#43A047`, `Янтарный` `#FFA000`, `Красный` `#E53935`, `Розовый` `#D81B60`,
+  `Фиолетовый` `#8E24AA`. TonalSpot keeps only a seed's hue, so no grey preset
+  is offered; `Монохром` is the grey look.
+- The scheme: MaterialKolor's `dynamicColorScheme` from the seed with the
+  style's `PaletteStyle` and the contrast level (0, 0.5, 1), 2021 spec, which
+  has every style. `Спокойная` at `Обычный` is the brand scheme's recipe, so
+  the defaults and the DS-ACC1 presets draw exactly as before.
+- `Как обои` at `Спокойная` and `Обычный` is the system's dynamic scheme
+  unchanged (with the View theme's baseline outline-variant and error roles);
+  another style or contrast rebuilds it from the wallpaper's seed, because the
+  system's scheme has neither.
+- `Чёрный фон` sets `background`, `surface`, `surfaceDim` and
+  `surfaceContainerLowest` to black in the dark scheme only (MaterialKolor's
+  `isAmoled` plus the two surfaces under the containers); the containers keep
+  their tones, so cards stay apart from the page.
+
+Every style and contrast keeps `onSurface` on `surface` at 4.5:1 or more (7:1
+at `Высокий`) and the on-primary pairs at 3:1 or more (`ThemeSchemesTest`).
+The View screens that remain, the QR tile, notifications and the launcher
+icon keep their colours. `AccentSamplesPreview` shows a sample screen in four
+seeds, `ThemeStylesPreview` in every style and `ThemeContrastPreview` at every
+contrast and with the black background, in every appearance.
 
 | Role | Rule |
 |---|---|

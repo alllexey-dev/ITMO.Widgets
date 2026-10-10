@@ -9,7 +9,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.painter.Painter
 import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.HexColor
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.designsystem.components.controls.ColorPicker
+import dev.alllexey.itmowidgets.designsystem.components.controls.ColorPickerLabels
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialogSurface
@@ -37,6 +40,12 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_background_work
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_consent_message
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_consent_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_enable
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_brightness
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_hex
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_hex_error
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_hue
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_preview
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_saturation
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
@@ -125,11 +134,17 @@ fun rememberSettingsDialogState(): SettingsDialogState =
  * calendar dialogs hand their button to the host. Back, a tap outside and the dismiss button only close.
  */
 @Composable
-internal fun SettingsDialogs(dialogs: SettingsDialogState, sections: List<SettingSection>, actions: SettingsActions) {
+internal fun SettingsDialogs(
+    dialogs: SettingsDialogState,
+    sections: List<SettingSection>,
+    actions: SettingsActions,
+    theme: ThemeSpec? = null,
+) {
     val dialog = dialogs.dialog ?: return
     SettingsDialogBody(
         dialog = dialog,
         sections = sections,
+        theme = theme,
         windowed = true,
         onConfirm = { action -> if (dialogs.close() != null) action() },
         onDismiss = { dialogs.close() },
@@ -139,7 +154,8 @@ internal fun SettingsDialogs(dialogs: SettingsDialogState, sections: List<Settin
 
 /**
  * [dialog] in the kit's window, or without it ([windowed] false) for previews. [onConfirm] closes the dialog and
- * runs the button's action if the dialog was still shown.
+ * runs the button's action if the dialog was still shown. [theme] is the page's appearance: the accent swatches show
+ * its style and the custom colour.
  */
 @Composable
 internal fun SettingsDialogBody(
@@ -149,6 +165,7 @@ internal fun SettingsDialogBody(
     onConfirm: (action: () -> Unit) -> Unit,
     onDismiss: () -> Unit,
     actions: SettingsActions,
+    theme: ThemeSpec? = null,
 ) {
     when (dialog) {
         is SettingsDialog.Choice -> {
@@ -156,7 +173,7 @@ internal fun SettingsDialogBody(
                 .firstOrNull { it.id == dialog.id } ?: return
             if (item.id == SettingRowId.ACCENT_COLOR) {
                 // A colour applies on tap and the dialog stays, so the whole app behind it shows the pick at once.
-                AccentChoice(windowed, item, onSelect = { key -> actions.onChoice(item.id, key) }, onDismiss)
+                AccentChoice(windowed, item, theme ?: ThemeSpec(), actions, onDismiss)
             } else {
                 SettingsChoice(windowed, item, onSelect = { key -> onConfirm { actions.onChoice(item.id, key) } }, onDismiss)
             }
@@ -202,32 +219,63 @@ internal fun SettingsDialogBody(
 private fun SettingsChoice(windowed: Boolean, item: SettingItem.Choice, onSelect: (String) -> Unit, onDismiss: () -> Unit) {
     val title = item.title.asString()
     val labels = item.options.map { it.label.asString() }
+    val descriptions = item.options.map { it.description?.asString() }
     val selected = item.options.indexOfFirst { it.key == item.selectedOptionKey }
     val select = { index: Int -> onSelect(item.options[index].key) }
     val dismissLabel = stringResource(CoreRes.string.common_cancel)
     if (windowed) {
-        ChoiceDialog(title, labels, selected, select, onDismiss, dismissLabel = dismissLabel)
+        ChoiceDialog(title, labels, selected, select, onDismiss, dismissLabel = dismissLabel, descriptions = descriptions)
     } else {
-        ChoiceDialogSurface(title, labels, selected, select, onDismiss, dismissLabel = dismissLabel)
+        ChoiceDialogSurface(title, labels, selected, select, onDismiss, dismissLabel = dismissLabel, descriptions = descriptions)
     }
 }
 
-/** The options as colour swatches of their schemes; the done button closes. */
+/**
+ * The options as colour swatches of their schemes in [theme]'s style; the done button closes. While «Свой цвет» is
+ * picked, its picker sits under the swatches and reports the colour as the custom colour row's `#RRGGBB`.
+ */
 @Composable
-private fun AccentChoice(windowed: Boolean, item: SettingItem.Choice, onSelect: (String) -> Unit, onDismiss: () -> Unit) {
+private fun AccentChoice(
+    windowed: Boolean,
+    item: SettingItem.Choice,
+    theme: ThemeSpec,
+    actions: SettingsActions,
+    onDismiss: () -> Unit,
+) {
     val title = item.title.asString()
     val swatches = item.options.map { option ->
-        accentSwatch(ThemeSpec(accent = AccentColor.valueOf(option.key)), option.label.asString())
+        accentSwatch(theme.copy(accent = AccentColor.valueOf(option.key)), option.label.asString())
     }
     val selected = item.options.indexOfFirst { it.key == item.selectedOptionKey }.takeIf { it >= 0 }
-    val select = { index: Int -> onSelect(item.options[index].key) }
+    val select = { index: Int -> actions.onChoice(item.id, item.options[index].key) }
     val done = stringResource(Res.string.settings_accent_color_done)
-    if (windowed) {
-        SwatchChoiceDialog(title, swatches, selected, select, onDismiss, done)
+    val picker: (@Composable () -> Unit)? = if (item.selectedOptionKey == AccentColor.CUSTOM.name) {
+        {
+            ColorPicker(
+                argb = theme.customArgb,
+                onColorChange = { argb -> actions.onChoice(SettingRowId.ACCENT_CUSTOM, HexColor.format(argb)) },
+                labels = colorPickerLabels(),
+            )
+        }
     } else {
-        SwatchChoiceDialogSurface(title, swatches, selected, select, onDismiss, done)
+        null
+    }
+    if (windowed) {
+        SwatchChoiceDialog(title, swatches, selected, select, onDismiss, done, below = picker)
+    } else {
+        SwatchChoiceDialogSurface(title, swatches, selected, select, onDismiss, done, below = picker)
     }
 }
+
+@Composable
+private fun colorPickerLabels() = ColorPickerLabels(
+    hue = stringResource(Res.string.settings_color_picker_hue),
+    saturation = stringResource(Res.string.settings_color_picker_saturation),
+    brightness = stringResource(Res.string.settings_color_picker_brightness),
+    hex = stringResource(Res.string.settings_color_picker_hex),
+    hexError = stringResource(Res.string.settings_color_picker_hex_error),
+    preview = stringResource(Res.string.settings_color_picker_preview),
+)
 
 @Composable
 private fun SettingsConfirm(

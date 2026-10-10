@@ -15,7 +15,19 @@ import dev.alllexey.itmowidgets.core.settings.ThemeStyle
  * View theme draws it, and the seed of its palette (`system_accent1_500`, the wallpaper hue the user picked in the
  * system's style settings).
  */
-class WallpaperPalette(val light: ColorScheme, val dark: ColorScheme, val seedArgb: Int)
+class WallpaperPalette(val light: ColorScheme, val dark: ColorScheme, val seedArgb: Int) {
+
+    /**
+     * Equal by the colours: every configuration change reads a new palette, and a new but equal one must not rebuild
+     * the schemes keyed on it (a dialog that grows is a configuration change of its window).
+     */
+    private val colors = listOf(light, dark).flatMap { listOf(it.primary, it.surface, it.onSurfaceVariant, it.tertiary) } +
+        Color(seedArgb)
+
+    override fun equals(other: Any?): Boolean = other is WallpaperPalette && other.colors == colors
+
+    override fun hashCode(): Int = colors.hashCode()
+}
 
 /**
  * The one way from the stored appearance ([ThemeSpec]) to the scheme in [dark] or light mode: every [ItmoTheme]

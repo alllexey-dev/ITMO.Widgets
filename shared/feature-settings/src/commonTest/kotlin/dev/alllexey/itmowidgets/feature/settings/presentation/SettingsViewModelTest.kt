@@ -160,7 +160,10 @@ class SettingsViewModelTest {
                     SettingRowId.VERSION,
                     SettingRowId.DELETE_ACCOUNT,
                     SettingRowId.PRIVACY_POLICY,
-                    SettingRowId.ACCENT_COLOR
+                    SettingRowId.ACCENT_COLOR,
+                    SettingRowId.THEME_PALETTE,
+                    SettingRowId.THEME_CONTRAST,
+                    SettingRowId.DARK_BLACK
                 ),
                 items.map(SettingItem::id).toSet()
             )

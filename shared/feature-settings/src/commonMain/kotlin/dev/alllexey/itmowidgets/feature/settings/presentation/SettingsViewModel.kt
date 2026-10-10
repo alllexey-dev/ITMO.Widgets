@@ -98,7 +98,8 @@ class SettingsViewModel(
                 page = page,
                 sections = provider.sections(page, state),
                 loaded = true,
-                previewSettings = provider.preview(page, state.local)
+                previewSettings = provider.preview(page, state.local),
+                themePreview = provider.themePreview(page, state.local)
             )
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState(page))

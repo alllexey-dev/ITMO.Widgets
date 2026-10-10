@@ -130,7 +130,6 @@
     <string name="settings_accent_color_purple">Фиолетовый</string>
     <string name="settings_accent_color_custom">Свой цвет</string>
     <string name="settings_appearance_title">Оформление</string>
-    <string name="settings_appearance_summary">Цвет, стиль палитры и контраст</string>
     <string name="settings_appearance_group_colors">Цвета</string>
     <string name="settings_appearance_group_contrast">Контраст и фон</string>
     <string name="settings_appearance_wallpaper_footer">С цветом «Как обои» другой стиль или контраст строят палитру заново из цвета обоев</string>

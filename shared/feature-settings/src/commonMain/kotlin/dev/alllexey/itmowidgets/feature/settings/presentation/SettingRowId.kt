@@ -46,6 +46,10 @@ enum class SettingRowId(val key: String) {
     DELETE_ACCOUNT("delete_account"),
     PRIVACY_POLICY("privacy_policy"),
     ACCENT_COLOR("accent_color"),
+    ACCENT_CUSTOM("accent_custom"),
+    THEME_PALETTE("theme_palette"),
+    THEME_CONTRAST("theme_contrast"),
+    DARK_BLACK("dark_black"),
 
     // Navigation rows: `page_` and the lowercase name of the page they open.
     PAGE_SERVICES("page_services"),
@@ -57,7 +61,8 @@ enum class SettingRowId(val key: String) {
     PAGE_SCHEDULE("page_schedule"),
     PAGE_RECORDBOOK("page_recordbook"),
     PAGE_SPORT("page_sport"),
-    PAGE_MAINTENANCE("page_maintenance");
+    PAGE_MAINTENANCE("page_maintenance"),
+    PAGE_APPEARANCE("page_appearance");
 
     companion object {
         /** The row that opens [page]; the root page is never a row. */
@@ -73,6 +78,7 @@ enum class SettingRowId(val key: String) {
             SettingsPage.RECORDBOOK -> PAGE_RECORDBOOK
             SettingsPage.SPORT -> PAGE_SPORT
             SettingsPage.MAINTENANCE -> PAGE_MAINTENANCE
+            SettingsPage.APPEARANCE -> PAGE_APPEARANCE
         }
     }
 }

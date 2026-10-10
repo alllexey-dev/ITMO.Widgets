@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.text.UiText
 
@@ -13,7 +14,9 @@ data class SettingsUiState(
     val sections: List<SettingSection> = emptyList(),
     val loaded: Boolean = false,
     /** The widget the page configures, drawn above its rows; null on pages without a widget. */
-    val previewSettings: WidgetPreviewSettings? = null
+    val previewSettings: WidgetPreviewSettings? = null,
+    /** The appearance a sample above the rows shows; null on pages without one. */
+    val themePreview: ThemeSpec? = null
 )
 
 sealed interface SettingsEvent {

@@ -57,7 +57,14 @@ struct SettingsForm: View {
                     )
                 ) {
                     ForEach(choice.options, id: \.key) { option in
-                        Text(verbatim: copy.text(option.label)).tag(option.key)
+                        // A second text is the menu item's subtitle: what a palette style does.
+                        VStack {
+                            Text(verbatim: copy.text(option.label))
+                            if let description = option.description_ {
+                                Text(verbatim: copy.text(description))
+                            }
+                        }
+                        .tag(option.key)
                     }
                 } label: {
                     Text(verbatim: copy.text(choice.title))
@@ -96,6 +103,18 @@ struct SettingsForm: View {
             // A row that opens or runs something reads as a row, as on Android, not as a tinted command.
             .tint(.primary)
             .disabled(!action.enabled)
+        case let .customColor(custom):
+            // The system colour well; the shared row takes the pick as `#RRGGBB`, like Android's picker.
+            ColorPicker(
+                selection: Binding(
+                    get: { Color(uiColor: UIColor(rgb: UInt32(bitPattern: custom.argb) & 0xFFFFFF)) },
+                    set: { actions.choose(custom.id, $0.hexRGB) }
+                ),
+                supportsOpacity: false
+            ) {
+                ItmoRowLabel(title: copy.text(custom.title))
+            }
+            .disabled(!custom.enabled)
         case let .info(info):
             SettingsValueLabel(title: copy.text(info.title), value: copy.text(info.value))
                 .textSelection(.enabled)
@@ -193,5 +212,15 @@ struct SettingsIosCopy {
             system.backgroundRefresh == .restricted ? "ios_background_refresh_restricted" : "ios_background_refresh_off"
         default: nil
         }
+    }
+}
+
+private extension Color {
+    /// `#RRGGBB` of the colour in sRGB, the form the shared custom colour row reads.
+    var hexRGB: String {
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        func channel(_ value: CGFloat) -> Int { Int((min(max(value, 0), 1) * 255).rounded()) }
+        return String(format: "#%02X%02X%02X", channel(red), channel(green), channel(blue))
     }
 }

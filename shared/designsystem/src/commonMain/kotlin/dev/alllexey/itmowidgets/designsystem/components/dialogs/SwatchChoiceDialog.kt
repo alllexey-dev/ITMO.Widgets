@@ -42,7 +42,8 @@ data class Swatch(val label: String, val color: Color, val contentColor: Color)
 /**
  * Picks one of [swatches], a grid of colour circles with the name of the current one under it. A tap reports
  * [onSelect] and the dialog stays, so the caller can apply the colour at once and the user sees it before closing;
- * [confirmLabel] closes it through [onDismiss], as do back and a tap outside. Nothing animates.
+ * [confirmLabel] closes it through [onDismiss], as do back and a tap outside. Nothing animates. [below] goes under the
+ * grid, inside the scrolling content: the custom colour's picker.
  */
 @Composable
 fun SwatchChoiceDialog(
@@ -53,9 +54,10 @@ fun SwatchChoiceDialog(
     onDismiss: () -> Unit,
     confirmLabel: String,
     modifier: Modifier = Modifier,
+    below: (@Composable () -> Unit)? = null,
 ) {
     DialogWindow(onDismissRequest = onDismiss) {
-        SwatchChoiceDialogSurface(title, swatches, selectedIndex, onSelect, onDismiss, confirmLabel, modifier)
+        SwatchChoiceDialogSurface(title, swatches, selectedIndex, onSelect, onDismiss, confirmLabel, modifier, below)
     }
 }
 
@@ -69,8 +71,9 @@ fun SwatchChoiceDialogSurface(
     onDismiss: () -> Unit,
     confirmLabel: String,
     modifier: Modifier = Modifier,
+    below: (@Composable () -> Unit)? = null,
 ) {
-    val content = @Composable { SwatchGrid(swatches, selectedIndex, onSelect) }
+    val content = @Composable { SwatchGrid(swatches, selectedIndex, onSelect, below) }
     when (ItmoTheme.platformStyle) {
         ItmoPlatformStyle.Material -> DialogSurface(
             title = title,
@@ -89,7 +92,12 @@ fun SwatchChoiceDialogSurface(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SwatchGrid(swatches: List<Swatch>, selectedIndex: Int?, onSelect: (Int) -> Unit) {
+private fun SwatchGrid(
+    swatches: List<Swatch>,
+    selectedIndex: Int?,
+    onSelect: (Int) -> Unit,
+    below: (@Composable () -> Unit)?,
+) {
     Column(Modifier.verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
         FlowRow(
             Modifier.fillMaxWidth().selectableGroup(),
@@ -110,6 +118,7 @@ private fun SwatchGrid(swatches: List<Swatch>, selectedIndex: Int?, onSelect: (I
                 textAlign = TextAlign.Center,
             )
         }
+        below?.invoke()
     }
 }
 
