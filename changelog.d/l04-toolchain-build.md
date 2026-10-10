@@ -50,3 +50,7 @@
   differ; the cached v2.2 APK is named by its certificate and rebuilt with
   the current debug key when none matches, so `android-ship` no longer
   depends on the Actions cache keeping the key that signed it.
+- When the emulator's log shows no TestRunner run (its logd stalled),
+  `scripts/ui-report.py` counts the tests from Gradle's JUnit XML, so an
+  `android-ui` shard that ran and passed its tests is no longer reported as
+  having run none; a shard with no test still fails.
