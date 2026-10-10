@@ -206,3 +206,12 @@ the APNs token, and with it any push, needs the Apple account (gate T13).
 - The marks digest and the `Войдите в БАРС` reminder are Android's
   (`IosMarksNotifier`, thread `marks`, IO-09d3), with the same delays and the
   same 06:00 hand-over ([mark tracking](marks-tracking.md#ios)).
+- Backend pushes reach iOS as alerts (`mutable-content`), and the notification
+  service runs the [sport handler](#sport-handler) in Swift before one shows:
+  a booking or MyITMO's refusal retitles it with Android's text and settles or
+  cancels the queue, a full lesson or nothing left to book drops it, a failure
+  before MyITMO's answer keeps Backend's `Освободилось место на занятии`.
+  Friendship pushes show Backend's text. Another account, the demo and a
+  missing services opt-in drop the push; until the filtering entitlement (after
+  T13) a dropped push is not hidden. The refresh of the session is serialised
+  with the app's ([iOS app](../ios.md#notifications)).

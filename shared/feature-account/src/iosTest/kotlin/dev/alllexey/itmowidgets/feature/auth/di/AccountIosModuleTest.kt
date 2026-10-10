@@ -137,11 +137,15 @@ class AccountIosModuleTest {
     ) {
         val session = FakeSessionRepository(SessionState.Initializing)
         val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = {}))
-        SessionSnapshotSync(session, MutableStateFlow(false), writer, log).launchIn(backgroundScope)
+        SessionSnapshotSync(session, MutableStateFlow(false), MutableStateFlow(false), writer, log)
+            .launchIn(backgroundScope)
         assertNull(writer.read())
 
         session.mutableState.value = SessionState.SignedIn(DemoPeople.ME, demo = true)
-        assertEquals(SessionSnapshot(isu = DemoPeople.ME.isu, demo = true, alertsAllowed = false), writer.read())
+        assertEquals(
+            SessionSnapshot(isu = DemoPeople.ME.isu, demo = true, alertsAllowed = false, servicesEnabled = false),
+            writer.read()
+        )
 
         // Sign-out: the App Group cleaner removes the file, no state writes it.
         session.mutableState.value = SessionState.SigningOut
@@ -150,28 +154,47 @@ class AccountIosModuleTest {
         assertNull(writer.read())
 
         session.mutableState.value = SessionState.SignedIn(DemoPeople.ME, demo = true)
-        assertEquals(SessionSnapshot(isu = DemoPeople.ME.isu, demo = true, alertsAllowed = false), writer.read())
+        assertEquals(
+            SessionSnapshot(isu = DemoPeople.ME.isu, demo = true, alertsAllowed = false, servicesEnabled = false),
+            writer.read()
+        )
 
         session.mutableState.value = SessionState.SignedIn(CurrentUser(isu = ISU, name = null, pictureUrl = null))
-        assertEquals(SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false), writer.read())
+        assertEquals(
+            SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = false),
+            writer.read()
+        )
     }
 
     @Test
-    fun theSessionSnapshotFollowsTheAlertsAnswer() = runTest(UnconfinedTestDispatcher()) {
+    fun theSessionSnapshotFollowsTheAlertsAnswerAndTheServicesOptIn() = runTest(UnconfinedTestDispatcher()) {
         val session = FakeSessionRepository(SessionState.Initializing)
         val alerts = MutableStateFlow(false)
+        val services = MutableStateFlow(false)
         val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = {}))
-        SessionSnapshotSync(session, alerts, writer, log).launchIn(backgroundScope)
+        SessionSnapshotSync(session, alerts, services, writer, log).launchIn(backgroundScope)
 
         // Signed out: no file, whatever the answer.
         alerts.value = true
         assertNull(writer.read())
 
         session.mutableState.value = SessionState.SignedIn(CurrentUser(isu = ISU, name = null, pictureUrl = null))
-        assertEquals(SessionSnapshot(isu = ISU, demo = false, alertsAllowed = true), writer.read())
+        assertEquals(
+            SessionSnapshot(isu = ISU, demo = false, alertsAllowed = true, servicesEnabled = false),
+            writer.read()
+        )
 
         alerts.value = false
-        assertEquals(SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false), writer.read())
+        assertEquals(
+            SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = false),
+            writer.read()
+        )
+
+        services.value = true
+        assertEquals(
+            SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = true),
+            writer.read()
+        )
     }
 
     /** A counting engine, the test's own directories and App Group, and no main queue (the test blocks it). */

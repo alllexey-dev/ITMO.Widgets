@@ -10,6 +10,9 @@ struct SessionFile: Equatable, Decodable {
     let demo: Bool
     /// Whether the user allows alert notifications.
     let alertsAllowed: Bool
+    /// The ITMO.Widgets services opt-in (`BackendGate`): the notification service books and settles only with it.
+    /// A file without the key (an app that has not run since the update) reads as off.
+    var servicesEnabled = false
 
     /// The file name in the App Group container.
     static let fileName = AppGroupSnapshot.fileName("session", version: version)
@@ -20,5 +23,19 @@ struct SessionFile: Equatable, Decodable {
     /// The session in the App Group `container`; nil when signed out, unreadable or newer than this build.
     static func read(fromContainer container: URL?) -> SessionFile? {
         AppGroupSnapshot.read(SessionFile.self, file: fileName, maxVersion: version, in: container)
+    }
+}
+
+extension SessionFile {
+    private enum CodingKeys: String, CodingKey {
+        case isu, demo, alertsAllowed, servicesEnabled
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        isu = try values.decodeIfPresent(Int.self, forKey: .isu)
+        demo = try values.decode(Bool.self, forKey: .demo)
+        alertsAllowed = try values.decode(Bool.self, forKey: .alertsAllowed)
+        servicesEnabled = try values.decodeIfPresent(Bool.self, forKey: .servicesEnabled) ?? false
     }
 }

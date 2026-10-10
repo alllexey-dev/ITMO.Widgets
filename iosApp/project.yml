@@ -48,6 +48,9 @@ targets:
       - path: Extensions/Widgets
         excludes:
           - WidgetsBundle.swift
+      # The notification service's sources (IO-12a), so the hosted tests drive its push handling on fixtures; the
+      # app never registers the extension's principal class.
+      - path: Extensions/NotificationService
     configFiles:
       Debug: Config/App.xcconfig
       Release: Config/App.xcconfig
@@ -116,6 +119,19 @@ targets:
       - path: Tests/UnitTests
       # LS-3's reference timeline, which ScheduleTimelineTests decodes (IO-10b): the Kotlin fixture by path, never a copy.
       - path: ../shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json
+        buildPhase: resources
+      # The Kotlin golden fixtures NotificationServiceTests replays (IO-12a), by path, never copies: Backend's FCM
+      # envelopes (BK-16), MyITMO's sign-up answers and KM-11c's golden push and sign-up outcomes.
+      - path: ../shared/backend-client/src/commonTest/resources/contract/fcm
+        type: folder
+        buildPhase: resources
+      - path: ../shared/feature-sport/src/androidHostTest/resources/myitmo/sport/lessons.json
+        buildPhase: resources
+      - path: ../shared/feature-sport/src/androidHostTest/resources/myitmo/sport/sign-in-error.json
+        buildPhase: resources
+      - path: ../shared/feature-sport/src/androidHostTest/resources/sport/golden/push.txt
+        buildPhase: resources
+      - path: ../shared/feature-sport/src/androidHostTest/resources/sport/golden/sign-outcomes.txt
         buildPhase: resources
     configFiles:
       Debug: Config/UnitTests.xcconfig

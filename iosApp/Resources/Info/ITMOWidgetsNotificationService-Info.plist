@@ -22,6 +22,8 @@
 	<string>$(APP_GROUP_ID)</string>
 	<key>KeychainGroup</key>
 	<string>$(KEYCHAIN_GROUP)</string>
+	<key>BackendBaseURL</key>
+	<string>$(BACKEND_BASE_URL)</string>
 	<key>CFBundleDisplayName</key>
 	<string>ITMO.Widgets</string>
 	<key>NSExtension</key>
