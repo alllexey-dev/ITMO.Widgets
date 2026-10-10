@@ -14,4 +14,7 @@ sealed interface ColorSource {
      * and narrow appearances see what a seeded View screen sees.
      */
     data class Seed(val argb: Int) : ColorSource
+
+    /** An accent colour preset: the brand scheme's TonalSpot variant from [argb] instead of the brand blue. */
+    data class Accent(val argb: Int) : ColorSource
 }

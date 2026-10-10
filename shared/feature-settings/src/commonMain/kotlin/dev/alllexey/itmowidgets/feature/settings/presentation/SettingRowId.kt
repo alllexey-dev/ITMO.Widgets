@@ -45,6 +45,7 @@ enum class SettingRowId(val key: String) {
     DIAGNOSTICS("diagnostics"),
     DELETE_ACCOUNT("delete_account"),
     PRIVACY_POLICY("privacy_policy"),
+    ACCENT_COLOR("accent_color"),
 
     // Navigation rows: `page_` and the lowercase name of the page they open.
     PAGE_SERVICES("page_services"),

@@ -41,7 +41,7 @@ expressive Material APIs only inside it, behind `Itmo*` wrappers.
 
 | Slot | Contents and values |
 |---|---|
-| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (default): dynamic colour on Android 12+, otherwise, and on iOS, the static brand scheme (`ColorSource.Static`: the TonalSpot variant of the 2021 spec from the brand blue `#4984E2`). `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests). On Android 12+ the outline-variant and error roles stay MDC's baseline ones, as the View theme shows them |
+| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (the default of `AppColorSource`): dynamic colour on Android 12+, otherwise, and on iOS, the static brand scheme (`ColorSource.Static`: the TonalSpot variant of the 2021 spec from the brand blue `#4984E2`). `ColorSource.Accent` builds the same variant from a `Цвет оформления` preset. `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests). On Android 12+ the outline-variant and error roles stay MDC's baseline ones, as the View theme shows them |
 | `ItmoTheme.extendedColors` | The app's own colours beside the scheme, one slot per entry of `res/values{,-night}/colors.xml`: lesson types, recordbook passed, sport scores and conditions, teacher levels. Derived per scheme: sport condition containers (the accent mixed 12 % over `surfaceContainerLowest`) and teacher levels (harmonized towards `primary`). In dark, lesson types keep their light values |
 | `ItmoTheme.shapes` | Corner scale `extraSmall` 4, `small` 8, `medium` 12, `large` 16, `largeIncreased` 20, `extraLarge` 28, `extraLargeIncreased` 32, `extraExtraLarge` 48 dp, `full`; card family `cardContent` 20, `cardSummary` 28, `cardHero` 28, `scheduleDay` 16 dp; connected groups 20 dp outer, 4 dp inner, 2 dp gap; stroke 1 dp, elevation 0 dp |
 | `ItmoTheme.spacing` | `related` 4, `compact` 8, `content` 12, `group` 16, `section` 24, `screenMargin` 16, `cardPadding` 16, `summaryPadding` 20, `touchTarget` 48, `fabStackClearance` 152, `statePadding` 32, `stateIcon` 64, `stateInlineIcon` 56 dp |
@@ -81,6 +81,18 @@ the M3 baseline `#6750A4`; the window background follows the brand scheme there
 (`theme_static_background`), so no seam shows behind the status bar. Every
 screen must work in light, dark and dynamic palettes; never assume the
 wallpaper.
+
+The user picks the seed in `Цвет оформления` ([settings](settings.md#appearance)):
+`ItmoTheme` without a `colorSource` reads `AppColorSource.current`, which the
+app hosts feed from the stored `AccentColor` at start. `Как обои` is
+`ColorSource.Platform` (today's default), `Фирменный` is `ColorSource.Static`,
+and the six presets are `ColorSource.Accent` seeds built with the brand
+scheme's recipe (TonalSpot, 2021 spec), so each keeps the brand's contrast:
+`Бирюзовый` `#009688`, `Зелёный` `#43A047`, `Янтарный` `#FFA000`, `Красный`
+`#E53935`, `Розовый` `#D81B60`, `Фиолетовый` `#8E24AA`. TonalSpot keeps only a
+seed's hue, so a grey preset is not offered. The View screens that remain, the
+widgets, the QR tile, notifications and the launcher icon keep their colours.
+`AccentSamplesPreview` shows a sample screen in four seeds in every appearance.
 
 | Role | Rule |
 |---|---|
@@ -389,6 +401,7 @@ both platforms.
 | `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | No handle (the host's grabber); the header is the sheet's navigation bar ([Platform styles](#platform-styles)) |
 | `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link | Compose-drawn iOS alerts with capsule buttons; no hero icon |
 | `InfoDialog` | A message with one button | An iOS alert whose one capsule is the preferred action |
+| `SwatchChoiceDialog` | A choice among colours: named swatches in a grid, the picked name under it; a tap applies and the dialog stays until its button | An iOS alert with the same grid and one preferred capsule |
 | `ItmoMenu` | The one menu of actions anchored to its parent, groups with separators, destructive items in the error colour | A context-menu panel drawn in Compose |
 | `ScoreRing` | The sport score ring | Same |
 | `GradeScale` | A 0-100 bar with grade ticks | Same |

@@ -118,4 +118,14 @@
     <string name="ics_ready_summary">%1$s, %2$s</string>
     <string name="ics_ready_hint">Импортируйте в отдельный календарь — так его легко удалить или заменить свежим файлом</string>
     <string name="ics_pick_other">Выбрать другой период</string>
+    <string name="settings_accent_color_title">Цвет оформления</string>
+    <string name="settings_accent_color_done">Готово</string>
+    <string name="settings_accent_color_wallpaper">Как обои</string>
+    <string name="settings_accent_color_brand">Фирменный</string>
+    <string name="settings_accent_color_teal">Бирюзовый</string>
+    <string name="settings_accent_color_green">Зелёный</string>
+    <string name="settings_accent_color_amber">Янтарный</string>
+    <string name="settings_accent_color_red">Красный</string>
+    <string name="settings_accent_color_pink">Розовый</string>
+    <string name="settings_accent_color_purple">Фиолетовый</string>
 </resources>

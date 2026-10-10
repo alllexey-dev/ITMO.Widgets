@@ -17,4 +17,5 @@ internal val EveryPlatformCapability = PlatformCapabilities(
     reviews = true,
     qrWidgetAnimation = true,
     qrCustomSpoiler = true,
+    wallpaperColors = true,
 )

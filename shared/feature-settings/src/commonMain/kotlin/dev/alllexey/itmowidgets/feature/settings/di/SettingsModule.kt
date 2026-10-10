@@ -50,7 +50,7 @@ val settingsDataModule = module {
  * capabilities parameter has a default for hand-built providers, which a constructor reference would make ambiguous.
  */
 val settingsModule = module {
-    factory { RootPageProvider(get()) }
+    factory { RootPageProvider(get(), get()) }
     factoryOf(::ServicesPageProvider)
     factory { WidgetsPageProvider(get(), get(), get()) }
     factoryOf(::HomePageProvider)

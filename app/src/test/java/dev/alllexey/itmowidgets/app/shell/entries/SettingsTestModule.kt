@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
@@ -62,7 +63,7 @@ internal fun settingsTestModule(spoilers: CustomSpoilerRepository = FakeCustomSp
         override fun refreshAll() = Unit
     }
     val pages = SettingsPages(
-        root = RootPageProvider(),
+        root = RootPageProvider(repository),
         services = ServicesPageProvider(repository, FakeCustomServicesRepository(), refresher),
         widgets = WidgetsPageProvider(repository, NoQuickSettingsTile),
         home = HomePageProvider(repository),
@@ -119,6 +120,9 @@ private class MemorySettings : SettingsRepository {
     override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) = Unit
     override suspend fun setBackgroundWorkHintShown() = Unit
     override suspend fun setQrTileAdded(added: Boolean) = Unit
+    override suspend fun setAccentColor(color: AccentColor) {
+        local.value = local.value.copy(accentColor = color)
+    }
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) = Unit
     override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) = Unit
     override suspend fun setFullWidgetTeacherHidden(hidden: Boolean) = Unit
