@@ -11,6 +11,7 @@ notification_friend_accepted
 notification_friend_request
 notification_sport_failure
 notification_sport_lesson
+notification_sport_place_free
 notification_sport_success
 qr_tile_label
 schedule_auto_sign_prediction_description
