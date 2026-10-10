@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.designsystem.theme
 
+import android.content.Context
 import android.os.Build
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -11,18 +12,29 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 
 /**
- * The wallpaper scheme on API 31+, read from the same `android.R.color.system_*` the MDC DynamicColors theme reads.
- * The configuration key re-reads it after a wallpaper or theme change recreates the configuration.
+ * The wallpaper's colours, re-read after a wallpaper or theme change recreates the configuration (the configuration
+ * is the key).
  */
 @Composable
-internal actual fun platformColorScheme(dark: Boolean): ColorScheme? {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
+internal actual fun platformWallpaperPalette(): WallpaperPalette? {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
-    return remember(context, configuration, dark) {
-        val dynamic = if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        dynamic.withViewThemeRoles(dark, Build.VERSION.SDK_INT)
-    }
+    return remember(context, configuration) { wallpaperPalette(context) }
+}
+
+/**
+ * The wallpaper's colours on API 31+, null below: both schemes from the same `android.R.color.system_*` the MDC
+ * DynamicColors theme reads, and `system_accent1_500` as the seed a style or contrast rebuilds from. Outside
+ * composition (widgets) pass it to [resolveColorScheme].
+ */
+fun wallpaperPalette(context: Context): WallpaperPalette? {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
+    val sdk = Build.VERSION.SDK_INT
+    return WallpaperPalette(
+        light = dynamicLightColorScheme(context).withViewThemeRoles(dark = false, sdk),
+        dark = dynamicDarkColorScheme(context).withViewThemeRoles(dark = true, sdk),
+        seedArgb = context.getColor(android.R.color.system_accent1_500),
+    )
 }
 
 /**

@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
-import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
@@ -120,8 +120,8 @@ private class MemorySettings : SettingsRepository {
     override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) = Unit
     override suspend fun setBackgroundWorkHintShown() = Unit
     override suspend fun setQrTileAdded(added: Boolean) = Unit
-    override suspend fun setAccentColor(color: AccentColor) {
-        local.value = local.value.copy(accentColor = color)
+    override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
+        local.value = local.value.copy(theme = change(local.value.theme))
     }
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) = Unit
     override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) = Unit

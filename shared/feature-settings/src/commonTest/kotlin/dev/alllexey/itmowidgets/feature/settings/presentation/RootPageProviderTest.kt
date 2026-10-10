@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
@@ -137,7 +138,7 @@ class RootPageProviderTest {
             fixture.viewModel.onChoiceChanged(SettingRowId.ACCENT_COLOR, "NOT_A_COLOUR")
             advanceUntilIdle()
 
-            assertEquals(listOf(AccentColor.TEAL), fixture.repository.accentColorRequests)
+            assertEquals(listOf(ThemeSpec(accent = AccentColor.TEAL)), fixture.repository.themeRequests)
             val choice = fixture.viewModel.choice(SettingRowId.ACCENT_COLOR)
             assertEquals(AccentColor.TEAL.name, choice.selectedOptionKey)
             assertEquals(UiText.Res(Res.string.settings_accent_color_teal), choice.value)

@@ -37,6 +37,7 @@ import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_title
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_amber
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_brand
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_custom
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_green
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_pink
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_purple
@@ -541,6 +542,7 @@ internal object SettingsPreviewData {
             AccentColor.RED -> Res.string.settings_accent_color_red
             AccentColor.PINK -> Res.string.settings_accent_color_pink
             AccentColor.PURPLE -> Res.string.settings_accent_color_purple
+            AccentColor.CUSTOM -> Res.string.settings_accent_color_custom
         }
     )
 

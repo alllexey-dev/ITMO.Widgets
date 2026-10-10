@@ -9,6 +9,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.painter.Painter
 import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialogSurface
@@ -216,7 +217,7 @@ private fun SettingsChoice(windowed: Boolean, item: SettingItem.Choice, onSelect
 private fun AccentChoice(windowed: Boolean, item: SettingItem.Choice, onSelect: (String) -> Unit, onDismiss: () -> Unit) {
     val title = item.title.asString()
     val swatches = item.options.map { option ->
-        accentSwatch(AccentColor.valueOf(option.key), option.label.asString())
+        accentSwatch(ThemeSpec(accent = AccentColor.valueOf(option.key)), option.label.asString())
     }
     val selected = item.options.indexOfFirst { it.key == item.selectedOptionKey }.takeIf { it >= 0 }
     val select = { index: Int -> onSelect(item.options[index].key) }

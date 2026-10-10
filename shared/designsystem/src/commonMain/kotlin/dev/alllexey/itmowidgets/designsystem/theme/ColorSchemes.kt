@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.Color
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.dynamicColorScheme
+import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 
 /** The launcher, shortcut and `lesson_type_lecture` blue: the seed of [staticColorScheme]. */
 internal const val BRAND_SEED: Int = 0xFF4984E2.toInt()
@@ -35,17 +37,9 @@ internal fun seededColorScheme(argb: Int, dark: Boolean): ColorScheme = dynamicC
     specVersion = ColorSpec.SpecVersion.SPEC_2021,
 )
 
-private val BrandLight = accentColorScheme(BRAND_SEED, dark = false)
+private val BrandLight = themedColorScheme(BRAND_SEED, ThemeStyle.TONAL_SPOT, ThemeContrast.STANDARD, dark = false)
 
-private val BrandDark = accentColorScheme(BRAND_SEED, dark = true)
-
-/** The brand scheme's recipe (TonalSpot, 2021 spec) from [argb]: the brand blue or a [ColorSource.Accent]. */
-internal fun accentColorScheme(argb: Int, dark: Boolean): ColorScheme = dynamicColorScheme(
-    seedColor = Color(argb),
-    isDark = dark,
-    style = PaletteStyle.TonalSpot,
-    specVersion = ColorSpec.SpecVersion.SPEC_2021,
-)
+private val BrandDark = themedColorScheme(BRAND_SEED, ThemeStyle.TONAL_SPOT, ThemeContrast.STANDARD, dark = true)
 
 private val BaselineLight = lightColorScheme(
     primary = Color(0xFF6750A4),

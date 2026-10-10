@@ -199,12 +199,6 @@ private class StyleTokens(val shapes: ItmoShapes, val spacing: ItmoSpacing, val 
     }
 }
 
-internal fun generatedColorScheme(colorSource: ColorSource, dark: Boolean): ColorScheme = when (colorSource) {
-    is ColorSource.Seed -> seededColorScheme(colorSource.argb, dark)
-    is ColorSource.Accent -> accentColorScheme(colorSource.argb, dark)
-    ColorSource.Platform, ColorSource.Static -> staticColorScheme(dark)
-}
-
-/** The platform's dynamic scheme, or null where there is none (Android below 12, iOS). */
+/** The platform's wallpaper colours, or null where there are none (Android below 12, iOS). */
 @Composable
-internal expect fun platformColorScheme(dark: Boolean): ColorScheme?
+internal expect fun platformWallpaperPalette(): WallpaperPalette?

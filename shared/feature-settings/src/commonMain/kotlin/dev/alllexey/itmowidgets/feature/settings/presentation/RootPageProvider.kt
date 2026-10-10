@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.shared.core.me_group_app
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_amber
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_brand
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_custom
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_green
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_pink
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_purple
@@ -84,7 +85,7 @@ class RootPageProvider(
         SettingSection(
             title = UiText.Res(CoreRes.string.me_group_app),
             items = listOfNotNull(
-                accentColor(state.local.accentColor),
+                accentColor(state.local.theme.accent),
                 SettingRows.navigation(SettingsPage.HOME),
                 SettingRows.navigation(SettingsPage.SCHEDULE),
                 SettingRows.navigation(SettingsPage.RECORDBOOK).takeIf { capabilities.marks },
@@ -101,7 +102,7 @@ class RootPageProvider(
     override fun onChoiceChanged(scope: SettingsPageScope, id: SettingRowId, optionKey: String) {
         if (id != SettingRowId.ACCENT_COLOR) return
         val color = AccentColor.entries.firstOrNull { it.name == optionKey } ?: return
-        scope.updateLocalSetting { repository.setAccentColor(color) }
+        scope.updateLocalSetting { repository.updateTheme { it.copy(accent = color) } }
     }
 
     /**
@@ -130,5 +131,6 @@ class RootPageProvider(
             AccentColor.RED -> Res.string.settings_accent_color_red
             AccentColor.PINK -> Res.string.settings_accent_color_pink
             AccentColor.PURPLE -> Res.string.settings_accent_color_purple
+            AccentColor.CUSTOM -> Res.string.settings_accent_color_custom
         }
 }
