@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.storage
 
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
@@ -17,14 +18,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 45 key names
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 46 key names
  * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The four
  * `push_registered_*` keys are written only by iOS (IO-13a), whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 45 key names, each declared once`() {
+    fun `the app preferences keep their 46 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules (KM-06 moved core's there).
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -35,11 +36,11 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(45, declared.map { it.name }.toSet().size)
+        assertEquals(46, declared.map { it.name }.toSet().size)
     }
 
     @Test
-    fun `the 28 settings keys read their released defaults from an empty file`() = runTest {
+    fun `the 29 settings keys read their released defaults from an empty file`() = runTest {
         val stores = PreferenceStores()
 
         assertFalse(stores.servicesOptIn.getCustomServicesEnabled())
@@ -75,6 +76,7 @@ class PreferenceKeyParityTest {
         assertFalse(stores.deviceHints.observeBackgroundWorkHintShown().first())
         assertFalse(stores.deviceHints.observeQrTileAdded().first())
         assertFalse(stores.demoPreferences.getDemoActive())
+        assertEquals(AccentColor.WALLPAPER, stores.appearance.observeAccentColor().first())
     }
 
     private data class Key(val file: String, val type: String, val name: String)
@@ -122,6 +124,7 @@ class PreferenceKeyParityTest {
             Key("DeviceHintPreferences.kt", "boolean", "background_work_hint_shown"),
             Key("DeviceHintPreferences.kt", "boolean", "qr_tile_added"),
             Key("DemoPreferences.kt", "boolean", "demo_active"),
+            Key("AppearancePreferences.kt", "string", "app_accent_color"),
             Key("UtilityStorage.kt", "int", "registered_firebase_owner"),
             Key("UtilityStorage.kt", "string", "registered_firebase_token"),
             Key("UtilityStorage.kt", "string", "registered_firebase_app_version"),

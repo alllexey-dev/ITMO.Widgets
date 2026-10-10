@@ -35,12 +35,13 @@ internal fun seededColorScheme(argb: Int, dark: Boolean): ColorScheme = dynamicC
     specVersion = ColorSpec.SpecVersion.SPEC_2021,
 )
 
-private val BrandLight = brandColorScheme(dark = false)
+private val BrandLight = accentColorScheme(BRAND_SEED, dark = false)
 
-private val BrandDark = brandColorScheme(dark = true)
+private val BrandDark = accentColorScheme(BRAND_SEED, dark = true)
 
-private fun brandColorScheme(dark: Boolean): ColorScheme = dynamicColorScheme(
-    seedColor = Color(BRAND_SEED),
+/** The brand scheme's recipe (TonalSpot, 2021 spec) from [argb]: the brand blue or a [ColorSource.Accent]. */
+internal fun accentColorScheme(argb: Int, dark: Boolean): ColorScheme = dynamicColorScheme(
+    seedColor = Color(argb),
     isDark = dark,
     style = PaletteStyle.TonalSpot,
     specVersion = ColorSpec.SpecVersion.SPEC_2021,

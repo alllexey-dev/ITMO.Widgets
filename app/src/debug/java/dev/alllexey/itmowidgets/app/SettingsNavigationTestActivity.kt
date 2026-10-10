@@ -71,6 +71,7 @@ import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -325,7 +326,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     private val settingsFakes = object : SettingsDebugFixtures.Fakes {
         override fun settingsViewModel(savedStateHandle: SavedStateHandle) = SettingsViewModel(
             SettingsPages(
-                RootPageProvider(),
+                RootPageProvider(repository),
                 ServicesPageProvider(repository, Services, refresh),
                 WidgetsPageProvider(repository, MemoryQuickSettingsTile),
                 HomePageProvider(repository),
@@ -461,6 +462,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
 
         override suspend fun setQrTileAdded(added: Boolean) {
             qrTileAdded.value = added
+        }
+
+        override suspend fun setAccentColor(color: AccentColor) {
+            local.value = local.value.copy(accentColor = color)
         }
 
         override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {

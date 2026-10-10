@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.testing
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
@@ -22,5 +23,6 @@ class PreferenceStores(dataStore: DataStore<Preferences> = InMemoryPreferencesDa
     val markSources = MarkSourcePreferences(dataStore)
     val homeLayout = HomeLayoutPreferences(dataStore)
     val deviceHints = DeviceHintPreferences(dataStore)
+    val appearance = AppearancePreferences(dataStore)
     val demoPreferences = DemoPreferences(dataStore)
 }

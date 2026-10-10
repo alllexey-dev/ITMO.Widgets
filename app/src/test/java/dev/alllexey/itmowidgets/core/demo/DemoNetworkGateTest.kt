@@ -164,6 +164,7 @@ class DemoNetworkGateTest {
         stores.markSources,
         stores.homeLayout,
         stores.deviceHints,
+        stores.appearance,
         gate,
         backendClient.users,
         demo,

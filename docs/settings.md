@@ -10,8 +10,8 @@ The settings root is a compact catalogue, not a scrolling list of every switch:
 
 - `Доступ`: `Подключение к ITMO.Widgets` (with account deletion), `Друзья и приватность`, and the Android notifications action.
 - `Виджеты`: `Компактное расписание`, `Полное расписание` and the QR widget.
-- `Приложение`: home screen, schedule, recordbook (`Зачётка`), sport, and
-  maintenance.
+- `Приложение`: `Цвет оформления`, home screen, schedule, recordbook
+  (`Зачётка`), sport, and maintenance.
 
 Each category opens a separate back-stack entry with its own title and scroll
 position. Notification permissions open Android settings directly. Rows show a
@@ -56,6 +56,31 @@ Background App Refresh is off or restricted for the app, and opens the app's
 page in Settings. Widget pages show no live preview. The error journal shares
 the plain-text journal through the share sheet; a Kotlin crash shows on the
 next launch, Swift crashes are not recorded.
+
+## Appearance
+
+| Row | Choices | Default |
+|---|---|---|
+| `Цвет оформления` (root, `Приложение`) | `Как обои` (Android 12+ only), `Фирменный`, `Бирюзовый`, `Зелёный`, `Янтарный`, `Красный`, `Розовый`, `Фиолетовый` | `Как обои` on Android 12+, `Фирменный` elsewhere |
+
+- The row opens a picker of colour swatches, each the primary colour of the
+  scheme it gives; a tap applies the colour to every Compose screen at once,
+  system bars included, and `Готово` closes the picker. TalkBack reads each
+  swatch by its name and selection; nothing animates.
+- The choice is stored in `app_accent_color` (the `AccentColor` name; absent
+  or unknown reads as `WALLPAPER`, today's scheme). Without wallpaper colours
+  (below Android 12, iOS) the stored default shows and draws as `Фирменный`.
+- Widgets, the QR tile, notifications and the launcher icon keep their own
+  colours; the QR widget's `Динамические цвета` is separate.
+- The presets and their seeds are listed in
+  [the design guide](design.md#colour-and-surfaces).
+
+### iOS
+
+The same row renders as a menu of the colour names in the SwiftUI settings
+form, without `Как обои`; a pick recolours the Compose screens at once, while
+the SwiftUI screens keep their tint. iOS reads and writes the same
+`app_accent_color` key of its own `app_preferences` file.
 
 ## Account and services
 

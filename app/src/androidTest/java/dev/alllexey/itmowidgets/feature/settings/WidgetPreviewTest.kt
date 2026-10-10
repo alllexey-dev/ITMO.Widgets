@@ -31,6 +31,7 @@ import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
@@ -343,7 +344,7 @@ class WidgetPreviewTest {
                     val refresher = object : WidgetRefreshRequester { override fun refreshAll() = Unit }
                     SettingsViewModel(
                         SettingsPages(
-                            RootPageProvider(),
+                            RootPageProvider(repository),
                             ServicesPageProvider(
                                 repository,
                                 object : CustomServicesRepository {
@@ -476,6 +477,10 @@ class WidgetPreviewTest {
 
         override suspend fun setQrTileAdded(added: Boolean) {
             local.value = local.value.copy(qrTileAdded = added)
+        }
+
+        override suspend fun setAccentColor(color: AccentColor) {
+            local.value = local.value.copy(accentColor = color)
         }
     }
 

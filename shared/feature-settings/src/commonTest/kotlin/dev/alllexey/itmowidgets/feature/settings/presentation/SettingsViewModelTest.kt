@@ -159,7 +159,8 @@ class SettingsViewModelTest {
                     SettingRowId.DIAGNOSTICS,
                     SettingRowId.VERSION,
                     SettingRowId.DELETE_ACCOUNT,
-                    SettingRowId.PRIVACY_POLICY
+                    SettingRowId.PRIVACY_POLICY,
+                    SettingRowId.ACCENT_COLOR
                 ),
                 items.map(SettingItem::id).toSet()
             )

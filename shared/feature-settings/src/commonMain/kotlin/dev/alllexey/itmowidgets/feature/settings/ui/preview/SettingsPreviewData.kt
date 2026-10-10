@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.ui.preview
 
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
@@ -34,6 +35,15 @@ import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_title
 import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_description
 import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_title
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_amber
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_brand
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_green
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_pink
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_purple
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_red
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_teal
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_wallpaper
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_toggle
@@ -126,6 +136,13 @@ internal object SettingsPreviewData {
         SettingSection(
             title = res(CoreRes.string.me_group_app),
             items = listOf(
+                SettingItem.Choice(
+                    id = SettingRowId.ACCENT_COLOR,
+                    title = res(Res.string.settings_accent_color_title),
+                    value = AccentColor.WALLPAPER.label(),
+                    options = AccentColor.entries.map { ChoiceOption(it.name, it.label()) },
+                    selectedOptionKey = AccentColor.WALLPAPER.name
+                ),
                 navigation(SettingsPage.HOME),
                 navigation(SettingsPage.SCHEDULE),
                 navigation(SettingsPage.RECORDBOOK),
@@ -511,6 +528,19 @@ internal object SettingsPreviewData {
             WidgetTextSize.NORMAL -> CoreRes.string.settings_widget_text_size_normal
             WidgetTextSize.LARGE -> CoreRes.string.settings_widget_text_size_large
             WidgetTextSize.EXTRA_LARGE -> CoreRes.string.settings_widget_text_size_extra_large
+        }
+    )
+
+    private fun AccentColor.label() = res(
+        when (this) {
+            AccentColor.WALLPAPER -> Res.string.settings_accent_color_wallpaper
+            AccentColor.BRAND -> Res.string.settings_accent_color_brand
+            AccentColor.TEAL -> Res.string.settings_accent_color_teal
+            AccentColor.GREEN -> Res.string.settings_accent_color_green
+            AccentColor.AMBER -> Res.string.settings_accent_color_amber
+            AccentColor.RED -> Res.string.settings_accent_color_red
+            AccentColor.PINK -> Res.string.settings_accent_color_pink
+            AccentColor.PURPLE -> Res.string.settings_accent_color_purple
         }
     )
 
