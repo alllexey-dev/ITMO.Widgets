@@ -1,8 +1,9 @@
 import XCTest
 
-/// A tapped notification routes by its payload type (IO-13a): the Debug fixture (`-itmoNotificationFixture`) posts a
-/// local notification shaped like Backend's push in the demo session, the test taps its banner and the shell opens
-/// the tab the payload names, a friendship with the actor's profile on the me tab (IO-09e). The first run answers
+/// A tapped notification routes by its `userInfo` (IO-13a, IO-FIX-NT): the Debug fixture (`-itmoNotificationFixture`)
+/// posts a local notification in the demo session, shaped like Backend's push or through the app's own notifier, the
+/// test taps its banner and the shell opens what Android opens: the tab the push names, a friendship with the actor's
+/// profile on the me tab (IO-09e), the found schedule changes, the recordbook, the BARS sign-in. The first run answers
 /// iOS's notification dialog. On a fresh simulator the notification daemon answers its first requests only after a
 /// minute or two, so the dialog and the banner get a long timeout.
 final class NotificationTapUITests: XCTestCase {
@@ -20,6 +21,18 @@ final class NotificationTapUITests: XCTestCase {
 
     func testAFriendshipTapOpensTheActorsProfile() {
         tapFixture("friendship", title: Self.friendsTitle, opens: "social.profile")
+    }
+
+    func testAScheduleChangeTapOpensTheChanges() {
+        tapFixture("schedule-changes", title: Self.scheduleChangesTitle, opens: "schedule.changes")
+    }
+
+    func testAMarksDigestTapOpensTheRecordbook() {
+        tapFixture("marks", title: Self.marksTitle, opens: "shell.root.recordbook")
+    }
+
+    func testTheBarsReminderTapOpensTheBarsSignIn() {
+        tapFixture("bars-login", title: Self.barsTitle, opens: "bars.login")
     }
 
     private func tapFixture(_ fixture: String, title: String, opens root: String) {
@@ -54,9 +67,13 @@ final class NotificationTapUITests: XCTestCase {
         return banner
     }
 
-    /// `notification_sport_success` and `notification_channel_friends`: the app shows only the Russian catalog.
+    /// `notification_sport_success`, `notification_channel_friends`, `schedule_changes_notification_title` (one
+    /// change), `marks_new_title` and `marks_bars_login_title`: the app shows only the Russian catalog.
     private static let sportTitle = "Вы записаны на спорт"
     private static let friendsTitle = "Друзья"
+    private static let scheduleChangesTitle = "Расписание изменилось"
+    private static let marksTitle = "Новые оценки"
+    private static let barsTitle = "Войдите в БАРС"
 
     private func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {
         app.descendants(matching: .any)[identifier].firstMatch

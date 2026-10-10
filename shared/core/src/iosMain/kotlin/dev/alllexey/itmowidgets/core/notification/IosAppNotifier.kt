@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.core.notification
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
-import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.text.resolve
 import kotlin.coroutines.cancellation.CancellationException
@@ -67,30 +66,12 @@ class IosAppNotifier(
         body = notification.text.resolve(),
         silent = notification.silent,
         deliverAt = deliverAt,
-        userInfo = entryOf(notification.destination),
+        userInfo = NotificationTapRoutes.userInfoOf(notification.destination),
     )
 
     companion object {
         /** The request identifier of a channel's notification, as Android's tag and id. */
         fun identifierOf(channel: String, id: Int): String = "$channel-$id"
-
-        /** What a tap opens, in `EntryRouteParser`'s terms; the tap handler comes with the push card (IO-13a). */
-        fun entryOf(destination: NotificationDestination): Map<String, Any> = when (destination) {
-            NotificationDestination.Sport -> action(AppEntryIntents.ACTION_OPEN_SPORT)
-            is NotificationDestination.UserProfile ->
-                action(AppEntryIntents.ACTION_OPEN_USER_PROFILE) + (USER_INFO_ISU to destination.isu)
-            NotificationDestination.ScheduleChanges -> action(AppEntryIntents.ACTION_OPEN_SCHEDULE_CHANGES)
-            NotificationDestination.Recordbook -> action(AppEntryIntents.ACTION_OPEN_RECORDBOOK)
-            // The subject's arguments stay on Android until the recordbook reaches iOS (IO-09d2); the tab is one tap
-            // away.
-            is NotificationDestination.RecordbookSubject -> action(AppEntryIntents.ACTION_OPEN_RECORDBOOK)
-            NotificationDestination.BarsLogin -> action(AppEntryIntents.ACTION_OPEN_BARS_LOGIN)
-        }
-
-        const val USER_INFO_ACTION = "action"
-        const val USER_INFO_ISU = "isu"
-
-        private fun action(value: String): Map<String, Any> = mapOf(USER_INFO_ACTION to value)
 
         private const val TAG = "AppNotifier"
     }

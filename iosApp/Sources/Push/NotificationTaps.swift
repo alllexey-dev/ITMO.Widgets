@@ -1,10 +1,12 @@
 import Shared
 import UserNotifications
 
-/// Routes a tapped notification by the payload type of its `data` envelope (`NotificationTapRoutes`): a friendship
-/// event to the actor's profile, a sport booking to its lesson. The route goes to the shared route queue
-/// (`AppRouter.open(entry:)`), which runs it once the session is ready. A notification that arrives in the
-/// foreground shows as a banner, as on Android.
+/// Routes a tapped notification by its `userInfo` (`NotificationTapRoutes`): a Backend push by the payload type of its
+/// `data` envelope (a friendship event to the actor's profile, a sport booking to its lesson), a local notification
+/// of `IosAppNotifier` by the destination it carries (the schedule changes, the recordbook or a subject, the BARS
+/// sign-in), as Android's notification intents. The route goes to the shared route queue (`AppRouter.open(entry:)`),
+/// which runs it once the session is ready, so a tap that launches the app routes as one on a running app does. A
+/// notification that arrives in the foreground shows as a banner, as on Android.
 @MainActor
 final class NotificationTaps: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationTaps()
@@ -21,9 +23,9 @@ final class NotificationTaps: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
-    /// The route of a notification's `userInfo`; nil for a notification that is not a Backend push.
+    /// The route of a notification's `userInfo`; nil for a notification that names none.
     nonisolated static func entryRoute(userInfo: [AnyHashable: Any]) -> EntryRoute? {
-        NotificationTapRoutes.shared.entryRoute(data: userInfo[NotificationTapRoutes.shared.DATA_KEY] as? String)
+        NotificationTapRoutes.shared.entryRoute(userInfo: userInfo)
     }
 
     func route(_ route: EntryRoute) {

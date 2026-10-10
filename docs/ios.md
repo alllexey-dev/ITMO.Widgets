@@ -470,23 +470,37 @@ service's work with IO-12a.
   again only when the token, the owner, the alerts answer or the build changed (once after an update). A failure
   is logged, never thrown into Swift.
 - Taps. `ITMOWidgetsAppDelegate` (`@UIApplicationDelegateAdaptor`) runs `PushLaunch`, which makes `NotificationTaps`
-  the notification center's delegate before launch ends. A tap reads the `data` envelope from `userInfo`
-  (`NotificationTapRoutes`) and hands the route to `AppRouter.open(entry:)`; a tap that launched the app waits until
-  the shell attaches the router. A notification that arrives in the foreground shows as a banner.
-- Local notifications (`IosAppNotifier`: schedule changes, marks, the BARS reminder) carry Android's entry action
-  in `userInfo["action"]`, but the tap handler routes only the push `data` envelope, so a tap on one opens the app
-  where it was (Degradations).
+  the notification center's delegate before launch ends. A tap reads the route from `userInfo`
+  (`NotificationTapRoutes.entryRoute(userInfo:)`): a push's `data` envelope by its payload type, else a local
+  notification's destination. It hands the route to `AppRouter.open(entry:)`, so a tap that launched the app (cold
+  start) waits until the shell attaches the router and the session is ready, and a tap on a running app (warm start)
+  runs at once. A notification that arrives in the foreground shows as a banner.
+- Local notifications. `IosAppNotifier` writes each notification's destination into `userInfo`
+  (`NotificationTapRoutes.userInfoOf`): Android's entry action under `action` and its arguments as strings, the
+  profile's `isu` and a subject's arguments under the keys of Android's intent extras (`RecordbookSubjectArgs`).
+  The tap reads them with `EntryRouteParser`, so it opens what Android's notification intent opens; an action no
+  local notification carries (a link, the widget actions) opens nothing. The BARS sign-in activity sets
+  `AppRouter.barsLoginRequested`, which the recordbook root answers with `BarsLoginSheet` once it is on screen.
 
-| Payload type | Opens |
-|---|---|
-| `FRIENDSHIP_EVENT_PAYLOAD` | the me tab with the actor's profile above it |
-| `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD` | the sport tab with the lesson's request; with several lessons the sport tab |
-| anything else | nothing |
+| Notification | `userInfo` | Opens |
+|---|---|---|
+| Push `FRIENDSHIP_EVENT_PAYLOAD` | `data` | the me tab with the actor's profile above it |
+| Push `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD` | `data` | the sport tab with the lesson's request; with several lessons the sport tab |
+| Schedule change digest | `action` = `ACTION_OPEN_SCHEDULE_CHANGES` | the schedule tab with the found changes above it |
+| `Новые оценки`, several subjects or one without a page | `action` = `ACTION_OPEN_RECORDBOOK` | the recordbook tab |
+| `Новые оценки`, one subject with a page | `action` = `ACTION_OPEN_RECORDBOOK_SUBJECT`, `entry_id`, `program_id`, `semester`, `study_year`, with a BARS journal `bars_plan`, `bars_type`, `bars_identifier` | the recordbook tab with the subject's page; arguments that do not describe a page open the recordbook tab |
+| `Войдите в БАРС` | `action` = `ACTION_OPEN_BARS_LOGIN` | the recordbook tab with the BARS sign-in sheet |
+| `NotificationDestination.Sport`, `UserProfile` (notices of the push handlers, none on iOS before T13) | `action` = `ACTION_OPEN_SPORT`; `ACTION_OPEN_USER_PROFILE`, `isu` | the sport tab; the me tab with the profile |
+| anything else | | nothing |
 
-- A Debug build launched with `-itmoNotificationFixture friendship|sport` asks for permission and posts a local
-  notification shaped like the push two seconds later (`NotificationFixtures`); `NotificationTapUITests` taps its
-  banner. `ITMOWidgetsTests/DeviceRegistrationTests` checks the graph and the tap routes, `PushDeviceRegistrationTest`
-  (`scripts/ios/test.sh kn core`) the Backend cases on a MockEngine.
+- A Debug build launched with `-itmoNotificationFixture <kind>` asks for permission and posts one notification
+  (`NotificationFixtures`): `friendship` and `sport` shaped like the push two seconds later, `schedule-changes`,
+  `marks` and `bars-login` at once through the app's notifier with their real `userInfo`; `NotificationTapUITests`
+  taps each banner on the running app. `ITMOWidgetsTests/DeviceRegistrationTests` checks the graph, the tap routes
+  of every kind and a tap that arrives before the router is attached (the cold start),
+  `NotificationTapRoutesTest` (`shared/core`, also `scripts/ios/test.sh kn core`) the `userInfo` round trip of every
+  destination against Android's intents, `PushDeviceRegistrationTest` (`scripts/ios/test.sh kn core`) the Backend
+  cases on a MockEngine.
 
 ## Widgets
 
@@ -792,7 +806,6 @@ fix, not a decision.
 | Quiet hours | a change or mark found between 00:00 and 06:00 is handed to the system for 06:00 at once | iOS might not wake the app soon after 06:00 |
 | BARS in the background | renewal only through the Keychain cookie copy, never the hidden WebKit view | a background run has about 30 s and no window |
 | Notification channels | one switch for all the app's notifications | iOS has no channels |
-| Tap on a local notification | opens the app without a route | open gap: the tap handler reads only the push `data` envelope, not `userInfo["action"]` |
 | Push | no device token, so nothing is registered with Backend; the notification service passes notifications through | APNs needs the paid Apple account (gate T13) |
 | App Links (`https`) | not opened; only `itmowidgets://route/<id>` | Universal Links need associated domains, which only a signed build after T13 has |
 | Web sign-in scanner | VisionKit's scanner, which asks for the camera; without it (or on the simulator) the code is typed | iOS has no Play services scanner |

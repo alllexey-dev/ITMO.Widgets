@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.core.notification
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
-import dev.alllexey.itmowidgets.core.navigation.EntryRouteParser
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -58,18 +57,18 @@ class IosAppNotifierTest {
     }
 
     @Test
-    fun theTapEntryParsesToAndroidsDestination() {
-        val profile = IosAppNotifier.entryOf(NotificationDestination.UserProfile(isu = 123456))
-        val route = EntryRouteParser.parse(
-            action = profile[IosAppNotifier.USER_INFO_ACTION] as String,
-            isu = profile[IosAppNotifier.USER_INFO_ISU] as Int,
-        )
-        assertEquals(AppRoutes.UserProfile(123456), route?.overlay)
+    fun theRequestCarriesItsDestinationForTheTap() = runTest {
+        val notifier = notifier()
+        val destination = NotificationDestination.UserProfile(isu = 123456)
 
-        val changes = IosAppNotifier.entryOf(NotificationDestination.ScheduleChanges)
+        notifier.show(notification().copy(destination = destination))
+        notifier.awaitPosts()
+
+        val userInfo = center.added.single().userInfo
+        assertEquals(NotificationTapRoutes.userInfoOf(destination), userInfo)
         assertEquals(
-            AppRoutes.ScheduleChanges,
-            EntryRouteParser.parse(changes[IosAppNotifier.USER_INFO_ACTION] as String)?.overlay,
+            AppRoutes.UserProfile(123456),
+            NotificationTapRoutes.entryRoute(userInfo)?.overlay,
         )
     }
 
