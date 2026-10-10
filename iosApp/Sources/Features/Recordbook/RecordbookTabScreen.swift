@@ -5,7 +5,8 @@ import UIKit
 /// The recordbook tab's root: L12's Compose recordbook (`recordbookRootPage`, IO-09d2) in Android's tab order. A
 /// subject opens its page through the router, the period button the period picker, whose choice comes back through
 /// the router (`open(_:onResult:)`); the BARS sign-in is IO-09d1's `BarsLoginSheet`, after which the list loads
-/// again, as after `BarsLoginActivity`.
+/// again, as after `BarsLoginActivity`. The BARS reminder's tap asks the router for the sign-in, which the root shows
+/// as soon as it is on screen.
 struct RecordbookTabScreen: View {
     let router: AppRouter
     @State private var host = RecordbookHost()
@@ -16,6 +17,9 @@ struct RecordbookTabScreen: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("shell.root.recordbook")
+        .onChange(of: router.barsLoginRequested, initial: true) {
+            if router.consumeBarsLogin() { host.showsBarsLogin = true }
+        }
         .recordbookBarsLogin(host)
         .scheduleMessages(host.messages)
     }

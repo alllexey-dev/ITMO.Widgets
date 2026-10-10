@@ -234,6 +234,17 @@ suspend fun postFixtureMarkDigest(center: LocalNotificationCenter) {
 /** [postFixtureMarkDigest] to the app's notification centre. */
 suspend fun postFixtureMarkDigest() = postFixtureMarkDigest(IosKoin.koin().get<LocalNotificationCenter>())
 
+/**
+ * Debug builds' `-itmoNotificationFixture bars-login`: posts the "sign in to BARS" reminder through the marks notifier
+ * to the app's notification centre, so a UI test taps it without an expired BARS session.
+ */
+suspend fun postFixtureBarsPrompt() {
+    val koin = IosKoin.koin()
+    val notifier = IosAppNotifier(koin.get<LocalNotificationCenter>(), koin.get(), koin.get())
+    IosMarksNotifier(notifier).showBarsPrompt()
+    notifier.awaitPosts()
+}
+
 /** Every return of the app from the background. */
 private fun applicationForegrounds(): Flow<Unit> = callbackFlow {
     val center = NSNotificationCenter.defaultCenter

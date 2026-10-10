@@ -19,7 +19,7 @@ import platform.UserNotifications.UNUserNotificationCenter
 /**
  * One local notification as the system takes it: [identifier] replaces a shown or pending one with the same id,
  * [threadIdentifier] groups by channel, [deliverAt] delays it (a calendar trigger) or shows it at once when null.
- * [userInfo] holds only plain values: the Android entry action that `EntryRouteParser` reads and its ISU.
+ * [userInfo] holds only strings: the destination as `NotificationTapRoutes.userInfoOf` writes it.
  */
 data class LocalNotificationRequest(
     val identifier: String,

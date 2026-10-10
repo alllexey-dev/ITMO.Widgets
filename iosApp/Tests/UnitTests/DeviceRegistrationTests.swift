@@ -5,8 +5,9 @@ import XCTest
 
 /// The push plumbing of the app process before the Apple account (IO-13a): the graph binds one shared push
 /// registration (`PushDeviceRegistration`, whose Backend cases run on a MockEngine in `PushDeviceRegistrationTest`),
-/// the device has no token yet so nothing is registered, and a tapped notification reaches the shared route queue by
-/// its payload type. Every ISU and lesson is synthetic.
+/// the device has no token yet so nothing is registered, and a tapped notification reaches the shared route queue: a
+/// push by its payload type, a local notification (`IosAppNotifier`) by the destination in its `userInfo`. Every ISU,
+/// lesson and subject is synthetic.
 @MainActor
 final class DeviceRegistrationTests: XCTestCase {
     // MARK: Registration
@@ -85,6 +86,105 @@ final class DeviceRegistrationTests: XCTestCase {
         XCTAssertNil(NotificationTaps.entryRoute(userInfo: ["data": #"{"type":"SOMETHING_NEW","payload":{}}"#]))
         XCTAssertNil(NotificationTaps.entryRoute(userInfo: ["data": 42]))
     }
+
+    // MARK: Local notification taps
+
+    func testAScheduleChangeTapOpensTheChangesOverTheSchedule() throws {
+        let router = try open(NotificationDestinationScheduleChanges.shared)
+
+        XCTAssertEqual(router.selectedTab, .schedule)
+        XCTAssertEqual(router.path(of: .schedule), [ShellDestination(AppRoutes.ScheduleChanges.shared)])
+    }
+
+    func testAMarksDigestTapOpensTheRecordbook() throws {
+        let router = try open(NotificationDestinationRecordbook.shared)
+
+        XCTAssertEqual(router.selectedTab, .recordbook)
+        XCTAssertEqual(router.path(of: .recordbook), [])
+        XCTAssertFalse(router.barsLoginRequested)
+    }
+
+    func testAMarksDigestOfOneSubjectOpensItsPage() throws {
+        for args in [subject, subjectWithJournal] {
+            let router = try open(NotificationDestinationRecordbookSubject(args: args))
+
+            XCTAssertEqual(router.selectedTab, .recordbook)
+            XCTAssertEqual(router.path(of: .recordbook), [ShellDestination(AppRoutes.RecordbookSubject(args: args))])
+        }
+    }
+
+    func testTheBarsReminderTapAsksTheRecordbookForTheSignInOnce() throws {
+        let router = try open(NotificationDestinationBarsLogin.shared)
+
+        XCTAssertEqual(router.selectedTab, .recordbook)
+        XCTAssertTrue(router.barsLoginRequested)
+        XCTAssertTrue(router.consumeBarsLogin())
+        XCTAssertFalse(router.consumeBarsLogin())
+    }
+
+    func testLocalSportAndProfileDestinationsOpenTheirTabs() throws {
+        let sport = try open(NotificationDestinationSport.shared)
+        XCTAssertEqual(sport.selectedTab, .sport)
+        XCTAssertNil(sport.consumeRequest(of: .sport))
+
+        let profile = try open(NotificationDestinationUserProfile(isu: 100_002))
+        XCTAssertEqual(profile.selectedTab, .me)
+        XCTAssertEqual(profile.path(of: .me), [ShellDestination(AppRoutes.UserProfile(isu: 100_002))])
+    }
+
+    /// What the system hands back: plain Foundation values, a number where an older build stored the ISU as one.
+    func testAStoredUserInfoRoutesAsTheNotifierWroteIt() throws {
+        let subjectInfo = NotificationTapRoutes.shared.userInfoOf(
+            destination: NotificationDestinationRecordbookSubject(args: subjectWithJournal)
+        )
+        let archived = try NSKeyedArchiver.archivedData(withRootObject: subjectInfo, requiringSecureCoding: true)
+        let stored = try XCTUnwrap(
+            NSKeyedUnarchiver.unarchivedObject(
+                ofClasses: [NSDictionary.self, NSString.self, NSNumber.self], from: archived
+            ) as? [AnyHashable: Any]
+        )
+        XCTAssertEqual(
+            NotificationTaps.entryRoute(userInfo: stored)?.overlay as? AppRoutes.RecordbookSubject,
+            AppRoutes.RecordbookSubject(args: subjectWithJournal)
+        )
+
+        let numeric: [AnyHashable: Any] = [
+            "action": AppEntryIntents.shared.ACTION_OPEN_USER_PROFILE, "isu": NSNumber(value: 100_002),
+        ]
+        XCTAssertEqual(
+            NotificationTaps.entryRoute(userInfo: numeric)?.overlay as? AppRoutes.UserProfile,
+            AppRoutes.UserProfile(isu: 100_002)
+        )
+    }
+
+    func testAnActionNoLocalNotificationCarriesOpensNothing() {
+        XCTAssertNil(NotificationTaps.entryRoute(userInfo: ["action": AppEntryIntents.shared.ACTION_OPEN_QR_PASS]))
+        XCTAssertNil(NotificationTaps.entryRoute(userInfo: ["action": "android.intent.action.VIEW"]))
+        XCTAssertNil(NotificationTaps.entryRoute(userInfo: [
+            "action": AppEntryIntents.shared.ACTION_OPEN_USER_PROFILE, "isu": "0",
+        ]))
+    }
+
+    /// The tap of a local notification of `destination`, with the `userInfo` `IosAppNotifier` writes, on a ready
+    /// router through the delegate's queue.
+    private func open(_ destination: NotificationDestination) throws -> AppRouter {
+        let userInfo = NotificationTapRoutes.shared.userInfoOf(destination: destination)
+        let route = try XCTUnwrap(NotificationTaps.entryRoute(userInfo: userInfo), "\(destination)")
+        let router = readyRouter()
+        let taps = NotificationTaps()
+        taps.attach { route in router.open(entry: route) }
+        taps.route(route)
+        return router
+    }
+
+    private let subject = RecordbookSubjectArgs(
+        entryId: 11, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: nil, barsType: nil,
+        barsIdentifier: nil
+    )
+    private let subjectWithJournal = RecordbookSubjectArgs(
+        entryId: 11, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: KotlinLong(value: 7),
+        barsType: "flow", barsIdentifier: "7"
+    )
 
     private func userInfo(_ kind: NotificationFixtures.Kind) -> [AnyHashable: Any] {
         ["data": NotificationFixtures.data(kind), "recipient_isu": "100001"]
