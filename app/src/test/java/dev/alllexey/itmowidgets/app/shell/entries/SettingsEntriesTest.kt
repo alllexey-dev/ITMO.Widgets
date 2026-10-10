@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.app.shell.BottomSheetSceneStrategy
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
@@ -29,6 +30,7 @@ import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
+import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsTestTags
@@ -50,8 +52,9 @@ import org.robolectric.annotation.Config
 
 /**
  * The settings keys in the Compose shell with Koin ViewModels over fakes: a page renders its rows under the real
- * [shellEntries] and opens the next page and the error journal as overlays, the journal and the `.ics` sheet render,
- * and the spoiler picker and crop screen answer the QR widget page after its state was saved and restored.
+ * [shellEntries] and opens the next page and the error journal as overlays, a site row opens the browser through the
+ * shell's own platform actions, the journal and the `.ics` sheet render, and the spoiler picker and crop screen
+ * answer the QR widget page after its state was saved and restored.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = PreviewHostApplication::class)
@@ -102,6 +105,19 @@ class SettingsEntriesTest {
 
         clickTop(DiagnosticsTestTags.BACK)
         assertEquals(listOf(AppRoutes.Settings(SettingsPage.MAINTENANCE.name)), navigator.state.overlays)
+    }
+
+    @Test
+    fun thePrivacyPolicyRowOpensTheSiteInTheBrowser() {
+        show()
+        act { open(AppRoutes.Settings(SettingsPage.MAINTENANCE.name)) }
+        awaitRows()
+
+        clickRow(SettingRowId.PRIVACY_POLICY)
+
+        val started = shadowOf(compose.activity).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, started?.action)
+        assertEquals(BuildConfig.WIDGETS_BASE_URL + MaintenancePageProvider.PRIVACY_POLICY_PATH, started.dataString)
     }
 
     @Test

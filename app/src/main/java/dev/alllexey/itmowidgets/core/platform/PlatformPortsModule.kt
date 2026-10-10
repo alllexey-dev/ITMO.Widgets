@@ -12,8 +12,8 @@ import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import javax.inject.Singleton
 
 /**
- * Android's platform ports; `CoreBridge` forwards them to Koin. [PlatformActions] needs the host's activity, so
- * [PlatformComposeHost] provides it to Compose instead.
+ * Android's platform ports; `CoreBridge` forwards them to Koin. [PlatformActions] needs the host's activity, so the
+ * Navigation 3 shell (`ShellContent`) provides [AndroidPlatformActions] to Compose instead.
  */
 @Module
 @InstallIn(SingletonComponent::class)
