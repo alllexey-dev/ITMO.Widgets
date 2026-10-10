@@ -17,6 +17,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
@@ -30,15 +31,17 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
+import dev.alllexey.itmowidgets.core.platform.AndroidPlatformActions
 import dev.alllexey.itmowidgets.designsystem.host.ItmoComposeHost
+import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /**
  * The Navigation 3 shell (ADR 0020): the [surface] the session allows and, on the tabs, the [navigator]'s
  * `ShellBackStack` in one `NavDisplay`. Sheets and dialogs are overlay scenes above everything; the tab root and the
  * overlay screens are the shell's own layers ([ShellLayers]). Everything sits in [ItmoTheme] inside the host-level
- * composition locals every Fragment-hosted screen gets ([ItmoComposeHost]), plus the Navigation 3 result bus, so a
- * screen behaves here as in its Fragment host.
+ * composition locals every Fragment-hosted screen gets ([ItmoComposeHost]), plus the Navigation 3 result bus and the
+ * activity's [AndroidPlatformActions], so a screen behaves here as in its Fragment host.
  */
 @Composable
 fun AppShell(
@@ -56,7 +59,8 @@ fun AppShell(
 }
 
 /**
- * [AppShell] without the theme and the host locals, for tests and captures that bring their own. Each tab and the
+ * [AppShell] without the theme and the host locals, for tests and captures that bring their own. It provides
+ * [LocalPlatformActions] itself, so no host can leave the entries' links and system pages on a no-op. Each tab and the
  * contextual stack (overlays, sheets, dialogs) has its own decorator set, computed on every composition: a hidden
  * tab's root stays in its own stack, so its decorators never see a pop and its saveable state and ViewModels
  * survive the switch (SP-14's multiple back stacks).
@@ -80,7 +84,13 @@ internal fun ShellContent(
         if (surface == ShellSurface.Auth) navigator.dismissOverlays()
     }
 
-    CompositionLocalProvider(LocalResultEventBus provides rememberResultEventBus()) {
+    val context = LocalContext.current
+    val platform = remember(context) { AndroidPlatformActions(context) }
+
+    CompositionLocalProvider(
+        LocalResultEventBus provides rememberResultEventBus(),
+        LocalPlatformActions provides platform,
+    ) {
         Box(Modifier.fillMaxSize().windowInsetsPadding(shellInsets)) {
             when (surface) {
                 ShellSurface.Progress -> GateProgress()
