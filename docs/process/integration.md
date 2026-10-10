@@ -107,8 +107,8 @@ batch head or a red ship check reverts the culprit; it is never fixed forward on
 ## Ship check
 
 The ship check is `scripts/ship-check.sh`, also reached through `scripts/verify.sh ship`. The integrator runs it in
-`~/proj/.wt/android/next`. Each stage writes PASS or FAIL to `~/proj/.wt/run/ship/<sha7>/summary.md`, with its log
-next to it, and any FAIL makes the exit code non-zero:
+`~/proj/.wt/android/next`. Each stage writes PASS or FAIL to `~/proj/.wt/run/ship/<sha7>/summary.md`, with its time,
+source and log next to it, and any FAIL makes the exit code non-zero:
 
 1. version lines per [0030](../decisions/0030-release-lines-and-data-continuity.md), and `origin/release/2.2`
    below 100;
@@ -127,9 +127,20 @@ next to it, and any FAIL makes the exit code non-zero:
    never run R8, so only this stage sees a crash of the shrunk app, such as two Koin keys merged into one class
    (`app/proguard-rules.pro`, "Class identity").
 
-`--no-device` runs stages 1-3, as a lane does for its own PR. Device stages refuse every serial except
-`emulator-5554` and any worktree other than the integrator's. The release-signed upgrade belongs to the owner at
-T16. The last line has the `--local-verify` format: `VERIFY A ship|ship-no-device PASS|FAIL <secs>s <sha7>`.
+By default, when `gh` is installed and signed in, only stages 1 and 3 run on the laptop and the rest are read from
+GitHub Actions for the head SHA: stage 2 from the `verify-quick` check, stage 4 from `android-ui`, and stages 5 and
+6 from `android-ship` together with their rows in the summary of its artifact `ship-<sha7>`. The newest run of the
+SHA with a job of that name counts, and the `Source` column of each row links it (`CI run <url>`). A check that is
+missing, still running or not `success` fails its stage; `--wait` polls every minute, for up to two hours, until
+the checks finish. CI results belong to a commit, so a dirty worktree is refused. Once CI has finished on the
+head, the CI-backed check takes as long as stage 3's release build and needs no emulator.
+
+`--local` runs all six stages on the laptop, as before CI carried them; without `gh` the script falls back to it.
+`--no-device` runs stages 1-3 locally, as a lane does for its own PR. Local device stages refuse every serial
+except `emulator-5554` and any worktree other than the integrator's. The release-signed upgrade belongs to the
+owner at T16. The last line has the `--local-verify` format:
+`VERIFY A ship|ship-no-device PASS|FAIL <secs>s <sha7>`. `scripts/test-ship-check.sh`, run by
+`scripts/verify.sh quick`, covers the CI source against a `gh` stub.
 
 It runs:
 
@@ -138,6 +149,26 @@ It runs:
 - on every prerelease head and on the release candidate.
 
 A red ship check reverts the culprit like a red batch head.
+
+## Merge queue
+
+The integrator drains the open PRs of A with a local queue loop (untracked integrator tooling) that never drops a
+PR and lands one merge at a time under a serial lock. A PR merges only when its current head already contains the
+current `origin/v2.3/next` and every check on that head is green, `verify-quick` and `android-ui` included, so CI
+has run on exactly the state the squash produces:
+
+1. A PR behind `v2.3/next` is updated on GitHub (`PUT /repos/{owner}/{repo}/pulls/{n}/update-branch` with the
+   expected head SHA). That pushes a merge of `v2.3/next` into the lane branch and CI runs again on it; the queue
+   waits for the new head's checks.
+2. A PR that contains `v2.3/next` and is green goes through `integrate merge android <n>` (with the `surface OK`
+   comment of the standing approvals), then the cleanup of merged lane branches and worktrees.
+3. Red checks are rerun a bounded number of times per head; a PR still red after that waits for a new head.
+4. When GitHub cannot update the branch (a conflict), the queue squashes the PR onto `v2.3/next` locally and runs
+   `scripts/verify.sh quick` and `shots all` as before. A green local run merges; a conflict or a red run is
+   reported as needing a rebase by the lane.
+
+Every merge moves `v2.3/next`, so the other green PRs are updated and checked again before they merge: the queue
+spends CI time instead of the laptop's.
 
 ## The 2.2.x line
 

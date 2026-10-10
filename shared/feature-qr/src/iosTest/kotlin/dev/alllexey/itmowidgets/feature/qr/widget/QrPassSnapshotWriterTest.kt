@@ -2,9 +2,12 @@ package dev.alllexey.itmowidgets.feature.qr.widget
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.AppGroupSessionDataCleaner
+import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.feature.qr.data.demo.DemoQr
 import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSourceImpl
@@ -40,6 +43,7 @@ class QrPassSnapshotWriterTest {
     private val clock = FakeClock(SAVED_AT)
     private val demo = FakeDemoMode(active = true)
     private val remote = FakeRemote()
+    private val settings = QrSettingsPreferences(InMemoryPreferencesDataStore())
 
     @AfterTest
     fun deleteDevice() = device.delete()
@@ -55,7 +59,7 @@ class QrPassSnapshotWriterTest {
         repository.refreshQrHex(force = true)
         clock.advanceBy(GENERATED_AFTER)
 
-        writer.publish(DemoQr.HEX)
+        writer.publish(DemoQr.HEX, QrWidgetAppearance.Default)
 
         val written = FileSystem.SYSTEM.read(directory.file(FILE_NAME)) { readUtf8() }
         val fixture = repositoryRoot() / FIXTURE
@@ -74,7 +78,7 @@ class QrPassSnapshotWriterTest {
         repository.refreshQrHex(force = true)
         clock.advanceBy(GENERATED_AFTER)
 
-        writer.publish(DemoQr.HEX)
+        writer.publish(DemoQr.HEX, QrWidgetAppearance.Default)
 
         val snapshot = assertNotNull(snapshotWriter().read(QrPassSnapshotWriter.FILE))
         assertEquals(SAVED_AT + GENERATED_AFTER, snapshot.generatedAt)
@@ -86,7 +90,40 @@ class QrPassSnapshotWriterTest {
             assertEquals(code.size, row.length)
             row.forEachIndexed { x, module -> assertEquals(code.getModule(x, y), module == '1', "module $x,$y") }
         }
+        assertTrue(snapshot.spoiler)
+        assertTrue(snapshot.dynamicColors)
+        assertEquals("CIRCLE", snapshot.animation)
         assertEquals(listOf(QrPassSnapshotWriter.QR_WIDGET_KIND), reloads)
+    }
+
+    @Test
+    fun everyChangedWidgetOptionRewritesThePassAndReloadsTheWidget() = runTest(UnconfinedTestDispatcher()) {
+        val (repository, writer) = graph()
+        writer.launchIn(backgroundScope)
+        repository.refreshQrHex(force = true)
+        val written = assertNotNull(snapshotWriter().read(QrPassSnapshotWriter.FILE))
+
+        settings.setQrSpoilerEnabled(false)
+        settings.setQrDynamicColorsEnabled(false)
+        settings.setQrSpoilerAnimationType(QrAnimationType.NONE)
+
+        val snapshot = assertNotNull(snapshotWriter().read(QrPassSnapshotWriter.FILE))
+        assertEquals(written.copy(spoiler = false, dynamicColors = false, animation = "NONE"), snapshot)
+        assertEquals(4, reloads.size)
+    }
+
+    @Test
+    fun anOptionChangedWithoutAValidPassWritesNothing() = runTest(UnconfinedTestDispatcher()) {
+        val (repository, writer) = graph()
+        writer.launchIn(backgroundScope)
+        repository.refreshQrHex(force = true)
+        repository.clearSessionData()
+        AppGroupSessionDataCleaner(directory, dispatchers()).clearSessionData()
+
+        settings.setQrSpoilerEnabled(false)
+
+        assertFalse(FileSystem.SYSTEM.exists(directory.file(FILE_NAME)))
+        assertEquals(1, reloads.size)
     }
 
     @Test
@@ -129,7 +166,7 @@ class QrPassSnapshotWriterTest {
         repository.refreshQrHex(force = true)
         clock.advanceBy(61.minutes)
 
-        writer.publish(DemoQr.HEX)
+        writer.publish(DemoQr.HEX, QrWidgetAppearance.Default)
 
         assertFalse(FileSystem.SYSTEM.exists(directory.file(FILE_NAME)))
         assertEquals(emptyList(), reloads)
@@ -141,7 +178,7 @@ class QrPassSnapshotWriterTest {
         val (repository, writer) = graph()
         repository.refreshQrHex(force = true)
 
-        writer.publish(remote.hex)
+        writer.publish(remote.hex, QrWidgetAppearance.Default)
 
         assertNull(snapshotWriter().read(QrPassSnapshotWriter.FILE))
         assertEquals(listOf("WARN:QrPassSnapshot:The pass does not fit a version 1 code"), log.lines)
@@ -150,7 +187,7 @@ class QrPassSnapshotWriterTest {
     private fun TestScope.graph(): Pair<QrCodeRepositoryImpl, QrPassSnapshotWriter> {
         val dispatchers = dispatchers()
         val repository = QrCodeRepositoryImpl(QrCodeLocalDataSourceImpl(device.directories, clock), remote, dispatchers)
-        return repository to QrPassSnapshotWriter(repository, snapshotWriter(), demo, clock, log)
+        return repository to QrPassSnapshotWriter(repository, settings, snapshotWriter(), demo, clock, log)
     }
 
     private fun TestScope.dispatchers(): AppDispatchers = UnconfinedTestDispatcher(testScheduler).let {

@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
-# ship-check.sh [--no-device] [--central] [--keep-going] [--only <n>[,<n>...]]
+# ship-check.sh [--local] [--wait] [--no-device] [--central] [--keep-going] [--only <n>[,<n>...]]
 #
 # The ship check (master plan section 5.4, L01 SS-01): run on batch heads that carry a toolchain, module-graph,
 # shell or storage change, weekly otherwise, on every prerelease head and on the release candidate.
 #
-# Stages, each PASS or FAIL in ~/proj/.wt/run/ship/<sha7>/summary.md with its log beside it:
+# Two sources (TC-CI2). By default, when `gh` is installed and signed in, stages 2, 4, 5 and 6 are read from the
+# GitHub Actions results of the head SHA and only stages 1 and 3 run here (they take minutes, not an emulator):
+#   2 full      the `verify-quick` check
+#   4 ui        the `android-ui` check
+#   5, 6        the `android-ship` check and the row of that stage in summary.md of its artifact `ship-<sha7>`
+# The newest run of the SHA that has a job of that name counts (`gh run list --commit`, `gh run view`,
+# `gh run download`). A check that is missing, still running or not `success` fails its stage; --wait polls every
+# ITMO_SHIP_POLL_SECONDS (60) for up to ITMO_SHIP_WAIT_MINUTES (120) until the checks finish. CI results belong to
+# the commit, so a dirty worktree is refused here. --local runs every stage on this machine as below.
+#
+# Stages, each PASS or FAIL in ~/proj/.wt/run/ship/<sha7>/summary.md with its log and source beside it:
 #   1 version   versionCode/versionName per ADR 0030; origin/release/2.2 stays below 100
 #   2 full      scripts/verify.sh full (unit tests incl. StableIdentifiersTest and Konsist, both lints, assembles)
 #   3 release   unsigned :app:assembleGithubRelease :app:bundlePlayRelease and both process*ReleaseManifest through
@@ -18,7 +28,7 @@
 #               each and wait for the sign-in screen without a FATAL EXCEPTION. Debug builds never run R8, so this is
 #               what catches a startup crash only the shrunk app has (R8-FIX1: two Koin keys merged into one class)
 #
-# --no-device runs stages 1-3. --central passes -PmyItmoApiFromCentral=true to stage 3. --keep-going runs every
+# --no-device runs stages 1-3 locally (implies --local). --central passes -PmyItmoApiFromCentral=true to stage 3. --keep-going runs every
 # selected stage after a FAIL (default: stop at the first one). --only picks stages (device stages still need the
 # integrator's emulator).
 #
@@ -26,7 +36,7 @@
 #   v2.2 build through `~/proj/.wt/bin/slot.sh android --` (slot.sh is re-entrant through ITMO_SLOT_HELD).
 # - Device stages run only on emulator-5554 from a worktree whose itmo-lane marker reads `integrator`; any other
 #   ANDROID_SERIAL is refused (the owner's phone shares the applicationId). Release outputs stay unsigned: a
-#   keystore.properties in the worktree is refused.
+#   keystore.properties in the worktree is refused. Read from CI, no stage needs a device.
 # - The last line is `VERIFY A ship|ship-no-device PASS|FAIL <secs>s <sha7>` (the --local-verify format).
 # - Exit code: 0 every stage passed, 1 a stage failed, 2 refused (usage, signing config, unsafe device).
 
@@ -61,10 +71,12 @@ usage() {
   exit 2
 }
 
-device=1 central="" keep_going="" only=""
+device=1 central="" keep_going="" only="" source=ci wait=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --no-device) device="" ;;
+    --local) source=local ;;
+    --wait) wait=1 ;;
+    --no-device) device="" source=local ;;
     --central) central=-PmyItmoApiFromCentral=true ;;
     --keep-going) keep_going=1 ;;
     --only)
@@ -89,13 +101,36 @@ selected() { # stage
 mode=ship
 [ -n "$device" ] || mode=ship-no-device
 
+from_ci() { # stage
+  [ "$source" = ci ] || return 1
+  case "$1" in 2 | 4 | 5 | 6) return 0 ;; esac
+  return 1
+}
+
+ci_check_of() { # stage -> the GitHub Actions check that stands for it
+  case "$1" in
+    2) echo verify-quick ;;
+    4) echo android-ui ;;
+    5 | 6) echo android-ship ;;
+  esac
+}
+
+ci_needed() { selected 2 || selected 4 || selected 5 || selected 6; }
+
+if [ "$source" = ci ] && ci_needed; then
+  if ! command -v gh > /dev/null 2>&1 || ! gh auth status > /dev/null 2>&1; then
+    note "gh is missing or not signed in: every stage runs locally (--local)"
+    source=local
+  fi
+fi
+
 [ -x "$verify_sh" ] || refuse "no executable scripts/verify.sh"
 if selected 3 && [ -e "$root/keystore.properties" ]; then
   refuse "keystore.properties exists in $root: release outputs must stay unsigned here"
 fi
 
 # Device stages: emulator-5554 only, only from the integrator's worktree, only if it really is an emulator.
-if selected 4 || selected 5 || selected 6; then
+if [ "$source" = local ] && { selected 4 || selected 5 || selected 6; }; then
   [ -z "${ANDROID_SERIAL:-}" ] || [ "$ANDROID_SERIAL" = "$DEVICE_SERIAL" ] ||
     refuse "device stages run only on $DEVICE_SERIAL, not '$ANDROID_SERIAL' (use --no-device)"
   git_dir=$(git rev-parse --absolute-git-dir 2> /dev/null) || refuse "not a git worktree"
@@ -112,23 +147,37 @@ head_sha=$(git rev-parse HEAD) || refuse "cannot resolve HEAD"
 sha=${head_sha:0:7}
 dirty=""
 [ -z "$(git status --porcelain 2> /dev/null)" ] || dirty="+dirty"
+if [ -n "$dirty" ] && [ "$source" = ci ] && ci_needed; then
+  refuse "the worktree has uncommitted changes and CI results cover only $sha: commit them or use --local"
+fi
 out_dir="$wt/run/ship/$sha"
 mkdir -p "$out_dir" || refuse "cannot create $out_dir"
 summary="$out_dir/summary.md"
-rows=""
+ci_table="$out_dir/ci-checks.tsv"
+rm -f "$ci_table"
+ci_ship_summary=""
+row=()
 ui_failures=""
 failed=""
 started=$(date +%s)
 
 write_summary() {
+  local n
   {
     printf '# Ship check %s%s\n\n' "$sha" "$dirty"
     printf -- '- Head: `%s`\n' "$head_sha"
     printf -- '- Worktree: `%s`\n' "$root"
     printf -- '- Mode: %s%s\n' "$mode" "${central:+ (MyItmoApi from Central)}"
+    if [ "$source" = ci ]; then
+      printf -- '- Source: stages 2, 4, 5, 6 from the CI checks verify-quick, android-ui, android-ship; 1, 3 local\n'
+    else
+      printf -- '- Source: every stage local\n'
+    fi
     printf -- '- Started: %s\n\n' "$(date -r "$started" '+%Y-%m-%d %H:%M:%S %z')"
-    printf '| Stage | Result | Time | Log |\n|---|---|---|---|\n'
-    printf '%b' "$rows"
+    printf '| Stage | Result | Time | Source | Log |\n|---|---|---|---|---|\n'
+    for n in 1 2 3 4 5 6; do
+      [ -z "${row[$n]:-}" ] || printf '%s\n' "${row[$n]}"
+    done
     if [ -n "$ui_failures" ]; then
       printf '\n## Failed instrumentation runs (stage 4, scripts/ui-report.py)\n\n'
       printf '%s\n' "$ui_failures" | sed 's/^ui-report: *FAIL /- /'
@@ -137,13 +186,13 @@ write_summary() {
 }
 
 run_stage() { # n name function
-  local n=$1 name=$2 fn=$3 log t0 rc verdict
+  local n=$1 name=$2 fn=$3 log t0 rc verdict secs src url
   log="$out_dir/stage$n-$name.log"
   if ! selected "$n"; then
     return 0
   fi
   if [ -n "$failed" ] && [ -z "$keep_going" ]; then
-    rows="$rows| $n $name | NOT RUN | - | - |\n"
+    row[$n]="| $n $name | NOT RUN | - | - | - |"
     write_summary
     return 0
   fi
@@ -158,9 +207,140 @@ run_stage() { # n name function
   fi
   [ "$n" != 4 ] || ui_failures=$(grep '^ui-report: *FAIL ' "$log")
   printf '%s: stage %s %s %s\n' "$me" "$n" "$name" "$verdict" | tee -a "$log" >&2
-  rows="$rows| $n $name | $verdict | $(($(date +%s) - t0))s | \`$(basename "$log")\` |\n"
+  secs="$(($(date +%s) - t0))s" src=local
+  if from_ci "$n"; then
+    url=$(ci_field "$(ci_check_of "$n")" 4)
+    secs=$(ci_field "$(ci_check_of "$n")" 5)
+    if [ -n "$secs" ] && [ "$secs" != - ]; then secs="${secs}s"; else secs=-; fi
+    if [ -n "$url" ] && [ "$url" != - ]; then src="CI run $url"; else src="CI: $(ci_check_of "$n") not reported"; fi
+  fi
+  row[$n]="| $n $name | $verdict | $secs | $src | \`$(basename "$log")\` |"
   write_summary
 }
+
+# ---- CI results (stages 2, 4, 5, 6) ----------------------------------------------------------------------
+
+# Writes $ci_table: one line per check, "name state conclusion url seconds run-id" (tab-separated, "-" when
+# unknown). state is completed, pending (running, queued, or not reported while a run of the SHA is unfinished)
+# or missing. Of all runs of the SHA the newest with a job of that name counts.
+ci_snapshot() { # check...
+  python3 - "$head_sha" "$@" > "$ci_table.tmp" << 'PY' && mv "$ci_table.tmp" "$ci_table"
+import json
+import subprocess
+import sys
+from datetime import datetime
+
+sha, checks = sys.argv[1], sys.argv[2:]
+
+
+def gh(*args):
+    done = subprocess.run(["gh", *args], stdin=subprocess.DEVNULL, capture_output=True, text=True)
+    if done.returncode != 0:
+        sys.stderr.write("gh %s: %s\n" % (" ".join(args), done.stderr.strip()))
+        return None
+    return json.loads(done.stdout or "null")
+
+
+def seconds(job):
+    try:
+        fmt = "%Y-%m-%dT%H:%M:%SZ"
+        start = datetime.strptime(job["startedAt"], fmt)
+        end = datetime.strptime(job["completedAt"], fmt)
+        return str(int((end - start).total_seconds()))
+    except (KeyError, TypeError, ValueError):
+        return "-"
+
+
+runs = gh("run", "list", "--commit", sha, "--limit", "100", "--json", "databaseId,status,createdAt,url") or []
+runs.sort(key=lambda r: r.get("createdAt") or "", reverse=True)
+unfinished = not runs or any(r.get("status") != "completed" for r in runs)
+jobs = [(r, (gh("run", "view", str(r["databaseId"]), "--json", "jobs") or {}).get("jobs") or []) for r in runs]
+for check in checks:
+    line = [check, "pending" if unfinished else "missing", "-", "-", "-", "-"]
+    for run, run_jobs in jobs:
+        job = next((j for j in run_jobs if j.get("name") == check), None)
+        if job is None:
+            continue
+        done = job.get("status") == "completed"
+        line = [check, "completed" if done else "pending", job.get("conclusion") or "-",
+                job.get("url") or run.get("url") or "-", seconds(job) if done else "-", str(run["databaseId"])]
+        break
+    print("\t".join(line))
+PY
+}
+
+ci_field() { # check column -> that column of the check's line in $ci_table
+  [ -f "$ci_table" ] || return 0
+  awk -F '\t' -v c="$1" -v i="$2" '$1 == c { print $i; exit }' "$ci_table"
+}
+
+# Reads the checks of the selected CI stages, with --wait until none is pending, then the ship artifact.
+ci_collect() {
+  local checks="" deadline run_id
+  ! selected 2 || checks="verify-quick"
+  ! selected 4 || checks="$checks android-ui"
+  { ! selected 5 && ! selected 6; } || checks="$checks android-ship"
+  [ -n "$checks" ] || return 0
+  deadline=$(($(date +%s) + ${ITMO_SHIP_WAIT_MINUTES:-120} * 60))
+  while :; do
+    # shellcheck disable=SC2086 # one word per check name
+    ci_snapshot $checks || note "reading the CI results of $sha failed"
+    awk -F '\t' '$2 == "pending" { found = 1 } END { exit !found }' "$ci_table" 2> /dev/null || break
+    [ -n "$wait" ] && [ "$(date +%s)" -lt "$deadline" ] || break
+    note "waiting for CI on $sha: $(awk -F '\t' '$2 == "pending" { printf "%s ", $1 }' "$ci_table")"
+    sleep "${ITMO_SHIP_POLL_SECONDS:-60}"
+  done
+  run_id=$(ci_field android-ship 6)
+  if [ "$(ci_field android-ship 2)" = completed ] && [ -n "$run_id" ] && [ "$run_id" != - ]; then
+    rm -rf "$out_dir/ci-ship"
+    if gh run download "$run_id" -n "ship-$sha" -D "$out_dir/ci-ship" > /dev/null 2>&1; then
+      ci_ship_summary=$(find "$out_dir/ci-ship" -name summary.md -type f 2> /dev/null | head -n 1)
+    else
+      note "no artifact ship-$sha in CI run $run_id"
+    fi
+  fi
+}
+
+ci_check_ok() { # check
+  local state conclusion url
+  state=$(ci_field "$1" 2) conclusion=$(ci_field "$1" 3) url=$(ci_field "$1" 4)
+  [ "$url" != - ] || url=""
+  case "$state" in
+    completed)
+      if [ "$conclusion" = success ]; then
+        echo "ok: CI check $1 succeeded on $head_sha ($url)"
+        return 0
+      fi
+      echo "FAIL: CI check $1 concluded '$conclusion' on $head_sha ($url)"
+      ;;
+    pending) echo "FAIL: CI check $1 has not finished on $head_sha${url:+ ($url)}; --wait polls until it does" ;;
+    *) echo "FAIL: no CI check $1 on $head_sha (gh run list --commit $head_sha); --local runs the stage here" ;;
+  esac
+  return 1
+}
+
+stage_ci_full() { ci_check_ok verify-quick; }
+
+stage_ci_ui() { ci_check_ok android-ui; }
+
+# Stages 5 and 6 pass on their own row of the artifact's summary.md: the android-ship job fails as a whole when
+# either stage fails, so a PASS row of the other stage still counts.
+ci_ship_stage() { # n name
+  local line result
+  ci_check_ok android-ship || [ "$(ci_field android-ship 2)" = completed ] || return 1
+  if [ -z "$ci_ship_summary" ]; then
+    echo "FAIL: no summary.md in the artifact ship-$sha of CI run $(ci_field android-ship 6)"
+    return 1
+  fi
+  line=$(grep -E "^\| *$1 $2 *\|" "$ci_ship_summary" | head -n 1)
+  result=$(printf '%s\n' "$line" | awk -F '|' '{ gsub(/ /, "", $3); print $3 }')
+  echo "artifact ship-$sha: ${line:-no row for stage $1 $2 in summary.md}"
+  [ "$result" = PASS ]
+}
+
+stage_ci_upgrade() { ci_ship_stage 5 upgrade; }
+
+stage_ci_shrunk() { ci_ship_stage 6 shrunk; }
 
 # ---- 1 version -------------------------------------------------------------------------------------------
 
@@ -488,11 +668,21 @@ stage_shrunk() {
 
 write_summary
 run_stage 1 version stage_version
-run_stage 2 full stage_full
-run_stage 3 release stage_release
-run_stage 4 ui stage_ui
-run_stage 5 upgrade stage_upgrade
-run_stage 6 shrunk stage_shrunk
+if [ "$source" = ci ]; then
+  # The local stages first: CI usually finishes while the release build runs.
+  run_stage 3 release stage_release
+  [ -n "$failed" ] && [ -z "$keep_going" ] || ci_collect
+  run_stage 2 full stage_ci_full
+  run_stage 4 ui stage_ci_ui
+  run_stage 5 upgrade stage_ci_upgrade
+  run_stage 6 shrunk stage_ci_shrunk
+else
+  run_stage 2 full stage_full
+  run_stage 3 release stage_release
+  run_stage 4 ui stage_ui
+  run_stage 5 upgrade stage_upgrade
+  run_stage 6 shrunk stage_shrunk
+fi
 
 note "summary: $summary"
 cat "$summary" >&2
