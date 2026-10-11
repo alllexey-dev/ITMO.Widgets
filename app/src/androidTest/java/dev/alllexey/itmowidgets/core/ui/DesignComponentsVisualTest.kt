@@ -5,28 +5,19 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.TextView
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.button.MaterialButton
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.toSettingsPreview
-import dev.alllexey.itmowidgets.testing.Screenshots
-import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import org.junit.Assert.*
 import org.junit.Test
@@ -43,8 +34,6 @@ class DesignComponentsVisualTest {
             try {
                 val login = root.findViewById<SwipeRefreshLayout>(R.id.login_swipe_refresh).indicator()
                 val defaults = SwipeRefreshLayout(activity).indicator()
-                val unrelatedRefresh = SwipeRefreshLayout(activity)
-                unrelatedRefresh.applyAppRefreshColors()
                 assertArrayEquals((defaults.drawable as CircularProgressDrawable).colorSchemeColors,
                     (login.drawable as CircularProgressDrawable).colorSchemeColors)
                 assertEquals(centerPixel(defaults.background), centerPixel(login.background))
@@ -53,83 +42,6 @@ class DesignComponentsVisualTest {
                 webView.destroy()
             }
         }
-    }
-
-    @Test
-    fun errorAndEmptyStatesFitFullScreenAndInlineLayouts() {
-        Appearances.default.forEachIndexed { index, spec -> preview(spec) { scenario ->
-            val cases = listOf(
-                StateLayout("sport-inline", R.layout.item_content_state, inline = true)
-            )
-            for (case in cases) for (error in listOf(false, true)) {
-                lateinit var state: View
-                scenario.onActivity { activity ->
-                    val root = activity.layoutInflater.inflate(case.layout, FrameLayout(activity), false)
-                    state = root
-                    state.visibility = View.VISIBLE
-                    state.findViewById<TextView>(case.title).setText(
-                        if (error) R.string.common_load_error_title else R.string.sport_lessons_empty_title
-                    )
-                    state.findViewById<TextView>(case.description).setText(
-                        if (error) R.string.common_error_network else R.string.sport_lessons_empty_description
-                    )
-                    state.findViewById<MaterialButton>(case.action).apply {
-                        setText(R.string.common_retry)
-                        visibility = if (error) View.VISIBLE else View.GONE
-                    }
-                    if (error) state.descendants().filterIsInstance<ImageView>().first().setImageResource(R.drawable.ic_error)
-                    show(activity, root, spec.widthDp, case.inline)
-                }
-                settle()
-                screenshot("${case.name}-${if (error) "error" else "empty"}-$index")
-                scenario.onActivity {
-                    assertContentBounds(state)
-                    assertTrue(state.height > 0)
-                    assertEquals(state.context.color.onSurface, state.findViewById<TextView>(case.title).currentTextColor)
-                    assertEquals(state.context.color.onSurfaceVariant, state.findViewById<TextView>(case.description).currentTextColor)
-                    state.descendants().filterIsInstance<ImageView>().forEach { assertNull(it.contentDescription) }
-                    if (case.inline) assertEquals(ViewGroup.LayoutParams.WRAP_CONTENT, state.layoutParams.height)
-                    state.descendants().filterIsInstance<MaterialButton>().filter { it.isShown }.forEach { button ->
-                        val minimum = 48 * button.resources.displayMetrics.density - 1
-                        assertTrue("Action width", button.width >= minimum)
-                        assertTrue("Action height", button.height >= minimum)
-                    }
-                }
-            }
-        } }
-    }
-
-    private fun assertContentBounds(root: View) {
-        root.descendants().filter { it.isShown && (it is TextView || it is ImageView) }.forEach { view ->
-            val bounds = Rect().also(view::getDrawingRect)
-            (root as ViewGroup).offsetDescendantRectToMyCoords(view, bounds)
-            assertTrue("Child bounds: ${view.javaClass.simpleName} $bounds in ${root.width}x${root.height}",
-                bounds.left >= 0 && bounds.top >= 0 && bounds.right <= root.width && bounds.bottom <= root.height)
-            if (view is TextView && view.text.isNotEmpty()) {
-                val layout = checkNotNull(view.layout)
-                assertTrue("Text height: ${view.text}", layout.height <= view.height - view.compoundPaddingTop - view.compoundPaddingBottom)
-                for (line in 0 until layout.lineCount) {
-                    assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(line))
-                    assertTrue("Text width: ${view.text}", layout.getLineMax(line) <= view.width - view.compoundPaddingLeft - view.compoundPaddingRight + 1)
-                }
-            }
-        }
-    }
-
-    private fun show(activity: SettingsPreviewActivity, root: View, widthDp: Int, inline: Boolean = false) {
-        val frame = FrameLayout(activity).apply { setBackgroundColor(activity.color.surface) }
-        frame.addView(root, FrameLayout.LayoutParams(
-            if (widthDp > 0) (widthDp * activity.resources.displayMetrics.density).toInt() else -1,
-            if (inline) ViewGroup.LayoutParams.WRAP_CONTENT else ViewGroup.LayoutParams.MATCH_PARENT,
-            Gravity.CENTER
-        ))
-        activity.setContentView(frame)
-        ViewCompat.setOnApplyWindowInsetsListener(frame) { view, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-            insets
-        }
-        ViewCompat.requestApplyInsets(frame)
     }
 
     private fun SwipeRefreshLayout.indicator() = descendants().filterIsInstance<ImageView>()
@@ -158,12 +70,4 @@ class DesignComponentsVisualTest {
             SettingsPreviewActivity.appearance = PreviewAppearance()
         }
     }
-
-    private fun settle() = TestUi.settle(250)
-
-    private fun screenshot(name: String) = Screenshots.capture("design-components-screenshots", name)
-
-    private data class StateLayout(val name: String, val layout: Int,
-        val title: Int = R.id.state_title, val description: Int = R.id.state_description,
-        val action: Int = R.id.state_action, val inline: Boolean = false)
 }

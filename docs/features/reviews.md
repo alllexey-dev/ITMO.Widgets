@@ -29,9 +29,6 @@ defines the routes, limits, premoderation and the ISU check.
   `dev.alllexey.itmowidgets.feature.reviews.data`): `TeacherReviewsRepositoryImpl`, the Core mapping,
   `TeacherLevelsRepositoryImpl` and `TeacherLevelsFileStore`; Koin's `reviewsModule` builds one instance of each
   repository, and sign-out reaches them as the `reviews` and `teacher-levels` cleaners.
-- `core/ui/TeacherLevelTone.kt`: the dot colour and words of each tone and
-  `ImageView.bindLevel`, shared by the profile, the lesson sheet and the subject
-  page.
 - `feature/reviews/presentation`: `ReviewEditorViewModel`, `ReportReviewViewModel`.
 - `feature/reviews/ui` (`:shared:feature-reviews` `commonMain`): `ReviewEditorSheet.kt` with the editor's
   `ReviewEditorSheet` (the hosts' entry) and its stateless `ReviewEditorSheetContent`, and `ReportReviewDialog.kt`
@@ -174,7 +171,7 @@ implementation:
   sign-out or after the opt-in was switched off is dropped;
 - is a `SessionDataCleaner`, and a corrupt file is deleted.
 
-The dot (`bg_teacher_level_dot.xml`, 10 dp) is decorative; the row that carries
+The dot (10 dp) is decorative; the row that carries
 it adds `, тон отзывов: …` to its TalkBack description. Where it stands:
 
 - the summary card's tone row;

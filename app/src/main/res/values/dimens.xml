@@ -1,37 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <dimen name="design_spacing_related">4dp</dimen>
-    <dimen name="design_spacing_compact">8dp</dimen>
-    <dimen name="design_spacing_content">12dp</dimen>
-    <dimen name="design_spacing_group">16dp</dimen>
-    <dimen name="design_spacing_section">24dp</dimen>
     <dimen name="design_screen_margin">16dp</dimen>
-    <dimen name="design_card_padding">16dp</dimen>
-    <dimen name="design_summary_padding">20dp</dimen>
-    <dimen name="design_touch_target">48dp</dimen>
-    <!--
-        Bottom padding of a list under a stack of two FABs (16 dp margin, 56 dp, a gap of up to 16 dp, 56 dp) with
-        room to spare, so its last item scrolls clear of them.
-    -->
-    <dimen name="design_fab_stack_clearance">152dp</dimen>
-
-    <dimen name="design_card_radius_day">16dp</dimen>
-    <dimen name="design_card_radius_content">20dp</dimen>
-    <dimen name="design_card_radius_summary">24dp</dimen>
-    <dimen name="design_card_radius_hero">28dp</dimen>
-    <dimen name="design_card_elevation">0dp</dimen>
-    <dimen name="design_card_stroke">1dp</dimen>
-
-    <!-- Connected group: rows of one section on one surface, joined by small gaps and inner corners. -->
-    <dimen name="design_group_radius_outer">20dp</dimen>
-    <dimen name="design_group_radius_inner">4dp</dimen>
-    <dimen name="design_group_gap">2dp</dimen>
-
-    <dimen name="design_state_padding">32dp</dimen>
-    <dimen name="design_state_icon">64dp</dimen>
-    <dimen name="design_state_inline_icon">56dp</dimen>
-
-    <!-- The four range rows of the .ics sheet; loading, the file and failures keep this height. -->
-    <dimen name="ics_export_content_min_height">288dp</dimen>
 </resources>
