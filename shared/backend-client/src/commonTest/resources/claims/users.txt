@@ -1,6 +1,7 @@
 # The users fixtures UsersVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
 # Not here: http/users/myRoles.json is not mirrored (Web only); http/users/myRestrictions.json is CO-05's.
 http/users/approveWebLogin.json
+http/users/deleteMyAccount.json
 http/users/lookupUsers.json
 http/users/myPrivacySettings.json
 http/users/myUserData.json

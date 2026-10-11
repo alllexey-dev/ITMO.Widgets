@@ -704,6 +704,26 @@
         ]
       }
     },
+    "/api/admin/system/client-versions": {
+      "get": {
+        "operationId": "adminSystem_clientVersions",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminClientVersions"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/system/credentials": {
       "get": {
         "operationId": "adminSystem_credentials",
@@ -2556,6 +2576,26 @@
         ]
       }
     },
+    "/api/users/me": {
+      "delete": {
+        "operationId": "user_deleteMyAccount",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseString"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/users/me/data": {
       "get": {
         "operationId": "user_myData",
@@ -3250,6 +3290,78 @@
           "targetType"
         ]
       },
+      "AdminClientBuild": {
+        "type": "object",
+        "properties": {
+          "build": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "devices": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "distribution": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ANDROID",
+              "IOS"
+            ]
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "build",
+          "devices",
+          "distribution",
+          "platform",
+          "version"
+        ]
+      },
+      "AdminClientVersionWindow": {
+        "type": "object",
+        "properties": {
+          "activeDevices": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "builds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminClientBuild"
+            }
+          },
+          "unknownDevices": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "activeDevices",
+          "builds",
+          "unknownDevices"
+        ]
+      },
+      "AdminClientVersions": {
+        "type": "object",
+        "properties": {
+          "last30d": {
+            "$ref": "#/components/schemas/AdminClientVersionWindow"
+          },
+          "last7d": {
+            "$ref": "#/components/schemas/AdminClientVersionWindow"
+          }
+        },
+        "required": [
+          "last30d",
+          "last7d"
+        ]
+      },
       "AdminDashboard": {
         "type": "object",
         "properties": {
@@ -3314,6 +3426,13 @@
             "type": "integer",
             "format": "int64"
           },
+          "devicesByPlatform": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
           "friendships": {
             "type": "integer",
             "format": "int64"
@@ -3347,6 +3466,7 @@
           "activeDevices30d",
           "activeDevices7d",
           "activeFreeSignEntries",
+          "devicesByPlatform",
           "friendships",
           "links",
           "newUsers7d",
@@ -3358,17 +3478,66 @@
       "AdminDevice": {
         "type": "object",
         "properties": {
+          "appBuild": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "appDistribution": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "appPlatform": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ANDROID",
+              "IOS"
+            ]
+          },
+          "appVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "appVersionSeenAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
           "lastLogin": {
             "type": "string",
             "format": "date-time"
           },
           "name": {
             "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ANDROID",
+              "IOS"
+            ]
           }
         },
         "required": [
+          "appBuild",
+          "appDistribution",
+          "appPlatform",
+          "appVersion",
+          "appVersionSeenAt",
           "lastLogin",
-          "name"
+          "name",
+          "platform"
         ]
       },
       "AdminLinkSummary": {
@@ -4316,6 +4485,39 @@
             "oneOf": [
               {
                 "$ref": "#/components/schemas/AdminAppVersion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseAdminClientVersions": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminClientVersions"
               },
               {
                 "type": "null"
@@ -5815,10 +6017,12 @@
               "invalid_request_data",
               "validation_error",
               "unauthorized",
+              "reauth_required",
               "permission_denied",
               "access_denied",
               "restricted",
               "csrf",
+              "recent_sign_in_required",
               "not_found",
               "business_rule_violation",
               "conflict",
@@ -6518,11 +6722,33 @@
       "RegisterDeviceRequest": {
         "type": "object",
         "properties": {
+          "alertsAllowed": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "appVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "deviceName": {
             "type": "string"
           },
           "fcmToken": {
             "type": "string"
+          },
+          "platform": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ANDROID",
+              "IOS"
+            ]
           }
         },
         "required": [

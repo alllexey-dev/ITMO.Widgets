@@ -69,4 +69,14 @@ interface UsersApi {
      */
     @Throws(BackendException::class, CancellationException::class)
     suspend fun approveWebLogin(challengeId: Uuid)
+
+    /**
+     * `DELETE /api/users/me`: deletes the caller's account; Backend's confirmation text is not returned. Backend
+     * takes only a recent sign-in (ITMO.ID `auth_time` within `itmowidgets.account.recent-auth`, default 10 minutes),
+     * so the caller runs a fresh ITMO.ID sign-in right before the call and signs out after it. An older sign-in or a
+     * token without `auth_time` is 403 `recent_sign_in_required`; a missing or invalid token is
+     * [BackendException.Unauthorized]. The iOS app calls it; Android keeps the website request flow.
+     */
+    @Throws(BackendException::class, CancellationException::class)
+    suspend fun deleteMe()
 }

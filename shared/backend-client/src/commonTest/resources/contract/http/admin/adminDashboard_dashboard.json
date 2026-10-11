@@ -6,6 +6,10 @@
       "newUsers7d": 35,
       "activeDevices7d": 640,
       "activeDevices30d": 910,
+      "devicesByPlatform": {
+        "ANDROID": 1100,
+        "IOS": 60
+      },
       "webSessions7d": 12,
       "friendships": 2300,
       "links": {
