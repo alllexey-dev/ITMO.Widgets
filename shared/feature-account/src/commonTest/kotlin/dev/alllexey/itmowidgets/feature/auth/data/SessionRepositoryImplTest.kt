@@ -1,7 +1,9 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
+import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
@@ -29,6 +31,7 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -300,6 +303,28 @@ class SessionRepositoryImplTest {
         assertEquals(SessionState.SignedOut, fixture.repository.state.value)
     }
 
+    /**
+     * KNOWN GAP (AUTH-TOKV1), current behaviour pinned for a fix card: ITMO.ID rejecting the refresh token while the
+     * app runs ends nothing. The state stays SignedIn, the tokens stay, and the next launch is SignedIn again because
+     * `initialize` only compares the local refresh expiry. Every screen shows its Unauthorized error until the user
+     * signs out by hand. A fix flips these assertions to ReauthenticationRequired.
+     */
+    @Test
+    fun knownGapARejectedRefreshWhileSignedInKeepsTheSessionSignedIn() = runTest(dispatcher) {
+        val user = CurrentUser(123456, "Иванов Иван", null)
+        val fixture = fixture(session = stored(), currentUser = user) {
+            respondJson("""{"error":"invalid_grant"}""", HttpStatusCode.BadRequest)
+        }
+        fixture.repository.initialize()
+        clock.advanceBy(301.seconds)
+
+        assertFailsWith<MyItmoException.Auth> { fixture.client.tokens.validAccessToken() }
+
+        assertEquals(SessionState.SignedIn(user), fixture.repository.state.value)
+        assertEquals("stored-refresh", fixture.storage.refreshToken)
+        assertFalse(fixture.client.tokens.isRefreshTokenExpired(), "The next initialize() would be SignedIn again")
+    }
+
     @Test
     fun aHugeTokenLifetimeSaturatesLikeTwoPointTwo() = runTest(dispatcher) {
         val fixture = fixture(session = null)
@@ -367,6 +392,7 @@ class SessionRepositoryImplTest {
         )
         return Fixture(
             repository,
+            client,
             storage,
             requests,
             cleaner,
@@ -388,6 +414,7 @@ class SessionRepositoryImplTest {
 
     private inner class Fixture(
         val repository: SessionRepositoryImpl,
+        val client: MyItmoClient,
         val storage: InMemoryTokenFile,
         val requests: List<HttpRequestData>,
         val cleaner: FakeSessionDataCleaner,
