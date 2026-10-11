@@ -4,7 +4,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import dev.alllexey.itmowidgets.designsystem.theme.ExtendedColorTokens
 import dev.alllexey.itmowidgets.designsystem.tokens.ItmoSpacing
-import dev.alllexey.itmowidgets.designsystem.tokens.ShapeTokens
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.w3c.dom.Element
@@ -12,11 +11,9 @@ import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
- * The Compose kit's [ExtendedColorTokens], [ShapeTokens] and [ItmoSpacing] equal the View screens'
- * `res/values{,-night}/colors.xml` and the `design_*` dimens of `res/values/dimens.xml`, so a value changed on one
- * side only fails here. The widget palette, `shortcut_icon_background` and `calendar_app` are resource-only;
- * feature dimens (no `design_` prefix) stay with their layouts. [m3eDivergences] are the dimens the M3E token change
- * (M3-02) moved in the kit only: the View screens keep their 2.2 values until their port deletes them.
+ * The Compose kit's [ExtendedColorTokens] and [ItmoSpacing] equal what is left in `res/values{,-night}/colors.xml`
+ * and the `design_*` dimens of `res/values/dimens.xml` (widgets, previews), so a value changed on one side only
+ * fails here. The widget palette, `shortcut_icon_background` and `calendar_app` are resource-only.
  */
 class DesignTokensParityTest {
 
@@ -30,47 +27,17 @@ class DesignTokensParityTest {
         assertParity(ExtendedColorTokens.Dark, colors("values") + colors("values-night"))
 
     @Test
-    fun `shape and spacing tokens equal the design dimens`() {
+    fun `spacing tokens equal the design dimens`() {
         val dimens = elements("values", "dimens", "dimen")
-            .filterKeys { it.startsWith("design_") && it !in m3eDivergences }
+            .filterKeys { it.startsWith("design_") }
         assertEquals("design_* dimens without a token slot", dimens.keys.toSortedSet(), dimenSlots.keys.toSortedSet())
         dimenSlots.forEach { (name, token) -> assertEquals(name, dimens.getValue(name), token.resource()) }
     }
 
     private val dimenSlots: Map<String, Dp> = with(ItmoSpacing.Default) {
         mapOf(
-            "design_spacing_related" to related,
-            "design_spacing_compact" to compact,
-            "design_spacing_content" to content,
-            "design_spacing_group" to group,
-            "design_spacing_section" to section,
             "design_screen_margin" to screenMargin,
-            "design_card_padding" to cardPadding,
-            "design_summary_padding" to summaryPadding,
-            "design_touch_target" to touchTarget,
-            "design_fab_stack_clearance" to fabStackClearance,
-            "design_state_padding" to statePadding,
-            "design_state_icon" to stateIcon,
-            "design_state_inline_icon" to stateInlineIcon,
-            "design_card_radius_day" to ShapeTokens.ScheduleDay,
-            "design_card_radius_content" to ShapeTokens.CardContent,
-            "design_card_radius_hero" to ShapeTokens.CardHero,
-            "design_card_elevation" to ShapeTokens.CardElevation,
-            "design_card_stroke" to ShapeTokens.CardStroke,
-            "design_group_radius_outer" to ShapeTokens.GroupOuter,
-            "design_group_radius_inner" to ShapeTokens.GroupInner,
-            "design_group_gap" to ShapeTokens.GroupGap,
         )
-    }
-
-    /** `Card.Summary` stays 24 dp in `res`; the kit's `cardSummary` is 28 dp (owner, item 14 Q2 (a)). */
-    private val m3eDivergences = setOf("design_card_radius_summary")
-
-    @Test
-    fun `the M3E divergences still exist in res and differ from the kit`() {
-        val dimens = elements("values", "dimens", "dimen")
-        assertEquals("24dp", dimens["design_card_radius_summary"])
-        assertEquals("28dp", ShapeTokens.CardSummary.resource())
     }
 
     @Test
@@ -108,18 +75,6 @@ class DesignTokensParityTest {
             "lesson_type_sport" to lessonTypeSport,
             "lesson_type_free" to lessonTypeFree,
             "lesson_type_default" to lessonTypeDefault,
-            "recordbook_passed" to recordbookPassed,
-            "sport_score_attendance" to sportScoreAttendance,
-            "sport_score_bonus" to sportScoreBonus,
-            "sport_condition_allowed" to sportConditionAllowed,
-            "sport_condition_waiting" to sportConditionWaiting,
-            "sport_condition_warning" to sportConditionWarning,
-            "sport_condition_blocked" to sportConditionBlocked,
-            "teacher_level_very_negative" to teacherLevelVeryNegative,
-            "teacher_level_negative" to teacherLevelNegative,
-            "teacher_level_mixed" to teacherLevelMixed,
-            "teacher_level_positive" to teacherLevelPositive,
-            "teacher_level_very_positive" to teacherLevelVeryPositive,
         )
     }
 

@@ -22,7 +22,7 @@
 
 ## Hot files
 - `build.gradle.kts`: lane L04 (`versionCode`, `versionName`: L01).
-- `ItmoWidgetsApplication.kt`, `AndroidManifest.xml`, `styles.xml`, `themes.xml`: lane L05.
+- `ItmoWidgetsApplication.kt`, `AndroidManifest.xml`, `themes.xml`: lane L05.
 - `MainActivity.kt`, `core/navigation/`, debug hosts: lane L06; `di/`: lane L07; navigation graphs: lane L17.
 - `strings_<file>.xml`: the lane `scripts/strings-owners.py --where <id or path>` names.
 - `StableIdentifiersTest.kt`: the list only grows; changing an entry needs an ADR and a dual read of the old value.

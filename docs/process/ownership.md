@@ -27,7 +27,7 @@ feature data move; T14 (shell files → L17); T15 (theme files, about ¼ day).
 | `app/build.gradle.kts` | L01 (versions) → L04 → L05 (one line) |
 | `scripts/verify.sh`, Android CI workflows | L04, one open PR at a time |
 | MyItmoApi pin file | L04 creates → L01 bumps |
-| `styles.xml`, `themes.xml`, `AndroidManifest.xml`, `ItmoWidgetsApplication.kt`, `scripts/strings-frozen-keys.txt` | L05 |
+| `themes.xml`, `AndroidManifest.xml`, `ItmoWidgetsApplication.kt`, `scripts/strings-frozen-keys.txt` | L05 |
 | `strings_<file>.xml` | The lane of the module `scripts/strings-owners.py --where <id or path>` names |
 | Konsist suite: `ArchitectureScope.kt` and `*RulesTest.kt` in the architecture test package | L05 (one line) → L06 |
 | `MainActivity.kt`, `core/navigation/`, debug hosts | L06 |

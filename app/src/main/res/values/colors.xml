@@ -14,23 +14,6 @@
     <!-- The app's own calendar «ITMO.Widgets» in the phone's calendar apps; the blue of the launcher icon. -->
     <color name="calendar_app">#4984E2</color>
 
-    <color name="recordbook_passed">#286B39</color>
-
-    <color name="sport_score_attendance">#345BD1</color>
-    <color name="sport_score_bonus">#C93672</color>
-
-    <color name="sport_condition_allowed">#216B3C</color>
-    <color name="sport_condition_waiting">#285EA7</color>
-    <color name="sport_condition_warning">#875200</color>
-    <color name="sport_condition_blocked">#B32635</color>
-
-    <!-- Tone of a teacher's reviews, from very negative to very positive; harmonized with the palette at runtime. -->
-    <color name="teacher_level_very_negative">#D32F2F</color>
-    <color name="teacher_level_negative">#E06C00</color>
-    <color name="teacher_level_mixed">#B58900</color>
-    <color name="teacher_level_positive">#689F38</color>
-    <color name="teacher_level_very_positive">#2E7D32</color>
-
     <!-- App-widget palette for launchers that cannot resolve the activity theme. -->
     <color name="widget_surface">#FFFDFBFF</color>
     <color name="widget_on_surface">#FF1C1B1F</color>

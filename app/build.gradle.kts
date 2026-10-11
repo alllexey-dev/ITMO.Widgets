@@ -155,7 +155,6 @@ dependencies {
     implementation(libs.my.itmo.api.kmp)
     // The BARS engine of di/RecordbookModule (KM-10b2): OkHttp with the BARS timeouts, apart from MyITMO's engine.
     implementation(libs.ktor.client.okhttp)
-    implementation(libs.androidx.navigation.ui)
     implementation(libs.androidx.datastore.preferences)
     // Storage foundation (KM-04): okio files, DataStore by okio path, the common lock of AtomicTextFile.
     implementation(libs.androidx.datastore.preferences.core)
@@ -171,13 +170,9 @@ dependencies {
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.firebase.messaging)
     implementation(libs.play.services.code.scanner)
-    implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.savedstate)
-    implementation(libs.androidx.recyclerview)
-    implementation(libs.androidx.viewpager2)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp)
     implementation(libs.ksoup)
