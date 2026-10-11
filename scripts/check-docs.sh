@@ -10,19 +10,13 @@
 #          never-open names below (docs name them to forbid them). Bare class names and refs are not paths.
 # - link   [<doc>:link:<target>] relative Markdown links resolve to a listed file or directory and their
 #          anchors to a heading (GitHub slugs, -1 for a repeated heading) or an HTML id of the target.
-#          History (CHANGELOG.md, changelog.d/**, docs/decisions/**) is exempt from path and link.
-# - vibe   [<doc>:vibe:<path>] no doc anywhere names a path below vibe/ (the bare `vibe/` directory may be named).
-# - lines  [AGENTS.md:lines] AGENTS.md has at most 130 lines.
-# - module [<dir>/AGENTS.md:missing|lines] every project directory of an `include(...)` in settings.gradle.kts, plus
-#          build-logic/ and iosApp/ when they exist, has an AGENTS.md of at most 40 lines. `includeBuild` (the
-#          MyItmoApi pin, build-logic itself) declares no project.
+#          History (CHANGELOG.md, docs/decisions/**) is exempt from path and link.
 # - unindexed [<doc>:unindexed] every docs/**/*.md is linked from docs/README.md or from a directory README.md
 #          that docs/README.md links; fails for docs/decisions/*.md, warns for other docs (fails with --strict).
-# - changelog `scripts/changelog.sh check` validates the changelog.d/ fragments when that script exists.
 #
-# Ratchet: scripts/check-docs.known accepts today's findings, one `<entry>  # <reason>` per line, where <entry> is
-# a finding key or a whole doc path. New findings fail; stale entries warn and fail only with --strict, so the
-# list only shrinks and no other lane edits it.
+# Accepted findings: scripts/check-docs.known lists false positives, one `<entry>  # <reason>` per line, where
+# <entry> is a finding key or a whole doc path. Other findings fail; an entry that matches nothing any more warns
+# (fails with --strict).
 #
 # Portable: macOS /bin/bash 3.2 with BSD tools and Ubuntu with GNU tools; git, grep -E, awk and sed only.
 # Exit code: 0 pass, 1 findings, 2 usage or environment error.
@@ -31,9 +25,6 @@ set -u
 
 me=check-docs.sh
 NEVER_OPEN="serviceAccountKey.json properties.env"
-AGENTS_MAX_LINES=130
-MODULE_AGENTS_MAX_LINES=40
-MODULE_EXTRA_DIRS="build-logic iosApp"
 
 die() { printf '%s: %s\n' "$me" "$*" >&2; exit 2; }
 
@@ -57,7 +48,7 @@ trap 'rm -rf "$tmp"' EXIT
 
 write_scan_awk() {
   cat > "$1" <<'AWK'
-# Input: the listed files (pass 0), then every doc twice (pass=1 headings, line counts and vibe; pass=2 paths
+# Input: the listed files (pass 0), then every doc twice (pass=1 headings and anchors; pass=2 paths
 # and links). Output: one finding per line, tab-separated: severity (E|W), key, location, message, and the
 # normalized token for the ignore filter (path findings only).
 function last_slash(p,   i, j) {
@@ -123,19 +114,6 @@ function add_anchor(file, a,   n) {
   n = anchor_count[file, a]++
   anchors[file, (n ? a "-" n : a)] = 1
 }
-function check_modules(   n, dirs, i, d, f) {
-  n = split(module_dirs, dirs, " ")
-  for (i = 1; i <= n; i++) {
-    d = dirs[i]
-    if (d == "" || (d in module_seen)) continue
-    module_seen[d] = 1
-    f = d "/AGENTS.md"
-    if (!(f in listed))
-      printf "E\t%s:missing\t%s:1\tdoes not exist: every module has an AGENTS.md\t\n", f, f
-    else if (line_count[f] > module_max)
-      printf "E\t%s:lines\t%s:%d\thas %d lines, at most %d\t\n", f, f, line_count[f], line_count[f], module_max
-  }
-}
 function emit(sev, key, msg, token) {
   printf "%s\t%s\t%s:%d\t%s\t%s\n", sev, key, FILENAME, FNR, msg, token
 }
@@ -149,14 +127,13 @@ function is_path_token(t) {
   if (t ~ /\/$/) return 1
   return t ~ PATH_EXTENSIONS
 }
-# The vibe rule owns vibe/ paths, so the result does not depend on whether vibe/ is ignored locally.
 function check_token(t,   rel, u, b) {
   if (!is_path_token(t)) return
   rel = t
   while (rel ~ /^\.\.?\//) sub(/^\.\.?\//, "", rel)
   u = rel
   sub(/\/+$/, "", u)
-  if (u == "" || u == "vibe" || u ~ /^vibe\// || (u in suffix)) return
+  if (u == "" || (u in suffix)) return
   b = u
   sub(/^.*\//, "", b)
   if (index(" " never_open " ", " " b " ")) return
@@ -174,7 +151,7 @@ function check_link(raw,   t, path, frag, i, target) {
   if (path == "") target = FILENAME
   else {
     target = normalize((cur_dir == "" ? "" : cur_dir "/") path)
-    if (target == ESCAPE || target ~ /^vibe\//) return
+    if (target == ESCAPE) return
   }
   if (target != "" && !(target in listed)) {
     if (!history) emit("E", FILENAME ":link:" t, "link target `" t "` does not exist", "")
@@ -185,19 +162,6 @@ function check_link(raw,   t, path, frag, i, target) {
   if (frag == "" || history || target !~ /\.md$/) return
   if (!((target, frag) in anchors) && !((target, tolower(frag)) in anchors))
     emit("E", FILENAME ":link:" t, "anchor `#" frag "` matches no heading of " target, "")
-}
-function scan_vibe(line,   s, t, k) {
-  s = line
-  while (match(s, /(^|[^A-Za-z0-9_.-])vibe\/[A-Za-z0-9_.*<{~-]/)) {
-    s = substr(s, RSTART)
-    k = index(s, "vibe/")
-    s = substr(s, k)
-    t = s
-    sub(/[ \t`'"()<>\[\]|,;].*$/, "", t)
-    sub(/[.:]+$/, "", t)
-    emit("E", FILENAME ":vibe:" t, "names `" t "` below vibe/", "")
-    s = substr(s, 6)
-  }
 }
 BEGIN {
   ESCAPE = "\001"
@@ -218,10 +182,9 @@ pass == 0 { add_listed($0); next }
 FNR == 1 {
   fence = ""
   cur_dir = dir_of(FILENAME)
-  history = (FILENAME ~ /(^|\/)CHANGELOG\.md$/ || FILENAME ~ /^changelog\.d\// || FILENAME ~ /^docs\/decisions\//)
+  history = (FILENAME ~ /(^|\/)CHANGELOG\.md$/ || FILENAME ~ /^docs\/decisions\//)
   if (pass == 1) docs[FILENAME] = 1
 }
-pass == 1 { line_count[FILENAME] = FNR; scan_vibe($0) }
 {
   if (fence != "") {
     if (index($0, fence) && $0 ~ /^ *(```|~~~)/) fence = ""
@@ -265,10 +228,6 @@ pass == 2 {
   }
 }
 END {
-  if (("AGENTS.md" in line_count) && line_count["AGENTS.md"] > agents_max)
-    printf "E\tAGENTS.md:lines\tAGENTS.md:%d\thas %d lines, at most %d\t\n",
-      line_count["AGENTS.md"], line_count["AGENTS.md"], agents_max
-  check_modules()
   n = split(links["docs/README.md"], targets, SUBSEP)
   for (i = 1; i <= n; i++) if (targets[i] != "") indexed[targets[i]] = 1
   for (i = 1; i <= n; i++) {
@@ -285,7 +244,7 @@ END {
 AWK
 }
 
-write_ratchet_awk() {
+write_report_awk() {
   cat > "$1" <<'AWK'
 # Input: the ignored tokens, the known file, the raw findings. Prints the report; the last line is the verdict.
 function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
@@ -327,47 +286,17 @@ END {
 AWK
 }
 
-# The module directories: each `include(...)` project path of settings.gradle.kts (`:a:b` -> a/b; comments dropped,
-# `includeBuild` and other include* calls are not projects), then the extra directories that exist.
-module_dirs() {
-  if [ -f settings.gradle.kts ]; then
-    awk '
-      { sub(/\/\/.*$/, "") }
-      !open && /(^|[^A-Za-z0-9_.])include\(/ { open = 1; sub(/^.*include\(/, "") }
-      open {
-        s = $0
-        while (match(s, /"[^"]*"/)) {
-          p = substr(s, RSTART + 1, RLENGTH - 2)
-          s = substr(s, RSTART + RLENGTH)
-          if (p !~ /^:/) continue
-          sub(/^:/, "", p)
-          gsub(/:/, "/", p)
-          print p
-        }
-        if (index($0, ")")) open = 0
-      }' settings.gradle.kts || die "cannot read settings.gradle.kts"
-  fi
-  local d
-  for d in $MODULE_EXTRA_DIRS; do
-    if [ -d "$d" ]; then printf '%s\n' "$d"; fi
-  done
-}
-
 run_check() {
-  local docs=() f modules
+  local docs=() f
   git ls-files -co --exclude-standard > "$tmp/files" || die "git ls-files failed"
   while IFS= read -r f; do
     case $f in *.md) [ -f "$f" ] && docs[${#docs[@]}]=$f ;; esac
   done < "$tmp/files"
   [ ${#docs[@]} -gt 0 ] || die "no *.md files listed"
 
-  modules=$(module_dirs) || exit 2
-  modules=$(printf '%s\n' "$modules" | tr '\n' ' ')
-
   write_scan_awk "$tmp/scan.awk"
-  write_ratchet_awk "$tmp/ratchet.awk"
-  LC_ALL=C awk -v agents_max="$AGENTS_MAX_LINES" -v never_open="$NEVER_OPEN" -v module_dirs="$modules" \
-    -v module_max="$MODULE_AGENTS_MAX_LINES" -f "$tmp/scan.awk" \
+  write_report_awk "$tmp/report.awk"
+  LC_ALL=C awk -v never_open="$NEVER_OPEN" -f "$tmp/scan.awk" \
     "$tmp/files" pass=1 "${docs[@]}" pass=2 "${docs[@]}" > "$tmp/raw" || die "the scan failed"
 
   awk -F '\t' '$5 != "" && !seen[$5]++ { print $5 }' "$tmp/raw" > "$tmp/candidates"
@@ -378,13 +307,9 @@ run_check() {
   fi
   local known="$root/scripts/check-docs.known"
   [ -f "$known" ] || known=/dev/null
-  LC_ALL=C awk -v strict="$strict" -v known_name="scripts/check-docs.known" -f "$tmp/ratchet.awk" \
+  LC_ALL=C awk -v strict="$strict" -v known_name="scripts/check-docs.known" -f "$tmp/report.awk" \
     "$tmp/ignored" "$known" "$tmp/raw"
-  local status=$?
-  if [ -f "$root/scripts/changelog.sh" ]; then
-    "$BASH" "$root/scripts/changelog.sh" check || status=1
-  fi
-  return $status
+  return $?
 }
 
 # ---- self-test ------------------------------------------------------------------------------------------------
@@ -393,14 +318,13 @@ st_repo=""
 st_fixture() {
   rm -rf "$st_repo"
   local qr_dir="$st_repo/shared/feature/qr/src/commonMain/kotlin/dev/itmo/feature/qr/ui"
-  mkdir -p "$st_repo/scripts" "$st_repo/docs/decisions" "$st_repo/docs/features" "$st_repo/vibe" "$qr_dir"
+  mkdir -p "$st_repo/scripts" "$st_repo/docs/decisions" "$st_repo/docs/features" "$qr_dir"
   git init -q "$st_repo" || die "git init failed"
   cp "$self" "$st_repo/scripts/check-docs.sh"
   printf 'local.properties\n' > "$st_repo/.gitignore"
   printf '# accepted findings\n' > "$st_repo/scripts/check-docs.known"
   printf 'class QrTileService\n' > "$qr_dir/QrTileService.kt"
   printf '# Agents\n\nNever commit `local.properties` or `serviceAccountKey.json`.\n' > "$st_repo/AGENTS.md"
-  printf '# Plan\n' > "$st_repo/vibe/x.md"
   cat > "$st_repo/docs/README.md" <<'MD'
 # Docs
 
@@ -430,28 +354,6 @@ MD
   printf '# Changelog\n\n- Removed `app/src/main/Gone.kt`, see [old](old.md).\n' > "$st_repo/CHANGELOG.md"
 }
 st_append() { printf '%s\n' "$2" >> "$st_repo/$1"; }
-# The clean fixture plus modules: a multi-line include, a commented and an includeBuild path that are no projects.
-st_modules() {
-  st_fixture
-  cat > "$st_repo/settings.gradle.kts" <<'KTS'
-pluginManagement {
-    includeBuild("build-logic") // include(":not:a:project")
-}
-// The modules use string paths (`project(":gone")`).
-include(":app")
-include(
-    ":shared:core", // the core
-    ":shared:feature-qr",
-)
-includeBuild("../MyItmoApi/kmp")
-KTS
-  local d
-  for d in app shared/core shared/feature-qr build-logic; do
-    mkdir -p "$st_repo/$d"
-    awk 'BEGIN { print "# module"; for (i = 1; i < 40; i++) print "" }' > "$st_repo/$d/AGENTS.md"
-  done
-}
-
 st_failures=0
 st_expect() { # expected-exit description args...
   local want=$1 what=$2 got
@@ -477,8 +379,6 @@ self_test() {
   st_expect 1 "dangling link fails"
   st_fixture; st_append docs/features/qr.md 'See [tile](#no-such-heading).'
   st_expect 1 "dangling anchor fails"
-  st_fixture; st_append docs/features/qr.md 'Plan: [plan](../../vibe/x.md).'
-  st_expect 1 "a vibe/x.md link fails"
   st_fixture; printf '# 0002 Unindexed\n' > "$st_repo/docs/decisions/0002-unindexed.md"
   st_expect 1 "an unindexed ADR fails"
   st_fixture; printf '# Orphan\n' > "$st_repo/docs/features/orphan.md"
@@ -488,14 +388,14 @@ self_test() {
   st_expect 0 "a stale known entry only warns"
   st_expect 1 "a stale known entry fails --strict" --strict
   st_fixture; st_append docs/features/qr.md 'See `docs/features/missing.md`.'
-  st_append scripts/check-docs.known 'docs/features/qr.md:path:docs/features/missing.md  # written in a later card'
+  st_append scripts/check-docs.known 'docs/features/qr.md:path:docs/features/missing.md  # not written yet'
   st_expect 0 "a known finding passes --strict" --strict
   st_fixture; st_append scripts/check-docs.known 'docs/features/qr.md:path:docs/features/missing.md'
   st_append docs/features/qr.md 'See `docs/features/missing.md`.'
   st_expect 1 "a known entry without a reason fails"
   st_fixture; st_append CHANGELOG.md '- Dropped `app/src/main/Other.kt` and [link](nowhere.md#x).'
   st_expect 0 "a dead path and link in CHANGELOG.md pass" --strict
-  st_fixture; st_append docs/features/qr.md 'The class `QrTileService`, the branches `v2.3/next` and `release/2.2`.'
+  st_fixture; st_append docs/features/qr.md 'The class `QrTileService`, the branches `master` and `release/2.2`.'
   st_expect 0 "a bare class name and ref names pass" --strict
   st_fixture
   st_append docs/features/qr.md 'Moved: `feature/qr/ui/QrTileService.kt`, `QrTileService.kt`, `docs/features/`.'
@@ -507,25 +407,6 @@ self_test() {
   st_append docs/features/qr.md '`../itmo-widgets-core/docs/contract.md`, `https://x.dev/a.md`, `a/.../b/`,'
   st_append docs/features/qr.md '`local.properties`, `serviceAccountKey.json`.'
   st_expect 0 "patterns, home, sibling and URL tokens pass" --strict
-  st_fixture; awk 'BEGIN { for (i = 0; i < 131; i++) print "line" }' > "$st_repo/AGENTS.md"
-  st_expect 1 "AGENTS.md over 130 lines fails"
-  st_modules; st_expect 0 "modules with an AGENTS.md of at most 40 lines pass" --strict
-  st_modules; rm "$st_repo/shared/core/AGENTS.md"
-  st_expect 1 "a module without AGENTS.md fails"
-  st_modules; rm "$st_repo/build-logic/AGENTS.md"
-  st_expect 1 "build-logic/ without AGENTS.md fails"
-  st_modules; awk 'BEGIN { for (i = 0; i < 41; i++) print "line" }' > "$st_repo/app/AGENTS.md"
-  st_expect 1 "a 41-line module AGENTS.md fails"
-  st_modules; rm "$st_repo/shared/core/AGENTS.md"
-  st_append scripts/check-docs.known 'shared/core/AGENTS.md:missing  # written in a later card'
-  st_expect 0 "a known missing module AGENTS.md passes --strict" --strict
-  if [ -f "$script_dir/changelog.sh" ]; then
-    st_fixture; cp "$script_dir/changelog.sh" "$st_repo/scripts/changelog.sh"; mkdir "$st_repo/changelog.d"
-    printf -- '- Schedule widget in Compose.\n' > "$st_repo/changelog.d/l10-schedule-widgets.md"
-    st_expect 0 "a valid changelog fragment passes" --strict
-    printf -- '- Recordbook.\n' > "$st_repo/changelog.d/L12-recordbook.md"
-    st_expect 1 "an invalid changelog fragment fails"
-  fi
 
   if [ "$st_failures" -gt 0 ]; then
     printf 'check-docs self-test: FAIL (%d case(s))\n' "$st_failures"

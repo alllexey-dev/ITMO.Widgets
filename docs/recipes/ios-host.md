@@ -236,7 +236,7 @@ the rest.
 The Android catalog is the only source of copy; Swift holds no Russian
 (`scripts/ios/check-sources.sh` fails on Cyrillic in Swift).
 
-- `scripts/verify.sh run -- :app:exportAppleStrings` writes
+- `./gradlew :app:exportAppleStrings` writes
   `iosApp/Shared/Strings/*.xcstrings`; commit the result and never edit a
   table by hand. Swift uses the generated symbols:
   `Text(.qrTileLabel)`, `Text(.StringsCommon.scheduleLessonCount(5))`.

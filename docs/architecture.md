@@ -104,7 +104,7 @@ and the version catalog.
 
 | Module | Convention | Holds | Depends on |
 |---|---|---|---|
-| `:app` | Android app | what stays Android-only (below), Hilt | every shared module; `:shared:testing` in tests |
+| `:app` | Android app | what stays Android-only (below) | every shared module; `:shared:testing` in tests |
 | `:shared:core` | kmp-library | the `core/*` contracts and models, common strings | nothing |
 | `:shared:designsystem` | cmp-ui | theme, tokens, component kit, icons | `:shared:core` |
 | `:shared:testing` | cmp-ui | test kit, fake `Clock`, preview and screenshot harness | nothing (core-free) |
@@ -126,8 +126,7 @@ The ten feature modules are `:shared:feature-qr`, `:shared:feature-home`,
   and `iosSimulatorArm64Test`. `:shared:core` and the features also compile the
   core test fakes from `shared/core/src/testFixtures/kotlin` into `commonTest`.
 - **Allowed dependencies.** Only the edges in the table. A feature never
-  depends on another feature; `commonMain` has no `android.*`, `java.*`, `R`,
-  Hilt or `javax.inject`. The `Res` class of a cmp-ui module lives in its
+  depends on another feature; `commonMain` has no `android.*`, `java.*` or `R`. The `Res` class of a cmp-ui module lives in its
   namespace (`dev.alllexey.itmowidgets.shared.<path>`) and is public only in
   `:shared:core` and `:shared:designsystem`.
 - **Packages are preserved.** Moving a class into a module is a `git mv`
@@ -138,8 +137,14 @@ The ten feature modules are `:shared:feature-qr`, `:shared:feature-home`,
   (`MyFirebaseMessagingService`, `DefaultFcmTokenSync`, the Android notifier),
   `QrTileService`, shortcuts and channel creation, the Keystore cipher,
   calendar sync, the Play code scanner, the `github` and `play` update actions,
-  debug tools, the exported `strings_platform.xml`, and Hilt until it leaves
-  ([0019](decisions/0019-koin-per-lane.md)).
+  debug tools and the exported `strings_platform.xml`.
+- **Module notes.** `:shared:testing` is `api` for its test libraries and is
+  named only from test source sets. `:shared:backend-client` mirrors Backend
+  exactly (no invented field, route or default), reads no clock, logs nothing
+  and holds no user-visible text; `DemoMode` and `BackendGate` are checked by
+  its callers. `:shared:designsystem` is the only module that opts in to the
+  expressive API. Every `api` dependency of `:shared:core` has a comment naming
+  the public signature that needs it.
 
 ## Layers
 
@@ -310,8 +315,7 @@ Every other id lives in its module's `strings_<module>.xml`: `app`, `debug`,
 `resources`, `reviews`, and one file per account package (`auth`,
 `onboarding`, `me`, `weblogin`, `web`, `update`).
 `scripts/strings-owners.py --where <id|path>` places a new string, and
-`--report` lists id, file and users. Only L05 writes `strings_common.xml` and
-`strings_platform.xml`; other lanes hand rows in as `## Catalog hand-in`.
+`--report` lists id, file and users.
 `StringOwnershipTest` keeps the split honest.
 
 ### Time
@@ -438,8 +442,6 @@ address from BuildConfig`). The rules are split by topic:
 `GateRulesTest`, `StorageRulesTest`, `DebugRulesTest`,
 `DistributionRulesTest` and `UiRulesTest`, over the shared `ArchitectureScope`,
 whose scopes must stay above non-empty floors so a rule cannot pass on nothing.
-The scope filters agent worktrees by the project path, so the suite also runs
-inside one.
 `DesignCardResourcesTest` pins the card style family from
 [`design.md`](design.md). Add a rule when a new invariant is agreed instead of
 relying on review.

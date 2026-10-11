@@ -4,7 +4,7 @@ import com.lemonappdev.konsist.api.verify.assertFalse
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
 import org.junit.Test
 
-/** The QR pass (L09): its rules over `feature.qr` in `:app` and `:shared:feature-qr`. */
+/** The QR pass: rules over `feature.qr` in `:app` and `:shared:feature-qr`. */
 class QrRulesTest {
 
     @Test
@@ -22,7 +22,7 @@ class QrRulesTest {
         const val QR_PACKAGE = "dev.alllexey.itmowidgets.feature.qr"
         const val ACADEMIC_TIME_PROVIDER = "dev.alllexey.itmowidgets.core.time.AcademicTimeProvider"
 
-        /** The QR files of `:app` and `:shared:feature-qr` after KM-11g1; drops only with the integrator's OK. */
+        /** Guards against a vacuous pass if the package moves; lower it when QR files are deleted. */
         const val MIN_QR_FILES = 35
     }
 }

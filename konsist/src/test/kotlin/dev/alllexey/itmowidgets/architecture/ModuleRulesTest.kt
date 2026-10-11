@@ -8,7 +8,7 @@ import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Module boundaries, moves that keep packages (G-03) and one DI graph per binding (ADR 0019, master plan X7). */
+/** Module boundaries: shared feature modules stay independent and every file sits in its package's directory. */
 class ModuleRulesTest {
 
     @Test

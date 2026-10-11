@@ -147,7 +147,7 @@ builds (`RecordbookSubjectIosRoute`). The page draws its own header with
   (`link_open_failed` when nothing takes them); `Изменить итог` opens
   [`Мои баллы`](sheet-scores.md#ios); `Войти в БАРС` of a BARS snackbar opens the BARS
   sign-in sheet, after which the page loads again.
-- Links: `PlatformCapabilities.reviews` is on since IO-09f, so the route gets
+- Links: `PlatformCapabilities.reviews` is on, so the route gets
   `linksEnabled = true` and shows `Ссылки` and `Чаты` as on Android; a link's
   actions (a long press), `Все ссылки` and the editor open as SwiftUI sheets
   ([subject links](resources.md#ios)), and the teacher rows carry their tones.

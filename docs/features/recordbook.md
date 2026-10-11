@@ -209,7 +209,7 @@ plans with `has_course_project` are rejected for now.
 ## Verification
 
 ```bash
-scripts/verify.sh quick
+./gradlew verifyQuick
 scripts/verify.sh shots feature-recordbook -Pshots.appearance=full
 ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui MarksWorkTest,MarksNotificationTest
 ```
@@ -242,13 +242,13 @@ stay while the tab's root stays alive.
   first with the system drag indicator; a pick answers the tab root through the
   router (`open(_:onResult:)`, `deliver(_:from:)`) and the root's
   `RecordbookPage` hands it to the ViewModel, as Android's `ResultEffect` does.
-- BARS: the snackbar's `Войти в БАРС` opens IO-09d1's `BarsLoginSheet`;
+- BARS: the snackbar's `Войти в БАРС` opens the iOS `BarsLoginSheet`;
   after a completed sign-in the list loads again (`RecordbookPage.barsSignedIn`).
   In the demo the chip's overlay says `Недоступно в демо`, as on Android.
 - A subject opens [its page](subject-page.md#ios) only with valid arguments.
 - Demo: `DemoRecordbook` answers the list, the subject pages and the demo sheet
   total with no request.
-- Mark tracking is on since IO-09d3 (`PlatformCapabilities.marks`): the
+- Mark tracking is on (`PlatformCapabilities.marks`): the
   new-mark dots, the marks card and the settings page
   ([mark tracking](marks-tracking.md#ios)). A tap on a marks notification opens
   the recordbook or the subject's page, as on Android.

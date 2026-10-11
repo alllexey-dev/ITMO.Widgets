@@ -23,5 +23,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "build-logic"
 include(":convention")
-// L05 owns :strings from TC-16a on; until then itmowidgets.strings is a no-op.
 include(":strings")

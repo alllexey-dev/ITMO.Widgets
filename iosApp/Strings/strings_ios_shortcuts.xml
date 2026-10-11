@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copy only the iOS App Shortcuts and the QR Control show (IO-11, ADR 0028): exported to Localizable.xcstrings.
+<!-- Copy only the iOS App Shortcuts and the QR Control show (ADR 0028): exported to Localizable.xcstrings.
      The phrases also feed AppShortcuts.xcstrings through build-logic/strings/apple-tables.properties; Siri and
      Spotlight require ${applicationName} exactly once in each. -->
 <resources>

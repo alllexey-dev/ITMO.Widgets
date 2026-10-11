@@ -1,17 +1,17 @@
-# Every PR into and every push to `v2.3/next` and `master`: scripts/ios/test.sh --ci on a GitHub macOS runner.
-# `ios-check` is the ruleset name (L01 G-12b) and the name `promote` reads; never rename the job.
+# Every PR into and every push to `master`: scripts/ios/test.sh --ci on a GitHub macOS runner.
+# `ios-check` is the check to require; renaming the job renames the check.
 # The path filter is a step inside the job, never on the trigger: a path-filtered required check would never
 # report and would block the merge. Scheduled jobs go to ios-nightly.yml (a skipped job still leaves a check run).
 name: ios
 
 on:
   pull_request:
-    branches: [v2.3/next, master]
+    branches: [master]
   push:
-    branches: [v2.3/next, master]
+    branches: [master]
   workflow_dispatch:
 
-# Per ref; only PR runs are cancelled, so every pushed `v2.3/next` SHA keeps its own result for `promote`.
+# Per ref; only PR runs are cancelled, so every pushed `master` SHA keeps its own result.
 concurrency:
   group: ios-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -27,7 +27,7 @@ env:
 
 jobs:
   ios-check:
-    # The image carrying the Xcode pinned in scripts/ios/env.sh (27.0, gate T10); arm64, 3 vCPU, 7 GB.
+    # The image carrying the Xcode pinned in scripts/ios/env.sh (27.0); arm64, 3 vCPU, 7 GB.
     runs-on: xcode-27
     timeout-minutes: 90
     steps:
@@ -62,7 +62,7 @@ jobs:
           run=false
           while IFS= read -r path; do
             case "$path" in
-              iosApp/* | shared/* | scripts/ios/* | scripts/slot.sh | gradle/* | build-logic/* | *.gradle.kts | \
+              iosApp/* | shared/* | scripts/ios/* | gradle/* | build-logic/* | *.gradle.kts | \
                 gradle.properties | app/src/main/assets/* | .github/workflows/ios*.yml)
                 echo "iOS input changed: $path"
                 run=true
@@ -72,15 +72,15 @@ jobs:
           echo "run=$run" >> "$GITHUB_OUTPUT"
           [ "$run" = true ] || echo "No iOS input changed since ${base:0:7}: nothing to build."
 
-      # The Xcode pin is asserted, never substituted: if the image drops it, the job fails and the pin moves
-      # through L18 and L01 (scripts/ios/env.sh refuses any other version or build).
+      # CI tests exactly the Xcode pinned in scripts/ios/env.sh: if the image drops it, the job fails until the pin
+      # moves (locally env.sh only warns about another version).
       - name: Select the pinned Xcode
         if: steps.paths.outputs.run == 'true'
         run: |
           version=$(sed -n 's/^: "\${ITMO_XCODE_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
           app="/Applications/Xcode_$version.app"
           if [ -z "$version" ] || [ ! -d "$app" ]; then
-            echo "::error::Xcode ${version:-?} pinned in scripts/ios/env.sh is not on this runner image; escalate to L18 and L01, no fallback."
+            echo "::error::Xcode ${version:-?} pinned in scripts/ios/env.sh is not on this runner image; move the pin in scripts/ios/env.sh."
             ls -d /Applications/Xcode*.app
             exit 1
           fi
@@ -102,11 +102,13 @@ jobs:
           bin=$(dirname "$(find "$RUNNER_TEMP/xcodegen" -type f -name xcodegen -perm -u+x | head -n 1)")
           echo "$bin" >> "$GITHUB_PATH"
 
-      # Asserts every pin (Xcode version and build, XcodeGen) exactly as test.sh does, before the long steps.
+      # The toolchain the job runs on, before the long steps; a pin mismatch fails here.
       - name: Toolchain pins
         if: steps.paths.outputs.run == 'true'
         run: |
-          source scripts/ios/env.sh
+          source scripts/ios/env.sh 2> "$RUNNER_TEMP/env.err"
+          cat "$RUNNER_TEMP/env.err"
+          if grep -q warning "$RUNNER_TEMP/env.err"; then exit 1; fi
           xcodebuild -version
           xcodegen --version
           xcrun simctl list runtimes | grep -i ios
@@ -119,12 +121,12 @@ jobs:
           distribution: jetbrains
           java-version: 21
 
-      # Basic (MIT) cache provider; only `v2.3/next` writes the cache, everything else reads it.
+      # Basic (MIT) cache provider; only `master` writes the cache, everything else reads it.
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         if: steps.paths.outputs.run == 'true'
         with:
           cache-provider: basic
-          cache-read-only: ${{ github.ref != 'refs/heads/v2.3/next' }}
+          cache-read-only: ${{ github.ref != 'refs/heads/master' }}
 
       # Gradle uses only the JDK above: a criteria mismatch fails loudly instead of downloading a toolchain.
       - name: Gradle toolchain without auto-download
@@ -137,27 +139,7 @@ jobs:
           } >> "$GRADLE_USER_HOME/gradle.properties"
           "$JAVA_HOME/bin/java" -version
 
-      # MyItmoApi 2.x at gradle/myitmoapi.ref as the composite build (ADR 0024, TC-05), as in android-ci.yml.
-      - name: MyItmoApi ref
-        id: myitmoapi
-        if: steps.paths.outputs.run == 'true'
-        run: echo "ref=$(head -n 1 gradle/myitmoapi.ref | tr -d ' \t\r')" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: steps.paths.outputs.run == 'true'
-        with:
-          repository: alllexey-dev/my-itmo-api
-          ref: ${{ steps.myitmoapi.outputs.ref }}
-          path: myitmoapi
-          persist-credentials: false
-
-      - name: MyItmoApi out of the workspace
-        if: steps.paths.outputs.run == 'true'
-        run: |
-          mv myitmoapi "$RUNNER_TEMP/myitmoapi"
-          echo "MYITMOAPI_DIR=$RUNNER_TEMP/myitmoapi" >> "$GITHUB_ENV"
-
-      # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version and runner architecture; only `v2.3/next` writes.
+      # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version and runner architecture; only `master` writes.
       - name: Kotlin/Native version
         id: kotlin-native
         if: steps.paths.outputs.run == 'true'
@@ -190,9 +172,9 @@ jobs:
         if: steps.paths.outputs.run == 'true'
         env:
           CI: "true"
-          ITMO_MAX_WORKERS: "1"
           TEST_RUNNER_SNAPSHOT_ARTIFACTS: ${{ github.workspace }}/iosApp/build/snapshot-artifacts
         run: |
+          echo "org.gradle.workers.max=1" >> "$GRADLE_USER_HOME/gradle.properties"
           peak="$RUNNER_TEMP/memory-peak"
           echo 0 > "$peak"
           (
@@ -219,7 +201,7 @@ jobs:
 
       - name: Save ~/.konan
         if: >-
-          steps.paths.outputs.run == 'true' && github.ref == 'refs/heads/v2.3/next' &&
+          steps.paths.outputs.run == 'true' && github.ref == 'refs/heads/master' &&
           steps.konan-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

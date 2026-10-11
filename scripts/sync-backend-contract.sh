@@ -14,7 +14,7 @@
 #
 # Backend is ${ITMO_BACKEND_REPO:-$HOME/proj/itmo-widgets-backend}, read only through git rev-parse, merge-base,
 # ls-tree and cat-file: no checkout, stash, fetch or write there. <backend-sha> must be merged work (an ancestor of
-# origin/v2.3/next) and must not go back behind the recorded commit unless --allow-older is given. A commit
+# origin/dev, or of ITMO_BACKEND_REF) and must not go back behind the recorded commit unless --allow-older is given. A commit
 # Backend's clone does not have exits 2 with the fetch command to run.
 #
 # ITMO_CONTRACT_DIR overrides the destination (the self-test uses it).
@@ -24,7 +24,7 @@
 set -u
 
 me=sync-backend-contract.sh
-BACKEND_REF=origin/v2.3/next
+BACKEND_REF=${ITMO_BACKEND_REF:-origin/dev}
 SOURCE_DIR=src/test/resources/contract
 OPENAPI=docs/openapi.json
 VERSION_FILE=build.gradle.kts

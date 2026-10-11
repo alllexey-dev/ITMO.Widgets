@@ -16,19 +16,20 @@ class PresentationRulesTest {
         val violations = productionClasses
             .filter { it.name.endsWith("ViewModel") && ": ViewModel" in it.text }
             .requireAtLeast(MIN_VIEW_MODELS, "ViewModel subclasses")
-            .associate { it.ratchetKey to shapeViolations(it) }
+            .filterNot { it.qualifiedKey in EVENTS_ONLY_VIEW_MODELS }
+            .associate { it.qualifiedKey to shapeViolations(it) }
             .filterValues { it.isNotEmpty() }
             .mapValues { (_, reasons) -> reasons.joinToString("; ") }
-        Ratchet.assertOnly(RatchetRule.VIEW_MODEL_SHAPE, violations)
+        assertNoViolations("the ViewModel shape", violations)
     }
 
     @Test
     fun `presentation does not import Android resources`() {
-        // UiText and AppError carry text; KM-07's UiTextRulesTest covers commonMain once presentation moves there.
+        // UiText and AppError carry text, so a ViewModel never needs a resource id; UiTextRulesTest covers commonMain.
         val violations = presentationFiles()
             .filter { file -> file.imports.any { it.name == RESOURCES || it.name.startsWith("$RESOURCES.") } }
-            .associate { it.ratchetKey to "imports $RESOURCES" }
-        Ratchet.assertOnly(RatchetRule.PRESENTATION_RESOURCES, violations)
+            .associate { it.qualifiedKey to "imports $RESOURCES" }
+        assertNoViolations("presentation without Android resources", violations)
     }
 
     @Test
@@ -87,6 +88,11 @@ class PresentationRulesTest {
         const val UI_STATE = "uiState"
         const val EVENTS = "events"
         const val RESOURCES = "dev.alllexey.itmowidgets.R"
+
+        /** It has no screen to render a state for: it only decides once whether to open the update screen. */
+        val EVENTS_ONLY_VIEW_MODELS = setOf(
+            "dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateGateViewModel"
+        )
         val FLOW_TYPE = Regex("""^(Mutable)?(State|Shared)?Flow<|^(Mutable)?LiveData<""")
         val FLOW_INITIALIZER = Regex("""\w*Flow\b|\bstateIn\(|\bshareIn\(|LiveData\b""")
         val allowedAndroidxImports = setOf(

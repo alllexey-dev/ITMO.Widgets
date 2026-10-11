@@ -5,7 +5,7 @@ The data directory of an ITMO.Widgets 2.2 installation, written once by 2.2's ow
 `123456`, made-up tokens, subjects, teachers and sheet ids.
 
 Never edit, add to or re-capture these files. `UpgradeFrom22Test.fixtureIsTheUnchanged22Capture` pins their SHA-256.
-A lane that moves or reformats a store changes its checker in `upgrade/stores/`, not the assets.
+A change that moves or reformats a store changes its checker in `upgrade/stores/`, not the assets.
 
 ## Source
 
@@ -47,25 +47,23 @@ one wins, then removes the per-format keys and checks the legacy fallback.
 Run once; the result is what is committed here.
 
 ```bash
-git worktree add --detach ~/proj/.wt/android/l06-architecture-g04-capture v2.2
+git worktree add --detach ../v22-capture v2.2
 # add capture/UpgradeFixtureCapture22.kt.txt as
 #   app/src/androidTest/java/dev/alllexey/itmowidgets/upgrade/UpgradeFixtureCapture22.kt
-cd <lane worktree> && scripts/emulator.sh up --api 35          # ANDROID_SERIAL=emulator-<port>
-cd ~/proj/.wt/android/l06-architecture-g04-capture
-ANDROID_SERIAL=emulator-<port> <lane worktree>/scripts/slot.sh android -- \
-  ./gradlew :app:installGithubDebug :app:installGithubDebugAndroidTest
+cd ../v22-capture
+ANDROID_SERIAL=emulator-<port> ./gradlew :app:installGithubDebug :app:installGithubDebugAndroidTest
 adb -s emulator-<port> shell am instrument -w \
   -e class dev.alllexey.itmowidgets.upgrade.UpgradeFixtureCapture22 \
   dev.alllexey.itmowidgets.test/androidx.test.runner.AndroidJUnitRunner
 adb -s emulator-<port> pull /sdcard/Android/data/dev.alllexey.itmowidgets/cache/upgrade-2.2 <tmp>/
 # copied <tmp>/upgrade-2.2/{files,no_backup,cache,plaintext} here unchanged
-git worktree remove --force ~/proj/.wt/android/l06-architecture-g04-capture
+git worktree remove --force ../v22-capture
 ```
 
 ## Run
 
+On a running emulator (API 35):
+
 ```bash
-scripts/emulator.sh up
 ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui dev.alllexey.itmowidgets.upgrade.UpgradeFrom22Test
-scripts/emulator.sh down
 ```

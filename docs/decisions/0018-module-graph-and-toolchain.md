@@ -32,14 +32,14 @@ konsist/                architecture rules over app/ and shared/
 - Library pins live in the version catalog and follow their ADRs: CMP 1.12.1
   (0017, 0021), Koin 4.2.2 (0019), Navigation 3 1.2.x (0020), Ktor 3.6.0 and
   kotlinx.serialization 1.11.0 (0026), kotlinx-datetime 0.8.0, Roborazzi
-  1.76.0 (0022), SKIE 0.10.15 (0023). One owner bumps the toolchain and the
-  catalog; other changes add a library as a one-line catalog change.
+  1.76.0 (0022), SKIE 0.10.15 (0023). Toolchain and catalog bumps are changes
+  of their own; other changes add a library as a one-line catalog change.
 
 **Why.** The iOS client is the second in-repo reuse site that 0001 named as
-its trigger. Kept packages make every move a pure rename for parallel work.
+its trigger. Kept packages make every move a pure rename.
 AGP 9.3.x is the newest line inside Kotlin 2.4.20's tested KMP range.
 
-**Consequence.** Only the toolchain owner edits build files; Konsist rules
+**Consequence.** Build files change only in toolchain changes; Konsist rules
 become module- and Compose-aware.
 
 **Supersedes.** 0001 Single Gradle module.
@@ -47,11 +47,11 @@ become module- and Compose-aware.
 **Revisit when.** Kotlin 2.5 ships, or Konsist runs on Kotlin 2.4.20 without
 the test-runtime compiler pin.
 
-**Settled.** A3 settled 90 Q5 (AGP 9.3.x) and 12 Q6 (Kotlin 2.4.20 now,
-2.5.x after v2.3). Konsist stays, with the SP-03 pin; no replacement.
+**Settled.** AGP 9.3.x; Kotlin 2.4.20 now, 2.5.x after v2.3. Konsist stays,
+with the compiler pin below; no replacement.
 
 **Evidence.**
-- SP-01: PASS (AGP 9.3.3, Gradle 9.7.0, built-in Kotlin 2.4.20, KSP and Hilt 2.60.1 build both flavors; no `legacy-kapt`; AGP pick 9.3.3, also passed by SP-13a)
-- SP-03: PASS (Konsist 0.17.3 runs on Kotlin 2.4.20 with a test-runtime pin `kotlin-compiler-embeddable:2.4.10`; no replacement)
-- SP-09: PASS (a 2.4.20-built library with `languageVersion`/`apiVersion` 2.2 and `coreLibrariesVersion` 2.2.0 runs in a Kotlin 2.2.21 consumer)
-- SP-13: PASS (SP-13a PASS, SP-13b PASS; CMP 1.12.1 resources with the Android-KMP library plugin on AGP 9.3.3; forces compileSdk 37; Konsist covers `commonMain` with the 2.4.10 pin)
+- Toolchain spike: PASS (AGP 9.3.3, Gradle 9.7.0, built-in Kotlin 2.4.20, KSP and Hilt 2.60.1 build both flavors; no `legacy-kapt`; AGP pick 9.3.3)
+- Konsist spike: PASS (Konsist 0.17.3 runs on Kotlin 2.4.20 with a test-runtime pin `kotlin-compiler-embeddable:2.4.10`; no replacement)
+- Library compatibility spike: PASS (a 2.4.20-built library with `languageVersion`/`apiVersion` 2.2 and `coreLibrariesVersion` 2.2.0 runs in a Kotlin 2.2.21 consumer)
+- Resources spike: PASS (CMP 1.12.1 resources with the Android-KMP library plugin on AGP 9.3.3; forces compileSdk 37; Konsist covers `commonMain` with the 2.4.10 pin)

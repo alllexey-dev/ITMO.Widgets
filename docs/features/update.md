@@ -72,7 +72,7 @@ in 320 dp), the `AppUpdateScreen_{supported,unsupported,long-note}` goldens of
 `PendingIntent`s).
 
 ```bash
-scripts/verify.sh run -- :shared:feature-account:testAndroidHostTest --tests 'dev.alllexey.itmowidgets.feature.update.*'
+./gradlew :shared:feature-account:testAndroidHostTest --tests 'dev.alllexey.itmowidgets.feature.update.*'
 scripts/verify.sh shots feature-account
 ./gradlew :app:testGithubDebugUnitTest
 ./gradlew :app:connectedPlayDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.update.ui.PlayUpdateActionTest
@@ -91,7 +91,7 @@ with the same texts and buttons ([iOS app](../ios.md#data-sharing)).
   `https://apps.apple.com/app/id<APP_STORE_ID>` (`AppStoreListing`); no GitHub
   or Play link, so there is no downloaded-update snackbar.
 - `APP_STORE_ID` (`iosApp/Config/Base.xcconfig`, `AppStoreID` in the app's
-  Info.plist) stays empty until the App Store record exists (gate T13);
+  Info.plist) stays empty until the App Store record exists (it needs the Apple developer account);
   without it the app never checks or offers (`AppUpdateOffer`).
 - Until Backend 1.8.0 is in production the check goes to the dev Backend
   (`BACKEND_BASE_URL`).

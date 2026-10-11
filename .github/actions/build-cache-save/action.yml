@@ -1,8 +1,8 @@
-# Saves the build cache line `android-setup` restored, on pushes to `v2.3/next` only (PR runs read, never write).
+# Saves the build cache line `android-setup` restored, on pushes to `master` only (PR runs read, never write).
 # Only the entries this job loaded or stored are kept, so each line stays the size of one job's work: Gradle never
 # touches an entry's mtime when it loads it, but the read moves its atime (relatime), which the probe checks first.
 name: build-cache-save
-description: Save this job's Gradle build cache line on v2.3/next.
+description: Save this job's Gradle build cache line on master.
 
 inputs:
   build-cache:
@@ -17,7 +17,7 @@ runs:
       id: prune
       shell: bash
       env:
-        WRITE: ${{ github.ref == 'refs/heads/v2.3/next' }}
+        WRITE: ${{ github.ref == 'refs/heads/master' }}
       run: |
         dir=~/.gradle/caches/build-cache-1
         stamp="$RUNNER_TEMP/build-cache/stamp"
@@ -45,7 +45,7 @@ runs:
         echo "save=true" >> "$GITHUB_OUTPUT"
 
     - name: Save the build cache
-      if: github.ref == 'refs/heads/v2.3/next' && steps.prune.outputs.save == 'true'
+      if: github.ref == 'refs/heads/master' && steps.prune.outputs.save == 'true'
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.gradle/caches/build-cache-1

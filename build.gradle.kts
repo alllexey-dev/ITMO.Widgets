@@ -1,6 +1,6 @@
-// Advisory only (TC-08): the dependency-analysis plugin reaches the classpath, and `buildHealth` exists, only with
+// Advisory only: the dependency-analysis plugin reaches the classpath, and `buildHealth` exists, only with
 // -Pitmo.buildHealth=true, which android-nightly.yml passes. Its AGP 9.3 and Android-KMP support is unproven, so
-// no other build loads it and a failure there never reaches verify.sh or android-ci.yml. The buildscript block
+// no other build loads it and a failure there never reaches android-ci.yml. The buildscript block
 // is compiled apart from the script and cannot see the `buildHealth` value below.
 buildscript {
     if (providers.gradleProperty("itmo.buildHealth").orNull == "true") {
@@ -23,7 +23,7 @@ if (buildHealth) {
     allprojects { apply(plugin = dependencyAnalysis) }
 }
 
-// The aggregates scripts/verify.sh runs (quick, full, klibs). Every convention registers `itmoVerifyQuick`;
+// The verification aggregates (verifyQuick, verifyFull, verifyIosKlibs). Every convention registers `itmoVerifyQuick`;
 // the iOS umbrella and :konsist apply none, so they are left out of that list.
 val modulePaths = subprojects.map { it.path }
 val sharedPaths = modulePaths.filter { it.startsWith(":shared:") }
@@ -57,11 +57,11 @@ val verifyQuick = tasks.register("verifyQuick") {
 
 tasks.register("verifyFull") {
     group = "verification"
-    description = "verifyQuick plus lintPlayDebug: the Android part of the AGENTS.md build command."
+    description = "verifyQuick plus lintPlayDebug."
     dependsOn(verifyQuick, ":app:lintPlayDebug")
 }
 
-// Compile-only: linking a framework or running iosSimulatorArm64Test needs Xcode (SP-10, T10).
+// Compile-only: linking a framework or running iosSimulatorArm64Test needs Xcode.
 tasks.register("verifyIosKlibs") {
     group = "verification"
     description = "iosSimulatorArm64 klibs of every shared module (needs no Xcode; runs on Linux x86_64 too)."

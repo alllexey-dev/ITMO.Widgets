@@ -4,14 +4,14 @@
 agp = "9.3.3"
 kotlin = "2.4.20"
 googleGmsGoogleServices = "4.4.4"
-# androidx.compose 1.12.1 (CMP 1.12.1) AAR metadata requires compileSdk >= 37 (SP-13a); targetSdk stays 36.
+# androidx.compose 1.12.1 (CMP 1.12.1) AAR metadata requires compileSdk >= 37; targetSdk stays 36.
 android-compileSdk = "37"
 android-minSdk = "26"
 android-targetSdk = "36"
 
 # Compose Multiplatform 1.12.1 and the JetBrains libraries its release notes pair with it.
 composeMultiplatform = "1.12.1"
-# JetBrains material3 1.12.0-alpha03 requires Jetpack material3 1.5.0-alpha22 (SP-04, ADR 0021).
+# JetBrains material3 1.12.0-alpha03 requires Jetpack material3 1.5.0-alpha22 (ADR 0021).
 material3 = "1.12.0-alpha03"
 material3Jetpack = "1.5.0-alpha22"
 material3Adaptive = "1.3.0-rc01"
@@ -42,7 +42,7 @@ robolectric = "4.17"
 roborazzi = "1.76.0"
 composablePreviewScanner = "0.9.3"
 turbine = "1.2.1"
-# Advisory buildHealth in android-nightly.yml only (TC-08).
+# Advisory buildHealth in android-nightly.yml only.
 dependencyAnalysis = "3.19.2"
 
 androidImageCropper = "4.7.0"
@@ -94,7 +94,7 @@ compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
 compose-material3-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "material3Adaptive" }
-# Never a plain dependency: only as strictly("1.5.0-alpha22") beside compose-material3 (SP-04, ADR 0021, L08 DS-01a).
+# Never a plain dependency: only as strictly("1.5.0-alpha22") beside compose-material3 (ADR 0021).
 androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Jetpack" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidxCompose" }
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidxCompose" }
@@ -104,7 +104,7 @@ jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifec
 jetbrains-lifecycle-viewmodel-savedstate = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-savedstate", version.ref = "jetbrainsLifecycle" }
 jetbrains-savedstate = { module = "org.jetbrains.androidx.savedstate:savedstate", version.ref = "jetbrainsSavedstate" }
 jetbrains-savedstate-compose = { module = "org.jetbrains.androidx.savedstate:savedstate-compose", version.ref = "jetbrainsSavedstate" }
-# Navigation 3 (SP-14, ADR 0020): only the runtime has iOS klibs; navigation3-ui and the ViewModel decorator stay
+# Navigation 3 (ADR 0020): only the runtime has iOS klibs; navigation3-ui and the ViewModel decorator stay
 # in Android source sets.
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
@@ -134,7 +134,7 @@ ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 # kotlinx and multiplatform utilities
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
-# Library only, for kotlinx.atomicfu.locks.SynchronizedObject (L07 KM-04); no atomicfu plugin, atomics use
+# Library only, for kotlinx.atomicfu.locks.SynchronizedObject; no atomicfu plugin, atomics use
 # kotlin.concurrent.atomics.
 kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
@@ -151,24 +151,24 @@ coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.r
 coil-test = { module = "io.coil-kt.coil3:coil-test", version.ref = "coil" }
 qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
-# MyItmoApi 2.x KMP: served by the pinned composite (TC-05) until M2 publishes it on Central.
+# MyItmoApi 2.x KMP from Maven Central; MYITMOAPI_DIR swaps in a local checkout (settings.gradle.kts).
 my-itmo-api-kmp = { module = "dev.alllexey:my-itmo-api-kmp", version.ref = "myItmoApiKmp" }
 
 # Tests and screenshots
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-# Robolectric 4.17 runtime for @Config(sdk = [35]); resolved by Gradle so Robolectric never writes ~/.m2 (SP-13a).
+# Robolectric 4.17 runtime for @Config(sdk = [35]); resolved by Gradle so Robolectric never writes ~/.m2.
 robolectric-android-all = { module = "org.robolectric:android-all-instrumented", version = "15-robolectric-13954326-i7" }
-# Robolectric 4.17 runtime for @Config(sdk = [29]), opted in by :app through itmoTesting.extraRobolectricSdks (KM-04).
+# Robolectric 4.17 runtime for @Config(sdk = [29]), opted in by :app through itmoTesting.extraRobolectricSdks.
 robolectric-android-all-sdk29 = { module = "org.robolectric:android-all-instrumented", version = "10-robolectric-5803371-i7" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
 roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
 roborazzi-compose-preview-scanner-support = { module = "io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support", version.ref = "roborazzi" }
-# ATF 4.1.1 through Roborazzi: accessibility checks of preview captures under Robolectric (SP-06).
+# ATF 4.1.1 through Roborazzi: accessibility checks of preview captures under Robolectric.
 roborazzi-accessibility-check = { module = "io.github.takahirom.roborazzi:roborazzi-accessibility-check", version.ref = "roborazzi" }
-# The android scanner finds commonMain @Preview functions; the deprecated common scanner finds none (SP-13b).
+# The android scanner finds commonMain @Preview functions; the deprecated common scanner finds none.
 composable-preview-scanner-android = { module = "io.github.sergio-sastre.ComposablePreviewScanner:android", version.ref = "composablePreviewScanner" }
 
 android-image-cropper = { module = "com.vanniktech:android-image-cropper", version.ref = "androidImageCropper" }
@@ -210,5 +210,5 @@ androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref
 # id without a version, or Gradle fails with "already on the classpath with an unknown version".
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
 koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompiler" }
-# Not in any plugins {} block: the root build.gradle.kts loads it only with -Pitmo.buildHealth=true (TC-08).
+# Not in any plugins {} block: the root build.gradle.kts loads it only with -Pitmo.buildHealth=true.
 dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependencyAnalysis" }

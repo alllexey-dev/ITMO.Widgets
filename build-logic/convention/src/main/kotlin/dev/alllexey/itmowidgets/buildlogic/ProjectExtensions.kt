@@ -13,18 +13,18 @@ import java.io.File
 
 internal const val BASE_PACKAGE = "dev.alllexey.itmowidgets"
 
-/** The per-module lifecycle task the root `verifyQuick` aggregates (TC-04b); later checks attach here. */
+/** The per-module lifecycle task the root `verifyQuick` aggregates; module checks attach here. */
 internal const val VERIFY_QUICK_TASK = "itmoVerifyQuick"
 
 /**
- * Core fakes shared by the tests of `:shared:core`, the ten `:shared:feature-*` modules and `:app` (L07 KM-06 creates
- * the directory). One source root in several modules instead of a 17th module (master plan section 3.1); never in
- * `:shared:testing` (core-free) or `:shared:designsystem` (its tests need no core fakes).
+ * Core fakes shared by the tests of `:shared:core`, the ten `:shared:feature-*` modules and `:app`. One source root
+ * in several modules instead of a separate fixtures module; never in `:shared:testing` (core-free) or
+ * `:shared:designsystem` (its tests need no core fakes).
  */
 internal val Project.coreTestFixturesDir: Directory
     get() = isolated.rootProject.projectDirectory.dir("shared/core/src/testFixtures/kotlin")
 
-/** The one lint configuration of `:app` and every shared module (L04 TC-06). */
+/** The one lint configuration of `:app` and every shared module. */
 internal val Project.lintConfigFile: File
     get() = isolated.rootProject.projectDirectory.file("app/lint.xml").asFile
 
@@ -64,7 +64,7 @@ internal fun Project.verifyQuickTask(): TaskProvider<Task> =
     } else {
         tasks.register(VERIFY_QUICK_TASK) {
             group = "verification"
-            description = "Fast checks of this module that scripts/verify.sh quick runs."
+            description = "Fast checks of this module that the root verifyQuick runs."
         }
     }
 

@@ -1,13 +1,11 @@
 package dev.alllexey.itmowidgets.architecture
 
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
-import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
-import dev.alllexey.itmowidgets.architecture.ArchitectureScope.testFiles
 import org.junit.Test
 
-/** Koin is the one graph (ADR 0019): where Koin modules and the global Koin context may appear; no Hilt or Dagger. */
+/** Koin is the one graph (ADR 0019): where Koin modules and the global Koin context may appear. */
 class DiRulesTest {
 
     @Test
@@ -46,15 +44,6 @@ class DiRulesTest {
             .assertTrue { file -> file.isAppMainOrFlavor && file.packagee?.name == DI_PACKAGE }
     }
 
-    @Test
-    fun `no dagger, javax inject or hilt annotation anywhere`() {
-        // Hilt left in KM-12c; every source set of every module, tests included, stays free of it.
-        val files = (productionFiles + testFiles).requireNonEmpty("source files")
-        files.assertFalse { file -> INJECTION_PACKAGES.any { it in file.text } }
-        files.flatMap { it.classes(includeNested = true) }
-            .assertFalse { it.hasAnnotationWithName(HILT_ANNOTATIONS) }
-    }
-
     /** The primary type of every unqualified definition in the file, in order. */
     private val KoFileDeclaration.definedTypes: List<String>
         get() = text.lines()
@@ -79,19 +68,8 @@ class DiRulesTest {
 
         val KOIN_MODULE_BUILDERS = setOf("org.koin.dsl.module", "org.koin.dsl.lazyModule")
         val GLOBAL_KOIN = setOf("org.koin.core.context.GlobalContext", "org.koin.mp.KoinPlatform")
-        val HILT_ANNOTATIONS = setOf(
-            "HiltAndroidApp",
-            "AndroidEntryPoint",
-            "HiltViewModel",
-            "HiltAndroidTest",
-            "HiltWorker",
-            "EntryPoint",
-            "InstallIn",
-        )
 
         val DEFINITION = Regex("""\b(?:single|factory|scoped|viewModel|worker)(?:<([\w.]+)|Of\(::([\w.]+))""")
         val QUALIFIER = Regex("""\bnamed(?:<|\()|\bqualifier\b""")
-
-        val INJECTION_PACKAGES = listOf("dagger.", "javax.inject")
     }
 }

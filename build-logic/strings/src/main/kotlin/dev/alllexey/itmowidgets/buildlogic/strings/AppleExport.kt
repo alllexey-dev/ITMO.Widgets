@@ -20,7 +20,7 @@ object AppleExport {
 
     const val STRINGS_DIR = "Strings"
     const val SYMBOLS_FILE = "Symbols/AppSymbol.swift"
-    const val COMMAND = "scripts/verify.sh run -- :app:exportAppleStrings"
+    const val COMMAND = "./gradlew :app:exportAppleStrings"
     const val TABLES_FILE = "build-logic/strings/apple-tables.properties"
     const val ICONS_FILE = "docs/design/icons.tsv"
 

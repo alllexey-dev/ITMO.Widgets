@@ -191,7 +191,7 @@ the demo banner.
   this feature (`homeModule`, `homeIosModule`), the schedule, sport and friend
   cards with their features' iOS cards. `offeredBy` keeps only the renderers
   of kinds `PlatformCapabilities` offers; every kind is offered since mark
-  tracking shipped on iOS (IO-09d3), and the new-marks card opens the
+  tracking shipped on iOS, and the new-marks card opens the
   recordbook tab.
 - Hints. `IosHomeHintStatus`: the widget hint shows until any widget of the
   app is placed (WidgetKit's current configurations through `IosPlatform`);

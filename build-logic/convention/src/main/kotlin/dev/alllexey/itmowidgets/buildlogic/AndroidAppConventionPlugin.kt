@@ -68,7 +68,7 @@ class AndroidAppConventionPlugin : Plugin<Project> {
 
         // Konsist reads sources that are not compile inputs: an import-only edit leaves the bytecode
         // unchanged, so without this the up-to-date check or the build cache would replay a stale result.
-        // G-03's StableIdentifiersTest also scans shared/*/src/*Main/kotlin; keep both after L06 KN-02a.
+        // StableIdentifiersTest also scans shared/*/src/*Main/kotlin, so the shared sources are inputs too.
         val sharedSources = isolated.rootProject.projectDirectory.dir("shared").asFileTree.matching {
             include("*/src/**")
         }

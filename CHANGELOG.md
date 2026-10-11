@@ -3,14 +3,133 @@
 Reference documents in `docs/` describe the current state; this file records
 what changed and when. Unreleased entries describe local development, not a
 publication or deployment.
-New entries are written as fragments in `changelog.d/` (format in its
-`README.md`) and collected here by `scripts/changelog.sh collect` at release.
 
-## 2.3 — development
+## Unreleased (2.3.0)
 
-- v2.3 starts: `master` builds `2.3-SNAPSHOT` (version code 20290), 2.2.x fixes
-  move to `release/2.2`, and agents work in lanes under § v2.3 lanes of
-  `AGENTS.md`.
+The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
+keeps its features and the data of 2.2, and the same shared screens run in a
+new iOS app.
+
+### iOS app
+
+- Sign-in through ITMO.ID or a refresh token, the demo session (five taps on
+  the logo), the first-run flow with `Как добавить виджет` hints, `Вход на
+  сайт` with the system QR scanner, and My ITMO in the app's browser (other
+  sites open in Safari).
+- The tabs are the shared screens of Android: `Зачётка` with BARS and the
+  subject page (links, chats, teacher reviews with the AI summary), the
+  schedule with friends' schedules and lesson sheets (`Открыть на карте` in
+  Apple Maps), sport with `Мой спорт` and `Запись`, the home feed, and the Me
+  tab with friends, people search, privacy and settings; rows iOS cannot
+  support are hidden.
+- The QR pass at full brightness, the QR widget with the spoiler and dynamic
+  colours, the `QR-пропуск` control in Control Center, on the Lock Screen and
+  the Action button, App Shortcuts `QR-пропуск` and `Сегодня` in Siri and
+  Spotlight, and quick actions on the app icon.
+- Schedule widgets `Пара` (small, medium, Lock Screen) and `Расписание`
+  (medium, large) read a timeline the app precomputes to the end of tomorrow,
+  so they switch lessons without waking the app.
+- Background refresh checks schedule changes and new marks (My ITMO, BARS,
+  connected sheets) with Android's periods and texts; what is found at night
+  arrives at 06:00, and a tap on a notification opens the screen it is about.
+- The notification service books a freed sport place as Android's push
+  handler does, never for another account, the demo or without the services
+  opt-in.
+- Phone calendar sync into an `ITMO.Widgets` calendar, and `.ics` export
+  through the share sheet.
+- A newer iOS release from Backend is offered with a link to the App Store
+  (inactive until the App Store record exists); a Kotlin crash is saved to
+  `Журнал ошибок`.
+
+### Android screens on Compose Multiplatform
+
+- Every screen, sheet and dialog (home, QR pass, schedule, sport, recordbook,
+  social, settings, links, reviews, sign-in, first-run flow, Me tab, update
+  offer, web sign-in, My ITMO) is a Compose Multiplatform screen shared with
+  iOS; copy, layout and behaviour stay as in 2.2. XML layouts, adapters and
+  View-based visual tests are gone.
+- One Navigation 3 shell in `MainActivity` replaces the Fragments and nav
+  graphs; widget, notification, shortcut and App Link routes go through one
+  shared parser and queue.
+- Predictive back on Android 13-15, as on 16: the gesture previews closing a
+  screen or a sheet, the start tab shows the back-to-home animation, and My
+  ITMO goes back in its web history first.
+- The bottom tabs switch by a horizontal swipe on a tab root: one tab per
+  swipe, no wrap-around, off under TalkBack and while a sheet or dialog is
+  open. `Мой спорт` and `Запись` keep their own swipe and switch the tab only
+  on a new swipe at either end.
+- Smaller changes: the `.ics` sheet buttons stand side by side when they fit;
+  deleting an own link asks first; report dialogs keep their text across
+  rotation; the review editor's button stays above the keyboard; another
+  user's sport offers `Открыть на карте`; the My ITMO top bar no longer shows
+  the current site.
+
+### Appearance
+
+- New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
+  обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
+  палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep
+  the look of 2.2.
+- Material 3 Expressive: below Android 12 and on iOS the app is painted in
+  the brand blue `#4984E2` instead of the baseline purple, every bottom tab
+  shows its label, a few hero moments get expressive motion, and waits show
+  the morphing loading indicator. Under reduced motion everything shows its
+  end state at once.
+- New switch `Виджеты в цвет темы` (off by default) paints the schedule and QR
+  widgets in the app's colours on Android and iOS; with `Динамические цвета`
+  off the QR code stays black on white.
+- Every icon is a Material Symbols Rounded glyph, and the selected bottom tab
+  shows its filled variant. On iOS the shared screens use iOS controls, text
+  styles and haptics.
+- The app speaks Russian on a phone in any language: Russian plurals (`5
+  пар`, `Ещё 2 балла`) and library texts, notifications, widgets and the QR
+  tile included.
+
+### Fixes
+
+- The schedule widgets show lessons again on Android 8-11; the day-list
+  widget no longer shows an older list after a refresh; on Android 12+ both
+  schedule widgets follow the launcher's corner radius.
+- When ITMO.ID rejects the refresh token while the app runs, the session ends
+  with `Сессия истекла. Войдите снова, чтобы продолжить.`; a timeout or a
+  server error keeps the session.
+- Sign-out also forgets the sport points, auto-sign limits, queues and
+  friends' bookings, so the next account or the demo never sees them.
+- The prediction of a lesson you are booked on no longer shows as booked: it
+  offers auto-sign again.
+- A setting changed while a screen starts watching it is no longer lost until
+  restart.
+- The `Запись` week strip no longer flashes grey when the selection moves to
+  or from a day without lessons.
+- Links and system pages opened from the new screens (privacy policy, account
+  deletion, subject links, calendar settings) work again after 2.3.0-beta.1.
+
+### Architecture and build
+
+- 15 shared Kotlin Multiplatform modules with iOS targets hold each feature's
+  domain, data, view models and screens; `:shared:designsystem` is the one
+  source of the look and exports its tokens for iOS and the web app.
+- The data layer runs on MyItmoApi 2.x and Core 2.0 over Ktor; Retrofit,
+  Gson, MyItmoApi 1.x and Core 1.x are no longer app dependencies. Core 2.0 is
+  built in as `:shared:backend-client` and tested against Backend's golden
+  fixtures and OpenAPI snapshot; privacy fields have no wire defaults, so a
+  missing one fails instead of widening access.
+- Every Backend request carries `X-App-Version` (version, build, platform,
+  distribution), and the device registers again once after an update. Every
+  Backend call checks the services opt-in and the demo session in one place.
+- Koin is the only dependency-injection graph; Hilt, Dagger and KSP are gone.
+- Files and settings stay compatible with 2.2 (caches, change history, widget
+  snapshot, QR pass, tokens); `UpgradeFrom22Test` and
+  `StableIdentifiersTest` guard the upgrade.
+- Gradle 9.7, AGP 9.3, Kotlin 2.4.20, compileSdk 37, minSdk 26, targetSdk 36;
+  MyItmoApi builds from source at a pinned commit, release builds take it
+  from Maven Central. The QR encoder is a Kotlin port, Google Sheets parse
+  with Ksoup, avatars load with Coil 3, OkHttp is 5.5.
+- `scripts/verify.sh` is the one build entry point. CI runs the checks, both
+  lints, Roborazzi screenshot baselines (four Android appearances, plus iOS
+  ones for the design system) and every instrumented test on GitHub's
+  emulators for each PR; the Konsist architecture rules cover the app and
+  every shared module.
 
 ## 2.2 — 2026-10-03
 

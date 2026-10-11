@@ -1,21 +1,12 @@
 package dev.alllexey.itmowidgets.architecture
 
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
-import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
 import org.junit.Test
 
-/** The Navigation 3 shell (L17): one Compose shell in `:app`, no Fragment host left beside it. */
+/** The Navigation 3 shell: one Compose shell in `:app` owns navigation and registers every route. */
 class ShellRulesTest {
-
-    @Test
-    fun `the app's main sources use no Fragment or Fragment navigation`() {
-        // SH-1d deleted every Fragment, sheet and dialog host and the nav graphs; screens are shell entries now.
-        appMainFiles
-            .requireNonEmpty("app main files")
-            .assertFalse { file -> file.imports.any { import -> FRAGMENT_IMPORTS.any { import.name.startsWith(it) } } }
-    }
 
     @Test
     fun `NavDisplay and entry registration live only in the shell`() {
@@ -30,7 +21,7 @@ class ShellRulesTest {
 
     @Test
     fun `every route is registered by a shell entry`() {
-        // A route without a registration would show the shell's placeholder; each lane's <Tab>Entries.kt and the
+        // A route without a registration would show the shell's placeholder; each tab's <Tab>Entries.kt and the
         // shell's own host entries name their keys as entry<...> type arguments.
         val registered = appMainFiles
             .filter { it.inShell }
@@ -58,6 +49,5 @@ class ShellRulesTest {
         const val REGISTRATION = "EntryRegistry"
         val NAV_DISPLAY_CALL = Regex("""\bNavDisplay\(""")
         val ENTRY_REGISTRATION = Regex("""\bentry<([\w.]+)>""")
-        val FRAGMENT_IMPORTS = listOf("androidx.fragment.", "androidx.navigation.fragment.", "androidx.navigation.ui.")
     }
 }

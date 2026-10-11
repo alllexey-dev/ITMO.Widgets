@@ -1,14 +1,5 @@
-# Findings scripts/check-docs.sh accepts: `<finding key or whole doc path>  # <reason>`, one per line.
-# The list only shrinks: fix a finding and delete its line (a stale line fails --strict).
-# Only L02-governance edits this file; other lanes fix the doc or hand the text in.
-
-AGENTS.md:path:plan.md  # user-global rule file under ~/.claude/rules/generated/, named to exclude it
-AGENTS.md:path:allsteps.md  # user-global rule file, named to exclude it
-AGENTS.md:path:local-ci-check-manual.md  # user-global rule file, named to exclude it
-AGENTS.md:path:ya-build-test.md  # user-global rule file, named to exclude it
-AGENTS.md:path:linter-rules.md  # user-global rule file, named to exclude it
-AGENTS.md:path:ticket.md  # user-global rule file, named to exclude it
-AGENTS.md:path:working-rules.md  # user-global rule file, named to exclude it
+# False positives scripts/check-docs.sh accepts: `<finding key or whole doc path>  # <reason>`, one per line.
+# Delete a line once its finding is gone (a stale line fails --strict).
 
 docs/features/app-links.md:path:site/.well-known/assetlinks.json  # Web repository file without the W/ prefix
 

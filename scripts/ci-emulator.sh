@@ -4,17 +4,16 @@
 #                                             the animation scales; prints ANDROID_SERIAL=...
 # ci-emulator.sh logcat <file>                capture `logcat -v threadtime` into <file> in the background
 #
-# The emulator of android-ui.yml and android-ship.yml (L04 TC-CI1). Local runs use scripts/emulator.sh and its pool.
+# The emulator of android-ui.yml and android-ship.yml. Locally use any emulator (Android Studio's device manager).
 #
 # - Runs only with CI=true and GITHUB_ACTIONS=true: it writes a udev rule with sudo and installs SDK packages.
-# - The AVD mirrors the pool AVD of scripts/emulator.sh (Pixel 7 geometry: 1080x2400 at 420 dpi, 2 GB RAM, 4 cores,
-#   hardware keyboard, no skin and so no cutout) on system-images;android-35;google_apis;x86_64, the x86_64 twin of
-#   the pool's arm64 image. Animations stay as the image ships them, as on the pool emulators, unless
+# - The AVD has Pixel 7 geometry (1080x2400 at 420 dpi, 2 GB RAM, 4 cores, hardware keyboard, no skin and so no
+#   cutout) on system-images;android-35;google_apis;x86_64. Animations stay as the image ships them, unless
 #   `wait --animations off` sets the window, transition and animator scales to 0.
 # - `start` returns right after the launch, so the job builds while the emulator boots; every boot is cold
-#   (-no-snapshot), so no state leaks between runs. The port is 5560, a pool port: verify.sh ui refuses 5554.
+#   (-no-snapshot), so no state leaks between runs. The port is 5560.
 # - `wait --cutout tall` enables com.android.internal.display.cutout.emulation.tall, the tall cutout overlay,
-#   because the integrator's emulator has a cutout and the shell's insets tests must see one.
+#   because phones with a cutout are common and the shell's insets tests must see one.
 # - Exit code: 0 ok, 1 the emulator failed or did not boot in time, 2 refused (usage, not in GitHub Actions).
 
 set -u
@@ -31,7 +30,7 @@ die() { printf '%s: %s\n' "$me" "$1" >&2; exit "${2:-2}"; }
 note() { printf '%s: %s\n' "$me" "$*" >&2; }
 
 [ "${CI:-}" = true ] && [ "${GITHUB_ACTIONS:-}" = true ] ||
-  die "GitHub Actions only (CI=true, GITHUB_ACTIONS=true); locally use scripts/emulator.sh"
+  die "GitHub Actions only (CI=true, GITHUB_ACTIONS=true); locally start an emulator yourself"
 [ -n "${ANDROID_HOME:-}" ] || die "ANDROID_HOME is not set"
 
 adb="$ANDROID_HOME/platform-tools/adb"

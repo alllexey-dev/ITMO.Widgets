@@ -1,4 +1,4 @@
-// Generated from docs/design/icons.tsv by `scripts/verify.sh run -- :app:exportAppleStrings`; do not edit.
+// Generated from docs/design/icons.tsv by `./gradlew :app:exportAppleStrings`; do not edit.
 
 /// The icon registry on SwiftUI and system surfaces.
 enum AppSymbol: String, CaseIterable {

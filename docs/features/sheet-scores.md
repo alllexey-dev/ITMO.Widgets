@@ -200,7 +200,7 @@ reads the sheet's arguments from a `SavedStateHandle` the iOS route builds.
   `filesDir/sheet_scores` under the app's files directory.
 - The subject page's connected total, `Открыть таблицу`, `Изменить итог` and
   `Отключить` work as on Android. The offer to connect a sheet and the sheet
-  link picker come from the subject's links, which iOS loads since IO-09f
+  link picker come from the subject's links, which iOS loads too
   ([subject page](subject-page.md#ios)); a link's `Мои баллы` opens this sheet
   from its actions ([subject links](resources.md#ios)).
 - Tests: `RecordbookUITests` opens `Мои баллы` from the demo's total and closes

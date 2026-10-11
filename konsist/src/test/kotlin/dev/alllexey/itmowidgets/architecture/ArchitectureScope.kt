@@ -11,7 +11,7 @@ import org.junit.Assert.fail
 internal object ArchitectureScope {
 
     /**
-     * Every module's production source sets, so the shared modules join once they exist. Agent worktrees under
+     * Every module's production source sets, so new modules join automatically. Git worktrees under
      * .claude/ are separate checkouts, not this app's sources. The project path, not the absolute one: inside such a
      * worktree the absolute path of every file contains /.claude/. Build logic and the Konsist module are tooling.
      */
@@ -40,25 +40,20 @@ internal fun <T> List<T>.requireNonEmpty(what: String): List<T> = requireAtLeast
 
 internal const val APP_MODULE = "app"
 
-/** This module: it holds the rules and their ratchet files, and its own sources are never in scope. */
+/** This module: it holds the rules, and its own sources are never in scope. */
 internal const val KONSIST_MODULE = "konsist"
 
-internal const val ROOT_PACKAGE = "dev.alllexey.itmowidgets"
 internal const val FEATURE_PACKAGE_PREFIX = "dev.alllexey.itmowidgets.feature."
 internal const val CORE_PACKAGE_PREFIX = "dev.alllexey.itmowidgets.core."
 internal const val APP_PACKAGE_PREFIX = "dev.alllexey.itmowidgets.app."
 internal const val DI_PACKAGE = "dev.alllexey.itmowidgets.di"
-internal const val CORE_STORAGE_PACKAGE = "dev.alllexey.itmowidgets.core.storage"
 
-/** Floors for sets that must not shrink; they drop only with the integrator's OK. */
+/** Floors for sets that must not shrink; lower one only when the code it counts is deliberately removed. */
 internal const val MIN_GATED_CLASSES = 20
 internal const val MIN_VIEW_MODELS = 34
 internal const val MIN_DOMAIN_FILES = 95
 
-/**
- * The two sport debug stores, the time override store and the refresh token controller. SH-1d3 deleted the fifth, the
- * debug tools Fragment; the shell registers the debug tools entry only in debug builds (`ShellEntries.kt`).
- */
+/** The two sport debug stores, the time override store and the refresh token controller. */
 internal const val MIN_DEBUG_ONLY_CLASSES = 4
 internal const val MIN_BACKEND_GATED_CLASSES = 16
 internal const val MIN_KMP_SOURCE_FILES = 250
@@ -70,84 +65,18 @@ internal fun featureOf(name: String): String? = name
     ?.removePrefix(FEATURE_PACKAGE_PREFIX)
     ?.substringBefore(".")
 
-/** The key a file-level rule reports and a ratchet line names: the package plus the file name without `.kt`. */
-internal val KoFileDeclaration.ratchetKey: String
+/** The key a file-level rule reports: the package plus the file name without `.kt`. */
+internal val KoFileDeclaration.qualifiedKey: String
     get() = listOfNotNull(packagee?.name, name).joinToString(".")
 
-/** The key a class-level rule reports and a ratchet line names: the package plus the class name. */
-internal val KoClassDeclaration.ratchetKey: String
+/** The key a class-level rule reports: the package plus the class name. */
+internal val KoClassDeclaration.qualifiedKey: String
     get() = listOfNotNull(packagee?.name, name).joinToString(".")
 
-/**
- * Rules that start with known violations. Their allowlists are the files of [Ratchet.DIRECTORY], one per owner, so a
- * lane that fixes a violation deletes the line from its own file only.
- */
-internal enum class RatchetRule(val id: String) {
-    VIEW_MODEL_SHAPE("viewmodel-shape"),
-    PRESENTATION_RESOURCES("presentation-imports-r"),
-    DOMAIN_JAVA("domain-imports-java");
-
-    companion object {
-        fun byId(id: String): RatchetRule? = entries.firstOrNull { it.id == id }
-    }
-}
-
-/** One allowlist line: `<rule-id> <key>` in [file] at [line]. */
-internal data class RatchetEntry(val file: String, val line: Int, val ruleId: String, val key: String)
-
-/**
- * The allowlists of the [RatchetRule]s, read from every file of [DIRECTORY]; there is no registry of files.
- *
- * A file is `<feature>.txt` for `feature.<feature>.*`, `core.txt` for `core.*` and `app.txt` for everything else.
- * Lines are `<rule-id> <key>`; blank lines and lines starting with `#` are ignored. Entries only ever go away: a key
- * that no longer violates its rule fails as stale, and a new violation is fixed, never added.
- */
-internal object Ratchet {
-
-    const val DIRECTORY = "src/test/resources/architecture/ratchet"
-
-    val directory: File get() = ArchitectureScope.moduleFile(KONSIST_MODULE, DIRECTORY)
-
-    val entries: List<RatchetEntry> by lazy {
-        directory.listFiles { file -> file.isFile }.orEmpty().sortedBy { it.name }.flatMap { file ->
-            file.readLines().mapIndexedNotNull { index, raw ->
-                val line = raw.trim()
-                if (line.isEmpty() || line.startsWith("#")) return@mapIndexedNotNull null
-                val parts = line.split(Regex("\\s+"))
-                RatchetEntry(file.name, index + 1, parts[0], parts.drop(1).joinToString(" "))
-            }
-        }
-    }
-
-    /** The allowlist file that owns [key]. */
-    fun fileFor(key: String): String = when {
-        key.startsWith(FEATURE_PACKAGE_PREFIX) -> "${featureOf(key)}.txt"
-        key.startsWith(CORE_PACKAGE_PREFIX) -> "core.txt"
-        else -> "app.txt"
-    }
-
-    /**
-     * Fails when [violations] (key to reason) holds a key that [rule]'s allowlist lacks, or the allowlist holds a key
-     * that no longer violates. The message lists ready-to-delete lines and never suggests adding one.
-     */
-    fun assertOnly(rule: RatchetRule, violations: Map<String, String>) {
-        val allowed = entries.filter { it.ruleId == rule.id }
-        val allowedKeys = allowed.map { it.key }.toSet()
-        val added = violations.filterKeys { it !in allowedKeys }.toSortedMap()
-        val stale = allowed.filter { it.key !in violations }
-        if (added.isEmpty() && stale.isEmpty()) return
-        val message = buildString {
-            if (added.isNotEmpty()) {
-                appendLine("${added.size} new violation(s) of ${rule.id}; fix them, the ratchet never grows:")
-                added.forEach { (key, reason) -> appendLine("  $key: $reason") }
-            }
-            if (stale.isNotEmpty()) {
-                appendLine("${stale.size} stale line(s) of ${rule.id}; the code is fixed, delete them:")
-                stale.forEach {
-                    appendLine("  $KONSIST_MODULE/$DIRECTORY/${it.file}:${it.line} ${it.ruleId} ${it.key}")
-                }
-            }
-        }
-        fail(message)
-    }
+/** Fails with every key and its reason when [violations] (key to reason) is not empty. */
+internal fun assertNoViolations(rule: String, violations: Map<String, String>) {
+    if (violations.isEmpty()) return
+    fail(violations.toSortedMap().entries.joinToString("\n", "${violations.size} violation(s) of $rule:\n") {
+        "  ${it.key}: ${it.value}"
+    })
 }

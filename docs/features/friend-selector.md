@@ -117,7 +117,7 @@ otherwise.
 ## iOS
 
 The iOS app ([iOS app](../ios.md)) hosts the same route as a sheet above the
-shell (IO-09b): `AppRoutes.FriendSelector` is a Compose sheet key of the Swift
+shell: `AppRoutes.FriendSelector` is a Compose sheet key of the Swift
 router, `FriendSelectorSheet` (`iosApp/Sources/Features/Schedule/`) shows the
 content of `friendSelectorViewController` (`shared/ios`,
 `screens/ScheduleScreens.kt`) at full height with the system's drag indicator,
@@ -132,7 +132,7 @@ arguments do.
   Close and a drag down deliver nothing.
 - A profile (a closed schedule's row, a long press) opens on the schedule's
   stack in the sheet's place.
-- The friend list is the social graph's (`socialModule`, IO-09e);
+- The friend list is the social graph's (`socialModule`);
   `friendSelectorModule` joins the iOS graph with the schedule.
 - Tests: `ScheduleUITests` on the demo session (a friend chosen and the own
   schedule back, a profile from a long press), `RouterTests` (one route sheet

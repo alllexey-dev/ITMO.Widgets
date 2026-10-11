@@ -33,11 +33,11 @@ Backend is not involved. The code is part of the schedule feature
   that read the phone's calendars (Xiaomi, Samsung) show it; Google and Yandex
   Calendar do not, since they show only their own accounts' calendars; for
   Google Calendar there is the `.ics` export.
-- Google-account calendars are never written (owner's decision of
+- Google-account calendars are never written (decided on
   2026-10-02): a delete there is final only once Google's sync adapter uploads
   it, and Android's guard against too many deletions undoes bulk deletes, after
   which the adapter writes the server's copies back as new rows. On the
-  owner's phone 37 of 38 events came back after turning off.
+  developer's phone 37 of 38 events came back after turning off.
 - `AndroidPhoneCalendars` is the only `CalendarContract` code. Events are busy,
   have no reminders and carry the event time zone. The last line of the
   description is the app's tag `ITMO.Widgets · <key>`

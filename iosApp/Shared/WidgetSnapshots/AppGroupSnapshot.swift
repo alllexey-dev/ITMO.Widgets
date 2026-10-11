@@ -8,7 +8,7 @@ import Foundation
 /// reader's) all come back as nil, and the reader shows its placeholder (ADR 0027).
 enum AppGroupSnapshot {
     /// The App Group container of this process: the group in its own Info.plist (`AppGroupID`), then any group
-    /// AltStore lists in `ALTAppGroups` (SP-23), as the Kotlin `AppGroupDirectory` resolves it. Nil in a build
+    /// AltStore lists in `ALTAppGroups`, as the Kotlin `AppGroupDirectory` resolves it. Nil in a build
     /// without the entitlement; the extensions then see nothing and show the signed-out state.
     static func container(bundle: Bundle = .main, fileManager: FileManager = .default) -> URL? {
         groupCandidates(of: bundle).lazy

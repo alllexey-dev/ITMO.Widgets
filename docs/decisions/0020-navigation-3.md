@@ -31,19 +31,19 @@ at the end. One swap at the end means `AppNavigator` and the Fragment hosts do
 not change while the feature screens are ported.
 
 **Consequence.** Until the swap, navigation code is frozen except for
-announced exceptions; feature work adds keys, the shell owner registers them.
+announced exceptions; feature work adds keys, the shell change registers them.
 Predictive back on sheets needs `android:enableOnBackInvokedCallback`.
 
 **Supersedes.** The Navigation part of the `AGENTS.md` § Hard rules line
 "Android stays on XML, Fragments, ViewBinding, Navigation, Hilt and
 WorkManager" (with ADR 0017).
 
-**Revisit when.** SP-05b fails (predictive back on a sheet scene on a device),
-or a sheet case cannot be expressed as a scene.
+**Revisit when.** Predictive back on a sheet scene fails on a device, or a
+sheet case cannot be expressed as a scene.
 
-**Settled.** A5 settled 12 Q5 with (a), Navigation 3. The fallbacks (Nav2
-type-safe routes, or sheets managed by the host outside the back stack) are
-not taken: SP-14 passed.
+**Settled.** Navigation 3. The fallbacks (Nav2 type-safe routes, or sheets
+managed by the host outside the back stack) are not taken: the spike below
+passed.
 
 **Evidence.**
-- SP-14: PASS (Nav3 1.2.0 overlay scenes carry sheets, dialogs, results, App Links, per-tab back stacks and restore, 8/8 under Robolectric; no fallback; predictive back on a sheet scene waits for SP-05b on a device)
+- Navigation 3 spike: PASS (Nav3 1.2.0 overlay scenes carry sheets, dialogs, results, App Links, per-tab back stacks and restore, 8/8 under Robolectric; no fallback; predictive back on a sheet scene still needed a device check)

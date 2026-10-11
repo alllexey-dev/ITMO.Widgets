@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Owner of every string id: which app/src/main/res/values/strings_<file>.xml holds it.
 
-The owner is computed from usage, not from the id prefix (ADR 0028, L05 AA-01):
+The owner is computed from usage, not from the id prefix (ADR 0028):
 
 1. `platform` holds every id a system surface reaches (manifest, res/xml*, widget and launcher-preview layouts,
    the Kotlin files in PLATFORM_KOTLIN) and every id the shared text builders in PLATFORM_BUILDERS reference.
    `scripts/strings-frozen-keys.txt` is this set, sorted, and only grows.
 2. `common` holds ids used by two or more owner units, or by `core/**` at all.
-3. Otherwise the single owner unit (a v2.3 module) holds the id.
+3. Otherwise the single owner unit (a feature module or package) holds the id.
 
 Usage comes from app/src/{main,github,play}: `R.string`/`R.plurals` (and the `AppR` alias), layouts and menus
 through their users (`*Binding`, `R.layout`, `R.menu`, `@menu/` and `<include>` parents). `src/debug` previews and
@@ -17,7 +17,7 @@ Modes:
   --split <rev> [--diff]  write strings_<file>.xml from <rev>'s strings.xml, names, values and order kept, and
                           delete strings.xml; --diff prints what would change instead (nothing = in sync).
   --where <id|path>       the file for an id, or for a new string used from that source file; a file moved to a
-                          shared module (scripts/strings-move.py) is named at its new place.
+                          shared module is named at its new place.
   --report                id, file, users as TSV, for the files still in app/src/main/res/values.
 """
 
@@ -42,7 +42,7 @@ PRIMARY_SETS = ("main", "github", "play")
 PREVIEW_SETS = ("debug",)
 TEST_SETS = ("test", "testGithub", "androidTest", "androidTestPlay")
 
-# The v2.3 modules (master plan section 3.1); `account` keeps one file per package until L16 moves them.
+# The owner units: the feature modules; `account` keeps one file per package.
 FEATURE_UNITS = {
     "qr": "qr",
     "home": "home",
@@ -369,7 +369,7 @@ def target(file):
 
 
 def location(file):
-    """The file as it is now: in a shared module's composeResources once moved (scripts/strings-move.py)."""
+    """The file as it is now: in a shared module's composeResources once moved there."""
     moved = sorted((ROOT / "shared").glob(f"{SHARED_VALUES}/strings_{file}.xml"))
     return moved[0] if moved else target(file)
 

@@ -38,15 +38,15 @@ live side by side until the shell swap; nothing ships in between.
 - `docs/design.md` § Principle, the words "a new UI framework" in "Unification does
   not mean a redesign, a new UI framework or features outside the roadmap."
 
-**Revisit when.** SP-05b fails (sheet ports on a device); the pilot overruns
-its time box; a material3 bump breaks the `strictly` pin (ADR 0021).
+**Revisit when.** Sheet ports fail on a device; a material3 bump breaks the
+`strictly` pin (ADR 0021).
 
-**Settled.** D1 and A2 settled 90 Q1 and 12 Q3-Q4. Fallback C-b (screen
-composables in `app/feature/<x>/ui` on Jetpack, shared presentation, SwiftUI
-screens on iOS) is not taken: SP-04, SP-05a and SP-13 found no blocker. A later
-failure that needs it is the owner's decision and a superseding ADR.
+**Settled.** The fallback (screen composables in `app/feature/<x>/ui` on
+Jetpack Compose, shared presentation, SwiftUI screens on iOS) is not taken: the
+spikes below found no blocker. A later failure that needs it gets a
+superseding ADR.
 
 **Evidence.**
-- SP-04: PARTIAL (the expressive API compiles in `commonMain` on both material3 lines; mixing with a newer Jetpack material3 breaks at runtime unless it is pinned `strictly` to the JetBrains mapping; 94 Q6 goes to the owner)
-- SP-05: pending (SP-05a PASS: `ComposeView` bodies in the real MDC sheets, 31/31 roles through the bridge, drag, IME and recreation pass on the host; SP-05b device checks pending)
-- SP-13: PASS (SP-13a PASS, SP-13b PASS; CMP resources resolve in the APK on AGP 9.3.3; a Hilt Fragment hosts a `commonMain` screen through `ComposeView`; fallback C-b not needed)
+- Expressive API spike: PARTIAL (the expressive API compiles in `commonMain` on both material3 lines; mixing with a newer Jetpack material3 breaks at runtime unless it is pinned `strictly` to the JetBrains mapping, see ADR 0021)
+- Sheet hosting spike: partly done (`ComposeView` bodies in the real MDC sheets, 31/31 roles through the bridge, drag, IME and recreation pass on the host; device checks were pending when this was decided)
+- Resources spike: PASS (CMP resources resolve in the APK on AGP 9.3.3; a Hilt Fragment hosts a `commonMain` screen through `ComposeView`; the fallback is not needed)
