@@ -149,7 +149,9 @@ jobs:
         if: always() && steps.ui.outcome != 'skipped'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ui-${{ matrix.config }}-${{ matrix.shard }}
+          # Per attempt: a rerun's upload is a second artifact of the same name, and the download keeps the one with
+          # the highest id, which is not always the newest.
+          name: ui-${{ matrix.config }}-${{ matrix.shard }}-a${{ github.run_attempt }}
           path: |
             ui-out/
             app/build/outputs/androidTest-results/connected/
@@ -193,7 +195,9 @@ jobs:
           [ "$CHANGES" = success ] || { echo "::error::the path filter job ended $CHANGES"; ok=1; }
           [ "$UI" = success ] || { echo "::error::the shard jobs ended $UI"; ok=1; }
           for id in $EXPECTED; do
-            md="shards/ui-$id/ui-out/shard.md"
+            # The newest attempt's report: a shard that was not rerun keeps its earlier one.
+            dir=$(ls -d "shards/ui-$id-a"* 2> /dev/null | sort -V | tail -n 1)
+            md="$dir/ui-out/shard.md"
             if [ ! -f "$md" ]; then
               echo "::error::shard $id uploaded no report (missing run)"
               ok=1
