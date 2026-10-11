@@ -97,7 +97,8 @@ The iOS app ([iOS app](../ios.md#shell-and-routes)) parses links with the same
 above once the session is ready. Today only the app's own URL scheme reaches
 it: `itmowidgets://route/<id>` from widgets, the Control, App Shortcuts and
 quick actions. `https` links on these hosts open the site, because Universal
-Links need the associated domains of a signed build after gate T13
+Links need the associated domains of a signed build, which needs the Apple
+developer account
 ([degradations](../ios.md#degradations)).
 
 Sharing works as on Android through the system share sheet

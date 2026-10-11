@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check-sources.sh    source rules of the iOS app; scripts/ios/test.sh runs it before every build (L18 IO-20)
+# check-sources.sh    source rules of the iOS app; scripts/ios/test.sh runs it before every build
 #
 # - No Cyrillic in the Swift of iosApp/Sources, iosApp/Extensions and iosApp/Shared: user-visible text comes from
 #   the catalog through the generated string tables (ADR 0028). Tests may compare with Russian text.
@@ -7,7 +7,7 @@
 #   `AppGroupID` and `KeychainGroup` from its own Info.plist (docs/ios.md, Identifiers).
 # - The generated iosApp/Shared files are fresh: each table has the keys its catalog files give it, AppSymbol.swift
 #   the cases of docs/design/icons.tsv. Texts are compared byte for byte by `checkStringCatalog` in every Android
-#   build; this check is the cheap part that needs no Gradle. Fix: scripts/verify.sh run -- :app:exportAppleStrings
+#   build; this check is the cheap part that needs no Gradle. Fix: ./gradlew :app:exportAppleStrings
 # - Exit code: 0 clean, 1 violations (one line each on stderr).
 
 set -u
@@ -100,6 +100,6 @@ if problems:
     for problem in problems:
         print(f"check-sources.sh: {problem}", file=sys.stderr)
     if any(".xcstrings" in p or "AppSymbol" in p for p in problems):
-        print("check-sources.sh: regenerate with scripts/verify.sh run -- :app:exportAppleStrings", file=sys.stderr)
+        print("check-sources.sh: regenerate with ./gradlew :app:exportAppleStrings", file=sys.stderr)
     sys.exit(1)
 PY

@@ -14,7 +14,7 @@ import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
- * The `key -> R` table of the exported strings (ADR 0028, L07 KM-07): `UiText.Res` and `UiText.Plural` carry a CMP
+ * The `key -> R` table of the exported strings (ADR 0028): `UiText.Res` and `UiText.Plural` carry a CMP
  * resource whose `key` is the Android resource name, and the Android resolver turns it into `R.string.<key>` or
  * `R.plurals.<key>` through this table instead of `Resources.getIdentifier`.
  */

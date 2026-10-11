@@ -8,10 +8,10 @@ import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
 import org.junit.Test
 
 /**
- * Compose Multiplatform screens (master plan 3.1, ADR 0020) and the design-system boundary (ADR 0021, DS-02c's
- * hand-in). `@Preview` functions and files under a `preview/` directory are exempt from every literal rule: long
- * Russian synthetic text and fixed sizes are their purpose. View and RemoteViews code keeps its own `dp` and colour
- * helpers, so the literal rules read only files that import Compose.
+ * Compose Multiplatform screens (ADR 0020) and the design-system boundary (ADR 0021). `@Preview` functions and files
+ * under a `preview/` directory are exempt from every literal rule: long Russian synthetic text and fixed sizes are
+ * their purpose. View and RemoteViews code keeps its own `dp` and colour helpers, so the literal rules read only files
+ * that import Compose.
  */
 class ComposeRulesTest {
 
@@ -30,7 +30,7 @@ class ComposeRulesTest {
 
     @Test
     fun `every public screen and sheet content has a preview in its module`() {
-        // DS-02b's harness renders every commonMain @Preview, so a preview is also the screen's screenshot test.
+        // The screenshot harness renders every commonMain @Preview, so a preview is also the screen's screenshot test.
         val screens = statelessCandidates().filter { it.hasPublicOrDefaultModifier && SCREEN.matches(it.name) }
         if (sharedFeatureUiFiles().isNotEmpty()) screens.requireNonEmpty("public shared screens")
         if (screens.isEmpty()) return
@@ -72,7 +72,7 @@ class ComposeRulesTest {
         .flatMap { it.composables() }
         .filter { !it.isPreview && STATELESS.matches(it.name) }
 
-    /** Once a shared feature has a `ui` file (LH-3's QR pass screen is the first), its screens must be in scope. */
+    /** Once a shared feature has a `ui` file, its screens must be in scope. */
     private fun sharedFeatureUiFiles(): List<KoFileDeclaration> =
         productionFiles.filter { SHARED_FEATURE_UI_FILE.matches(it.projectPath) }
 

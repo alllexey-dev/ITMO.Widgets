@@ -2,7 +2,7 @@
 
 Synthetic answers, not captured university responses or account exports. They are
 copied unchanged from MyItmoApi (`M/`) commit `3a85bd82a9c9a6101ae0f8aeb85cc3ed12f7bf5e`
-(`gradle/myitmoapi.ref` at the time of KM-10b1) and read by
+(the MyItmoApi 2.0.0 sources) and read by
 `feature/recordbook/data/RecordbookRepositoryImplTest.kt`.
 
 | File | Source |

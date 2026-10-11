@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# archive.sh --unsigned             Release archive without an Apple signature and the F3 .ipa (app + widget, no NSE)
+# archive.sh --unsigned             Release archive without an Apple signature and an unsigned .ipa (app + widget, no NSE)
 # archive.sh --signed               Release archive signed through Signing.local.xcconfig and an App Store .ipa
-# archive.sh --signed --upload      the same, uploaded to App Store Connect (integrator only, on the owner's word)
+# archive.sh --signed --upload      the same, uploaded to App Store Connect
 #
-# Device archives of the iOS app (L18 IO-18a, docs/ios.md, Release). Output goes to iosApp/build/archive/ (ignored);
+# Device archives of the iOS app (docs/ios.md, Release). Output goes to iosApp/build/archive/ (ignored);
 # the script never publishes anything, and only --upload sends the build anywhere.
 #
-# - Sources scripts/ios/env.sh first (Xcode and XcodeGen pins), runs xcodegen and `xcodebuild archive` of the
-#   ITMOWidgets scheme, Release, generic/platform=iOS, inside `scripts/slot.sh kn` (the Run Script builds the
-#   iosArm64 Kotlin framework through the nested slot.sh). DerivedData stays in iosApp/build/DerivedData.
-# - CURRENT_PROJECT_VERSION = `git rev-list --count HEAD` of the archived commit, monotonic along v2.3/next and
-#   master; MARKETING_VERSION comes from Base.xcconfig (2.3.0). --signed and --upload refuse a dirty tree; an
+# - Sources scripts/ios/env.sh first, runs xcodegen and `xcodebuild archive` of the ITMOWidgets scheme, Release,
+#   generic/platform=iOS (the Run Script builds the iosArm64 Kotlin framework). DerivedData stays in
+#   iosApp/build/DerivedData.
+# - CURRENT_PROJECT_VERSION = `git rev-list --count HEAD` of the archived commit, monotonic along master; MARKETING_VERSION comes from Base.xcconfig (2.3.0). --signed and --upload refuse a dirty tree; an
 #   --unsigned build of a dirty tree gets `-dirty` in its file name.
-# - --unsigned (F3, SP-23): `CODE_SIGNING_ALLOWED=NO`, which leaves the bundles without entitlements. The NSE is
+# - --unsigned: `CODE_SIGNING_ALLOWED=NO`, which leaves the bundles without entitlements. The NSE is
 #   removed (a free team has no push, and it would cost a third App ID), the expanded unsigned entitlements of the
 #   widget and the app are applied with an ad-hoc `codesign -s -` (widget first, then the app), so AltStore and
 #   SideStore find the App Group and Keychain group to re-sign with, and `Payload/` is zipped into
-#   ITMOWidgets-<version>-<build>-unsigned.ipa. Prints whether F3 widgets get real data or the signed-out state.
-# - --signed: needs iosApp/Config/Signing.local.xcconfig (written by the integrator after T13); archives with the
+#   ITMOWidgets-<version>-<build>-unsigned.ipa for self-signing. Prints whether the widgets get real data or the
+#   signed-out state.
+# - --signed: needs iosApp/Config/Signing.local.xcconfig (local, ignored); archives with the
 #   team's automatic signing (`-allowProvisioningUpdates`) and exports with method app-store-connect, the NSE kept.
 #   --upload sets the export destination to upload instead of writing the .ipa.
 # - Exit code: 0 done, 1 failed, 2 refused (usage, toolchain, dirty tree, no signing config).
@@ -60,11 +60,11 @@ done
 
 signing_config="iosApp/Config/Signing.local.xcconfig"
 if [ "$mode" = signed ] && [ ! -f "$signing_config" ]; then
-  refuse "--signed needs $signing_config (DEVELOPMENT_TEAM, ITMO_CODE_SIGN_IDENTITY, ITMO_ENTITLEMENTS_VARIANT), written by the integrator after T13"
+  refuse "--signed needs $signing_config (DEVELOPMENT_TEAM, ITMO_CODE_SIGN_IDENTITY, ITMO_ENTITLEMENTS_VARIANT), local and ignored"
 fi
 
 # shellcheck source=scripts/ios/env.sh
-source "$script_dir/env.sh" || refuse "toolchain off its pins (scripts/ios/env.sh)"
+source "$script_dir/env.sh"
 
 # ---- version -------------------------------------------------------------------------------------------------
 
@@ -91,12 +91,12 @@ xcode_archive() { # extra xcodebuild arguments
   xcodegen generate --quiet --spec iosApp/project.yml || return 1
   rm -rf "$archive"
   mkdir -p "$out"
-  note "[kn slot] xcodebuild archive, Release, $mode, $marketing ($build), $sha$dirty"
+  note "xcodebuild archive, Release, $mode, $marketing ($build), $sha$dirty"
   # The Release link of the framework does not fit the daemon's 4 GB heap (OutOfMemoryError), so the Kotlin/Native
   # compiler runs in a process of its own with more; xcodebuild passes the environment on to the Run Script's Gradle.
   env "ORG_GRADLE_PROJECT_kotlin.native.disableCompilerDaemon=true" \
     "ORG_GRADLE_PROJECT_kotlin.native.jvmArgs=-Xmx$release_link_heap" \
-    scripts/slot.sh kn -- xcodebuild \
+    xcodebuild \
     -project iosApp/ITMOWidgets.xcodeproj \
     -scheme ITMOWidgets \
     -configuration Release \
@@ -141,7 +141,7 @@ if problems:
 PY
 }
 
-# ---- unsigned (F3) -------------------------------------------------------------------------------------------
+# ---- unsigned -------------------------------------------------------------------------------------------------
 
 # Writes the target's unsigned entitlements with $(APP_GROUP_ID) and $(KEYCHAIN_GROUP) taken from the built app's
 # Info.plist, the values Xcode expanded for this build (a team-less device build has an empty AppIdentifierPrefix).
@@ -170,7 +170,7 @@ def expand(value):
 with open(source, "rb") as f:
     entitlements = expand(plistlib.load(f))
 if "aps-environment" in entitlements:
-    sys.exit(f"{source}: aps-environment has no place in an F3 build")
+    sys.exit(f"{source}: aps-environment has no place in an unsigned build")
 with open(output, "wb") as f:
     plistlib.dump(entitlements, f)
 PY
@@ -201,7 +201,7 @@ package_unsigned() {
   nse="$payload_app/PlugIns/ITMOWidgetsNotificationService.appex"
   [ -d "$widget" ] || fail "no widget extension in the archive"
   rm -rf "$nse"
-  note "removed the notification service extension (no push in F3)"
+  note "removed the notification service extension (no push without a signature)"
 
   expand_entitlements iosApp/Resources/ITMOWidgetsWidgets.entitlements "$payload_app/Info.plist" \
     "$staging/ITMOWidgetsWidgets.xcent" || return 1
@@ -233,13 +233,13 @@ package_unsigned() {
 
   printf 'IPA: %s (%s bytes)\n' "$ipa" "$(stat -f %z "$ipa")"
   if [ -n "$app_groups" ] && [ "$app_groups" = "$widget_groups" ]; then
-    printf 'F3 widgets: real data. App and widget request the App Group %s; AltStore and SideStore re-sign it\n' \
+    printf 'Widgets: real data. App and widget request the App Group %s; AltStore and SideStore re-sign it\n' \
       "$app_groups"
     printf '  into <group>.<TEAMID> and list it under ALTAppGroups, which AppGroupDirectory and AppGroupSnapshot try\n'
-    printf '  after AppGroupID (SP-23). Confirm on a device in the owner'"'"'s free-team session before an F3 prerelease;\n'
+    printf '  after AppGroupID. Confirm on a device in a free-team session before an unsigned prerelease;\n'
     printf '  if no container resolves there, the widgets stay in the signed-out state.\n'
   else
-    printf 'F3 widgets: demo data. App and widget do not request one App Group (%s / %s), so no container resolves\n' \
+    printf 'Widgets: demo data. App and widget do not request one App Group (%s / %s), so no container resolves\n' \
       "${app_groups:-none}" "${widget_groups:-none}"
     printf '  after re-signing and the widgets show the signed-out state.\n'
     return 1
@@ -261,8 +261,8 @@ with open(path, "wb") as f:
                    "signingStyle": "automatic", "manageAppVersionAndBuildNumber": False}, f)
 PY
   rm -rf "$out/export"
-  [ "$upload" -eq 1 ] && note "uploading build $build to App Store Connect (the owner's word is required for this)"
-  scripts/slot.sh kn -- xcodebuild -exportArchive \
+  [ "$upload" -eq 1 ] && note "uploading build $build to App Store Connect"
+  xcodebuild -exportArchive \
     -archivePath "$archive" \
     -exportOptionsPlist "$options" \
     -exportPath "$out/export" \

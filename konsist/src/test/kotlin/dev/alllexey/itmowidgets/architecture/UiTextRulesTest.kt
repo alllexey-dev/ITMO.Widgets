@@ -7,7 +7,7 @@ import org.junit.Test
 
 /**
  * Common code names text through `UiText.Res`/`UiText.Plural` and icons through `AppIcon`, never an Android `R` id
- * (ADR 0028, recipe uitext-migration). `UiText.Resource` stays only for unported Android presentation.
+ * (ADR 0028). `UiText.Resource` carries an Android resource id, so only Android code may build it.
  */
 class UiTextRulesTest {
 

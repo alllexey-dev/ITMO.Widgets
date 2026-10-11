@@ -1,4 +1,4 @@
-// Project-wide build settings of every target (L18 IO-02, docs/ios.md, Identifiers).
+// Project-wide build settings of every target (docs/ios.md, Identifiers).
 // The App Group and Keychain access-group IDs live only here: Xcode expands them into each target's Info.plist
 // (AppGroupID, KeychainGroup) and entitlements; Swift and Kotlin read them per process, never as literals.
 
@@ -11,9 +11,9 @@ KEYCHAIN_GROUP = $(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared
 BACKEND_BASE_URL = https:/$()/dev.widgets.alllexey.dev
 BACKEND_BASE_URL[config=Release] = https:/$()/widgets.alllexey.dev
 
-// The App Store record of the app, AppStoreID in the app's Info.plist (L18 IO-08b): the update offer opens
-// https://apps.apple.com/app/id$(APP_STORE_ID) and offers nothing while it is empty. Empty until the record exists
-// (gate T13).
+// The App Store record of the app, AppStoreID in the app's Info.plist: the update offer opens
+// https://apps.apple.com/app/id$(APP_STORE_ID) and offers nothing while it is empty. Empty until the App Store
+// record exists.
 APP_STORE_ID =
 
 MARKETING_VERSION = 2.3.0
@@ -27,8 +27,8 @@ EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64
 // The Run Script calls Gradle outside the sandbox (direct integration needs it).
 ENABLE_USER_SCRIPT_SANDBOXING = NO
 
-// Unsigned by default: "Sign to Run Locally" for the simulator and CI, no team (SP-23). The ignored
-// Signing.local.xcconfig (written by the integrator after T13) sets DEVELOPMENT_TEAM, ITMO_CODE_SIGN_IDENTITY and
+// Unsigned by default: "Sign to Run Locally" for the simulator and CI, no team. The ignored
+// Signing.local.xcconfig (written locally by whoever signs) sets DEVELOPMENT_TEAM, ITMO_CODE_SIGN_IDENTITY and
 // ITMO_ENTITLEMENTS_VARIANT = .signed, which switches every target to its *.signed.entitlements.
 CODE_SIGN_STYLE = Automatic
 DEVELOPMENT_TEAM =

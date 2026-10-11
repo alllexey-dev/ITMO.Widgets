@@ -57,7 +57,7 @@ class FeatureIsolationRulesTest {
 
     @Test
     fun `feature tests do not depend on another feature's tests`() {
-        // Shared fakes live in core/testing (AA-09); a fake that two features need moves there.
+        // Shared fakes live in core/testing; a fake that two features need moves there.
         val testDeclarations = testFiles
             .requireNonEmpty("test files")
             .flatMap { file ->

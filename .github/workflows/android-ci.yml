@@ -1,18 +1,17 @@
-# Every PR into and every push to `v2.3/next` and `master`: scripts/verify.sh quick and the Android part of full,
-# split into parallel jobs (L04 TC-CI1), and the iOS klibs. `verify-quick` is the aggregate job and the required
-# check of the ruleset, `integrate merge` and `promote`; never rename it. It passes only when every part passed.
-# Only always-running jobs live here: scheduled and advisory jobs go to android-nightly.yml,
+# Every PR into and every push to `master`: the root verifyQuick and verifyFull tasks split into parallel jobs,
+# the screenshot tests and the iOS klibs. `verify-quick` is the aggregate job and the required check; it passes only
+# when every part passed. Only always-running jobs live here: scheduled and advisory jobs go to android-nightly.yml,
 # because a skipped job still leaves a `skipped` check run on the SHA.
 name: android-ci
 
 on:
   pull_request:
-    branches: [v2.3/next, master]
+    branches: [master]
   push:
-    branches: [v2.3/next, master]
+    branches: [master]
   workflow_dispatch:
 
-# Per ref; only PR runs are cancelled, so every pushed `v2.3/next` SHA keeps its own result for `promote`.
+# Per ref; only PR runs are cancelled, so every pushed `master` SHA keeps its own result.
 concurrency:
   group: android-ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -25,7 +24,7 @@ env:
 
 jobs:
   # The parts of the root verifyQuick (build.gradle.kts) on runners of their own, plus lintPlayDebug, which makes
-  # the union the Android part of verify.sh full. The app's unit tests and its APKs share one runner (they compile
+  # the union verifyFull. The app's unit tests and its APKs share one runner (they compile
   # the same classes). The matrix name is also the job's build cache line. Fewer, longer jobs keep a PR under the
   # 20 concurrent jobs of the free plan together with android-ui.
   gradle:
@@ -51,10 +50,9 @@ jobs:
           tasks: ${{ matrix.tasks }}
           gradle-home-writer: ${{ matrix.home }}
 
-      # No secrets: google-services.json is tracked, release stays unsigned, Core and MyItmoApi 1.x
-      # come from Maven Central.
-      - name: verify.sh run -- ${{ matrix.tasks }}
-        run: scripts/verify.sh run -- ${{ matrix.tasks }}
+      # No secrets: google-services.json is tracked, release stays unsigned, MyItmoApi comes from Maven Central.
+      - name: ./gradlew ${{ matrix.tasks }}
+        run: ./gradlew ${{ matrix.tasks }}
 
       - uses: ./.github/actions/build-cache-save
         with:
@@ -117,8 +115,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # The Gradle-free part of verify.sh quick (docs and changelog drift, the module generator, the ui-report and
-  # ship-check tests), then the iOS klibs.
+  # The Gradle-free checks (docs links, the ui-report self-test), then the iOS klibs.
   checks-klibs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -134,7 +131,7 @@ jobs:
         with:
           tasks: verifyIosKlibs
 
-      # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version; only `v2.3/next` writes the cache.
+      # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version; only `master` writes the cache.
       - name: Kotlin/Native version
         id: kotlin-native
         run: echo "version=$(sed -n 's/^kotlin = "\(.*\)"$/\1/p' gradle/libs.versions.toml)" >> "$GITHUB_OUTPUT"
@@ -146,12 +143,12 @@ jobs:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ runner.arch }}-${{ steps.kotlin-native.outputs.version }}
 
-      # iOS klibs compile on Linux x86_64 without Xcode (SP-10); never link* or *Test on Apple targets here.
-      - name: verify.sh klibs
-        run: scripts/verify.sh klibs
+      # iOS klibs compile on Linux x86_64 without Xcode; never link* or *Test on Apple targets here.
+      - name: ./gradlew verifyIosKlibs
+        run: ./gradlew verifyIosKlibs
 
       - name: Save ~/.konan
-        if: github.ref == 'refs/heads/v2.3/next' && steps.konan-cache.outputs.cache-hit != 'true'
+        if: github.ref == 'refs/heads/master' && steps.konan-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.konan

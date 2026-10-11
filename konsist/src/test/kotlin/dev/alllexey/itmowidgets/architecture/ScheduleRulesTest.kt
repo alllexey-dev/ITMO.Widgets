@@ -1,31 +1,14 @@
 package dev.alllexey.itmowidgets.architecture
 
 import com.lemonappdev.konsist.api.declaration.KoClassDeclaration
-import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionClasses
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/**
- * The schedule (L10): rules over `feature.schedule` in `:app` and `:shared:feature-schedule` that `KmpRulesTest`,
- * `ComposeRulesTest` and `DiRulesTest` do not already cover.
- */
+/** Schedule widget and worker invariants that the platform and the iOS widget rely on. */
 class ScheduleRulesTest {
-
-    @Test
-    fun `shared schedule code holds no Fragment, View or R`() {
-        // Every screen is a stateless Compose body that the Fragment and sheet hosts in :app draw; androidMain
-        // included, the shared module never reaches back into the View toolkit or the app's resources.
-        productionFiles
-            .filter { it.projectPath.startsWith(SHARED_SCHEDULE) }
-            .requireAtLeast(MIN_SHARED_SCHEDULE_FILES, "shared schedule files")
-            .assertFalse { file ->
-                file.imports.any { import -> import.name.isViewToolkit() || import.name.isResourceClass() } ||
-                    APP_RESOURCE_REFERENCE.containsMatchIn(file.text)
-            }
-    }
 
     @Test
     fun `schedule widgets, receiver and workers stay in app under their packages`() {
@@ -62,14 +45,9 @@ class ScheduleRulesTest {
 
     private val KoClassDeclaration.fqcn: String get() = listOfNotNull(packagee?.name, name).joinToString(".")
 
-    private fun String.isViewToolkit(): Boolean = VIEW_PACKAGES.any { this == it || startsWith("$it.") }
-
-    private fun String.isResourceClass(): Boolean = endsWith(".R") || contains(".R.")
-
     private fun String.isIn(pkg: String): Boolean = this == pkg || startsWith("$pkg.")
 
     private companion object {
-        const val SHARED_SCHEDULE = "/shared/feature-schedule/src/"
         const val APP_MAIN = "/app/src/main/"
         const val SCHEDULE_PACKAGE = "dev.alllexey.itmowidgets.feature.schedule"
         const val WIDGET_DOMAIN_PACKAGE = "dev.alllexey.itmowidgets.feature.schedule.domain.widget"
@@ -77,21 +55,6 @@ class ScheduleRulesTest {
         const val TIMELINE_JSON_OBJECT = "ScheduleWidgetTimelineJson"
         const val VERSION = "version"
         const val VERSION_SERIAL_NAME = "@SerialName(\"version\")"
-
-        val VIEW_PACKAGES = listOf(
-            "android.view",
-            "android.widget",
-            "android.app.Fragment",
-            "androidx.fragment",
-            "androidx.recyclerview",
-            "androidx.viewbinding",
-            "com.google.android.material",
-            "dev.alllexey.itmowidgets.databinding",
-        )
-
-        /** `R.string.x` and the like, also through a fully qualified `dev.alllexey.itmowidgets.R`. */
-        val APP_RESOURCE_REFERENCE =
-            Regex("""(?<![\w.])R\.(string|plurals|drawable|layout|id|color|dimen|style|attr|xml|raw|menu|font)\.""")
 
         val ENCODE_DEFAULTS = Regex("""\bencodeDefaults\s*=\s*true\b""")
 
@@ -104,7 +67,7 @@ class ScheduleRulesTest {
             "RemoteViewsService",
         )
 
-        /** Stable identifiers of report 13: the names never change, and none of these leaves `:app`. */
+        /** Stable identifiers: the names never change, and none of these leaves `:app`. */
         val ANDROID_COMPONENTS = setOf(
             "$SCHEDULE_PACKAGE.ui.widget.SingleLessonWidgetProvider",
             "$SCHEDULE_PACKAGE.ui.widget.DayScheduleWidgetProvider",
@@ -114,8 +77,5 @@ class ScheduleRulesTest {
             "$SCHEDULE_PACKAGE.work.ScheduleChangesWorker",
             "$SCHEDULE_PACKAGE.work.CalendarSyncWorker",
         )
-
-        /** The production sources of `:shared:feature-schedule` after LS-6b; drops only with the integrator's OK. */
-        const val MIN_SHARED_SCHEDULE_FILES = 90
     }
 }

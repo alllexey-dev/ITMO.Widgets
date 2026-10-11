@@ -1,23 +1,18 @@
-# Dependency updates (L04 TC-08). Dependabot reads this file from the default branch only, so it starts after
-# a promote puts it on master; every PR targets v2.3/next, where the integrator merges it only while no L04
-# build-file PR is open. Two open PRs per ecosystem keep the integrator queue free.
+# Dependency updates into `master`, at most two open PRs per ecosystem.
 version: 2
 
 updates:
   - package-ecosystem: gradle
     directory: /
-    target-branch: v2.3/next
     schedule:
       interval: weekly
     open-pull-requests-limit: 2
-    # Lockstep and pinned lines: only L04 cards bump them (ADR 0018, ADR 0021, spike verdicts).
+    # Lockstep and pinned lines, bumped together by hand (ADR 0018, ADR 0021).
     ignore:
-      # Kotlin, its compose compiler and the Kotlin compiler Konsist embeds, with KSP.
+      # Kotlin, its compose compiler and the Kotlin compiler Konsist embeds.
       - dependency-name: "org.jetbrains.kotlin:*"
-      - dependency-name: "com.google.devtools.ksp*"
       - dependency-name: "com.android.tools.build:gradle"
       - dependency-name: "gradle-wrapper"
-      - dependency-name: "com.google.dagger:*"
       # Compose Multiplatform, JetBrains material3 and the JetBrains and Jetpack lines CMP pairs with
       # (the strict Jetpack material3 pin of ADR 0021 included).
       - dependency-name: "org.jetbrains.compose*"
@@ -26,7 +21,7 @@ updates:
       - dependency-name: "androidx.navigation3:*"
       - dependency-name: "co.touchlab.skie*"
       - dependency-name: "com.lemonappdev:*"
-      # Core 1.x, MyItmoApi 1.x and my-itmo-api-kmp.
+      # Own libraries (Core 1.x, MyItmoApi), bumped with the matching app change.
       - dependency-name: "dev.alllexey:*"
     # A dependency matching several groups lands in the first, so androidx.test goes to test.
     groups:
@@ -54,7 +49,6 @@ updates:
   # Keeps the SHA pins in .github/workflows and their version comments.
   - package-ecosystem: github-actions
     directory: /
-    target-branch: v2.3/next
     schedule:
       interval: weekly
     open-pull-requests-limit: 2

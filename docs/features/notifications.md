@@ -173,7 +173,7 @@ arguments that survive the intent) and the prompt with its sign-in tap.
 The iOS app ([iOS app](../ios.md#background-refresh)) posts the local
 notifications through the same contract. Push registration and the tap
 routing of Backend pushes are in place ([iOS app](../ios.md#notifications));
-the APNs token, and with it any push, needs the Apple account (gate T13).
+the APNs token, and with it any push, needs the Apple developer account.
 
 - `IosAppNotifier` (`shared/core`, iosMain) is the iOS `AppNotifier`: one
   `UNUserNotificationCenter` request per notification, identifier
@@ -204,7 +204,7 @@ the APNs token, and with it any push, needs the Apple account (gate T13).
   recordbook or the one subject's page, `Войдите в БАРС` the recordbook with
   the BARS sign-in sheet ([iOS app](../ios.md#notifications)).
 - The marks digest and the `Войдите в БАРС` reminder are Android's
-  (`IosMarksNotifier`, thread `marks`, IO-09d3), with the same delays and the
+  (`IosMarksNotifier`, thread `marks`), with the same delays and the
   same 06:00 hand-over ([mark tracking](marks-tracking.md#ios)).
 - Backend pushes reach iOS as alerts (`mutable-content`), and the notification
   service runs the [sport handler](#sport-handler) in Swift before one shows:
@@ -212,6 +212,6 @@ the APNs token, and with it any push, needs the Apple account (gate T13).
   cancels the queue, a full lesson or nothing left to book drops it, a failure
   before MyITMO's answer keeps Backend's `Освободилось место на занятии`.
   Friendship pushes show Backend's text. Another account, the demo and a
-  missing services opt-in drop the push; until the filtering entitlement (after
-  T13) a dropped push is not hidden. The refresh of the session is serialised
+  missing services opt-in drop the push; until the filtering entitlement (which needs
+  the Apple developer account) a dropped push is not hidden. The refresh of the session is serialised
   with the app's ([iOS app](../ios.md#notifications)).

@@ -1,60 +1,39 @@
 #!/usr/bin/env bash
-# verify.sh [quick]                        checks, then root verifyQuick: every module's tests, Konsist, lintGithubDebug, APKs
-# verify.sh checks                         the Gradle-free checks of quick: docs, generator, ui-report, ship-check tests
-# verify.sh full                           root verifyFull (both lints), then klibs
-# verify.sh klibs [<module>]               iosSimulatorArm64 klibs of every shared module, or of shared/<module>
+# verify.sh checks                         the Gradle-free checks: docs links, ui-report self-test
 # verify.sh shots <module>|app|all [--record | --gallery <dir>] [--shard <i>/<n>] [-P<name>=<value>...]
 #                                          :shared:<module>, :app or all of them: screenshotsVerify (screenshotsRecord)
-# verify.sh ui <Class>[,<Class>...]|all [--shard <i>/<n>]   :app:connectedGithubDebugAndroidTest on a pool emulator
-# verify.sh ui @platform [--managed-device] the platform list under Orchestrator (pool emulator, or CI's managed device)
-# verify.sh ship                           scripts/ship-check.sh when it exists, else full + check-play-policy.sh
-# verify.sh run -- <gradle args...>        ad hoc Gradle tasks (kn slot when an argument names an iOS task)
+# verify.sh ui <Class>[,<Class>...]|all [--shard <i>/<n>]   :app:connectedGithubDebugAndroidTest on ANDROID_SERIAL
+# verify.sh ui @platform [--managed-device] the platform list under Orchestrator (an emulator, or CI's managed device)
 #
-# The one build entry point for agents (master plan section 7.5, L04 TC-09; contract in the verify-script recipe).
+# The modes CI runs (android-ci.yml, android-ui.yml, android-nightly.yml) that are more than one Gradle call. For
+# everything else call Gradle directly: ./gradlew verifyQuick, verifyFull, verifyIosKlibs.
 #
-# - Every Gradle part runs in its own scripts/slot.sh call (android, or kn for iOS tasks), one after another and
-#   never nested, with --max-workers=$ITMO_MAX_WORKERS from the slot. ITMO_SLOT_SH overrides the slot script.
-# - kn parts (klibs, the klibs of full, run with an iOS task) pass -Dorg.gradle.jvmargs with KN_HEAP instead of the
-#   -Xmx of gradle.properties, so K/N builds get a daemon of their own and Android daemons keep theirs (TC-15).
-#   A run that passes its own -Dorg.gradle.jvmargs keeps it.
 # - JAVA_HOME defaults to JDK 21 and ANDROID_HOME to ~/Library/Android/sdk on macOS; the Gradle daemon JDK comes
 #   from gradle/gradle-daemon-jvm.properties either way.
-# - Every Gradle part gets -PmyItmoApiDir=<the worktree's MyItmoApi pin> (ADR 0024), read from
-#   $(git rev-parse --absolute-git-dir)/itmo-myitmoapi-dir, which `lane new|pin` writes. A missing pin or one off
-#   gradle/myitmoapi.ref warns with the `lane pin` command and builds on. Skipped when MYITMOAPI_DIR is set (CI) or a
-#   run passes its own -PmyItmoApiDir or -PmyItmoApiFromCentral.
 # - shots all runs every shared module with a *ScreenshotTest class or a screenshots/ directory, plus :app, in one
 #   Gradle call with --continue, so one run reports every module's differences. --gallery <dir> (an absent or empty
 #   directory) renders every capture in all four appearances into <dir>/<module>/ without comparing and without
 #   touching the baselines (screenshotsRecord with -Pshots.gallery and -Pshots.appearance=full).
-# - --shard <i>/<n> (0 <= i < n) runs one of n parts, so CI spreads a mode over parallel jobs (android-ci.yml,
-#   android-ui.yml): shots all keeps every n-th module of its list starting at the i-th; ui passes AndroidJUnitRunner's
-#   numShards and shardIndex, which split the test methods by a hash of their names (a suite member and its
-#   standalone run share a shard).
+# - --shard <i>/<n> (0 <= i < n) runs one of n parts, so CI spreads a mode over parallel jobs: shots all keeps every
+#   n-th module of its list starting at the i-th; ui passes AndroidJUnitRunner's numShards and shardIndex, which split
+#   the test methods by a hash of their names (a suite member and its standalone run share a shard).
 # - ui accepts FQCNs or bare class names (resolved to the one file under app/src/androidTest*/), optionally with
-#   #method. It refuses unless ANDROID_SERIAL is emulator-<port> and the device reports ro.boot.qemu (or
-#   ro.kernel.qemu) = 1; emulator-5554 only from a worktree whose itmo-lane marker reads `integrator`.
+#   #method. It needs ANDROID_SERIAL and refuses a device that is not an emulator (the tests clear app data).
 # - ui @platform runs the FQCNs of app/src/androidTest/platform-tests.txt with -Pitmo.orchestrator=true (Android
-#   Test Orchestrator, clearPackageData; L04 TC-14). --managed-device runs them on the Gradle Managed Device ciDevice
-#   instead of ANDROID_SERIAL and only with CI=true: locally it would create an AVD.
-# - Never runs --stop, publishToMavenLocal, connected* outside ui, or install*/uninstall* tasks.
-# - The last line of a finished run is `VERIFY A <mode> PASS|FAIL <secs>s <sha7>[+dirty]`.
-# - ui ends in scripts/ui-report.py (TC-UIREPORT): while Gradle runs, the device's TestRunner log is captured
-#   after a marker line, and every run of every test is listed, so a suite member that fails inside ShellSuite and
-#   passes standalone later (AGP's XML, HTML and "Finished <n> tests" keep only the last run) still fails the
-#   mode. A failed run is named with its suite or "standalone", "run k of n" and the ShellModeRule shell. Gradle's
-#   `FAILED` lines count too, so the managed device (no log capture) is covered. A capture that ended before
-#   `run finished:` is replaced by the device's log buffer when that still holds the marker.
-# - Exit code: 0 pass, 1 fail, 2 refused (usage, missing harness, unsafe device); refusals print no VERIFY line.
+#   Test Orchestrator, clearPackageData). --managed-device runs them on the Gradle Managed Device ciDevice instead of
+#   ANDROID_SERIAL and only with CI=true: locally it would create an AVD.
+# - ui ends in scripts/ui-report.py: while Gradle runs, the device's TestRunner log is captured after a marker line,
+#   and every run of every test is listed, so a suite member that fails inside ShellSuite and passes standalone later
+#   (AGP's XML, HTML and "Finished <n> tests" keep only the last run) still fails the mode. A failed run is named
+#   with its suite or "standalone", "run k of n" and the ShellModeRule shell. Gradle's `FAILED` lines count too, so
+#   the managed device (no log capture) is covered. A capture that ended before `run finished:` is replaced by the
+#   device's log buffer when that still holds the marker.
+# - Exit code: 0 pass, 1 fail, 2 refused (usage, missing harness, unsafe device).
 
 set -u
 
 me=verify.sh
-REPO_LETTER=A
-# K/N daemon heap (TC-15): the release framework link of :shared:ios peaks at about 2.3 GB of heap (5.4 GB
-# footprint with LLVM); -Xmx2g slowed it down, -Xmx6g did not speed it up.
-KN_HEAP=3g
-# TC-14: the platform instrumentation list and the CI-only Gradle Managed Device of app/build.gradle.kts.
+# The platform instrumentation list and the CI-only Gradle Managed Device of app/build.gradle.kts.
 PLATFORM_LIST=app/src/androidTest/platform-tests.txt
 MANAGED_DEVICE=ciDevice
 
@@ -73,96 +52,22 @@ if [ "$(uname -s)" = Darwin ]; then
   fi
 fi
 
-# Internal: the command slot.sh runs inside a held slot, where ITMO_MAX_WORKERS is known.
-if [ "${1:-}" = __gradle ]; then
-  shift
-  exec ./gradlew ${ITMO_MAX_WORKERS:+"--max-workers=$ITMO_MAX_WORKERS"} "$@"
-fi
-
 usage() {
-  sed -n '2,11p' "$self" | sed 's/^# //' >&2
+  sed -n '2,6p' "$self" | sed 's/^# //' >&2
   exit 2
 }
 
-slot_sh=${ITMO_SLOT_SH:-$root/scripts/slot.sh}
-[ -x "$slot_sh" ] || refuse "no executable slot script at $slot_sh"
-
-mode=${1:-quick}
+mode=${1:-}
 [ $# -gt 0 ] && shift
 case "$mode" in
-  -h | --help) usage ;;
-  quick | checks | full | klibs | shots | ui | ship | run) ;;
+  -h | --help | "") usage ;;
+  checks | shots | ui) ;;
   *) note "unknown mode '$mode'"; usage ;;
 esac
 
-started=$(date +%s)
-sha=$(git rev-parse --short=7 HEAD 2> /dev/null || printf 'nogit')
-[ -n "$(git status --porcelain 2> /dev/null)" ] && sha="$sha+dirty"
-
-finish() { # rc
-  local verdict=PASS
-  [ "$1" -eq 0 ] || verdict=FAIL
-  printf 'VERIFY %s %s %s %ss %s\n' "$REPO_LETTER" "$mode" "$verdict" "$(($(date +%s) - started))" "$sha"
-  [ "$1" -eq 0 ] && exit 0
-  exit 1
-}
-
-slot_part() { # kind cmd...
-  local kind=$1
-  shift
-  note "[$kind slot] $*"
-  "$slot_sh" "$kind" -- "$@"
-}
-
-# gradle.properties' org.gradle.jvmargs with its -Xmx replaced by KN_HEAP.
-kn_jvmargs() {
-  local base
-  base=$(sed -n 's/^org\.gradle\.jvmargs=//p' "$root/gradle.properties" | tail -n 1 |
-    sed -E 's/(^| )-Xmx[^ ]*//g; s/^ +//')
-  printf '%s' "-Xmx$KN_HEAP${base:+ $base}"
-}
-
-gradle_part() { # kind gradle-args...
-  local kind=$1 arg
-  local -a jvm=()
-  shift
-  if [ "$kind" = kn ]; then
-    jvm=("-Dorg.gradle.jvmargs=$(kn_jvmargs)")
-    for arg in "$@"; do
-      case "$arg" in -Dorg.gradle.jvmargs=*) jvm=() ;; esac
-    done
-  fi
-  note "[$kind slot] ./gradlew${jvm[*]:+ ${jvm[*]}} $*${pin_arg:+ $pin_arg}"
-  "$slot_sh" "$kind" -- "$self" __gradle ${jvm[@]+"${jvm[@]}"} "$@" ${pin_arg:+"$pin_arg"}
-}
-
-# ---- MyItmoApi pin (ADR 0024, L04 TC-05) -----------------------------------------------------------------
-
-# Sets pin_arg to -PmyItmoApiDir=<pin> for the worktree's pin; warns and leaves it empty when there is none.
-pin_arg=""
-resolve_pin() { # gradle-args of a run...
-  local ref_file="$root/gradle/myitmoapi.ref" ref git_dir record pin pin_head arg fix
-  [ -f "$ref_file" ] || return 0
-  [ -z "${MYITMOAPI_DIR:-}" ] || return 0
-  for arg in "$@"; do
-    case "$arg" in -PmyItmoApiDir=* | -PmyItmoApiFromCentral=*) return 0 ;; esac
-  done
-  ref=$(head -n 1 "$ref_file" | tr -d ' \t\r')
-  fix="run \`~/proj/.wt/bin/lane pin $root\` to build against MyItmoApi ${ref:0:7}"
-  if ! git_dir=$(git rev-parse --absolute-git-dir 2> /dev/null); then
-    note "warning: not a git worktree, building without a MyItmoApi pin"
-    return 0
-  fi
-  record="$git_dir/itmo-myitmoapi-dir"
-  pin=$(head -n 1 "$record" 2> /dev/null | tr -d '\r')
-  if [ -z "$pin" ] || [ ! -d "$pin" ]; then
-    note "warning: no MyItmoApi pin for this worktree (${pin:-no $record}); building without one. $fix"
-    return 0
-  fi
-  pin_head=$(git -C "$pin" rev-parse HEAD 2> /dev/null)
-  [ "$pin_head" = "$ref" ] ||
-    note "warning: MyItmoApi pin $pin is at ${pin_head:-an unknown commit}, not at the ref. $fix"
-  pin_arg="-PmyItmoApiDir=$pin"
+gradle_part() { # gradle-args...
+  note "./gradlew $*"
+  ./gradlew "$@"
 }
 
 no_args() { [ $# -eq 0 ] || refuse "$mode takes no arguments (got: $*)"; }
@@ -176,70 +81,16 @@ parse_shard() { # spec
   [ "$shard_index" -lt "$shard_count" ] || refuse "--shard: index $shard_index is not below the count $shard_count"
 }
 
-# ---- quick, full, klibs, ship ----------------------------------------------------------------------------
-
-# The task lists live in the root build.gradle.kts (verifyQuick, verifyFull, verifyIosKlibs).
+# ---- checks ----------------------------------------------------------------------------------------------
 
 run_checks() {
-  if [ -e "$root/scripts/check-docs.sh" ]; then
-    note "scripts/check-docs.sh (outside any slot)"
-    "$root/scripts/check-docs.sh" || return 1
-  fi
-  # The feature-module generator against the QR pilot: about a second, no Gradle (DC-04).
-  if [ -e "$root/scripts/test-new-feature-module.sh" ]; then
-    local out
-    note "scripts/test-new-feature-module.sh (outside any slot)"
-    out=$("$root/scripts/test-new-feature-module.sh" 2>&1) || { printf '%s\n' "$out" >&2; return 1; }
-    printf '%s\n' "$out" | tail -n 1 >&2
-  fi
-  # The ui-report parser on seeded logs: well under a second, no Gradle, no device (TC-UIREPORT).
-  if [ -e "$root/scripts/test-ui-report.sh" ]; then
-    local report
-    note "scripts/test-ui-report.sh (outside any slot)"
-    report=$("$root/scripts/test-ui-report.sh" 2>&1) || { printf '%s\n' "$report" >&2; return 1; }
-    printf '%s\n' "$report" | tail -n 1 >&2
-  fi
-  # ship-check's CI source on a scratch repository and a gh stub: a few seconds, no Gradle, no network (TC-CI2).
-  if [ -e "$root/scripts/test-ship-check.sh" ]; then
-    local ship
-    note "scripts/test-ship-check.sh (outside any slot)"
-    ship=$("$root/scripts/test-ship-check.sh" 2>&1) || { printf '%s\n' "$ship" >&2; return 1; }
-    printf '%s\n' "$ship" | tail -n 1 >&2
-  fi
-}
-
-run_quick() {
-  run_checks || return 1
-  gradle_part android verifyQuick
-}
-
-run_full() {
-  gradle_part android verifyFull || return 1
-  run_klibs
-}
-
-# Compile-only (no link*, no *Test on Apple targets): needs no Xcode, and runs on Linux x86_64 in CI (SP-10).
-run_klibs() {
-  local module=${1:-}
-  [ $# -le 1 ] || refuse "usage: klibs [<module>]"
-  if [ -z "$module" ]; then
-    gradle_part kn verifyIosKlibs
-    return
-  fi
-  [[ $module =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || refuse "klibs: '$module' is not a module name"
-  [ -f "$root/shared/$module/build.gradle.kts" ] || refuse "klibs: no module shared/$module"
-  gradle_part kn ":shared:$module:compileKotlinIosSimulatorArm64"
-}
-
-run_ship() {
-  # ship-check.sh takes its own slots; calling it from a held slot would deadlock, so hand over before any.
-  if [ -e "$root/scripts/ship-check.sh" ]; then
-    note "handing over to scripts/ship-check.sh"
-    exec "$root/scripts/ship-check.sh" "$@"
-  fi
-  no_args "$@"
-  run_full || return 1
-  slot_part android "$root/scripts/check-play-policy.sh"
+  note "scripts/check-docs.sh"
+  "$root/scripts/check-docs.sh" || return 1
+  # The ui-report parser on seeded logs: well under a second, no Gradle, no device.
+  local report
+  note "scripts/test-ui-report.sh"
+  report=$("$root/scripts/test-ui-report.sh" 2>&1) || { printf '%s\n' "$report" >&2; return 1; }
+  printf '%s\n' "$report" | tail -n 1 >&2
 }
 
 # ---- shots -----------------------------------------------------------------------------------------------
@@ -298,7 +149,7 @@ run_shots() {
   for arg in "${projects[@]}"; do tasks+=("$arg:$task"); done
   [ "${#tasks[@]}" -eq 1 ] || tasks=(--continue "${tasks[@]}")
   out=$(mktemp "${TMPDIR:-/tmp}/verify-shots.XXXXXX") || refuse "cannot create a temporary file"
-  gradle_part android "${tasks[@]}" ${props[@]+"${props[@]}"} 2>&1 | tee "$out"
+  gradle_part "${tasks[@]}" ${props[@]+"${props[@]}"} 2>&1 | tee "$out"
   rc=${PIPESTATUS[0]}
   if [ "$rc" -ne 0 ] && grep -qE "(Task '$task' not found|Cannot locate tasks that match)" "$out"; then
     rm -f "$out"
@@ -362,21 +213,15 @@ EOF
 }
 
 check_device() {
-  local serial=${ANDROID_SERIAL:-} marker="" git_dir adb qemu prop
-  [[ $serial =~ ^emulator-[0-9]+$ ]] ||
-    refuse "ui: ANDROID_SERIAL must name a pool emulator (emulator-<port>), got '${serial:-unset}'"
-  if [ "$serial" = emulator-5554 ]; then
-    git_dir=$(git rev-parse --absolute-git-dir 2> /dev/null) &&
-      marker=$(head -n 1 "$git_dir/itmo-lane" 2> /dev/null | tr -d ' \t\r')
-    [ "$marker" = integrator ] || refuse "ui: emulator-5554 is the integrator's; use a pool emulator"
-  fi
+  local serial=${ANDROID_SERIAL:-} adb qemu prop
+  [ -n "$serial" ] || refuse "ui: set ANDROID_SERIAL to the emulator to run on (adb devices)"
   adb="${ANDROID_HOME:-}/platform-tools/adb"
   [ -x "$adb" ] || refuse "ui: no adb at $adb (set ANDROID_HOME)"
   for prop in ro.boot.qemu ro.kernel.qemu; do
     qemu=$("$adb" -s "$serial" shell getprop "$prop" 2> /dev/null | tr -d ' \t\r')
     [ "$qemu" = 1 ] && return 0
   done
-  refuse "ui: $serial is not a reachable emulator (getprop ro.boot.qemu / ro.kernel.qemu is not 1)"
+  refuse "ui: $serial is not a reachable emulator (getprop ro.boot.qemu / ro.kernel.qemu is not 1); the tests clear app data"
 }
 
 # The FQCNs of the platform list, comma-separated; comments and blank lines skipped.
@@ -438,12 +283,12 @@ run_ui() {
     note "running on the managed device $MANAGED_DEVICE: $classes"
   fi
   ui_report_start "$device"
-  gradle_part android "$task" ${extra[@]+"${extra[@]}"} \
+  gradle_part "$task" ${extra[@]+"${extra[@]}"} \
     ${classes:+"-Pandroid.testInstrumentationRunnerArguments.class=$classes"} 2>&1 | tee "$ui_dir/gradle"
   ui_report_finish "${PIPESTATUS[0]}"
 }
 
-# ---- ui report (TC-UIREPORT) -----------------------------------------------------------------------------
+# ---- ui report -----------------------------------------------------------------------------------------
 
 ui_dir="" ui_logcat_pid="" ui_marker="" ui_serial=""
 ui_cleanup() {
@@ -514,45 +359,10 @@ ui_report_finish() {
   return "$rc"
 }
 
-# ---- run -------------------------------------------------------------------------------------------------
-
-run_run() {
-  local kind=android arg task
-  [ "${1:-}" = -- ] || refuse "usage: run -- <gradle args...>"
-  shift
-  [ $# -gt 0 ] || refuse "run: no Gradle arguments"
-  for arg in "$@"; do
-    task=${arg##*:}
-    case "$arg" in
-      --stop | --stop=*) refuse "run: never --stop (other agents share the daemons)" ;;
-      -*) continue ;;
-    esac
-    case "$task" in
-      *ToMavenLocal* | *toMavenLocal*) refuse "run: no publishing to Maven Local ($arg)" ;;
-      install* | uninstall*) refuse "run: no installs outside ui ($arg)" ;;
-      connected* | deviceCheck | allDevices* | "$MANAGED_DEVICE"* | cleanManagedDevices)
-        refuse "run: device tests go through \`verify.sh ui\` ($arg)"
-        ;;
-    esac
-    case "$arg" in
-      *Ios* | *iosSimulatorArm64* | *iosArm64* | *iosX64* | link*Framework* | *:link*Framework*) kind=kn ;;
-    esac
-  done
-  gradle_part "$kind" "$@"
-}
-
 # ---- main ------------------------------------------------------------------------------------------------
 
-if [ "$mode" = run ]; then resolve_pin "$@"; else resolve_pin; fi
-
 case "$mode" in
-  quick) no_args "$@"; run_quick ;;
   checks) no_args "$@"; run_checks ;;
-  full) no_args "$@"; run_full ;;
-  klibs) run_klibs "$@" ;;
-  ship) run_ship "$@" ;;
   shots) run_shots "$@" ;;
   ui) run_ui "$@" ;;
-  run) run_run "$@" ;;
 esac
-finish $?

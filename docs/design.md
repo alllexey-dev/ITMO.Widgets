@@ -21,11 +21,11 @@ the app theme and `res/values` ([System surfaces](#system-surfaces)).
 - Never stack a filled surface, a coloured stroke, a large status, a badge and a
   decorative progress on one element.
 - Screens that already worked kept their look. They moved to Compose
-  Multiplatform ([ADR 0017](decisions/0017-cmp-ui-in-common-main.md)) as parity
-  ports, each matched against a JVM capture of its XML screen. The Material 3
+  Multiplatform ([ADR 0017](decisions/0017-cmp-ui-in-common-main.md)) as
+  behaviour-preserving ports, each matched against a JVM capture of its XML screen. The Material 3
   Expressive look then arrived as one token change and one expressive pass per
   feature ([ADR 0021](decisions/0021-m3-expressive-order.md)), not screen by
-  screen. Unification does not mean a redesign or features outside the roadmap.
+  screen. Unification does not mean a redesign or features outside the release plan.
 
 ## Tokens
 
@@ -33,8 +33,9 @@ the app theme and `res/values` ([System surfaces](#system-surfaces)).
 is the one source of design values for Compose. Its schema has the Material 3
 Expressive shape from the start (extended colours, a corner scale with
 `largeIncreased`, emphasized type, `MotionScheme`), so component APIs do not
-change when the values do; the values are the owner's M3E answers (item 14),
-taken in one token change before the shell port.
+change when the values do; the values are the chosen M3E values
+([Expressive components](#expressive-components)), taken in one token change
+before the shell port.
 Components and screens read tokens only through `ItmoTheme.*`. No raw colour,
 `.dp` spacing or font size outside `shared/designsystem`; experimental and
 expressive Material APIs only inside it, behind `Itmo*` wrappers.
@@ -56,7 +57,7 @@ expressive Material APIs only inside it, behind `Itmo*` wrappers.
 - Reduced motion: `rememberReducedMotion()` is true when the system animator
   duration scale is 0 (iOS reports false until its host reads Reduce Motion); a
   kit animation then shows its end state at once.
-- Parity with the View resources is tested: `DesignTokensParityTest` (`:app`)
+- Equality with the View resources is tested: `DesignTokensParityTest` (`:app`)
   keeps extended colours, spacing and shapes equal to `res/values` except its
   listed M3E divergences (`design_card_radius_summary` stays 24 dp in
   `res/values`), `ThemeParityTest` the dynamic and seeded schemes and the M3
@@ -68,7 +69,7 @@ expressive Material APIs only inside it, behind `Itmo*` wrappers.
   `schemaVersion` grows with a breaking change). The iOS client and the web app
   take their tokens from it instead of copying values. It is generated, never
   edited or merged by hand: after a token change or a rebase run
-  `scripts/verify.sh run -- :shared:designsystem:exportDesignTokens`;
+  `./gradlew :shared:designsystem:exportDesignTokens`;
   `DesignTokensExportTest` fails while it is stale.
 
 ## Colour and surfaces
@@ -100,7 +101,7 @@ Android 12).
 - The scheme: MaterialKolor's `dynamicColorScheme` from the seed with the
   style's `PaletteStyle` and the contrast level (0, 0.5, 1), 2021 spec, which
   has every style. `Спокойная` at `Обычный` is the brand scheme's recipe, so
-  the defaults and the DS-ACC1 presets draw exactly as before.
+  the defaults and the earlier accent presets draw exactly as before.
 - `Как обои` at `Спокойная` and `Обычный` is the system's dynamic scheme
   unchanged (with the View theme's baseline outline-variant and error roles);
   another style or contrast rebuilds it from the wallpaper's seed, because the
@@ -352,7 +353,7 @@ Android only. The kit's `designsystem/gesture/` package holds the pieces:
 `TabSwipeDefaults` (the numbers below), `tabSwipeHandover`, `tabSwipeBlocked`
 and `TabSwipeRegistry`; `GestureRulesTest` enforces rules 3 and 5.
 
-iOS has no tab swipe (owner decision, 2026-10-06): paging between tab bar tabs
+iOS has no tab swipe (decided 2026-10-06): paging between tab bar tabs
 is not an iOS convention, so the tabs switch by the native tab bar only, inner
 horizontal content just scrolls, and the leading edge belongs to the back
 swipe. Shared screens keep `tabSwipeHandover` and `tabSwipeBlocked` (rule 3);
@@ -553,7 +554,7 @@ Details: [iOS app](ios.md#design-system).
 ## Expressive components
 
 The Material 3 Expressive look arrived as one token change
-([ADR 0021](decisions/0021-m3-expressive-order.md)): the owner's answers below,
+([ADR 0021](decisions/0021-m3-expressive-order.md)): the values chosen below,
 the brand static scheme and the expressive switch on. Every feature then took
 the rules below in one expressive pass over its screens, through the `Itmo*`
 wrappers only; a new screen follows them from the start. Behaviour, semantics,
@@ -621,13 +622,12 @@ strings and stable identifiers do not change for the look.
 - **Not used yet.** Flexible app bars, expressive list items, the `SearchBar`
   state and `FlexibleBottomAppBar` exist on the pinned material3 line
   (`1.12.0-alpha03`) but are not used by choice; no Android-only actuals stand
-  in for them unless the owner asks.
+  in for them.
 - **Out of the look.** Widgets, the quick-settings tile, shortcut and
   notification icons keep their own palette; WebViews and the ITMO.ID page stay
   as they are.
 
-The owner decided the open values with the token change (item 14,
-2026-10-09):
+The open values were decided with the token change (2026-10-09):
 
 | Question | Decision | Not taken |
 |---|---|---|
@@ -644,11 +644,11 @@ Screens and kit components are checked by JVM screenshot baselines
 for what the JVM cannot render. Screenshots and fixtures contain synthetic data
 only. Compilation is not visual verification.
 
-- **Every PR.** `scripts/verify.sh quick`, plus `scripts/verify.sh shots <module>`
+- **Every PR.** `./gradlew verifyQuick`, plus `scripts/verify.sh shots <module>`
   for a UI change: light and dark baselines of every preview, compared pixel for
   pixel, with accessibility checks (touch targets, labels, contrast) on every
   capture. One exemption: the sport week strip keeps 2.2's seven 45 dp days
-  below 336 dp (owner decision 2026-10-07), so its narrow captures skip ATF's
+  below 336 dp (decided 2026-10-07), so its narrow captures skip ATF's
   touch-target check (`PreviewScreenshots.narrowTouchTargetExemptions`).
   CI's `verify-quick` runs `shots all` and never records. A baseline
   changes only with the code behind it, and every new or changed PNG is looked
@@ -662,7 +662,7 @@ only. Compilation is not visual verification.
   baselines in one PR; the re-record diff is the review.
 - **Emulator** only for Android-only surfaces: widgets, the quick-settings tile,
   shortcuts, WebView, notifications and the platform tests, through
-  `scripts/verify.sh ui` on a pool emulator.
+  `scripts/verify.sh ui` on an emulator.
 - **Release candidate.** The full matrix: `scripts/verify.sh shots all --gallery <dir>`
   plus an emulator pass that covers
   - light and dark theme, at least one non-default Material You palette on
@@ -707,32 +707,24 @@ scripts/verify.sh shots all --gallery <dir>       # every capture in four appear
 - `-Pshots.variant=<set>[,<set>...] -Pshots.out=<absolute dir>` renders the
   previews in light and dark with the named M3E candidate sets of
   `M3eValues.kt` into contact sheets instead of comparing; it served the
-  owner's value decision and changes no baseline.
+  choice of the M3E values and changes no baseline.
 
 Instrumented tests stay for what only a device shows: widgets, the
 quick-settings tile, WebView, notifications and the platform list
-(`app/src/androidTest/platform-tests.txt`). They run on a pool emulator through
-`scripts/verify.sh ui`, never with bare `adb` or Gradle commands against a
-shared device:
+(`app/src/androidTest/platform-tests.txt`). They run on an emulator through
+`scripts/verify.sh ui`. Start any emulator (Android Studio's Device Manager or
+`emulator -avd <name>`), then:
 
 ```bash
-scripts/emulator.sh up            # prints ANDROID_SERIAL=emulator-<port>; `up --api 30` for API 30
 ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui WidgetPreviewTest
-scripts/emulator.sh down          # always, also after a failure
 ```
 
-- `up` holds one of the two `emulator` build slots for the emulator's
-  lifetime, boots the read-only pool AVD `itmo-pool-api35` (or
-  `itmo-pool-api30`) headless on port 5560 or higher, and waits for the boot.
-  Every boot starts from a clean image and nothing written during a run survives
-  `down`. `scripts/emulator.sh list` shows the pool, the slots and the running
-  emulators.
 - `verify.sh ui` takes bare class names, FQCNs or `Class#method`, comma
   separated, and runs `:app:connectedGithubDebugAndroidTest` for them. It
-  refuses any serial that is not a running emulator; `emulator-5554` belongs to
-  the integrator, and the owner's phone is never a target.
-- The pool AVDs are created once by the owner with `scripts/emulator.sh init`;
-  agents only run `init --dry-run`.
+  refuses any serial that is not an emulator, because the tests clear app data;
+  a personal phone is never a target.
+- `scripts/verify.sh ui @platform` runs the platform list under Android Test
+  Orchestrator.
 
 By default the visual suites run in the light appearance only and write no
 screenshots, which keeps the suite short. Two instrumentation arguments switch
@@ -746,15 +738,17 @@ the full checks on:
   `/sdcard/Android/data/dev.alllexey.itmowidgets/cache/<suite>-screenshots/`
   (the profile and social suites use `files/` instead of `cache/`).
 
-`verify.sh ui` passes no instrumentation arguments, so a lane run proves the
-light pass only. The full matrix with PNGs is an integrator run on
-`emulator-5554`; a PR that needs it says so. Before a UI change is called
+`verify.sh ui` passes no instrumentation arguments, so it proves the light pass
+only. For the full matrix with PNGs pass both arguments to
+`./gradlew :app:connectedGithubDebugAndroidTest` as
+`-Pandroid.testInstrumentationRunnerArguments.<name>=<value>`; a PR that needs
+it says so. Before a UI change is called
 done, the affected suites run with both arguments and someone looks at the
 PNGs; the default run only proves the layout holds in light. `Screenshots`
 exports PNGs to Gradle's
 `app/build/outputs/connected_android_test_additional_output/githubDebugAndroidTest/connected/`;
-copy a completed suite's screenshots into ignored `vibe/` before another
-connected run replaces that directory.
+copy a completed suite's screenshots elsewhere before another connected run
+replaces that directory.
 
 Preview hosts set `delegate.localNightMode` before attaching their base context;
 setting it in `onCreate` can trigger an extra recreation and consume one-shot

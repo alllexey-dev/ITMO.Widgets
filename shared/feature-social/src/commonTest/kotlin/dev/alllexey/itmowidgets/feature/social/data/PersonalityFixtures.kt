@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.social.data
 
 /**
  * Synthetic MyITMO personalities answers, copied from MyItmoApi's `kmp/fixtures/personalities/` at the pinned
- * commit 3a85bd82a9c9a6101ae0f8aeb85cc3ed12f7bf5e (`gradle/myitmoapi.ref`). Kept as constants, not JVM
+ * commit 3a85bd82a9c9a6101ae0f8aeb85cc3ed12f7bf5e (the 2.0.0 sources). Kept as constants, not JVM
  * resources, so they move to `commonTest` unchanged. No value here is a real person, ISU number or contact.
  */
 object PersonalityFixtures {

@@ -147,7 +147,7 @@ the one `BackendClient` of the process through `BackendClientFactory` in `:share
   `BackendException`. The public API has no `ApiResponse<T>`, no generics and does not rely on default arguments,
   so every nullable parameter is passed explicitly.
 - `commonTest` runs on the iOS simulator with `scripts/ios/test.sh kn :shared:backend-client`; Linux CI compiles the
-  iOS klibs with `scripts/verify.sh klibs`.
+  iOS klibs with `./gradlew verifyIosKlibs`.
 
 ## Tests
 

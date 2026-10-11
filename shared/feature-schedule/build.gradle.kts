@@ -28,7 +28,7 @@ kotlin {
     }
 }
 
-// :app reads these files as Android resources until --retire (scripts/strings-move.py, L05 KM-09b).
+// :app still reads these files as Android resources (R.string); drop an export once no app/ code uses its ids.
 itmowidgetsStrings {
     androidExport("values/strings_schedule.xml")
 }

@@ -287,7 +287,7 @@ shows its text under the comment and keeps the dialog.
 
 ## iOS
 
-The iOS app (IO-09f, [iOS app](../ios.md)) loads `reviewsModule` with
+The iOS app ([iOS app](../ios.md)) loads `reviewsModule` with
 `reviewsIosModule` (Core 2.0's reviews area from the one `BackendClient`; the
 teacher's lessons from `scheduleDataModule`) and turns
 `PlatformCapabilities.reviews` on, so the person profile shows a teacher's

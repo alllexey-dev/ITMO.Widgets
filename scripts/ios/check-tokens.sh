@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check-tokens.sh    the Swift design tokens are fresh; scripts/ios/test.sh runs it before every build (L18 IO-06a)
+# check-tokens.sh    the Swift design tokens are fresh; scripts/ios/test.sh runs it before every build
 #
 # - iosApp/Sources/DesignSystem/Tokens.generated.swift must be what scripts/ios/gen-tokens.py makes of
 #   shared/designsystem/tokens/itmo-tokens.json (docs/ios.md, Design system). Fix: python3 scripts/ios/gen-tokens.py

@@ -34,7 +34,7 @@ class DebugRulesTest {
 
     private val KoClassDeclaration.isShared: Boolean get() = containingFile.projectPath.startsWith("/shared/")
 
-    /** Shared code has no BuildConfig; it takes KM-04's injected `core.debug.DebugBuild` and reads its flag instead. */
+    /** Shared code has no BuildConfig; it takes the injected `core.debug.DebugBuild` and reads its flag instead. */
     private val KoClassDeclaration.checksDebugBuild: Boolean
         get() = ".isDebug" in text &&
             constructors.any { constructor -> constructor.parameters.any { it.type.name == DEBUG_BUILD } }

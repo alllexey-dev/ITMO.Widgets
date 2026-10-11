@@ -50,6 +50,6 @@ class DesignTokensExportTest {
 
     private companion object {
         const val PATH = "tokens/itmo-tokens.json"
-        const val HINT = "run scripts/verify.sh run -- :shared:designsystem:exportDesignTokens and commit it"
+        const val HINT = "run ./gradlew :shared:designsystem:exportDesignTokens and commit it"
     }
 }

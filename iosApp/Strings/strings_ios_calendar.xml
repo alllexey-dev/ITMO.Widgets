@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copy only the iOS calendar shows (IO-15b, ADR 0028): exported to Localizable.xcstrings, never to Android. -->
+<!-- Copy only the iOS calendar shows (ADR 0028): exported to Localizable.xcstrings, never to Android. -->
 <resources>
     <!-- NSCalendarsFullAccessUsageDescription (InfoPlist row): the system prompt when the sync is turned on. Full
          access, since write-only access can neither create the app's calendar nor read its events back. -->

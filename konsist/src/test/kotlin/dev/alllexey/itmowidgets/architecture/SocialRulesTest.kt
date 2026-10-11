@@ -5,10 +5,7 @@ import com.lemonappdev.konsist.api.verify.assertTrue
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
 import org.junit.Test
 
-/**
- * Social and the friend picker (L13): rules over `feature.{social,friendselector}` in `:app` and
- * `:shared:feature-social` that `KmpRulesTest`, `FeatureIsolationRulesTest` and `GateRulesTest` do not already cover.
- */
+/** Social privacy on the client: contacts stay in the data layer and only Backend's answer sets viewer access. */
 class SocialRulesTest {
 
     @Test
@@ -58,7 +55,7 @@ class SocialRulesTest {
         /** A feature's data layer, `DemoSocial` under `feature.social.data.demo` included. */
         val FEATURE_DATA_PACKAGE = Regex("""dev\.alllexey\.itmowidgets\.feature\.[a-z]+\.data(\..+)?""")
 
-        /** `PersonMappers` and `PeopleSearchRepositoryImpl` after KM-10d2; drops only with the integrator's OK. */
+        /** `PersonMappers` and `PeopleSearchRepositoryImpl`. */
         const val MIN_PERSONALITY_READERS = 2
     }
 }

@@ -5,7 +5,7 @@ Usage:
   ui-report.py --logcat <file> [--gradle <file>] [--junit <dir>] [--root <repo>] [--marker <text>]
   ui-report.py --list-suites [--root <repo>]
 
-Why (L04 TC-UIREPORT): `verify.sh ui all` runs the members of a JUnit suite (ShellSuite) twice, once inside the
+Why: `verify.sh ui all` runs the members of a JUnit suite (ShellSuite) twice, once inside the
 suite and once on their own. AGP's JUnit XML, its HTML report, test-result.pb and the closing "Finished <n> tests"
 keep one result per class and method, the last one, so a pass in the second run hid a failure in the first.
 
@@ -16,7 +16,7 @@ keep one result per class and method, the last one, so a pass in the second run 
 - --gradle is Gradle's console output; every `<class> > <method>[<device>] FAILED` line is a failed run too, so a
   failure still counts when the log capture missed it (or when there is no device log, as on a managed device).
 - --junit is AGP's connected results directory (rewritten by every connected run). Only when the log has no run
-  (the device's logd stalled, TC-UIREPORT2) its `TEST-*.xml` give the count line, one result per test, so a shard
+  (the device's logd stalled) its `TEST-*.xml` give the count line, one result per test, so a shard
   whose tests ran still reports `<n> runs of <m> tests` and a shard that ran none reports no count.
 - A run is identified by its suite: the suites are the `@Suite.SuiteClasses` of app/src/androidTest*/ under --root,
   and a stretch of runs whose classes follow a suite's members in order (two members at least) ran inside it; other

@@ -11,18 +11,18 @@ configFiles:
   Release: Config/Base.xcconfig
 settings:
   base:
-    # String catalogs (IO-20): the generated tables under Shared/Strings become `LocalizedStringResource` symbols.
+    # String catalogs: the generated tables under Shared/Strings become `LocalizedStringResource` symbols.
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     STRING_CATALOG_GENERATE_SYMBOLS: YES
 
-# Swift packages, each at an exact version (lane L18 Pins).
+# Swift packages, each at an exact version.
 packages:
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing
     exactVersion: 1.19.6
 
 settingGroups:
-  # Target presets set CODE_SIGN_IDENTITY at target level, above any xcconfig (SP-23); route it back to Base.xcconfig.
+  # Target presets set CODE_SIGN_IDENTITY at target level, above any xcconfig; route it back to Base.xcconfig.
   signing:
     CODE_SIGN_IDENTITY: $(ITMO_CODE_SIGN_IDENTITY)
 
@@ -32,15 +32,15 @@ targets:
     platform: iOS
     sources:
       - path: Sources
-      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20).
+      # The generated string tables and AppSymbol.swift, and the custom symbol images.
       - path: Shared
-      # The sign-in page's token interceptor (IO-07a, SP-21 path (a)): Android's asset by path, never a copy.
+      # The sign-in page's token interceptor: Android's asset by path, never a copy.
       - path: ../app/src/main/assets/token_refresh_interceptor.js
         buildPhase: resources
-      # The sign-in screen's logo (IO-07b): the shared module's drawable by path, never a copy.
+      # The sign-in screen's logo: the shared module's drawable by path, never a copy.
       - path: ../shared/feature-account/src/commonMain/composeResources/drawable/auth_logo.webp
         buildPhase: resources
-      # The known ITMO buildings of the lesson sheet's map (IO-09b): Android's raw resource by path, never a copy.
+      # The known ITMO buildings of the lesson sheet's map: Android's raw resource by path, never a copy.
       - path: ../app/src/main/res/raw/itmo_buildings.json
         buildPhase: resources
       # The widget sources without their @main bundle, so the hosted tests reach the timelines and entry views
@@ -48,7 +48,7 @@ targets:
       - path: Extensions/Widgets
         excludes:
           - WidgetsBundle.swift
-      # The notification service's sources (IO-12a), so the hosted tests drive its push handling on fixtures; the
+      # The notification service's sources, so the hosted tests drive its push handling on fixtures; the
       # app never registers the extension's principal class.
       - path: Extensions/NotificationService
     configFiles:
@@ -57,16 +57,14 @@ targets:
     settings:
       groups: [signing]
       base:
-        # The URL type of `itmowidgets://route/<id>` (IO-06b): Info.plist's CFBundleURLTypes reads it. Widgets and
+        # The URL type of `itmowidgets://route/<id>`: Info.plist's CFBundleURLTypes reads it. Widgets and
         # Controls hold these URLs, so the scheme is frozen (StableIdentifiersTests).
         APP_URL_SCHEME: itmowidgets
     dependencies:
       - target: ITMOWidgetsWidgets
       - target: ITMOWidgetsNotificationService
     preBuildScripts:
-      # Builds the Kotlin framework `Shared` before Compile Sources (direct integration). Gradle runs in the `kn`
-      # build slot with the worktree's MyItmoApi pin; inside scripts/ios/test.sh the slot is already held, so the
-      # nested slot.sh runs Gradle directly.
+      # Builds the Kotlin framework `Shared` before Compile Sources (direct integration).
       - name: Build Kotlin framework
         basedOnDependencyAnalysis: false
         shell: /bin/bash
@@ -74,19 +72,17 @@ targets:
           set -euo pipefail
           source "$SRCROOT/../scripts/ios/env.sh"
           cd "$ITMO_ROOT"
-          pin_args=$(itmo_ios_pin_args)
-          scripts/slot.sh kn -- /bin/bash -c './gradlew ${ITMO_MAX_WORKERS:+--max-workers=$ITMO_MAX_WORKERS} "$@"' gradle \
-            :shared:ios:embedAndSignAppleFrameworkForXcode $pin_args
+          ./gradlew :shared:ios:embedAndSignAppleFrameworkForXcode
 
   ITMOWidgetsWidgets:
     type: app-extension
     platform: iOS
     sources:
       - path: Extensions/Widgets
-      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20).
+      # The generated string tables and AppSymbol.swift, and the custom symbol images.
       - path: Shared
-      # The design tokens and their SwiftUI colours (IO-06a) for the schedule widgets' surfaces and lesson types
-      # (IO-10b): the app's files by path, so a token regeneration reaches the widgets too.
+      # The design tokens and their SwiftUI colours for the schedule widgets' surfaces and lesson
+      # types: the app's files by path, so a token regeneration reaches the widgets too.
       - path: Sources/DesignSystem/Tokens.generated.swift
       - path: Sources/DesignSystem/ItmoTheme.swift
     configFiles:
@@ -100,8 +96,8 @@ targets:
     platform: iOS
     sources:
       - path: Extensions/NotificationService
-      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20); no intents, so no
-      # App Shortcut phrases either (IO-11).
+      # The generated string tables and AppSymbol.swift, and the custom symbol images; no intents, so no
+      # App Shortcut phrases either.
       - path: Shared
         excludes:
           - "Intents/**"
@@ -117,11 +113,11 @@ targets:
     platform: iOS
     sources:
       - path: Tests/UnitTests
-      # LS-3's reference timeline, which ScheduleTimelineTests decodes (IO-10b): the Kotlin fixture by path, never a copy.
+      # The shared reference timeline, which ScheduleTimelineTests decodes: the Kotlin fixture by path, never a copy.
       - path: ../shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json
         buildPhase: resources
-      # The Kotlin golden fixtures NotificationServiceTests replays (IO-12a), by path, never copies: Backend's FCM
-      # envelopes (BK-16), MyITMO's sign-up answers and KM-11c's golden push and sign-up outcomes.
+      # The Kotlin golden fixtures NotificationServiceTests replays, by path, never copies: Backend's FCM
+      # envelopes, MyITMO's sign-up answers and the golden push and sign-up outcomes.
       - path: ../shared/backend-client/src/commonTest/resources/contract/fcm
         type: folder
         buildPhase: resources
@@ -181,8 +177,8 @@ schemes:
     test:
       config: Debug
       gatherCoverageData: false
-      # The host app of the hosted tests runs the signed-in fixture shell, so it never opens the ITMO.ID page
-      # (IO-07a); the tests build their own sessions. XCUITest launches set their own arguments.
+      # The host app of the hosted tests runs the signed-in fixture shell, so it never opens the ITMO.ID page;
+      # the tests build their own sessions. XCUITest launches set their own arguments.
       commandLineArguments:
         "-itmoShellSession signed-in": true
       targets:

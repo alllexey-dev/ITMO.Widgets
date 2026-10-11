@@ -15,7 +15,7 @@ class GestureRulesTest {
 
     @Test
     fun `horizontal scrollers hand the tab swipe over or block it`() {
-        // Empty until the first port with a horizontal scroller merges; the scope itself must not be.
+        // Code without a horizontal scroller passes; the scanned scope itself must not be empty.
         val scrollers = composeSources()
             .requireNonEmpty("shared commonMain and app main files")
             .filter { HORIZONTAL_SCROLLER.containsMatchIn(it.withoutPreviews()) }

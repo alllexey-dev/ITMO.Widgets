@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copy only the iOS settings and diagnostics show (IO-08a, ADR 0028): exported to Localizable.xcstrings, never to
+<!-- Copy only the iOS settings and diagnostics show (ADR 0028): exported to Localizable.xcstrings, never to
      Android. The Background App Refresh row reuses ios_background_refresh_* from strings_ios.xml. -->
 <resources>
     <!-- The notification row: the shared values name Android. -->

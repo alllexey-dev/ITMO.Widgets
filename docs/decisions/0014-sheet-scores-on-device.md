@@ -22,7 +22,7 @@ export of a tab as CSV (`/export?format=csv&gid=…`) and the HTML view
 are shared but not published, so neither is used. A sheet that forbids the
 export still renders its HTML view, which is why the HTML tab is the fallback.
 
-**Automatic search instead of manual markup.** The roadmap's Stage 33 planned a
+**Automatic search instead of manual markup.** The original plan was a
 manual mapping: a header row, a key column and a formula for the total. Real
 sheets have one to six header rows, a teacher's name above them, merged group
 titles and the ISU or only the name as the key, so manual markup would be

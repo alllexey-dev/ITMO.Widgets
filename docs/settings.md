@@ -391,7 +391,7 @@ Google Sheets.
 
 ### iOS
 
-The iOS app lists `Зачётка` since IO-09d3 (`PlatformCapabilities.marks`), after
+The iOS app lists `Зачётка` (`PlatformCapabilities.marks`), after
 `Расписание`, with the same switches, keys, defaults and footer, rendered by
 the SwiftUI settings form. The switches run the `marks` step of the app's one
 refresh task instead of WorkManager work

@@ -15,7 +15,7 @@ import org.gradle.api.tasks.TaskAction
 
 /**
  * Runs [StringCatalogRules] over every catalog file of the repository: `:app`'s `strings_*.xml`, the shared
- * modules' `composeResources` and L18's Apple-only `iosApp/Strings/strings_ios*.xml`. Then compares the committed
+ * modules' `composeResources` and the Apple-only `iosApp/Strings/strings_ios*.xml`. Then compares the committed
  * `iosApp/Shared` files with a fresh [AppleExport].
  */
 abstract class CheckStringCatalog : DefaultTask() {

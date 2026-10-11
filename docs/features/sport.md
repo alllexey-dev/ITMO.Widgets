@@ -189,7 +189,7 @@ On Android, `SportSignPushHandler` (`app/`, free and auto instances, Hilt
 `@IntoSet` of `FcmPayloadHandler`, run by `FcmMessageWorker`) is the adapter:
 it calls the booker, which Koin builds and `SportBridge` hands to Hilt, and posts
 each notice through `AppNotifier`. The iOS notification service calls the same
-booker (L18 IO-12a). See [`notifications.md`](notifications.md).
+booker. See [`notifications.md`](notifications.md).
 
 ## Tests
 

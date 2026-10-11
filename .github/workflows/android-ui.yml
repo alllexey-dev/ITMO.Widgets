@@ -1,18 +1,17 @@
-# The instrumented tests on emulators (L04 TC-CI1): `verify.sh ui all` in 6 shards on a Pixel-geometry emulator
-# without a cutout, and `verify.sh ui ShellSuite` (the shell, its insets and the tab swipe) in 2 shards on the same
-# emulator with the tall cutout overlay, as the integrator's emulator has a cutout. Every PR into `v2.3/next` that
-# touches what the app is built from, every push to `v2.3/next`, and on demand.
-# `android-ui` is the aggregate job and the check name integrate and the ship check read; never rename it. It fails
-# when a shard failed, is missing or ran no test, and scripts/ui-report.py fails a shard on any failed run of any
-# test, not only on the last run Gradle keeps. The path filter is a job, never on the trigger, so the check always
-# reports (see ios.yml).
+# The instrumented tests on emulators: `verify.sh ui all` in 6 shards on a Pixel-geometry emulator without a cutout,
+# and `verify.sh ui ShellSuite` (the shell, its insets and the tab swipe) in 2 shards on the same emulator with the
+# tall cutout overlay, so the shell is also tested on a cutout. Every PR into `master` that touches what the app is
+# built from, every push to `master`, and on demand.
+# `android-ui` is the aggregate job and the check to require. It fails when the path filter failed, a shard failed,
+# is missing or ran no test, and scripts/ui-report.py fails a shard on any failed run of any test, not only on the
+# last run Gradle keeps. The path filter is a job, never on the trigger, so the check always reports (see ios.yml).
 name: android-ui
 
 on:
   pull_request:
-    branches: [v2.3/next]
+    branches: [master]
   push:
-    branches: [v2.3/next]
+    branches: [master]
   workflow_dispatch:
     inputs:
       ref:
@@ -20,7 +19,7 @@ on:
         required: false
         default: ""
 
-# Per ref; only PR runs are cancelled, so every pushed `v2.3/next` SHA keeps its own result.
+# Per ref; only PR runs are cancelled, so every pushed `master` SHA keeps its own result.
 concurrency:
   group: android-ui-${{ github.ref }}-${{ inputs.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -57,7 +56,7 @@ jobs:
           while IFS= read -r path; do
             case "$path" in
               app/* | shared/* | build-logic/* | gradle/* | *.gradle.kts | gradle.properties | gradlew | \
-                scripts/verify.sh | scripts/ui-report.py | scripts/ci-emulator.sh | scripts/slot.sh | \
+                scripts/verify.sh | scripts/ui-report.py | scripts/ci-emulator.sh | \
                 .github/workflows/android-ui.yml | .github/actions/*)
                 echo "App input changed: $path"
                 run=true
@@ -107,7 +106,7 @@ jobs:
           tasks: ":app:assembleGithubDebug :app:assembleGithubDebugAndroidTest"
 
       - name: Build the app and test APKs
-        run: scripts/verify.sh run -- :app:assembleGithubDebug :app:assembleGithubDebugAndroidTest
+        run: ./gradlew :app:assembleGithubDebug :app:assembleGithubDebugAndroidTest
 
       - name: Wait for the emulator
         run: |
@@ -124,19 +123,19 @@ jobs:
           scripts/verify.sh ui ${{ matrix.tests }} --shard ${{ matrix.shard }}/${{ matrix.shards }} 2>&1 |
             tee "$OUT/verify.log"
 
-      # One line per shard for the aggregate: the verdict, the ui-report block and Gradle's test count.
+      # One line per shard for the aggregate: the step's outcome, the ui-report block and Gradle's test count.
       - name: Shard summary
         if: always() && steps.ui.outcome != 'skipped'
         env:
           TESTS: ${{ matrix.tests }}
           SHARD: ${{ matrix.shard }}/${{ matrix.shards }}
+          OUTCOME: ${{ steps.ui.outcome }}
         run: |
           log="$OUT/verify.log"
-          verdict=$(grep -E '^VERIFY A ui ' "$log" | tail -n 1)
           finished=$(grep -E '^Finished [0-9]+ tests' "$log" | tail -n 1)
           {
             printf '### ui %s %s (%s)\n\n' "${SHARD_ID%-*}" "$SHARD" "$TESTS"
-            printf -- '- verdict: %s\n' "${verdict:-none (no VERIFY line)}"
+            printf -- '- verdict: %s\n' "$OUTCOME"
             printf -- '- gradle: %s\n' "${finished:-no Finished line}"
             printf '\n```\n'
             grep -E '^ui-report:' "$log" || echo 'ui-report: no report'
@@ -164,16 +163,21 @@ jobs:
         with:
           build-cache: ui
 
-  # The check: skipped shards (no app input changed) pass; otherwise every shard must have passed, uploaded its
-  # report, ended with a VERIFY PASS line and run at least one test.
+  # The check: fails unless the path filter succeeded; skipped shards (no app input changed) pass; otherwise every
+  # shard must have passed, uploaded its report and run at least one test.
   android-ui:
     needs: [changes, ui]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Path filter succeeded
+        env:
+          CHANGES: ${{ needs.changes.result }}
+        run: '[ "$CHANGES" = success ] || { echo "::error::the path filter job ended $CHANGES"; exit 1; }'
+
       - name: Nothing to test
-        if: needs.changes.result == 'success' && needs.changes.outputs.run != 'true'
+        if: needs.changes.outputs.run != 'true'
         run: echo "No app input changed; no instrumented run." | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Download the shard reports
@@ -204,7 +208,7 @@ jobs:
               continue
             fi
             cat "$md" >> "$GITHUB_STEP_SUMMARY"
-            grep -q '^- verdict: VERIFY A ui PASS ' "$md" || { echo "::error::shard $id did not pass"; ok=1; }
+            grep -q '^- verdict: success$' "$md" || { echo "::error::shard $id did not pass"; ok=1; }
             grep -q '^ui-report: [0-9]* runs of [0-9]* tests' "$md" || { echo "::error::shard $id ran no test"; ok=1; }
             grep '^ui-report: *FAIL ' "$md" | sed "s/^/::error::$id /" || true
           done

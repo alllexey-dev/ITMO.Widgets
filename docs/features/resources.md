@@ -236,7 +236,7 @@ file and memory state, and drops late answers of the previous session.
 
 ## iOS
 
-The iOS app (IO-09f, [iOS app](../ios.md)) hosts the same Compose sheets of
+The iOS app ([iOS app](../ios.md)) hosts the same Compose sheets of
 `:shared:feature-resources` in SwiftUI sheets above the shell, through the
 factories of `shared/ios` (`screens/ResourcesScreens.kt`) and the Swift hosts in
 `iosApp/Sources/Features/Resources/LinkSheets.swift`; `Routes+Resources.swift`
@@ -286,7 +286,7 @@ Strict verification of flow membership is deferred, see
 ## Verification
 
 ```bash
-scripts/verify.sh run -- :shared:feature-resources:testAndroidHostTest :app:testGithubDebugUnitTest
+./gradlew :shared:feature-resources:testAndroidHostTest :app:testGithubDebugUnitTest
 scripts/verify.sh shots feature-resources
 ```
 

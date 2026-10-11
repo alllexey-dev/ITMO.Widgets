@@ -1,16 +1,15 @@
 # shellcheck shell=bash
 # source scripts/ios/env.sh
 #
-# The pinned iOS toolchain (L18 IO-02, docs/ios.md). Sourced by scripts/ios/test.sh and by the app target's Run Script
-# in iosApp/project.yml: the Xcode GUI passes no shell environment, so everything a build needs is set here.
+# The iOS toolchain (docs/ios.md). Sourced by scripts/ios/*.sh and by the app target's Run Script in
+# iosApp/project.yml: the Xcode GUI passes no shell environment, so everything a build needs is set here.
 #
-# - Pins Xcode (version and build, gate T10), XcodeGen, one simulator device type and runtime; sourcing returns 1
-#   with a message when the selected Xcode or XcodeGen differs. The ITMO_* pins below may be preset in the environment
-#   (a CI image with another Xcode), never edited per machine.
+# - The Xcode (version and build), XcodeGen, simulator device type and runtime the project is tested with. CI
+#   selects exactly this Xcode; locally a different one only warns. The ITMO_* values may be preset in the
+#   environment.
 # - DEVELOPER_DIR: kept when set (Xcode sets it for its Run Scripts), else ITMO_DEVELOPER_DIR.
-# - JAVA_HOME = JDK 21 and ANDROID_HOME as scripts/verify.sh sets them; PATH gains Homebrew for XcodeGen.
-# - itmo_ios_pin_args prints the -PmyItmoApiDir argument exactly as scripts/verify.sh resolves it (ADR 0024, TC-05):
-#   nothing when MYITMOAPI_DIR is set (CI) or the worktree has no pin record.
+# - JAVA_HOME = JDK 21 and ANDROID_HOME on macOS; PATH gains Homebrew for XcodeGen.
+# - MyItmoApi comes from Maven Central; set MYITMOAPI_DIR to a my-itmo-api checkout to build against it instead.
 
 : "${ITMO_XCODE_VERSION:=27.0}"
 : "${ITMO_XCODE_BUILD:=27A266a}"
@@ -37,28 +36,15 @@ itmo_ios_check_toolchain() {
   case "$version" in
     "Xcode $ITMO_XCODE_VERSION Build version $ITMO_XCODE_BUILD "*) ;;
     *)
-      printf 'env.sh: Xcode %s (%s) is pinned, DEVELOPER_DIR=%s has: %s\n' \
+      printf 'env.sh: warning: tested with Xcode %s (%s), DEVELOPER_DIR=%s has: %s\n' \
         "$ITMO_XCODE_VERSION" "$ITMO_XCODE_BUILD" "$DEVELOPER_DIR" "${version:-no xcodebuild}" >&2
-      return 1
       ;;
   esac
   xcodegen=$(xcodegen --version 2> /dev/null)
   if [ "$xcodegen" != "Version: $ITMO_XCODEGEN_VERSION" ]; then
-    printf 'env.sh: XcodeGen %s is pinned, found: %s\n' "$ITMO_XCODEGEN_VERSION" "${xcodegen:-none}" >&2
-    return 1
+    printf 'env.sh: warning: tested with XcodeGen %s, found: %s\n' "$ITMO_XCODEGEN_VERSION" "${xcodegen:-none}" >&2
   fi
+  return 0
 }
 
-itmo_ios_pin_args() {
-  local git_dir pin
-  [ -z "${MYITMOAPI_DIR:-}" ] || return 0
-  git_dir=$(git -C "$ITMO_ROOT" rev-parse --absolute-git-dir 2> /dev/null) || return 0
-  pin=$(head -n 1 "$git_dir/itmo-myitmoapi-dir" 2> /dev/null | tr -d '\r')
-  if [ -n "$pin" ] && [ -d "$pin" ]; then
-    printf '%s\n' "-PmyItmoApiDir=$pin"
-  else
-    printf 'env.sh: warning: no MyItmoApi pin for this worktree; run `~/proj/.wt/bin/lane pin %s`\n' "$ITMO_ROOT" >&2
-  fi
-}
-
-itmo_ios_check_toolchain || return 1
+itmo_ios_check_toolchain

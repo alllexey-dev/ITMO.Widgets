@@ -6,24 +6,24 @@
 # test.sh sim                                         print this worktree's simulator UDID, creating it if needed
 # test.sh --cleanup                                   delete this worktree's simulator
 #
-# The one iOS build entry point for agents and CI (L18 IO-02, docs/ios.md, Build and test).
+# The iOS build and test entry point, locally and in CI (docs/ios.md, Build and test).
 #
-# - Sources scripts/ios/env.sh first: a toolchain off its pins (Xcode, XcodeGen) refuses with exit 2.
-# - Runs every scripts/ios/check-*.sh before building (later cards add checks as new files, never as edits here).
-# - xcodegen generates iosApp/ITMOWidgets.xcodeproj (ignored); xcodebuild runs inside `scripts/slot.sh kn` with
-#   DerivedData in iosApp/build/DerivedData and the result bundle in iosApp/build/test-results/. The app target's
-#   Run Script builds the Kotlin framework through a nested slot.sh, which runs directly because the slot is held.
+# - Sources scripts/ios/env.sh first: a different Xcode or XcodeGen than the tested one warns.
+# - Runs every scripts/ios/check-*.sh before building (add a check as a new file).
+# - xcodegen generates iosApp/ITMOWidgets.xcodeproj (ignored); xcodebuild runs with DerivedData in
+#   iosApp/build/DerivedData and the result bundle in iosApp/build/test-results/. The app target's Run Script builds
+#   the Kotlin framework with Gradle.
 # - One simulator per worktree, `itmo-<worktree directory>` (`itmo-ci` with --ci), created from the pinned device
 #   type and runtime on first use; --cleanup (and the end of a --ci run) deletes it. No other simulator is touched.
 # - The default run and --only skip the UITests target; `ui` runs only it (XCUITest launches the app, so it is slower).
-# - Snapshots (swift-snapshot-testing, IO-17): the test process gets SNAPSHOT_TESTING_RECORD (all with --record, never
+# - Snapshots (swift-snapshot-testing): the test process gets SNAPSHOT_TESTING_RECORD (all with --record, never
 #   with --ci, else unset: the library records a missing reference and fails the test) and SNAPSHOT_ARTIFACTS =
 #   iosApp/build/snapshot-artifacts (failure images, emptied before each run) through xcodebuild's TEST_RUNNER_ prefix.
-# - kn: Gradle with the worktree's MyItmoApi pin (as scripts/verify.sh passes it) on the same simulator.
+# - kn: Gradle on the same simulator.
 # - sim: the simulator scripts/ios/screenshots.sh drives between runs; prints only the UDID on stdout.
-# - --ci: CI=true, so slot.sh runs commands directly; deletes the simulator at the end.
-# - The last line of a finished run is `VERIFY A ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha7>[+dirty]`.
-# - Exit code: 0 pass, 1 fail, 2 refused (usage, toolchain off its pins).
+# - --ci: CI=true; deletes the simulator at the end.
+# - The last line of a finished run is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha7>[+dirty]`.
+# - Exit code: 0 pass, 1 fail, 2 refused (usage).
 
 set -u
 
@@ -90,7 +90,7 @@ done
 case "$mode" in all | only) ;; *) [ "$record" -eq 0 ] || refuse "--record applies to the default run and --only" ;; esac
 
 # shellcheck source=scripts/ios/env.sh
-source "$script_dir/env.sh" || refuse "toolchain off its pins (scripts/ios/env.sh)"
+source "$script_dir/env.sh"
 
 started=$(date +%s)
 sha=$(git rev-parse --short=7 HEAD 2> /dev/null || printf 'nogit')
@@ -99,7 +99,7 @@ sha=$(git rev-parse --short=7 HEAD 2> /dev/null || printf 'nogit')
 finish() { # label rc
   local verdict=PASS
   [ "$2" -eq 0 ] || verdict=FAIL
-  printf 'VERIFY A %s %s %ss %s\n' "$1" "$verdict" "$(($(date +%s) - started))" "$sha"
+  printf '%s: %s %s %ss %s\n' "$me" "$1" "$verdict" "$(($(date +%s) - started))" "$sha"
   [ "$2" -eq 0 ] && exit 0
   exit 1
 }
@@ -193,8 +193,8 @@ run_xcode() { # label
   mkdir -p "$results"
   bundle="$results/$label.xcresult"
   rm -rf "$bundle"
-  note "[kn slot] xcodebuild build test on $sim_name ${test_args[*]:-}"
-  scripts/slot.sh kn -- xcodebuild \
+  note "xcodebuild build test on $sim_name ${test_args[*]:-}"
+  xcodebuild \
     -project iosApp/ITMOWidgets.xcodeproj \
     -scheme ITMOWidgets \
     -configuration Debug \
@@ -206,7 +206,7 @@ run_xcode() { # label
 }
 
 run_kn() {
-  local init pin_args
+  local init
   local -a tasks=()
   for name in "${modules[@]}"; do tasks+=(":shared:$name:iosSimulatorArm64Test"); done
   ensure_sim
@@ -219,11 +219,8 @@ allprojects {
         .configureEach { it.device.set('$udid') }
 }
 EOF
-  pin_args=$(itmo_ios_pin_args)
-  note "[kn slot] ./gradlew ${tasks[*]} $pin_args"
-  # shellcheck disable=SC2016 # expanded by the inner shell, inside the slot
-  scripts/slot.sh kn -- /bin/bash -c './gradlew ${ITMO_MAX_WORKERS:+--max-workers=$ITMO_MAX_WORKERS} "$@"' gradle \
-    --init-script "$init" "${tasks[@]}" $pin_args
+  note "./gradlew ${tasks[*]}"
+  ./gradlew --init-script "$init" "${tasks[@]}"
 }
 
 case "$mode" in

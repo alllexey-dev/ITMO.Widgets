@@ -5,10 +5,7 @@ import com.lemonappdev.konsist.api.verify.assertFalse
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
 import org.junit.Test
 
-/**
- * What common and iOS source sets may import (master plan 3.1). Android `R` is `UiTextRulesTest`'s; the ban of
- * dependency-injection annotations everywhere is `DiRulesTest`'s.
- */
+/** What common and iOS source sets may import. Android `R` is `UiTextRulesTest`'s. */
 class KmpRulesTest {
 
     @Test
@@ -18,7 +15,7 @@ class KmpRulesTest {
 
     @Test
     fun `common and ios code imports androidx only from the multiplatform artifacts`() {
-        // A blanket androidx ban would break Compose Multiplatform and the DataStore core of KM-04.
+        // A blanket androidx ban would break Compose Multiplatform and the multiplatform DataStore core.
         kmpFiles().assertFalse { file ->
             file.imports.any { import ->
                 val name = import.name
@@ -38,7 +35,7 @@ class KmpRulesTest {
 
         val PLATFORM_ONLY = listOf("android.", "java.", "javax.")
 
-        /** The KMP artifacts TC-04a declares. */
+        /** The androidx artifacts that publish common and iOS variants. */
         val multiplatformAndroidx = listOf(
             "androidx.compose.",
             "androidx.lifecycle.",

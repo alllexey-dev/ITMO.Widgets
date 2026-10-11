@@ -11,7 +11,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
  * A shared module: the Android-KMP library plugin (`kotlin { android { } }`), iosArm64 and iosSimulatorArm64,
- * JVM 17, host tests with Android resources and default return values (parity with `:app`, whose moved tests log
+ * JVM 17, host tests with Android resources and default return values (as in `:app`, whose moved tests log
  * through `android.util.Log`), kotlinx.serialization. `:shared:core` and the features also compile the core test
  * fixtures in `commonTest`. `com.android.lint` publishes the module's lint model, without which the `:app` lint
  * (checkDependencies) skips the module's sources; the module's own lint tasks are not part of any verify aggregate.

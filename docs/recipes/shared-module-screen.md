@@ -64,7 +64,7 @@ and [the iOS app](../ios.md).
   `...feature.<x>.presentation`, its Koin module in `...feature.<x>.di`.
 - `commonMain` holds no `android.*`, `java.*`, `R`, Hilt or `javax.inject`
   (`UiTextRulesTest`, `common code references no Android R`). Check the klib:
-  `scripts/verify.sh run -- :shared:feature-<x>:compileKotlinIosSimulatorArm64`.
+  `./gradlew :shared:feature-<x>:compileKotlinIosSimulatorArm64`.
 
 ## Pieces
 
@@ -125,9 +125,8 @@ and [the iOS app](../ios.md).
    import the core and kit ones with aliases (`as CoreRes`, `as KitRes`). Text
    used by two modules goes to `strings_common.xml`, text a system surface
    reads to `strings_platform.xml`; `scripts/strings-owners.py --where <id>`
-   places a new id. When a screen moves from `app/`,
-   `python3 scripts/strings-move.py <unit>` moves its file and keeps the
-   Android export while a View, widget or settings preview still reads it (QR:
+   places a new id. A module's catalog file keeps an Android export while a
+   View, widget or settings preview in `app/` still reads it (QR:
    `androidExport("values/strings_qr.xml")` for the widget preview).
 7. **Icons** come from the registry `docs/design/icons.tsv`, fetched by
    `scripts/icons-fetch.py` into `:shared:designsystem`, never hand-drawn. The
@@ -151,7 +150,7 @@ and [the iOS app](../ios.md).
     `-Pshots.appearance=full` for the two narrow appearances, look at every
     PNG, then `scripts/verify.sh shots feature-<x>` must pass unchanged. When
     the screen replaces an XML one, the XML reference captures under the same
-    preview names are the parity target and are overwritten by the record. See
+    preview names are the comparison target and are overwritten by the record. See
     [Running the visual tests](../design.md#running-the-visual-tests).
 11. **Host tests** in `commonTest`: `ui/<Screen>Test.kt` runs under
     `@RunWith(RobolectricTestRunner::class)` from `testkit` with

@@ -35,7 +35,7 @@ class ItmoTestingExtension internal constructor(
     /**
      * Adds the android-all jars [jars] (catalog entries) to the SDKs this module's host tests may run on. Gradle
      * resolves each into its own cache, and Robolectric reads every jar in place through a generated
-     * `robolectric-deps.properties`, still offline (SP-13a).
+     * `robolectric-deps.properties`, still offline.
      */
     fun extraRobolectricSdks(vararg jars: Provider<MinimalExternalModuleDependency>) {
         val task = depsFile ?: registerDepsFile().also { depsFile = it }

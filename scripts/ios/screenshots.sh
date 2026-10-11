@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # screenshots.sh [<Class>...]   UITests (or the listed classes) in light and dark into iosApp/build/screenshots/
 #
-# Review screenshots of the app on the simulator (L18 IO-17, docs/ios.md, Visual verification). Not goldens:
+# Review screenshots of the app on the simulator (docs/ios.md, Visual verification). Not goldens:
 # nothing here is committed or compared.
 #
 # - Takes this worktree's simulator from `scripts/ios/test.sh sim`, boots it and overrides the status bar (9:41,
 #   full battery, Wi-Fi and cellular bars, no carrier) so every screenshot has the same chrome.
-# - Per appearance (light, dark): `simctl ui appearance`, then `scripts/ios/test.sh ui [<Class>...]` (the kn slot,
-#   English launch arguments from UITests' AppLaunch.swift), then the result bundle's screenshot attachments are
+# - Per appearance (light, dark): `simctl ui appearance`, then `scripts/ios/test.sh ui [<Class>...]` (English launch arguments from UITests' AppLaunch.swift), then the result bundle's screenshot attachments are
 #   exported to iosApp/build/screenshots/<appearance>/<attachment name>.png (`attachScreenshot(named:)` names them
 #   `<Class>-<name>`). The directory is emptied first.
 # - Clears the status bar override and restores the light appearance at the end; the simulator stays, delete it
@@ -38,7 +37,7 @@ for arg in "$@"; do
 done
 
 # shellcheck source=scripts/ios/env.sh
-source "$script_dir/env.sh" || refuse "toolchain off its pins (scripts/ios/env.sh)"
+source "$script_dir/env.sh"
 
 udid=$("$script_dir/test.sh" sim) || refuse "no simulator (scripts/ios/test.sh sim)"
 [ -n "$udid" ] || refuse "no simulator UDID from scripts/ios/test.sh sim"

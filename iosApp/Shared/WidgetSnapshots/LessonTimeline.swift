@@ -2,7 +2,7 @@ import Foundation
 
 /// The schedule widgets' timeline: `schedule-timeline-v1.json` in the App Group container, written by the shared
 /// `ScheduleTimelineWriter` (`:shared:feature-schedule`, iosMain) inside the `{"version": N, "value": ...}` envelope of
-/// every App Group snapshot (docs/ios.md, Data sharing). The value is LS-3's `ScheduleWidgetTimeline` (reference
+/// every App Group snapshot (docs/ios.md, Data sharing). The value is the shared `ScheduleWidgetTimeline` (reference
 /// fixture `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json`): entries precomputed from now to the
 /// end of tomorrow, each holding from its `validFrom` to the next one's, the last one to `validUntil`. Swift only
 /// picks the entry of a moment; it takes no time-zone or academic decision.

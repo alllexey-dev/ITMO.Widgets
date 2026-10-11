@@ -8,8 +8,8 @@ import org.junit.Test
 
 /**
  * Who may hold a network client. Clients are matched by fully qualified name, read from each file's imports, so the
- * app's own `feature.recordbook.data.bars.BarsClient` is not MyItmoApi's `BarsClient`. A lane that adds or removes a
- * client name (KM-10a1/a2, CO-01a, ML-01b, KM-10i) edits one line below in its own PR, with L06 as reviewer.
+ * app's own `feature.recordbook.data.bars.BarsClient` is not MyItmoApi's `BarsClient`. A change that adds or removes
+ * a network client adds or removes its name below.
  */
 class GateRulesTest {
 
@@ -60,8 +60,8 @@ class GateRulesTest {
 
     /**
      * MyItmoApi's `TokenManager.replaceTokens` writes the local `TokenStorage` under the refresh lock and sends no
-     * request, so a class whose every use of its `MyItmoClient` is `<client>.tokens.replaceTokens(` (LA-1d's
-     * `SessionTransitions`: sign-in, sign-out, demo start) is a token writer, not a network caller. Any other use of
+     * request, so a class whose every use of its `MyItmoClient` is `<client>.tokens.replaceTokens(`
+     * (`SessionTransitions`: sign-in, sign-out, demo start) is a token writer, not a network caller. Any other use of
      * the parameter, a KDoc link included, brings the class back under the gate.
      */
     private fun KoParameterDeclaration.onlyWritesTokens(): Boolean {

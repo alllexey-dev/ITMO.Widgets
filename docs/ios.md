@@ -15,18 +15,19 @@ sport place a push announces (Notifications). What iOS does differently from And
 
 ## Prerequisites
 
-Only the owner installs the toolchain (it needs an Apple ID and `sudo`); agents check it.
+Installing the toolchain needs an Apple ID and `sudo`, so the scripts only check it.
 
 | Tool | Pin | Where it is pinned |
 |---|---|---|
-| Xcode | 27.0 (27A266a) at `/Applications/Xcode.app` | `scripts/ios/env.sh` (gate T10: Kotlin 2.4.20 works with it) |
+| Xcode | 27.0 (27A266a) at `/Applications/Xcode.app` | `scripts/ios/env.sh` (Kotlin 2.4.20 works with it) |
 | Simulator | iPhone 17, iOS 27.0 runtime | `scripts/ios/env.sh` |
 | XcodeGen | 2.46.0 (`brew install xcodegen`) | `scripts/ios/env.sh` |
-| JDK | 21 for Gradle, as `scripts/verify.sh` | `scripts/ios/env.sh` |
+| JDK | 21 for Gradle | `scripts/ios/env.sh` |
 | Deployment target | iOS 18.0 | `iosApp/Config/Base.xcconfig` |
 
-`scripts/ios/env.sh` refuses to build when `xcodebuild -version` or `xcodegen --version` differs from the pin. A CI
-image with another Xcode presets the `ITMO_*` pins in its environment instead of editing the file.
+`scripts/ios/env.sh` warns when `xcodebuild -version` or `xcodegen --version` differs from the pin and builds on; CI
+selects exactly the pinned Xcode. A CI image with another Xcode presets the `ITMO_*` pins in its environment instead
+of editing the file.
 
 Check the machine (read-only):
 
@@ -72,7 +73,7 @@ sharing), never memory or a Koin graph.
 
 - The app process is the only one with DataStore and a Koin graph; an extension that needs a fact reads a
   versioned JSON file the app wrote (session-v1.json for the session and the demo, never a token).
-- Memory: the widget extension has about 30 MB (SP-16a), which the Kotlin runtime alone would use up, so it links
+- Memory: the widget extension has about 30 MB, which the Kotlin runtime alone would use up, so it links
   no Kotlin; the app's own footprint is in Memory.
 - Time: the extensions compute no academic time. The app writes timelines with their instants, and WidgetKit
   picks the entry of the moment.
@@ -84,12 +85,12 @@ sharing), never memory or a Koin graph.
 The catalog is the Android resource files ([ADR 0028](decisions/0028-strings-and-icons.md)); iOS reads generated
 copies and never holds Russian text in Swift.
 
-- Tables. `scripts/verify.sh run -- :app:exportAppleStrings` writes `iosApp/Shared/Strings/*.xcstrings`, one per
+- Tables. `./gradlew :app:exportAppleStrings` writes `iosApp/Shared/Strings/*.xcstrings`, one per
   catalog file name; `strings_platform.xml` and `iosApp/Strings/strings_ios*.xml` go to `Localizable` (APNs resolves a
   `loc-key` only there), `InfoPlist` and `AppShortcuts` rows come from `build-logic/strings/apple-tables.properties`.
   Run it after changing a catalog file and commit the result; never edit a table by hand.
 - iOS-only copy (widget and Control texts, the Background App Refresh row, usage descriptions) lives in
-  `iosApp/Strings/strings_ios.xml`, Android syntax; later cards add `strings_ios_<area>.xml`
+  `iosApp/Strings/strings_ios.xml`, Android syntax, and in `strings_ios_<area>.xml` per area
   (`strings_ios_settings.xml`: the settings texts where the shared ones name Android). An Info.plist value is an
   `InfoPlist.<key>` row, a shortcut phrase an `AppShortcuts.<phrase>` row.
 - Language. Every bundle has only the `ru` localization (`CFBundleDevelopmentRegion = ru`; XcodeGen also lists
@@ -155,25 +156,25 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 
 ## Shell and routes
 
-The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Its session gate and demo banner follow
-the shared `SessionRepository` (see Core graph). The recordbook root is L12's Compose recordbook
-(`RecordbookTabScreen`, IO-09d2), the home root LH-2's Compose feed (`HomeScreen`, IO-09a), the sport root LP-6's
-Compose sport tab (`SportTabScreen`, IO-09c), the me root LA-3's Compose Me tab (`MeTabScreen`, IO-09e) with the
-entry to settings and the sign-out (the route's confirmation, `SessionRepository.signOut()`), the schedule root L10's
-Compose schedule (`ScheduleScreen`, IO-09b); no tab has a placeholder root any more.
+The app's root is the SwiftUI shell in `iosApp/Sources/App/`. Its session gate and demo banner follow
+the shared `SessionRepository` (see Core graph). The recordbook root is the Compose recordbook
+(`RecordbookTabScreen`), the home root the Compose feed (`HomeScreen`), the sport root the Compose sport tab
+(`SportTabScreen`), the me root the Compose Me tab (`MeTabScreen`) with the entry to settings and the sign-out (the
+route's confirmation, `SessionRepository.signOut()`), the schedule root the Compose schedule (`ScheduleScreen`); no
+tab has a placeholder root.
 
 - Tabs. `ShellTab` holds the roots of Android's bar (`AppTab`) in its order: recordbook, schedule, home,
   sport, me. A tab shows only while iOS offers its feature (`ShellTab.isAvailable`: the recordbook follows
-  `PlatformCapabilities.recordbook`, on since IO-09d2), so no placeholder reaches App Review; home is selected at
+  `PlatformCapabilities.recordbook`, which is on), so no placeholder reaches App Review; home is selected at
   launch. The container is one type, `Shell/ShellTabs.swift` (a `TabView`). Tabs switch by the native
-  tab bar only, with no swipe between them (owner decision 2026-10-06; IO-SW1 dropped, see design.md "Tab swipe").
+  tab bar only, with no swipe between them (decided 2026-10-06, see [Tab swipe](design.md#tab-swipe)).
 - Stacks and sheets. Each tab has one `NavigationStack` whose path the router holds; the shell's own sheets open at
   the medium detent and drag to large. A sheet key of a feature (`RouteTarget.composeSheet`: the lesson, pending
-  sport and friend picker sheets, IO-09b; the recordbook's period picker and `Мои баллы`, IO-09d2) is one
+  sport and friend picker sheets; the recordbook's period picker and `Мои баллы`) is one
   `ShellSheet.route` above the shell whose SwiftUI view hosts the Compose sheet content and sets the detents (`.large`
   for Android's tall sheets, `.medium` and `.large` for its default ones, with the system's drag indicator);
   the content draws its own title and close button. One sheet at a time; a screen opened from a sheet replaces it.
-  A screen's own sheet (the sport details, IO-09c) is a SwiftUI `.sheet` of its Swift host hosting the shared sheet
+  A screen's own sheet (the sport details) is a SwiftUI `.sheet` of its Swift host hosting the shared sheet
   content, never a Compose `ModalBottomSheet`: Android's tall sheet is the large detent, the system drag indicator
   sits over the content's header, and the controller is transparent (`screenController(opaque = false)`) over
   `presentationBackground`, so the sheet's grouped background runs under the home indicator.
@@ -187,11 +188,11 @@ Compose schedule (`ScheduleScreen`, IO-09b); no tab has a placeholder root any m
   whose signed-out gate signs in with one tap and whose flow counts as passed; UI tests pass it through
   `XCUIApplication.itmo(session:)`, and the scheme's test action passes `signed-in` to the host app of the hosted
   tests, so they never open the sign-in screen.
-- Chrome rule (the owner may veto at T12). A CMP route draws its own DS-03 top bar and hides the SwiftUI navigation
+- Chrome rule. A CMP route draws its own design-system top bar and hides the SwiftUI navigation
   bar (`shellChrome(.compose)`); a SwiftUI screen keeps the native bar (`.native`). Hiding the bar turns UIKit's
   edge swipe back off, so the compose chrome turns it on again for the stack above its root;
   `ShellUITests.testEdgeSwipeGoesBackFromComposeChrome` fails without it.
-- Router (`Sources/App/Router/`) on the shared route model of `:shared:core` (SH-1a2). Every URL, App Intent,
+- Router (`Sources/App/Router/`) on the shared route model of `:shared:core`. Every URL, App Intent,
   link and notification becomes an `EntryRoute` (`RouteURL`, which uses `EntryRouteParser` and `AppLinks`) and goes
   to `AppRouter.open(entry:)`; a tap opens an `AppRoute` key with `AppRouter.open(_:)`. Entry routes wait in the
   shared `RouteQueue`: a route runs once, only when `ShellGate` reports the tabs (a ready session, the first-run flow
@@ -201,18 +202,17 @@ Compose schedule (`ScheduleScreen`, IO-09b); no tab has a placeholder root any m
   callbacks.
 - Route map. `Routes.target(for:)` switches exhaustively over `RouteFeature` (`shared/ios`, `IosRoutes`) and
   delegates each key to its feature's `Routes+<Feature>.swift`, which returns a Compose screen, a SwiftUI screen, a
-  shell sheet, a Compose sheet, a tab, the gate, or "not on iOS". A feature card changes only its own file; a key no feature claims fails
+  shell sheet, a Compose sheet, a tab, the gate, or "not on iOS". A feature changes only its own file; a key no feature claims fails
   `RouterTests.testEveryRegisteredRouteHasAFeature`, and `testEveryRouteKindHasItsTarget` pins the target of every
   key. "Not on iOS" keys (the `.ics` export, which the settings screen presents itself; the link and review reports,
-  Compose dialogs inside what asks for them (IO-09f); the debug tools for good; and every screen of a feature whose
-  IO card has not merged) have no entry point and open nothing.
+  Compose dialogs inside what asks for them; the debug tools for good; and every screen of a feature iOS does not
+  offer yet) have no entry point and open nothing.
 - Route results. A screen that answers its opener (the friend picker answers the schedule, the period picker the
   recordbook) is opened with `open(_:onResult:)` and answers with `deliver(_:from:)`; the router holds the callback
   until then.
 - Sheets that lead on. One router sheet shows at a time. A links sheet that opens the next one in its place, as
   Android's close themselves first, calls `replaceSheet(with:)` (SwiftUI dismisses the one and presents the other);
-  all links show a link's actions and the editor as their own nested sheet over the list, as Android stacks them
-  (IO-09f).
+  all links show a link's actions and the editor as their own nested sheet over the list, as Android stacks them.
 
 | Route id | URL | Opens |
 |---|---|---|
@@ -227,7 +227,7 @@ frozen; `StableIdentifiersTests.testRouteUrls` pins them.
 
 ## Settings and diagnostics
 
-Settings are SwiftUI screens over the shared page model (IO-08a): `Routes+Settings.swift` maps each
+Settings are SwiftUI screens over the shared page model: `Routes+Settings.swift` maps each
 `AppRoutes.Settings(page)` key to `Features/Settings/SettingsScreen`, which owns the page's `SettingsViewModel`
 (`settingsPageParameters(page:)` hands it the page as Android's navigation argument), and `AppRoutes.Diagnostics` to
 `Features/Diagnostics/DiagnosticsScreen`. Android's Compose pages are not used on iOS. The Me tab's settings row opens
@@ -238,8 +238,8 @@ the root page, its privacy row the privacy page.
   value. Rows carry `settings.row.<SettingRowId.key>`. Nothing renders until the page is `loaded`, so stored values
   never animate in.
 - Platform rows. The page providers hide what `PlatformCapabilities` does not offer: the quick settings tile, the
-  spoiler animation and the custom spoiler image. The recordbook page (mark tracking) is on since IO-09d3, the
-  calendar rows since IO-15b. The QR widget page keeps its spoiler and dynamic colour switches, which the QR
+  spoiler animation and the custom spoiler image. The recordbook page (mark tracking) and the
+  calendar rows are on. The QR widget page keeps its spoiler and dynamic colour switches, which the QR
   widget follows through qr-pass-v1.json (see Widgets).
 - iOS copy. `SettingsIosCopy` replaces the shared texts that name Android with `strings_ios*.xml` rows: the
   notification values and the background work row, which is Background App Refresh on iOS
@@ -247,15 +247,15 @@ the root page, its privacy row the privacy page.
 - System state. On appear and on every return to the app the screen reports the notification permission and
   Background App Refresh to the ViewModel. The notification row asks for the permission while iOS has never asked,
   then opens the app's notification settings.
-- The schedule change switch and the calendar sync are the schedule data graph's (`scheduleDataModule`, IO-09b):
+- The schedule change switch and the calendar sync are the schedule data graph's (`scheduleDataModule`):
   the background runner runs the change check and the calendar sync (see Background refresh). The calendar switch
   asks EventKit for full access in Swift (`Features/Calendar/CalendarAccess`, the system prompt once, then a
   rationale that opens the app's page in Settings); `calendarIosModule` gives the sync the phone's calendars over
   EventKit and the `.ics` file, which `IcsExportSheet` shares with a `ShareLink`
-  ([calendar](features/calendar.md#ios)). Mark tracking is the recordbook graph's (IO-09d1) with its `Зачётка`
-  page since IO-09d3: the switches run the mark check of the background runner
+  ([calendar](features/calendar.md#ios)). Mark tracking is the recordbook graph's with its `Зачётка`
+  page: the switches run the mark check of the background runner
   ([mark tracking](features/marks-tracking.md#ios)). "Пройти знакомство заново" resets the shared flag,
-  which the shell's gate reads (IO-07b). Widget pages draw no preview above their rows.
+  which the shell's gate reads. Widget pages draw no preview above their rows.
 - Diagnostics. The journal lists `AppDiagnostics`' records, newest first, with a stack trace folded under its
   record; the share sheet takes the plain-text journal (and copies it), clearing asks first.
 - Tests. `SnapshotTests/SettingsSnapshotTests` (the root, schedule, recordbook and QR widget pages from the
@@ -288,7 +288,7 @@ from its own process's `Bundle.main` and never writes them as literals. `$(AppId
 a dot on a device, `FAKETEAMID.` on the simulator and empty in a team-less device build.
 
 Signing: builds are unsigned by default ("Sign to Run Locally", no team), which is all the simulator and CI need.
-The ignored `iosApp/Config/Signing.local.xcconfig`, written by the integrator after gate T13, sets
+The ignored `iosApp/Config/Signing.local.xcconfig`, written by hand once the Apple developer account exists, sets
 `DEVELOPMENT_TEAM`, `ITMO_CODE_SIGN_IDENTITY = Apple Development` and `ITMO_ENTITLEMENTS_VARIANT = .signed`; the
 last switches every target to its `.signed` entitlements, the only place for push and associated domains. No
 team ID is committed.
@@ -310,17 +310,17 @@ files and never link Kotlin (Targets and processes).
 DataStore stays in the app container: it is single-process, so no extension opens it.
 
 App Group container. `AppGroupDirectory.resolve` uses the group in `AppGroupID`, then any group AltStore lists in
-`ALTAppGroups` (SP-23). When none resolves (an unsigned build) it falls back to `no-backup/app-group` in the app
+`ALTAppGroups`. When none resolves (an unsigned build) it falls back to `no-backup/app-group` in the app
 container, logs one warning per process and carries on; the extensions then see nothing.
 
 | File | Written by | Read by | Notes |
 |---|---|---|---|
 | `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted; `myitmo-refresh` guards the token refresh |
 | session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension (`SessionFile.swift` in `iosApp/Shared/WidgetSnapshots/`), notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool, "servicesEnabled": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` is the last notification settings answer (see Notifications); `servicesEnabled` the services opt-in (`BackendGate`), absent reads as off |
-| qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass and every change of a QR widget option (`QrSettingsPreferences`) or of the widget theme (`AppearancePreferences.observeWidgetTheme`) while the pass is valid; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` and `QrWidgetAppearance.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool, "dynamicColors": Bool, "animation": String, "palette"?: WidgetPalette}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; `spoiler`, `dynamicColors` and `animation` (a `QrAnimationType` name) are the global QR widget options, each read as Android's default (on, on, `CIRCLE`) when absent or unknown, so a file from before IO-FIX-QRW stays version 1; `palette` (DS-ACC3, additive in version 1, `WidgetPalette.swift`) is `{"light": roles, "dark": roles}`, each `{"surface", "surfaceContainer", "onSurface", "onSurfaceVariant", "outlineVariant", "primary"}` as `0xRRGGBB` numbers, the app's scheme while `Виджеты в цвет темы` is on and absent otherwise; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`) |
+| qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass and every change of a QR widget option (`QrSettingsPreferences`) or of the widget theme (`AppearancePreferences.observeWidgetTheme`) while the pass is valid; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` and `QrWidgetAppearance.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String], "spoiler": Bool, "dynamicColors": Bool, "animation": String, "palette"?: WidgetPalette}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; `spoiler`, `dynamicColors` and `animation` (a `QrAnimationType` name) are the global QR widget options, each read as Android's default (on, on, `CIRCLE`) when absent or unknown, so a file written before these options existed stays version 1; `palette` (additive in version 1, `WidgetPalette.swift`) is `{"light": roles, "dark": roles}`, each `{"surface", "surfaceContainer", "onSurface", "onSurfaceVariant", "outlineVariant", "primary"}` as `0xRRGGBB` numbers, the app's scheme while `Виджеты в цвет темы` is on and absent otherwise; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`) |
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension, on a tap on the spoiler | widget extension (`QrWidgetReveal.swift`) | `{"revealedUntil": ISO 8601}`: the tap's time plus 30 s, Android's auto-hide delay; one file for every placed QR widget; never read by the app |
-| schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`, iosMain) on the session, the schedule widget options and the widget theme, every return to the foreground, a changed cached schedule and `ScheduleWidgetRefreshRequester` (sport); reloads `dev.alllexey.itmowidgets.widget.single-lesson` and `.day-schedule` | widget extension (`LessonTimeline.swift`) | LS-3's `ScheduleWidgetTimeline` from `ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow (academic zone): `{"version": 1, "generatedAt", "validUntil", "entries": [{"validFrom", "snapshot"}], "palette"?}`, the snapshot in the keys of Android's widget snapshot, nulls omitted, defaults written; rooms and buildings are already the short titles Android's widget shows; `palette` is qr-pass-v1.json's (DS-ACC3, additive in version 1), the palette of the write's moment; an unavailable schedule keeps the previous file; the envelope around `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json` is what the writer writes for it (`ScheduleTimelineWriterTest`, `ScheduleTimelineTests`) |
-| `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | each card that adds a snapshot adds its row |
+| schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`, iosMain) on the session, the schedule widget options and the widget theme, every return to the foreground, a changed cached schedule and `ScheduleWidgetRefreshRequester` (sport); reloads `dev.alllexey.itmowidgets.widget.single-lesson` and `.day-schedule` | widget extension (`LessonTimeline.swift`) | the shared `ScheduleWidgetTimeline` from `ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow (academic zone): `{"version": 1, "generatedAt", "validUntil", "entries": [{"validFrom", "snapshot"}], "palette"?}`, the snapshot in the keys of Android's widget snapshot, nulls omitted, defaults written; rooms and buildings are already the short titles Android's widget shows; `palette` is qr-pass-v1.json's (additive in version 1), the palette of the write's moment; an unavailable schedule keeps the previous file; the envelope around `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json` is what the writer writes for it (`ScheduleTimelineWriterTest`, `ScheduleTimelineTests`) |
+| `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | each new snapshot adds its row |
 
 - Snapshots hold `{"version": N, "value": ...}`. A write goes to a temporary file of its own and is renamed over
   the old one, so a reader sees the old or the new snapshot, never a partial one; then the writer asks WidgetKit to
@@ -346,7 +346,7 @@ entitlements, so Keychain tests are the hosted `ITMOWidgetsTests/KeychainTests`.
 | `bars_tokens.enc` | `BarsTokenStore` (`"<isu>\n<header>"`, the BARS sign-in and every renewal) | app |
 | `itmo_id_cookies` | `KeychainItmoIdCookies` (the `id.itmo.ru` cookies of WebKit, merged with each replay's `Set-Cookie`) | app |
 
-Each card that stores a secret adds its row. Values are never logged.
+Each new secret adds its row. Values are never logged.
 
 Session. `KeychainTokenStorage` is both MyItmoApi 2.x's `TokenStorage` and the session's `SessionTokenStore` over
 the one `myitmo_tokens` item, serialised as Android's `MyItmoStorage` serialises `myitmo_tokens.enc` before sealing
@@ -356,7 +356,7 @@ inside `FileCrossProcessLock("myitmo-refresh")` and re-reads the item once it ho
 notification service find the same expired token only the first refreshes. A value that does not parse is dropped
 (signed out); a Keychain failure is thrown and drops nothing.
 
-Sign-in (IO-07a, IO-07b, SP-21 path (a)). The signed-out gate is `AuthScreen` (`Sources/Features/Auth/`), Android's
+Sign-in (the WebView token hand-over). The signed-out gate is `AuthScreen` (`Sources/Features/Auth/`), Android's
 `AuthFragment` in SwiftUI over the shared `AuthViewModel`: the shared `auth_logo` (bundled by path from
 `shared/feature-account/src/commonMain/composeResources/drawable`, no copy), the app name, the three feature lines,
 `auth_login_itmo_id`, which opens `ItmoSignInScreen` as a full-screen cover, and `auth_login_refresh_token`, an alert with a secure field that calls
@@ -376,10 +376,10 @@ one hand-over at a time; `Completed` closes the cover. The main frame stays on h
 as on Android, for VK and other providers); no new windows. A failed page or sign-in shows an error with a retry
 (`auth_web_error`, Android's `auth_error_*` mapping); a retry reloads the sign-in page. The website data is not
 cleared before the page loads, unlike Android: sign-out has cleared it, and an expired session keeps ITMO.ID's SSO
-cookies for the re-sign-in. Path (b) (own PKCE with `decidePolicyFor`, SP-21's recommendation) needs the code
+cookies for the re-sign-in. Own PKCE with `decidePolicyFor`, the recommended alternative, needs the code
 exchange in shared Kotlin first.
 
-First-run flow (IO-07b). `OnboardingScreen` (`Sources/Features/Onboarding/`) is Android's flow in SwiftUI over the
+First-run flow. `OnboardingScreen` (`Sources/Features/Onboarding/`) is Android's flow in SwiftUI over the
 shared `OnboardingViewModel`, which gets a fresh `SavedStateHandle` as a Koin parameter (`OnboardingIosParameters`):
 `ScreenViewModelStore` has no saved-state registry, so a relaunch starts at the first step. The steps and their order
 are Android's; a widget step shows how to add the widget (`ios_onboarding_widget_howto_*`; iOS lets no app place one,
@@ -391,7 +391,7 @@ after the dialog carries it into `alertsAllowed` (see Notifications). A back but
 `-itmoOnboarding` shows the flow over the demo session, which otherwise skips it, until the flow ends (UI tests,
 `XCUIApplication.itmoOnboarding()`); finishing it there stores the flag as a real account would.
 
-BARS session (IO-09d1, SP-21). `recordbookModule` runs on `recordbookIosModule`
+BARS session. `recordbookModule` runs on `recordbookIosModule`
 (`shared/feature-recordbook/src/iosMain/`): one `BarsClient`, `BarsTokenStore` and `OwnerBoundBarsStorage` per
 process, BARS on a Darwin engine of its own (no cookies, cache or redirects, never the MyITMO engine), and ITMO.ID's
 `bars` sign-in (`BarsLogin`) over it.
@@ -412,11 +412,11 @@ process, BARS on a Darwin engine of its own (no cookies, cache or redirects, nev
 - Sign-in sheet. `BarsLoginSheet` is Android's `BarsLoginActivity` over the shared `BarsLoginViewModel`, whose
   `SavedStateHandle` is a Koin parameter (`BarsLoginParameters.fresh()`), so each sheet keeps one `state`. A retry
   also clears WebKit's cookies, as Android clears `CookieManager`. The recordbook list and the subject page open
-  it from their BARS snackbar and load again after a completed sign-in (IO-09d2); in a Debug build
+  it from their BARS snackbar and load again after a completed sign-in; in a Debug build
   `-itmoBarsLogin` presents it, and `-itmoBarsRenew foreground|background` replaces the saved header with one BARS
   rejects and renews it through the hidden view or the cookie copy (`BarsSessionCheck`, which logs only the
   header's length and expiry).
-- The mark check (IO-09d3) reads BARS in the background through the cookie renewal only (`BarsCookieSilentLogin`
+- The mark check reads BARS in the background through the cookie renewal only (`BarsCookieSilentLogin`
   over the Keychain cookies), never the hidden view; no cookies or ITMO.ID's `LOGIN_REQUIRED` end the session with
   one `Войдите в БАРС` ([mark tracking](features/marks-tracking.md#ios)).
 
@@ -430,7 +430,7 @@ widgets would read a container the app no longer writes (`ITMOWidgetsTests/Widge
 cleaner takes `bars_tokens.enc` and `itmo_id_cookies` with the session; the recordbook's own cleaners run as on
 Android.
 
-Web sign-in (IO-08b). `WebLoginSheet` (`Sources/Features/WebLogin/`) is Android's `WebLoginBottomSheet` in SwiftUI
+Web sign-in. `WebLoginSheet` (`Sources/Features/WebLogin/`) is Android's `WebLoginBottomSheet` in SwiftUI
 over the shared `WebLoginViewModel` (a fresh `SavedStateHandle` as its Koin parameter, `WebLoginIosParameters`), the
 shell sheet of `AppRoutes.WebLogin` (`ShellSheet.webLogin`); a Universal Link's `code` is checked as soon as it
 opens. `web_login_scan` opens VisionKit's `DataScannerViewController` (QR only) full screen; unlike Android's Play
@@ -441,20 +441,20 @@ the route (`ShellGate`), so the Me tab's row says `error_demo_unavailable` there
 `-itmoWebLoginFixture` opens the sheet on the tabs, answers from `WebLoginIosFixture` (code `ABCD2345`, Chrome on
 macOS, no Backend) and hands the fixture's link to the scan button (`UITests/WebLoginUITests`).
 
-My ITMO web (IO-08b). `MyItmoWebScreen` (`Sources/Features/MyItmoWeb/`) is a SwiftUI screen under the native bar on
+My ITMO web. `MyItmoWebScreen` (`Sources/Features/MyItmoWeb/`) is a SwiftUI screen under the native bar on
 the tab's stack: `my.itmo.ru` in a `WKWebView` on `WKWebsiteDataStore.default()`, every navigation decided by the
 shared `MyItmoWebPolicy`, no token injection; see [My ITMO in the app](features/my-itmo-web.md#ios).
 
-Update offer (IO-08b). `AppUpdateOffer` (`Sources/Features/Update/`) runs the shared `AppUpdateGateViewModel` once per
+Update offer. `AppUpdateOffer` (`Sources/Features/Update/`) runs the shared `AppUpdateGateViewModel` once per
 process on the tabs of a real session (`ShellGate.checksForUpdate`), and a newer iOS release opens `AppUpdateScreen`
 over the shared `AppUpdateViewModel` as a sheet. The only channel is the App Store page
 `https://apps.apple.com/app/id$(APP_STORE_ID)` (`AppStoreListing`; `APP_STORE_ID` in `Base.xcconfig`, `AppStoreID` in
-the app's Info.plist): while the ID is empty, until the App Store record exists (T13), the offer never checks or shows.
+the app's Info.plist): while the ID is empty, until the App Store record exists, the offer never checks or shows.
 No GitHub or Play channel.
 
 ## Notifications
 
-Push plumbing before the Apple account (IO-13a); the APNs and FCM token arrive with IO-13b.
+The push plumbing is in place; the APNs and FCM token need the Apple developer account.
 
 - Registration. `PushDeviceRegistration` (`shared/core/src/commonMain/.../core/notification/`) is both the
   session's `FcmTokenSync` and its `BackendDeviceSession`: it registers the token with `platform = IOS`,
@@ -489,11 +489,11 @@ Push plumbing before the Apple account (IO-13a); the APNs and FCM token arrive w
 | `Новые оценки`, several subjects or one without a page | `action` = `ACTION_OPEN_RECORDBOOK` | the recordbook tab |
 | `Новые оценки`, one subject with a page | `action` = `ACTION_OPEN_RECORDBOOK_SUBJECT`, `entry_id`, `program_id`, `semester`, `study_year`, with a BARS journal `bars_plan`, `bars_type`, `bars_identifier` | the recordbook tab with the subject's page; arguments that do not describe a page open the recordbook tab |
 | `Войдите в БАРС` | `action` = `ACTION_OPEN_BARS_LOGIN` | the recordbook tab with the BARS sign-in sheet |
-| `NotificationDestination.Sport`, `UserProfile` (notices of the push handlers, none on iOS before T13) | `action` = `ACTION_OPEN_SPORT`; `ACTION_OPEN_USER_PROFILE`, `isu` | the sport tab; the me tab with the profile |
+| `NotificationDestination.Sport`, `UserProfile` (notices of the push handlers, none on iOS without a push token) | `action` = `ACTION_OPEN_SPORT`; `ACTION_OPEN_USER_PROFILE`, `isu` | the sport tab; the me tab with the profile |
 | anything else | | nothing |
 
-- Notification service (IO-12a, Swift only: SP-16a measured a Kotlin/Native one at 21 MB peak RSS against
-  Swift's 16 MB, ADR 0023). Backend sends iOS an alert with `mutable-content`
+- Notification service (Swift only: a Kotlin/Native one measured 21 MB peak RSS against Swift's 16 MB,
+  ADR 0023). Backend sends iOS an alert with `mutable-content`
   ([Backend notifications](../../itmo-widgets-backend/docs/contracts/notifications.md#ios-delivery-options)); `PushHandler` decides what it shows:
   - signed out, the demo, a `recipient_isu` other than session-v1.json's `isu`, or a sport push without
     `servicesEnabled`: dropped (empty content, see Degradations);
@@ -512,11 +512,11 @@ Push plumbing before the Apple account (IO-13a); the APNs and FCM token arrive w
     request is logged; URLSession runs ephemeral, without cookies, cache or redirects.
   - When iOS ends the extension's time (`serviceExtensionTimeWillExpire`) Backend's alert is delivered; a
     delivery happens once, whichever comes first. Bookings, queues and widgets refresh when the app runs next.
-  - `simctl push` never runs an extension (SP-23), so `ITMOWidgetsTests/NotificationServiceTests` replays the
+  - `simctl push` never runs an extension, so `ITMOWidgetsTests/NotificationServiceTests` replays the
     Kotlin golden fixtures by path: Backend's FCM envelopes (`contract/fcm/`), MyITMO's sign-up answers and
-    KM-11c's golden `sign-outcomes.txt` and `push.txt`, plus the gates, the refresh under the lock, the Keychain
-    item shared with the Kotlin store and the time limit. The memory of the extension on a device is SP-16b's
-    (IO-12b, after T13).
+    the golden `sign-outcomes.txt` and `push.txt`, plus the gates, the refresh under the lock, the Keychain
+    item shared with the Kotlin store and the time limit. The memory of the extension on a device is still to be
+    measured; it needs a signed build.
 - A Debug build launched with `-itmoNotificationFixture <kind>` asks for permission and posts one notification
   (`NotificationFixtures`): `friendship` and `sport` shaped like the push two seconds later, `schedule-changes`,
   `marks` and `bars-login` at once through the app's notifier with their real `userInfo`; `NotificationTapUITests`
@@ -528,7 +528,7 @@ Push plumbing before the Apple account (IO-13a); the APNs and FCM token arrive w
 
 ## Widgets
 
-The widget extension links no Kotlin (its limit is about 30 MB, SP-16a): each widget reads App Group files on every
+The widget extension links no Kotlin (its limit is about 30 MB): each widget reads App Group files on every
 timeline request and makes no network call. The app's writers reload a widget's kind when its files change.
 
 QR widget (`Extensions/Widgets/Qr/`, kind `dev.alllexey.itmowidgets.widget.qr`, small, `StaticConfiguration`).
@@ -587,8 +587,8 @@ day's rows, tomorrow's once today is over when that option is on. A tap opens `i
 - Degradation: no seven-minute pending sport refresh (WidgetKit allows about 40 to 70 reloads a day); a pending row
   stays until the app writes again or its entry ends.
 - The writer starts with the graph (`scheduleWidgetIosModule`) and resolves the provider and the cached schedule at
-  each write from the schedule data graph (IO-09b) and its pending sport rows from the sport graph (IO-09c).
-- `ITMOWidgetsTests/ScheduleTimelineTests` decodes LS-3's fixture and picks Kotlin's `entryAt` entry at sampled
+  each write from the schedule data graph and its pending sport rows from the sport graph.
+- `ITMOWidgetsTests/ScheduleTimelineTests` decodes the timeline fixture and picks Kotlin's `entryAt` entry at sampled
   instants; `SnapshotTests/WidgetSnapshotTests` holds lesson, break, pending sport, empty, tomorrow, signed out,
   demo and unavailable states, light and dark (AX1 for the small and the large family), long names at the narrowest
   medium size (321 pt, `WidgetSizes.narrowMedium`), and the lesson, day and QR widgets in the teal preset's palette
@@ -628,7 +628,7 @@ any URL does (Shell and routes): it waits for a ready session and the tab bar, t
 iOS has no WorkManager: the app gets one app refresh task, `dev.alllexey.itmowidgets.refresh` (`UIBackgroundModes`
 `fetch`, listed in `BGTaskSchedulerPermittedIdentifiers`), and the system decides when it runs, from how the app is
 used, often hours apart, never with Background App Refresh off or in Low Power Mode. `BackgroundRunner`
-(`shared/ios/src/iosMain/.../ios/background/`, IO-14) is the one entry point of every run:
+(`shared/ios/src/iosMain/.../ios/background/`) is the one entry point of every run:
 
 - Triggers. The task (`.backgroundRefresh()` on the scene, `Sources/Background/BackgroundRefresh.swift`, SwiftUI's
   `.backgroundTask(.appRefresh(_:))`), the app's launch and every return to the foreground (`App.init` calls
@@ -637,8 +637,8 @@ used, often hours apart, never with Background App Refresh off or in Low Power M
 - Steps. Each feature binds its `RefreshStep` (`shared/core`, iosMain, `core/work/RefreshSteps.kt`) under its key in
   its iOS module; the runner takes them in `RefreshStepKeys.ORDER`, where each later check adds one line: widget
   snapshots (`scheduleWidgetIosModule`: `ScheduleTimelineWriter` publishes the schedule timeline), schedule changes
-  (`scheduleChangesIosModule`: `ScheduleChangesRefresh`, LT-1's `ScheduleChangesCheck`, then the quiet hours), marks
-  with the BARS renewal (`recordbookIosModule`: `MarksRefresh`, KM-11b2's `MarksCheck`, then the quiet hours; every
+  (`scheduleChangesIosModule`: `ScheduleChangesRefresh`, `ScheduleChangesCheck`, then the quiet hours), marks
+  with the BARS renewal (`recordbookIosModule`: `MarksRefresh`, `MarksCheck`, then the quiet hours; every
   three hours, a switch turned on makes the step due at once), then the calendar sync (`calendarIosModule`:
   `DefaultCalendarSync.run` every two hours; turning it on makes the step due at once). A bound step without a place
   in the order fails the start.
@@ -660,8 +660,7 @@ used, often hours apart, never with Background App Refresh off or in Low Power M
   BARS reminder found between 00:00 and 06:00 Moscow time are handed to the system for 06:00 at once (a calendar
   trigger) and count as delivered; Android keeps them for its first run after 06:00, which iOS might not give for
   hours.
-- The schedule change step resolves the check and its repository from the graph at each run (`scheduleDataModule`,
-  in the graph since IO-09b); `scheduleChangesIosModule` binds the check's iOS ports (`IosScheduleChangeNotifier`,
+- The schedule change step resolves the check and its repository from the graph at each run (`scheduleDataModule`); `scheduleChangesIosModule` binds the check's iOS ports (`IosScheduleChangeNotifier`,
   the scheduler).
 - Debug. A Debug build launched with `-itmoRunRefresh` runs the entry point once more after the session is read,
   prints `Refresh: <step>=<result> ...`, and posts a fixture schedule change notification (`ScheduleChangeFixture`)
@@ -686,13 +685,13 @@ each core type once, what `:app`'s Hilt modules and `CoreBridge` give Android: `
 `MyItmoClient`, Core 2.0's `BackendClient` and its `UsersApi`, `PlatformActions`, `PlatformCapabilities` and the
 sign-out cleaners.
 
-- The session. `authDataModule` (KM-11h1: `SessionRepository`, `DemoMode`) runs on `accountIosModule`
+- The session. `authDataModule` (`SessionRepository`, `DemoMode`) runs on `accountIosModule`
   (`shared/feature-account/src/iosMain/.../auth/di/`), the iOS side of Android's `CoreBridge` and
   `AccountAuthBridge`: `DemoPreferences`, the current user from the ID token (`DemoMode`'s fictional user in the
   demo), every `SessionDataCleaner` of the graph (`getAll()`, read on each transition), and `SessionSnapshotSync`,
   which writes session-v1.json for every signed-in state. The lifecycle effects do nothing yet (no background
   work, notifications or widgets to stop); push token sync and device registration are one shared
-  `PushDeviceRegistration` (see Notifications), the Backend identity upload a no-op until an iOS card turns custom
+  `PushDeviceRegistration` (see Notifications), the Backend identity upload a no-op until iOS turns custom
   services on. `AppNotifier` is `IosAppNotifier` (`iosBackgroundModule`, see Background refresh), also a sign-out
   cleaner of every shown and scheduled notification.
 - Launch. `App.init` starts the graph, builds the shell's session, then calls `SessionRepository.initialize()`. A
@@ -709,21 +708,20 @@ sign-out cleaners.
 - The web sign-in and the update offer. `webLoginDataModule` and `webLoginModule` of `:shared:feature-account`
   on Core 2.0's users area from `iosCoreModule`, and `updateModule` on `updateIosModule`
   (`shared/feature-account/src/iosMain/.../update/di/`): the installed version is `CFBundleShortVersionString`, the
-  platform `DevicePlatform.IOS`, so Backend answers the iOS release (`version-info?platform=IOS`, BK-17).
+  platform `DevicePlatform.IOS`, so Backend answers the iOS release (`version-info?platform=IOS`).
 - The application `CoroutineScope` (as Android's `CoroutinesModule`) and `ShareLinkFactory` over the Backend origin,
-  the site the share links name (as Android's `WIDGETS_BASE_URL`), are core bindings (IO-09e).
+  the site the share links name (as Android's `WIDGETS_BASE_URL`), are core bindings.
 - Sport. `sportModule` on `sportIosModule` (`shared/feature-sport/src/iosMain/.../sport/di/`): Core 2.0's sport
   area from the one `BackendClient`, empty debug ports and `SportShares`; `scheduleDataModule` gives the schedule
   refresh after a booking and `friendSelectorModule` the lessons' friends (`FriendRepository` over social's
-  repository). `sportModule` replaces the schedule's empty pending sport rows, and the sport card joins the home feed
-  (IO-09c).
+  repository). `sportModule` replaces the schedule's empty pending sport rows, and the sport card joins the home feed.
 - Recordbook screens. `recordbookModule`'s four ViewModels and the subject page's loaders run on the schedule data
   graph's own lessons and refresh, the sport graph's score, the reviews graph's teacher tones and the links graph's
-  subject links (IO-09d2).
+  subject links.
 - Reviews and subject links. `reviewsModule` on `reviewsIosModule` and `resourcesModule` on `resourcesIosModule`
   (`shared/feature-{reviews,resources}/src/iosMain/.../di/`): Core 2.0's reviews and links areas from the one
   `BackendClient`; the editor's teacher lessons come from `scheduleDataModule`. They replace the stand-ins the
-  social, schedule and recordbook graphs had before (IO-09f).
+  social, schedule and recordbook graphs had before.
 - `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
   controller for the share sheet.
 - Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`: dev
@@ -733,9 +731,8 @@ sign-out cleaners.
   `IosCrashHook` (Kotlin/Native's `setUnhandledExceptionHook`): an uncaught Kotlin exception becomes a crash record
   with its type and stack frames, written at once to the JSON file diagnostics-crash-v1.json in the no-backup directory, which
   the next launch shows first and deletes. Swift crashes never pass Kotlin and are not recorded.
-- `PlatformCapabilities` is `IosPlatformCapabilities`: everything off until the IO card that ships a feature turns
-  it on (calendar export on since IO-15b, recordbook since IO-09d2, marks since IO-09d3, reviews and subject links
-  since IO-09f); the quick settings tile, Android's battery and Xiaomi screens, the update channel, the animated QR widget
+- `PlatformCapabilities` is `IosPlatformCapabilities`: a feature is off until iOS ships it (calendar export,
+  recordbook, marks, reviews and subject links are on); the quick settings tile, Android's battery and Xiaomi screens, the update channel, the animated QR widget
   and the custom spoiler image stay off.
 - `PlatformActions`: the share sheet (the title is not shown: iOS's sheet has none), links (t.me in Telegram when
   installed), Apple Maps (`maps.apple.com`, the pin or the address) and the app's pages in Settings.
@@ -743,7 +740,7 @@ sign-out cleaners.
   `IosCoreModuleTest` resolves every definition on the simulator, since Koin's `verify()` is JVM-only.
 
 Network and log. `darwinHttpEngine()` is the Ktor engine of every iOS client: no cookie storage, no cookie
-handling, no URL cache (SP-15a, SP-15b); clients read cookies with Ktor's `setCookie()` and set
+handling, no URL cache; clients read cookies with Ktor's `setCookie()` and set
 `followRedirects = false` where a redirect must surface. `OsLogAppLog` writes `AppLog` to unified logging, subsystem
 = the bundle ID, category = the tag.
 
@@ -756,9 +753,8 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
 
 - Exports. A type of an exported module has its own name in Swift (`UiText`, `AppIcon`); any other keeps a module
   prefix (`Lifecycle_viewmodelViewModel`, typealiased as `SharedViewModel`). `:shared:core`,
-  `:shared:feature-account` (IO-07b), `:shared:feature-settings` (IO-08a) and `:shared:feature-recordbook` (IO-09d1:
-  `BarsLoginViewModel`, the BARS WebKit ports) are exported; the IO card of a SwiftUI-owned ViewModel exports its
-  feature module. Each export grows the header and the link.
+  `:shared:feature-account`, `:shared:feature-settings` and `:shared:feature-recordbook` (`BarsLoginViewModel`,
+  the BARS WebKit ports) are exported; a feature with a SwiftUI-owned ViewModel exports its feature module. Each export grows the header and the link.
 - Koin start. `App.init` calls `startKoinIos(platform: AppPlatform())` after the app locale: one global graph over
   `IosKoinModules.all(platform)` (`shared/ios/src/iosMain/.../ios/di/`), `allowOverride(false)`. A second call keeps
   the running graph and returns false. `IosKoin` keeps the graph `startKoin` returned; iOS code never reads Koin's
@@ -777,15 +773,15 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   which runs `onCleared` and cancels `viewModelScope`; nothing else does on iOS. These ViewModels get no
   `SavedStateHandle`: arguments are Koin parameters (`ScreenViewModelStore.resolve(type:parameters:)`).
 - Compose screens. Only `shared/ios` builds a `ComposeUIViewController`: `screens/ScreenControllers.kt` wraps the
-  content in `ItmoTheme` and the host's `LocalPlatformActions`, and each feature's IO card adds
+  content in `ItmoTheme` and the host's `LocalPlatformActions`, and each feature adds
   `screens/<Feature>Screens.kt` with the factories Swift calls (`qrPassViewController(onBack:)`). A CMP screen's
   `koinViewModel()` uses the store Compose Multiplatform gives each controller, whose `SavedStateHandle` is empty: a
   route whose ViewModel reads its key's arguments gets them from its feature's iOS route, which resolves the Koin
-  definition in that store with a `SavedStateHandle` of the arguments (`UserProfileIosRoute`, IO-09e;
-  `UserScheduleIosRoute`, `LessonDetailsIosRoute`, `FriendSelectorIosRoute`, IO-09b; `UserSportIosRoute`, IO-09c;
-  `RecordbookSubjectIosRoute`, `SheetScoresIosRoute`, IO-09d2). The links and review sheets and the report dialogs
+  definition in that store with a `SavedStateHandle` of the arguments (`UserProfileIosRoute`,
+  `UserScheduleIosRoute`, `LessonDetailsIosRoute`, `FriendSelectorIosRoute`, `UserSportIosRoute`,
+  `RecordbookSubjectIosRoute`, `SheetScoresIosRoute`). The links and review sheets and the report dialogs
   resolve theirs with `hostedViewModel` (`shared/ios`, `screens/HostedViewModel.kt`) in a store cleared when they
-  leave the composition (IO-09f).
+  leave the composition.
   A Swift host that keeps state for its route across the route's life holds a Kotlin object the factory reads
   (`SportTabState`: the sport tab's shared lessons and the details sheet's results).
 - Requests into a hosted route. A tab root that takes requests from the shell returns a Kotlin handle with its
@@ -818,12 +814,12 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
 ## Degradations
 
 Where iOS does less than Android, or does it differently, and why. Everything else is Android's behaviour on the
-same shared code (ADR 0016: full parity; only the debug tools stay Android-only). An open gap is a defect still to
+same shared code (ADR 0016: the full Android feature set; only the debug tools stay Android-only). An open gap is a defect still to
 fix, not a decision.
 
 | Surface | On iOS | Why |
 |---|---|---|
-| Tabs | switch by the native tab bar only, no swipe between them | owner decision 2026-10-06: paging between tabs is not an iOS convention |
+| Tabs | switch by the native tab bar only, no swipe between them | decided 2026-10-06: paging between tabs is not an iOS convention |
 | Colours | the static brand scheme on every screen | iOS has no wallpaper colours for `ColorSource.Platform` |
 | Placing a widget | the first-run flow and the home hint show how to add one | iOS lets no app place a widget |
 | QR widget reveal | the code fades in instead of the circle; the animation row is hidden | WidgetKit animates only between timeline entries and draws no custom shape transition |
@@ -835,11 +831,11 @@ fix, not a decision.
 | Quiet hours | a change or mark found between 00:00 and 06:00 is handed to the system for 06:00 at once | iOS might not wake the app soon after 06:00 |
 | BARS in the background | renewal only through the Keychain cookie copy, never the hidden WebKit view | a background run has about 30 s and no window |
 | Notification channels | one switch for all the app's notifications | iOS has no channels |
-| Push | no device token, so nothing is registered with Backend; the notification service is tested on fixtures only | APNs needs the paid Apple account (gate T13) |
-| Dropped pushes | a push the notification service drops (another account, the demo, a full lesson) still shows a notification | hiding one needs the `usernotifications.filtering` entitlement, requested after T13 (ADR 0023) |
-| App Links (`https`) | not opened; only `itmowidgets://route/<id>` | Universal Links need associated domains, which only a signed build after T13 has |
+| Push | no device token, so nothing is registered with Backend; the notification service is tested on fixtures only | APNs needs the paid Apple developer account |
+| Dropped pushes | a push the notification service drops (another account, the demo, a full lesson) still shows a notification | hiding one needs the `usernotifications.filtering` entitlement, requested once the Apple developer account exists (ADR 0023) |
+| App Links (`https`) | not opened; only `itmowidgets://route/<id>` | Universal Links need associated domains, which only a signed build has |
 | Web sign-in scanner | VisionKit's scanner, which asks for the camera; without it (or on the simulator) the code is typed | iOS has no Play services scanner |
-| Update offer | only the App Store page, and nothing while `APP_STORE_ID` is empty | no GitHub or Play channel on iOS; the App Store record arrives after T13 |
+| Update offer | only the App Store page, and nothing while `APP_STORE_ID` is empty | no GitHub or Play channel on iOS; the App Store record needs the Apple developer account |
 | Background work settings | Background App Refresh instead of Android's battery and Xiaomi screens | those screens do not exist on iOS |
 | First-run flow | a relaunch in the middle starts at the first step | `ScreenViewModelStore` has no saved-state registry |
 | Diagnostics | Kotlin crashes show on the next launch; Swift crashes are not recorded | Swift crashes never pass Kotlin's hook |
@@ -848,22 +844,22 @@ fix, not a decision.
 ## Memory
 
 The app's physical footprint (`footprint -p <pid>`, `phys_footprint`) on the pinned simulator, Debug build, demo
-session, measured with the method in recipe `ios-cmp-host` when a route of a new kind arrives. The widget extension
+session, measured with the method in [the iOS host recipe](recipes/ios-host.md) when a route of a new kind arrives. The widget extension
 stays under its about 30 MB limit by linking no Kotlin; these figures are the app process only.
 
 | State | Footprint | Measured |
 |---|---|---|
-| Launch on home (fixture roots, Koin graph and the shared session started) | 72 MB | IO-21, 2026-10-07 |
-| After visiting the 4 tabs and opening the QR pass (the first Compose screen) | 79 to 87 MB | IO-21, 2026-10-07 |
-| Launch on home (the Compose home feed with its hints, other roots fixtures) | 81 MB | IO-09a, 2026-10-07 |
-| Launch on home, then the Compose schedule tab and the `today` route (schedule data graph loaded) | 81 MB (peak 89 MB) | IO-09b, 2026-10-08 |
-| The sport tab open from home, both pages loaded (Compose `SportRoute`, launched by XCUITest) | 106 MB (peak 108 MB) | IO-09c, 2026-10-08 |
-| The recordbook tab open from home through `itmowidgets://route/recordbook` (Compose `RecordbookRoute`, `simctl launch`); home and the sport tab measured the same way in the same session: 162 MB and 154 MB | 149 to 154 MB (peak 153 to 192 MB) | IO-09d2, 2026-10-08 |
+| Launch on home (fixture roots, Koin graph and the shared session started) | 72 MB | 2026-10-07 |
+| After visiting the 4 tabs and opening the QR pass (the first Compose screen) | 79 to 87 MB | 2026-10-07 |
+| Launch on home (the Compose home feed with its hints, other roots fixtures) | 81 MB | 2026-10-07 |
+| Launch on home, then the Compose schedule tab and the `today` route (schedule data graph loaded) | 81 MB (peak 89 MB) | 2026-10-08 |
+| The sport tab open from home, both pages loaded (Compose `SportRoute`, launched by XCUITest) | 106 MB (peak 108 MB) | 2026-10-08 |
+| The recordbook tab open from home through `itmowidgets://route/recordbook` (Compose `RecordbookRoute`, `simctl launch`); home and the sport tab measured the same way in the same session: 162 MB and 154 MB | 149 to 154 MB (peak 153 to 192 MB) | 2026-10-08 |
 
 ## Build and test
 
-Gradle and `xcodebuild` run only through `scripts/ios/test.sh` (or `scripts/verify.sh run|klibs`), which hold the
-`kn` build slot and pass the worktree's MyItmoApi pin.
+Gradle and `xcodebuild` run through `scripts/ios/test.sh` (Kotlin/Native klibs alone: `./gradlew verifyIosKlibs`).
+MyItmoApi comes from Maven Central; set `MYITMOAPI_DIR` to a MyItmoApi checkout to build against it instead.
 
 ```bash
 scripts/ios/test.sh                                          # checks, xcodegen, build and all tests but UITests
@@ -876,45 +872,43 @@ scripts/ios/test.sh --cleanup                                # delete this workt
 
 - `test.sh` runs every `scripts/ios/check-*.sh` first, then `xcodegen generate` and `xcodebuild build test` with
   DerivedData in `iosApp/build/` and the `.xcresult` in `iosApp/build/test-results/`. Its last line is
-  `VERIFY A ios|ios-only|ios-ui|ios-kn PASS|FAIL <secs>s <sha7>`. The default run and `--only` skip `UITests`;
+  `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha7>[+dirty]`. The default run and `--only` skip `UITests`;
   `ui` runs only them.
 - Each worktree gets one simulator, `itmo-<worktree directory>`, created on first use; delete it with `--cleanup`
-  at the end of a card. `--ci` runs without slots, uses `itmo-ci` and deletes it afterwards.
+  when done. `--ci` uses `itmo-ci` and deletes it afterwards.
 - The app target's Run Script "Build Kotlin framework" runs before Compile Sources:
-  `scripts/slot.sh kn -- ./gradlew :shared:ios:embedAndSignAppleFrameworkForXcode` with the pin, after sourcing
-  `env.sh` because the Xcode GUI passes no shell environment. Inside `test.sh` the slot is already held, so the
-  nested `slot.sh` runs Gradle directly. It needs `ENABLE_USER_SCRIPT_SANDBOXING = NO`.
+  `./gradlew :shared:ios:embedAndSignAppleFrameworkForXcode`, after sourcing `env.sh` because the Xcode GUI passes
+  no shell environment. It needs `ENABLE_USER_SCRIPT_SANDBOXING = NO`.
 - Opening the project in Xcode: run `xcodegen generate --spec iosApp/project.yml` first, then open
-  `iosApp/ITMOWidgets.xcodeproj`; the Run Script still takes the `kn` slot.
+  `iosApp/ITMOWidgets.xcodeproj`.
 - `CADisableMinimumFrameDurationOnPhone = YES` is set in the app's Info.plist; Compose Multiplatform refuses to
   start without it.
 - The app link prints one known warning: the ICU data object in Compose Multiplatform 1.12.1 targets iOS 18.5,
   above the 18.0 deployment target. It is harmless; the minimum stays iOS 18.0 (ADR 0023).
 
-Tiers (the iOS side of `docs/process/workflow.md`, Verification tiers):
+Verification tiers on iOS:
 
 | Tier | Run | When |
 |---|---|---|
-| Card | `scripts/ios/test.sh`, plus `test.sh kn <module>` for each shared module whose `iosMain` changed and `test.sh ui <Class>` for the screens the card hosts or changes | every iOS card; a card that also touches `app/` or a `commonMain` runs `scripts/verify.sh quick` |
-| PR | `ios-check` (CI) | every PR into and push to `v2.3/next` and `master` |
-| Nightly | `ios-nightly.yml`: every shared module's `kn` tests and all of `UITests` | each night on `v2.3/next` |
-| Release | the snapshot matrix, `scripts/ios/screenshots.sh` in light and dark for review, `archive.sh` of the case that applies (Release) | before a TestFlight build or the F3 prerelease |
+| Change | `scripts/ios/test.sh`, plus `test.sh kn <module>` for each shared module whose `iosMain` changed and `test.sh ui <Class>` for the screens the change hosts or touches | every iOS change; one that also touches `app/` or a `commonMain` runs `./gradlew verifyQuick` |
+| PR | `ios-check` (CI) | every PR into and push to `master` |
+| Nightly | `ios-nightly.yml`: every shared module's `kn` tests and all of `UITests` | each night on `master` |
+| Release | the snapshot matrix, `scripts/ios/screenshots.sh` in light and dark for review, `archive.sh` of the case that applies (Release) | before a TestFlight build or an unsigned prerelease |
 
 ## CI
 
 `.github/workflows/ios.yml` runs the job `ios-check` (the required check's name; never renamed) on every PR into
-and every push to `v2.3/next` and `master`, and on `workflow_dispatch`.
+and every push to `master`, and on `workflow_dispatch`.
 
 - Runner: the GitHub `xcode-27` image (arm64, 3 vCPU, 7 GB), the image with the Xcode pinned in
   `scripts/ios/env.sh`. The job selects `/Applications/Xcode_<pin>.app` and fails when the image lacks it; it never
   falls back to another Xcode. XcodeGen comes from its GitHub release at the pinned version, checked by sha256.
 - Path filter: a first step ends the job green when nothing under `iosApp/`, `shared/`, `scripts/ios/`,
-  `scripts/slot.sh`, `gradle/`, `build-logic/`, `app/src/main/assets/`, the `*.gradle.kts` files,
+  `gradle/`, `build-logic/`, `app/src/main/assets/`, the `*.gradle.kts` files,
   `gradle.properties` or `.github/workflows/ios*.yml` changed. The filter is never on the trigger, so the check
   always reports.
-- The build is `scripts/ios/test.sh --ci` with MyItmoApi checked out at `gradle/myitmoapi.ref` (`MYITMOAPI_DIR`, as
-  in `android-ci.yml`), one Gradle worker (`ITMO_MAX_WORKERS=1`, no parallel K/N), the Gradle cache and `~/.konan`
-  cached; only `v2.3/next` writes the caches. No secrets and no signing.
+- The build is `scripts/ios/test.sh --ci` with MyItmoApi from Maven Central, the Gradle cache and `~/.konan`
+  cached; only `master` writes the caches. No secrets and no signing.
 - No toolchain download inside `xcodebuild`: `setup-java` installs JetBrains 21, the JDK
   `gradle/gradle-daemon-jvm.properties` asks for, and the job turns Gradle's toolchain auto-download off, so a
   criteria mismatch fails instead of reaching api.foojay.io. A step before `test.sh` runs `./gradlew help` with
@@ -923,7 +917,7 @@ and every push to `v2.3/next` and `master`, and on `workflow_dispatch`.
   `iosApp/build/snapshot-artifacts/` (`SNAPSHOT_ARTIFACTS` for the test runner) are uploaded as `ios-check-results`.
 - The step summary records the duration of `test.sh --ci` and the peak used memory (active, wired and compressed
   pages, sampled every 5 s).
-- `.github/workflows/ios-nightly.yml` runs on a schedule against `v2.3/next`: `test.sh --ci kn` over every shared
+- `.github/workflows/ios-nightly.yml` runs on a schedule against `master`: `test.sh --ci kn` over every shared
   module with the testing convention, and `test.sh --ci ui` (every class in `UITests`, `SmokeUITests` included). It
   is never a required check. It installs JetBrains 21 with toolchain auto-download off and resolves the Gradle
   plugins with retries before the build, as `ios.yml` and `android-ci.yml` do.
@@ -934,35 +928,34 @@ a peak of 6.3 to 6.4 GB used of 7 GB. If the build runs out of memory, split it 
 
 ## Release
 
-How iOS ships in v2.3 depends on when the paid Apple Developer account arrives (gate T13). One case applies:
+How iOS ships in v2.3 depends on when the paid Apple Developer account arrives. One case applies:
 
 | Case | When | What ships | Build |
 |---|---|---|---|
-| F0 | T13 by about 2026-11-10 | MVP and stretch on TestFlight external at T16; App Store submission after Android GA, on the owner's word | `archive.sh --signed --upload` |
-| F1 | T13 by about 2026-12-01 | MVP on TestFlight internal at T16, external about a week later; the NSE may slip to 2.3.1 | `archive.sh --signed --upload` |
-| F2 | T13 later, account expected | Android ships on time; iOS stays simulator-verified and CI-built on `master`; TestFlight 2.3.x 1 to 2 weeks after T13 | `test.sh --ci` (CI), then as F1 |
-| F3 | no account in sight at T16 | on the owner's approval, an "iOS developer preview": the unsigned `.ipa` on a GitHub prerelease for self-signing with a free Apple ID (AltStore, SideStore; re-signed every 7 days), no push and no NSE | `archive.sh --unsigned` |
+| F0 | account by about 2026-11-10 | MVP and stretch on TestFlight external at the release candidate; App Store submission after Android GA, as a separate decision | `archive.sh --signed --upload` |
+| F1 | account by about 2026-12-01 | MVP on TestFlight internal at the release candidate, external about a week later; the NSE may slip to 2.3.1 | `archive.sh --signed --upload` |
+| F2 | account later, but expected | Android ships on time; iOS stays simulator-verified and CI-built on `master`; TestFlight 2.3.x 1 to 2 weeks after the account | `test.sh --ci` (CI), then as F1 |
+| F3 | no account in sight at the release candidate | if explicitly chosen, an "iOS developer preview": the unsigned `.ipa` on a GitHub prerelease for self-signing with a free Apple ID (AltStore, SideStore; re-signed every 7 days), no push and no NSE | `archive.sh --unsigned` |
 
 ```bash
 scripts/ios/archive.sh --unsigned          # F3: iosApp/build/archive/ITMOWidgets-2.3.0-<build>-unsigned.ipa
-scripts/ios/archive.sh --signed            # after T13: a signed archive and an App Store .ipa in archive/export/
-scripts/ios/archive.sh --signed --upload   # the integrator only, on the owner's word: to App Store Connect
+scripts/ios/archive.sh --signed            # with the account: a signed archive and an App Store .ipa in archive/export/
+scripts/ios/archive.sh --signed --upload   # to App Store Connect (a deliberate release step)
 ```
 
 - Everything goes to `iosApp/build/archive/` (ignored): the `.xcarchive`, the `.ipa`, for F3 the staging
   directory `iosApp/build/archive/unsigned`. The script never publishes; a GitHub prerelease of the F3 `.ipa`
-  and every upload are the owner's word, each time.
+  and every upload are deliberate manual steps, each time.
 - Versions: `MARKETING_VERSION` 2.3.0 from `Base.xcconfig`; the build number (`CURRENT_PROJECT_VERSION`, the
   committed value 1 is for simulator builds) is `git rev-list --count HEAD` of the archived commit, monotonic along
-  `v2.3/next` and `master`. A signed build refuses uncommitted changes; an unsigned one of a dirty tree carries
+  `master`. A signed build refuses uncommitted changes; an unsigned one of a dirty tree carries
   `-dirty` in its file name.
-- The archive is the `ITMOWidgets` scheme, Release, `generic/platform=iOS`, run by `xcodebuild` inside the `kn`
-  slot; the Run Script builds the iosArm64 Kotlin framework in Release. That link runs out of the Gradle daemon's
+- The archive is the `ITMOWidgets` scheme, Release, `generic/platform=iOS`, run by `xcodebuild`; the Run Script builds the iosArm64 Kotlin framework in Release. That link runs out of the Gradle daemon's
   4 GB heap, so the script runs the Kotlin/Native compiler in a process of its own with 8 GB
   (`kotlin.native.disableCompilerDaemon`, `kotlin.native.jvmArgs`, passed as `ORG_GRADLE_PROJECT_` variables
   through `xcodebuild` to the Run Script). An unsigned archive with the iosArm64 klibs already built takes about
   6 minutes.
-- F3 package (SP-23). `CODE_SIGNING_ALLOWED=NO` archives without signatures, so the bundles carry no entitlements,
+- F3 package. `CODE_SIGNING_ALLOWED=NO` archives without signatures, so the bundles carry no entitlements,
   and Xcode cannot ad-hoc sign a device build with entitlements itself. The script removes the notification
   service (no push on a free team, and a third App ID), expands the unsigned entitlements of the widget and the app
   with the `AppGroupID` and `KeychainGroup` of the built Info.plist (a team-less device build has an empty
@@ -971,10 +964,10 @@ scripts/ios/archive.sh --signed --upload   # the integrator only, on the owner's
   the App Group. App and widget use 2 of the free account's App IDs and 1 active-app slot.
 - F3 widget data. The script prints whether the widgets get real data: yes when app and widget request one App
   Group. AltStore renames it to `<group>.<TEAMID>` and lists it under `ALTAppGroups`, which `AppGroupDirectory` and
-  `AppGroupSnapshot` try after `AppGroupID` (Data sharing). Before an F3 prerelease the owner's free-team device
-  session confirms it (SideStore issue 1437 reports a failure); if no container resolves there, the widgets stay
+  `AppGroupSnapshot` try after `AppGroupID` (Data sharing). Before an F3 prerelease a session on a free-team device
+  confirms it (SideStore issue 1437 reports a failure); if no container resolves there, the widgets stay
   in the signed-out state and the prerelease notes say so.
-- Signed (after T13): needs the ignored `iosApp/Config/Signing.local.xcconfig` (Identifiers), archives with
+- Signed (needs the Apple developer account): needs the ignored `iosApp/Config/Signing.local.xcconfig` (Identifiers), archives with
   automatic signing and `-allowProvisioningUpdates`, keeps the notification service, and exports with method
   `app-store-connect`; `--upload` sends the export to App Store Connect instead of writing the `.ipa`.
 

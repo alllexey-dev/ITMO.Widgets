@@ -6,14 +6,14 @@ step lands in its own repository and pull request, in the order below; a later
 step never merges before the one it consumes. The order and the
 source-of-truth boundaries are in [`AGENTS.md`](../../AGENTS.md); the
 decisions behind them are
-[ADR 0024](../decisions/0024-pinned-composite-build.md) (MyItmoApi through a
-pinned composite build), [ADR 0025](../decisions/0025-myitmoapi-2-kmp.md)
+[ADR 0024](../decisions/0024-pinned-composite-build.md) (how the app gets
+MyItmoApi), [ADR 0025](../decisions/0025-myitmoapi-2-kmp.md)
 (MyItmoApi 2.x) and [ADR 0026](../decisions/0026-core-2-backend-client.md)
 (Core 2.0 in `:shared:backend-client`).
 
 Paths of the other repositories are written from this repository's parent:
 `../itmo-widgets-backend/...` and `../MyItmoApi/...`. Backend paths are as on
-its `v2.3/next`, MyItmoApi paths as at the commit in `gradle/myitmoapi.ref`.
+its `dev` branch, MyItmoApi paths as on its `master`.
 
 ## Backend path
 
@@ -32,8 +32,8 @@ Its behaviour is in [web sign-in](../features/web-login.md).
 | App repository | `feature/weblogin/data/WebLoginRepositoryImpl.kt` behind `core/weblogin/WebLoginRepository.kt`, tested by `feature/weblogin/data/WebLoginRepositoryImplTest.kt` and `core/demo/DemoNetworkGateTest.kt` |
 | ViewModel and screen | `feature/weblogin/presentation/WebLoginViewModel.kt`, `app/shell/entries/AccountEntries.kt` |
 
-The repository still calls Core 1.x (`ItmoWidgetsApi`); KM-10g moves it onto
-`UsersApi`. The Core 2.0 call pattern that is already in place is
+The repository still calls Core 1.x (`ItmoWidgetsApi`); moving it onto
+`UsersApi` is still to do. The Core 2.0 call pattern that is already in place is
 `core/session/DefaultBackendIdentitySync.kt` (`UsersApi.updateIdTokenData`).
 
 ### 1. Privacy boundary
@@ -44,7 +44,7 @@ write it into the area's contract under `../itmo-widgets-backend/docs/contracts/
 involved). Backend decides privacy and authorization in its services and
 returns viewer-scoped capabilities (`canViewSchedule` and the like), never
 another user's raw settings; the apps never enforce privacy on Backend's
-behalf. A new audience or capability is an owner decision, see
+behalf. A new audience or capability needs its own decision, see
 [ADR 0004](../decisions/0004-privacy-audiences.md).
 
 ### 2. Route, DTO and security test
@@ -68,21 +68,22 @@ Follow "Where things go" in `../itmo-widgets-backend/docs/architecture.md`:
 
 - Record the golden fixture of the new route or field
   (`../itmo-widgets-backend/src/test/resources/contract/README.md` has the
-  command and the layout). Only a card that adds a route or an optional
+  command and the layout). Only a change that adds a route or an optional
   response field records; any other fixture difference is a wire change.
 - The `compatCore120Test` and `compatCore170Test` suites decode every fixture
   with the released Core 1.2.0 and 1.7.0 (Android 2.1 and 2.2):
   `../itmo-widgets-backend/src/compatCore170Test/kotlin/dev/alllexey/itmowidgets/backend/compat/Core170DecodeTest.kt`.
   A fixture no released Core reads carries `minCore` `1.8.0`.
-- Regenerate `../itmo-widgets-backend/docs/openapi.json` with Backend's
-  `scripts/verify.sh openapi`; `OpenApiSnapshotTest` fails on a stale file.
+- Regenerate `../itmo-widgets-backend/docs/openapi.json` with
+  `./gradlew test --rerun --tests '*OpenApiSnapshotTest' -Popenapi.record=true`
+  in Backend; `OpenApiSnapshotTest` fails on a stale file.
 - The pull request names the changed fixtures and the snapshot in a
-  `Contract change:` line, so the client side re-syncs, and adds a fragment to
-  Backend's `changelog.d/`.
+  `Contract change:` line, so the client side re-syncs, and adds an entry to
+  Backend's `CHANGELOG.md`.
 
 ### 4. Core 2.0 area
 
-After the Backend pull request is merged into Backend's `v2.3/next`:
+After the Backend pull request is merged into Backend's `dev`:
 
 1. Vendor the contract with `scripts/sync-backend-contract.sh <backend-sha>`,
    then `scripts/sync-backend-contract.sh --check`. Never edit or hand-merge
@@ -101,9 +102,9 @@ After the Backend pull request is merged into Backend's `v2.3/next`:
    compares every route and model with the vendored OpenAPI snapshot. A route
    the apps do not call goes to `contract/NotMirrored.kt` with its reason; a
    client field Backend has not shipped yet goes to
-   `contract/PendingBackendFields.kt` with its Backend card.
+   `contract/PendingBackendFields.kt` with the Backend change it waits for.
 4. Verify with
-   `scripts/verify.sh run -- :shared:backend-client:testAndroidHostTest :shared:backend-client:compileTestKotlinIosSimulatorArm64`.
+   `./gradlew :shared:backend-client:testAndroidHostTest :shared:backend-client:compileTestKotlinIosSimulatorArm64`.
 
 A fixture that does not decode is a contract question for Backend, never a
 client workaround. Core 1.x is frozen at 1.7.0, so a new route exists only in
@@ -135,8 +136,7 @@ Core 2.0.
   `DemoNetworkGateTest` or the feature's `*DemoGateTest` that sends nothing in
   the demo session and nothing without the opt-in.
 - The binding: `singleOf(::<X>RepositoryImpl) { bind<<X>Repository>() }` in
-  the shared module's `di/<X>Module.kt`, checked by its `<X>ModuleTest`; a
-  feature still in `app/` binds it with `@Binds` in its Hilt module.
+  the shared module's `di/<X>Module.kt`, checked by its `<X>ModuleTest`.
 
 ### 6. ViewModel and screen
 
@@ -176,7 +176,7 @@ The pass moved from MyItmoApi 1.x onto the 2.x client and then into
 | Step | Files |
 |---|---|
 | MyItmoApi area | `../MyItmoApi/kmp/src/commonMain/kotlin/dev/alllexey/itmoapi/myitmo/qr/QrApi.kt`, `../MyItmoApi/kmp/src/commonMain/kotlin/dev/alllexey/itmoapi/myitmo/qr/QrData.kt`, fixture `../MyItmoApi/kmp/fixtures/qr/pass.json`, tests `../MyItmoApi/kmp/src/commonTest/kotlin/dev/alllexey/itmoapi/myitmo/qr/QrApiTest.kt` and its MockEngine seam `../MyItmoApi/kmp/src/commonTest/kotlin/dev/alllexey/itmoapi/myitmo/qr/AreaExchange.kt` |
-| Pin | `gradle/myitmoapi.ref` |
+| Version | `gradle/libs.versions.toml` |
 | Data source | `feature/qr/data/remote/QrCodeRemoteDataSourceImpl.kt`, demo answer `feature/qr/data/demo/DemoQr.kt` |
 | Repository | `feature/qr/data/repository/QrCodeRepositoryImpl.kt` (maps `MyItmoException` to `AppError`) |
 | Tests | `feature/qr/data/remote/QrCodeRemoteDataSourceImplTest.kt` with `feature/qr/data/remote/QrRemoteFixtures.kt`, the QR case of `core/demo/DemoNetworkGateTest.kt` |
@@ -196,13 +196,15 @@ rules are in `../MyItmoApi/AGENTS.md`:
 - Synthetic fixtures go to `../MyItmoApi/kmp/fixtures/` and MockEngine tests
   assert the method, host, path, query, headers and the decoded payload.
 
-### 2. Pin bump
+### 2. Version bump
 
-The change reaches this repository in one order (ADR 0024): MyItmoApi pull
-request, MyItmoApi `v2.3/next`, an owner-approved batch on MyItmoApi
-`master`, then the integrator bumps `gradle/myitmoapi.ref`, and each Android
-worktree re-pins with `lane pin`. A card that needs an unmerged MyItmoApi
-change waits; no commit points at a local path or Maven Local.
+The app takes MyItmoApi from Maven Central. While the library change is in
+development, point `MYITMOAPI_DIR` at a local MyItmoApi checkout: the build
+then uses it as a composite build instead of the published artifact. The
+change reaches this repository in one order: MyItmoApi pull request, merge
+into MyItmoApi `master`, a release on Maven Central, then the version bump
+here. An app change that needs an unreleased MyItmoApi change waits; no commit
+points at a local path or Maven Local.
 
 ### 3. Data source and repository
 

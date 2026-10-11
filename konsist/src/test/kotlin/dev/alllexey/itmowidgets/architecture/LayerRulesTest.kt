@@ -28,7 +28,7 @@ class LayerRulesTest {
 
     @Test
     fun `domain does not use the Java platform`() {
-        Ratchet.assertOnly(RatchetRule.DOMAIN_JAVA, domainFilesImporting { it.startsWith("java.") })
+        assertNoViolations("a domain without the Java platform", domainFilesImporting { it.startsWith("java.") })
     }
 
     @Test
@@ -90,13 +90,13 @@ class LayerRulesTest {
     }
 
     @Test
-    fun `legacy global data and domain buckets stay empty`() {
+    fun `there is no global data or domain package outside features and core`() {
         productionFiles.requireNonEmpty("production files").assertFalse { file ->
             val packageName = file.packagee?.name.orEmpty()
-            packageName == LEGACY_DATA_PACKAGE ||
-                packageName.startsWith("$LEGACY_DATA_PACKAGE.") ||
-                packageName == LEGACY_DOMAIN_PACKAGE ||
-                packageName.startsWith("$LEGACY_DOMAIN_PACKAGE.")
+            packageName == GLOBAL_DATA_PACKAGE ||
+                packageName.startsWith("$GLOBAL_DATA_PACKAGE.") ||
+                packageName == GLOBAL_DOMAIN_PACKAGE ||
+                packageName.startsWith("$GLOBAL_DOMAIN_PACKAGE.")
         }
     }
 
@@ -125,11 +125,11 @@ class LayerRulesTest {
             }
     }
 
-    /** Domain files with an import matching [forbidden], keyed for the ratchet, with the offending imports. */
+    /** Domain files with an import matching [forbidden], with the offending imports. */
     private fun domainFilesImporting(forbidden: (String) -> Boolean): Map<String, String> = productionFiles
         .filter { it.packagee?.name?.contains(".domain") == true }
         .requireAtLeast(MIN_DOMAIN_FILES, "domain files")
-        .associate { file -> file.ratchetKey to file.imports.map { it.name }.filter(forbidden) }
+        .associate { file -> file.qualifiedKey to file.imports.map { it.name }.filter(forbidden) }
         .filterValues { it.isNotEmpty() }
         .mapValues { (_, imports) -> "imports ${imports.joinToString()}" }
 
@@ -148,9 +148,9 @@ class LayerRulesTest {
             "dev.alllexey.itmowidgets.core.model."
         const val SHARED_USER_MODEL =
             "dev.alllexey.itmowidgets.core.model.UserSummary"
-        const val LEGACY_DATA_PACKAGE =
+        const val GLOBAL_DATA_PACKAGE =
             "dev.alllexey.itmowidgets.data"
-        const val LEGACY_DOMAIN_PACKAGE =
+        const val GLOBAL_DOMAIN_PACKAGE =
             "dev.alllexey.itmowidgets.domain"
 
         val forbiddenDomainImports = listOf(

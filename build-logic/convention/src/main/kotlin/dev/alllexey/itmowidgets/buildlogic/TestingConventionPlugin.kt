@@ -59,10 +59,10 @@ class TestingConventionPlugin : Plugin<Project> {
         dependencies {
             robolectricRuntime(libs.library("robolectric-android-all"))
         }
-        // Opt-in extra SDKs for @Config(sdk = [...]) (TC-17).
+        // Opt-in extra SDKs for @Config(sdk = [...]).
         extensions.add(ItmoTestingExtension::class.java, "itmoTesting", ItmoTestingExtension(this, robolectricRuntime))
         tasks.withType<Test>().configureEach {
-            // JVM default locale en-US, as on an English-language device (SP-13a plural forms).
+            // JVM default locale en-US, as on an English-language device (plural forms resolve as there).
             jvmArgs("-Duser.language=en", "-Duser.country=US")
             jvmArgumentProviders.add(
                 objects.newInstance<RobolectricOfflineArguments>().apply {

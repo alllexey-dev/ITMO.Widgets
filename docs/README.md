@@ -1,17 +1,15 @@
 # ITMO.Widgets documentation
 
 Everything here describes the current state of the apps. History is in
-[`CHANGELOG.md`](../CHANGELOG.md) and, until the next release, in
-[`changelog.d/`](../changelog.d/README.md); rules for agents are in
-[`AGENTS.md`](../AGENTS.md).
+[`CHANGELOG.md`](../CHANGELOG.md); the short contributor guide with build
+commands and hard rules is [`AGENTS.md`](../AGENTS.md).
 
 ## Product
 
 - [Releases](product/releases.md) — release sequence, the `github` and `play`
   distribution variants, release lines and version codes, client and Backend
-  compatibility.
-- [Roadmap](product/roadmap.md) — v2.3 goals, parity rules, gates, iOS tiers,
-  the v2.4 backlog.
+  compatibility, the backlog.
+- [Release](release.md) — the steps and checks of a release.
 
 ## Engineering
 
@@ -22,25 +20,10 @@ Everything here describes the current state of the apps. History is in
 - [iOS app](ios.md) — the SwiftUI shell, the `Shared` framework, toolchain
   pins, build and verification.
 
-## Process
-
-- [Workflow](process/workflow.md) — work tiers, the cross-repo chain,
-  verification tiers, batches, closing a feature.
-- [Plan template](process/plan-template.md) — lane files, the card format,
-  executing a card.
-- [Parallel agents](process/parallel-agents.md) — worktrees and branches,
-  build slots, emulators, admission and the pull rule.
-- [Ownership](process/ownership.md) — hot-file writers per wave, hand-ins,
-  the module `AGENTS.md` shape, rules for writing docs.
-- [Integration](process/integration.md) — how lane PRs reach `v2.3/next` and
-  how `v2.3/next` reaches the default branches.
-- [Release checklist](process/release-checklist.md) — the order and checks of
-  a release, with the owner's steps marked.
-
 ## Recipes
 
 - [Recipes](recipes/README.md) — durable how-tos for repeated Android and
-  shared-module work, and the feature module generator.
+  shared-module work.
 - [Background check](recipes/background-check.md) — a periodic or one-off
   WorkManager check from worker to iOS mapping.
 - [Screen in a shared module](recipes/shared-module-screen.md) — a stateless
@@ -122,27 +105,27 @@ editing an old one when a decision changes.
 - [0013 Schedule changes are detected on the device](decisions/0013-schedule-changes-on-device.md)
 - [0014 Own totals from public Google Sheets are read on the device](decisions/0014-sheet-scores-on-device.md)
 - [0015 A hidden demo session gated in the repositories](decisions/0015-demo-mode.md)
-- [0016 v2.3 is a parity rewrite](decisions/0016-parity-rewrite.md)
+- [0016 v2.3 is a behaviour-preserving rewrite](decisions/0016-parity-rewrite.md)
 - [0017 Compose Multiplatform screens in `commonMain` of shared modules](decisions/0017-cmp-ui-in-common-main.md)
 - [0018 Module graph and toolchain for v2.3](decisions/0018-module-graph-and-toolchain.md)
-- [0019 Koin per feature beside Hilt, then Koin only](decisions/0019-koin-per-lane.md)
+- [0019 Koin modules per feature module, beside Hilt, then Koin only](decisions/0019-koin-per-lane.md)
 - [0020 One Navigation 3 shell with `@Serializable` routes](decisions/0020-navigation-3.md)
-- [0021 Material 3 Expressive through a token schema, parity ports, one flip and a component pass](decisions/0021-m3-expressive-order.md)
+- [0021 Material 3 Expressive through a token schema, behaviour-preserving ports, one flip and a component pass](decisions/0021-m3-expressive-order.md)
 - [0022 JVM screenshot tests replace emulator matrices; the full matrix runs before a release](decisions/0022-jvm-screenshot-tests.md)
 - [0023 The iOS client is a SwiftUI shell around the shared CMP screens](decisions/0023-ios-client.md)
-- [0024 MyItmoApi 2.x reaches the app through a pinned composite build](decisions/0024-pinned-composite-build.md)
+- [0024 MyItmoApi 2.x from Maven Central, a local checkout as an opt-in composite build](decisions/0024-pinned-composite-build.md)
 - [0025 MyItmoApi 2.x is a Kotlin Multiplatform library beside 1.x](decisions/0025-myitmoapi-2-kmp.md)
 - [0026 Core 2.0 is a client-only KMP module; Backend owns the wire DTOs](decisions/0026-core-2-backend-client.md)
 - [0027 Android widgets stay RemoteViews; a shared timeline feeds them and WidgetKit](decisions/0027-remoteviews-widgets.md)
 - [0028 One Russian string catalog generated outward; Material Symbols Rounded with an SF Symbol registry](decisions/0028-strings-and-icons.md)
-- [0029 Lanes push their own branches, one integrator merges, the owner moves master](decisions/0029-lanes-and-integrator.md)
 - [0030 Release lines, version codes and data continuity](decisions/0030-release-lines-and-data-continuity.md)
 
-## Sibling repositories
+## Related repositories
 
-- Backend: `../itmo-widgets-backend/docs/README.md`
-- MyItmoApi: `../MyItmoApi/README.md`, the 2.x migration in
-  `../MyItmoApi/docs/migration.md`
-- Web version and landing: `../itmo-widgets-web/web/README.md`
-- Core 1.x, frozen at `1.7.0`: `../itmo-widgets-core/docs/contract.md`; Core 2.0
-  is `shared/backend-client` in this repository
+- [Backend](https://github.com/alllexey-dev/itmo-widgets-backend): users,
+  friendships, privacy, sport queues, push delivery; its `docs/README.md`
+- [MyItmoApi](https://github.com/alllexey-dev/my-itmo-api): the typed client
+  for MyITMO and BARS, with its 2.x migration guide
+- [Web version and landing](https://github.com/alllexey-dev/itmo-widgets-web)
+- [Core 1.x](https://github.com/alllexey-dev/itmo-widgets-core), frozen at
+  `1.7.0`; Core 2.0 is `shared/backend-client` in this repository
