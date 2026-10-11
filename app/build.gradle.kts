@@ -30,6 +30,8 @@ android {
         versionName = "2.3.0-beta.2"
         resValue("string", "app_version", versionName!!)
 
+        // The real ITMO and Backend hosts fail at once in instrumented tests, never hang them (SH-FIX-DL).
+        testInstrumentationRunner = "dev.alllexey.itmowidgets.testing.OfflineHostsTestRunner"
         // ActivityScenario.launchActivityForResult waits the full lifecycle timeout (45 s) on
         // close; observed transitions on the emulator stay under 2 s.
         testInstrumentationRunnerArguments["activityLifecycleChangeTimeoutMillis"] = "5000"
