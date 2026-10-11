@@ -16,9 +16,6 @@ import org.koin.dsl.module
  */
 object QrDebugFixtures {
 
-    /** The release module that defines the overridden clock, loaded again once the last fixture goes. */
-    private val releaseModules: List<Module> get() = listOf(coreBridgeModule)
-
     private var current: Module? = null
 
     /** Overrides the repository and the wall clock; returns the handle [unload] takes. */
@@ -34,14 +31,14 @@ object QrDebugFixtures {
 
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
-     * overrode, so the release bindings come back: the core bridge forwards Hilt's singletons and the repository is
-     * `qrModule`'s one instance, as before. A fixture that a newer host already replaced is left to that host.
+     * overrode, so the keys point back at the release instances: the system clock and `qrModule`'s one repository.
+     * A fixture that a newer host already replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
         val koin = KoinStarter.ensureStarted(context)
         koin.unloadModules(listOf(fixture))
-        koin.loadModules(releaseModules, allowOverride = true)
+        koin.declare<Clock>(Clock.System, allowOverride = true)
         // Reloading `qrModule` would build a second repository and a second cached pass beside the one the widget
         // already holds, so the repository key points at `qrModule`'s instance again.
         koin.declare<QrCodeRepository>(koin.get<QrCodeRepositoryImpl>(), allowOverride = true)

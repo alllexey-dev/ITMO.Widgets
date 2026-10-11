@@ -1,25 +1,24 @@
 package dev.alllexey.itmowidgets.di
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
 import dev.alllexey.itmowidgets.feature.sport.data.debug.DefaultSportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
-import javax.inject.Singleton
+import dev.alllexey.itmowidgets.feature.sport.data.debug.SportScoreOverridePoints
+import dev.alllexey.itmowidgets.feature.sport.data.debug.SportScoreOverrideSource
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.module
 
 /**
- * What sport keeps on Hilt: the debug lesson templates. The sport data is Koin's (`sportModule`), the FCM handlers
- * of the free and auto queue pushes too (`di/ComponentBindingsModule.kt`); `SportBridge` carries the types between
- * the graphs.
+ * The app-only inputs of the sport data `sportModule` constructs: the debug lesson templates and the debug score
+ * override of `core/debug`, behind the sport ports. Release builds read no override.
  */
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class SportModule {
-
-    @Binds
-    @Singleton
-    abstract fun bindSportLessonTemplateProvider(
-        impl: DefaultSportLessonTemplateProvider
-    ): SportLessonTemplateProvider
+val androidSportModule = module {
+    singleOf(::DefaultSportLessonTemplateProvider) { bind<SportLessonTemplateProvider>() }
+    single<SportScoreOverrideSource> {
+        val provider = get<SportScoreOverrideProvider>()
+        SportScoreOverrideSource {
+            provider.getOverride()?.let { SportScoreOverridePoints(attendances = it.attendances, bonus = it.bonus) }
+        }
+    }
 }

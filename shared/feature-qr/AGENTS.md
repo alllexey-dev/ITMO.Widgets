@@ -11,7 +11,7 @@
 - `commonTest`: ViewModel, repository, data source and screen tests; `androidHostTest`: `QrModuleTest`,
   `QrScreenshotTest`, `QrCodeGeneratorGoldenTest` over the matrices in `src/androidHostTest/resources/qr/`.
 - Not here: `QrTileService`, the widget and its worker stay in `app/` under `feature/qr/`, the custom spoiler under
-  `core/qr/`; `di/bridge/QrBridge.kt` bridges Koin and Hilt.
+  `core/qr/`; their Koin bindings are in `di/QrModule.kt`.
 
 ## Depends on
 - `:shared:core`, `:shared:designsystem`; `:shared:testing` in tests only. Koin (core, ViewModel, compose

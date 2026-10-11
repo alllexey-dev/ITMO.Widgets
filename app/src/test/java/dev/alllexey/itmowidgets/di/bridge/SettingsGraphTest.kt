@@ -2,29 +2,27 @@ package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.app.AndroidWidgetPaletteSource
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.feature.settings.data.AndroidBackgroundWorkAccess
+import dev.alllexey.itmowidgets.feature.settings.data.AndroidQuickSettingsTileAccess
+import org.junit.Assert.assertTrue
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
-import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
-import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
-import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
 import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.WidgetAppearanceRepositoryImpl
-import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
-import javax.inject.Inject
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,65 +35,35 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
 @LazyApplication(LazyLoad.ON)
-class SettingsBridgeTest {
+class SettingsGraphTest {
 
     @get:Rule
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the Android side of settings resolves in Koin to what Hilt builds`() {
+    fun `the Android side of settings resolves in Koin`() {
         val application = bootApplication()
-        val hilt = SettingsBridgeEntryPoint.from(application)
         val koin = GlobalContext.get()
 
-        assertSame(hilt.widgetRefreshRequester(), koin.get<WidgetRefreshRequester>())
-        assertEquals(hilt.appVersion(), koin.get<AppVersion>())
-        assertEquals(hilt.backgroundWorkAccess()::class, koin.get<BackgroundWorkAccess>()::class)
-        assertEquals(hilt.quickSettingsTileAccess()::class, koin.get<QuickSettingsTileAccess>()::class)
-        assertEquals(hilt.widgetPaletteSource()::class, koin.get<WidgetPaletteSource>()::class)
+        assertSame(koin.get<WidgetRefreshRequester>(), koin.get<WidgetRefreshRequester>())
+        assertEquals(AppVersion(application.getString(R.string.app_version)), koin.get<AppVersion>())
+        assertTrue(koin.get<BackgroundWorkAccess>() is AndroidBackgroundWorkAccess)
+        assertTrue(koin.get<QuickSettingsTileAccess>() is AndroidQuickSettingsTileAccess)
+        assertTrue(koin.get<WidgetPaletteSource>() is AndroidWidgetPaletteSource)
     }
 
     @Test
-    fun `each settings repository is one Koin single that Hilt readers share`() {
-        val application = bootApplication()
+    fun `each settings repository is one Koin single`() {
+        bootApplication()
         val koin = GlobalContext.get()
 
         assertSame(koin.get<SettingsRepositoryImpl>(), koin.get<SettingsRepository>())
         assertSame(koin.get<CustomServicesRepositoryImpl>(), koin.get<CustomServicesRepository>())
         assertSame(koin.get<WidgetAppearanceRepositoryImpl>(), koin.get<WidgetAppearanceRepository>())
         assertSame(koin.get<SchedulePreferencesRepositoryImpl>(), koin.get<SchedulePreferencesRepository>())
-
-        assertSame(koin.get<CustomServicesRepository>(), SettingsBridge.customServicesRepository(application))
-        assertSame(koin.get<WidgetAppearanceRepository>(), SettingsBridge.widgetAppearanceRepository(application))
-        assertSame(koin.get<SchedulePreferencesRepository>(), SettingsBridge.schedulePreferencesRepository(application))
     }
 
-    /** Without an `@Inject` constructor Hilt cannot build a second instance beside Koin's: one graph per binding. */
-    @Test
-    fun `Hilt cannot construct the moved repositories`() {
-        listOf(
-            SettingsRepositoryImpl::class.java,
-            CustomServicesRepositoryImpl::class.java,
-            WidgetAppearanceRepositoryImpl::class.java,
-            SchedulePreferencesRepositoryImpl::class.java,
-        ).forEach { type ->
-            assertFalse(type.name, type.constructors.any { it.isAnnotationPresent(Inject::class.java) })
-        }
-    }
-
-    /**
-     * The recordbook page reads the marks switches, which `recordbookModule` constructs since KM-11b2; that module reads
-     * the subject links of `resourcesModule` since KM-11f.
-     */
-    @Test
-    fun `the settings modules pass the graph check against the release bridges`() {
-        KoinGraphCheck.assertValid(
-            KoinModules.bridges,
-            listOf(onboardingDataModule, settingsModule, resourcesModule, recordbookModule) + scheduleDataGraph,
-        )
-    }
-
-    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
+    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */
     private fun bootApplication(): ItmoWidgetsApplication {
         val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()
         if (failure != null) {

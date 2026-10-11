@@ -43,7 +43,7 @@ class QrDebugFixturesTest {
         QrDebugFixtures.unload(application, fixture)
         assertSame(release, koin.get<QrCodeRepository>())
         assertSame(koin.get<QrCodeRepositoryImpl>(), koin.get<QrCodeRepository>())
-        assertSame(CoreBridgeEntryPoint.from(application).clock(), koin.get<Clock>())
+        assertSame(Clock.System, koin.get<Clock>())
     }
 
     @Test

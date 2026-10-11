@@ -2,21 +2,19 @@ package dev.alllexey.itmowidgets.feature.qr.ui.rendering
 
 import android.graphics.Color
 import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.widget.rolesFor
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
-import javax.inject.Inject
 
 /**
  * The QR widget's colours. Precedence: without the QR widget's dynamic colours the code is black on white whatever
  * the theme option says, since that always scans; with them, the app's palette while the widgets follow the theme
  * (`widgets_follow_app_theme`), the system theme otherwise.
  */
-class QrColorResolver @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class QrColorResolver(
+    private val context: Context,
     private val preferences: QrAppearancePreferences,
     private val palettes: WidgetPaletteSource
 ) {

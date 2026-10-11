@@ -24,9 +24,9 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The session Koin builds is the one Hilt-built code reads, and its cleaners are Hilt's one set: Koin's qualified
- * cleaners arrive there once through `SessionCleanersBridge`, never a second time through Koin's `getAll()`. Read
- * through the debug-only entry points of the real graph.
+ * The debug test entry points read the session, the first-run flag and the cleaners Koin builds, through
+ * `DebugEntryPointsBridge`, and each Koin cleaner reaches the session's list once. Read through the debug-only entry
+ * points of the real graph.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -46,7 +46,7 @@ class AccountAuthBridgeTest {
     }
 
     @Test
-    fun `the session's cleaners are Hilt's set with each Koin cleaner once`() {
+    fun `the session's cleaners are the entry point's set with each Koin cleaner once`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
         val hilt = entryPoint<SportSessionBindingsEntryPoint>(application).sessionDataCleaners()

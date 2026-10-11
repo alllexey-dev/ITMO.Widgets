@@ -34,9 +34,8 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The home feed sees every feature's source exactly once while the sources sit in two graphs: Hilt's `@IntoSet`
- * set behind the composite, and the qualified sources a lane has already moved to Koin (home's hints, social's
- * friend requests, the schedule's two cards, the recordbook's new marks).
+ * The home feed sees every feature's source exactly once: each is a qualified Koin source (home's hints, social's
+ * friend requests, the schedule's two cards, the recordbook's new marks, sport's score and queues).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -51,7 +50,6 @@ class HomeSourcesGraphTest {
         bootApplication()
 
         val sources = GlobalContext.get().getAll<HomeCardSource>()
-            .flatMap { source -> (source as? CompositeHomeCardSource)?.parts ?: listOf(source) }
 
         assertEquals(
             listOf(
@@ -63,47 +61,39 @@ class HomeSourcesGraphTest {
     }
 
     @Test
-    fun `the composite forwards the sources Hilt builds and the feed's stores resolve`() {
-        val application = bootApplication()
-        val hilt = HomeBridgeEntryPoint.from(application)
+    fun `the feed's stores resolve`() {
+        bootApplication()
         val koin = GlobalContext.get()
 
-        val composite = koin.get<HomeCardSource>(hiltCardsQualifier) as CompositeHomeCardSource
-        assertEquals(hilt.homeCardSources().size, composite.parts.size)
-        hilt.homeCardSources().forEach { source -> assertTrue(composite.parts.any { it === source }) }
-        assertSame(composite, koin.get<HomeCardSource>(hiltCardsQualifier))
         assertSame(koin.get<DataStoreHomeCardPreferences>(), koin.get<HomeCardPreferences>())
         assertSame(koin.get<DataStoreHomeHintStore>(), koin.get<HomeHintStore>())
     }
 
     @Test
     fun `the hint source is one Koin single over the Android device status`() {
-        val application = bootApplication()
+        bootApplication()
         val koin = GlobalContext.get()
 
         val hints = koin.get<HintHomeCardSource>()
         assertSame(hints, koin.get<HomeCardSource>(hintCardsQualifier))
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === hints })
-        assertTrue(HomeBridgeEntryPoint.from(application).homeCardSources().none { it is HintHomeCardSource })
         assertTrue(koin.get<HomeHintStatus>() is AndroidHomeHintStatus)
     }
 
     @Test
-    fun `the friend-requests source is one Koin single outside the Hilt set`() {
-        val application = bootApplication()
+    fun `the friend-requests source is one Koin single`() {
+        bootApplication()
         val koin = GlobalContext.get()
 
         val social = koin.get<SocialHomeCardSource>()
         assertSame(social, koin.get<HomeCardSource>(socialCardsQualifier))
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === social })
-        assertTrue(HomeBridgeEntryPoint.from(application).homeCardSources().none { it is SocialHomeCardSource })
     }
 
     @Test
-    fun `the schedule sources are Koin singles outside the Hilt set`() {
-        val application = bootApplication()
+    fun `the schedule sources are Koin singles`() {
+        bootApplication()
         val koin = GlobalContext.get()
-        val hilt = HomeBridgeEntryPoint.from(application).homeCardSources()
 
         val schedule = koin.get<ScheduleHomeCardSource>()
         val changes = koin.get<ScheduleChangesHomeCardSource>()
@@ -111,21 +101,19 @@ class HomeSourcesGraphTest {
         assertSame(changes, koin.get<HomeCardSource>(scheduleChangesCardsQualifier))
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === schedule })
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === changes })
-        assertTrue(hilt.none { it is ScheduleHomeCardSource || it is ScheduleChangesHomeCardSource })
     }
 
     @Test
-    fun `the new-marks source is one Koin single outside the Hilt set`() {
-        val application = bootApplication()
+    fun `the new-marks source is one Koin single`() {
+        bootApplication()
         val koin = GlobalContext.get()
 
         val marks = koin.get<MarksHomeCardSource>()
         assertSame(marks, koin.get<HomeCardSource>(marksCardsQualifier))
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === marks })
-        assertTrue(HomeBridgeEntryPoint.from(application).homeCardSources().none { it is MarksHomeCardSource })
     }
 
-    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
+    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */
     private fun bootApplication(): ItmoWidgetsApplication {
         val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()
         if (failure != null) {

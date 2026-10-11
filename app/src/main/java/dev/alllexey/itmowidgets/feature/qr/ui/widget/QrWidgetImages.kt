@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.qr.ui.widget
 import android.graphics.Bitmap
 import androidx.core.graphics.scale
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrToolkit
-import javax.inject.Inject
 
 /**
  * Bitmaps for the home-screen widget.
@@ -14,7 +13,7 @@ import javax.inject.Inject
  * `ARGB_8888` because the renderer draws a rounded background — `RGB_565` has no
  * alpha and would paint the corners instead of leaving them transparent.
  */
-class QrWidgetImages @Inject constructor(
+class QrWidgetImages(
     private val toolkit: QrToolkit
 ) {
 

@@ -13,7 +13,7 @@
   `SettingsScreenshotTest`, whose baselines also stand for the app's hosts.
 - Not here: the shell entries (`app/shell/entries/SettingsEntries.kt`), the calendar and background-work
   dialogs, `AndroidBackgroundWorkAccess`, `AndroidQuickSettingsTileAccess` and `CustomSpoilerRepositoryImpl` stay in
-  `app/` under `feature/settings/`; `di/bridge/SettingsBridge.kt` bridges Koin and Hilt.
+  `app/` under `feature/settings/`; their Koin bindings are in `di/SettingsModule.kt`.
 
 ## Depends on
 - `:shared:core` (the preference stores and their keys), `:shared:designsystem`; `:shared:testing` in tests only.

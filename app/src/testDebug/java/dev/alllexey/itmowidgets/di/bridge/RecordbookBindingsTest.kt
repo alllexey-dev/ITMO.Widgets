@@ -31,7 +31,7 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 /**
  * The real graph's view of the recordbook data, all of which Koin constructs: Hilt-built code (the marks test entry
  * point, debug tools) reads Koin's mark tracking, the one BARS client reports to Koin's `BarsMarksActivation`, and
- * Hilt's sign-out set holds each of the feature's six cleaners once, all through `SessionCleanersBridge`.
+ * the debug entry points' cleaner set holds each of the feature's six cleaners once, through `DebugEntryPointsBridge`.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)

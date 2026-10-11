@@ -1,15 +1,12 @@
 package dev.alllexey.itmowidgets.di
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.FileAppDiagnostics
-import javax.inject.Singleton
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.bind
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class DiagnosticsModule {
-    @Binds @Singleton abstract fun diagnostics(impl: FileAppDiagnostics): AppDiagnostics
+/** The Application reads the file implementation itself (crash handler, pending crashes). */
+val diagnosticsModule = module {
+    single { FileAppDiagnostics(androidContext(), get(), get(), get()) } bind AppDiagnostics::class
 }

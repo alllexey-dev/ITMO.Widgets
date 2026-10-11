@@ -2,13 +2,11 @@ package dev.alllexey.itmowidgets.app
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.app.shell.ShellHost
 import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes
 import dev.alllexey.itmowidgets.feature.update.navigation.UpdateRoutes
 
 /** The app's one activity: it hosts the Navigation 3 shell ([ShellHost]), which does the rest. */
-@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

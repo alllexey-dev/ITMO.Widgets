@@ -1,21 +1,15 @@
 package dev.alllexey.itmowidgets.di
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.feature.update.ui.GithubInstallStateWatcher
 import dev.alllexey.itmowidgets.feature.update.ui.GithubUpdateAction
 import dev.alllexey.itmowidgets.feature.update.ui.InstallStateWatcher
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.factoryOf
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class UpdateActionModule {
-
-    @Binds
-    abstract fun bindUpdateAction(action: GithubUpdateAction): UpdateAction
-
-    @Binds
-    abstract fun bindInstallStateWatcher(watcher: GithubInstallStateWatcher): InstallStateWatcher
+/** The github flavor's update: the update button opens the release page; nothing downloads in the background. */
+val updateActionModule = module {
+    factoryOf(::GithubUpdateAction) { bind<UpdateAction>() }
+    factoryOf(::GithubInstallStateWatcher) { bind<InstallStateWatcher>() }
 }

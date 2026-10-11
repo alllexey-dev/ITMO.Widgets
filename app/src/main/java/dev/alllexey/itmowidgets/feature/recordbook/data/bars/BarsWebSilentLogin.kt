@@ -9,9 +9,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
-import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -19,8 +17,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /** Headless copy of the interactive flow: same official URLs, no JavaScript bridge, no token reading. */
-class BarsWebSilentLogin @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class BarsWebSilentLogin(
+    private val context: Context,
     private val auth: BarsLogin
 ) : BarsSilentLogin {
     @Suppress("SetJavaScriptEnabled")

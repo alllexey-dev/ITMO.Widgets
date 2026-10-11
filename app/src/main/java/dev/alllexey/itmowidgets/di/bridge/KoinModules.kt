@@ -1,6 +1,25 @@
 package dev.alllexey.itmowidgets.di.bridge
 
+import dev.alllexey.itmowidgets.di.androidHomeModule
+import dev.alllexey.itmowidgets.di.androidQrModule
+import dev.alllexey.itmowidgets.di.androidRecordbookModule
+import dev.alllexey.itmowidgets.di.androidScheduleModule
+import dev.alllexey.itmowidgets.di.androidSettingsModule
+import dev.alllexey.itmowidgets.di.androidSportModule
+import dev.alllexey.itmowidgets.di.androidUpdateModule
 import dev.alllexey.itmowidgets.di.componentBindingsModule
+import dev.alllexey.itmowidgets.di.coroutinesModule
+import dev.alllexey.itmowidgets.di.debugModule
+import dev.alllexey.itmowidgets.di.diagnosticsModule
+import dev.alllexey.itmowidgets.di.linksModule
+import dev.alllexey.itmowidgets.di.locationModule
+import dev.alllexey.itmowidgets.di.networkModule
+import dev.alllexey.itmowidgets.di.notificationModule
+import dev.alllexey.itmowidgets.di.sessionModule
+import dev.alllexey.itmowidgets.di.storageModule
+import dev.alllexey.itmowidgets.di.timeModule
+import dev.alllexey.itmowidgets.di.updateActionModule
+import dev.alllexey.itmowidgets.di.webModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
@@ -24,31 +43,34 @@ import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import org.koin.core.module.Module
 
 /**
- * The Koin modules of the release graph, which [KoinStarter] loads and `KoinGraphTest` checks.
- *
- * A lane adds one line per module, and L07 reviews it: a Hilt to Koin `<Feature>Bridge` from this package goes to
- * [bridges], a module whose definitions Koin constructs (`feature-<x>/di`, `core/di`) goes to [constructed]. Debug
- * fixture overrides stay out of both lists. The app's own Android-only bindings (`di`) count as constructed.
+ * The Koin modules of the release graph, the app's only graph (ADR 0019), which [KoinStarter] loads and `KoinGraphTest`
+ * checks. A lane adds one line per module, and L07 reviews it. Debug fixture overrides stay out.
  */
 object KoinModules {
 
-    /** Types Hilt constructs and Koin only forwards; the graph check takes them as given. */
-    val bridges: List<Module> = listOf(
-        coreBridgeModule,
-        homeBridgeModule,
-        settingsBridgeModule,
-        recordbookBridgeModule,
-        scheduleBridgeModule,
-        sportBridgeModule,
-        accountAuthBridgeModule,
-        shellBridgeModule,
-        accountUpdateBridgeModule,
-        qrBridgeModule,
-        debugToolsBridgeModule,
-    )
-
-    /** Definitions Koin constructs; the graph check verifies their constructors. */
-    val constructed: List<Module> = listOf(
+    val all: List<Module> = listOf(
+        // The app's own Android bindings (`di`, the flavor's `updateActionModule` included).
+        coroutinesModule,
+        timeModule,
+        storageModule,
+        diagnosticsModule,
+        networkModule,
+        sessionModule,
+        notificationModule,
+        locationModule,
+        linksModule,
+        webModule,
+        androidHomeModule,
+        androidQrModule,
+        androidRecordbookModule,
+        androidScheduleModule,
+        androidSettingsModule,
+        androidSportModule,
+        androidUpdateModule,
+        updateActionModule,
+        debugModule,
+        componentBindingsModule,
+        // The shared modules' definitions (`feature-<x>/di`).
         qrModule,
         homeModule,
         resourcesModule,
@@ -69,9 +91,5 @@ object KoinModules {
         webLoginDataModule,
         webLoginModule,
         updateModule,
-        componentBindingsModule,
-        debugToolsModule,
     )
-
-    val all: List<Module> get() = bridges + constructed
 }

@@ -5,11 +5,8 @@ import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
-import dev.alllexey.itmowidgets.core.time.WallClock
 import java.io.File
 import java.time.Clock
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.io.encoding.Base64
 import kotlin.time.Instant
 
@@ -18,11 +15,10 @@ import kotlin.time.Instant
  * read and write the same 5-field state under one lock, so a write through one is what the other reads next. The
  * 2.x client's `tokens` is the only refresher.
  */
-@Singleton
-class MyItmoStorage @Inject constructor(
-    @TokenStorageFile tokenFile: File,
+class MyItmoStorage(
+    tokenFile: File,
     private val tokenCipher: TokenCipher,
-    @param:WallClock private val clock: Clock,
+    private val clock: Clock,
     private val log: AppLog
 ) : TokenStorage, SessionTokenStore {
 

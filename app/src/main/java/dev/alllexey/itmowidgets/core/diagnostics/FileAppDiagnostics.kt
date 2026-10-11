@@ -1,12 +1,9 @@
 package dev.alllexey.itmowidgets.core.diagnostics
 
 import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import java.io.File
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
@@ -29,7 +26,6 @@ import kotlin.time.Instant
  * coroutine may be dead by then, and are merged on the next start.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-@Singleton
 class FileAppDiagnostics internal constructor(
     private val directory: File,
     private val clock: Clock,
@@ -37,9 +33,8 @@ class FileAppDiagnostics internal constructor(
     private val log: AppLog,
 ) : AppDiagnostics {
 
-    @Inject
     constructor(
-        @ApplicationContext context: Context,
+        context: Context,
         clock: Clock,
         dispatchers: AppDispatchers,
         log: AppLog,

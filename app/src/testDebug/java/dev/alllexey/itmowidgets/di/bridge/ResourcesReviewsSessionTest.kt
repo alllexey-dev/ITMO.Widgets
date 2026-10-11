@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.test.core.app.ApplicationProvider
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
@@ -13,13 +12,13 @@ import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.feature.resources.data.SubjectLinksRepositoryImpl
 import dev.alllexey.itmowidgets.feature.reviews.data.StoredLevel
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsFileStore
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherReviewsRepositoryImpl
-import dev.alllexey.itmowidgets.feature.sport.data.SportSessionBindingsEntryPoint
 import java.io.File
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -39,8 +38,8 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The links, reviews and levels data on the real graph: sign-out (Hilt's `Set<SessionDataCleaner>`, which holds
- * Koin's qualified cleaners through `SessionCleanersBridge`) reaches each of the three repositories once and forgets
+ * The links, reviews and levels data on the real graph: sign-out (`SessionDataCleaners`, every qualified Koin
+ * cleaner) reaches each of the three repositories once and forgets
  * the device-only links (file and memory), the reviews cache and the levels file.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -53,9 +52,9 @@ class ResourcesReviewsSessionTest {
 
     @Test
     fun `the cleaner set holds each of the three repositories once`() {
-        val application = bootApplication()
+        bootApplication()
         val koin = GlobalContext.get()
-        val cleaners = cleaners(application)
+        val cleaners = cleaners()
 
         assertEquals(1, cleaners.count { it === koin.get<SubjectLinksRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<TeacherReviewsRepositoryImpl>() })
@@ -75,7 +74,7 @@ class ResourcesReviewsSessionTest {
         assertTrue(File(directory, "cache.json").exists())
         assertEquals(listOf(LINK_ID), content(links).mine.map { it.id })
 
-        cleaners(application).forEach { it.clearSessionData() }
+        cleaners().forEach { it.clearSessionData() }
 
         assertFalse(directory.exists())
         assertEquals(emptyList<String>(), content(links).mine.map { it.id })
@@ -99,7 +98,7 @@ class ResourcesReviewsSessionTest {
         val levels = File(application.filesDir, "teacher_levels")
         assertTrue(File(levels, "levels.json").exists())
 
-        cleaners(application).forEach { it.clearSessionData() }
+        cleaners().forEach { it.clearSessionData() }
 
         assertNull(reviews.cachedReviews(teacher))
         assertFalse(levels.exists())
@@ -109,8 +108,7 @@ class ResourcesReviewsSessionTest {
         (links.observe(SCOPE).first { it is SubjectLinksState.Content } as SubjectLinksState.Content).snapshot
     }
 
-    private fun cleaners(context: Context): Set<SessionDataCleaner> =
-        EntryPointAccessors.fromApplication(context, SportSessionBindingsEntryPoint::class.java).sessionDataCleaners()
+    private fun cleaners(): Collection<SessionDataCleaner> = GlobalContext.get().get<SessionDataCleaners>().current()
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
     private fun bootApplication(): ItmoWidgetsApplication {

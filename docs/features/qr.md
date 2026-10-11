@@ -82,17 +82,16 @@ All in `commonMain`, constructed by Koin (`feature/qr/di/QrModule.kt`, one
 - `QrAppearancePreferencesImpl` and `QrTilePreferencesImpl` read and write
   `QrSettingsPreferences` and `DeviceHintPreferences` of `:shared:core`.
 
-The core types come from `:app`'s Hilt graph through `di/bridge/CoreBridge.kt`
+The core types come from `:app`'s Koin modules in `di/`
 (`MyItmoClient`, the `app_preferences` DataStore, `AppDirectories`, the two
-preference stores, the wall clock, `DemoMode`, `AppDispatchers`). The other
-way, `di/bridge/QrBridge.kt` provides the repository, the widget state store and
-the two preference ports to Hilt for the widget, the worker, the tile and the
-session effects; Koin keeps the lifetime. `di/QrModule.kt` (Hilt) keeps only
-`QrBitmapCache` and `QrCodeGenerator`.
+preference stores, the wall clock, `DemoMode`, `AppDispatchers`). The widget,
+the worker, the tile and the session effects read the repository, the widget
+state store and the two preference ports from the same graph. `di/QrModule.kt`
+holds the Android rendering (`QrBitmapCache`, `QrCodeGenerator`, the toolkit).
 
 Sign-out: the repository is a `SessionDataCleaner` bound in Koin as
-`named("qr")`; `di/bridge/SessionCleanersBridge.kt` adds every Koin cleaner to
-Hilt's `Set<SessionDataCleaner>`, beside the Hilt-built `QrBitmapCacheImpl`.
+`named("qr")`, beside `QrBitmapCacheImpl` as `named("qr-bitmaps")`; sign-out
+runs every Koin cleaner (`SessionDataCleaners`, `di/SessionModule.kt`).
 Sign-out deletes `cache/qr_hex` and `cache/bitmap_cache/`.
 
 ## Tile

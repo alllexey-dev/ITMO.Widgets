@@ -1,11 +1,6 @@
 package dev.alllexey.itmowidgets.di
 
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmoapi.core.defaultEngine
-import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.client.BackendClient
@@ -20,111 +15,46 @@ import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.network.BackendClientFactory
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
-import dev.alllexey.itmowidgets.core.network.PublicWebClient
 import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import io.ktor.client.engine.HttpClientEngine
-import java.util.concurrent.TimeUnit
-import javax.inject.Qualifier
-import javax.inject.Singleton
-import kotlin.time.Clock
-import okhttp3.CookieJar
-import okhttp3.OkHttpClient
+import org.koin.dsl.module
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class BackendBaseUrl
-
-@Module
-@InstallIn(SingletonComponent::class)
-object NetworkModule {
-
-    /**
-     * The one Ktor engine of MyItmoApi 2.x and Core 2.0: OkHttp without cookies, cache or redirects. Neither client
-     * closes it; it lives as long as the process.
-     */
-    @Provides
-    @Singleton
-    fun provideHttpClientEngine(): HttpClientEngine = defaultEngine()
-
-    @Provides
-    @Singleton
-    fun provideRefreshRejections(): RefreshRejections = RefreshRejections()
-
-    /**
-     * MyItmoApi 2.x over the session's [TokenStorage]; its `tokens` is the only refresher and writer. A refresh
-     * ITMO.ID rejects is reported to the session through [rejections].
-     */
-    @Provides
-    @Singleton
-    fun provideMyItmoClient(
-        storage: TokenStorage,
-        engine: HttpClientEngine,
-        clock: Clock,
-        rejections: RefreshRejections
-    ): MyItmoClient =
-        MyItmoClientFactory.create(storage = storage, engine = engine, clock = clock, refreshGuard = rejections.guard())
-
-    @Provides
-    @BackendBaseUrl
-    fun provideBackendBaseUrl(): String = BuildConfig.WIDGETS_BASE_URL
-
-    /** This build as Backend sees it in `X-App-Version`: `<versionName> (<versionCode>); android; <flavor>`. */
-    @Provides
-    fun provideClientVersion(): ClientVersion =
-        ClientVersion(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString(), "android", BuildConfig.FLAVOR)
-
-    /**
-     * Core 2.0. Its token comes from the 2.x client's `tokens`, the only refresher and writer of the session; every
-     * request, workers' and FCM's included, carries [version].
-     */
-    @Provides
-    @Singleton
-    fun provideBackendClient(
-        @BackendBaseUrl baseUrl: String,
-        myItmo: MyItmoClient,
-        engine: HttpClientEngine,
-        version: ClientVersion
-    ): BackendClient = BackendClientFactory.create(
-        baseUrl = baseUrl,
-        tokens = myItmo.tokens,
-        engine = engine,
-        version = version
-    )
-
-    @Provides
-    fun provideUsersApi(client: BackendClient): UsersApi = client.users
-
-    @Provides
-    fun provideFriendsApi(client: BackendClient): FriendsApi = client.friends
-
-    @Provides
-    fun provideBackendSportApi(client: BackendClient): SportApi = client.sport
-
-    @Provides
-    fun provideSubjectLinksApi(client: BackendClient): SubjectLinksApi = client.links
-
-    @Provides
-    fun provideTeacherReviewsApi(client: BackendClient): TeacherReviewsApi = client.reviews
-
-    @Provides
-    fun provideDeviceApi(client: BackendClient): DeviceApi = client.device
-
-    @Provides
-    fun provideAppApi(client: BackendClient): AppApi = client.app
-
-    @Provides
-    fun provideBackendScheduleApi(client: BackendClient): ScheduleApi = client.schedule
-
-    /** Public Google Sheets: no cookies, no HTTPS-to-HTTP redirects. */
-    @Provides
-    @Singleton
-    @PublicWebClient
-    fun providePublicWebClient(): OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .callTimeout(90, TimeUnit.SECONDS)
-        .cookieJar(CookieJar.NO_COOKIES)
-        .followRedirects(true)
-        .followSslRedirects(false)
-        .build()
+val networkModule = module {
+    // The one Ktor engine of MyItmoApi 2.x and Core 2.0: OkHttp without cookies, cache or redirects. Neither client
+    // closes it; it lives as long as the process.
+    single<HttpClientEngine> { defaultEngine() }
+    single { RefreshRejections() }
+    // MyItmoApi 2.x over the session's TokenStorage; its `tokens` is the only refresher and writer. A refresh ITMO.ID
+    // rejects is reported to the session through RefreshRejections.
+    single<MyItmoClient> {
+        MyItmoClientFactory.create(
+            storage = get(),
+            engine = get(),
+            clock = get(),
+            refreshGuard = get<RefreshRejections>().guard()
+        )
+    }
+    single { clientVersion() }
+    // Core 2.0. Its token comes from the 2.x client's `tokens`; every request, workers' and FCM's included, carries
+    // the ClientVersion.
+    single<BackendClient> {
+        BackendClientFactory.create(
+            baseUrl = BuildConfig.WIDGETS_BASE_URL,
+            tokens = get<MyItmoClient>().tokens,
+            engine = get(),
+            version = get()
+        )
+    }
+    single<UsersApi> { get<BackendClient>().users }
+    single<FriendsApi> { get<BackendClient>().friends }
+    single<SportApi> { get<BackendClient>().sport }
+    single<SubjectLinksApi> { get<BackendClient>().links }
+    single<TeacherReviewsApi> { get<BackendClient>().reviews }
+    single<DeviceApi> { get<BackendClient>().device }
+    single<AppApi> { get<BackendClient>().app }
+    single<ScheduleApi> { get<BackendClient>().schedule }
 }
+
+/** This build as Backend sees it in `X-App-Version`: `<versionName> (<versionCode>); android; <flavor>`. */
+internal fun clientVersion(): ClientVersion =
+    ClientVersion(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString(), "android", BuildConfig.FLAVOR)

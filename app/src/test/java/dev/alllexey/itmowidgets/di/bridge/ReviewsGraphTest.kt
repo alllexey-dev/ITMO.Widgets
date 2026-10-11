@@ -44,13 +44,7 @@ class ReviewsGraphTest {
         assertEquals(1, cleaners.count { it === levels })
     }
 
-    /** `scheduleDataGraph` holds `reviewsModule` with `DemoMode` and the teacher lessons gateway it reads. */
-    @Test
-    fun `the reviews module resolves against the bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, scheduleDataGraph)
-    }
-
-    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
+    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */
     private fun bootApplication(): ItmoWidgetsApplication {
         val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()
         if (failure != null) {

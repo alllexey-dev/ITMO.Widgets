@@ -19,9 +19,9 @@ class HomeRenderersGraphTest {
 
     @Test
     fun `every home card kind has exactly one renderer in the release modules`() {
+        // The zone stands in for the app's provider, which reads a file under `androidContext()`.
         val application = koinApplication {
-            allowOverride(false)
-            modules(KoinModules.constructed + module { single<AcademicTimeProvider> { MoscowTime } })
+            modules(KoinModules.all + module { single<AcademicTimeProvider> { MoscowTime } })
         }
         try {
             val claims = application.koin.getAll<HomeCardRenderer>()

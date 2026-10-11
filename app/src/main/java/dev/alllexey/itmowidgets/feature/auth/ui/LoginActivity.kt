@@ -29,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.designsystem.host.ItmoComposeHost
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.domain.ItmoAuthUrlPolicy
@@ -47,7 +46,6 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
  * since Compose's pull-to-refresh cannot see a WebView's scroll. The WebView's security settings, the cookie and
  * storage wipe before every sign-in page, the token bridge and the token interceptor stay here.
  */
-@AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
 
     private val viewModel: InteractiveLoginViewModel by viewModel()

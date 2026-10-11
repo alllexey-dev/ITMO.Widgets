@@ -1,41 +1,33 @@
 package dev.alllexey.itmowidgets.di
 
-import dagger.Binds
-import dagger.Module
-import dagger.Provides
-import dagger.multibindings.IntoSet
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCache
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCacheImpl
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapRenderer
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
-import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import javax.inject.Singleton
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrColorResolver
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrPreviewBitmapCache
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrToolkit
+import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrWidgetImages
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 
 /**
- * The QR pass's Android rendering. The pass data is Koin's (`qrModule` in `:shared:feature-qr`); the widget, the
- * tile and the worker read it through `di/bridge/QrBridge.kt`.
+ * The QR pass's Android rendering: bitmaps for the widget, the tile and the previews. The pass data is `qrModule`'s
+ * (`:shared:feature-qr`).
  */
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class QrModule {
-
-    @Binds
-    @Singleton
-    abstract fun bindQrBitmapCache(
-        impl: QrBitmapCacheImpl
-    ): QrBitmapCache
-
-    @Binds
-    @IntoSet
-    @Singleton
-    abstract fun bindQrBitmapSessionDataCleaner(
-        impl: QrBitmapCacheImpl
-    ): SessionDataCleaner
-
-    companion object {
-        /** The generator lives in `:shared:feature-qr` `commonMain`, which has no `@Inject`. */
-        @Provides
-        fun provideQrCodeGenerator(): QrCodeGenerator = QrCodeGenerator()
-    }
+val androidQrModule = module {
+    singleOf(::QrBitmapCacheImpl) { bind<QrBitmapCache>() }
+    single<SessionDataCleaner>(named("qr-bitmaps")) { get<QrBitmapCacheImpl>() }
+    factory { QrCodeGenerator() }
+    factory { QrBitmapRenderer(java.time.Clock.systemUTC()) }
+    factoryOf(::QrColorResolver)
+    singleOf(::CustomSpoilerManager)
+    factoryOf(::QrToolkit)
+    singleOf(::QrPreviewBitmapCache)
+    singleOf(::QrWidgetImages)
 }

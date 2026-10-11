@@ -12,7 +12,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
@@ -24,10 +23,9 @@ import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.NotificationDestination
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.withAppLocale
-import javax.inject.Inject
 
-class AndroidAppNotifier @Inject constructor(
-    @param:ApplicationContext private val context: Context
+class AndroidAppNotifier(
+    private val context: Context
 ) : AppNotifier {
     override fun show(notification: AppNotification) {
         if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(

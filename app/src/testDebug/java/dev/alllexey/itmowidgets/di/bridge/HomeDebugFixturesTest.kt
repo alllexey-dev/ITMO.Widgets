@@ -26,7 +26,7 @@ import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -63,14 +63,13 @@ class HomeDebugFixturesTest {
         val fixture = HomeDebugFixtures.load(application, Fakes, EpochClock)
         val sources = koin.getAll<HomeCardSource>()
         assertTrue(Fakes.source in sources)
-        assertEquals(emptyList<HomeCardSource>(), sources.filterNot { it === Fakes.source }.flatMap { it.parts() })
+        assertTrue(sources.none { it in listOf(hints, social, schedule, changes, marks, sport) })
         assertSame(Fakes.preferences, koin.get<HomeCardPreferences>())
         assertSame(Fakes.hintStore, koin.get<HomeHintStore>())
         assertSame(EpochClock, koin.get<Clock>())
 
         HomeDebugFixtures.unload(application, fixture)
-        val composite = koin.get<HomeCardSource>(hiltCardsQualifier) as CompositeHomeCardSource
-        assertEquals(HomeBridgeEntryPoint.from(application).homeCardSources().size, composite.parts.size)
+        assertTrue(Fakes.source !in koin.getAll<HomeCardSource>())
         assertSame(hints, koin.get<HomeCardSource>(hintCardsQualifier))
         assertSame(hints, koin.get<HintHomeCardSource>())
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === hints })
@@ -81,10 +80,8 @@ class HomeDebugFixturesTest {
         assertSame(sport, koin.get<HomeCardSource>(sportCardsQualifier))
         assertSame(releasePreferences, koin.get<HomeCardPreferences>())
         assertSame(releaseHintStore, koin.get<HomeHintStore>())
-        assertSame(CoreBridgeEntryPoint.from(application).clock(), koin.get<Clock>())
+        assertSame(Clock.System, koin.get<Clock>())
     }
-
-    private fun HomeCardSource.parts(): List<HomeCardSource> = (this as? CompositeHomeCardSource)?.parts ?: listOf(this)
 
     @Test
     fun `a replaced fixture is left to the host that replaced it`() {
@@ -94,10 +91,10 @@ class HomeDebugFixturesTest {
         val first = HomeDebugFixtures.load(application, Fakes, EpochClock)
         val second = HomeDebugFixtures.load(application, Fakes, EpochClock)
         HomeDebugFixtures.unload(application, first)
-        assertSame(Fakes.source, koin.get<HomeCardSource>(hiltCardsQualifier))
+        assertSame(Fakes.source, koin.get<HomeCardSource>(fixtureCardsQualifier))
 
         HomeDebugFixtures.unload(application, second)
-        assertNotSame(Fakes.source, koin.get<HomeCardSource>(hiltCardsQualifier))
+        assertNull(koin.getOrNull<HomeCardSource>(fixtureCardsQualifier))
     }
 
     private object Fakes : HomeDebugFixtures.Fakes {

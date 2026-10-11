@@ -14,18 +14,18 @@ class KoinGraphTest {
 
     @Test
     fun `the release modules pass the graph check`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, KoinModules.constructed)
+        KoinGraphCheck.assertValid(KoinModules.all)
     }
 
     @Test
-    fun `a constructed definition may depend on a bridged core contract`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(module { singleOf(::NeedsAcademicTime) }))
+    fun `a definition may depend on a core contract of the app modules`() {
+        KoinGraphCheck.assertValid(KoinModules.all + module { singleOf(::NeedsAcademicTime) })
     }
 
     @Test
     fun `the graph check fails on a missing binding and names the type`() {
         val error = assertThrows(Throwable::class.java) {
-            KoinGraphCheck.assertValid(emptyList(), listOf(module { singleOf(::NeedsDemoMode) }))
+            KoinGraphCheck.assertValid(listOf(module { singleOf(::NeedsDemoMode) }))
         }
         assertTrue(error.toString(), DemoMode::class.qualifiedName!! in error.message.orEmpty())
     }
@@ -33,7 +33,7 @@ class KoinGraphTest {
     @Test
     fun `the graph check fails on a cycle and names the types`() {
         val error = assertThrows(Throwable::class.java) {
-            KoinGraphCheck.assertValid(emptyList(), listOf(module { singleOf(::CycleA); singleOf(::CycleB) }))
+            KoinGraphCheck.assertValid(listOf(module { singleOf(::CycleA); singleOf(::CycleB) }))
         }
         assertTrue(error.toString(), CycleA::class.qualifiedName!! in error.message.orEmpty())
     }
@@ -42,7 +42,6 @@ class KoinGraphTest {
     fun `the graph check fails on a type defined in two modules`() {
         assertThrows(DefinitionOverrideException::class.java) {
             KoinGraphCheck.assertValid(
-                emptyList(),
                 listOf(
                     module { singleOf(::FirstPort) bind Port::class },
                     module { singleOf(::SecondPort) bind Port::class },

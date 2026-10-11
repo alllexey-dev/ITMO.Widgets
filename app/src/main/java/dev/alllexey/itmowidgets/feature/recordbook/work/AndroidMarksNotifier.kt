@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.work
 
 import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.notification.AppNotification
@@ -14,14 +13,13 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigest
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigests
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
-import javax.inject.Inject
 
 /**
  * "Новые оценки" with subject names only, never the marks; the lock screen shows the title alone.
  * One subject with a page opens it, anything else opens the recordbook.
  */
-class AndroidMarksNotifier @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class AndroidMarksNotifier(
+    private val context: Context,
     private val notifier: AppNotifier
 ) : MarksNotifier {
 

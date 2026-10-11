@@ -1,21 +1,16 @@
 package dev.alllexey.itmowidgets.di
 
-import android.content.Context
-import dagger.Binds
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
+import dev.alllexey.itmowidgets.core.work.BackgroundCheck
 import dev.alllexey.itmowidgets.core.work.CheckScheduler
 import dev.alllexey.itmowidgets.core.work.PeriodicCheckScheduler
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsHttp
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebViewItmoIdCookies
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
+import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.work.AndroidMarksNotifier
@@ -24,39 +19,23 @@ import dev.alllexey.itmowidgets.feature.recordbook.work.WorkManagerBarsSessionPr
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
 import java.util.concurrent.TimeUnit
-import javax.inject.Singleton
 import okhttp3.CookieJar
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 
 /**
- * The recordbook's Android bindings only: the BARS engine and its ITMO.ID sign-in, the WebView sign-in and cookies, the
- * BARS session probe, and the marks worker's scheduler and notifier. All recordbook data is Koin's
- * (`recordbookModule`); `di/bridge/RecordbookBridge.kt` connects both graphs.
+ * The recordbook's Android side: the BARS engine and its ITMO.ID sign-in, the WebView sign-in and cookies, the BARS
+ * session probe, the marks worker's scheduler and notifier, and the mark check's place among the background checks.
+ * All recordbook data is `recordbookModule`'s.
  */
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class RecordbookModule {
-
-    @Binds
-    abstract fun bindBarsSilentLogin(impl: BarsWebSilentLogin): BarsSilentLogin
-
-    @Binds
-    abstract fun bindItmoIdCookies(impl: WebViewItmoIdCookies): ItmoIdCookies
-
-    @Binds
-    abstract fun bindBarsSessionProbe(impl: WorkManagerBarsSessionProbe): BarsSessionProbe
-
-    @Binds
-    abstract fun bindMarksNotifier(impl: AndroidMarksNotifier): MarksNotifier
-
-    companion object {
-        /**
-         * The BARS engine, apart from MyITMO's: the ADR 0012 policy of MyItmoApi's `defaultEngine()` (no cookie jar,
-         * cache or redirects) with the BARS timeouts. Neither client closes it; it lives as long as the process.
-         */
-        @Provides
-        @Singleton
-        @BarsHttp
-        fun barsEngine(): HttpClientEngine = OkHttp.create {
+val androidRecordbookModule = module {
+    // The BARS engine, apart from MyITMO's: the ADR 0012 policy of MyItmoApi's `defaultEngine()` (no cookie jar,
+    // cache or redirects) with the BARS timeouts. Neither client closes it; it lives as long as the process.
+    single<HttpClientEngine>(barsEngineQualifier) {
+        OkHttp.create {
             config {
                 followRedirects(false)
                 followSslRedirects(false)
@@ -66,17 +45,16 @@ abstract class RecordbookModule {
                 readTimeout(30, TimeUnit.SECONDS)
             }
         }
-
-        @Provides
-        fun marksScheduler(@ApplicationContext context: Context): MarksScheduler =
-            object : MarksScheduler, CheckScheduler by PeriodicCheckScheduler(context, MARKS_SPEC) {}
-
-        /**
-         * The ITMO.ID sign-in of the `bars` client: URL, callback checks and the cookie replay. Built here over the
-         * engine; `recordbookModule` takes this one instance through `RecordbookBridge`.
-         */
-        @Provides
-        @Singleton
-        fun barsLogin(@BarsHttp engine: HttpClientEngine): BarsLogin = BarsLogin(engine)
     }
+    // The ITMO.ID sign-in of the `bars` client: URL, callback checks and the cookie replay.
+    single { BarsLogin(get<HttpClientEngine>(barsEngineQualifier)) }
+    singleOf(::BarsWebSilentLogin) { bind<BarsSilentLogin>() }
+    singleOf(::WebViewItmoIdCookies) { bind<ItmoIdCookies>() }
+    singleOf(::WorkManagerBarsSessionProbe) { bind<BarsSessionProbe>() }
+    singleOf(::AndroidMarksNotifier) { bind<MarksNotifier>() }
+    single<MarksScheduler> {
+        object : MarksScheduler, CheckScheduler by PeriodicCheckScheduler(androidContext(), MARKS_SPEC) {}
+    }
+    // The implementation key, so a debug fixture that overrides MarkTracking never reaches the background checks.
+    single<BackgroundCheck>(named("marks")) { get<DefaultMarkTracking>() }
 }

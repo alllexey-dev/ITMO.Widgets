@@ -12,15 +12,10 @@ import android.graphics.RectF
 import android.net.Uri
 import android.util.AtomicFile
 import androidx.core.graphics.createBitmap
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.util.concurrent.atomic.AtomicLong
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class CustomSpoilerManager @Inject constructor(
-    @param:ApplicationContext private val context: Context
+class CustomSpoilerManager(
+    private val context: Context
 ) {
 
     private val imageRevision = AtomicLong()

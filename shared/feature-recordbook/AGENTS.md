@@ -11,7 +11,7 @@
   `RecordbookScreenshotTest`; fixtures in `resources/myitmo/recordbook/` and `src/androidHostTest/resources/sheets/`.
 - Not here: `BarsLoginActivity`, the recordbook and subject Fragments, the sheet hosts, `MarksWorker`,
   `BarsCookieProbeWorker`, `AndroidMarksNotifier` and the WebView cookie bridge stay in `app/` under
-  `feature/recordbook/`; `di/bridge/RecordbookBridge.kt` bridges Koin and Hilt.
+  `feature/recordbook/`; their Koin bindings are in `di/RecordbookModule.kt`.
 
 ## Depends on
 - `:shared:core`, `:shared:designsystem`; `:shared:testing` in tests only. Koin, the KMP lifecycle, ksoup (the

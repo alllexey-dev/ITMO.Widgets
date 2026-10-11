@@ -1,17 +1,18 @@
 package dev.alllexey.itmowidgets.di
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.app.AndroidAppNotifier
-import dev.alllexey.itmowidgets.core.notification.*
-import javax.inject.Singleton
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
+import dev.alllexey.itmowidgets.core.notification.DefaultFcmTokenSync
+import dev.alllexey.itmowidgets.core.notification.DefaultFirebaseTokenProvider
+import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
+import dev.alllexey.itmowidgets.core.notification.FirebaseTokenProvider
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class NotificationModule {
-    @Binds @Singleton abstract fun tokenSync(impl: DefaultFcmTokenSync): FcmTokenSync
-    @Binds abstract fun tokenProvider(impl: DefaultFirebaseTokenProvider): FirebaseTokenProvider
-    @Binds @Singleton abstract fun notifier(impl: AndroidAppNotifier): AppNotifier
+val notificationModule = module {
+    singleOf(::DefaultFcmTokenSync) { bind<FcmTokenSync>() }
+    factoryOf(::DefaultFirebaseTokenProvider) { bind<FirebaseTokenProvider>() }
+    singleOf(::AndroidAppNotifier) { bind<AppNotifier>() }
 }

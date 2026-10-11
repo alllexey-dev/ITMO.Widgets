@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.test.core.app.ApplicationProvider
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -22,7 +22,6 @@ import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRep
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.StoredScheduleChanges
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
-import dev.alllexey.itmowidgets.feature.sport.data.SportSessionBindingsEntryPoint
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
@@ -39,8 +38,8 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * Sign-out on the real graph after KM-11a2 and IO-15a: Hilt's `Set<SessionDataCleaner>` holds Koin's four schedule
- * cleaners (through `SessionCleanersBridge`) and Hilt's one once each, and running it forgets every schedule store.
+ * Sign-out on the real graph after KM-11a2 and IO-15a: `SessionDataCleaners` holds the five schedule cleaners once
+ * each, and running it forgets every schedule store.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -51,10 +50,10 @@ class ScheduleSessionBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the cleaner set holds each schedule cleaner once`() {
-        val application = bootApplication()
+    fun `the cleaner list holds each schedule cleaner once`() {
+        bootApplication()
         val koin = GlobalContext.get()
-        val cleaners = cleaners(application)
+        val cleaners = cleaners()
 
         assertEquals(1, cleaners.count { it === koin.get<ScheduleRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<ScheduleChangesRepositoryImpl>() })
@@ -66,7 +65,7 @@ class ScheduleSessionBridgeTest {
 
     @Test
     fun `sign-out clears the schedule cache, the change history, the teacher weeks and the calendar sync`() = runBlocking {
-        val application = bootApplication()
+        bootApplication()
         val koin = GlobalContext.get()
         val schedule = koin.get<ScheduleRepositoryImpl>()
         val directories = koin.get<AppDirectories>()
@@ -79,7 +78,7 @@ class ScheduleSessionBridgeTest {
         CalendarSyncFileStore(directories).write(StoredCalendarSync())
         assertNotNull(schedule.peekScheduleForRange(null, today, today))
 
-        cleaners(application).forEach { it.clearSessionData() }
+        cleaners().forEach { it.clearSessionData() }
 
         assertNull(schedule.peekScheduleForRange(null, today, today))
         assertNull(ScheduleChangesFileStore(directories).read())
@@ -90,8 +89,7 @@ class ScheduleSessionBridgeTest {
     private fun isScheduleCleaner(cleaner: SessionDataCleaner): Boolean =
         cleaner::class.java.name.startsWith("dev.alllexey.itmowidgets.feature.schedule.")
 
-    private fun cleaners(context: Context): Set<SessionDataCleaner> =
-        EntryPointAccessors.fromApplication(context, SportSessionBindingsEntryPoint::class.java).sessionDataCleaners()
+    private fun cleaners(): Collection<SessionDataCleaner> = GlobalContext.get().get<SessionDataCleaners>().current()
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
     private fun bootApplication(): ItmoWidgetsApplication {

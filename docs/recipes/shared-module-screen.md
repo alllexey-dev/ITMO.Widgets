@@ -29,10 +29,9 @@ The QR pass was the first screen built this way. Copy its shape.
 | Goldens | `shared/feature-qr/screenshots/` via `feature/qr/QrScreenshotTest.kt` |
 | Host tests | `feature/qr/ui/QrPassScreenTest.kt`, `feature/qr/presentation/QrCodeViewModelTest.kt`, `feature/qr/di/QrModuleTest.kt` |
 
-The Android side keeps only the host and the bridge:
-`app/shell/entries/HomeEntries.kt` (the shell entry) and `di/bridge/QrBridge.kt`
-(Hilt-built types handed to Koin), with one line each in
-`di/bridge/KoinModules.kt`.
+The Android side keeps only the host and the Android bindings:
+`app/shell/entries/HomeEntries.kt` (the shell entry) and `di/QrModule.kt`,
+with one line in `di/bridge/KoinModules.kt`.
 
 What stays Android-only, in `app/`, and is not part of a shared screen:
 
@@ -85,14 +84,12 @@ and [the iOS app](../ios.md).
    `start()` and `stop()` calls, which the route makes.
 3. **Koin module** in `di/<X>Module.kt`:
    `val qrModule = module { viewModelOf(::QrCodeViewModel) }`. Only
-   definitions Koin constructs go here. A dependency that the app's Hilt graph
-   still builds (QR: the repository and the colour setting) is handed over in
-   `app/.../di/bridge/<X>Bridge.kt` as a lazy `single { EntryPoint.from(...) }`
-   so the screen shares the one instance the widget and the worker use; a type
-   more than one feature reads goes to `CoreBridge.kt` once. Register the
-   module in `KoinModules.constructed` and the bridge in `KoinModules.bridges`.
-   A `<X>ModuleTest` in `androidHostTest` calls `module.verify(extraTypes = ...)`
-   with every bridged type, and `KoinGraphTest` checks the release graph.
+   definitions Koin constructs go here. An Android-only dependency goes to
+   `app/.../di/<X>Module.kt` of the same graph, so the screen shares the one
+   instance the widget and the worker use. Register the modules in
+   `KoinModules.all`. A `<X>ModuleTest` in `androidHostTest` calls
+   `module.verify(extraTypes = ...)` with every type the app supplies, and
+   `KoinGraphTest` checks the release graph.
 4. **Route** (`ui/<Name>Route.kt`, public): the only composable that knows
    the ViewModel. It takes navigation as lambdas (`onBack`, `onOpen<Y>`) and
    the ViewModel as a defaulted argument, `viewModel: QrCodeViewModel = koinViewModel()`,

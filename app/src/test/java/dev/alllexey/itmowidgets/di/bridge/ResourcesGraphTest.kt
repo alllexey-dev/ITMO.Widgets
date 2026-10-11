@@ -40,13 +40,7 @@ class ResourcesGraphTest {
         assertEquals(1, koin.getAll<SessionDataCleaner>().count { it === repository })
     }
 
-    /** `DemoMode` is `authDataModule`'s since KM-11h1. */
-    @Test
-    fun `the links module resolves against the bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(authDataModule, resourcesModule))
-    }
-
-    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
+    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */
     private fun bootApplication(): ItmoWidgetsApplication {
         val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()
         if (failure != null) {

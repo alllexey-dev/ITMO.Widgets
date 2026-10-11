@@ -4,7 +4,6 @@ import android.appwidget.AppWidgetManager
 import dev.alllexey.itmowidgets.core.notification.FcmWork
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
@@ -19,17 +18,16 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSna
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetWork
-import javax.inject.Inject
 
-class AndroidSessionLifecycleEffects @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class AndroidSessionLifecycleEffects(
+    private val context: Context,
     private val widgetSettings: WidgetSettingsPreferences,
     private val palettes: WidgetPaletteSource,
     private val scheduleWidgetStore: ScheduleWidgetSnapshotStore,
     private val qrWidgetStateStore: QrWidgetStateStore,
     private val qrWidgetImages: QrWidgetImages,
     private val notifier: AppNotifier,
-    private val backgroundChecks: Set<@JvmSuppressWildcards BackgroundCheck>
+    private val backgroundChecks: Set<BackgroundCheck>
 ) : SessionLifecycleEffects {
 
     override suspend fun prepareForSessionChange() {

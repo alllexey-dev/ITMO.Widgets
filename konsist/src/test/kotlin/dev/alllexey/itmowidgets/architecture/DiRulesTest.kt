@@ -12,8 +12,8 @@ class DiRulesTest {
 
     @Test
     fun `koin modules are declared only in core di, shared feature di and di bridge`() {
-        // The app's main `di` also holds the Android-only bindings Koin constructs (KM-12a); debug fixtures stay in
-        // `di.bridge`.
+        // The app's `di` holds its Android bindings (KM-12a, KM-12b), the flavor's `updateActionModule` included;
+        // debug fixtures stay in `di.bridge`.
         productionFiles
             .filter { file -> file.imports.any { it.name in KOIN_MODULE_BUILDERS } }
             .requireNonEmpty("files that declare a Koin module")
@@ -21,7 +21,7 @@ class DiRulesTest {
                 val packageName = file.packagee?.name.orEmpty()
                 when {
                     file.isShared -> packageName.isIn(CORE_DI_PACKAGE) || FEATURE_DI.matches(packageName)
-                    file.isAppMain -> packageName.isIn(DI_PACKAGE)
+                    file.isAppMainOrFlavor -> packageName.isIn(DI_PACKAGE)
                     else -> file.isAppMainOrDebug && packageName.isIn(DI_BRIDGE_PACKAGE)
                 }
             }
@@ -91,7 +91,8 @@ class DiRulesTest {
 
     private val KoFileDeclaration.isAndroidMain: Boolean get() = "/src/androidMain/" in projectPath
 
-    private val KoFileDeclaration.isAppMain: Boolean get() = projectPath.startsWith("/app/src/main/")
+    private val KoFileDeclaration.isAppMainOrFlavor: Boolean
+        get() = APP_MAIN_AND_FLAVORS.any { projectPath.startsWith(it) }
 
     private val KoFileDeclaration.isAppMainOrDebug: Boolean
         get() = projectPath.startsWith("/app/src/main/") || projectPath.startsWith("/app/src/debug/")
@@ -101,6 +102,7 @@ class DiRulesTest {
     private companion object {
         const val CORE_DI_PACKAGE = "dev.alllexey.itmowidgets.core.di"
         const val DI_BRIDGE_PACKAGE = "dev.alllexey.itmowidgets.di.bridge"
+        val APP_MAIN_AND_FLAVORS = listOf("/app/src/main/", "/app/src/github/", "/app/src/play/")
         val FEATURE_DI = Regex("""dev\.alllexey\.itmowidgets\.feature\.\w+\.di(\..+)?""")
 
         val KOIN_MODULE_BUILDERS = setOf("org.koin.dsl.module", "org.koin.dsl.lazyModule")

@@ -13,8 +13,8 @@
 - `commonTest`: repositories, ViewModels, policies; `androidHostTest`: one Koin graph test per package, screens and
   `AccountScreenshotTest`; `iosTest`: the iOS modules and the App Store listing.
 - Not here: `LoginActivity`, the Android helpers of the account entries, `WebSessionDataCleaner` and the update
-  action of each distribution (`app/src/github`, `app/src/play`) stay in `app/` under `feature/<package>/`; the
-  bridges are `di/bridge/AccountAuthBridge.kt`, `AccountOnboardingBridge.kt` and `AccountUpdateBridge.kt`.
+  action of each distribution (`app/src/github`, `app/src/play`) stay in `app/` under `feature/<package>/`; their
+  Koin bindings are in `app/`'s `di/` (`SessionModule.kt`, `UpdateModule.kt`, the flavor's `UpdateActionModule.kt`).
 
 ## Depends on
 - `:shared:core` (session, token storage contracts, `DemoMode`), `:shared:designsystem`; `:shared:testing` in tests

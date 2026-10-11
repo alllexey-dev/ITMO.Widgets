@@ -9,13 +9,11 @@ import android.net.Uri
 import android.provider.CalendarContract.Calendars
 import android.provider.CalendarContract.Events
 import androidx.core.content.ContextCompat
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.MarkedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
-import javax.inject.Inject
 import kotlin.time.Instant
 
 /**
@@ -23,8 +21,8 @@ import kotlin.time.Instant
  * created and deleted through the sync-adapter URI, which a local account allows any app to use; events in any
  * calendar are ordinary app events. Only ids the app stored itself are ever updated or deleted.
  */
-class AndroidPhoneCalendars @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class AndroidPhoneCalendars(
+    private val context: Context,
     private val time: AcademicTimeProvider
 ) : PhoneCalendars {
 

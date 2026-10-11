@@ -22,7 +22,7 @@ shared routes: `FriendsFragment` (`FriendsRoute`), `UserSearchFragment`
 hosts perform the Android effects: sharing, the clipboard, the invitation,
 navigation and Fragment results. `app/` keeps besides them only
 `FriendshipPushHandler` (bound in `di/ComponentBindingsModule.kt`, see
-[notifications](notifications.md)), `di/bridge/SocialBridge.kt` and the debug
+[notifications](notifications.md)) and the debug
 fixtures (`SocialDebugFixtures`, `FriendSelectorFixture`). The texts are the
 module's `strings_social.xml`; `:app` still reads four of its ids as Android
 resources (`person_isu_label`, `person_isu_copied`, `user_search_invite_text`,
@@ -62,11 +62,8 @@ in `socialModule` and `friendSelectorModule`, which also declare the five
 ViewModels (`viewModelOf`): one `SocialRepositoryImpl` serves
 the screens, the friend-requests home card (`HomeCardSource` under the
 `social` qualifier), the picker and the session cleaners (`social`, `person`
-and `friend-history`, reaching sign-out through `di/bridge/SessionCleanersBridge.kt`).
-`MeViewModel` reads the same Koin single. Android code still on Hilt
-(`FriendshipPushHandler`, `SportDataRepositoryImpl`) reads `SocialRepository`
-and `FriendRepository` through `di/bridge/SocialBridge.kt`, which forwards the
-same Koin singles.
+and `friend-history`, which sign-out runs).
+`MeViewModel`, `FriendshipPushHandler` and `SportDataRepositoryImpl` read the same Koin singles.
 `TeacherReviewsRepositoryImpl` is the single of Koin's `reviewsModule`. `cachedProfile`, `cachedUserFriends` and `cachedReviews` are
 unavailable while the opt-in is off or unknown. Disabling it clears the caches,
 changes friends and requests to `LoadState.Disabled` and clears the own Backend

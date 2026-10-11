@@ -13,7 +13,7 @@
 - Tests: `androidHostTest` (repositories, checks, screens, `ScheduleModuleTest`, `ScheduleScreenshotTest`),
   `commonTest`, `iosTest`.
 - Not here: the RemoteViews widgets, `ScheduleWidgetRefreshReceiver`, `ScheduleWidgetRemoteViewsService`, the
-  workers and schedulers stay in `app/` under `feature/schedule/`; `di/bridge/ScheduleBridge.kt` bridges Koin and Hilt.
+  workers and schedulers stay in `app/` under `feature/schedule/`; their Koin bindings are in `di/ScheduleModule.kt`.
 
 ## Depends on
 - `:shared:core`, `:shared:designsystem`; `:shared:testing` in tests only. Koin and the KMP lifecycle.

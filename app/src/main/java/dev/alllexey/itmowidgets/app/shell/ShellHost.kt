@@ -95,7 +95,7 @@ import org.koin.androidx.viewmodel.ext.android.getViewModel
  *   while RESUMED; Google Play's flexible update offers the restart in a snackbar above the bar.
  * - edge to edge; the manifest entry's `adjustResize` makes `WindowInsets.ime` also work on API 26-29.
  *
- * Dependencies come from Koin; the Hilt-owned ones through `di/bridge/ShellBridge`. [updateRoute] is the key of the
+ * Dependencies come from Koin. [updateRoute] is the key of the
  * update screen (L16's `AppUpdateArgs`, SH-1b8); without it the shell checks for nothing. [featureRoutes] are the
  * feature modules' key registrations, for saving the back stack and the pending route.
  */
@@ -110,7 +110,7 @@ class ShellHost(
     private val installState: InstallStateWatcher = koin.get()
     private val onboardingGate: OnboardingGateViewModel = activity.getViewModel()
 
-    // Built here from the bridged check, never through Hilt's default factory.
+    // Built here from Koin's update check.
     private val updateGate = activity.shellViewModel { AppUpdateGateViewModel(koin.get()) }
     private val json = Json { serializersModule = appRouteSerializersModule(*featureRoutes.toTypedArray()) }
 
@@ -320,7 +320,7 @@ private val OnboardingGate.status: OnboardingStatus
         OnboardingGate.Passed -> OnboardingStatus.PASSED
     }
 
-/** A ViewModel of the activity built by [create], never through Hilt's default factory. */
+/** A ViewModel of the activity built by [create]. */
 private inline fun <reified VM : ViewModel> ComponentActivity.shellViewModel(crossinline create: () -> VM): VM =
     ViewModelProvider(this, viewModelFactory { initializer { create() } })[VM::class.java]
 

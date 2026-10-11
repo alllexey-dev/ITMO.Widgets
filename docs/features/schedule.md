@@ -31,9 +31,8 @@ or a `.ics` file ([calendar](calendar.md)).
   list adapter (`ui/widget`), the workers, the change notification and the
   refresh receiver (`work`), `AndroidPhoneCalendars` and `IcsFileExport`
   (`data/calendar`) and the widget snapshot file
-  (`data/widget/ScheduleWidgetSnapshotStoreImpl`). Hilt's side is
-  `di/ScheduleModule.kt`; `di/bridge/ScheduleBridge.kt` hands it to Koin and
-  back. `ScheduleRulesTest` keeps the shared code free of Fragments, Views and
+  (`data/widget/ScheduleWidgetSnapshotStoreImpl`). The Android side is
+  `di/ScheduleModule.kt`, in the same Koin graph. `ScheduleRulesTest` keeps the shared code free of Fragments, Views and
   `R`, and the widget providers, the receiver, the adapter service and the
   workers in `:app` under their packages.
 
@@ -110,10 +109,10 @@ The stores write through `AtomicTextFile` (`<name>.new`, sync, atomic move).
   sources, `ScheduleWidgetDataProvider` and `DemoSchedule`. The platform
   supplies Core 2.0's `ScheduleApi`, the change notification
   (`ScheduleChangeNotifier`), the check's scheduler
-  (`ScheduleChangesScheduler`) and `AppNotifier`; on Android they are Hilt's and
-  reach Koin through `di/bridge/ScheduleBridge.kt` and `CoreBridge`, and the
-  same bridge hands Koin's change tracking, change check, widget data provider
-  and preview scenario to the Hilt-built workers, widget and debug tools. The
+  (`ScheduleChangesScheduler`) and `AppNotifier`; on Android they are bound in
+  `di/ScheduleModule.kt` and `di/NotificationModule.kt`, and the workers, the
+  widget and the debug tools read the change tracking, change check, widget data
+  provider and preview scenario from the same Koin graph. The
   phone calendar sync lives there too (`CalendarSyncRepositoryImpl`,
   `DefaultCalendarSync`, `CalendarSyncFileStore`, `MyItmoOwnScheduleSource`);
   the platform supplies the `PhoneCalendars` port and the

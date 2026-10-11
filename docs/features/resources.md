@@ -200,9 +200,8 @@ checked first and every call passes `BackendGate.mayCallBackend()`.
 `SubjectLinkMappers.kt` is the one place that reads Core's types: a category a
 newer Backend adds shows as `OTHER`, a status it adds shows no badge, and authors
 map through `UserData.toUserSummary()` (`core/model/ClientUserMapping.kt`). Koin's `resourcesModule` builds the
-one repository that the sheets, the recordbook and sign-out (the `links` cleaner, through
-`di/bridge/SessionCleanersBridge.kt`) share; Core's `SubjectLinksApi`, `AppDirectories`, the clock, `DemoMode` and
-the dispatchers come from `di/bridge/CoreBridge.kt`. With the connection the server is the source of truth: every action
+one repository that the sheets, the recordbook and sign-out (the `links` cleaner) share; Core's `SubjectLinksApi`,
+`AppDirectories`, the clock, `DemoMode` and the dispatchers come from the app's Koin modules in `di/`. With the connection the server is the source of truth: every action
 goes to it at once and its answer updates the cached snapshot. There is no
 background synchronization.
 

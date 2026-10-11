@@ -1,32 +1,14 @@
 package dev.alllexey.itmowidgets.di
 
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-object CoroutinesModule {
-
-    @Provides
-    @Singleton
-    fun provideAppDispatchers(): AppDispatchers = AppDispatchers(
-        io = Dispatchers.IO,
-        default = Dispatchers.Default,
-        main = Dispatchers.Main,
-    )
-
-    @Provides
-    @Singleton
-    @ApplicationScope
-    fun provideApplicationScope(
-        dispatchers: AppDispatchers
-    ): CoroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
+val coroutinesModule = module {
+    single { AppDispatchers(io = Dispatchers.IO, default = Dispatchers.Default, main = Dispatchers.Main) }
+    // The application scope, for work that must finish after the caller is gone; the only CoroutineScope of the
+    // graph, so it needs no qualifier.
+    single<CoroutineScope> { CoroutineScope(SupervisorJob() + get<AppDispatchers>().default) }
 }

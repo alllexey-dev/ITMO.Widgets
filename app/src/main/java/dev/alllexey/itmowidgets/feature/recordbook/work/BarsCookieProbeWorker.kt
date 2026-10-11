@@ -10,7 +10,6 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmoapi.bars.RuntimeBarsStorage
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmoapi.bars.auth.BarsSessionCode
@@ -23,7 +22,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
 import io.ktor.client.engine.HttpClientEngine
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import org.koin.core.Koin
 import org.koin.core.component.KoinComponent
@@ -104,8 +102,8 @@ class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : Corout
 }
 
 /** The delay leaves time to send the app to the background and kill its process, so the probe starts cold. */
-class WorkManagerBarsSessionProbe @Inject constructor(
-    @param:ApplicationContext private val context: Context
+class WorkManagerBarsSessionProbe(
+    private val context: Context
 ) : BarsSessionProbe {
     override fun start() {
         val request = OneTimeWorkRequestBuilder<BarsCookieProbeWorker>()

@@ -3,16 +3,14 @@ package dev.alllexey.itmowidgets.feature.qr.ui.rendering
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
-import javax.inject.Inject
 
-class QrBitmapCacheImpl @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class QrBitmapCacheImpl(
+    private val context: Context,
     private val log: AppLog
 ) : QrBitmapCache, SessionDataCleaner {
 
