@@ -55,7 +55,6 @@ class StringOwnershipTest {
             references(text, "layout").forEach { users[it]?.add(unit) }
             BINDING.findAll(text).mapNotNull { bindings[it.groupValues[1]] }.forEach { users.getValue(it).add(unit) }
         }
-        APP_LAYOUTS.forEach { users.getValue(it).add(APP) }
         val parents = layouts.keys.associateWith { mutableSetOf<String>() }
         layouts.forEach { (name, file) -> xmlReferences(file.readText(), "layout").forEach { parents[it]?.add(name) } }
         layouts.keys.associateWith { unitsOf(it, users, parents, emptySet()) }
@@ -120,7 +119,6 @@ class StringOwnershipTest {
         layouts.forEach { (name, file) ->
             xmlReferences(file.readText(), "menu").forEach { menuUsers[it]?.addAll(layoutUnits.getValue(name)) }
         }
-        APP_MENUS.forEach { menuUsers.getValue(it).add(APP) }
         menus.forEach { (name, file) -> checkXmlUsers(file, menuUsers.getValue(name), misuse) }
         resourceFiles("navigation").values.forEach { checkXmlUsers(it, setOf(APP), misuse) }
         assertEquals(emptyList<String>(), misuse.distinct().sorted())
@@ -227,8 +225,6 @@ class StringOwnershipTest {
         val PRODUCTION_SETS = listOf("main", "github", "play")
         val ACCOUNT_FILES = setOf("auth", "onboarding", "me", "weblogin", "web", "update")
         val FEATURE_UNITS = CATALOG_FILES.associateWith { it } + mapOf("friendselector" to "social")
-        val APP_LAYOUTS = setOf("activity_main")
-        val APP_MENUS = setOf("bottom_nav")
         val LITERAL_FREE_DIRS = setOf("layout", "menu", "navigation", "xml")
         val LAUNCHER_PREVIEW_LAYOUTS = setOf("widget_lesson_list_preview", "widget_single_lesson_preview")
         val TEXT_ATTRIBUTES = setOf("text", "label", "hint", "contentDescription")

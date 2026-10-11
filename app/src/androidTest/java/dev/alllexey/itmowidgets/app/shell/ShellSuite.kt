@@ -14,7 +14,7 @@ import org.junit.runners.Suite
  * the demo session, the launcher shortcuts, the QR tile, notifications, the tab swipe, the window insets, a profile
  * opened from a sheet and the system pages the entries open. Every card that changes the shell runs it on a pool
  * emulator (`scripts/verify.sh ui dev.alllexey.itmowidgets.app.shell.ShellSuite`). A member whose navigation assertions
- * read `ShellProbe` runs in every shell `ShellModeRule` knows.
+ * read `ShellProbe` names the shell in a failure through `ShellModeRule`.
  */
 @RunWith(Suite::class)
 @Suite.SuiteClasses(

@@ -125,11 +125,11 @@ internal fun SportTabRoot(navigator: Nav3AppNavigator) {
 }
 
 /**
- * What `MainActivity.openLessonDetails` and `openPendingSportDetails` did for the feed and the schedule: a sport lesson
- * (type 11) or a pending sport row opens the sport tab's details sheet when [holder] finds its booking (the holder's
- * tie-break and wait), the schedule's own sheet otherwise; every other lesson opens its sheet at once. The cancel
- * those sheets offer is asked first ([AppRoutes.CancelBookingConfirm]) and runs only while the booking still offers
- * it. [scope] outlives the screen that asked, as the activity's did, so a slow lookup still opens its sheet.
+ * How the feed and the schedule open a lesson: a sport lesson (type 11) or a pending sport row opens the sport tab's
+ * details sheet when [holder] finds its booking (the holder's tie-break and wait), the schedule's own sheet otherwise;
+ * every other lesson opens its sheet at once. The cancel those sheets offer is asked first
+ * ([AppRoutes.CancelBookingConfirm]) and runs only while the booking still offers it. [scope] outlives the screen
+ * that asked, so a slow lookup still opens its sheet.
  */
 internal class SportDetailsRedirect(
     private val holder: SportBookingsHolder,
@@ -250,7 +250,10 @@ private fun SportDetailsEntry(key: SportRoutes.SportCommonDetails, navigator: Na
     }
 }
 
-/** `MainActivity.onSportSheetAction`'s question: `Назад` closes it, `Отменить` cancels and closes it. */
+/**
+ * The cancel question of a sport sheet opened from the feed or the schedule: `Назад` closes it, `Отменить` cancels
+ * and closes it.
+ */
 @Composable
 private fun CancelBookingEntry(key: AppRoutes.CancelBookingConfirm, onClose: () -> Unit) {
     val redirect = rememberSportDetailsRedirect()

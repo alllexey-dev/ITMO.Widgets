@@ -17,7 +17,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity
  */
 object ActivityRoutes {
 
-    /** The plain start of an entry route's activity, as `MainActivity.applyRoute` does today. */
+    /** The plain start of an entry route's activity. */
     fun intent(context: Context, route: ActivityRoute): Intent = when (route) {
         ActivityRoute.BARS_LOGIN -> barsLogin(context)
     }

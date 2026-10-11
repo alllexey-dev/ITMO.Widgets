@@ -47,8 +47,7 @@ import org.junit.runner.RunWith
  * The system pages the Compose shell's entries open through `LocalPlatformActions` (SH-FIX-PA), on the real
  * `MainActivity` in the demo session: the privacy policy row starts the browser on the site's page, and the locked
  * calendar dialog's «Открыть настройки» starts the app's system settings page. An [Instrumentation.ActivityMonitor]
- * answers both starts, so no browser or settings app opens; the permission request passes through. Only the Compose
- * shell is read; the legacy shell's Fragments open these pages themselves.
+ * answers both starts, so no browser or settings app opens; the permission request passes through.
  */
 @RunWith(AndroidJUnit4::class)
 @SdkSuppress(minSdkVersion = Build.VERSION_CODES.Q) // WindowInspector reads the dialog's window
@@ -139,9 +138,6 @@ class ShellPlatformActionsTest {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
         )
         try {
-            var compose = false
-            onActivity { compose = ShellHost.of(it) != null }
-            assumeTrue("the Compose shell runs", compose)
             eventually { assertEquals(AppTab.HOME, ShellProbe.current().tab) }
             body()
         } finally {
@@ -151,7 +147,7 @@ class ShellPlatformActionsTest {
 
     /** The Compose shell's navigator; `ShellHost` keeps it private, so the test reads the field. */
     private fun MainActivity.navigator(): Nav3AppNavigator {
-        val host = checkNotNull(ShellHost.of(this)) { "MainActivity runs the legacy shell" }
+        val host = checkNotNull(ShellHost.of(this)) { "MainActivity has no shell yet" }
         val field = ShellHost::class.java.getDeclaredField("navigator").apply { isAccessible = true }
         return checkNotNull(field.get(host) as Nav3AppNavigator?) { "the Compose shell has not composed yet" }
     }

@@ -98,22 +98,14 @@ class IconRegistryTest {
     }
 
     @Test
-    fun `bottom navigation fills the selected tab only`() {
-        val items = NAV_ITEM.findAll(File(root, BOTTOM_NAV).readText()).map { it.groupValues[1] }.toList()
-        assertEquals(5, items.size)
-        val filled = items.map { selector ->
-            assertTrue(selector, selector.startsWith("nav_"))
-            val states = NAV_STATE.findAll(File(root, "$APP_DRAWABLES/$selector.xml").readText())
-                .map { it.groupValues[1] to it.groupValues[2] }
-                .toList()
-            val checked = states.single { it.second.isNotEmpty() }
-            val default = states.single { it.second.isEmpty() }
-            assertEquals(selector, """ android:state_checked="true"""", checked.second)
-            assertEquals(selector, "${default.first}$FILLED", checked.first)
-            checked.first.removePrefix("ic_")
-        }
+    fun `the navigation bar fills the selected tab only`() {
+        val pairs = BAR_ICONS.findAll(File(root, SHELL_CHROME).readText())
+            .map { it.groupValues[1] to it.groupValues[2] }
+            .toList()
+        assertEquals(5, pairs.size)
+        pairs.forEach { (outlined, selected) -> assertEquals(outlined, "$outlined$FILLED", selected) }
         val filledRows = rows.filter { it[KIND] == "shared" && it[FILL] == "1" }.map { it[ID] }
-        assertEquals(filledRows.sorted(), filled.sorted())
+        assertEquals(filledRows.sorted(), pairs.map { it.second.removePrefix("ic_") }.sorted())
     }
 
     private fun drawable(row: List<String>) =
@@ -131,15 +123,14 @@ class IconRegistryTest {
         const val REGISTRY = "docs/design/icons.tsv"
         const val APP_DRAWABLES = "app/src/main/res/drawable"
         const val SHARED_DRAWABLES = "shared/designsystem/src/commonMain/composeResources/drawable"
-        const val BOTTOM_NAV = "app/src/main/res/menu/bottom_nav.xml"
+        const val SHELL_CHROME = "app/src/main/java/dev/alllexey/itmowidgets/app/shell/ShellChrome.kt"
         const val SYMBOLS_URL = "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsrounded"
         const val HOUSE_VECTOR = """android:width="24dp" android:height="24dp" """ +
             """android:viewportWidth="960" android:viewportHeight="960">"""
         const val FILLED = "_filled"
         val UNTINTED = listOf("android:tint", "?attr", "?color", "@android:color", "@color/")
         val FILL_COLOR = Regex("""android:fillColor="([^"]*)"""")
-        val NAV_ITEM = Regex("""android:icon="@drawable/(\w+)"""")
-        val NAV_STATE = Regex("""<item android:drawable="@drawable/(\w+)"((?: android:state_\w+="\w+")*) />""")
+        val BAR_ICONS = Regex("""Res\.drawable\.(\w+) to Res\.drawable\.(\w+)""")
         val COLUMNS = listOf("id", "symbol", "fill", "kind", "sf_symbol", "note")
         const val ID = 0
         const val SYMBOL = 1

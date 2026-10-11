@@ -28,25 +28,27 @@ example) gets `MainActivity` in its own task, and Back from home returns there.
 
 ## Routes
 
-`MainActivityIntentRouting` turns `ACTION_VIEW` into a route like any widget,
-notification, tile or shortcut intent; it waits in `MainRouteQueue` for sign-in
-and the first-run flow, runs once and is not repeated from Recents
+`EntryRouteParser` (`:shared:core`) turns `ACTION_VIEW` into an `EntryRoute`
+like any widget, notification, tile or shortcut intent. `ShellHost` keeps it in
+a `RouteQueue`, saved with the activity's state, until sign-in and the
+first-run flow are done, runs it once and never repeats it from Recents
 (`FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY`).
 
 | Link | Root | Above it | Back |
 |---|---|---|---|
-| `/u/{isu}` | profile tab | `USER_PROFILE` | profile tab → home → out |
+| `/u/{isu}` | profile tab | `UserProfile` | profile tab → home → out |
 | `/sport/{id}`, `/sport/p/{id}` | sport, page `Запись` | the lesson card or `Занятие недоступно` | card → sport → home → out |
-| malformed | home | `Ссылка не открывается` | home → out |
+| malformed | home | `Ссылка не открывается` (`LinkUnavailable`) | home → out |
 
-The profile is the ordinary `USER_PROFILE`: any positive ISU opens, an unknown
+The profile is the ordinary `UserProfile`: any positive ISU opens, an unknown
 one is `Профиль не найден`, and what the ITMO.Widgets block shows follows the
 capabilities Backend returns. The app never enforces privacy itself.
 
-A lesson route sets `SportLessonRequest` (`LESSON_ID`, `PREDICTED`) as a
-Fragment result on the Activity's FragmentManager. The root `SportFragment`
-listens and hands it to `SportRoute`, which switches to `Запись` and
-passes it to `SportSignViewModel.openSharedLesson`. That
+A lesson route carries the tab request `TabRequest.SportLesson` (lesson id,
+`predicted`). The shell keeps it with the back stack, across recreation and
+process death, until the sport tab's root (`SportTabRoot` in
+`app/shell/entries/SportEntries.kt`) consumes it once: `SportRoute` switches to
+`Запись` and passes it to `SportSignViewModel.openSharedLesson`. That
 waits for the first answer of the merged catalog and looks the lesson up among
 all lessons, ignoring filters (`findLinked` in
 `feature/sport/domain/model/SportLessonPrediction.kt`):
@@ -62,10 +64,10 @@ all lessons, ignoring filters (`findLinked` in
   error is the usual snackbar.
 
 When found, the lesson's day is selected and its card opens as on a tap; the
-card's actions go through `SportFragment` to `SportSignRoute`
-(`SportSheetAction.outcome`), which falls back to
+card's actions come back to the sport root on the sign page's result key and
+go to `SportSignRoute` (`SportSheetAction.outcome`), which falls back to
 `SportSignViewModel.linkedLesson` when filters hide the lesson from the list.
-Both dialogs are `MaterialAlertDialog`s with a title, a text and `Понятно`.
+Both dialogs have a title, a text and `Понятно`.
 
 ## Sharing
 
@@ -129,7 +131,8 @@ to the latest GitHub release.
 
 ## Tests
 
-- JVM: `AppLinksTest`, `ShareLinkFactoryTest`, `MainActivityIntentRoutingTest`,
+- JVM: `AppLinksTest`, `ShareLinkFactoryTest`, `EntryRouteParserTest`,
+  `RouteQueueTest` (`:shared:core`),
   `SportSignViewModelTest` (shared, hidden, ended and missing lessons;
   predictions, real repeats and a missing prototype; a request before the
   catalog answers), `SportSessionPresentationTest` (prototype id, shared date),

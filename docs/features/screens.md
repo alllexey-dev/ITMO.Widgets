@@ -43,8 +43,7 @@ Feature doc: [Architecture](../architecture.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `app/MainActivity.kt` | Activity | `AppUpdateGateViewModel`, `OnboardingGateViewModel`, `SportMyViewModel` (shared with the sport tab) | launcher, App Links, shortcuts, notification intents | `app/SettingsNavigationTestActivity.kt` | — |
-| `app/AppOverlayHostFragment.kt` | Fragment (`NavHostFragment`) | — | `MainNavigationCoordinator.openScreen`, hosts `overlay_nav_graph` | `app/SettingsNavigationTestActivity.kt` | — |
+| `app/MainActivity.kt` hosting `app/shell/ShellHost.kt` | Activity | `AppUpdateGateViewModel`, `OnboardingGateViewModel` (in `ShellHost`) | launcher, App Links, shortcuts, notification intents | — | — |
 | `core/ui/spoiler/SpoilerCropActivity.kt` | Activity (`CropImageActivity`) | — | `SpoilerCropContract` from `SpoilerImagePicker` (settings, widget step) | — | — |
 
 ## Sign-in
@@ -62,7 +61,7 @@ Feature doc: [First-run flow](onboarding.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/onboarding/ui/OnboardingFragment.kt` hosting `OnboardingScreen` (`:shared:feature-account`) with `AndroidView` widget previews | Fragment | `OnboardingViewModel` (Koin) | `onboarding` | `app/SettingsNavigationTestActivity.kt` (`onboardingFixture`) | `AccountScreenshotTest` (`:shared:feature-account`), `feature/onboarding/OnboardingVisualTest.kt` |
+| `feature/onboarding/ui/OnboardingFragment.kt` hosting `OnboardingScreen` (`:shared:feature-account`) with `AndroidView` widget previews | Fragment | `OnboardingViewModel` (Koin) | `onboarding` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
 
 ## Home
 
@@ -70,7 +69,7 @@ Feature doc: [Home and quick actions](home.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/home/ui/HomeFragment.kt` hosting `HomeRoute` (`:shared:feature-home`) | Fragment | `HomeViewModel` (Koin) | `navigation_home`, `AppRoot.HOME` | `app/SettingsNavigationTestActivity.kt` (`HomeDebugFixtures`) | `HomeScreenshotTest` (`:shared:feature-home`), `app/MainNavigationTest.kt` |
+| `feature/home/ui/HomeFragment.kt` hosting `HomeRoute` (`:shared:feature-home`) | Fragment | `HomeViewModel` (Koin) | `navigation_home`, `AppRoot.HOME` | — | `HomeScreenshotTest` (`:shared:feature-home`) |
 
 ## QR pass
 
@@ -78,7 +77,7 @@ Feature docs: [QR pass](qr.md), [Widgets](widgets.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/qr/ui/QrCodeFragment.kt` hosting `QrPassRoute` (`:shared:feature-qr`) | Fragment | `QrCodeViewModel` (Koin) | `qr_pass`, `AppScreen.QR_PASS` | `app/SettingsNavigationTestActivity.kt` (`QrDebugFixtures`) | `QrScreenshotTest` (`:shared:feature-qr`), `feature/home/HomeQrVisualTest.kt` |
+| `feature/qr/ui/QrCodeFragment.kt` hosting `QrPassRoute` (`:shared:feature-qr`) | Fragment | `QrCodeViewModel` (Koin) | `qr_pass`, `AppScreen.QR_PASS` | — | `QrScreenshotTest` (`:shared:feature-qr`) |
 
 ## My ITMO web
 
@@ -86,7 +85,7 @@ Feature docs: [My ITMO in the app](my-itmo-web.md), [Home and quick actions](hom
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/web/ui/MyItmoWebFragment.kt` hosting `MyItmoWebScreen` (`:shared:feature-account`) around an `AndroidView` WebView | Fragment | — | `my_itmo_web`, `AppScreen.MY_ITMO_WEB` | `feature/web/ui/MyItmoWebPreviewFragment.kt` in `app/SettingsNavigationTestActivity.kt` | `AccountScreenshotTest` (`:shared:feature-account`), `feature/home/HomeWebVisualTest.kt` |
+| `feature/web/ui/MyItmoWebFragment.kt` hosting `MyItmoWebScreen` (`:shared:feature-account`) around an `AndroidView` WebView | Fragment | — | `my_itmo_web`, `AppScreen.MY_ITMO_WEB` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
 
 ## Recordbook
 
@@ -119,7 +118,7 @@ Feature doc: [Friend selector](friend-selector.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/friendselector/ui/FriendSelectorDialogFragment.kt` hosting `FriendSelectorSheetRoute` (`:shared:feature-social`) | bottom sheet (kit sheet host) | `FriendSelectorViewModel` (Koin) | `friend_selector` dialog destination, from `ScheduleFragment` | `app/SettingsNavigationTestActivity.kt` (`FriendSelectorFixture`) | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `feature/friendselector/ui/FriendSelectorDialogFragment.kt` hosting `FriendSelectorSheetRoute` (`:shared:feature-social`) | bottom sheet (kit sheet host) | `FriendSelectorViewModel` (Koin) | `friend_selector` dialog destination, from `ScheduleFragment` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
 
 ## Sport
 
@@ -159,8 +158,8 @@ Feature doc: [Social](social.md).
 |---|---|---|---|---|---|
 | `feature/social/ui/FriendsFragment.kt` hosting `FriendsRoute` (`:shared:feature-social`) | Fragment | `FriendsViewModel` (Koin) | `friends`, `AppScreen.FRIENDS` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
 | `feature/social/ui/UserSearchFragment.kt` hosting `UserSearchRoute` (`:shared:feature-social`) | Fragment | `UserSearchViewModel` (Koin) | `user_search`, `AppScreen.USER_SEARCH` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
-| `feature/social/ui/UserProfileFragment.kt` hosting `UserProfileRoute` (`:shared:feature-social`) | Fragment | `UserProfileViewModel` (Koin) | `user_profile`, `AppScreen.USER_PROFILE` | `app/SettingsNavigationTestActivity.kt` (`SocialDebugFixtures`) | `SocialScreenshotTest` (`:shared:feature-social`) |
-| `feature/social/ui/UserFriendsFragment.kt` hosting `UserFriendsRoute` (`:shared:feature-social`) | Fragment | `UserFriendsViewModel` (Koin) | `user_friends`, `AppScreen.USER_FRIENDS` | `app/SettingsNavigationTestActivity.kt` (`SocialDebugFixtures`) | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `feature/social/ui/UserProfileFragment.kt` hosting `UserProfileRoute` (`:shared:feature-social`) | Fragment | `UserProfileViewModel` (Koin) | `user_profile`, `AppScreen.USER_PROFILE` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `feature/social/ui/UserFriendsFragment.kt` hosting `UserFriendsRoute` (`:shared:feature-social`) | Fragment | `UserFriendsViewModel` (Koin) | `user_friends`, `AppScreen.USER_FRIENDS` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
 
 ## Profile tab
 
@@ -168,7 +167,7 @@ Feature doc: [Profile tab](me.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/me/ui/MeFragment.kt` hosting `MeRoute` (`:shared:feature-account`) | Fragment | `MeViewModel` (Koin) | `navigation_me`, `AppRoot.ME` | `app/SettingsNavigationTestActivity.kt` (`AccountDebugFixtures`) | `AccountScreenshotTest` (`:shared:feature-account`), `feature/settings/ProfileBackMotionTest.kt`, `app/MainNavigationTest.kt` |
+| `feature/me/ui/MeFragment.kt` hosting `MeRoute` (`:shared:feature-account`) | Fragment | `MeViewModel` (Koin) | `navigation_me`, `AppRoot.ME` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
 
 ## Web sign-in
 
@@ -184,9 +183,9 @@ Feature docs: [Settings](../settings.md), [Calendar](calendar.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/settings/ui/SettingsFragment.kt` hosting `SettingsScreen` (`:shared:feature-settings`) with `AndroidView` widget previews | Fragment | `SettingsViewModel`, `CustomSpoilerViewModel` (Koin) | `settings`, `AppScreen.SETTINGS` | `app/SettingsNavigationTestActivity.kt`, `feature/settings/ui/SettingsPreviewActivity.kt` | `SettingsScreenshotTest` (`:shared:feature-settings`), `feature/settings/SettingsNavigationTest.kt`, `feature/settings/WidgetPreviewTest.kt` |
+| `feature/settings/ui/SettingsFragment.kt` hosting `SettingsScreen` (`:shared:feature-settings`) with `AndroidView` widget previews | Fragment | `SettingsViewModel`, `CustomSpoilerViewModel` (Koin) | `settings`, `AppScreen.SETTINGS` | `feature/settings/ui/SettingsPreviewActivity.kt` | `SettingsScreenshotTest` (`:shared:feature-settings`), `feature/settings/WidgetPreviewTest.kt` |
 | `feature/settings/ui/DiagnosticsFragment.kt` hosting `DiagnosticsScreen` (`:shared:feature-settings`) | Fragment | `DiagnosticsViewModel` (Koin) | `diagnostics`, `AppScreen.DIAGNOSTICS` | — | `SettingsScreenshotTest` (`:shared:feature-settings`) |
-| `feature/settings/ui/IcsExportBottomSheet.kt` hosting `IcsExportSheetContent` (`:shared:feature-settings`) | bottom sheet | `IcsExportViewModel` (Koin) | from `SettingsFragment` | `app/SettingsNavigationTestActivity.kt` | `SettingsScreenshotTest` (`:shared:feature-settings`), `feature/settings/SettingsNavigationTest.kt` |
+| `feature/settings/ui/IcsExportBottomSheet.kt` hosting `IcsExportSheetContent` (`:shared:feature-settings`) | bottom sheet | `IcsExportViewModel` (Koin) | from `SettingsFragment` | — | `SettingsScreenshotTest` (`:shared:feature-settings`) |
 
 ## Update offer
 

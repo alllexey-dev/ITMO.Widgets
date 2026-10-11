@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/** `MainActivityIntentRoutingTest`, case for case, on the common parser. */
+/** The entry intents and App Links of `MainActivity`, case for case, on the common parser. */
 class EntryRouteParserTest {
 
     @Test

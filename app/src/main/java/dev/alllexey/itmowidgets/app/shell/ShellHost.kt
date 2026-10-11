@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -86,8 +85,7 @@ import kotlinx.serialization.json.Json
 import org.koin.androidx.viewmodel.ext.android.getViewModel
 
 /**
- * `MainActivity`'s Navigation 3 body, which SH-1b9 switches it to. Created in the activity's `onCreate` after
- * `super.onCreate`, it does everything the legacy `MainActivity` does besides the Fragment shell:
+ * `MainActivity`'s body, the Navigation 3 shell. Created in the activity's `onCreate` after `super.onCreate`, it does:
  * - an entry intent goes through [EntryRouteParser] into a [RouteQueue] that is saved with the activity's state; the
  *   route runs once the tabs show, after sign-in and the first-run flow: its tab, overlay, request and alert, its
  *   [ActivityRoutes] start and `reportShortcutUsed`. A Recents replay runs nothing.
@@ -95,7 +93,7 @@ import org.koin.androidx.viewmodel.ext.android.getViewModel
  *   demo session says `error_demo_unavailable`, and the demo banner's sign-in signs out.
  * - one update check per process outside the demo (`AppUpdateGateViewModel`), its offer opened as [updateRoute] only
  *   while RESUMED; Google Play's flexible update offers the restart in a snackbar above the bar.
- * - edge to edge, and `adjustResize`, so `WindowInsets.ime` also works on API 26-29.
+ * - edge to edge; the manifest entry's `adjustResize` makes `WindowInsets.ime` also work on API 26-29.
  *
  * Dependencies come from Koin; the Hilt-owned ones through `di/bridge/ShellBridge`. [updateRoute] is the key of the
  * update screen (L16's `AppUpdateArgs`, SH-1b8); without it the shell checks for nothing. [featureRoutes] are the
@@ -112,7 +110,7 @@ class ShellHost(
     private val installState: InstallStateWatcher = koin.get()
     private val onboardingGate: OnboardingGateViewModel = activity.getViewModel()
 
-    // Still Hilt's in the legacy shell until L16's LA-2b moves it to Koin; built here from the bridged check.
+    // Built here from the bridged check, never through Hilt's default factory.
     private val updateGate = activity.shellViewModel { AppUpdateGateViewModel(koin.get()) }
     private val json = Json { serializersModule = appRouteSerializersModule(*featureRoutes.toTypedArray()) }
 
@@ -127,8 +125,6 @@ class ShellHost(
 
     init {
         activity.enableEdgeToEdge()
-        @Suppress("DEPRECATION")
-        activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         // A recreated activity already accepted its intent: only the route still waiting comes back.
         val restored = activity.savedStateRegistry.consumeRestoredStateForKey(STATE_KEY)
         if (restored != null) restore(restored) else accept(activity.intent)
@@ -183,7 +179,7 @@ class ShellHost(
                         Modifier
                             .align(Alignment.BottomCenter)
                             .windowInsetsPadding(WindowInsets.navigationBars)
-                            // Above the bar, as the legacy snackbar's anchor; the bar is at least this tall.
+                            // Above the bar, which is at least this tall.
                             .padding(bottom = if (surface is ShellSurface.Tabs) NavigationBarTokens.MinHeight else 0.dp),
                     )
                 }
@@ -264,7 +260,7 @@ class ShellHost(
         /** The live host of each activity, until it is destroyed; main thread only. */
         private val hosts = WeakHashMap<Activity, ShellHost>()
 
-        /** The host [activity] runs, or null while it runs the legacy Fragment shell. */
+        /** The host [activity] runs, or null before its `onCreate` and after its `onDestroy`. */
         fun of(activity: Activity): ShellHost? = hosts[activity]
     }
 }
@@ -277,7 +273,7 @@ fun EntryRegistry.Builder.shellHostEntries() {
     entry<AppRoutes.LinkUnavailable> { key, navigator -> LinkUnavailableAlert(onDismiss = { navigator.close(key) }) }
 }
 
-/** `MainActivity`'s `MaterialAlertDialogBuilder` alert in the kit's dialog layout; Back and a tap outside close it. */
+/** The malformed-link alert in the kit's dialog layout; Back and a tap outside close it. */
 @Composable
 private fun LinkUnavailableAlert(onDismiss: () -> Unit) {
     val title = stringResource(R.string.app_link_unavailable_title)

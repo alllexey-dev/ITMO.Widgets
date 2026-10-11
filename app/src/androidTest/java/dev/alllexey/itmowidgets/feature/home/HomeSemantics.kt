@@ -9,7 +9,6 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
-import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import org.junit.Assert.assertTrue
 
@@ -18,10 +17,6 @@ import org.junit.Assert.assertTrue
  * no `ui-test-junit4`, so they find nodes by `HomeTestTags` and act through semantics actions. Main thread only.
  */
 object HomeSemantics {
-
-    /** The home tab's root view, the Fragment's `ComposeView`. */
-    fun root(activity: SettingsNavigationTestActivity): View =
-        activity.host.childFragmentManager.primaryNavigationFragment!!.requireView()
 
     /** The `ComposeView` that holds the home feed in any activity, such as `MainActivity`. */
     fun feedRoot(activity: Activity): View {
@@ -34,8 +29,6 @@ object HomeSemantics {
 
     /** The node tagged [tag] in [root]'s unmerged semantics tree, or null when the screen does not show it. */
     fun node(root: View, tag: String): SemanticsNode? = nodes(root).firstOrNull { it.tag == tag }
-
-    fun node(activity: SettingsNavigationTestActivity, tag: String): SemanticsNode? = node(root(activity), tag)
 
     /** Every node of [root]'s unmerged tree, breadth first. */
     fun nodes(root: View): Sequence<SemanticsNode> {
