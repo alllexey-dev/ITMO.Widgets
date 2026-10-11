@@ -27,7 +27,7 @@ android {
     defaultConfig {
         applicationId = "dev.alllexey.itmowidgets"
         versionCode = 20292
-        versionName = "2.3.0-beta.2"
+        versionName = "2.3-SNAPSHOT"
         resValue("string", "app_version", versionName!!)
 
         // The real ITMO and Backend hosts fail at once in instrumented tests, never hang them (SH-FIX-DL).
