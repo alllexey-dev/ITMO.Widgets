@@ -23,7 +23,7 @@ import org.koin.dsl.module
 
 /**
  * The schedule screens' fixture in Koin: a debug host replaces everything the three schedule ViewModels read with its
- * own fakes while it lives, so `ScheduleFragment`, `LessonDetailsBottomSheet` and `ScheduleChangesFragment` obtain
+ * own fakes while it lives, so the schedule list, the lesson sheet and the schedule changes obtain
  * their ViewModels exactly as in release. Nothing reaches the network, the session or the files.
  *
  * Koin is process-wide: a host calls [load] or [loadChanges] in `onCreate` before `super.onCreate()` and [unload] in

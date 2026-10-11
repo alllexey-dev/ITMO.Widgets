@@ -23,7 +23,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * The QR pass screen with its Koin ViewModel: requests run while the screen is started, and a failed refresh of a
- * still valid pass shows a snackbar with a retry. Android hosts it in `QrCodeFragment`, iOS in IO-21.
+ * still valid pass shows a snackbar with a retry. Android hosts it in the shell's `QrPass` entry, iOS in IO-21.
  */
 @Composable
 fun QrPassRoute(onBack: () -> Unit, viewModel: QrCodeViewModel = koinViewModel()) {

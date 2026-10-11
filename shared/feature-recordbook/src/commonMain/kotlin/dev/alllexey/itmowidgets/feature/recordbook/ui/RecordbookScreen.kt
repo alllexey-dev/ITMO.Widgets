@@ -132,7 +132,7 @@ object RecordbookTestTags {
 /**
  * The recordbook with its Koin ViewModel: loads on entry (a return to the list does not reload it), shows a failed
  * refresh or a failed BARS overlay in a snackbar and hands the period picker, a subject and the BARS sign-in to the
- * host. Android hosts it in `RecordbookFragment`.
+ * host. Android hosts it in the shell's recordbook tab.
  */
 @Composable
 fun RecordbookRoute(

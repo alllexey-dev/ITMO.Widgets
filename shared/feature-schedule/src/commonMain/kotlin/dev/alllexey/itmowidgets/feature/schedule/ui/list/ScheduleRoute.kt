@@ -69,8 +69,8 @@ class ScheduleRouteActions(
  * schedules, today again on [ScheduleRouteRequest.Today]; [listState] keeps the reader's position across recreation.
  *
  * [ownTab] is the schedule tab (the friends button, the `Сегодня` shortcut); a user's schedule screen passes false.
- * [requests] carries the host's results (the picker, the shortcut). Android hosts it in `ScheduleFragment` and
- * `UserScheduleFragment`, iOS in IO-09b.
+ * [requests] carries the host's results (the picker, the shortcut). Android hosts it in the shell's schedule tab and
+ * user schedule entries, iOS in IO-09b.
  */
 @Composable
 fun ScheduleRoute(

@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
 import org.junit.Assert.assertTrue
 
 /**
- * The Compose feed of `HomeFragment` read through its `ComposeView`'s semantics owner: `:app`'s instrumented tests have
+ * The Compose home feed read through its `ComposeView`'s semantics owner: `:app`'s instrumented tests have
  * no `ui-test-junit4`, so they find nodes by `HomeTestTags` and act through semantics actions. Main thread only.
  */
 object HomeSemantics {

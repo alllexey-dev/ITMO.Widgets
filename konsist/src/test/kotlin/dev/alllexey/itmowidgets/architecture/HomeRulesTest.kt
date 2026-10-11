@@ -25,7 +25,7 @@ class HomeRulesTest {
         const val PREVIEW_DIRECTORY = "/preview/"
         val FORBIDDEN_IMPORTS = listOf("java.time.", "kotlinx.datetime.")
 
-        /** `HomeFragment`, `HomeRoute`, `HomeScreen`, `HomeCards` and their previews after LH-2. */
+        /** `HomeHints`, `HomeRoute`, `HomeScreen`, `HomeCards` and their previews after LH-2. */
         const val MIN_UI_FILES = 5
     }
 }

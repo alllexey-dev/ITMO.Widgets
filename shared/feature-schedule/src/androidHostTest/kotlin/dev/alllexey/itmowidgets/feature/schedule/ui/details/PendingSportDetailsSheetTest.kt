@@ -34,7 +34,7 @@ import kotlinx.datetime.TimeZone
  * The cases of the View-only pending checks of `LessonDetailsVisualTest` on the Compose sheet, at 320 dp and font
  * scale 1.3 in the sheet's 802 dp: what the header shows (and that it has no flow row), the condition card of each
  * queue kind, the teacher's profile, the map and `Открыть в спорте`. The host's own effects (closing before the
- * profile and the sport tab, the map intent, the snackbar) stay in `PendingSportDetailsBottomSheet` and its
+ * profile and the sport tab, the map intent, the snackbar) stay in the shell's pending sport entry and its
  * instrumented test; the looks live in the `PendingSportDetailsContent_*` goldens.
  */
 @OptIn(ExperimentalTestApi::class)

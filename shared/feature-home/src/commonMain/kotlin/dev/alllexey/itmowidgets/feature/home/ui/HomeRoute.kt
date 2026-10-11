@@ -28,7 +28,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * The home feed with its Koin ViewModel. The first show refreshes once, every resume revalidates (and refreshes a
  * stale feed), and a partly failed refresh shows `Часть данных не загрузилась` with `Повторить` while the screen is
  * resumed. [actions] carries the host's navigation and platform actions; dismissing and refreshing are wired here.
- * The cards are drawn by every feature's Koin `HomeCardRenderer`. Android hosts it in `HomeFragment`.
+ * The cards are drawn by every feature's Koin `HomeCardRenderer`. Android hosts it in the shell's home tab.
  */
 @Composable
 fun HomeRoute(

@@ -109,7 +109,7 @@ internal fun ScheduleTabRoot(navigator: Nav3AppNavigator) {
     )
 }
 
-/** As `ScheduleFragment` read the picker's result: no user for the own schedule, the picture URL as delivered. */
+/** As v2.2's schedule tab read the picker's result: no user for the own schedule, the picture URL as delivered. */
 private fun FriendSelection.toSelectedUser(): SelectedUser? =
     if (useMySchedule) null else SelectedUser(isu = isu, name = name, avatar = pictureUrl)
 

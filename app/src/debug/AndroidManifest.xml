@@ -3,12 +3,8 @@
 
     <!-- Debug hosts: one line each, grouped by feature, so a port deletes only its own lines. -->
     <application>
-        <!-- recordbook -->
-        <activity android:name=".feature.recordbook.ui.RecordbookPreviewActivity" android:exported="false" />
         <!-- settings -->
         <activity android:name=".feature.settings.ui.SettingsPreviewActivity" android:exported="false" />
-        <!-- sport -->
-        <activity android:name=".feature.sport.ui.SportCardsPreviewActivity" android:exported="false" />
     </application>
 
 </manifest>

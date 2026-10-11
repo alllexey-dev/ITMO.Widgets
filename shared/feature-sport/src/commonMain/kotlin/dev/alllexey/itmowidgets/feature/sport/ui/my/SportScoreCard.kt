@@ -397,7 +397,7 @@ private val StatusVerticalPadding = 7.dp
 private val StatusIconSize = 18.dp
 private val StatusIconGap = 7.dp
 
-/** The chip waits for the counters to get going before it scales in (`SportMyFragment.STATUS_ANIMATION_DELAY`). */
+/** The chip waits for the counters to get going before it scales in (v2.2's status animation delay). */
 private const val STATUS_DELAY_MILLIS = 380L
 private const val STATUS_START_SCALE = 0.84f
 
