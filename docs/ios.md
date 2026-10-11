@@ -162,7 +162,7 @@ Compose sport tab (`SportTabScreen`, IO-09c), the me root LA-3's Compose Me tab 
 entry to settings and the sign-out (the route's confirmation, `SessionRepository.signOut()`), the schedule root L10's
 Compose schedule (`ScheduleScreen`, IO-09b); no tab has a placeholder root any more.
 
-- Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
+- Tabs. `ShellTab` holds the roots of Android's bar (`AppTab`) in its order: recordbook, schedule, home,
   sport, me. A tab shows only while iOS offers its feature (`ShellTab.isAvailable`: the recordbook follows
   `PlatformCapabilities.recordbook`, on since IO-09d2), so no placeholder reaches App Review; home is selected at
   launch. The container is one type, `Shell/ShellTabs.swift` (a `TabView`). Tabs switch by the native

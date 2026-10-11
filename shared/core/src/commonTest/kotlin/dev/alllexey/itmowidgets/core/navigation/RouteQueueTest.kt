@@ -5,7 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/** `MainRouteQueueTest`, case for case, plus the saved-state round trip. */
+/** The pending entry route: offered, replaced, taken once, plus the saved-state round trip. */
 class RouteQueueTest {
     private val qrPass = EntryRoute(AppTab.HOME, overlay = AppRoutes.QrPass, shortcutId = EntryShortcuts.QR_PASS)
     private val today =

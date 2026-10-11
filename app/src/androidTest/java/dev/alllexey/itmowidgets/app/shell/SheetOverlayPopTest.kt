@@ -39,7 +39,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,8 +49,7 @@ import org.junit.runner.RunWith
  * shows again without the sheet. Every frame the emulator draws keeps the window's height and end, so the overlay layer
  * never shrinks the profile towards the centre; a predictive Back held at half way shows the horizontal move on a
  * frame that does not depend on timing. How many frames a real slide gets depends on the emulator's load, so the
- * frame-by-frame slide is counted on a paused clock in `AppShellTest` instead. Only the Compose shell is read; the
- * legacy shell is a debug fallback with the Fragment host's own animation.
+ * frame-by-frame slide is counted on a paused clock in `AppShellTest` instead.
  */
 @RunWith(AndroidJUnit4::class)
 @SdkSuppress(minSdkVersion = Build.VERSION_CODES.Q) // WindowInspector reads the sheet's window
@@ -199,9 +197,6 @@ class SheetOverlayPopTest {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
         )
         try {
-            var compose = false
-            onActivity { compose = ShellHost.of(it) != null }
-            assumeTrue("the Compose shell runs", compose)
             body()
         } finally {
             runCatching { onActivity { it.finish() } }
@@ -210,7 +205,7 @@ class SheetOverlayPopTest {
 
     /** The Compose shell's navigator; `ShellHost` keeps it private, so the test reads the field. */
     private fun MainActivity.navigator(): Nav3AppNavigator {
-        val host = checkNotNull(ShellHost.of(this)) { "MainActivity runs the legacy shell" }
+        val host = checkNotNull(ShellHost.of(this)) { "MainActivity has no shell yet" }
         val field = ShellHost::class.java.getDeclaredField("navigator").apply { isAccessible = true }
         return checkNotNull(field.get(host) as Nav3AppNavigator?) { "the Compose shell has not composed yet" }
     }

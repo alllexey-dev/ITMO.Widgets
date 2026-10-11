@@ -10,16 +10,11 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
-import androidx.navigation.fragment.NavHostFragment
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -27,7 +22,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.app.shell.ShellHost
 import dev.alllexey.itmowidgets.app.shell.ShellModeRule
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
@@ -50,7 +44,7 @@ import org.junit.runner.RunWith
 
 /**
  * Widget, notification, tile, shortcut and App Link intents on the real `MainActivity`. Navigation is read through
- * `ShellProbe`, so each body runs in every shell [ShellModeRule] knows.
+ * `ShellProbe`.
  */
 @RunWith(AndroidJUnit4::class)
 class MainActivityDeepLinkTest {
@@ -73,7 +67,6 @@ class MainActivityDeepLinkTest {
             awaitRoute(AppTab.HOME, AppRoutes.QrPass)
             back()
             awaitRoute(AppTab.HOME, overlay = null)
-            onActivity(::assertNothingUnderTheTab)
         }
     }
 
@@ -160,7 +153,6 @@ class MainActivityDeepLinkTest {
                 awaitRoute(tab, overlay = null)
                 back()
                 awaitRoute(AppTab.HOME, overlay = null)
-                onActivity(::assertNothingUnderTheTab)
             }
         }
     }
@@ -197,18 +189,9 @@ class MainActivityDeepLinkTest {
         signedIn()
         ActivityScenario.launch<MainActivity>(link("/sport/abc")).use {
             awaitRoute(AppTab.HOME, overlay = null)
-            when (shells.mode) {
-                // The legacy alert is a MaterialAlertDialogBuilder dialog, which the probe does not see.
-                ShellModeRule.Mode.LEGACY -> {
-                    onView(withText(R.string.app_link_unavailable_title)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    onView(withText(R.string.common_got_it)).inRoot(isDialog()).perform(click())
-                }
-                ShellModeRule.Mode.NAV3 -> {
-                    eventually { assertEquals(AppRoutes.LinkUnavailable, ShellProbe.current().floating) }
-                    onView(isRoot()).inRoot(isDialog()).perform(clickComposeText(context.getString(R.string.common_got_it)))
-                    eventually { assertNull(ShellProbe.current().floating) }
-                }
-            }
+            eventually { assertEquals(AppRoutes.LinkUnavailable, ShellProbe.current().floating) }
+            onView(isRoot()).inRoot(isDialog()).perform(clickComposeText(context.getString(R.string.common_got_it)))
+            eventually { assertNull(ShellProbe.current().floating) }
             awaitRoute(AppTab.HOME, overlay = null)
         }
     }
@@ -260,16 +243,6 @@ class MainActivityDeepLinkTest {
 
     private fun awaitSurface(surface: ShellSurface) = eventually { assertEquals(surface, ShellProbe.current().surface) }
 
-    /**
-     * The tab's own history is empty, so Back from here leaves the app. The Navigation 3 tab stack is its root alone
-     * (`ShellBackStack.tabStack`); the legacy one is checked on its NavController.
-     */
-    private fun assertNothingUnderTheTab(activity: MainActivity) {
-        if (ShellHost.of(activity) != null) return
-        val root = activity.supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        assertNull(root.navController.previousBackStackEntry)
-    }
-
     private fun back() = onActivity { it.onBackPressedDispatcher.onBackPressed() }
 
     // ActivityScenario matches the original Intent and loses track when onNewIntent replaces it.
@@ -287,7 +260,7 @@ class MainActivityDeepLinkTest {
         failure?.let { throw it }
     }
 
-    /** Whether the Compose node tagged [tag] in the activity's window is selected; both shells host the same route. */
+    /** Whether the Compose node tagged [tag] in the activity's window is selected. */
     private fun selected(activity: MainActivity, tag: String): Boolean = semantics(activity.window.decorView)
         .filter { it.config.getOrNull(SemanticsProperties.TestTag) == tag }
         .any { it.config.getOrNull(SemanticsProperties.Selected) == true }
