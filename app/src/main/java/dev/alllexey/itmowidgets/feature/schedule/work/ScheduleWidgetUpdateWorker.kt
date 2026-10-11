@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetLoadResult
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector

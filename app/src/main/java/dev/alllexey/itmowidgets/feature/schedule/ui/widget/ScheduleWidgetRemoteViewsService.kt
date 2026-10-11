@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import kotlinx.coroutines.runBlocking

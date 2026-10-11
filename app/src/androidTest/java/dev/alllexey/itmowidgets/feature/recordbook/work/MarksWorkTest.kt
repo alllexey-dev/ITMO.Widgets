@@ -6,7 +6,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.NetworkType
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import dagger.hilt.android.EntryPointAccessors
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
+import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
@@ -23,15 +25,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class MarksWorkTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val dependencies = EntryPointAccessors.fromApplication(context, MarksTestEntryPoint::class.java)
-    private val scheduler = dependencies.marksScheduler()
+    private val scheduler = TestGraph.get<MarksScheduler>()
     private val workManager = WorkManager.getInstance(context)
 
     @After
     fun restoreOwnerState() {
         scheduler.cancel()
         // The switches and the session decide again, as on an app start.
-        runBlocking { dependencies.marksTracking().syncWork() }
+        runBlocking { TestGraph.get<MarkTracking>().syncWork() }
     }
 
     @Test

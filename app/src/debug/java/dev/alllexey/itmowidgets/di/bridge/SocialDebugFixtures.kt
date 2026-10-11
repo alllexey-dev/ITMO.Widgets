@@ -1,12 +1,13 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
+import dev.alllexey.itmowidgets.core.demo.DemoCurrentUserProvider
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
-import dev.alllexey.itmowidgets.core.demo.DemoCurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory

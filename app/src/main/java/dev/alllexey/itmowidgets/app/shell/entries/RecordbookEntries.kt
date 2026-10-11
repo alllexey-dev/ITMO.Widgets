@@ -34,7 +34,7 @@ import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelection

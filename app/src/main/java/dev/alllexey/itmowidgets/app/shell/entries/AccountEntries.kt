@@ -44,7 +44,7 @@ import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthRoute
 import dev.alllexey.itmowidgets.feature.auth.ui.confirmDemoEntry

@@ -4,8 +4,6 @@ import java.util.Properties
 plugins {
     id("itmowidgets.android.app")
     id("com.google.gms.google-services")
-    id("com.google.dagger.hilt.android")
-    id("com.google.devtools.ksp")
     // Robolectric (offline) for host tests that boot the real Application.
     id("itmowidgets.testing")
 }
@@ -18,7 +16,7 @@ val keystoreProperties = Properties().apply {
 
 // Android Test Orchestrator with clearPackageData (TC-14) for the platform list only: `scripts/verify.sh ui @platform`
 // and the nightly managed-device job pass -Pitmo.orchestrator=true. The View suites share TestSession and the real
-// Hilt graph across tests, so they keep the plain runner until their ports delete them.
+// Koin graph across tests, so they keep the plain runner until their ports delete them.
 val orchestrated = providers.gradleProperty("itmo.orchestrator").map(String::toBoolean).getOrElse(false)
 
 android {
@@ -186,11 +184,9 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     // kotlinx JSON of the core stores, auth and the FCM envelope (KM-05d).
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.hilt.android)
-    // Koin beside Hilt (ADR 0019): the graph starts in di/bridge/KoinStarter.
+    // Koin, the app's one graph (ADR 0019), starts in di/KoinStarter.
     implementation(libs.koin.android)
     "playImplementation"(libs.play.app.update.ktx)
-    ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
@@ -202,9 +198,6 @@ dependencies {
     testImplementation(libs.androidx.work.testing)
     // KoinContext for Robolectric Compose tests: Koin Compose caches the first graph per JVM, and StopKoinRule restarts it.
     testImplementation(libs.koin.compose.viewmodel)
-    // Screenshot tests that host @AndroidEntryPoint screens (AppScreenshotRule, XmlReferenceCapture).
-    testImplementation(libs.hilt.android.testing)
-    kspTest(libs.hilt.compiler)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.monitor)

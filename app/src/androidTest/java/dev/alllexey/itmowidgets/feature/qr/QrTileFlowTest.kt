@@ -9,16 +9,16 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.app.shell.ShellModeRule
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
-import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
+import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.feature.qr.ui.QrTileService
 import dev.alllexey.itmowidgets.testing.ShellProbe
+import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import kotlinx.coroutines.flow.first
@@ -38,7 +38,7 @@ class QrTileFlowTest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
-    private val deviceHints = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java).deviceHints()
+    private val deviceHints = TestGraph.get<DeviceHintPreferences>()
 
     @After
     fun removeTheTileAndSignOut() {

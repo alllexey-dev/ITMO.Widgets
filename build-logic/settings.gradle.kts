@@ -1,5 +1,5 @@
 // Convention plugins for every module (ADR 0018). Plugin versions come from the root catalog only: the
-// conventions' dependencies put AGP, Kotlin, CMP, KSP, Hilt, google-services and Roborazzi on the build
+// conventions' dependencies put AGP, Kotlin, CMP, google-services and Roborazzi on the build
 // classpath once, and modules apply them by id without a version.
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)

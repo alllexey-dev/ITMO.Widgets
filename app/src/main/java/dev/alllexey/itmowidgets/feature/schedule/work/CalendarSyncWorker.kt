@@ -6,7 +6,7 @@ import androidx.work.ListenableWorker.Result
 import androidx.work.WorkerParameters
 import dev.alllexey.itmowidgets.core.work.PeriodicCheckSpec
 import dev.alllexey.itmowidgets.core.work.workResultOf
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes

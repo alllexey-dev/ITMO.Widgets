@@ -43,7 +43,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
             iosSimulatorArm64()
 
             compilerOptions {
-                // expect/actual classes (CMP locale root, the Hilt bridge) are Beta and warn without this flag.
+                // expect/actual classes (CMP locale root) are Beta and warn without this flag.
                 freeCompilerArgs.add("-Xexpect-actual-classes")
             }
 

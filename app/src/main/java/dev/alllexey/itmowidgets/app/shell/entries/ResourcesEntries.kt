@@ -35,7 +35,7 @@ import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel

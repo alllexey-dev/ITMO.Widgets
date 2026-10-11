@@ -12,7 +12,7 @@ import androidx.work.WorkerParameters
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import kotlinx.coroutines.CancellationException
 import org.koin.core.Koin
 import org.koin.core.component.KoinComponent

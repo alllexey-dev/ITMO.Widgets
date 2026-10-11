@@ -1,11 +1,9 @@
 package dev.alllexey.itmowidgets.feature.recordbook
 
+import android.app.Application
 import androidx.test.core.app.ApplicationProvider
-import dagger.hilt.android.testing.HiltAndroidRule
-import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.HiltTestApplication
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.BarsLoginViewModel
@@ -22,18 +20,13 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * The BARS sign-in obtains its ViewModel from Koin (LR-2a) on the release graph with a fake session port. Hilt can no
- * longer build this ViewModel, so an Activity that resolves one proves the Koin path.
+ * The BARS sign-in obtains its ViewModel from Koin (LR-2a) on the release graph with a fake session port.
  */
-@HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = HiltTestApplication::class)
+@Config(sdk = [35], application = Application::class)
 class RecordbookKoinHostsTest {
 
-    @get:Rule(order = 0)
-    val hilt = HiltAndroidRule(this)
-
-    @get:Rule(order = 1)
+    @get:Rule
     val stopKoin = StopKoinRule()
 
     @Test

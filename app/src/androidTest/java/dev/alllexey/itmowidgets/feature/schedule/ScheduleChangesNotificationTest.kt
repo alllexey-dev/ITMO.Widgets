@@ -14,19 +14,19 @@ import android.service.notification.StatusBarNotification
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
-import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
-import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesTestEntryPoint
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
+import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestUi
-import kotlin.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlin.time.Instant
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalTime
 import org.junit.After
@@ -43,9 +43,8 @@ class ScheduleChangesNotificationTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val manager = context.getSystemService(NotificationManager::class.java)
-    private val notifier = EntryPointAccessors.fromApplication(context, ScheduleChangesTestEntryPoint::class.java)
-        .scheduleChangeNotifier()
-    private val appNotifier = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java).notifier()
+    private val notifier = TestGraph.get<ScheduleChangeNotifier>()
+    private val appNotifier = TestGraph.get<AppNotifier>()
 
     @Before
     fun grantNotifications() {

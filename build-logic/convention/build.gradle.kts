@@ -11,8 +11,6 @@ dependencies {
     implementation(libs.kotlin.composeCompiler.gradlePlugin)
     implementation(libs.kotlin.serialization.gradlePlugin)
     implementation(libs.compose.gradlePlugin)
-    implementation(libs.ksp.gradlePlugin)
-    implementation(libs.hilt.gradlePlugin)
     implementation(libs.google.services.gradlePlugin)
     implementation(libs.roborazzi.gradlePlugin)
 }

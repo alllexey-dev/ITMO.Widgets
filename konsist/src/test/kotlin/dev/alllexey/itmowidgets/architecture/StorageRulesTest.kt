@@ -11,14 +11,14 @@ class StorageRulesTest {
 
     @Test
     fun `session-cleared repositories are singletons`() {
-        // Hilt builds a repository once through @Singleton; a repository moved to a shared module is a Koin single.
+        // Sign-out must clear the instance every screen reads: each such repository is a Koin single.
         val koinSingles = productionFiles
             .flatMap { file -> KOIN_SINGLE.findAll(file.text).map { it.groupValues[1] }.toList() }
             .toSet()
         productionClasses
             .filter { it.name.endsWith("RepositoryImpl") && it.hasParentWithName("SessionDataCleaner") }
             .requireNonEmpty("session-cleared repositories")
-            .assertTrue { it.hasAnnotationWithName("Singleton") || it.name in koinSingles }
+            .assertTrue { it.name in koinSingles }
     }
 
     @Test

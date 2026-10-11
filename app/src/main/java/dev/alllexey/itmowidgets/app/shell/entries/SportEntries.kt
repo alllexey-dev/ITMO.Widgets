@@ -34,7 +34,7 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialogSurface
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.navigation.SportDetailsOpener
 import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes

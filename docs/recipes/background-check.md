@@ -99,22 +99,14 @@ pinned by `PeriodicCheckSpecTest`). Use them instead of a feature copy.
 
 Workers are built by WorkManager, so they cannot take constructor injection.
 
-**Now (Hilt and Koin side by side).** The worker reads a Hilt `@EntryPoint`
-(`MarksEntryPoint` in `MarksWorker.kt`). `EntryPointAccessors` is allowed only
-in `di/bridge` (`DiRulesTest`, `EntryPointAccessors is used only in di
-bridge`); the existing workers sit on its ratchet and no new line may join it,
-so a new worker's entry point and its `from(context)` accessor go to
-`app/src/main/java/dev/alllexey/itmowidgets/di/bridge/`. When the check's
-dependencies are built by Koin, the entry point returns them through an
-unscoped `@Provides` in a `<Feature>KoinBridgeModule` there that calls
-`KoinStarter.ensureStarted(context).get()`: a worker can run before
-`Application.onCreate()`. No `@HiltWorker` and no custom `WorkManager`
+**Koin.** The worker is a `KoinComponent` whose `getKoin()` is
+`KoinStarter.ensureStarted(applicationContext)` (`MarksWorker.kt`), since a
+worker can run before `Application.onCreate()`; it keeps its class name and
+runs under WorkManager's default `WorkerFactory`. Its check and scheduler are
+Koin definitions, and the check joins the app's background checks as
+`single<BackgroundCheck>(named("<x>")) { get<Impl>() }`
+(`app/src/main/java/dev/alllexey/itmowidgets/di/`). No custom `WorkManager`
 configuration.
-
-**After the Hilt removal (KM-12a).** The worker becomes a `KoinComponent`
-with `by inject()`, keeps its class name and runs under WorkManager's default
-`WorkerFactory`; the entry point and its ratchet line are deleted. That change
-replaces this section.
 
 ## iOS
 

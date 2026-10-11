@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.DefaultAcademicTimeProvider
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync

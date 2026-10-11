@@ -72,7 +72,7 @@ import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.designsystem.components.navigation.NavigationBarTokens
 import dev.alllexey.itmowidgets.designsystem.host.ItmoComposeHost
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGate
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGateViewModel
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate

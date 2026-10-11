@@ -5,7 +5,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetWork
 import kotlinx.coroutines.CoroutineScope

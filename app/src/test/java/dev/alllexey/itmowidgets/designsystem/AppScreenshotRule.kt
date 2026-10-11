@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.designsystem
 import android.os.Looper
 import android.view.View
 import com.github.takahirom.roborazzi.captureRoboImage
-import dagger.hilt.android.testing.HiltAndroidRule
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewAppearance
 import dev.alllexey.itmowidgets.testkit.screenshot.BaselineDirectory
 import dev.alllexey.itmowidgets.testkit.screenshot.CaptureSize
@@ -18,31 +17,25 @@ import org.robolectric.Shadows.shadowOf
 
 /**
  * The rule of every `:app` screenshot test (a `*ScreenshotTest` class, run by `scripts/verify.sh shots app` on the
- * `githubDebug` unit tests). It owns Hilt, so `@AndroidEntryPoint` hosts and their Hilt view models work, and
- * captures one baseline per appearance of the run into a [BaselineDirectory]: light and dark,
- * `-Pshots.appearance=full` adds the narrow two, and an appearance that already has a baseline is always captured.
+ * `githubDebug` unit tests). It captures one baseline per appearance of the run into a [BaselineDirectory]: light
+ * and dark, `-Pshots.appearance=full` adds the narrow two, and an appearance that already has a baseline is always
+ * captured.
  *
  * ```
- * @HiltAndroidTest
  * @RunWith(RobolectricTestRunner::class)
- * @Config(application = HiltTestApplication::class)
+ * @Config(application = Application::class)
  * class SportReferenceScreenshotTest {
  *     @get:Rule
- *     val shots = AppScreenshotRule(this)
+ *     val shots = AppScreenshotRule()
  * }
  * ```
  *
- * `HiltTestApplication`, not the real `ItmoWidgetsApplication`: its `onCreate` stops at WorkManager under Robolectric
- * (no `androidx.startup`, see `KoinStartTest`).
+ * A plain `Application`, not the real `ItmoWidgetsApplication`: its `onCreate` stops at WorkManager under Robolectric
+ * (no `androidx.startup`, see `KoinStartTest`); a screen starts Koin itself through `KoinStarter`.
  */
-class AppScreenshotRule(testInstance: Any) : TestRule {
+class AppScreenshotRule : TestRule {
 
-    private val hilt = HiltAndroidRule(testInstance)
-
-    override fun apply(base: Statement, description: Description): Statement = hilt.apply(base, description)
-
-    /** Injects the test's own `@Inject` fields. */
-    fun inject() = hilt.inject()
+    override fun apply(base: Statement, description: Description): Statement = base
 
     /**
      * Sets the Robolectric window of each appearance ([CaptureSize.qualifiers], font scale), lets [render] build the

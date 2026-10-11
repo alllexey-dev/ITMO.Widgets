@@ -25,7 +25,7 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorSheetRoute
 import dev.alllexey.itmowidgets.feature.social.ui.copyPersonIsu
 import dev.alllexey.itmowidgets.feature.social.ui.friends.FriendsRoute

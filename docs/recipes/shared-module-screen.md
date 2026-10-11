@@ -31,7 +31,7 @@ The QR pass was the first screen built this way. Copy its shape.
 
 The Android side keeps only the host and the Android bindings:
 `app/shell/entries/HomeEntries.kt` (the shell entry) and `di/QrModule.kt`,
-with one line in `di/bridge/KoinModules.kt`.
+with one line in `di/KoinModules.kt`.
 
 What stays Android-only, in `app/`, and is not part of a shared screen:
 

@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.qr.work
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState

@@ -9,7 +9,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.widget.RemoteViews
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState

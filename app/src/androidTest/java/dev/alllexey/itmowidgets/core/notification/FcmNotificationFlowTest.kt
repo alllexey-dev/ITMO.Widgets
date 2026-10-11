@@ -5,15 +5,13 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
-import androidx.test.runner.lifecycle.Stage
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import dagger.hilt.android.EntryPointAccessors
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
-import dev.alllexey.itmowidgets.app.OnboardingTestEntryPoint
 import dev.alllexey.itmowidgets.app.shell.ShellModeRule
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
@@ -21,8 +19,13 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.session.SessionTokenStore
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.testing.ShellProbe
+import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.Base64
@@ -41,15 +44,12 @@ class FcmNotificationFlowTest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
-    private val dependencies = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java)
-    private val onboarding = EntryPointAccessors
-        .fromApplication(context, OnboardingTestEntryPoint::class.java)
-        .onboarding()
+    private val onboarding = TestGraph.get<OnboardingRepository>()
 
     @Test
     fun notificationsGroupAndOpenTheirTargetsOnceAfterAuthenticationAndRecreation() {
-        val originalServices = runBlocking { dependencies.servicesOptIn().getCustomServicesEnabled() }
-        runBlocking { dependencies.servicesOptIn().setCustomServicesEnabled(false) }
+        val originalServices = runBlocking { TestGraph.get<ServicesOptInPreferences>().getCustomServicesEnabled() }
+        runBlocking { TestGraph.get<ServicesOptInPreferences>().setCustomServicesEnabled(false) }
         // Notification routing is what this test is about; the first-run flow would hold the window.
         runBlocking { onboarding.complete() }
         // Signed out in memory too: the repository reads the token store only once per process, and the pass of
@@ -67,13 +67,13 @@ class FcmNotificationFlowTest {
                 eventually { assertEquals(ShellSurface.Auth, ShellProbe.current().surface) }
                 recreate()
                 runBlocking {
-                    withTimeout(30_000) { dependencies.session().completeItmoIdLogin(tokenResponse()) }
+                    withTimeout(30_000) { TestGraph.get<SessionRepository>().completeItmoIdLogin(tokenResponse()) }
                 }
                 eventually { assertProfile(100001) }
                 recreate()
                 eventually { assertProfile(100001) }
 
-                val notifier = dependencies.notifier()
+                val notifier = TestGraph.get<AppNotifier>()
                 notifier.show(AppNotification(AppNotificationChannels.SPORT, 42,
                     UiText.Resource(R.string.notification_sport_success),
                     UiText.Resource(R.string.notification_sport_lesson, listOf("Секция плавания", "21 сент., 12:00")),
@@ -116,10 +116,10 @@ class FcmNotificationFlowTest {
             }
         } finally {
             runCatching { onActivity { it.finish() } }
-            dependencies.notifier().clear()
-            dependencies.tokens().clearTokens()
+            TestGraph.get<AppNotifier>().clear()
+            TestGraph.get<SessionTokenStore>().clearTokens()
             runBlocking {
-                dependencies.servicesOptIn().setCustomServicesEnabled(originalServices)
+                TestGraph.get<ServicesOptInPreferences>().setCustomServicesEnabled(originalServices)
                 onboarding.reset()
             }
         }

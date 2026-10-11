@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.di.bridge
+package dev.alllexey.itmowidgets.di
 
 import android.app.Application
 import android.content.Context
@@ -10,9 +10,9 @@ import org.koin.core.context.startKoin
 /**
  * Starts the app's one Koin graph (ADR 0019).
  *
- * `ItmoWidgetsApplication.onCreate()` calls [ensureStarted] first. The Android components and the Koin to Hilt
- * bridge call it as well: WorkManager's `InitializationProvider` can run a worker, and Android can deliver a widget
- * broadcast, before `Application.onCreate()`.
+ * `ItmoWidgetsApplication.onCreate()` calls [ensureStarted] first. The Android components call it as well:
+ * WorkManager's `InitializationProvider` can run a worker, and Android can deliver a widget broadcast, before
+ * `Application.onCreate()`.
  */
 object KoinStarter {
 

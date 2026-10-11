@@ -27,12 +27,6 @@ class LayerRulesTest {
     }
 
     @Test
-    fun `domain does not use javax inject`() {
-        // KMP domain code is wired by the DI module, not annotated; KM-06 moves domain into commonMain.
-        Ratchet.assertOnly(RatchetRule.DOMAIN_JAVAX_INJECT, domainFilesImporting { it.startsWith("javax.inject.") })
-    }
-
-    @Test
     fun `domain does not use the Java platform`() {
         Ratchet.assertOnly(RatchetRule.DOMAIN_JAVA, domainFilesImporting { it.startsWith("java.") })
     }

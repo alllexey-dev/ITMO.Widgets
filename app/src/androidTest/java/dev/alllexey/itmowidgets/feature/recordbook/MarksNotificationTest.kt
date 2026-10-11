@@ -13,7 +13,6 @@ import android.service.notification.StatusBarNotification
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.AndroidAppNotifier
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
@@ -21,12 +20,12 @@ import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.from
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
-import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigest
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.work.AndroidMarksNotifier
-import dev.alllexey.itmowidgets.feature.recordbook.work.MarksTestEntryPoint
+import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -43,8 +42,8 @@ class MarksNotificationTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val manager = context.getSystemService(NotificationManager::class.java)
-    private val notifier = EntryPointAccessors.fromApplication(context, MarksTestEntryPoint::class.java).marksNotifier()
-    private val appNotifier = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java).notifier()
+    private val notifier = TestGraph.get<MarksNotifier>()
+    private val appNotifier = TestGraph.get<AppNotifier>()
 
     @Before
     fun grantNotifications() {

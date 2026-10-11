@@ -136,7 +136,7 @@ val recordbookModule = module {
     singleOf(::DefaultMarkTracking) { bind<MarkTracking>() }
     // One background run; stateless, as with Hilt's unscoped constructor before.
     factoryOf(::MarksCheck)
-    // The marks card: one source under its own qualifier, never in Hilt's set behind `named("hilt")`.
+    // The marks card: one source under its own qualifier in the open set the feed reads.
     singleOf(::MarksHomeCardSource)
     single<HomeCardSource>(marksCardsQualifier) { get<MarksHomeCardSource>() }
 }

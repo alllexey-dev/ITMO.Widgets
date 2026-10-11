@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.ui.navigation.AppEntryIntentFactory
 import dev.alllexey.itmowidgets.core.ui.withAppLocale
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileController
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileState
 import kotlinx.coroutines.MainScope
