@@ -1,159 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background_rounded"
     android:clipToOutline="true"
-    android:gravity="center_vertical"
     android:minHeight="56dp"
-    android:orientation="vertical"
-    android:paddingHorizontal="12dp"
-    android:paddingVertical="8dp"
     tools:ignore="UnusedAttribute,UseAppTint">
 
+    <include layout="@layout/widget_theme_background" />
+
     <LinearLayout
-        android:id="@+id/lesson_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp">
 
         <LinearLayout
+            android:id="@+id/lesson_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <LinearLayout
-                android:id="@+id/type_layout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:visibility="gone">
-
-                <!-- Keep the framework class: AppCompat overrides lack RemoteViews method annotations. -->
-                <android.widget.ImageView
-                    android:id="@+id/type_indicator"
-                    android:layout_width="7dp"
-                    android:layout_height="7dp"
-                    android:layout_marginEnd="6dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/shape_circle_filled" />
-
-                <TextView
-                    android:id="@+id/type"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textColor="@color/widget_on_surface_variant"
-                    android:textSize="11sp"
-                    tools:text="Практика" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/time_column"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:visibility="gone">
+                android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/time_start"
+                <LinearLayout
+                    android:id="@+id/type_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <!-- Keep the framework class: AppCompat overrides lack RemoteViews method annotations. -->
+                    <android.widget.ImageView
+                        android:id="@+id/type_indicator"
+                        android:layout_width="7dp"
+                        android:layout_height="7dp"
+                        android:layout_marginEnd="6dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/shape_circle_filled" />
+
+                    <TextView
+                        android:id="@+id/type"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/widget_on_surface_variant"
+                        android:textSize="11sp"
+                        tools:text="Практика" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/time_column"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:textColor="@color/widget_on_surface"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    tools:text="11:30" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
 
-                <TextView
-                    android:id="@+id/time_separator"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="–"
-                    android:textColor="@color/widget_on_surface_variant"
-                    android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/time_start"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:maxLines="1"
+                        android:textColor="@color/widget_on_surface"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        tools:text="11:30" />
 
-                <TextView
-                    android:id="@+id/time_end"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:maxLines="1"
-                    android:textColor="@color/widget_on_surface_variant"
-                    android:textSize="12sp"
-                    tools:text="13:00" />
+                    <TextView
+                        android:id="@+id/time_separator"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="–"
+                        android:textColor="@color/widget_on_surface_variant"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/time_end"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:textColor="@color/widget_on_surface_variant"
+                        android:textSize="12sp"
+                        tools:text="13:00" />
+
+                </LinearLayout>
 
             </LinearLayout>
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:ellipsize="end"
-            android:fontFamily="sans-serif-medium"
-            android:maxLines="1"
-            android:text="@string/schedule_widget_loading"
-            android:textColor="@color/widget_on_surface"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            tools:text="Математический анализ (продвинутый уровень)" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/secondary_text"
-                android:layout_width="0dp"
+                android:id="@+id/title"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_marginTop="2dp"
                 android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
                 android:maxLines="1"
-                android:textColor="@color/widget_on_surface_variant"
-                android:textSize="10sp"
-                android:visibility="gone"
-                tools:text="1506 Кронва · Попов А. И."
-                tools:visibility="visible" />
+                android:text="@string/schedule_widget_loading"
+                android:textColor="@color/widget_on_surface"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Математический анализ (продвинутый уровень)" />
 
             <LinearLayout
-                android:id="@+id/more_lessons_layout"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:orientation="horizontal"
-                android:visibility="gone">
+                android:layout_marginTop="2dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/more_lessons_text"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/secondary_text"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="@string/schedule_widget_open_app_hint"
-                    android:textColor="@color/widget_primary"
+                    android:textColor="@color/widget_on_surface_variant"
                     android:textSize="10sp"
-                    tools:text="Сейчас · ещё 3" />
+                    android:visibility="gone"
+                    tools:text="1506 Кронва · Попов А. И."
+                    tools:visibility="visible" />
+
+                <LinearLayout
+                    android:id="@+id/more_lessons_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/more_lessons_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/schedule_widget_open_app_hint"
+                        android:textColor="@color/widget_primary"
+                        android:textSize="10sp"
+                        tools:text="Сейчас · ещё 3" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </LinearLayout>
+
+        <include layout="@layout/widget_single_lesson_message" />
 
     </LinearLayout>
 
-    <include layout="@layout/widget_single_lesson_message" />
-
-</LinearLayout>
+</FrameLayout>

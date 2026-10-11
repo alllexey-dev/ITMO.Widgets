@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
+import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import javax.inject.Inject
 import org.junit.Assert.assertEquals
@@ -51,6 +52,7 @@ class SettingsBridgeTest {
         assertEquals(hilt.appVersion(), koin.get<AppVersion>())
         assertEquals(hilt.backgroundWorkAccess()::class, koin.get<BackgroundWorkAccess>()::class)
         assertEquals(hilt.quickSettingsTileAccess()::class, koin.get<QuickSettingsTileAccess>()::class)
+        assertEquals(hilt.widgetPaletteSource()::class, koin.get<WidgetPaletteSource>()::class)
     }
 
     @Test

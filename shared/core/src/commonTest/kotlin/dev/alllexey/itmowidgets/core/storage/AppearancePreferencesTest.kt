@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -99,7 +100,28 @@ class AppearancePreferencesTest {
         assertEquals("#00000A", HexColor.format(0xFF00000A.toInt()))
     }
 
+    @Test
+    fun theWidgetsKeepTheirOwnColoursByDefault() = runTest {
+        preferences.updateTheme { it.copy(accent = AccentColor.TEAL) }
+
+        assertFalse(preferences.observeWidgetsFollowTheme().first())
+        assertNull(preferences.observeWidgetTheme().first())
+    }
+
+    @Test
+    fun theWidgetsFollowTheStoredThemeWhenOn() = runTest {
+        preferences.updateTheme { it.copy(accent = AccentColor.TEAL, style = ThemeStyle.VIBRANT) }
+        preferences.setWidgetsFollowTheme(true)
+
+        assertEquals(ThemeSpec(accent = AccentColor.TEAL, style = ThemeStyle.VIBRANT), preferences.observeWidgetTheme().first())
+        assertEquals(true, dataStore.data.first()[WIDGETS])
+
+        preferences.setWidgetsFollowTheme(false)
+        assertNull(preferences.observeWidgetTheme().first())
+    }
+
     private companion object {
+        val WIDGETS = booleanPreferencesKey("widgets_follow_app_theme")
         val ACCENT = stringPreferencesKey("app_accent_color")
         val CUSTOM = intPreferencesKey("app_accent_custom")
         val STYLE = stringPreferencesKey("app_theme_style")

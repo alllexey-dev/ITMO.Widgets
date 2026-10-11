@@ -174,7 +174,8 @@ enum SettingsFixtures {
                 style: .tonalSpot,
                 contrast: .standard,
                 pureBlack: false
-            )
+            ),
+            widgetsFollowTheme: false
         )
     }
 

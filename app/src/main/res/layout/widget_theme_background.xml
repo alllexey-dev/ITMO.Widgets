@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app's theme over a widget's own background (WidgetColors.applyBackground): an outline layer and a surface
+     layer 1 dp inside it, each tinted separately, since a RemoteViews tint colours a drawable as a whole. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Framework classes: AppCompat overrides lack RemoteViews method annotations. -->
+    <android.widget.ImageView
+        android:id="@+id/widget_theme_outline"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_theme_outline"
+        android:visibility="gone" />
+
+    <android.widget.ImageView
+        android:id="@+id/widget_theme_surface"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="1dp"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_theme_surface"
+        android:visibility="gone" />
+
+</merge>

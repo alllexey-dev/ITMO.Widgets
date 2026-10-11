@@ -1956,6 +1956,18 @@
           }
         }
       }
+    },
+    "settings_widgets_theme_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виджеты в цвет темы"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

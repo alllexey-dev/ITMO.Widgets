@@ -140,6 +140,7 @@ internal class FakeSettingsRepository(
     val qrTileAdded = MutableStateFlow(initialLocal.qrTileAdded)
     val qrTileAddedRequests = mutableListOf<Boolean>()
     val themeRequests = mutableListOf<ThemeSpec>()
+    val widgetsFollowThemeRequests = mutableListOf<Boolean>()
     private val localAvailable = MutableStateFlow(localInitiallyAvailable)
     val sharing = MutableStateFlow(initialSharing)
     var refreshSharingCount = 0
@@ -345,6 +346,11 @@ internal class FakeSettingsRepository(
     override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
         local.value = local.value.copy(theme = change(local.value.theme))
         themeRequests += local.value.theme
+    }
+
+    override suspend fun setWidgetsFollowTheme(enabled: Boolean) {
+        widgetsFollowThemeRequests += enabled
+        local.value = local.value.copy(widgetsFollowTheme = enabled)
     }
 }
 

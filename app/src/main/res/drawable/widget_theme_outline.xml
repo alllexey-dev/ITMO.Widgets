@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widget_background_rounded's outline as a layer of its own; WidgetColors tints it. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@android:color/white" />
+
+    <corners android:radius="20dp" />
+</shape>

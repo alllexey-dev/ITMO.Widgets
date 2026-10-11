@@ -34,10 +34,12 @@ struct DayScheduleEntryView: View {
     let family: WidgetFamily
 
     var body: some View {
+        let colors = LessonWidgetColors(palette: entry.palette)
         DayScheduleTile(content: entry.content, family: family)
             .dynamicTypeSize(...DynamicTypeSize.xLarge)
-            .background(LessonWidgetColor.background)
-            .containerBackground(for: .widget) { LessonWidgetColor.background }
+            .background(colors.background)
+            .containerBackground(for: .widget) { colors.background }
+            .environment(\.lessonWidgetColors, colors)
             .widgetURL(LessonWidgetRoute.scheduleURL)
     }
 }
@@ -85,6 +87,7 @@ private struct DayScheduleTile: View {
     let family: WidgetFamily
 
     @Environment(\.locale) private var locale
+    @Environment(\.lessonWidgetColors) private var colors
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .subheadline) private var titleSize: CGFloat = 14
     @ScaledMetric(relativeTo: .footnote) private var timeSize: CGFloat = 13
@@ -146,15 +149,15 @@ private struct DayScheduleTile: View {
         switch item.kind {
         case .header:
             caption(Text(LessonWidgetText.header(item, locale: locale)), weight: .semibold)
-                .foregroundStyle(LessonWidgetColor.accent)
+                .foregroundStyle(colors.accent)
         case .lesson:
             if let lesson = item.lesson { lessonRow(lesson, style: style) }
         case .end:
             caption(Text(item.tomorrow ? .scheduleWidgetEndTomorrow : .scheduleWidgetEndToday), weight: .regular)
-                .foregroundStyle(LessonWidgetColor.secondaryText)
+                .foregroundStyle(colors.secondaryText)
         case .emptyToday, .emptyTodayAndTomorrow, .noMoreToday, .signedOut, .loading, .error:
             caption(Text(message(item.kind)), weight: .medium)
-                .foregroundStyle(LessonWidgetColor.secondaryText)
+                .foregroundStyle(colors.secondaryText)
         }
     }
 
@@ -183,10 +186,10 @@ private struct DayScheduleTile: View {
             VStack(alignment: .trailing, spacing: 0) {
                 Text(verbatim: lesson.start)
                     .font(.system(size: timeSize * scale, weight: .semibold).monospacedDigit())
-                    .foregroundStyle(LessonWidgetColor.primaryText)
+                    .foregroundStyle(colors.primaryText)
                 Text(verbatim: lesson.end)
                     .font(.system(size: captionSize * scale).monospacedDigit())
-                    .foregroundStyle(LessonWidgetColor.secondaryText)
+                    .foregroundStyle(colors.secondaryText)
             }
             .lineLimit(1)
             .fixedSize()
@@ -194,10 +197,10 @@ private struct DayScheduleTile: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(verbatim: LessonWidgetText.subject(of: lesson))
                     .font(.system(size: titleSize * scale, weight: .semibold))
-                    .foregroundStyle(LessonWidgetColor.primaryText)
+                    .foregroundStyle(colors.primaryText)
                 subtitle(lesson, details: details)
                     .font(.system(size: captionSize * scale))
-                    .foregroundStyle(LessonWidgetColor.secondaryText)
+                    .foregroundStyle(colors.secondaryText)
             }
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)

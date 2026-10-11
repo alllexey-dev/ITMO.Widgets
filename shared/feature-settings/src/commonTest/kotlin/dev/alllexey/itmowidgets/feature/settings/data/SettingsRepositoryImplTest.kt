@@ -133,6 +133,17 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
+    fun theWidgetsKeepTheirOwnColoursUntilTheThemeSwitchIsStored() = runTest {
+        val fixture = createRepository()
+        assertFalse(fixture.repository.observeLocalSettings().first().widgetsFollowTheme)
+
+        fixture.repository.setWidgetsFollowTheme(true)
+
+        assertEquals(LocalSettings(widgetsFollowTheme = true), fixture.repository.observeLocalSettings().first())
+        assertTrue(fixture.stores.appearance.observeWidgetsFollowTheme().first())
+    }
+
+    @Test
     fun theQrTileStartsNotAddedAndFollowsTheStoredFlag() = runTest {
         val fixture = createRepository()
         assertFalse(fixture.repository.observeLocalSettings().first().qrTileAdded)

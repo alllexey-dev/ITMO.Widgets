@@ -163,7 +163,8 @@ class SettingsViewModelTest {
                     SettingRowId.ACCENT_COLOR,
                     SettingRowId.THEME_PALETTE,
                     SettingRowId.THEME_CONTRAST,
-                    SettingRowId.DARK_BLACK
+                    SettingRowId.DARK_BLACK,
+                    SettingRowId.WIDGETS_FOLLOW_THEME
                 ),
                 items.map(SettingItem::id).toSet()
             )

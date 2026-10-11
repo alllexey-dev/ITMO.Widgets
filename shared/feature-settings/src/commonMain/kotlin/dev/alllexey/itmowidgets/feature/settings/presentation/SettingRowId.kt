@@ -50,6 +50,7 @@ enum class SettingRowId(val key: String) {
     THEME_PALETTE("theme_palette"),
     THEME_CONTRAST("theme_contrast"),
     DARK_BLACK("dark_black"),
+    WIDGETS_FOLLOW_THEME("widgets_follow_theme"),
 
     // Navigation rows: `page_` and the lowercase name of the page they open.
     PAGE_SERVICES("page_services"),

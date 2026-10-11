@@ -26,7 +26,9 @@ data class LocalSettings(
     /** The QR pass tile is in the quick settings, as far as the app saw; a flag of the device. */
     val qrTileAdded: Boolean = false,
     /** The app's colours: accent, palette style, contrast and the black dark background. */
-    val theme: ThemeSpec = ThemeSpec()
+    val theme: ThemeSpec = ThemeSpec(),
+    /** «Виджеты в цвет темы»: the widgets draw with [theme]'s scheme instead of their own colours. */
+    val widgetsFollowTheme: Boolean = false
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -80,6 +82,8 @@ interface SettingsRepository {
 
     /** Changes the stored appearance from its current value in one write. */
     suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec)
+
+    suspend fun setWidgetsFollowTheme(enabled: Boolean)
 
     suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean)
 

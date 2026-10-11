@@ -81,13 +81,16 @@ class WidgetsPageProvider(
         else -> qrSections(state)
     }
 
-    override fun preview(page: SettingsPage, local: LocalSettings): WidgetPreviewSettings? = when (page) {
-        SettingsPage.QR_WIDGET -> WidgetPreviewSettings.Qr(local.qrWidget)
-        SettingsPage.COMPACT_SCHEDULE_WIDGET ->
-            WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT)
-        SettingsPage.FULL_SCHEDULE_WIDGET ->
-            WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL)
-        else -> null
+    override fun preview(page: SettingsPage, local: LocalSettings): WidgetPreviewSettings? {
+        val theme = local.theme.takeIf { local.widgetsFollowTheme }
+        return when (page) {
+            SettingsPage.QR_WIDGET -> WidgetPreviewSettings.Qr(local.qrWidget, theme)
+            SettingsPage.COMPACT_SCHEDULE_WIDGET ->
+                WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT, theme)
+            SettingsPage.FULL_SCHEDULE_WIDGET ->
+                WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL, theme)
+            else -> null
+        }
     }
 
     override fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) {

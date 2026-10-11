@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background_rounded"
     android:clipToOutline="true"
-    android:orientation="vertical"
-    android:padding="4dp"
     tools:ignore="UnusedAttribute">
+
+    <include layout="@layout/widget_theme_background" />
 
     <ListView
         android:id="@+id/lesson_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_margin="4dp"
         android:divider="@null"
         android:dividerHeight="0dp"
         android:fadingEdge="none"
         android:scrollbars="none" />
 
-</LinearLayout>
+</FrameLayout>

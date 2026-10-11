@@ -16,8 +16,12 @@ import androidx.core.widget.RemoteViewsCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.ui.widget.rolesFor
+import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.*
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleListRowRenderer
@@ -110,6 +114,40 @@ class ScheduleWidgetRenderingTest {
                     ))
                     ScheduleWidgetRenderer.singleLessonViews(activity, current).reapply(activity, single)
                     assertFade(content, singleXml, singleTextIds, 1f)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun theAppThemeColoursTheWidgetAndAReusedViewDropsItWhenTheSwitchGoesOff() {
+        for (spec in Appearances.default) {
+            SettingsPreviewActivity.appearance = spec.toSettingsPreview()
+            val intent = Intent(ApplicationProvider.getApplicationContext(), SettingsPreviewActivity::class.java)
+            ActivityScenario.launch<SettingsPreviewActivity>(intent).use { scenario ->
+                scenario.onActivity { activity ->
+                    val parent = FrameLayout(activity)
+                    val xml = activity.layoutInflater.inflate(R.layout.widget_single_lesson_dot, parent, false)
+                    val palette = ThemeSpec(accent = AccentColor.TEAL).widgetPalette()
+                    val roles = palette.rolesFor(activity)
+                    val current = ScheduleWidgetSnapshot(
+                        SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, lesson(ScheduleWidgetLessonState.CURRENT)),
+                        emptyList(), LessonStyle.DOT, LessonStyle.DOT
+                    )
+                    val root = ScheduleWidgetRenderer.singleLessonViews(activity, current, palette).apply(activity, parent)
+
+                    assertEquals(Color.BLACK or roles.onSurface, root.findViewById<TextView>(R.id.title).currentTextColor)
+                    assertEquals(Color.BLACK or roles.primary, root.findViewById<TextView>(R.id.more_lessons_text).currentTextColor)
+                    assertEquals(View.VISIBLE, root.findViewById<View>(R.id.widget_theme_surface).visibility)
+                    assertEquals(View.VISIBLE, root.findViewById<View>(R.id.widget_theme_outline).visibility)
+
+                    ScheduleWidgetRenderer.singleLessonViews(activity, current).reapply(activity, root)
+
+                    singleTextIds.forEach { id ->
+                        assertEquals("$id", xml.findViewById<TextView>(id).currentTextColor, root.findViewById<TextView>(id).currentTextColor)
+                    }
+                    assertEquals(View.GONE, root.findViewById<View>(R.id.widget_theme_surface).visibility)
+                    assertEquals(View.GONE, root.findViewById<View>(R.id.widget_theme_outline).visibility)
                 }
             }
         }

@@ -5,6 +5,7 @@ import android.widget.RemoteViews
 import androidx.core.widget.RemoteViewsCompat
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.ui.withAppLocale
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItem
@@ -17,7 +18,8 @@ import java.util.Locale
 /** One bound day-list row and its stable id. */
 class ScheduleListRow(val id: Long, val views: RemoteViews)
 
-class ScheduleListRowRenderer(context: Context) {
+/** [palette] is the app's theme while the widgets follow it, null for the rows' own colours. */
+class ScheduleListRowRenderer(context: Context, private val palette: WidgetPalette? = null) {
     private val context = context.withAppLocale()
 
     /** The day-list rows of [snapshot], shared by the widget's collection items and the legacy adapter service. */
@@ -49,7 +51,8 @@ class ScheduleListRowRenderer(context: Context) {
                     context = context,
                     lesson = lesson,
                     style = style,
-                    textSize = textSize
+                    textSize = textSize,
+                    palette = palette
                 )
             }
 
@@ -128,7 +131,8 @@ class ScheduleListRowRenderer(context: Context) {
                 day,
                 formattedDate
             ),
-            textSize = textSize
+            textSize = textSize,
+            palette = palette
         )
     }
 
@@ -138,7 +142,8 @@ class ScheduleListRowRenderer(context: Context) {
             layoutId = layoutId,
             textViewId = textViewId,
             text = context.getString(textId),
-            textSize = textSize
+            textSize = textSize,
+            palette = palette
         )
     }
 

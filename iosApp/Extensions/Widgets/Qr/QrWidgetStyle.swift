@@ -16,7 +16,7 @@ struct QrWidgetStyle: Equatable {
     init(entry: QrWidgetEntry, dark: Bool, fullColor: Bool) {
         switch entry.content {
         case .spoiler, .revealed:
-            tile = .pass(dynamicColors: entry.appearance.dynamicColors, dark: dark)
+            tile = .pass(dynamicColors: entry.appearance.dynamicColors, dark: dark, palette: entry.appearance.palette)
         case .signedOut, .expired:
             tile = dark ? .dark : .light
         }
@@ -51,9 +51,14 @@ struct QrWidgetTile: Equatable {
     /// The system's dark grouped surface with white, for the states without a code in the dark theme.
     static let dark = QrWidgetTile(backgroundRGB: 0x1C1C1E, foregroundRGB: 0xFFFFFF)
 
-    /// The code and the spoiler: black on white, or with `dynamicColors` the app's scheme for the widget's theme.
-    static func pass(dynamicColors: Bool, dark: Bool) -> QrWidgetTile {
+    /// The code and the spoiler: black on white, or with `dynamicColors` the app's scheme for the widget's theme,
+    /// the `palette` the app wrote while the widgets follow its theme, the brand scheme otherwise. Without
+    /// `dynamicColors` the palette changes nothing: black on white always scans.
+    static func pass(dynamicColors: Bool, dark: Bool, palette: WidgetPalette? = nil) -> QrWidgetTile {
         guard dynamicColors else { return code }
+        if let roles = palette?.roles(dark: dark) {
+            return resolve(surface: roles.surface, onSurfaceVariant: roles.onSurfaceVariant, onSurface: roles.onSurface)
+        }
         let roles = dark ? ItmoColorRoles.dark : ItmoColorRoles.light
         return resolve(surface: roles.surface, onSurfaceVariant: roles.onSurfaceVariant, onSurface: roles.onSurface)
     }
