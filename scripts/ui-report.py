@@ -2,7 +2,7 @@
 """ui-report.py: every run of every instrumentation test, from the device's TestRunner log.
 
 Usage:
-  ui-report.py --logcat <file> [--gradle <file>] [--root <repo>] [--marker <text>]
+  ui-report.py --logcat <file> [--gradle <file>] [--junit <dir>] [--root <repo>] [--marker <text>]
   ui-report.py --list-suites [--root <repo>]
 
 Why (L04 TC-UIREPORT): `verify.sh ui all` runs the members of a JUnit suite (ShellSuite) twice, once inside the
@@ -15,6 +15,9 @@ keep one result per class and method, the last one, so a pass in the second run 
   skipped; without a marker line the whole file counts.
 - --gradle is Gradle's console output; every `<class> > <method>[<device>] FAILED` line is a failed run too, so a
   failure still counts when the log capture missed it (or when there is no device log, as on a managed device).
+- --junit is AGP's connected results directory (rewritten by every connected run). Only when the log has no run
+  (the device's logd stalled, TC-UIREPORT2) its `TEST-*.xml` give the count line, one result per test, so a shard
+  whose tests ran still reports `<n> runs of <m> tests` and a shard that ran none reports no count.
 - A run is identified by its suite: the suites are the `@Suite.SuiteClasses` of app/src/androidTest*/ under --root,
   and a stretch of runs whose classes follow a suite's members in order (two members at least) ran inside it; other
   runs of a member ran standalone. A failure names the `ShellModeRule` shells its message names
@@ -29,6 +32,7 @@ import glob
 import os
 import re
 import sys
+import xml.etree.ElementTree as ElementTree
 
 DEFAULT_MARKER = "itmo-verify-ui-start"
 NAME_RE = re.compile(r"^(?P<method>.*)\((?P<cls>[^()]*)\)$")
@@ -128,6 +132,18 @@ def parse_gradle(lines):
         if match:
             failures[(match.group("cls"), match.group("method"))] += 1
     return failures
+
+
+def junit_tests(directory):
+    """(class, method) of every testcase in the TEST-*.xml under directory."""
+    tests = []
+    for path in sorted(glob.glob(os.path.join(directory, "**", "TEST-*.xml"), recursive=True)):
+        try:
+            cases = ElementTree.parse(path).iter("testcase")
+            tests.extend((case.get("classname", ""), case.get("name", "")) for case in cases)
+        except (OSError, ElementTree.ParseError):
+            continue
+    return tests
 
 
 def source_files(root):
@@ -269,6 +285,7 @@ def main(argv):
     parser = argparse.ArgumentParser(add_help=True, description=__doc__.split("\n\n")[0])
     parser.add_argument("--logcat")
     parser.add_argument("--gradle")
+    parser.add_argument("--junit")
     parser.add_argument("--root", default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     parser.add_argument("--marker", default=DEFAULT_MARKER)
     parser.add_argument("--list-suites", action="store_true")
@@ -301,6 +318,11 @@ def main(argv):
     elif args.logcat:
         out.append("no TestRunner events after the marker in %s; failures below come from Gradle's output only"
                    % args.logcat)
+    if not runs and args.junit:
+        tests = junit_tests(args.junit)
+        if tests:
+            out.append("%d runs of %d tests in Gradle's JUnit XML (its last result per test)"
+                       % (len(tests), len(set(tests))))
 
     failed = [run for run in runs if run.status in ("failed", "unfinished")]
     logged = collections.Counter((run.cls, run.method) for run in failed)

@@ -502,7 +502,8 @@ ui_report_finish() {
     return "$rc"
   fi
   python3 -I "$root/scripts/ui-report.py" --root "$root" --marker "${ui_marker:-itmo-verify-ui-start}" \
-    --logcat "$ui_dir/logcat" --gradle "$ui_dir/gradle" >&2
+    --logcat "$ui_dir/logcat" --gradle "$ui_dir/gradle" \
+    ${ui_serial:+--junit "$root/app/build/outputs/androidTest-results/connected"} >&2
   report_rc=$?
   if [ "$report_rc" -eq 1 ] && [ "$rc" -eq 0 ]; then
     note "Gradle passed, but the ui report lists a failed run (a later run of the same test hid it)"

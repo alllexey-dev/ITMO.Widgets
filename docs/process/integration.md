@@ -117,8 +117,9 @@ minutes are free), in parallel jobs, so nothing heavy has to run on the laptop f
 
 - Each check is an aggregate job: it fails when any of its jobs failed, was skipped where it had to run, or left
   no report. The jobs of `verify-quick` together are `verify.sh full`; `android-ui` together is `verify.sh ui all`,
-  judged by `scripts/ui-report.py` per shard (every run of every test, not Gradle's last result), plus the shell on
-  a cutout. A PR that touches no app input still gets a green `android-ui`.
+  judged by `scripts/ui-report.py` per shard (every run of every test, not Gradle's last result; Gradle's JUnit XML
+  gives the count when the emulator's log had no run), plus the shell on a cutout. A PR that touches no app input
+  still gets a green `android-ui`.
 - The emulators come from `scripts/ci-emulator.sh`: `system-images;android-35;google_apis;x86_64` with the pool
   AVD's Pixel 7 geometry, cold-booted while Gradle builds, animations as the image ships them (as on the pool).
 - `android-ship` uploads `ship-<sha7>`: a summary in the ship check's format with stages 1, 3, 5 and 6, and their
