@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
@@ -35,6 +36,7 @@ class AuthModuleTest {
     private val platformPorts = listOf(
         SessionTokenStore::class,
         MyItmoClient::class,
+        RefreshRejections::class,
         Clock::class,
         CurrentUserProvider::class,
         SessionDataCleaners::class,
