@@ -9,11 +9,7 @@ class PendingBackendField(val schema: String, val property: String, val backendC
     override fun toString(): String = "$schema.$property ($backendCard)"
 }
 
-/** Every [PendingBackendField]. The `platform` query of `GET /api/app/version-info` (BK-17) is in the snapshot. */
+/** Every [PendingBackendField]: none since Backend 1.9.1 shipped BK-16b's `RegisterDeviceRequest` fields. */
 object PendingBackendFields {
-    val all: List<PendingBackendField> = listOf(
-        PendingBackendField("RegisterDeviceRequest", "platform", "BK-16b"),
-        PendingBackendField("RegisterDeviceRequest", "alertsAllowed", "BK-16b"),
-        PendingBackendField("RegisterDeviceRequest", "appVersion", "BK-16b"),
-    )
+    val all: List<PendingBackendField> = emptyList()
 }

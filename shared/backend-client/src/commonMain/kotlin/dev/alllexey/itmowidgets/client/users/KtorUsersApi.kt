@@ -39,6 +39,8 @@ internal class KtorUsersApi(private val http: BackendHttp) : UsersApi {
     override suspend fun approveWebLogin(challengeId: Uuid) =
         http.callUnit(route(HttpMethod.Post, "me", "web-login", challengeId.toHexDashString(), "approve"))
 
+    override suspend fun deleteMe() = http.callUnit(route(HttpMethod.Delete, "me"))
+
     private fun route(method: HttpMethod, vararg segments: String, body: BackendBody? = null) =
         BackendRoute(method, listOf("api", "users") + segments, body = body)
 }

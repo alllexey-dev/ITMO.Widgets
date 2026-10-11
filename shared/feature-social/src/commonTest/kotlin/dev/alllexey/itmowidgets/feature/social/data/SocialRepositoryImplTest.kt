@@ -667,6 +667,8 @@ class SocialRepositoryImplTest {
             override suspend fun webLoginPreview(code: String): WebLoginPreview = unexpected("webLoginPreview")
 
             override suspend fun approveWebLogin(challengeId: Uuid): Unit = unexpected("approveWebLogin")
+
+            override suspend fun deleteMe(): Unit = unexpected("deleteMe")
         }
 
         val friendships: FriendsApi = object : FriendsApi {

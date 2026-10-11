@@ -7,13 +7,14 @@ import dev.alllexey.itmowidgets.client.support.runSuspend
 import kotlin.test.Test
 
 /**
- * Backend's vendored device fixtures (`claims/device.txt`): both answers are accepted by [DeviceApi] and both request
- * bodies round-trip. Arguments do not matter, the fixture is the answer.
+ * Backend's vendored device fixtures (`claims/device.txt`): every answer is accepted by [DeviceApi] and every request
+ * body round-trips. Arguments do not matter, the fixture is the answer.
  */
 class DeviceVendoredFixturesTest {
 
     private val responses = listOf(
         ResponseClaim("http/device/registerDevice.json", null) { device.register(DeviceRouteCases.released) },
+        ResponseClaim("http/device/registerDeviceIos.json", null) { device.register(DeviceRouteCases.released) },
         ResponseClaim("http/device/unregisterCurrentDevice.json", null) {
             device.unregisterCurrent(UnregisterDeviceRequest(DeviceRouteCases.TOKEN))
         },
@@ -21,6 +22,7 @@ class DeviceVendoredFixturesTest {
 
     private val requests = listOf(
         RequestClaim("requests/RegisterDeviceRequest.json", RegisterDeviceRequest.serializer()),
+        RequestClaim("requests/RegisterDeviceRequestIos.json", RegisterDeviceRequest.serializer()),
         RequestClaim("requests/UnregisterDeviceRequest.json", UnregisterDeviceRequest.serializer()),
     )
 

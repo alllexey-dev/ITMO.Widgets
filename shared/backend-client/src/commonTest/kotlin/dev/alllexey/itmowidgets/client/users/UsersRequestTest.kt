@@ -13,7 +13,7 @@ class UsersRequestTest {
 
     @Test
     fun everyPublicFunctionHasOneCase() {
-        assertEquals(9, UsersRouteCases.all.size)
+        assertEquals(10, UsersRouteCases.all.size)
         assertEquals(UsersRouteCases.all.size, UsersRouteCases.all.map { it.name }.toSet().size)
     }
 
@@ -83,6 +83,11 @@ class UsersRequestTest {
             HttpMethod.Post,
             "/api/users/me/web-login/00000000-0000-0000-0000-000000000077/approve",
         )
+    }
+
+    @Test
+    fun deleteMe() = runSuspend {
+        UsersRouteCases.deleteMe.assertRequest(HttpMethod.Delete, "/api/users/me")
     }
 
     @Test

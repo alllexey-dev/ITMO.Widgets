@@ -64,6 +64,14 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "RegisterDeviceRequestIos",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/RegisterDeviceRequestIos.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "ResourceVoteRequest",
     "kind": "request",
     "method": null,
@@ -304,6 +312,14 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "adminSystem_clientVersions",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/system/client-versions",
+    "file": "http/admin/adminSystem_clientVersions.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "adminSystem_credentials",
     "kind": "http",
     "method": "GET",
@@ -470,6 +486,14 @@
     "path": "/api/moderation/cases/{id}/decisions",
     "file": "http/moderation/decide.json",
     "minCore": "1.7.0"
+  },
+  {
+    "id": "deleteMyAccount",
+    "kind": "http",
+    "method": "DELETE",
+    "path": "/api/users/me",
+    "file": "http/users/deleteMyAccount.json",
+    "minCore": "1.8.0"
   },
   {
     "id": "deleteMyTeacherReview",
@@ -648,12 +672,28 @@
     "minCore": "1.7.0"
   },
   {
+    "id": "reauth_required",
+    "kind": "error",
+    "method": null,
+    "path": null,
+    "file": "errors/reauth_required.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "registerDevice",
     "kind": "http",
     "method": "POST",
     "path": "/api/device/register-device",
     "file": "http/device/registerDevice.json",
     "minCore": "1.2.0"
+  },
+  {
+    "id": "registerDeviceIos",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/device/register-device",
+    "file": "http/device/registerDeviceIos.json",
+    "minCore": "1.8.0"
   },
   {
     "id": "rejectFriendRequest",

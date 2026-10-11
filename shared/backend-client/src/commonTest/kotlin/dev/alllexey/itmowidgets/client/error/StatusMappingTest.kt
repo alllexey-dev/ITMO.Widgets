@@ -34,7 +34,7 @@ class StatusMappingTest {
 
     @Test
     fun forbiddenCodesStayDistinguishable() = runSuspend {
-        for (code in listOf("restricted", "permission_denied", "access_denied", "csrf")) {
+        for (code in listOf("restricted", "permission_denied", "access_denied", "csrf", "recent_sign_in_required")) {
             val error = assertIs<BackendException.Forbidden>(failureFor(HttpStatusCode.Forbidden, errorEnvelope(code)))
             assertEquals(code, error.code)
         }

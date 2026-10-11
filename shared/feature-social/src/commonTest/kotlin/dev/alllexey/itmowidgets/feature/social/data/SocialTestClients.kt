@@ -56,6 +56,7 @@ internal object UnreachableUsers : UsersApi {
     override suspend fun myUserData(): UserData = unreachable("myUserData")
     override suspend fun webLoginPreview(code: String): WebLoginPreview = unreachable("webLoginPreview")
     override suspend fun approveWebLogin(challengeId: Uuid): Unit = unreachable("approveWebLogin")
+    override suspend fun deleteMe(): Unit = unreachable("deleteMe")
 }
 
 /** Core 2.0's friends area that fails the test on any call. */

@@ -170,19 +170,19 @@ class VendoredContractTest {
     }
 
     @Test
-    fun unauthorizedBodyIsUnauthorized() = runSuspend {
-        val body = VendoredContract.read("errors/unauthorized.json")
+    fun everyUnauthorizedBodyIsUnauthorized() = runSuspend {
+        for (path in ERROR_FIXTURES) {
+            val backend = MockBackend { json(HttpStatusCode.Unauthorized, VendoredContract.read(path)) }
 
-        val backend = MockBackend { json(HttpStatusCode.Unauthorized, body) }
-
-        assertFailsWith<BackendException.Unauthorized> { backend.client.users.myUserData() }
+            assertFailsWith<BackendException.Unauthorized>(path) { backend.client.users.myUserData() }
+        }
     }
 
     private companion object {
         /** Read by this package, `README.md` by people; `index.json` lists every other file. */
         val META_FILES = listOf("BACKEND_COMMIT", "README.md", "index.json", "openapi.json")
 
-        /** Error bodies any route answers with, checked here. */
-        val ERROR_FIXTURES = listOf("errors/unauthorized.json")
+        /** 401 bodies, checked here: any protected route's, and an admin or moderation route's (Web only). */
+        val ERROR_FIXTURES = listOf("errors/unauthorized.json", "errors/reauth_required.json")
     }
 }

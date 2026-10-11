@@ -37,6 +37,7 @@ class UsersVendoredFixturesTest {
             users.webLoginPreview("K7M2QX9P")
         },
         ResponseClaim("http/users/approveWebLogin.json", null) { users.approveWebLogin(UsersRouteCases.challengeId) },
+        ResponseClaim("http/users/deleteMyAccount.json", null) { users.deleteMe() },
     )
 
     private val requests = listOf(

@@ -21,6 +21,7 @@ object UsersRouteCases {
     val myUserData = RouteCase("myUserData") { users.myUserData() }
     val webLoginPreview = RouteCase("webLoginPreview") { users.webLoginPreview("K7M2QX9P") }
     val approveWebLogin = RouteCase("approveWebLogin") { users.approveWebLogin(challengeId) }
+    val deleteMe = RouteCase("deleteMe") { users.deleteMe() }
 
     val all: List<RouteCase> = listOf(
         userProfile,
@@ -32,5 +33,6 @@ object UsersRouteCases {
         myUserData,
         webLoginPreview,
         approveWebLogin,
+        deleteMe,
     )
 }

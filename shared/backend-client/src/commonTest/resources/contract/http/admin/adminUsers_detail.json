@@ -37,7 +37,33 @@
     "devices": [
       {
         "name": "Pixel 8 (synthetic)",
-        "lastLogin": "2026-10-05T07:30:00Z"
+        "lastLogin": "2026-10-05T07:30:00Z",
+        "appVersion": "2.3.0-beta.1",
+        "appBuild": 20291,
+        "appPlatform": "ANDROID",
+        "appDistribution": "github",
+        "appVersionSeenAt": "2026-10-05T08:10:00Z",
+        "platform": "ANDROID"
+      },
+      {
+        "name": "iPhone 15 (synthetic)",
+        "lastLogin": "2026-09-20T10:00:00Z",
+        "appVersion": "2.3.0",
+        "appBuild": null,
+        "appPlatform": null,
+        "appDistribution": null,
+        "appVersionSeenAt": null,
+        "platform": "IOS"
+      },
+      {
+        "name": "Galaxy A52 (synthetic)",
+        "lastLogin": "2026-09-12T16:00:00Z",
+        "appVersion": null,
+        "appBuild": null,
+        "appPlatform": null,
+        "appDistribution": null,
+        "appVersionSeenAt": null,
+        "platform": "ANDROID"
       }
     ],
     "friendsCount": 12,

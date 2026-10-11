@@ -107,11 +107,11 @@ class ContractConformanceTest {
 
     @Test
     fun seededShippedPendingFieldFails() {
-        val drifted = spec.edited("components", "schemas", "RegisterDeviceRequest", "properties") { properties ->
-            JsonObject(properties.jsonObject + ("platform" to buildJsonObject { put("type", "string") }))
-        }
+        val shipped = PendingBackendField("RegisterDeviceRequest", "platform", "BK-16b")
 
-        assertHas(modelProblems(drifted), "RegisterDeviceRequest.platform is in Backend's schema now")
+        val problems = ContractConformance.modelProblems(spec, WireModels.all, WireModels.enums, listOf(shipped))
+
+        assertHas(problems, "RegisterDeviceRequest.platform is in Backend's schema now")
     }
 
     @Test
