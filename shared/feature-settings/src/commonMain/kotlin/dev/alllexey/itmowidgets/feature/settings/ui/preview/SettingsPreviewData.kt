@@ -110,6 +110,7 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_no
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_reset_image_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_short_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_widgets_theme_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_refresh_widgets_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_title
@@ -158,7 +159,12 @@ internal object SettingsPreviewData {
             items = listOf(
                 navigation(SettingsPage.COMPACT_SCHEDULE_WIDGET),
                 navigation(SettingsPage.FULL_SCHEDULE_WIDGET),
-                navigation(SettingsPage.QR_WIDGET, title = res(Res.string.settings_qr_short_title))
+                navigation(SettingsPage.QR_WIDGET, title = res(Res.string.settings_qr_short_title)),
+                SettingItem.Toggle(
+                    id = SettingRowId.WIDGETS_FOLLOW_THEME,
+                    title = res(Res.string.settings_widgets_theme_title),
+                    checked = false
+                )
             )
         ),
         SettingSection(

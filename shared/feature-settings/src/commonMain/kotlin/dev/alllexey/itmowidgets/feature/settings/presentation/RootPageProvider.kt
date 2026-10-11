@@ -56,12 +56,13 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_ton
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_tonal_spot_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_vibrant
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_vibrant_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_widgets_theme_title
 import org.jetbrains.compose.resources.StringResource
 
 /**
- * The catalogue: one row per detail page, plus the notification permission; and the appearance page, whose rows are
- * the stored [ThemeSpec] (DS-ACC1, DS-ACC2). The recordbook page holds only the mark checks, so it is listed where the
- * platform offers mark tracking.
+ * The catalogue: one row per detail page, plus the notification permission and whether the widgets take the app's
+ * theme (DS-ACC3); and the appearance page, whose rows are the stored [ThemeSpec] (DS-ACC1, DS-ACC2). The recordbook
+ * page holds only the mark checks, so it is listed where the platform offers mark tracking.
  */
 class RootPageProvider(
     private val repository: SettingsRepository,
@@ -76,7 +77,8 @@ class RootPageProvider(
         SettingRowId.ACCENT_CUSTOM,
         SettingRowId.THEME_PALETTE,
         SettingRowId.THEME_CONTRAST,
-        SettingRowId.DARK_BLACK
+        SettingRowId.DARK_BLACK,
+        SettingRowId.WIDGETS_FOLLOW_THEME
     )
 
     override fun sections(page: SettingsPage, state: SettingsPageState) = when (page) {
@@ -124,6 +126,11 @@ class RootPageProvider(
                 SettingRows.navigation(
                     SettingsPage.QR_WIDGET,
                     title = UiText.Res(Res.string.settings_qr_short_title)
+                ),
+                SettingItem.Toggle(
+                    id = SettingRowId.WIDGETS_FOLLOW_THEME,
+                    title = UiText.Res(Res.string.settings_widgets_theme_title),
+                    checked = state.local.widgetsFollowTheme
                 )
             )
         ),
@@ -192,7 +199,11 @@ class RootPageProvider(
     }
 
     override fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) {
-        if (id == SettingRowId.DARK_BLACK) updateTheme(scope) { it.copy(pureBlack = checked) }
+        when (id) {
+            SettingRowId.DARK_BLACK -> updateTheme(scope) { it.copy(pureBlack = checked) }
+            SettingRowId.WIDGETS_FOLLOW_THEME -> scope.updateWidgetSetting { repository.setWidgetsFollowTheme(checked) }
+            else -> Unit
+        }
     }
 
     /** The custom colour row reports its colour as `#RRGGBB`; picking it also makes it the accent. */
@@ -210,8 +221,9 @@ class RootPageProvider(
         }
     }
 
+    /** Widgets that follow the theme redraw with every change of it. */
     private fun updateTheme(scope: SettingsPageScope, change: (ThemeSpec) -> ThemeSpec) {
-        scope.updateLocalSetting { repository.updateTheme(change) }
+        scope.updateWidgetSetting { repository.updateTheme(change) }
     }
 
     /**

@@ -15,8 +15,10 @@ import androidx.core.widget.RemoteViewsCompat
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.ui.navigation.AppEntryIntentFactory
+import dev.alllexey.itmowidgets.core.ui.widget.WidgetColors
 import dev.alllexey.itmowidgets.core.ui.withAppLocale
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
@@ -37,8 +39,9 @@ object ScheduleWidgetRenderer {
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
         snapshot: ScheduleWidgetSnapshot,
+        palette: WidgetPalette?,
     ) {
-        val views = singleLessonViews(context, snapshot)
+        val views = singleLessonViews(context, snapshot, palette)
         views.setOnClickPendingIntent(
             android.R.id.background,
             openSchedulePendingIntent(context, appWidgetId)
@@ -46,12 +49,22 @@ object ScheduleWidgetRenderer {
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
-    /** Builds the exact widget layout without registering a host or issuing an update. */
-    fun singleLessonViews(context: Context, snapshot: ScheduleWidgetSnapshot): RemoteViews {
+    /**
+     * Builds the exact widget layout without registering a host or issuing an update; [palette] is the app's theme
+     * while the widgets follow it.
+     */
+    fun singleLessonViews(
+        context: Context,
+        snapshot: ScheduleWidgetSnapshot,
+        palette: WidgetPalette? = null,
+    ): RemoteViews {
         val content = snapshot.singleLesson
         val localized = context.withAppLocale()
+        val colors = WidgetColors(localized, palette)
         val views = RemoteViews(context.packageName, singleLessonLayout(snapshot.singleLessonStyle))
         applyTextSize(views, singleLessonTextSp, snapshot.resolvedCompactTextSize)
+        colors.applyBackground(views)
+        colors.applyText(views, singleLessonTextColors + singleMessageTextColors)
         val lesson = content.lesson
         if (lesson == null) {
             bindSingleMessage(localized, views, content.kind)
@@ -59,7 +72,7 @@ object ScheduleWidgetRenderer {
             views.setViewVisibility(R.id.widget_message, View.GONE)
             views.setViewVisibility(R.id.lesson_content, View.VISIBLE)
             bindLesson(localized, views, lesson, snapshot.singleLessonStyle)
-            applyLessonAlpha(localized, views, R.id.lesson_content, singleLessonTextColors, lessonAlpha(lesson))
+            applyLessonAlpha(colors, views, R.id.lesson_content, singleLessonTextColors, lessonAlpha(lesson))
             views.setViewVisibility(R.id.more_lessons_layout, View.VISIBLE)
             views.setTextViewText(
                 R.id.more_lessons_text,
@@ -78,14 +91,15 @@ object ScheduleWidgetRenderer {
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
         snapshot: ScheduleWidgetSnapshot,
+        palette: WidgetPalette?,
     ) {
-        val views = RemoteViews(context.packageName, R.layout.widget_lesson_list)
+        val views = listShellViews(context, palette)
         RemoteViewsCompat.setRemoteAdapter(
             context,
             views,
             appWidgetId,
             R.id.lesson_list,
-            ScheduleListRowRenderer(context).collectionItems(snapshot)
+            ScheduleListRowRenderer(context, palette).collectionItems(snapshot)
         )
         views.setPendingIntentTemplate(
             R.id.lesson_list,
@@ -94,22 +108,31 @@ object ScheduleWidgetRenderer {
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
+    /** The day list without its rows, for the widget and the settings preview. */
+    fun listShellViews(context: Context, palette: WidgetPalette?): RemoteViews =
+        RemoteViews(context.packageName, R.layout.widget_lesson_list).apply {
+            WidgetColors(context, palette).applyBackground(this)
+        }
+
     fun lessonListRow(
         context: Context,
         lesson: ScheduleWidgetLesson,
         style: LessonStyle,
         textSize: WidgetTextSize = WidgetTextSize.NORMAL,
+        palette: WidgetPalette? = null,
     ): RemoteViews {
         val localized = context.withAppLocale()
+        val colors = WidgetColors(localized, palette)
         return RemoteViews(context.packageName, lessonListLayout(style)).apply {
             applyTextSize(this, lessonRowTextSp, textSize)
+            colors.applyText(this, lessonRowTextColors)
             bindLesson(localized, this, lesson, style)
             // Fade the complete row, including its time column, exactly once.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 // Reset alpha left by older widget views that only faded lesson_content.
                 setFloat(R.id.lesson_content, "setAlpha", 1f)
             }
-            applyLessonAlpha(localized, this, R.id.item_root, lessonRowTextColors, lessonAlpha(lesson))
+            applyLessonAlpha(colors, this, R.id.item_root, lessonRowTextColors, lessonAlpha(lesson))
             setOnClickFillInIntent(R.id.item_root, Intent())
         }
     }
@@ -120,10 +143,14 @@ object ScheduleWidgetRenderer {
         textViewId: Int,
         text: CharSequence,
         textSize: WidgetTextSize = WidgetTextSize.NORMAL,
+        palette: WidgetPalette? = null,
     ): RemoteViews {
         return RemoteViews(context.packageName, layoutId).apply {
             messageRowTextSp[textViewId]?.let { sp ->
                 setTextViewTextSize(textViewId, TypedValue.COMPLEX_UNIT_SP, sp * textSize.scale)
+            }
+            messageRowTextColors[textViewId]?.let { color ->
+                WidgetColors(context, palette).apply(this, textViewId, "setTextColor", color)
             }
             setTextViewText(textViewId, text)
             setOnClickFillInIntent(R.id.item_root, Intent())
@@ -193,12 +220,11 @@ object ScheduleWidgetRenderer {
 
     /**
      * `View.setAlpha` is a RemoteViews method only from API 31; below it the widget fails to inflate. There every
-     * label gets its layout colour with the alpha folded in and the type indicator an image alpha, set on every
-     * render so a reused view drops an earlier fade. Colours resolve through [context], the widget's themed
-     * context, so night variants follow the configuration of the render.
+     * label gets its colour of [colors] with the alpha folded in and the type indicator an image alpha, set on every
+     * render so a reused view drops an earlier fade. Colours resolve in the render's own night mode.
      */
     private fun applyLessonAlpha(
-        context: Context,
+        colors: WidgetColors,
         views: RemoteViews,
         fadedViewId: Int,
         textColors: Map<Int, Int>,
@@ -209,7 +235,7 @@ object ScheduleWidgetRenderer {
             return
         }
         textColors.forEach { (id, colorRes) ->
-            views.setTextColor(id, ContextCompat.getColor(context, colorRes).withAlpha(alpha))
+            views.setTextColor(id, colors.resolve(colorRes).withAlpha(alpha))
         }
         views.setInt(R.id.type_indicator, "setImageAlpha", (alpha * OPAQUE).roundToInt())
     }
@@ -338,6 +364,17 @@ object ScheduleWidgetRenderer {
         R.id.title to R.color.widget_on_surface,
         R.id.secondary_text to R.color.widget_on_surface_variant,
         R.id.more_lessons_text to R.color.widget_primary
+    )
+    private val singleMessageTextColors = mapOf(
+        R.id.widget_message_title to R.color.widget_on_surface,
+        R.id.widget_message_hint to R.color.widget_primary
+    )
+    private val messageRowTextColors = mapOf(
+        R.id.day_title to R.color.widget_on_surface_variant,
+        R.id.end_marker to R.color.widget_on_surface_variant,
+        R.id.no_lessons to R.color.widget_on_surface,
+        R.id.no_more_lessons to R.color.widget_on_surface,
+        R.id.empty_view to R.color.widget_on_surface
     )
     private val lessonRowTextColors = mapOf(
         R.id.time_start to R.color.widget_on_surface,

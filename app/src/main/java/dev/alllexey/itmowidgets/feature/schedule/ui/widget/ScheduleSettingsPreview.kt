@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.databinding.ViewWidgetPreviewScheduleBinding
+import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewLabels
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
@@ -32,7 +33,6 @@ class ScheduleSettingsPreview(
     private val fullHeight: Int
     private var evening = false
     private var snapshot: ScheduleWidgetSnapshot? = null
-    private val rowRenderer = ScheduleListRowRenderer(context)
     private val labels = SchedulePreviewLabels(
         context.getString(R.string.widget_preview_subject_history),
         context.getString(R.string.widget_preview_subject_math),
@@ -107,17 +107,18 @@ class ScheduleSettingsPreview(
     private fun renderPreview() {
         val content = snapshot ?: return
         val root = binding.schedulePreviewContent
+        val palette = appearance?.theme?.widgetPalette(context)
         if (appearance?.format == ScheduleWidgetFormat.COMPACT) {
-            val remote = ScheduleWidgetRenderer.singleLessonViews(context, content)
+            val remote = ScheduleWidgetRenderer.singleLessonViews(context, content, palette)
             if (root.isEmpty()) {
                 root.addView(remote.apply(context, root), FrameLayout.LayoutParams(-1, -2, Gravity.CENTER))
             } else {
                 remote.reapply(context, root.getChildAt(0))
             }
         } else {
-            if (root.isEmpty()) {
-                LayoutInflater.from(context).inflate(R.layout.widget_lesson_list, root, true)
-            }
+            val shell = ScheduleWidgetRenderer.listShellViews(context, palette)
+            if (root.isEmpty()) root.addView(shell.apply(context, root)) else shell.reapply(context, root.getChildAt(0))
+            val rowRenderer = ScheduleListRowRenderer(context, palette)
             val list = root.findViewById<ListView>(R.id.lesson_list)
             list.adapter = object : BaseAdapter() {
                 override fun getCount() = content.lessonList.size

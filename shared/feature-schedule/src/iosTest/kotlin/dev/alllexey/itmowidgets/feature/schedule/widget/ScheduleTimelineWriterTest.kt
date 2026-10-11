@@ -1,7 +1,10 @@
 package dev.alllexey.itmowidgets.feature.schedule.widget
 
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
+import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
@@ -16,12 +19,14 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTim
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineJson
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetContent
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind
+import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import kotlin.random.Random
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -47,6 +52,7 @@ class ScheduleTimelineWriterTest {
     private val reloads = mutableListOf<String>()
     private val clock = FakeClock(Instant.parse("2026-10-07T09:00:00Z"))
     private val source = FakeSource()
+    private var palette: WidgetPalette? = null
     private val writer = ScheduleTimelineWriter(
         source = source,
         writer = AppGroupSnapshotWriter(directory, reloader = { kind -> reloads += kind }, json = ScheduleTimelineWriter.JSON),
@@ -54,6 +60,7 @@ class ScheduleTimelineWriterTest {
         timeProvider = FixedAcademicTime(),
         clock = clock,
         log = log,
+        palette = { palette },
     )
 
     @AfterTest
@@ -74,6 +81,17 @@ class ScheduleTimelineWriterTest {
         val expected = JsonObject(mapOf("version" to JsonPrimitive(1), "value" to Json.parseToJsonElement(fixture)))
         assertEquals(expected, written)
         assertEquals(listOf(SINGLE_LESSON_KIND, DAY_SCHEDULE_KIND), reloads)
+    }
+
+    @Test
+    fun eachWriteCarriesTheWidgetThemeOfItsMoment() = runTest(UnconfinedTestDispatcher()) {
+        writer.publish()
+        assertNull(read().palette)
+
+        palette = ThemeSpec(accent = AccentColor.TEAL).widgetPalette()
+        writer.publish()
+
+        assertEquals(ThemeSpec(accent = AccentColor.TEAL).widgetPalette(), read().palette)
     }
 
     @Test

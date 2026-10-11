@@ -3,9 +3,12 @@ package dev.alllexey.itmowidgets.feature.qr.widget
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.SnapshotFile
+import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import kotlin.coroutines.cancellation.CancellationException
@@ -17,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -48,6 +52,12 @@ data class QrPassSnapshot(
     @SerialName("dynamicColors") val dynamicColors: Boolean,
     /** `settings_qr_animation_title`, a [QrAnimationType] name (a stable identifier). */
     @SerialName("animation") val animation: String,
+    /**
+     * The app's colours while «Виджеты в цвет темы» is on, absent otherwise; additive in version 1, so an older widget
+     * ignores it. They replace the brand scheme of [dynamicColors]; without [dynamicColors] the code stays black on
+     * white.
+     */
+    @SerialName("palette") val palette: WidgetPalette? = null,
 )
 
 /**
@@ -58,6 +68,8 @@ data class QrWidgetAppearance(
     val spoiler: Boolean,
     val dynamicColors: Boolean,
     val animation: QrAnimationType,
+    /** The app's colours while the widgets follow the theme, null for the brand scheme. */
+    val palette: WidgetPalette? = null,
 ) {
     companion object {
         /** The options while nothing is stored: Android's defaults. */
@@ -66,15 +78,16 @@ data class QrWidgetAppearance(
 }
 
 /**
- * Keeps [FILE] on the pass that [QrCodeRepository] holds and on the QR widget options of [settings]: every new valid
- * pass and every changed option is written with the pass's expiry and the QR widget kind is reloaded, so a changed
- * switch reaches placed widgets at once. Nothing is written while there is no valid pass; on sign-out the App Group
+ * Keeps [FILE] on the pass that [QrCodeRepository] holds, on the QR widget options of [settings] and on the widget
+ * theme of [appearance]: every new valid pass and every changed option is written with the pass's expiry and the QR
+ * widget kind is reloaded, so a changed switch reaches placed widgets at once. Nothing is written while there is no valid pass; on sign-out the App Group
  * cleaner removes the file and the cleared cache emits nothing new, so the file stays gone until the next pass.
  * Times come from the wall [clock].
  */
 class QrPassSnapshotWriter(
     private val repository: QrCodeRepository,
     private val settings: QrSettingsPreferences,
+    private val appearance: AppearancePreferences,
     private val writer: AppGroupSnapshotWriter,
     private val demo: DemoMode,
     private val clock: Clock,
@@ -99,6 +112,7 @@ class QrPassSnapshotWriter(
                 spoiler = appearance.spoiler,
                 dynamicColors = appearance.dynamicColors,
                 animation = appearance.animation.name,
+                palette = appearance.palette,
             )
         } catch (error: IllegalArgumentException) {
             // A pass longer than a version 1 code holds: the screen shows its error state, the widget keeps nothing.
@@ -118,6 +132,7 @@ class QrPassSnapshotWriter(
         settings.observeQrSpoilerEnabled(),
         settings.observeQrDynamicColorsEnabled(),
         settings.observeQrSpoilerAnimationType(),
+        appearance.observeWidgetTheme().map { it?.widgetPalette() },
         ::QrWidgetAppearance,
     ).distinctUntilChanged()
 

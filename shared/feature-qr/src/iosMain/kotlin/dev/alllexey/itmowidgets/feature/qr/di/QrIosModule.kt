@@ -13,7 +13,7 @@ import org.koin.dsl.module
  */
 val qrIosModule = module {
     single(createdAtStart = true) {
-        QrPassSnapshotWriter(get(), get(), get(), get(), get(), get()).also { writer ->
+        QrPassSnapshotWriter(get(), get(), get(), get(), get(), get(), get()).also { writer ->
             writer.launchIn(CoroutineScope(SupervisorJob() + get<AppDispatchers>().main))
         }
     }

@@ -9,7 +9,8 @@ listed here is not a setting. Screens are built declaratively; see the
 The settings root is a compact catalogue, not a scrolling list of every switch:
 
 - `Доступ`: `Подключение к ITMO.Widgets` (with account deletion), `Друзья и приватность`, and the Android notifications action.
-- `Виджеты`: `Компактное расписание`, `Полное расписание` and the QR widget.
+- `Виджеты`: `Компактное расписание`, `Полное расписание`, the QR widget and
+  the `Виджеты в цвет темы` switch.
 - `Приложение`: `Оформление`, home screen, schedule, recordbook
   (`Зачётка`), sport, and maintenance.
 
@@ -91,10 +92,40 @@ and every choice recolours it and every Compose screen at once.
 - Absent or unknown values read as the defaults, today's look; the choices are
   device settings that sign-out keeps. Without wallpaper colours (below Android
   12, iOS) the stored default shows and draws as `Фирменный`.
-- Widgets, the QR tile, notifications and the launcher icon keep their own
-  colours; the QR widget's `Динамические цвета` is separate.
+- Widgets keep their own colours unless `Виджеты в цвет темы` is on (next
+  section); the QR tile, notifications and the launcher icon always do.
 - The presets, their seeds and how the stored choices become a scheme are in
   [the design guide](design.md#colour-and-surfaces).
+
+### Widgets in the app's colours
+
+| Row | Default |
+|---|---|
+| `Виджеты в цвет темы` (root, `Виджеты`, a switch) | off: the widgets' own colours |
+
+- On, both schedule widgets and the QR widget draw with the scheme the stored
+  `Оформление` gives (`resolveColorScheme`: accent or `Свой цвет`, `Стиль
+  палитры`, `Контраст`; with `Как обои` at the default style and contrast the
+  wallpaper's scheme on Android 12+, the brand scheme elsewhere), light or dark
+  as the system is. Only colours change: the layouts, sizes, shapes and the
+  lesson type colours stay the widgets' own.
+- `Чёрный фон` does not reach the widgets: a widget is a card on the home
+  screen, not a page, so it keeps the scheme's surface tone (a black tile would
+  vanish on a dark wallpaper and lose its outline).
+- Stored in `widgets_follow_app_theme` (boolean; absent reads as off). The
+  settings row key is `widgets_follow_theme`.
+- Turning the switch, or any change on `Оформление`, redraws installed widgets
+  at once (`WidgetRefreshRequester.refreshAll`); the widget previews in
+  settings follow both.
+- QR widget precedence: without `Динамические цвета` the code stays black on
+  white whatever this switch says (it always scans); with them the code and the
+  spoiler take the app's scheme while the switch is on, the system's colours
+  otherwise.
+- Android below 12 sets the colours of the mode the widget was last drawn in;
+  from Android 12 the launcher switches light and dark itself. The QR widget is
+  a bitmap and takes the mode of its last drawing on every version, as with
+  `Динамические цвета`.
+- The QR tile in the quick settings keeps the system's style.
 
 ### iOS
 
@@ -103,7 +134,12 @@ choices are menus (a style's line is its menu subtitle), `Чёрный фон` a
 switch, and `Свой цвет` the system colour well, which reports `#RRGGBB` like
 Android's picker. There is no sample: the SwiftUI screens keep their tint,
 while the Compose screens recolour at once. iOS reads and writes the same keys
-of its own `app_preferences` file.
+of its own `app_preferences` file. `Виджеты в цвет темы` is the same switch of
+the SwiftUI form under `Виджеты`, stored in `widgets_follow_app_theme`; the app
+writes the palette into the widgets' App Group files and reloads them
+([iOS widgets](ios.md#widgets)). The lesson, day and QR widgets follow it in
+full colour; the tinted and clear home screens and the Lock Screen keep the
+system's rendering.
 
 ## Account and services
 

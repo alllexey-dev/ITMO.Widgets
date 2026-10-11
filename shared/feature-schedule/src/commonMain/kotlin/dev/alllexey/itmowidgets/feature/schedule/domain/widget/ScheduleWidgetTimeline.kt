@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
+import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import kotlin.time.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -16,7 +17,8 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * What the schedule widgets show from [generatedAt] to [validUntil]: each entry holds from its `validFrom` to the next
  * entry's, the last one to [validUntil]. Every entry equals [ScheduleWidgetSelector.select] at any instant of its
- * interval, except that a pending-sport snapshot's `pendingValidUntil` is the end of the entry.
+ * interval, except that a pending-sport snapshot's `pendingValidUntil` is the end of the entry. [palette] is the app's
+ * colours while «Виджеты в цвет темы» is on, absent otherwise (additive in version 1).
  */
 @Serializable
 data class ScheduleWidgetTimeline(
@@ -24,6 +26,7 @@ data class ScheduleWidgetTimeline(
     @SerialName("generatedAt") @Serializable(with = IsoInstantSerializer::class) val generatedAt: Instant,
     @SerialName("validUntil") @Serializable(with = IsoInstantSerializer::class) val validUntil: Instant,
     @SerialName("entries") val entries: List<ScheduleWidgetTimelineEntry>,
+    @SerialName("palette") val palette: WidgetPalette? = null,
 ) {
 
     /** The entry shown at [instant], null before the first entry and from [validUntil] on. */

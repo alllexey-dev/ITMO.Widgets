@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.widget
 
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
+import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.SnapshotFile
 import dev.alllexey.itmowidgets.core.text.buildingShortTitle
@@ -66,7 +67,8 @@ class ScheduleTimelineTriggers(
  * The rooms and buildings in the file are the short titles Android's widget shows (`roomShortTitle`,
  * `buildingShortTitle`): the reader would need the catalog's Russian building names to shorten them. Everything else is the provider's data and keys.
  * An unavailable schedule keeps the previous file, as Android keeps its last snapshot. Times come from the academic
- * clock (the timeline's end) and the wall [clock] (how recently a write started).
+ * clock (the timeline's end) and the wall [clock] (how recently a write started). Each write carries the [palette] of
+ * that moment, the app's colours while the widgets follow the theme.
  */
 @OptIn(ExperimentalAtomicApi::class)
 class ScheduleTimelineWriter(
@@ -75,6 +77,7 @@ class ScheduleTimelineWriter(
     private val timeProvider: AcademicTimeProvider,
     private val clock: Clock,
     private val log: AppLog,
+    private val palette: suspend () -> WidgetPalette? = { null },
 ) : ScheduleWidgetRefreshRequester {
 
     private val mutex = Mutex()
@@ -140,7 +143,7 @@ class ScheduleTimelineWriter(
 
     private suspend fun write(timeline: ScheduleWidgetTimeline) {
         try {
-            writer.write(FILE, timeline.withShortLocations(), KINDS)
+            writer.write(FILE, timeline.withShortLocations().copy(palette = palette()), KINDS)
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {

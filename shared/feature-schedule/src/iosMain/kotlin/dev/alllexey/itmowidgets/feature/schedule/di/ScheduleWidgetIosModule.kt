@@ -5,11 +5,13 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.RefreshStep
 import dev.alllexey.itmowidgets.core.work.RefreshStepKeys
+import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.widget.ScheduleTimelineTriggers
@@ -20,7 +22,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.datetime.DateTimeUnit
@@ -51,6 +55,7 @@ val scheduleWidgetIosModule = module {
             timeProvider = get(),
             clock = get(),
             log = get(),
+            palette = { get<AppearancePreferences>().observeWidgetTheme().first()?.widgetPalette() },
         ).also { writer ->
             writer.launchIn(CoroutineScope(SupervisorJob() + get<AppDispatchers>().main), triggers())
         }
@@ -69,7 +74,12 @@ private fun Scope.triggers(): ScheduleTimelineTriggers {
     val scope = this
     return ScheduleTimelineTriggers(
         session = get<SessionRepository>().state.mapNotNull(::sessionKind),
-        widgetSettings = get<WidgetSettingsPreferences>().observeScheduleWidgetSettings(),
+        // The widgets' options and their theme (the accent while «Виджеты в цвет темы» is on).
+        widgetSettings = combine(
+            get<WidgetSettingsPreferences>().observeScheduleWidgetSettings(),
+            get<AppearancePreferences>().observeWidgetTheme(),
+            ::Pair,
+        ),
         foregrounds = applicationForegrounds(),
         cachedSchedule = flow {
             // The widgets' days as they are when the app starts; a later day is covered by the foreground write.
