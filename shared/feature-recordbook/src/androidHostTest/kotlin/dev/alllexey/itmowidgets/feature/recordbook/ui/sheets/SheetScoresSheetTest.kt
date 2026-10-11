@@ -50,7 +50,7 @@ import kotlin.test.assertTrue
  * Every case of the deleted `SheetScoresVisualTest` on the Compose sheet, at 320 dp and font scale 1.3 in at most the
  * sheet's 802 dp: loading and every failure in one area with the retry only for the network, the own row among
  * several, the tab and its rows, the name search over a long roster, the total among many cells by tab. Its looks live
- * in the `SheetScoresSheet_*` goldens; closing on `Done` and the save snackbar stay in `SheetScoresBottomSheet`.
+ * in the `SheetScoresSheet_*` goldens; closing on `Done` and the save snackbar stay in the shell's sheet entry.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)

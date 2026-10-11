@@ -10,7 +10,7 @@
 - `strings_sport.xml` in `composeResources/values/`, exported to `:app` as Android resources.
 - `androidHostTest`: repositories, mappers, screens, `SportModuleTest`, `SportScreenshotTest` and `SportGoldenTest`
   over `src/androidHostTest/resources/sport/golden/` and the MyITMO fixtures in `resources/myitmo/sport/`.
-- Not here: `SportFragment`, `UserSportFragment`, the details sheet host, `SportSignPushHandler` and the debug
+- Not here: the shell's sport entries, `SportSignPushHandler` and the debug
   template provider stay in `app/` under `feature/sport/`; `di/bridge/SportBridge.kt` bridges Koin and Hilt.
 
 ## Depends on

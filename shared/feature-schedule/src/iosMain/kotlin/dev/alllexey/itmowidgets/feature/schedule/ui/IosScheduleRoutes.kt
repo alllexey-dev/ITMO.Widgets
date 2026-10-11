@@ -33,7 +33,7 @@ import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
 /**
- * Another user's schedule as the iOS shell hosts it, as `UserScheduleFragment` does on Android: [UserScheduleScreen]
+ * Another user's schedule as the iOS shell hosts it, as Android's shell does: [UserScheduleScreen]
  * around [ScheduleRoute] of the user [isu] named [name] (blank: no name in the title), whose ViewModel reads the user
  * from the arguments Android's destination gives it. Every lesson goes to [actions]; there are no pending sport rows
  * and no friend picker.
@@ -60,7 +60,7 @@ class ScheduleSheetExits(
 )
 
 /**
- * The lesson sheet as the iOS shell hosts it, as `LessonDetailsBottomSheet` does on Android: [LessonDetailsSheetRoute]
+ * The lesson sheet as the iOS shell hosts it, as the shell's lesson entry does on Android: [LessonDetailsSheetRoute]
  * with its ViewModel reading the occurrence and the teacher from the arguments, the place in Apple Maps through
  * `PlatformActions` (the known building's pin, else the building text under its short title), the meeting link in
  * Safari. The friends on the lesson stay behind the Backend gate inside `LessonFriendsRepositoryImpl`.
@@ -100,7 +100,7 @@ fun LessonDetailsIosRoute(lesson: LessonDetailsArgs, exits: ScheduleSheetExits) 
 
 /**
  * The schedule's sheet of a queued or predicted sport booking as the iOS shell hosts it, as
- * `PendingSportDetailsBottomSheet` does on Android: the room in Apple Maps, the teacher's profile and the sport tab
+ * the shell's pending sport entry does on Android: the room in Apple Maps, the teacher's profile and the sport tab
  * (where the queue is managed) through [exits].
  */
 @Composable
@@ -128,7 +128,7 @@ fun PendingSportDetailsIosRoute(booking: PendingSportDetailsArgs, exits: Schedul
 private fun BuildingDirectory.knows(lesson: LessonDetailsArgs): Boolean =
     find(lesson.buildingId, lesson.mainBuildingId, lesson.building) != null
 
-/** Android's `LessonDetailsBottomSheet.mapDestination`. */
+/** Android's `lessonMapDestination`. */
 private suspend fun BuildingDirectory.mapDestination(lesson: LessonDetailsArgs): MapDestination? {
     find(lesson.buildingId, lesson.mainBuildingId, lesson.building)?.let { return it.toMapDestination() }
     val building = lesson.building ?: return null

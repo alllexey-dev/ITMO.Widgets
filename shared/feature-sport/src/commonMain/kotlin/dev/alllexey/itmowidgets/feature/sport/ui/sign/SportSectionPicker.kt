@@ -52,7 +52,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_search
 data class SportSectionOption(val name: SectionName, val label: String)
 
 /**
- * The picker's rows in today's order (`SportSignFragment.showMultiSelectSearchableDialog`): the selected sections
+ * The picker's rows in today's order (v2.2's searchable section dialog): the selected sections
  * first, then those in [used] (signed or queued), then by label. Labels go through [SectionName.shorten], and the
  * used check goes back through [SectionName.deshorten], as the View dialog compared its labels.
  */

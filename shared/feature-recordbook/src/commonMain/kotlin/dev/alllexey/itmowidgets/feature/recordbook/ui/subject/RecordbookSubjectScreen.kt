@@ -136,7 +136,7 @@ class RecordbookSubjectActions(
 /**
  * The subject page with its Koin ViewModel (the ViewModel loads on creation from the cached subject). A failed
  * refresh or BARS journal and a failed vote show in snackbars; everything outside the page goes to [exits].
- * [semester] is the page's argument, shown under the subject's name. Android hosts it in `RecordbookSubjectFragment`.
+ * [semester] is the page's argument, shown under the subject's name. Android's shell hosts it.
  * [linksEnabled] is the platform's `PlatformCapabilities.reviews` (always on Android, see [subjectHubItems]).
  */
 @Composable

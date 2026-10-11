@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.datetime.LocalDateTime
 
-/** The route reports visibility from its lifecycle, as `ScheduleChangesFragment`'s `onStart`/`onStop` did. */
+/** The route reports visibility from its lifecycle, as v2.2's screen did in `onStart`/`onStop`. */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ScheduleChangesRouteTest {

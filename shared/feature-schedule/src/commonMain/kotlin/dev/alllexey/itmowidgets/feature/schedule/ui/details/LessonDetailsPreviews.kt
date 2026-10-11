@@ -20,7 +20,7 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonFrie
  * The harness names a baseline `<function>_<@Preview name>`, and LS-0 recorded the XML references as
  * `LessonDetailsContent_<state>`. Each state therefore is a function called `LessonDetailsContent` in a holder class
  * of its own. Every preview is the sheet at its 90 % of the 891 dp capture window, on the sheet's colour, as
- * `LessonDetailsBottomSheet` opens it.
+ * the Android shell opens it.
  */
 
 /** Teacher with a profile, flow, room, the change, link, note and two friends. */

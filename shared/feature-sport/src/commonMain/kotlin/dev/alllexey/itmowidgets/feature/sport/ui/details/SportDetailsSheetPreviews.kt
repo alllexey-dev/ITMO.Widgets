@@ -17,7 +17,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrat
  * The harness names a baseline `<function>_<@Preview name>`, and LP-1d recorded the XML references as
  * `SportDetailsSheetContent_<state>`. Each state therefore is a function called `SportDetailsSheetContent` in a holder
  * class of its own; the scanner instantiates each holder by reflection. Every preview is the sheet at its 90 % of the
- * 891 dp capture window, on the sheet's colour, as `SportCommonDetailsBottomSheet` opens it.
+ * 891 dp capture window, on the sheet's colour, as the Android shell opens it.
  */
 
 /** Free places, two friends and a time conflict; the sign-up action. */

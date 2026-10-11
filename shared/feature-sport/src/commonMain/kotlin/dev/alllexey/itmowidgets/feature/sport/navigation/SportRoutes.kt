@@ -18,7 +18,7 @@ import kotlinx.serialization.modules.subclass
 object SportRoutes {
 
     /**
-     * The details sheet of a lesson or a booking, as `SportCommonDetailsBottomSheet` showed it: [item] is its
+     * The details sheet of a lesson or a booking, as v2.2's details sheet showed it: [item] is its
      * snapshot, [actionsEnabled] and [busy] are the Fragment's arguments of the same names. [replyTo] says where the
      * sheet's booking action goes, as the Fragment result went to the page that opened it or to the activity. Never
      * shown together with the schedule's pending-sport sheet ([AppRoutes.SPORT_DETAILS_GROUP]).

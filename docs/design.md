@@ -839,7 +839,7 @@ in [Shared components](#shared-components).
   choices; choice rows with the title in `bodyLarge`, the caption in
   `bodySmall`, the value in `titleSmall` at the end, `ic_check` in `primary`
   and `selected` for the current total; the whole row is the target), hosted
-  by `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt`.
+  by `app/shell/entries/RecordbookEntries.kt`.
 - The `.ics` sheet: `IcsExportSheetContent` (`:shared:feature-settings`,
   `feature/settings/ui/ics`) (handle, title,
   subtitle, one area of at least 288 dp for the ranges, loading, the file,

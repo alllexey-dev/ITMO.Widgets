@@ -69,7 +69,7 @@ Feature doc: [Home and quick actions](home.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/home/ui/HomeFragment.kt` hosting `HomeRoute` (`:shared:feature-home`) | Fragment | `HomeViewModel` (Koin) | `navigation_home`, `AppRoot.HOME` | — | `HomeScreenshotTest` (`:shared:feature-home`) |
+| `app/shell/entries/HomeEntries.kt` hosting `HomeRoute` (`:shared:feature-home`) | Navigation 3 entry | `HomeViewModel` (Koin) | `navigation_home`, `AppRoot.HOME` | — | `HomeScreenshotTest` (`:shared:feature-home`) |
 
 ## QR pass
 
@@ -77,7 +77,7 @@ Feature docs: [QR pass](qr.md), [Widgets](widgets.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/qr/ui/QrCodeFragment.kt` hosting `QrPassRoute` (`:shared:feature-qr`) | Fragment | `QrCodeViewModel` (Koin) | `qr_pass`, `AppScreen.QR_PASS` | — | `QrScreenshotTest` (`:shared:feature-qr`) |
+| `app/shell/entries/HomeEntries.kt` hosting `QrPassRoute` (`:shared:feature-qr`) | Navigation 3 entry | `QrCodeViewModel` (Koin) | `qr_pass`, `AppScreen.QR_PASS` | — | `QrScreenshotTest` (`:shared:feature-qr`) |
 
 ## My ITMO web
 
@@ -94,10 +94,10 @@ Feature docs: [Recordbook](recordbook.md), [Subject page](subject-page.md),
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/recordbook/ui/RecordbookFragment.kt` hosting `RecordbookRoute` (`:shared:feature-recordbook`) | Fragment | `RecordbookViewModel` (Koin) | `navigation_recordbook`, `AppRoot.RECORDBOOK` | `feature/recordbook/ui/RecordbookPreviewActivity.kt` | `RecordbookScreenshotTest` (`:shared:feature-recordbook`) |
-| `feature/recordbook/ui/RecordbookSubjectFragment.kt` hosting `RecordbookSubjectRoute` (`:shared:feature-recordbook`) | Fragment | `RecordbookSubjectViewModel` (Koin) | `recordbook_subject`, `AppScreen.RECORDBOOK_SUBJECT` | `feature/recordbook/ui/RecordbookPreviewActivity.kt` | `RecordbookScreenshotTest`, `RecordbookSubjectScreenTest`, `SubjectHubSectionsTest` (`:shared:feature-recordbook`) |
-| `feature/recordbook/ui/RecordbookPeriodBottomSheet.kt` hosting `RecordbookPeriodSheetContent` (`:shared:feature-recordbook`) | bottom sheet | — | `RecordbookPeriodBottomSheet.show` from `RecordbookFragment` | — | `RecordbookScreenshotTest` (`:shared:feature-recordbook`) |
-| `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt` | bottom sheet | `SheetScoresViewModel` | `AppNavigator.openSheetScores` | `feature/recordbook/ui/RecordbookPreviewActivity.kt` | - (JVM `SheetScoresSheetTest` and the `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`) |
+| `app/shell/entries/RecordbookEntries.kt` hosting `RecordbookRoute` (`:shared:feature-recordbook`) | Navigation 3 entry | `RecordbookViewModel` (Koin) | `navigation_recordbook`, `AppRoot.RECORDBOOK` | — | `RecordbookScreenshotTest` (`:shared:feature-recordbook`) |
+| `app/shell/entries/RecordbookEntries.kt` hosting `RecordbookSubjectRoute` (`:shared:feature-recordbook`) | Navigation 3 entry | `RecordbookSubjectViewModel` (Koin) | `recordbook_subject`, `AppScreen.RECORDBOOK_SUBJECT` | — | `RecordbookScreenshotTest`, `RecordbookSubjectScreenTest`, `SubjectHubSectionsTest` (`:shared:feature-recordbook`) |
+| `app/shell/entries/RecordbookEntries.kt` hosting `RecordbookPeriodSheetContent` (`:shared:feature-recordbook`) | Navigation 3 sheet | — | `RecordbookPeriodBottomSheet.show` from `RecordbookFragment` | — | `RecordbookScreenshotTest` (`:shared:feature-recordbook`) |
+| `app/shell/entries/RecordbookEntries.kt` hosting `SheetScoresSheet` | Navigation 3 sheet | `SheetScoresViewModel` | `AppNavigator.openSheetScores` | — | - (JVM `SheetScoresSheetTest` and the `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`) |
 | `feature/recordbook/ui/BarsLoginActivity.kt` | Activity | `BarsLoginViewModel` | started by `RecordbookFragment`, `RecordbookSubjectFragment` and `MainActivity` for `AppEntryIntents.ACTION_OPEN_BARS_LOGIN` | — | — |
 
 ## Schedule
@@ -106,11 +106,11 @@ Feature docs: [Schedule](schedule.md), [Schedule changes](schedule-changes.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/schedule/ui/ScheduleFragment.kt` hosting `ScheduleRoute` (`:shared:feature-schedule`) | Fragment | `ScheduleViewModel` (Koin) | `navigation_schedule`, `AppRoot.SCHEDULE` | — | `ScheduleScreenshotTest`, `ScheduleRouteTest` (`:shared:feature-schedule`) |
-| `feature/schedule/ui/UserScheduleFragment.kt` hosting `UserScheduleScreen` around `ScheduleRoute` (`:shared:feature-schedule`) | Fragment | `ScheduleViewModel` (Koin) | `user_schedule`, `AppScreen.USER_SCHEDULE` | — | `ScheduleScreenshotTest` (`UserScheduleScreen_content`) |
-| `feature/schedule/ui/changes/ScheduleChangesFragment.kt` hosting `ScheduleChangesRoute` (`:shared:feature-schedule`) | Fragment | `ScheduleChangesViewModel` (Koin) | `schedule_changes`, `AppScreen.SCHEDULE_CHANGES` | — | `ScheduleScreenshotTest` (`:shared:feature-schedule`) |
-| `feature/schedule/ui/details/LessonDetailsBottomSheet.kt` hosting `LessonDetailsSheetRoute` (`:shared:feature-schedule`) | bottom sheet (kit sheet host) | `LessonDetailsViewModel` (Koin) | `AppNavigator.openLessonDetails` | — | `ScheduleScreenshotTest`, `LessonDetailsSheetTest` (`:shared:feature-schedule`) |
-| `feature/schedule/ui/details/PendingSportDetailsBottomSheet.kt` hosting `PendingSportDetailsContent` (`:shared:feature-schedule`) | bottom sheet (kit sheet host) | — | `AppNavigator.openPendingSportDetails` | — | `ScheduleScreenshotTest`, `PendingSportDetailsSheetTest` (`:shared:feature-schedule`) |
+| `app/shell/entries/ScheduleEntries.kt` hosting `ScheduleRoute` (`:shared:feature-schedule`) | Navigation 3 entry | `ScheduleViewModel` (Koin) | `navigation_schedule`, `AppRoot.SCHEDULE` | — | `ScheduleScreenshotTest`, `ScheduleRouteTest` (`:shared:feature-schedule`) |
+| `app/shell/entries/ScheduleEntries.kt` hosting `UserScheduleScreen` around `ScheduleRoute` (`:shared:feature-schedule`) | Navigation 3 entry | `ScheduleViewModel` (Koin) | `user_schedule`, `AppScreen.USER_SCHEDULE` | — | `ScheduleScreenshotTest` (`UserScheduleScreen_content`) |
+| `app/shell/entries/ScheduleEntries.kt` hosting `ScheduleChangesRoute` (`:shared:feature-schedule`) | Navigation 3 entry | `ScheduleChangesViewModel` (Koin) | `schedule_changes`, `AppScreen.SCHEDULE_CHANGES` | — | `ScheduleScreenshotTest` (`:shared:feature-schedule`) |
+| `app/shell/entries/ScheduleEntries.kt` hosting `LessonDetailsSheetRoute` (`:shared:feature-schedule`) | Navigation 3 sheet | `LessonDetailsViewModel` (Koin) | `AppNavigator.openLessonDetails` | — | `ScheduleScreenshotTest`, `LessonDetailsSheetTest` (`:shared:feature-schedule`) |
+| `app/shell/entries/ScheduleEntries.kt` hosting `PendingSportDetailsContent` (`:shared:feature-schedule`) | Navigation 3 sheet | — | `AppNavigator.openPendingSportDetails` | — | `ScheduleScreenshotTest`, `PendingSportDetailsSheetTest` (`:shared:feature-schedule`) |
 
 ## Friend selector
 
@@ -126,9 +126,9 @@ Feature doc: [Sport](sport.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/sport/ui/common/SportFragment.kt` hosting `SportRoute` (`:shared:feature-sport`): `SportScreen` with `SportMyScreen` and `SportSignScreen` | Fragment | `SportMyViewModel`, `SportSignViewModel` (Koin, the Fragment's store) | `navigation_sport`, `AppRoot.SPORT`, `SportLessonRequest` | `feature/sport/ui/SportCardsPreviewActivity.kt` (booking cards, lesson list) | `SportScreenshotTest` (`:shared:feature-sport`) |
-| `feature/sport/ui/user/UserSportFragment.kt` hosting `UserSportRoute` (`:shared:feature-sport`) | Fragment | `UserSportViewModel` (Koin, the Fragment's store) | `user_sport`, `AppScreen.USER_SPORT` | — | `SportScreenshotTest` (`:shared:feature-sport`) |
-| `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt` | bottom sheet | — | `SportFragment` (either page); `MainNavigationCoordinator.openSportDetails` for a schedule row that is a known booking | `feature/sport/ui/SportCardsPreviewActivity.kt` | — (JVM `SportDetailsSheetTest` and the `SportDetailsSheetContent_*` goldens of `:shared:feature-sport`) |
+| `app/shell/entries/SportEntries.kt` hosting `SportRoute` (`:shared:feature-sport`): `SportScreen` with `SportMyScreen` and `SportSignScreen` | Navigation 3 entry | `SportMyViewModel`, `SportSignViewModel` (Koin, the entry's store) | `navigation_sport`, `AppRoot.SPORT`, `SportLessonRequest` | — | `SportScreenshotTest` (`:shared:feature-sport`) |
+| `app/shell/entries/SportEntries.kt` hosting `UserSportRoute` (`:shared:feature-sport`) | Navigation 3 entry | `UserSportViewModel` (Koin, the entry's store) | `user_sport`, `AppScreen.USER_SPORT` | — | `SportScreenshotTest` (`:shared:feature-sport`) |
+| `app/shell/entries/SportEntries.kt` hosting `SportDetailsSheetContent` | Navigation 3 sheet | — | the sport tab (either page); a schedule row that is a known booking | — | — (JVM `SportDetailsSheetTest` and the `SportDetailsSheetContent_*` goldens of `:shared:feature-sport`) |
 
 ## Subject links
 

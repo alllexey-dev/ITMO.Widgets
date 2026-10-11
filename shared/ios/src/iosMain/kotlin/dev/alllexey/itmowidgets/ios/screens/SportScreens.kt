@@ -41,7 +41,7 @@ import kotlinx.coroutines.launch
 import platform.UIKit.UIViewController
 
 /**
- * What the Swift sport root keeps for as long as its screen lives, as Android's `SportFragment` keeps its channels:
+ * What the Swift sport root keeps for as long as its screen lives, as Android's sport tab root keeps its channels:
  * the shared lessons a link or a notification asks the sign page to show, and the details sheet's actions for the
  * page that opened the sheet. One flow per channel, so recomposition never restarts the route's collectors.
  */
@@ -84,7 +84,7 @@ class SportDetailsRequest internal constructor(
 }
 
 /**
- * The sport tab's root (`AppRoutes.TabRoot(SPORT)`), LP-6's route as Android's `SportFragment` hosts it: `Мой спорт`
+ * The sport tab's root (`AppRoutes.TabRoot(SPORT)`), LP-6's route as Android's shell hosts it: `Мой спорт`
  * and `Запись` with their ViewModels in this controller's store. [tab] is the Swift host's: it carries a shared
  * lesson to the sign page and the details sheet's actions back to the page that opened the sheet. A booking or a lesson
  * asks the host for its details sheet through [openDetails] (a SwiftUI sheet, not a Compose one); a booking's
@@ -119,7 +119,7 @@ fun sportViewController(tab: SportTabState, openDetails: (SportDetailsRequest) -
 }
 
 /**
- * The content of the sport details sheet for [request], as Android's `SportCommonDetailsBottomSheet` draws it; the
+ * The content of the sport details sheet for [request], as Android's sport details entry draws it; the
  * Swift host presents it in a SwiftUI sheet, which owns the drag indicator and the detents. The booking action goes
  * to [tab] for the page that opened the sheet, which then closes ([onClose]); the share action sends the lesson's
  * link ([SportShares]), the map opens Apple Maps, a teacher or a friend closes the sheet and opens the profile through
@@ -167,7 +167,7 @@ fun sportDetailsViewController(
 }
 
 /**
- * Another user's sport (`AppRoutes.UserSport`), as `UserSportFragment` hosts it: read-only cards whose building opens
+ * Another user's sport (`AppRoutes.UserSport`), as Android's shell hosts it: read-only cards whose building opens
  * in Apple Maps. [name] is the profile's display name for the title.
  */
 fun userSportViewController(isu: Int, name: String, onBack: () -> Unit): UIViewController {

@@ -10,7 +10,7 @@
 - `strings_home.xml` in `composeResources/values/`; not exported to `:app`.
 - `commonTest`: ViewModel, stores, hint source and screen tests (`HomeFakes`); `androidHostTest`: `HomeModuleTest`,
   `HomeScreenshotTest`.
-- Not here: the cards of other features (each feature's `home/` package); `HomeFragment` and
+- Not here: the cards of other features (each feature's `home/` package); `HomeHints` and
   `AndroidHomeHintStatus` in `app/` under `feature/home/`, bound through `di/bridge/HomeBridge.kt`.
 
 ## Depends on

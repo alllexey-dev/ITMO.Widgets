@@ -29,8 +29,8 @@ internal fun EntryRegistry.Builder.homeEntries() {
 /**
  * The home tab's root (route map row 5): `HomeRoute` with its ViewModel from Koin's definition, kept in the root's own
  * store, so the hint callbacks reach the feed's instance. Cards open their sheets, overlays and tabs through
- * [navigator]; the hint actions are [HomeHints], owned by this entry's composition as `HomeFragment` owns them from
- * create to destroy.
+ * [navigator]; the hint actions are [HomeHints], owned by this entry's composition from its
+ * start to its end.
  */
 @Composable
 internal fun HomeTabRoot(navigator: Nav3AppNavigator) {

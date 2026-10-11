@@ -72,7 +72,7 @@ internal fun EntryRegistry.Builder.recordbookEntries() {
 /**
  * The recordbook tab's root: `RecordbookRoute` with the tab's ViewModel. It opens the period picker and takes the
  * picked period back once, opens a subject only with [RecordbookSubjectArgs.validOrNull] arguments and refreshes after
- * a completed BARS sign-in, as `RecordbookFragment` does.
+ * a completed BARS sign-in, as v2.2's recordbook tab did.
  */
 @Composable
 internal fun RecordbookTabRoot(navigator: Nav3AppNavigator) {
@@ -132,7 +132,7 @@ private fun subjectArgs(selection: RecordbookSelection, subject: RecordbookSubje
     barsIdentifier = subject.barsJournal?.identifier,
 )
 
-/** The period picker: a pick answers the tab root and closes the sheet, as `RecordbookPeriodBottomSheet` does. */
+/** The period picker: a pick answers the tab root and closes the sheet, as v2.2's period sheet did. */
 @Composable
 private fun RecordbookPeriodEntry(key: AppRoutes.RecordbookPeriod, onClose: () -> Unit) {
     val results = LocalResultEventBus.current
@@ -183,7 +183,7 @@ private fun RecordbookSubjectEntry(key: AppRoutes.RecordbookSubject, navigator: 
 
 /**
  * `Мои баллы`: the sheet closes itself once the ViewModel is done and shows a failed save in a snackbar, as
- * `SheetScoresBottomSheet` does.
+ * v2.2's sheet did.
  */
 @Composable
 private fun SheetScoresEntry(onClose: () -> Unit) {

@@ -15,16 +15,6 @@
         android:name="dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment"
         android:label="Onboarding" />
 
-    <fragment
-        android:id="@+id/navigation_recordbook"
-        android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookFragment"
-        android:label="Record book" />
-
-    <fragment
-        android:id="@+id/navigation_schedule"
-        android:name="dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleFragment"
-        android:label="Schedule" />
-
     <dialog
         android:id="@+id/friend_selector"
         android:name="dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment"
@@ -36,16 +26,6 @@
             app:argType="integer" />
 
     </dialog>
-
-    <fragment
-        android:id="@+id/navigation_home"
-        android:name="dev.alllexey.itmowidgets.feature.home.ui.HomeFragment"
-        android:label="Home" />
-
-    <fragment
-        android:id="@+id/navigation_sport"
-        android:name="dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment"
-        android:label="Sport" />
 
     <fragment
         android:id="@+id/navigation_me"

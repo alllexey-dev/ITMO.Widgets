@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 
 /**
  * The ring's two sectors in percent of the full turn. Up to the goal they are the points themselves; above it they
- * are shares of the total, so the ring stays closed with both colours in proportion (`SportMyFragment.updateScoreUi`).
+ * are shares of the total, so the ring stays closed with both colours in proportion (v2.2's score ring).
  */
 internal data class SportScoreRingShares(val attendance: Float, val bonus: Float)
 

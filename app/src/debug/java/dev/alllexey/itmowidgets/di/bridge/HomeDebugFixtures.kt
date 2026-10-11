@@ -24,7 +24,7 @@ import org.koin.dsl.module
 
 /**
  * The home feed's fixture in Koin: a debug host replaces the feed's sources, the card preferences, the hint store and
- * the wall clock with its own while it lives, so `HomeFragment` obtains its ViewModel exactly as in release. The fake
+ * the wall clock with its own while it lives, so the home feed obtains its ViewModel exactly as in release. The fake
  * source stands in for the Hilt-built sources; the hint cards, which read the device, and the Koin-built sources of
  * other features (social's friend requests, the schedule's two cards, the recordbook's new marks, sport's score and
  * queues) contribute nothing.

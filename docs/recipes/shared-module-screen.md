@@ -30,7 +30,7 @@ The QR pass was the first screen built this way. Copy its shape.
 | Host tests | `feature/qr/ui/QrPassScreenTest.kt`, `feature/qr/presentation/QrCodeViewModelTest.kt`, `feature/qr/di/QrModuleTest.kt` |
 
 The Android side keeps only the host and the bridge:
-`feature/qr/ui/QrCodeFragment.kt` (a Fragment host) and `di/bridge/QrBridge.kt`
+`app/shell/entries/HomeEntries.kt` (the shell entry) and `di/bridge/QrBridge.kt`
 (Hilt-built types handed to Koin), with one line each in
 `di/bridge/KoinModules.kt`.
 
