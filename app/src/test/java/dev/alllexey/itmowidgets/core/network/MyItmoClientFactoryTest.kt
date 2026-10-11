@@ -19,6 +19,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import java.io.File
 import java.io.IOException
+import java.net.SocketTimeoutException
 import java.time.ZoneOffset
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -77,6 +78,42 @@ class MyItmoClientFactoryTest {
         assertEquals("Bearer access", requests.last().headers[HttpHeaders.Authorization])
         assertEquals("access", storage.getAccessToken())
         assertEquals("refresh", storage.getRefreshToken())
+    }
+
+    @Test
+    fun `a rotated session is what the next process reads`() = runTest {
+        storage.write(stored(accessExpiresAt = clock.now() - 1.minutes))
+        val client = client { respondJson(TOKEN_RESPONSE) }
+
+        client.tokens.validAccessToken()
+
+        val rotated = MyItmoStorage(
+            tokenFile = File(folder.root, "myitmo_tokens.enc"),
+            tokenCipher = PlainTokenCipher,
+            clock = java.time.Clock.fixed(java.time.Instant.parse("2026-07-24T00:00:00Z"), ZoneOffset.UTC),
+            log = RecordingAppLog()
+        ).read()!!
+        assertEquals("access", rotated.accessToken)
+        assertEquals(clock.now() + 300.seconds, rotated.accessExpiresAt)
+        assertEquals("refresh", rotated.refreshToken)
+        assertEquals(clock.now() + 600.seconds, rotated.refreshExpiresAt)
+        assertEquals("header.payload.signature", rotated.idToken)
+    }
+
+    @Test
+    fun `an ITMO_ID timeout during a refresh is a network error and keeps the session`() = runTest {
+        storage.write(stored(accessExpiresAt = clock.now() - 1.minutes))
+        val client = client { request ->
+            if (request.url.host == "id.itmo.ru") throw SocketTimeoutException("timeout") else respondJson("{}")
+        }
+
+        val error = failure { client.system.getDashboard() }
+
+        assertEquals(AppError.Network, error)
+        assertEquals(CheckOutcome.RETRY, outcomeOf(listOf(error)))
+        assertEquals(listOf("id.itmo.ru"), requests.map { it.url.host })
+        assertEquals("stored-access", storage.getAccessToken())
+        assertEquals("stored-refresh", storage.getRefreshToken())
     }
 
     @Test
