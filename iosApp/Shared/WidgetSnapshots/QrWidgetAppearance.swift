@@ -10,6 +10,8 @@ struct QrWidgetAppearance: Equatable {
     var dynamicColors: Bool
     /// `settings_qr_animation_title`.
     var animation: QrRevealAnimation
+    /// The app's colours while the widgets follow the theme; with `dynamicColors` they replace the brand scheme.
+    var palette: WidgetPalette? = nil
 
     /// Android's defaults: the spoiler on, dynamic colours on, the circle.
     static let standard = QrWidgetAppearance(spoiler: true, dynamicColors: true, animation: .circle)

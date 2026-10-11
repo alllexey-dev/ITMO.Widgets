@@ -7,9 +7,11 @@ import android.view.LayoutInflater
 import android.view.View
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.databinding.ViewWidgetPreviewQrBinding
+import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrColorResolver
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrPreviewBitmapCache
 import kotlinx.coroutines.CancellationException
@@ -31,6 +33,7 @@ class QrSettingsPreview(
     override val view: View = binding.root
     private val image = binding.qrPreviewWidget.qrCodeImage
     private var appearance: QrWidgetSettings? = null
+    private var theme: ThemeSpec? = null
     private var bitmaps: Pair<Bitmap, Bitmap>? = null
     private var imageJob: Job? = null
     private var animator: ValueAnimator? = null
@@ -42,13 +45,16 @@ class QrSettingsPreview(
     }
 
     override fun bind(settings: WidgetPreviewSettings) {
-        val next = (settings as WidgetPreviewSettings.Qr).appearance
-        if (appearance == next) return
+        val qr = settings as WidgetPreviewSettings.Qr
+        val next = qr.appearance
+        if (appearance == next && theme == qr.theme) return
         val previous = appearance
+        val themeChanged = theme != qr.theme
         appearance = next
+        theme = qr.theme
         stop()
         revealed = !next.spoilerEnabled
-        if (bitmaps == null || previous?.dynamicColors != next.dynamicColors) {
+        if (bitmaps == null || previous?.dynamicColors != next.dynamicColors || themeChanged) {
             loadImages()
         } else {
             showRestingImage()
@@ -71,7 +77,7 @@ class QrSettingsPreview(
     private fun loadImages() {
         val options = appearance ?: return
         imageJob?.cancel()
-        val palette = colors.getQrColors(context, options.dynamicColors)
+        val palette = colors.getQrColors(context, options.dynamicColors, theme?.widgetPalette(context))
         images.cached(palette)?.let { cached ->
             bitmaps = cached
             ready.value = true

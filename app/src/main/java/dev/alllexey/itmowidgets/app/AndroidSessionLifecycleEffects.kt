@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
+import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
@@ -23,6 +24,7 @@ import javax.inject.Inject
 class AndroidSessionLifecycleEffects @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val widgetSettings: WidgetSettingsPreferences,
+    private val palettes: WidgetPaletteSource,
     private val scheduleWidgetStore: ScheduleWidgetSnapshotStore,
     private val qrWidgetStateStore: QrWidgetStateStore,
     private val qrWidgetImages: QrWidgetImages,
@@ -61,13 +63,15 @@ class AndroidSessionLifecycleEffects @Inject constructor(
         ).withTextSizes(widgetSettings.getScheduleWidgetSettings())
         scheduleWidgetStore.write(snapshot)
 
+        val palette = palettes.current()
         val manager = AppWidgetManager.getInstance(context)
         ScheduleWidgetProviders.singleLessonIds(context).forEach { appWidgetId ->
             ScheduleWidgetRenderer.renderSingle(
                 context = context,
                 appWidgetManager = manager,
                 appWidgetId = appWidgetId,
-                snapshot = snapshot
+                snapshot = snapshot,
+                palette = palette
             )
         }
         ScheduleWidgetProviders.dayScheduleIds(context).forEach { appWidgetId ->
@@ -75,7 +79,8 @@ class AndroidSessionLifecycleEffects @Inject constructor(
                 context = context,
                 appWidgetManager = manager,
                 appWidgetId = appWidgetId,
-                snapshot = snapshot
+                snapshot = snapshot,
+                palette = palette
             )
         }
     }

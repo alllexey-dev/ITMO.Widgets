@@ -43,6 +43,23 @@ final class QrPassSnapshotTests: XCTestCase {
         XCTAssertEqual(unknown.appearance.animation, .circle, "a newer animation falls back to the default")
     }
 
+    func testThePaletteIsReadWhenTheAppWroteOne() throws {
+        XCTAssertNil(try XCTUnwrap(QrPassSnapshot.decode(fixture())).appearance.palette, "absent: the brand scheme")
+
+        let roles: [String: Any] = [
+            "surface": 0xF4FBF8, "surfaceContainer": 0xE9EFED, "onSurface": 0x161D1C,
+            "onSurfaceVariant": 0x3F4947, "outlineVariant": 0xBEC9C6, "primary": 0x006A60,
+        ]
+        var dark = roles
+        dark["surface"] = 0x0E1513
+        let read = try XCTUnwrap(QrPassSnapshot.decode(fixture(with: ["palette": ["light": roles, "dark": dark]])))
+
+        let palette = try XCTUnwrap(read.appearance.palette)
+        XCTAssertEqual(palette.light.primary, 0x006A60)
+        XCTAssertEqual(palette.roles(dark: true).surface, 0x0E1513)
+        XCTAssertEqual(palette.roles(dark: false).surface, 0xF4FBF8)
+    }
+
     func testTheFileNameIsTheVersionedSnapshotName() {
         XCTAssertEqual(QrPassSnapshot.fileName, "qr-pass-v1.json")
     }

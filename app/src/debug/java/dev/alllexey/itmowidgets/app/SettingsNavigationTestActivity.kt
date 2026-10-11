@@ -467,6 +467,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
         override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
             local.value = local.value.copy(theme = change(local.value.theme))
         }
+        override suspend fun setWidgetsFollowTheme(enabled: Boolean) {
+            local.value = local.value.copy(widgetsFollowTheme = enabled)
+        }
 
         override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {
             val widget = local.value.scheduleWidget

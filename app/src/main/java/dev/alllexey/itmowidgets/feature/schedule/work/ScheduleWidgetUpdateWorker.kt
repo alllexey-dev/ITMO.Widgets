@@ -6,6 +6,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.WidgetPalette
+import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetLoadResult
@@ -30,6 +32,7 @@ class ScheduleWidgetUpdateWorker(
     private val dataProvider: ScheduleWidgetDataProvider by inject()
     private val store: ScheduleWidgetSnapshotStore by inject()
     private val diagnostics: AppDiagnostics by inject()
+    private val palettes: WidgetPaletteSource by inject()
 
     /** WorkManager can run a worker before `Application.onCreate()` has started Koin. */
     override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
@@ -77,7 +80,7 @@ class ScheduleWidgetUpdateWorker(
         val snapshot = store.read()
         currentCoroutineContext().ensureActive()
         if (store.currentGeneration() != generation) return Result.success()
-        render(singleIds, listIds, snapshot)
+        render(singleIds, listIds, snapshot, palettes.current())
         ScheduleWidgetWork.scheduleNext(applicationContext, rendered.nextUpdateDelay)
         return Result.success()
     }
@@ -109,6 +112,7 @@ class ScheduleWidgetUpdateWorker(
         singleIds: IntArray,
         listIds: IntArray,
         snapshot: ScheduleWidgetSnapshot,
+        palette: WidgetPalette?,
     ) {
         val manager = AppWidgetManager.getInstance(applicationContext)
         singleIds.forEach { appWidgetId ->
@@ -116,7 +120,8 @@ class ScheduleWidgetUpdateWorker(
                 context = applicationContext,
                 appWidgetManager = manager,
                 appWidgetId = appWidgetId,
-                snapshot = snapshot
+                snapshot = snapshot,
+                palette = palette
             )
         }
         listIds.forEach { appWidgetId ->
@@ -124,7 +129,8 @@ class ScheduleWidgetUpdateWorker(
                 context = applicationContext,
                 appWidgetManager = manager,
                 appWidgetId = appWidgetId,
-                snapshot = snapshot
+                snapshot = snapshot,
+                palette = palette
             )
         }
     }

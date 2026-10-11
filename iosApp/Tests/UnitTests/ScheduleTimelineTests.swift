@@ -121,6 +121,21 @@ final class ScheduleTimelineTests: XCTestCase {
         )
     }
 
+    func testEveryEntryCarriesTheTimelinesPalette() throws {
+        let fixture = try fixtureText()
+        XCTAssertNil(try self.fixture().palette, "LS-3's fixture has none: the brand scheme")
+
+        let roles = #"{"surface": 16055288, "surfaceContainer": 15331309, "onSurface": 1449244, "onSurfaceVariant": 4147527, "outlineVariant": 12503494, "primary": 27232}"#
+        let themed = fixture.replacingOccurrences(
+            of: #""version": 1,"#, with: #""version": 1, "palette": {"light": \#(roles), "dark": \#(roles)},"#
+        )
+        let timeline = try XCTUnwrap(LessonTimeline.decode(envelope(themed)))
+        XCTAssertEqual(timeline.palette?.light.primary, 0x006A60)
+
+        let entries = LessonWidgetTimeline.entries(now: instant("2026-08-10T08:20:00Z"), session: session, timeline: timeline)
+        XCTAssertTrue(entries.allSatisfy { $0.palette == timeline.palette })
+    }
+
     func testWithoutASessionTheWidgetsAreSignedOut() throws {
         XCTAssertEqual(
             LessonWidgetTimeline.entries(now: Date(), session: nil, timeline: try fixture()).map(\.content),

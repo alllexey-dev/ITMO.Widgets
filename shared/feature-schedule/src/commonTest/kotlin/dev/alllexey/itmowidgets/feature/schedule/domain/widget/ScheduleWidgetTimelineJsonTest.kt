@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
+import dev.alllexey.itmowidgets.core.settings.WidgetColorRoles
+import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -45,6 +47,19 @@ class ScheduleWidgetTimelineJsonTest {
         assertFailsWith<IllegalArgumentException> {
             ScheduleWidgetTimelineJson.decode(JsonObject(root - "version").toString())
         }
+    }
+
+    @Test
+    fun thePaletteIsAbsentWhileTheWidgetsKeepTheirColoursAndRoundTripsInVersion1() {
+        assertFalse("palette" in Json.parseToJsonElement(ScheduleWidgetTimelineJson.encode(timeline)).jsonObject)
+
+        val roles = WidgetColorRoles(0xFFFFFF, 0xF0F0F0, 0x111111, 0x444444, 0xCCCCCC, 0x009688)
+        val themed = timeline.copy(palette = WidgetPalette(light = roles, dark = roles.copy(surface = 0x101010)))
+        val root = Json.parseToJsonElement(ScheduleWidgetTimelineJson.encode(themed)).jsonObject
+
+        assertEquals(JsonPrimitive(1), root["version"])
+        assertEquals(JsonPrimitive(0x009688), root.getValue("palette").jsonObject.getValue("light").jsonObject["primary"])
+        assertEquals(themed, ScheduleWidgetTimelineJson.decode(root.toString()))
     }
 
     @Test

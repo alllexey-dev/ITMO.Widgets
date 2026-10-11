@@ -87,12 +87,47 @@ enum LessonWidgetText {
     }
 }
 
-/// The colours of the schedule widgets: the app's surface roles, the lesson type colours of the design tokens.
+/// The surface colours of the schedule widgets: the brand scheme's roles, or the app's `palette` while the widgets
+/// follow its theme (`settings_widgets_theme_title`). Each follows the widget's light or dark appearance. The views read it
+/// from the environment the entry view sets.
+struct LessonWidgetColors {
+    let background: Color
+    let primaryText: Color
+    let secondaryText: Color
+    let accent: Color
+
+    init(palette: WidgetPalette?) {
+        guard let palette else {
+            background = ItmoColor.surfaceContainer
+            primaryText = ItmoColor.onSurface
+            secondaryText = ItmoColor.onSurfaceVariant
+            accent = ItmoColor.primary
+            return
+        }
+        func color(_ role: KeyPath<WidgetColorRoles, UInt32>) -> Color {
+            Color(light: palette.light[keyPath: role], dark: palette.dark[keyPath: role])
+        }
+        background = color(\.surfaceContainer)
+        primaryText = color(\.onSurface)
+        secondaryText = color(\.onSurfaceVariant)
+        accent = color(\.primary)
+    }
+}
+
+private struct LessonWidgetColorsKey: EnvironmentKey {
+    static let defaultValue = LessonWidgetColors(palette: nil)
+}
+
+extension EnvironmentValues {
+    /// The schedule widget colours of the entry being drawn.
+    var lessonWidgetColors: LessonWidgetColors {
+        get { self[LessonWidgetColorsKey.self] }
+        set { self[LessonWidgetColorsKey.self] = newValue }
+    }
+}
+
+/// The schedule widgets' colours that no theme changes: the lesson types of the design tokens, the completed fade.
 enum LessonWidgetColor {
-    static let background = ItmoColor.surfaceContainer
-    static let primaryText = ItmoColor.onSurface
-    static let secondaryText = ItmoColor.onSurfaceVariant
-    static let accent = ItmoColor.primary
 
     /// `lessonTypeColorRes` of Android.
     static func type(_ typeId: Int) -> Color {
@@ -144,6 +179,7 @@ struct LessonWidgetMessage: View {
     let hint: LocalizedStringResource?
     let scale: Double
 
+    @Environment(\.lessonWidgetColors) private var colors
     @ScaledMetric(relativeTo: .subheadline) private var titleSize: CGFloat = 14
     @ScaledMetric(relativeTo: .caption2) private var hintSize: CGFloat = 11
 
@@ -151,15 +187,15 @@ struct LessonWidgetMessage: View {
         VStack(spacing: 6) {
             Image(systemName: symbol.systemName)
                 .font(.system(size: titleSize * scale * 1.3))
-                .foregroundStyle(LessonWidgetColor.accent)
+                .foregroundStyle(colors.accent)
                 .accessibilityHidden(true)
             Text(title)
                 .font(.system(size: titleSize * scale, weight: .semibold))
-                .foregroundStyle(LessonWidgetColor.primaryText)
+                .foregroundStyle(colors.primaryText)
             if let hint {
                 Text(hint)
                     .font(.system(size: hintSize * scale))
-                    .foregroundStyle(LessonWidgetColor.secondaryText)
+                    .foregroundStyle(colors.secondaryText)
             }
         }
         .multilineTextAlignment(.center)

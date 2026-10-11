@@ -90,6 +90,8 @@ class AppearancePageTest {
         assertEquals(AccentColor.TEAL.name, choice.selectedOptionKey)
         assertEquals(UiText.Res(Res.string.settings_accent_color_teal), choice.value)
         assertNull(fixture.viewModel.uiState.value.sections.first().footer)
+        // Widgets that follow the theme redraw in the new colour.
+        assertEquals(1, fixture.widgetRefresher.refreshCount)
     }
 
     @Test
@@ -140,6 +142,7 @@ class AppearancePageTest {
         val stored = ThemeSpec(AccentColor.PURPLE, style = ThemeStyle.MONOCHROME, contrast = ThemeContrast.HIGH, pureBlack = true)
         assertEquals(stored, fixture.repository.themeRequests.last())
         assertEquals(3, fixture.repository.themeRequests.size)
+        assertEquals(3, fixture.widgetRefresher.refreshCount)
         assertEquals(stored, fixture.viewModel.uiState.value.themePreview)
         assertEquals(ThemeStyle.MONOCHROME.name, fixture.viewModel.choice(SettingRowId.THEME_PALETTE).selectedOptionKey)
         assertEquals(true, fixture.viewModel.toggle(SettingRowId.DARK_BLACK).checked)

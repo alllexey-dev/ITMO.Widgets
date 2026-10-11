@@ -23,7 +23,7 @@ class QrColorResolverTest {
 
     @Test
     fun dynamicColorsStayOpaqueOutsideAnActivity() {
-        val resolver = QrColorResolver(context, StubPreferences)
+        val resolver = QrColorResolver(context, StubPreferences) { null }
 
         val (background, foreground) = resolver.getQrColors(dynamic = true)
 
@@ -33,7 +33,7 @@ class QrColorResolverTest {
 
     @Test
     fun staticColorsAreBlackOnWhite() {
-        val resolver = QrColorResolver(context, StubPreferences)
+        val resolver = QrColorResolver(context, StubPreferences) { null }
 
         assertEquals(Color.WHITE to Color.BLACK, resolver.getQrColors(dynamic = false))
     }

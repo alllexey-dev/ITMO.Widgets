@@ -2,8 +2,8 @@
 
 Three home-screen widgets: the single-lesson schedule widget, the day schedule
 widget and the QR pass widget. They render through WorkManager workers, keep
-their own launcher-adapted palette and never register a widget host from inside
-the app.
+their own launcher-adapted palette unless they follow the app's theme (Theme
+colours below) and never register a widget host from inside the app.
 
 ## Schedule widgets
 
@@ -127,6 +127,46 @@ the per-widget reveal state (`qr_widget_state_<appWidgetId>`) are the shared
 widget reads from Koin through `KoinStarter`. The
 widget and the pass screen share one repository and one cached pass; see
 [QR pass](qr.md#data).
+
+## Theme colours
+
+`Виджеты в цвет темы` (`widgets_follow_app_theme`, off by default,
+[settings](../settings.md#widgets-in-the-apps-colours)) makes all three widgets
+draw with the app's scheme instead of their own palette.
+
+- One resolver: `ThemeSpec.widgetPalette(context)` of `:shared:designsystem`
+  runs the stored appearance (`AppearancePreferences.observeTheme`) through
+  `resolveColorScheme`, the scheme `ItmoTheme` draws (accent or own colour,
+  palette style, contrast; the wallpaper's colours on Android 12+), without
+  `Чёрный фон`, and keeps the roles the widgets use, light and dark (`WidgetPalette` of `:shared:core`:
+  surface, surface container, on-surface, on-surface variant, outline variant,
+  primary). The renderers read it through `WidgetPaletteSource` (Android:
+  `AndroidWidgetPaletteSource`), null while the switch is off.
+- Schedule widgets: `WidgetColors` sets every label colour on every render, so
+  a reused launcher view drops the previous one. On, from Android 12 a colour
+  is a light and dark pair (`RemoteViews.setColorInt`), so the launcher
+  follows the system's mode; below 12 the colour of the render's mode. Off,
+  from Android 12 the layout's own `widget_*` resource (`setColor`), below 12
+  its colour in the render's mode. The background keeps its shape: two
+  layers of `widget_theme_background.xml` (the 1 dp outline and the surface
+  inside it, each tinted, since a RemoteViews tint colours a drawable as a
+  whole) show over the layout's own background only while the switch is on.
+  Lesson type colours stay.
+- QR widget: `QrColorResolver` feeds the palette's surface and text roles into
+  its usual math while `Динамические цвета` is on; without them the code is
+  black on white whatever the switch says.
+- The QR tile, notifications and the launcher icon keep the system's colours.
+- Turning the switch or any change on `Оформление` refreshes installed
+  widgets (`WidgetRefreshRequester.refreshAll`); the settings previews redraw
+  with the palette (`WidgetPreviewSettings.theme`).
+- iOS: the app writes the palette into qr-pass-v1.json and
+  schedule-timeline-v1.json (`palette`) and reloads the widgets
+  ([iOS app](../ios.md#widgets)).
+- Tests: `WidgetPalettesTest` and `WidgetPalettesAndroidTest` (the resolver),
+  `WidgetThemeScreenshotTest` of `:app` (both schedule widgets and the QR code,
+  off and on, light and dark, the teal preset), `ScheduleWidgetRenderingTest`
+  (colours on reuse), `RootPageProviderTest`, `WidgetsPageProviderTest`,
+  `AppearancePreferencesTest`, `PreferenceKeyParityTest`.
 
 ## Launcher picker previews
 

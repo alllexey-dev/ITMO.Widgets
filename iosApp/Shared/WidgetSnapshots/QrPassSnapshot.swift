@@ -46,7 +46,8 @@ struct QrPassSnapshot: Equatable {
             appearance: QrWidgetAppearance(
                 spoiler: value.spoiler ?? QrWidgetAppearance.standard.spoiler,
                 dynamicColors: value.dynamicColors ?? QrWidgetAppearance.standard.dynamicColors,
-                animation: QrRevealAnimation(name: value.animation)
+                animation: QrRevealAnimation(name: value.animation),
+                palette: value.palette
             )
         )
     }
@@ -59,5 +60,6 @@ struct QrPassSnapshot: Equatable {
         let spoiler: Bool?
         let dynamicColors: Bool?
         let animation: String?
+        let palette: WidgetPalette?
     }
 }

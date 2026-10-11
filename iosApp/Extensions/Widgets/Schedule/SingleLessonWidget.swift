@@ -41,6 +41,7 @@ struct SingleLessonEntryView: View {
     let family: WidgetFamily
 
     var body: some View {
+        let colors = LessonWidgetColors(palette: entry.palette)
         Group {
             switch family {
             case .accessoryInline:
@@ -51,10 +52,11 @@ struct SingleLessonEntryView: View {
             default:
                 SingleLessonTile(content: entry.content, family: family)
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                    .background(LessonWidgetColor.background)
-                    .containerBackground(for: .widget) { LessonWidgetColor.background }
+                    .background(colors.background)
+                    .containerBackground(for: .widget) { colors.background }
             }
         }
+        .environment(\.lessonWidgetColors, colors)
         .widgetURL(LessonWidgetRoute.scheduleURL)
     }
 
@@ -109,6 +111,7 @@ private struct SingleLessonTile: View {
     let content: LessonWidgetContent
     let family: WidgetFamily
 
+    @Environment(\.lessonWidgetColors) private var colors
     @ScaledMetric(relativeTo: .subheadline) private var titleSize: CGFloat = 15
     @ScaledMetric(relativeTo: .footnote) private var timeSize: CGFloat = 13
     @ScaledMetric(relativeTo: .caption2) private var captionSize: CGFloat = 11
@@ -147,18 +150,18 @@ private struct SingleLessonTile: View {
             Spacer(minLength: 0)
             Text(verbatim: LessonWidgetText.subject(of: lesson))
                 .font(.system(size: titleSize * scale, weight: .semibold))
-                .foregroundStyle(LessonWidgetColor.primaryText)
+                .foregroundStyle(colors.primaryText)
                 .lineLimit(family == .systemSmall ? 3 : 2)
                 .minimumScaleFactor(0.85)
             if !details.isEmpty {
                 Text(verbatim: details)
                     .font(.system(size: captionSize * scale))
-                    .foregroundStyle(LessonWidgetColor.secondaryText)
+                    .foregroundStyle(colors.secondaryText)
                     .lineLimit(family == .systemSmall ? 2 : 1)
             }
             Text(LessonWidgetText.supporting(state: lesson.state, remainingLessons: remaining))
                 .font(.system(size: captionSize * scale, weight: .semibold))
-                .foregroundStyle(LessonWidgetColor.accent)
+                .foregroundStyle(colors.accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
@@ -171,7 +174,7 @@ private struct SingleLessonTile: View {
             LessonMarker(lesson: lesson, style: style, size: 7 * scale)
             Text(LessonWidgetText.type(of: lesson))
                 .font(.system(size: captionSize * scale))
-                .foregroundStyle(LessonWidgetColor.secondaryText)
+                .foregroundStyle(colors.secondaryText)
                 .lineLimit(1)
         }
     }
@@ -179,7 +182,7 @@ private struct SingleLessonTile: View {
     private func time(_ lesson: WidgetLesson) -> some View {
         Text(verbatim: LessonWidgetText.time(of: lesson))
             .font(.system(size: timeSize * scale, weight: .semibold).monospacedDigit())
-            .foregroundStyle(LessonWidgetColor.primaryText)
+            .foregroundStyle(colors.primaryText)
             .lineLimit(1)
     }
 

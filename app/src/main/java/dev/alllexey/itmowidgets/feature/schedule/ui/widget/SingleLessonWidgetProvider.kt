@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetWork
@@ -18,6 +19,8 @@ class SingleLessonWidgetProvider : AppWidgetProvider(), KoinComponent {
 
     // Resolved on first use, after onReceive() has started Koin.
     private val store: ScheduleWidgetSnapshotStore by inject()
+
+    private val palettes: WidgetPaletteSource by inject()
 
     override fun onReceive(context: Context, intent: Intent) {
         // The one idempotent starter, as every Android component (KoinStarter); inject() then reads its graph.
@@ -38,12 +41,14 @@ class SingleLessonWidgetProvider : AppWidgetProvider(), KoinComponent {
         scope.launch {
             try {
                 val snapshot = store.read()
+                val palette = palettes.current()
                 appWidgetIds.forEach { appWidgetId ->
                     ScheduleWidgetRenderer.renderSingle(
                         context,
                         appWidgetManager,
                         appWidgetId,
-                        snapshot
+                        snapshot,
+                        palette
                     )
                 }
                 ScheduleWidgetWork.ensurePeriodic(context)

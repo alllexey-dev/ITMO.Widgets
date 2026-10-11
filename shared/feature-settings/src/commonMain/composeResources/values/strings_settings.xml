@@ -162,4 +162,5 @@
     <string name="settings_color_picker_hex">HEX</string>
     <string name="settings_color_picker_hex_error">Шесть знаков 0–9 и A–F, например #4984E2</string>
     <string name="settings_color_picker_preview">Выбранный цвет</string>
+    <string name="settings_widgets_theme_title">Виджеты в цвет темы</string>
 </resources>
