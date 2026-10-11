@@ -19,7 +19,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
-import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
+import dev.alllexey.itmowidgets.feature.onboarding.ui.ONBOARDING_ROOT_TEST_TAG
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -172,7 +172,7 @@ class MainActivitySessionRoutingTest {
             .filterIsInstance<ViewRootForTest>()
             .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.subtree() }
             .any { node ->
-                node.config.getOrNull(SemanticsProperties.TestTag) == OnboardingFragment.ROOT_TEST_TAG &&
+                node.config.getOrNull(SemanticsProperties.TestTag) == ONBOARDING_ROOT_TEST_TAG &&
                     node.size.height > 0
             }
         assertTrue("The first-run flow is not shown", shown)

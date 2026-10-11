@@ -40,7 +40,7 @@ import kotlin.test.assertTrue
 import org.robolectric.annotation.Config
 
 /**
- * `Жалоба на ссылку` on the real `SubjectLinksViewModel`, wired as `ReportLinkDialogFragment` wires it, at font scale
+ * `Жалоба на ссылку` on the real `SubjectLinksViewModel`, wired as the shell entry wires it, at font scale
  * 1.3: the four reasons in order, `Отправить` only with a reason, a failure under the comment that keeps the dialog and
  * goes with the next send, closing once the report is accepted, the comment's 500 characters and the cancel button.
  * The deleted View dialog had no test of its own; its looks were the `ReportLinkDialog_reason` reference and are now

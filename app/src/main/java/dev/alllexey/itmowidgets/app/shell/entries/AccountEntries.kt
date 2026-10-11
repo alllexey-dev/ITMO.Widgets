@@ -54,7 +54,7 @@ import dev.alllexey.itmowidgets.feature.debug.ui.debugToolsActions
 import dev.alllexey.itmowidgets.feature.debug.ui.handleDebugToolsEvent
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.feature.me.ui.MeActions
-import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
+import dev.alllexey.itmowidgets.feature.me.ui.MeHost
 import dev.alllexey.itmowidgets.feature.me.ui.MeRoute
 import dev.alllexey.itmowidgets.feature.me.ui.openProjectLink
 import dev.alllexey.itmowidgets.feature.me.ui.shareOwnProfile
@@ -103,15 +103,14 @@ internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
 /**
  * The Me tab's root (route map row 9): `MeRoute` with its ViewModel in the root's own store. Its rows open the
  * social screens, the settings (the privacy page for the privacy row), the web sign-in sheet and, in debug builds,
- * the debug tools through [navigator]; sharing and the project pages go through the Android helpers `MeFragment`
- * calls too.
+ * the debug tools through [navigator]; sharing and the project pages go through the Android helpers of `MeHost.kt`.
  */
 @Composable
 internal fun MeTabRoot(navigator: Nav3AppNavigator) {
     val context = LocalContext.current
     val viewModel: MeViewModel = entryViewModel()
     val actions = remember(navigator, context) { meActions(navigator, context) }
-    MeRoute(actions, showDebugTools = BuildConfig.DEBUG && !MeFragment.releaseLook, viewModel = viewModel)
+    MeRoute(actions, showDebugTools = BuildConfig.DEBUG && !MeHost.releaseLook, viewModel = viewModel)
 }
 
 private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions(
@@ -145,10 +144,10 @@ private fun AuthEntry() {
 }
 
 /**
- * The first-run flow (row 2), hosted as `OnboardingFragment` hosts it: the real widget previews, the launcher pin
- * (its receiver lives as long as this entry, so a pin confirmed while the app is stopped still counts), the
- * notification permission (AA-11), the spoiler photo picker and crop screen, links, and Back as a step back from the
- * second step on. The shell leaves the flow on its own once the first-run flag is set.
+ * The first-run flow (row 2): the real widget previews, the launcher pin (its receiver lives as long as this entry,
+ * so a pin confirmed while the app is stopped still counts), the notification permission (AA-11), the spoiler photo
+ * picker and crop screen, links, and Back as a step back from the second step on. The shell leaves the flow on its
+ * own once the first-run flag is set.
  */
 @Composable
 private fun OnboardingEntry() {
@@ -208,7 +207,7 @@ private fun OnboardingEntry() {
     )
 }
 
-/** The web sign-in sheet (S9): Google's code scanner runs in Play services, as in `WebLoginBottomSheet`. */
+/** The web sign-in sheet (S9): Google's code scanner runs in Play services. */
 @Composable
 private fun WebLoginEntry(onClose: () -> Unit) {
     val context = LocalContext.current
@@ -218,8 +217,8 @@ private fun WebLoginEntry(onClose: () -> Unit) {
 
 /**
  * My ITMO in the browser (row 22): one [MyItmoBrowser] whose history, page and failure survive recreation in this
- * entry's saved state, as in `MyItmoWebFragment`'s. Back goes back in the browser's history first; without history
- * the shell's overlay handler takes it, so the predictive gesture previews closing the screen.
+ * entry's saved state. Back goes back in the browser's history first; without history the shell's overlay handler
+ * takes it, so the predictive gesture previews closing the screen.
  */
 @Composable
 private fun MyItmoWebEntry(onClose: () -> Unit) {
@@ -313,5 +312,5 @@ private inline fun <reified VM : ViewModel> entryViewModel(): VM {
     return viewModel { KoinStarter.ensureStarted(context).get<VM> { parametersOf(createSavedStateHandle()) } }
 }
 
-/** The privacy page of the settings (`SettingsPage.PRIVACY`), as `MeFragment` opens it. */
+/** The privacy page of the settings (`SettingsPage.PRIVACY`), as the Me tab opens it. */
 private const val PRIVACY_PAGE = "PRIVACY"

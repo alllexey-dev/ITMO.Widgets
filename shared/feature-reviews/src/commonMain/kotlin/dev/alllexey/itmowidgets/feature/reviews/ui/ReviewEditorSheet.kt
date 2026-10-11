@@ -362,7 +362,7 @@ private const val MIN_TEXT_LINES = 5
 /*
  * Previews. The harness names a baseline `<function>_<@Preview name>`, and LX-1c recorded the XML references as
  * `ReviewEditorSheetContent_<state>`, so each state is a function called `ReviewEditorSheetContent` in a holder class
- * of its own. The sheet wraps its content on `surfaceContainerLow`, as `ReviewEditorBottomSheet` opens it.
+ * of its own. The sheet wraps its content on `surfaceContainerLow`, as the shell's sheet opens it.
  */
 
 /** A new review once the schedule history answered: three suggestions, nothing typed. */

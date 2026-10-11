@@ -25,7 +25,7 @@ the state is saved does nothing). The sheet is an `ItmoBottomSheetFragment`
 (`SheetSpec(textInput = true)`): it opens expanded to its content, up to 90 % of
 the screen, without a collapsed step, and the window resizes for the keyboard so
 the field stays above it. It expands to its content again through
-`core/ui/BottomSheets.kt` `expandToContent()` when the step changes, not on every
+the shell's sheet scene when the step changes, not on every
 keystroke.
 
 The body is `WebLoginSheetRoute` in `:shared:feature-account`

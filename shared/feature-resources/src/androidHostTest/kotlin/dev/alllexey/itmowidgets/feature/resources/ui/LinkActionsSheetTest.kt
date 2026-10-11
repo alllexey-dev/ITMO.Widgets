@@ -54,7 +54,7 @@ import org.robolectric.annotation.Config
  * nothing for a private link, arrows hidden by a restriction, an own rejected link with its reason and own actions,
  * another student's link with pinning and reporting; then the confirmed delete, a deleted link, one action at a time
  * and long text at 320 dp and font scale 1.3. The looks are the `LinkActionsSheetContent_*` goldens; the clipboard,
- * the toast and the navigation are `LinkActionsBottomSheet`'s.
+ * the toast and the navigation are the shell entry's.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)

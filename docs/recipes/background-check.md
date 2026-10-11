@@ -81,7 +81,7 @@ pinned by `PeriodicCheckSpecTest`). Use them instead of a feature copy.
    stable; list it in [Channels](../features/notifications.md#channels).
 9. **Debug trigger**: a button in the checks card of
    `feature/debug/ui/DebugToolsScreen.kt`, wired through `DebugToolsActions`
-   in `DebugToolsFragment.kt` to a
+   in `DebugToolsEffects.kt` to a
    `DebugToolsViewModel` method that calls `checkNow()`; list it in
    [debug tools](../features/debug.md#screen).
 10. **Gates in the data call**: every class that takes a network client

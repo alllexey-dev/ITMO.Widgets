@@ -110,5 +110,5 @@ private fun SheetPreview(state: SheetScoresUiState) = ItmoPreview {
     }
 }
 
-/** 90 % of the 891 dp capture window, the most `SheetHeight.FitContent` lets the sheet grow. */
+/** 90 % of the 891 dp capture window, the most `SheetPolicy.Height.FIT_CONTENT` lets the sheet grow. */
 private const val SHEET_MAX_HEIGHT = 802

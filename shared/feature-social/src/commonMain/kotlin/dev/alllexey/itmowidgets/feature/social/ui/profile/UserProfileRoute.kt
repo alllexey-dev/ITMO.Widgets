@@ -63,7 +63,7 @@ class UserProfileExits(
  * The person profile with its Koin ViewModel, which reads the ISU from the destination's arguments. A page with a part
  * that failed shows the single `Часть данных не загрузилась` snackbar with `Повторить`; a failed action shows a
  * snackbar of its own. Removing a friend and deleting the own review ask in a dialog first. [reviewsEnabled] is always
- * on for Android; the iOS host feeds it from its platform capabilities. Android hosts it in `UserProfileFragment`; the
+ * on for Android; the iOS host feeds it from its platform capabilities. Android hosts it in the Compose shell; the
  * iOS shell hosts the same route.
  */
 @Composable

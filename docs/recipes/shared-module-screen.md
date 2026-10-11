@@ -172,8 +172,8 @@ The same route serves every host; only the host changes.
 - **Android now: a Fragment host.** The Fragment keeps its class name and
   `@AndroidEntryPoint` (nav graphs, tiles, shortcuts and tests name it) and
   returns `itmoComposeView { <Name>Route(onBack = { closeScreen() }) }` from
-  `onCreateView`. `itmoComposeView`
-  (`designsystem/host/ItmoComposeView.kt`) wraps `ItmoComposeHost.locals` and
+  `onCreateView`. `itmoComposeView` wraps `ItmoComposeHost.locals`
+  (`designsystem/host/ItmoComposeHost.kt`) and
   `ItmoTheme` and disposes with the Fragment's view; never add a second host
   helper or theme. `koinViewModel()` inside it scopes the ViewModel to the
   Fragment's store through Koin's factory, so Hilt's default factory does not

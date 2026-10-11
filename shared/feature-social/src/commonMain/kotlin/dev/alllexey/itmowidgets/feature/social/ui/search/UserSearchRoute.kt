@@ -28,7 +28,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * People search with its Koin ViewModel. The typed text survives recreation here and is handed back to a fresh
  * ViewModel once, so a restored screen searches its query again. A failed action shows a snackbar; `Пригласить`
  * leaves through [onInvite], where the host shares the invitation text with the download link of its distribution.
- * Android hosts it in `UserSearchFragment`; the iOS shell hosts the same route.
+ * Android hosts it in the Compose shell; the iOS shell hosts the same route.
  */
 @Composable
 fun UserSearchRoute(

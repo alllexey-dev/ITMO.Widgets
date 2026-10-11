@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.feature.resources
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -11,14 +9,11 @@ import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
-import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import kotlin.time.Instant
-import org.koin.dsl.module
 
 /**
- * Synthetic links of one subject period for the links hosts' JVM tests in `:app`: an own link, an own private one and
+ * Synthetic links of one subject period for the links JVM tests in `:app`: an own link, an own private one and
  * another student's Google Sheet. What the sheets draw is tested in `:shared:feature-resources` over its own samples.
  */
 internal object LinksHostFixtures {
@@ -46,17 +41,6 @@ internal object LinksHostFixtures {
         premoderation = true,
         servicesEnabled = true,
     )
-
-    /** A repository with [fixture] and the connection, handed to Koin for every links view model of the test. */
-    fun install(): LinksHostRepository {
-        val repository = LinksHostRepository().apply {
-            servicesEnabled = true
-            snapshots.value = mapOf(SCOPE.key to fixture())
-        }
-        KoinStarter.ensureStarted(ApplicationProvider.getApplicationContext<Context>())
-            .loadModules(listOf(module { factory<SubjectLinksRepository> { repository } }), allowOverride = true)
-        return repository
-    }
 
     private fun link(
         id: String,

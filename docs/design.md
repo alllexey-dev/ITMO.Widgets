@@ -845,7 +845,7 @@ in [Shared components](#shared-components).
   subtitle, one area of at least 288 dp for the ranges, loading, the file,
   an empty range and failures; the ranges are connected-group rows: title
   `bodyLarge`, days `bodySmall`, chevron), hosted by
-  `feature/settings/ui/IcsExportBottomSheet.kt`.
+  `app/shell/entries/SettingsEntries.kt`.
 - Link sheets: `SubjectLinksSheet` (connected groups per category),
   `LinkEditorSheet` and `LinkActionsSheet` in `:shared:feature-resources`
   (`feature/resources/ui/`); rows are the kit's `LinkRow`.
@@ -878,7 +878,7 @@ in [Shared components](#shared-components).
   `:shared:feature-recordbook`); its place is reserved (`reserveTone`) where a
   late dot would otherwise move the row.
 - Review editor: Compose in `:shared:feature-reviews` (`feature/reviews/ui/ReviewEditorSheet.kt`),
-  hosted by `feature/reviews/ui/ReviewEditorBottomSheet.kt`. A form sheet without a handle
+  hosted by `app/shell/entries/ReviewsEntries.kt`. A form sheet without a handle
   that cannot be dragged or dismissed outside: Back and the close button ask
   `Не сохранять отзыв?` only when something changed. The title has a second line
   with the teacher's short name; subject suggestions are filter chips that mark

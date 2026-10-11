@@ -12,7 +12,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportUiState
 /*
  * Baselines `IcsExportSheet_<state>`, the names LT-3a's XML references took: each state is a function called
  * `IcsExportSheet` in a holder class of its own. The sheet fits its content, so it previews wrapping it on the colour
- * `BottomSheetDialogFragment` gives the sheet.
+ * the shell's sheet gives it.
  */
 
 @Composable

@@ -14,7 +14,7 @@ import dev.alllexey.itmowidgets.feature.settings.ui.SettingsTestTags
 import org.junit.Assert.assertTrue
 
 /**
- * The Compose settings page of `SettingsFragment` read through its `ComposeView`: rows by their `SettingRowId.key`
+ * The Compose settings page read through its `ComposeView`: rows by their `SettingRowId.key`
  * tags, in screen order, with the texts they show. `:app`'s instrumented tests have no `ui-test-junit4`, so this
  * walks the `ComposeView`'s semantics owner and acts through semantics actions. Main thread only.
  */

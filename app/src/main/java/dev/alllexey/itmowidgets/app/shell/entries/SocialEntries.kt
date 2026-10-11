@@ -42,7 +42,7 @@ import org.koin.core.parameter.parametersOf
  * The social keys (route map rows 13-16 and S2): the viewer's friends, another user's friends, people search, the
  * person profile and the schedule's friend picker. Every profile link goes through [openUserProfile], so an ISU outside
  * `1..Int.MAX_VALUE` opens nothing. The picker hands its choice to the schedule as a [FriendSelection] on the result
- * bus under its default key (one opener), where `FriendSelectorDialogFragment` sets a Fragment result.
+ * bus under its default key (one opener).
  */
 internal fun EntryRegistry.Builder.socialEntries() {
     entry<AppRoutes.Friends> { key, navigator ->

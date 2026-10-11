@@ -24,7 +24,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * The update offer with its Koin ViewModel. [onUpdate] is the host's distribution-specific update (`UpdateAction` on
  * Android): it gets whether the build is unsupported and a callback for when nothing could be opened, which shows
  * `app_update_open_failed`. The reminder and the close button both call [onClose]; a skipped release closes the
- * screen once the choice is stored. Android hosts it in `AppUpdateFragment`.
+ * screen once the choice is stored. Android hosts it in the Compose shell's entry.
  */
 @Composable
 fun AppUpdateRoute(

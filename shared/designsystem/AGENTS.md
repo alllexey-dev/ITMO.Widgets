@@ -6,7 +6,7 @@
   sheets, dialogs, buttons, bars, navigation, state, avatar, charts, settings), each with its previews.
 - `icons/`: `AppIconResources`, the `AppIcon` -> drawable table; `composeResources/drawable/ic_*.xml`.
 - `gesture/`: tab-swipe helpers; `preview/`: `ItmoPreview`, `PreviewAppearance` and preview fixtures.
-- `host/` (`androidMain`): `Fragment.itmoComposeView` and `ItmoBottomSheetFragment` for View hosts.
+- `host/`: `LocalPlatformActions` (`commonMain`) and `ItmoComposeHost` (`androidMain`), the host-level locals hook.
 - `tokens/itmo-tokens.json`: the tokens for iOS and Web; `screenshots/`: the kit's baselines.
 
 ## Depends on

@@ -39,7 +39,7 @@ enum class RouteKind {
 }
 
 /**
- * The design system's `SheetSpec` in common code: the shell maps it to the sheet scene, iOS to detents and
+ * How a sheet opens and who may close it: the shell maps it to the sheet scene, iOS to detents and
  * `interactiveDismissDisabled`.
  */
 data class SheetPolicy(

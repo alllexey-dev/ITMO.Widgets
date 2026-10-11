@@ -88,7 +88,7 @@ private fun SubjectLinksEntry(args: SubjectLinksArgs, onClose: () -> Unit, navig
 
 /**
  * The link editor (S4): a new link's sheet starts with the clipboard link once its window first has focus, only on
- * the sheet's first creation, as `LinkEditorBottomSheet` does; a saved link closes it.
+ * the sheet's first creation; a saved link closes it.
  */
 @Composable
 private fun LinkEditorEntry(onDone: () -> Unit) {

@@ -97,7 +97,7 @@ private fun SheetScaffoldToolbarPreview() = ItmoPreview {
     }
 }
 
-/** A sheet colour under the body, as `BottomSheetDialogFragment` draws it. */
+/** A sheet colour under the body, as the shell's sheet draws it. */
 @Composable
 private fun SheetPreviewSurface(content: @Composable () -> Unit) {
     Box(Modifier.background(ItmoTheme.colorScheme.surfaceContainerLow)) { content() }

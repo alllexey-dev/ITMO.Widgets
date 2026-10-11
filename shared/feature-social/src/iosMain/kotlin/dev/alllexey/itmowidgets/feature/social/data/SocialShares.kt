@@ -12,7 +12,7 @@ import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 
 /**
  * What the social screens and the Me tab share on iOS, through the system share sheet ([PlatformActions]): a profile
- * with its app link, as Android's `shareOwnProfile` and `UserProfileFragment` send it, and the invitation with
+ * with its app link, as Android's `shareOwnProfile` and `shareUserProfile` send it, and the invitation with
  * [inviteUrl], the App Store page once the app has one, else the site (Android sends its distribution's page).
  * Called on the main thread; false when no sheet could be shown.
  */

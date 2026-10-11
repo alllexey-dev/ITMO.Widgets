@@ -12,8 +12,8 @@ import org.koin.dsl.module
 
 /**
  * The settings screens' fixture in Koin: a debug host builds the settings, custom spoiler and `.ics` ViewModels over
- * its in-memory fakes while it lives, and `SettingsFragment` and `IcsExportBottomSheet` obtain them through Koin as
- * in release, with the `SavedStateHandle` Koin makes from the Fragment's arguments. The ViewModels are overridden
+ * its in-memory fakes while it lives, and the shell's settings and `.ics` entries obtain them through Koin as in
+ * release, with the `SavedStateHandle` Koin makes from the entry's arguments. The ViewModels are overridden
  * rather than the core contracts behind them, which are process-wide and read by other screens of the same host.
  *
  * Koin is process-wide: a host calls [load] in `onCreate` before `super.onCreate()` and [unload] in `onDestroy`, or

@@ -122,5 +122,5 @@ private fun DetailsPreview(
     }
 }
 
-/** 90 % of the 891 dp capture window, the sheet's `SheetHeight.Tall`. */
+/** 90 % of the 891 dp capture window, the sheet's `SheetPolicy.Height.TALL`. */
 private const val SHEET_HEIGHT = 802

@@ -30,7 +30,7 @@ Its behaviour is in [web sign-in](../features/web-login.md).
 | Golden fixtures | `../itmo-widgets-backend/src/test/resources/contract/http/users/webLoginPreview.json`, `../itmo-widgets-backend/src/test/resources/contract/http/users/approveWebLogin.json` |
 | Core 2.0 area | `client/users/UsersApi.kt` (`webLoginPreview`, `approveWebLogin`), `client/users/KtorUsersApi.kt`, `client/users/WebLoginPreview.kt`; tests `client/users/UsersRouteCases.kt`, `client/users/WebLoginApiTest.kt`, `client/users/WebLoginContractTest.kt`, `client/users/UsersVendoredFixturesTest.kt` and `shared/backend-client/src/commonTest/resources/claims/users.txt` |
 | App repository | `feature/weblogin/data/WebLoginRepositoryImpl.kt` behind `core/weblogin/WebLoginRepository.kt`, tested by `feature/weblogin/data/WebLoginRepositoryImplTest.kt` and `core/demo/DemoNetworkGateTest.kt` |
-| ViewModel and screen | `feature/weblogin/presentation/WebLoginViewModel.kt`, `feature/weblogin/ui/WebLoginBottomSheet.kt` |
+| ViewModel and screen | `feature/weblogin/presentation/WebLoginViewModel.kt`, `app/shell/entries/AccountEntries.kt` |
 
 The repository still calls Core 1.x (`ItmoWidgetsApi`); KM-10g moves it onto
 `UsersApi`. The Core 2.0 call pattern that is already in place is

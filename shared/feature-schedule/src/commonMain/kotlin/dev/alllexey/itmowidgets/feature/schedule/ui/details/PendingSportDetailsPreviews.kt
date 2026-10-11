@@ -57,5 +57,5 @@ private fun PendingPreview(booking: PendingSportDetailsArgs) = ItmoPreview {
     }
 }
 
-/** 90 % of the 891 dp capture window, the sheet's `SheetHeight.Tall`. */
+/** 90 % of the 891 dp capture window, the sheet's `SheetPolicy.Height.TALL`. */
 private const val PENDING_SHEET_HEIGHT = 802

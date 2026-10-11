@@ -7,8 +7,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.http.SslError
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.SslErrorHandler
@@ -19,9 +17,6 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.activity.OnBackPressedCallback
-import androidx.annotation.VisibleForTesting
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,95 +25,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.color
-import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
-import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
-import kotlinx.coroutines.launch
-
-/**
- * The overlay destination `my_itmo_web`: [MyItmoWebContent] over one [MyItmoBrowser], whose WebView is built in the
- * `AndroidView` factory and destroyed when the composition releases it. The WebView is the state, so the browser
- * derives the screen's [MyItmoWebState] from its callbacks and there is no ViewModel. This Fragment keeps its
- * lifecycle, Back and saved state; the Compose shell's entry hosts the same browser.
- *
- * Official browser session only: no native token injection, JavaScript bridge or console logging.
- */
-open class MyItmoWebFragment : Fragment() {
-    private val snackbars = SnackbarHostState()
-    private val myItmo = MyItmoBrowser(
-        openExternal = ::openExternal,
-        onBrowserCreated = { onBrowserCreated(it) },
-        interceptRequest = { interceptRequest(it) },
-    )
-    private var browserBack: OnBackPressedCallback? = null
-
-    /** The page's WebView while the view shows it, for instrumented tests. */
-    @get:VisibleForTesting
-    val browser: WebView? get() = myItmo.page
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        itmoComposeView {
-            MyItmoWebContent(
-                browser = myItmo,
-                onClose = { browserBack?.isEnabled = false; closeScreen() },
-                snackbarHostState = snackbars,
-            )
-        }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (!myItmo.goBack()) {
-                    isEnabled = false
-                    requireActivity().onBackPressedDispatcher.onBackPressed()
-                }
-            }
-        }
-        browserBack = callback
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
-        // Before the first composition, so creating the browser changes no state the screen has already read.
-        myItmo.restore(savedInstanceState)
-    }
-
-    /** Debug hosts adjust the browser before its first load. */
-    protected open fun onBrowserCreated(page: WebView) = Unit
-
-    /** Debug hosts replace transport with synthetic HTML while retaining the real browser lifecycle. */
-    protected open fun interceptRequest(request: WebResourceRequest): WebResourceResponse? = null
-
-    private fun openExternal(url: String) {
-        openExternalPage(requireContext(), url) {
-            if (view == null) return@openExternalPage
-            viewLifecycleOwner.lifecycleScope.launch {
-                snackbars.showSnackbar(getString(R.string.link_open_failed), duration = SnackbarDuration.Long)
-            }
-        }
-    }
-
-    override fun onResume() { super.onResume(); myItmo.onResume() }
-    override fun onPause() { myItmo.onPause(); super.onPause() }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putAll(myItmo.save())
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onDestroyView() {
-        myItmo.releaseShown()
-        browserBack?.remove()
-        browserBack = null
-        super.onDestroyView()
-    }
-}
 
 /**
  * `MyItmoWebScreen` over [browser]: the bar's subtitle is the host of the last official page, the slot is the
- * browser's WebView, hidden while the error page covers it. Both hosts call it (`MyItmoWebFragment` and the Compose
- * shell's `MY_ITMO_WEB` entry).
+ * browser's WebView, hidden while the error page covers it. The Compose shell's `MY_ITMO_WEB` entry calls it.
  */
 @Composable
 fun MyItmoWebContent(browser: MyItmoBrowser, onClose: () -> Unit, snackbarHostState: SnackbarHostState) {
@@ -155,8 +67,8 @@ fun openExternalPage(context: Context, url: String, onFailed: () -> Unit) {
  * One My ITMO browser: at most one WebView at a time, the last official page, the failure and the saved history, and
  * the screen state derived from the WebView's callbacks. A host creates the WebView through [create] and releases it
  * through [release], forwards resume and pause, Back through [goBack] (while [canGoBack]), and saves and restores
- * through [save] and [restore]. [openExternal] opens a page outside the official hosts; [onBrowserCreated] and [interceptRequest] are the
- * debug hosts' hooks.
+ * through [save] and [restore]. [openExternal] opens a page outside the official hosts; [onBrowserCreated] and
+ * [interceptRequest] are hooks for debug hosts.
  */
 class MyItmoBrowser(
     private val openExternal: (url: String) -> Unit,

@@ -52,7 +52,7 @@ Feature doc: [Sign-in](auth.md); the hidden demo entry in [Demo session](demo.md
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/auth/ui/AuthFragment.kt` hosting `AuthRoute` (`:shared:feature-account`) | Fragment | `AuthViewModel` (Koin) | `auth`, start destination of `main_nav_graph` | — | `AccountScreenshotTest` (`:shared:feature-account`), `app/DemoModeFlowTest.kt`, `app/MainActivitySessionRoutingTest.kt` |
+| `app/shell/entries/AccountEntries.kt` hosting `AuthRoute` (`:shared:feature-account`) | Navigation 3 entry | `AuthViewModel` (Koin) | `auth`, start destination of `main_nav_graph` | — | `AccountScreenshotTest` (`:shared:feature-account`), `app/DemoModeFlowTest.kt`, `app/MainActivitySessionRoutingTest.kt` |
 | `feature/auth/ui/LoginActivity.kt` hosting `LoginScreen` (`:shared:feature-account`) around an `AndroidView` `SwipeRefreshLayout` and WebView | Activity | `InteractiveLoginViewModel` (Koin) | started by `AuthFragment` | — | `AccountScreenshotTest` (`:shared:feature-account`, error state) |
 
 ## Onboarding
@@ -61,7 +61,7 @@ Feature doc: [First-run flow](onboarding.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/onboarding/ui/OnboardingFragment.kt` hosting `OnboardingScreen` (`:shared:feature-account`) with `AndroidView` widget previews | Fragment | `OnboardingViewModel` (Koin) | `onboarding` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
+| `app/shell/entries/AccountEntries.kt` hosting `OnboardingScreen` (`:shared:feature-account`) with `AndroidView` widget previews | Navigation 3 entry | `OnboardingViewModel` (Koin) | `onboarding` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
 
 ## Home
 
@@ -85,7 +85,7 @@ Feature docs: [My ITMO in the app](my-itmo-web.md), [Home and quick actions](hom
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/web/ui/MyItmoWebFragment.kt` hosting `MyItmoWebScreen` (`:shared:feature-account`) around an `AndroidView` WebView | Fragment | — | `my_itmo_web`, `AppScreen.MY_ITMO_WEB` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
+| `app/shell/entries/AccountEntries.kt` hosting `MyItmoWebScreen` (`:shared:feature-account`) around an `AndroidView` WebView | Navigation 3 entry | — | `my_itmo_web`, `AppScreen.MY_ITMO_WEB` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
 
 ## Recordbook
 
@@ -118,7 +118,7 @@ Feature doc: [Friend selector](friend-selector.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/friendselector/ui/FriendSelectorDialogFragment.kt` hosting `FriendSelectorSheetRoute` (`:shared:feature-social`) | bottom sheet (kit sheet host) | `FriendSelectorViewModel` (Koin) | `friend_selector` dialog destination, from `ScheduleFragment` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `app/shell/entries/SocialEntries.kt` hosting `FriendSelectorSheetRoute` (`:shared:feature-social`) | Navigation 3 sheet | `FriendSelectorViewModel` (Koin) | `friend_selector` dialog destination, from `ScheduleFragment` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
 
 ## Sport
 
@@ -136,10 +136,10 @@ Feature doc: [Subject links](resources.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/resources/ui/SubjectLinksBottomSheet.kt` hosting `SubjectLinksSheetRoute` (`:shared:feature-resources`) | bottom sheet | `SubjectLinksViewModel` (Koin) | `AppNavigator.openSubjectLinks` | - | - (JVM `SubjectLinksSheetTest`, `ResourcesHostsKoinTest` and the `SubjectLinksSheetContent_*` goldens of `:shared:feature-resources`) |
-| `feature/resources/ui/LinkEditorBottomSheet.kt` hosting `LinkEditorSheetRoute` (`:shared:feature-resources`) | bottom sheet | `LinkEditorViewModel` (Koin) | `AppNavigator.openLinkEditor` | - | - (JVM `LinkEditorSheetTest`, `LinkEditorPasteTest`, `ResourcesHostsKoinTest` and the `LinkEditorSheetContent_*` goldens) |
-| `feature/resources/ui/LinkActionsBottomSheet.kt` hosting `LinkActionsSheetRoute` (`:shared:feature-resources`) | bottom sheet | `SubjectLinksViewModel` (Koin) | `AppNavigator.openLinkActions` | - | - (JVM `LinkActionsSheetTest`, `ResourcesHostsKoinTest` and the `LinkActionsSheetContent_*` goldens) |
-| `feature/resources/ui/ReportLinkDialogFragment.kt` hosting `ReportLinkForm` (`:shared:feature-resources`) | dialog | `SubjectLinksViewModel` (Koin) | from `LinkActionsBottomSheet` | - | - (JVM `ReportLinkDialogTest`, `ResourcesHostsKoinTest` and the `ReportLinkDialog_*` goldens) |
+| `app/shell/entries/ResourcesEntries.kt` hosting `SubjectLinksSheetRoute` (`:shared:feature-resources`) | Navigation 3 sheet | `SubjectLinksViewModel` (Koin) | `AppNavigator.openSubjectLinks` | - | - (JVM `SubjectLinksSheetTest` and the `SubjectLinksSheetContent_*` goldens of `:shared:feature-resources`) |
+| `app/shell/entries/ResourcesEntries.kt` hosting `LinkEditorSheetRoute` (`:shared:feature-resources`) | Navigation 3 sheet | `LinkEditorViewModel` (Koin) | `AppNavigator.openLinkEditor` | - | - (JVM `LinkEditorSheetTest`, `LinkEditorPasteTest` and the `LinkEditorSheetContent_*` goldens) |
+| `app/shell/entries/ResourcesEntries.kt` hosting `LinkActionsSheetRoute` (`:shared:feature-resources`) | Navigation 3 sheet | `SubjectLinksViewModel` (Koin) | `AppNavigator.openLinkActions` | - | - (JVM `LinkActionsSheetTest` and the `LinkActionsSheetContent_*` goldens) |
+| `app/shell/entries/ResourcesEntries.kt` hosting `ReportLinkForm` (`:shared:feature-resources`) | Navigation 3 dialog | `SubjectLinksViewModel` (Koin) | from `LinkActionsBottomSheet` | - | - (JVM `ReportLinkDialogTest` and the `ReportLinkDialog_*` goldens) |
 
 ## Teacher reviews
 
@@ -147,8 +147,8 @@ Feature doc: [Teacher reviews](reviews.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/reviews/ui/ReviewEditorBottomSheet.kt` hosting `ReviewEditorSheet` (`:shared:feature-reviews`) | bottom sheet (form) | `ReviewEditorViewModel` (Koin) | `AppNavigator.openReviewEditor` | - | - (JVM `ReviewEditorSheetTest`, `ReviewsHostsKoinTest` and the `ReviewEditorSheetContent_*` goldens of `:shared:feature-reviews`) |
-| `feature/reviews/ui/ReportReviewDialogFragment.kt` hosting `ReportReviewForm` (`:shared:feature-reviews`) | dialog | `ReportReviewViewModel` (Koin) | `AppNavigator.openReviewReport` | - | - (JVM `ReportReviewDialogTest`, `ReviewsHostsKoinTest` and the `ReportReviewDialog_*` goldens of `:shared:feature-reviews`) |
+| `app/shell/entries/ReviewsEntries.kt` hosting `ReviewEditorSheet` (`:shared:feature-reviews`) | Navigation 3 sheet (form) | `ReviewEditorViewModel` (Koin) | `AppNavigator.openReviewEditor` | - | - (JVM `ReviewEditorSheetTest` and the `ReviewEditorSheetContent_*` goldens of `:shared:feature-reviews`) |
+| `app/shell/entries/ReviewsEntries.kt` hosting `ReportReviewForm` (`:shared:feature-reviews`) | Navigation 3 dialog | `ReportReviewViewModel` (Koin) | `AppNavigator.openReviewReport` | - | - (JVM `ReportReviewDialogTest` and the `ReportReviewDialog_*` goldens of `:shared:feature-reviews`) |
 
 ## Social
 
@@ -156,10 +156,10 @@ Feature doc: [Social](social.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/social/ui/FriendsFragment.kt` hosting `FriendsRoute` (`:shared:feature-social`) | Fragment | `FriendsViewModel` (Koin) | `friends`, `AppScreen.FRIENDS` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
-| `feature/social/ui/UserSearchFragment.kt` hosting `UserSearchRoute` (`:shared:feature-social`) | Fragment | `UserSearchViewModel` (Koin) | `user_search`, `AppScreen.USER_SEARCH` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
-| `feature/social/ui/UserProfileFragment.kt` hosting `UserProfileRoute` (`:shared:feature-social`) | Fragment | `UserProfileViewModel` (Koin) | `user_profile`, `AppScreen.USER_PROFILE` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
-| `feature/social/ui/UserFriendsFragment.kt` hosting `UserFriendsRoute` (`:shared:feature-social`) | Fragment | `UserFriendsViewModel` (Koin) | `user_friends`, `AppScreen.USER_FRIENDS` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `app/shell/entries/SocialEntries.kt` hosting `FriendsRoute` (`:shared:feature-social`) | Navigation 3 entry | `FriendsViewModel` (Koin) | `friends`, `AppScreen.FRIENDS` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `app/shell/entries/SocialEntries.kt` hosting `UserSearchRoute` (`:shared:feature-social`) | Navigation 3 entry | `UserSearchViewModel` (Koin) | `user_search`, `AppScreen.USER_SEARCH` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `app/shell/entries/SocialEntries.kt` hosting `UserProfileRoute` (`:shared:feature-social`) | Navigation 3 entry | `UserProfileViewModel` (Koin) | `user_profile`, `AppScreen.USER_PROFILE` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
+| `app/shell/entries/SocialEntries.kt` hosting `UserFriendsRoute` (`:shared:feature-social`) | Navigation 3 entry | `UserFriendsViewModel` (Koin) | `user_friends`, `AppScreen.USER_FRIENDS` | — | `SocialScreenshotTest` (`:shared:feature-social`) |
 
 ## Profile tab
 
@@ -167,7 +167,7 @@ Feature doc: [Profile tab](me.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/me/ui/MeFragment.kt` hosting `MeRoute` (`:shared:feature-account`) | Fragment | `MeViewModel` (Koin) | `navigation_me`, `AppRoot.ME` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
+| `app/shell/entries/AccountEntries.kt` hosting `MeRoute` (`:shared:feature-account`) | Navigation 3 entry | `MeViewModel` (Koin) | `navigation_me`, `AppRoot.ME` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
 
 ## Web sign-in
 
@@ -175,7 +175,7 @@ Feature doc: [Web sign-in](web-login.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/weblogin/ui/WebLoginBottomSheet.kt` hosting `WebLoginSheetRoute` (`:shared:feature-account`) | bottom sheet | `WebLoginViewModel` (Koin) | `AppNavigator.openWebLogin` | — | `AccountScreenshotTest`, `WebLoginSheetTest` (`:shared:feature-account`) |
+| `app/shell/entries/AccountEntries.kt` hosting `WebLoginSheetRoute` (`:shared:feature-account`) | Navigation 3 sheet | `WebLoginViewModel` (Koin) | `AppNavigator.openWebLogin` | — | `AccountScreenshotTest`, `WebLoginSheetTest` (`:shared:feature-account`) |
 
 ## Settings
 
@@ -183,9 +183,9 @@ Feature docs: [Settings](../settings.md), [Calendar](calendar.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/settings/ui/SettingsFragment.kt` hosting `SettingsScreen` (`:shared:feature-settings`) with `AndroidView` widget previews | Fragment | `SettingsViewModel`, `CustomSpoilerViewModel` (Koin) | `settings`, `AppScreen.SETTINGS` | `feature/settings/ui/SettingsPreviewActivity.kt` | `SettingsScreenshotTest` (`:shared:feature-settings`), `feature/settings/WidgetPreviewTest.kt` |
-| `feature/settings/ui/DiagnosticsFragment.kt` hosting `DiagnosticsScreen` (`:shared:feature-settings`) | Fragment | `DiagnosticsViewModel` (Koin) | `diagnostics`, `AppScreen.DIAGNOSTICS` | — | `SettingsScreenshotTest` (`:shared:feature-settings`) |
-| `feature/settings/ui/IcsExportBottomSheet.kt` hosting `IcsExportSheetContent` (`:shared:feature-settings`) | bottom sheet | `IcsExportViewModel` (Koin) | from `SettingsFragment` | — | `SettingsScreenshotTest` (`:shared:feature-settings`) |
+| `app/shell/entries/SettingsEntries.kt` hosting `SettingsScreen` (`:shared:feature-settings`) with `AndroidView` widget previews | Navigation 3 entry | `SettingsViewModel`, `CustomSpoilerViewModel` (Koin) | `settings`, `AppScreen.SETTINGS` | `feature/settings/ui/SettingsPreviewActivity.kt` | `SettingsScreenshotTest` (`:shared:feature-settings`), `feature/settings/WidgetPreviewTest.kt` |
+| `app/shell/entries/SettingsEntries.kt` hosting `DiagnosticsScreen` (`:shared:feature-settings`) | Navigation 3 entry | `DiagnosticsViewModel` (Koin) | `diagnostics`, `AppScreen.DIAGNOSTICS` | — | `SettingsScreenshotTest` (`:shared:feature-settings`) |
+| `app/shell/entries/SettingsEntries.kt` hosting `IcsExportSheetContent` (`:shared:feature-settings`) | Navigation 3 sheet | `IcsExportViewModel` (Koin) | from `SettingsFragment` | — | `SettingsScreenshotTest` (`:shared:feature-settings`) |
 
 ## Update offer
 
@@ -193,7 +193,7 @@ Feature doc: [Update offer](update.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/update/ui/AppUpdateFragment.kt` hosting `AppUpdateRoute` (`:shared:feature-account`) | Fragment | `AppUpdateViewModel` (Koin) | `app_update`, `AppScreen.APP_UPDATE` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
+| `app/shell/entries/AccountEntries.kt` hosting `AppUpdateRoute` (`:shared:feature-account`) | Navigation 3 entry | `AppUpdateViewModel` (Koin) | `app_update`, `AppScreen.APP_UPDATE` | — | `AccountScreenshotTest` (`:shared:feature-account`) |
 
 ## Debug tools
 
@@ -201,4 +201,4 @@ Feature doc: [Debug tools](debug.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/debug/ui/DebugToolsFragment.kt` hosting `DebugToolsScreen` (`:app`) | Fragment | `DebugToolsViewModel` (Hilt) | `debug_tools`, `AppScreen.DEBUG_TOOLS` | — | `DebugToolsScreenshotTest` (`:app`) |
+| `app/shell/entries/AccountEntries.kt` hosting `DebugToolsScreen` (`:app`) | Navigation 3 entry | `DebugToolsViewModel` (Hilt) | `debug_tools`, `AppScreen.DEBUG_TOOLS` | — | `DebugToolsScreenshotTest` (`:app`) |

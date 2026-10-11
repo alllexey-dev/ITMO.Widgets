@@ -16,7 +16,7 @@ import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.assertNotNull
 
 /**
- * The Compose sign-in screen of `AuthFragment` read through its `ComposeView`'s semantics owner (`:app`'s
+ * The Compose sign-in screen read through its `ComposeView`'s semantics owner (`:app`'s
  * instrumented tests have no `ui-test-junit4`), found by `AuthTestTags`. The logo has no click action, by design, so
  * [tap] sends a real down and up to the window at the node's centre.
  */

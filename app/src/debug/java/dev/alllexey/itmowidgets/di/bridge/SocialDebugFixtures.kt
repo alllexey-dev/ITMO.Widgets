@@ -22,8 +22,8 @@ import org.koin.dsl.module
 
 /**
  * The social screens' and the friend picker's fixture in Koin: a debug host replaces the repositories its screens
- * read with its own while it lives, so `UserProfileFragment`, `UserFriendsFragment` and `FriendSelectorDialogFragment`
- * obtain their ViewModels exactly as in release. A host passes only the fakes it has; the other types stay the
+ * read with its own while it lives, so the shell's profile, user friends and friend picker entries obtain their
+ * ViewModels exactly as in release. A host passes only the fakes it has; the other types stay the
  * release ones (`socialModule`, `friendSelectorModule` and `reviewsModule` construct the data, `CoreBridge` forwards
  * the rest). While a fake is loaded, Hilt readers of `SocialBridge` get it too.
  *

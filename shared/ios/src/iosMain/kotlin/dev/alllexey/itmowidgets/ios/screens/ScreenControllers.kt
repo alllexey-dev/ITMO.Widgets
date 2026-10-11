@@ -12,7 +12,7 @@ import platform.UIKit.UIViewController
 
 /**
  * The one way a Compose screen reaches Swift: [content] in [ItmoTheme] inside the host-level composition locals, as
- * `itmoComposeView` gives a Fragment on Android. Each feature's IO card adds `screens/<Feature>Screens.kt` with
+ * the Compose shell gives an entry on Android. Each feature's IO card adds `screens/<Feature>Screens.kt` with
  * Swift-facing factories that call it; feature modules never build a `ComposeUIViewController` themselves.
  *
  * [opaque] false lets the SwiftUI container show where [content] paints nothing (a sheet's background).
