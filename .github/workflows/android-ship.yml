@@ -174,7 +174,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ship-part-${{ matrix.name }}
+          # Per attempt, as android-ui.yml: the download keeps the highest artifact id, not the newest rerun.
+          name: ship-part-${{ matrix.name }}-a${{ github.run_attempt }}
           path: ${{ env.ITMO_WT }}/run/ship/
           if-no-files-found: warn
           retention-days: 14
@@ -211,7 +212,7 @@ jobs:
           mkdir -p "$out"
           rows=""
           for part in $EXPECTED; do
-            dir="parts/ship-part-$part/$sha"
+            dir="$(ls -d "parts/ship-part-$part-a"* 2> /dev/null | sort -V | tail -n 1)/$sha"
             if [ ! -f "$dir/summary.md" ]; then
               echo "::error::part $part left no summary (missing run)"
               rows="$rows| $part | MISSING | - | - | - |"$'\n'

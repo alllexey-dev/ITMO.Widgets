@@ -54,3 +54,6 @@
   `scripts/ui-report.py` counts the tests from Gradle's JUnit XML, so an
   `android-ui` shard that ran and passed its tests is no longer reported as
   having run none; a shard with no test still fails.
+- Re-running a failed `android-ui` shard or `android-ship` part now turns the
+  check green when it passes: artifacts carry the run attempt and the aggregate
+  job reads each shard's newest one instead of a stale earlier report.

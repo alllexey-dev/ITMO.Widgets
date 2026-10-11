@@ -124,8 +124,8 @@ minutes are free), in parallel jobs, so nothing heavy has to run on the laptop f
   AVD's Pixel 7 geometry, cold-booted while Gradle builds, animations as the image ships them (as on the pool).
 - `android-ship` uploads `ship-<sha7>`: a summary in the ship check's format with stages 1, 3, 5 and 6, and their
   logs; `scripts/ship-check.sh` reads stages 5 and 6 from it (see Ship check). Every shard of `android-ui` uploads
-  `ui-<config>-<i>` (JUnit XML, the HTML report, logcat, the `verify.sh` output) and every Roborazzi shard that
-  fails uploads its diffs.
+  `ui-<config>-<i>-a<attempt>` (JUnit XML, the HTML report, logcat, the `verify.sh` output) and every Roborazzi
+  shard that fails uploads its diffs.
 - Caches: the Gradle home (dependencies, keyed by the build files, saved by android-ci's `app` job) and one Gradle
   build cache line per job kind (`gbc-v1-<job>-<sha>`, `.github/actions/android-setup` and `build-cache-save`)
   are written only by pushes to `v2.3/next`; PRs read their base's newest line. A run after a build file change
@@ -133,7 +133,8 @@ minutes are free), in parallel jobs, so nothing heavy has to run on the laptop f
   signed it (`ship-v22-apk-v2-<v2.2 sha>-<certificate digest>`) and puts that key where AGP reads the debug key
   (`~/.config/.android/` on the runners) before the head is built; a missing or evicted entry only costs the `v2.2` build in the job, never the check.
 - Re-run: `gh run rerun <run-id> --failed`, or one job with `gh run rerun --job <job-id>` (the job ids are in
-  `gh run view <run-id> --json jobs`). The aggregate job reruns with it. Locally the same shard is
+  `gh run view <run-id> --json jobs`). The aggregate job reruns with it and judges each shard (and each
+  `android-ship` part) by its newest attempt's artifact. Locally the same shard is
   `ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui all --shard <i>/6` on a pool emulator (AndroidJUnitRunner
   splits by a hash of the test names, so the shard holds the same tests) or `scripts/verify.sh shots all --shard
   <i>/3`. A manual run of another ref: `gh workflow run android-ui.yml -f ref=<ref>` (possible once the workflow
