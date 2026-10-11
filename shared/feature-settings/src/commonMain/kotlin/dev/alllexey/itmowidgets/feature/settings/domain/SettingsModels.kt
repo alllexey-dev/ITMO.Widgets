@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.feature.settings.domain
 
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
-import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import kotlinx.coroutines.flow.Flow
 
 data class LocalSettings(
@@ -25,8 +25,8 @@ data class LocalSettings(
     val backgroundWorkHintShown: Boolean = false,
     /** The QR pass tile is in the quick settings, as far as the app saw; a flag of the device. */
     val qrTileAdded: Boolean = false,
-    /** The accent colour; the wallpaper's colours where there are any, the brand scheme elsewhere. */
-    val accentColor: AccentColor = AccentColor.WALLPAPER
+    /** The app's colours: accent, palette style, contrast and the black dark background. */
+    val theme: ThemeSpec = ThemeSpec()
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -78,7 +78,8 @@ interface SettingsRepository {
 
     suspend fun setQrTileAdded(added: Boolean)
 
-    suspend fun setAccentColor(color: AccentColor)
+    /** Changes the stored appearance from its current value in one write. */
+    suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec)
 
     suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean)
 

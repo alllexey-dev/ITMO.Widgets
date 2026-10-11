@@ -5,6 +5,9 @@ import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.text.AppIcon
@@ -35,8 +38,33 @@ import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_title
 import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_description
 import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_title
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_group_colors
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_group_contrast
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_wallpaper_footer
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_contrast_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_dark_black_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_dark_black_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_tonal_spot
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_vibrant
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_expressive
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_fidelity
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_content
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_neutral
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_monochrome
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_tonal_spot_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_vibrant_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_expressive_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_fidelity_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_content_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_neutral_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_monochrome_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_contrast_standard
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_contrast_medium
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_contrast_high
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_amber
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_brand
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_custom
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_green
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_pink
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_purple
@@ -136,13 +164,7 @@ internal object SettingsPreviewData {
         SettingSection(
             title = res(CoreRes.string.me_group_app),
             items = listOf(
-                SettingItem.Choice(
-                    id = SettingRowId.ACCENT_COLOR,
-                    title = res(Res.string.settings_accent_color_title),
-                    value = AccentColor.WALLPAPER.label(),
-                    options = AccentColor.entries.map { ChoiceOption(it.name, it.label()) },
-                    selectedOptionKey = AccentColor.WALLPAPER.name
-                ),
+                navigation(SettingsPage.APPEARANCE),
                 navigation(SettingsPage.HOME),
                 navigation(SettingsPage.SCHEDULE),
                 navigation(SettingsPage.RECORDBOOK),
@@ -151,6 +173,56 @@ internal object SettingsPreviewData {
             )
         )
     )
+
+    val Appearance = appearance(ThemeSpec())
+
+    /** The appearance page for [theme] where the wallpaper has colours, with the sample above its rows. */
+    fun appearance(theme: ThemeSpec): SettingsUiState {
+        val colors = SettingSection(
+            title = res(Res.string.settings_appearance_group_colors),
+            items = listOfNotNull(
+                SettingItem.Choice(
+                    id = SettingRowId.ACCENT_COLOR,
+                    title = res(Res.string.settings_accent_color_title),
+                    value = theme.accent.label(),
+                    options = AccentColor.entries.map { ChoiceOption(it.name, it.label()) },
+                    selectedOptionKey = theme.accent.name
+                ),
+                SettingItem.CustomColor(
+                    id = SettingRowId.ACCENT_CUSTOM,
+                    title = res(Res.string.settings_accent_color_custom),
+                    argb = theme.customArgb
+                ).takeIf { theme.accent == AccentColor.CUSTOM },
+                SettingItem.Choice(
+                    id = SettingRowId.THEME_PALETTE,
+                    title = res(Res.string.settings_theme_style_title),
+                    value = theme.style.label(),
+                    options = ThemeStyle.entries.map { ChoiceOption(it.name, it.label(), it.description()) },
+                    selectedOptionKey = theme.style.name
+                )
+            ),
+            footer = res(Res.string.settings_appearance_wallpaper_footer).takeIf { theme.accent == AccentColor.WALLPAPER }
+        )
+        val contrast = SettingSection(
+            title = res(Res.string.settings_appearance_group_contrast),
+            items = listOf(
+                SettingItem.Choice(
+                    id = SettingRowId.THEME_CONTRAST,
+                    title = res(Res.string.settings_theme_contrast_title),
+                    value = theme.contrast.label(),
+                    options = ThemeContrast.entries.map { ChoiceOption(it.name, it.label()) },
+                    selectedOptionKey = theme.contrast.name
+                ),
+                SettingItem.Toggle(
+                    id = SettingRowId.DARK_BLACK,
+                    title = res(Res.string.settings_dark_black_title),
+                    description = res(Res.string.settings_dark_black_description),
+                    checked = theme.pureBlack
+                )
+            )
+        )
+        return state(SettingsPage.APPEARANCE, colors, contrast).copy(themePreview = theme)
+    }
 
     val Services = state(
         SettingsPage.SERVICES,
@@ -541,6 +613,39 @@ internal object SettingsPreviewData {
             AccentColor.RED -> Res.string.settings_accent_color_red
             AccentColor.PINK -> Res.string.settings_accent_color_pink
             AccentColor.PURPLE -> Res.string.settings_accent_color_purple
+            AccentColor.CUSTOM -> Res.string.settings_accent_color_custom
+        }
+    )
+
+    private fun ThemeStyle.label() = res(
+        when (this) {
+            ThemeStyle.TONAL_SPOT -> Res.string.settings_theme_style_tonal_spot
+            ThemeStyle.VIBRANT -> Res.string.settings_theme_style_vibrant
+            ThemeStyle.EXPRESSIVE -> Res.string.settings_theme_style_expressive
+            ThemeStyle.FIDELITY -> Res.string.settings_theme_style_fidelity
+            ThemeStyle.CONTENT -> Res.string.settings_theme_style_content
+            ThemeStyle.NEUTRAL -> Res.string.settings_theme_style_neutral
+            ThemeStyle.MONOCHROME -> Res.string.settings_theme_style_monochrome
+        }
+    )
+
+    private fun ThemeStyle.description() = res(
+        when (this) {
+            ThemeStyle.TONAL_SPOT -> Res.string.settings_theme_style_tonal_spot_description
+            ThemeStyle.VIBRANT -> Res.string.settings_theme_style_vibrant_description
+            ThemeStyle.EXPRESSIVE -> Res.string.settings_theme_style_expressive_description
+            ThemeStyle.FIDELITY -> Res.string.settings_theme_style_fidelity_description
+            ThemeStyle.CONTENT -> Res.string.settings_theme_style_content_description
+            ThemeStyle.NEUTRAL -> Res.string.settings_theme_style_neutral_description
+            ThemeStyle.MONOCHROME -> Res.string.settings_theme_style_monochrome_description
+        }
+    )
+
+    private fun ThemeContrast.label() = res(
+        when (this) {
+            ThemeContrast.STANDARD -> Res.string.settings_theme_contrast_standard
+            ThemeContrast.MEDIUM -> Res.string.settings_theme_contrast_medium
+            ThemeContrast.HIGH -> Res.string.settings_theme_contrast_high
         }
     )
 

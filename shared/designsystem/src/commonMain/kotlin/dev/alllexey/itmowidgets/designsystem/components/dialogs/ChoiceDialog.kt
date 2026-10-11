@@ -24,7 +24,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
  * Picks one of [options]. With a [selectedIndex] the rows are radio buttons with the current choice marked
  * (`setSingleChoiceItems`); with null they are plain items (`setItems`). A tap reports [onSelect]; the caller applies
  * it and stops showing the dialog, as the View dialogs closed on a pick. [dismissLabel] adds a cancel button;
- * [onDismiss] also gets back and a tap outside.
+ * [onDismiss] also gets back and a tap outside. [descriptions] puts a line under an option, by index (Material only).
  *
  * Under the iOS style it is an iOS alert: the single choice as a list with a trailing checkmark in the tint on the
  * current row, the plain items as stacked action capsules, the cancel capsule last.
@@ -38,9 +38,10 @@ fun ChoiceDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     dismissLabel: String? = null,
+    descriptions: List<String?> = emptyList(),
 ) {
     DialogWindow(onDismissRequest = onDismiss) {
-        ChoiceDialogSurface(title, options, selectedIndex, onSelect, onDismiss, modifier, dismissLabel)
+        ChoiceDialogSurface(title, options, selectedIndex, onSelect, onDismiss, modifier, dismissLabel, descriptions)
     }
 }
 
@@ -54,10 +55,11 @@ fun ChoiceDialogSurface(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     dismissLabel: String? = null,
+    descriptions: List<String?> = emptyList(),
 ) {
     when (ItmoTheme.platformStyle) {
         ItmoPlatformStyle.Material ->
-            MaterialChoiceDialog(title, options, selectedIndex, onSelect, onDismiss, modifier, dismissLabel)
+            MaterialChoiceDialog(title, options, selectedIndex, onSelect, onDismiss, modifier, dismissLabel, descriptions)
         ItmoPlatformStyle.Ios ->
             IosChoiceDialog(title, options, selectedIndex, onSelect, onDismiss, modifier, dismissLabel)
     }
@@ -72,6 +74,7 @@ private fun MaterialChoiceDialog(
     onDismiss: () -> Unit,
     modifier: Modifier,
     dismissLabel: String?,
+    descriptions: List<String?>,
 ) {
     DialogSurface(
         title = title,
@@ -83,12 +86,14 @@ private fun MaterialChoiceDialog(
         content = {
             Column(Modifier.verticalScroll(rememberScrollState()).selectableGroup()) {
                 options.forEachIndexed { index, option ->
+                    val description = descriptions.getOrNull(index)
                     if (selectedIndex == null) {
-                        ChoiceRow(option, Modifier.clickable(role = Role.Button) { onSelect(index) })
+                        ChoiceRow(option, Modifier.clickable(role = Role.Button) { onSelect(index) }, description = description)
                     } else {
                         ChoiceRow(
                             option,
                             Modifier.selectable(index == selectedIndex, role = Role.RadioButton) { onSelect(index) },
+                            description = description,
                         ) {
                             RadioButton(selected = index == selectedIndex, onClick = null)
                         }
@@ -136,11 +141,15 @@ private fun IosChoiceDialog(
     )
 }
 
-/** A full-width row of a choice list: at least a touch target high, text on the dialog's 24 dp margin. */
+/**
+ * A full-width row of a choice list: at least a touch target high, text on the dialog's 24 dp margin, and an optional
+ * [description] line under it.
+ */
 @Composable
 internal fun ChoiceRow(
     text: String,
     modifier: Modifier,
+    description: String? = null,
     leading: (@Composable () -> Unit)? = null,
 ) {
     Row(
@@ -150,16 +159,12 @@ internal fun ChoiceRow(
             .padding(horizontal = ItmoTheme.spacing.section, vertical = ItmoTheme.spacing.compact),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (leading != null) {
-            leading()
-            Text(
-                text,
-                Modifier.padding(start = ItmoTheme.spacing.group),
-                color = ItmoTheme.colorScheme.onSurface,
-                style = ItmoTheme.typography.bodyLarge,
-            )
-        } else {
+        leading?.invoke()
+        Column(if (leading != null) Modifier.padding(start = ItmoTheme.spacing.group) else Modifier) {
             Text(text, color = ItmoTheme.colorScheme.onSurface, style = ItmoTheme.typography.bodyLarge)
+            if (description != null) {
+                Text(description, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+            }
         }
     }
 }

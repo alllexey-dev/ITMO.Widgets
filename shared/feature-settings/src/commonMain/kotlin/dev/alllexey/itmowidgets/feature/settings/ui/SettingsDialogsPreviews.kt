@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
@@ -27,6 +29,7 @@ private fun SettingsDialogPreview(dialog: SettingsDialog, page: SettingsUiState 
             onConfirm = {},
             onDismiss = {},
             actions = SettingsActions(),
+            theme = page.themePreview,
         )
     }
 }
@@ -85,5 +88,28 @@ internal class SettingsDialogCalendarAccessLockedPreview {
 internal class SettingsDialogAccentColorPreview {
     @Preview(name = "accent-color")
     @Composable
-    fun SettingsDialog() = SettingsDialogPreview(SettingsDialog.Choice(SettingRowId.ACCENT_COLOR))
+    fun SettingsDialog() = SettingsDialogPreview(
+        SettingsDialog.Choice(SettingRowId.ACCENT_COLOR),
+        SettingsPreviewData.Appearance,
+    )
+}
+
+/** The accent colour dialog with «Свой цвет» picked: its picker under the swatches. */
+internal class SettingsDialogAccentCustomPreview {
+    @Preview(name = "accent-custom", heightDp = 1000)
+    @Composable
+    fun SettingsDialog() = SettingsDialogPreview(
+        SettingsDialog.Choice(SettingRowId.ACCENT_COLOR),
+        SettingsPreviewData.appearance(ThemeSpec(AccentColor.CUSTOM, customArgb = 0xFF5C6BC0.toInt())),
+    )
+}
+
+/** The palette styles with a line each on what they do. */
+internal class SettingsDialogThemeStylePreview {
+    @Preview(name = "theme-style", heightDp = 900)
+    @Composable
+    fun SettingsDialog() = SettingsDialogPreview(
+        SettingsDialog.Choice(SettingRowId.THEME_PALETTE),
+        SettingsPreviewData.Appearance,
+    )
 }

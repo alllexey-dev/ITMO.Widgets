@@ -10,7 +10,7 @@ The settings root is a compact catalogue, not a scrolling list of every switch:
 
 - `Доступ`: `Подключение к ITMO.Widgets` (with account deletion), `Друзья и приватность`, and the Android notifications action.
 - `Виджеты`: `Компактное расписание`, `Полное расписание` and the QR widget.
-- `Приложение`: `Цвет оформления`, home screen, schedule, recordbook
+- `Приложение`: `Оформление`, home screen, schedule, recordbook
   (`Зачётка`), sport, and maintenance.
 
 Each category opens a separate back-stack entry with its own title and scroll
@@ -59,28 +59,51 @@ next launch, Swift crashes are not recorded.
 
 ## Appearance
 
-| Row | Choices | Default |
-|---|---|---|
-| `Цвет оформления` (root, `Приложение`) | `Как обои` (Android 12+ only), `Фирменный`, `Бирюзовый`, `Зелёный`, `Янтарный`, `Красный`, `Розовый`, `Фиолетовый` | `Как обои` on Android 12+, `Фирменный` elsewhere |
+The root's `Приложение` group opens `Оформление`, a page of its own. A sample
+(a switch row and a filled and a tonal button) sits above its rows, unscrolled,
+and every choice recolours it and every Compose screen at once.
 
-- The row opens a picker of colour swatches, each the primary colour of the
-  scheme it gives; a tap applies the colour to every Compose screen at once,
-  system bars included, and `Готово` closes the picker. TalkBack reads each
-  swatch by its name and selection; nothing animates.
-- The choice is stored in `app_accent_color` (the `AccentColor` name; absent
-  or unknown reads as `WALLPAPER`, today's scheme). Without wallpaper colours
-  (below Android 12, iOS) the stored default shows and draws as `Фирменный`.
+| Row | Key | Choices | Default |
+|---|---|---|---|
+| `Цвет оформления` | `app_accent_color` | `Как обои` (Android 12+ only), `Фирменный`, `Бирюзовый`, `Зелёный`, `Янтарный`, `Красный`, `Розовый`, `Фиолетовый`, `Свой цвет` | `Как обои` on Android 12+, `Фирменный` elsewhere |
+| `Свой цвет` (only while it is the accent) | `app_accent_custom` | any opaque colour (ARGB int) | `#4984E2`, the brand blue |
+| `Стиль палитры` | `app_theme_style` | `Спокойная` (TonalSpot), `Яркая` (Vibrant), `Выразительная` (Expressive), `Точная` (Fidelity), `Насыщенная` (Content), `Нейтральная` (Neutral), `Монохром` (Monochrome) | `Спокойная` |
+| `Контраст` | `app_theme_contrast` | `Обычный`, `Средний`, `Высокий` (M3 contrast 0, 0.5, 1) | `Обычный` |
+| `Чёрный фон` | `app_dark_black` | on, off | off |
+
+- `Цвет оформления` opens a picker of colour swatches, each the primary of the
+  scheme it gives in the current style (under `Монохром` the default style's,
+  so the hues stay apart); a tap applies at once and `Готово` closes it.
+  TalkBack reads each swatch by its name and selection; nothing animates.
+- With `Свой цвет` picked, the picker shows a `HEX` field with a swatch of the
+  colour in it and three sliders (`Оттенок`, `Насыщенность`, `Яркость`). A
+  valid `#RRGGBB` applies as typed, a slider applies when let go; an
+  unfinished value shows `Шесть знаков 0–9 и A–F, например #4984E2` once the
+  field loses focus. The `Свой цвет` row under the accent shows the value and
+  opens the same picker.
+- `Стиль палитры` and `Контраст` open choice dialogs; each style has a line on
+  what it does. With `Как обои`, a style other than `Спокойная` or a contrast
+  other than `Обычный` rebuilds the palette from the wallpaper's colour
+  (`system_accent1_500`) instead of using the system's scheme; a footer under
+  the colours says so on Android 12+.
+- `Чёрный фон` turns the dark theme's background and surfaces black; cards and
+  other containers keep their tones. The light theme ignores it.
+- Absent or unknown values read as the defaults, today's look; the choices are
+  device settings that sign-out keeps. Without wallpaper colours (below Android
+  12, iOS) the stored default shows and draws as `Фирменный`.
 - Widgets, the QR tile, notifications and the launcher icon keep their own
   colours; the QR widget's `Динамические цвета` is separate.
-- The presets and their seeds are listed in
+- The presets, their seeds and how the stored choices become a scheme are in
   [the design guide](design.md#colour-and-surfaces).
 
 ### iOS
 
-The same row renders as a menu of the colour names in the SwiftUI settings
-form, without `Как обои`; a pick recolours the Compose screens at once, while
-the SwiftUI screens keep their tint. iOS reads and writes the same
-`app_accent_color` key of its own `app_preferences` file.
+The same page renders in the SwiftUI settings form, without `Как обои`: the
+choices are menus (a style's line is its menu subtitle), `Чёрный фон` a
+switch, and `Свой цвет` the system colour well, which reports `#RRGGBB` like
+Android's picker. There is no sample: the SwiftUI screens keep their tint,
+while the Compose screens recolour at once. iOS reads and writes the same keys
+of its own `app_preferences` file.
 
 ## Account and services
 

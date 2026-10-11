@@ -63,8 +63,24 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(SettingsFixtures.longValues, named: "long", height: 1500, ax1Height: 3600)
     }
 
+    /// The appearance page (DS-ACC2) with a custom colour picked: the colour well under the accent menu.
+    func testAppearanceWithACustomColour() {
+        let theme = ThemeSpec(
+            accent: .custom,
+            customArgb: Int32(bitPattern: 0xFF5C_6BC0),
+            style: .vibrant,
+            contrast: .high,
+            pureBlack: true
+        )
+        let state = SettingsFixtures.page(
+            .appearance,
+            SettingsFixtures.pageState(notificationsGranted: true, local: SettingsFixtures.localSettings(theme: theme))
+        )
+        assertPage(state, named: "appearance", height: 620, ax1Height: 1100)
+    }
+
     func testLoading() {
-        let state = SettingsUiState(page: .root, sections: [], loaded: false, previewSettings: nil)
+        let state = SettingsUiState(page: .root, sections: [], loaded: false, previewSettings: nil, themePreview: nil)
         assertPage(state, named: "loading", height: 320, ax1Height: 320)
     }
 
@@ -120,13 +136,13 @@ enum SettingsFixtures {
             preconditionFailure("Koin resolved no SettingsPages")
         }
         let sections = pages.forPage(page: page).sections(page: page, state: state)
-        return SettingsUiState(page: page, sections: sections, loaded: true, previewSettings: nil)
+        return SettingsUiState(page: page, sections: sections, loaded: true, previewSettings: nil, themePreview: nil)
     }
 
     static let local = localSettings()
 
     /// A fresh install's values; `barsMarksEnabled` is set once the account's first BARS answer came.
-    static func localSettings(barsMarksEnabled: KotlinBoolean? = nil) -> LocalSettings {
+    static func localSettings(barsMarksEnabled: KotlinBoolean? = nil, theme: ThemeSpec? = nil) -> LocalSettings {
         LocalSettings(
             customServicesEnabled: true,
             scheduleWidget: ScheduleWidgetSettings(
@@ -152,7 +168,13 @@ enum SettingsFixtures {
             hiddenHomeCards: [],
             backgroundWorkHintShown: false,
             qrTileAdded: false,
-            accentColor: .wallpaper
+            theme: theme ?? ThemeSpec(
+                accent: .wallpaper,
+                customArgb: ThemeSpec.companion.DEFAULT_CUSTOM_ARGB,
+                style: .tonalSpot,
+                contrast: .standard,
+                pureBlack: false
+            )
         )
     }
 
@@ -171,7 +193,7 @@ enum SettingsFixtures {
             ),
             SettingItemChoice(
                 id: .compactWidgetTextSize, title: text(long), value: text(person),
-                options: [ChoiceOption(key: "LONG", label: text(person))],
+                options: [ChoiceOption(key: "LONG", label: text(person), description: nil)],
                 selectedOptionKey: "LONG", description: text(long), enabled: true
             ),
             SettingItemNavigation(
@@ -186,13 +208,15 @@ enum SettingsFixtures {
                 id: .refreshWidgets, title: text(person), description: nil, value: nil,
                 trailingIcon: .refresh, enabled: false
             ),
+            SettingItemCustomColor(id: .accentCustom, title: text(long), argb: Int32(bitPattern: 0xFF5C_6BC0), enabled: true),
             SettingItemInfo(id: .theVersion, title: text(long), value: text("2.3.0-SNAPSHOT (2026-10-07, debug)")),
         ]
         return SettingsUiState(
             page: .maintenance,
             sections: [SettingSection(title: text(long), items: items, footer: text(person))],
             loaded: true,
-            previewSettings: nil
+            previewSettings: nil,
+            themePreview: nil
         )
     }
 

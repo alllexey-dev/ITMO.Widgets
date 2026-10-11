@@ -39,6 +39,6 @@ class ItmoWidgetsApplication : Application() {
             backgroundChecks.forEach { it.syncWork() }
         }
         // Read before the first activity draws, so Compose screens open in the chosen colours.
-        applicationScope.launch { AppColorSource.follow(appearance.observeAccentColor()) }
+        applicationScope.launch { AppColorSource.follow(appearance.observeTheme()) }
     }
 }

@@ -59,9 +59,9 @@ object IosKoin {
         }.koin
         started = koin
         IosCrashHook.install(koin.get<IosAppDiagnostics>())
-        // The accent colour of every Compose screen, read before the first one opens.
+        // The colours of every Compose screen, read before the first one opens.
         CoroutineScope(SupervisorJob() + koin.get<AppDispatchers>().main).launch {
-            AppColorSource.follow(koin.get<AppearancePreferences>().observeAccentColor())
+            AppColorSource.follow(koin.get<AppearancePreferences>().observeTheme())
         }
         return true
     }

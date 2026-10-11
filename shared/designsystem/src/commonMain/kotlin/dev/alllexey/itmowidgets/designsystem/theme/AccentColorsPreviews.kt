@@ -13,6 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.SwatchChoiceDialogSurface
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsChoiceRow
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
@@ -22,7 +25,7 @@ import dev.alllexey.itmowidgets.designsystem.preview.LocalPreviewAppearance
 
 /** The names the settings page gives the presets, in [AccentColor] order. */
 private val AccentNames = listOf(
-    "Как обои", "Фирменный", "Бирюзовый", "Зелёный", "Янтарный", "Красный", "Розовый", "Фиолетовый",
+    "Как обои", "Фирменный", "Бирюзовый", "Зелёный", "Янтарный", "Красный", "Розовый", "Фиолетовый", "Свой цвет",
 )
 
 /** The accent colour picker with every preset, a preset picked; its own scheme is the appearance's. */
@@ -33,7 +36,9 @@ private fun AccentPickerPreview() = ItmoPreview {
     Box(Modifier.padding(ItmoTheme.spacing.section)) {
         SwatchChoiceDialogSurface(
             title = "Цвет оформления",
-            swatches = AccentColor.entries.mapIndexed { index, accent -> accentSwatch(accent, AccentNames[index], dark) },
+            swatches = AccentColor.entries.mapIndexed { index, accent ->
+                accentSwatch(ThemeSpec(accent = accent, customArgb = CUSTOM_SAMPLE), AccentNames[index], dark)
+            },
             selectedIndex = AccentColor.TEAL.ordinal,
             onSelect = {},
             onDismiss = {},
@@ -47,9 +52,41 @@ private fun AccentPickerPreview() = ItmoPreview {
 @Composable
 private fun AccentSamplesPreview() = Column {
     listOf(AccentColor.BRAND, AccentColor.TEAL, AccentColor.AMBER, AccentColor.PURPLE).forEach { accent ->
-        ItmoPreview(colorSource = accent.colorSource) { AccentSample(AccentNames[accent.ordinal]) }
+        ItmoPreview(colorSource = ColorSource.Theme(ThemeSpec(accent))) { AccentSample(AccentNames[accent.ordinal]) }
     }
 }
+
+/** The sample in every palette style, from the teal preset: how far each style moves from the seed. */
+@Preview(heightDp = 2400)
+@Composable
+private fun ThemeStylesPreview() = Column {
+    ThemeStyle.entries.forEachIndexed { index, style ->
+        ItmoPreview(colorSource = ColorSource.Theme(ThemeSpec(AccentColor.TEAL, style = style))) {
+            AccentSample(StyleNames[index])
+        }
+    }
+}
+
+/**
+ * The sample at the three contrast levels and with the black background, from a custom colour: in a light appearance
+ * the black background shows nothing, in a dark one its containers stay apart from the page.
+ */
+@Preview(heightDp = 1400)
+@Composable
+private fun ThemeContrastPreview() = Column {
+    val custom = ThemeSpec(AccentColor.CUSTOM, customArgb = CUSTOM_SAMPLE)
+    ThemeContrast.entries.forEachIndexed { index, contrast ->
+        ItmoPreview(colorSource = ColorSource.Theme(custom.copy(contrast = contrast))) { AccentSample(ContrastNames[index]) }
+    }
+    ItmoPreview(colorSource = ColorSource.Theme(custom.copy(pureBlack = true))) { AccentSample("Чёрный фон") }
+}
+
+private val StyleNames = listOf("Спокойная", "Яркая", "Выразительная", "Точная", "Насыщенная", "Нейтральная", "Монохром")
+
+private val ContrastNames = listOf("Обычный", "Средний", "Высокий")
+
+/** A custom seed far from every preset. */
+private const val CUSTOM_SAMPLE: Int = 0xFF5C6BC0.toInt()
 
 @Composable
 private fun AccentSample(name: String) {

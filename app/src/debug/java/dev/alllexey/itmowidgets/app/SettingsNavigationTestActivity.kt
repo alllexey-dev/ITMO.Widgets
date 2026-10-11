@@ -71,7 +71,7 @@ import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
-import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -464,8 +464,8 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
             qrTileAdded.value = added
         }
 
-        override suspend fun setAccentColor(color: AccentColor) {
-            local.value = local.value.copy(accentColor = color)
+        override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
+            local.value = local.value.copy(theme = change(local.value.theme))
         }
 
         override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {

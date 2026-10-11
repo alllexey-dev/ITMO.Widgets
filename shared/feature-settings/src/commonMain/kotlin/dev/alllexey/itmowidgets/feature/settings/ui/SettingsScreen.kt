@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import dev.alllexey.itmowidgets.core.settings.HexColor
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
@@ -76,11 +77,13 @@ object SettingsTestTags {
     const val SCROLL = "settings_scroll"
     const val PROGRESS = "settings_progress"
     const val FOOTER = "setting_section_footer"
+    const val THEME_SAMPLE = "settings_theme_sample"
 }
 
 /**
  * One settings page: the top bar with the page title, the widget the page configures (drawn by the host through
- * [widgetPreview], above the scrolling rows and never scrolled), and the page's [SettingSection]s as compact settings
+ * [widgetPreview], above the scrolling rows and never scrolled; the appearance page has a sample there, in the colours
+ * the app draws now), and the page's [SettingSection]s as compact settings
  * groups. Only privacy shows a progress while Backend has not answered; every other page enters with its rows.
  * Stateless: a switch shows what [state] says, so a refused, cancelled or failed change never needs undoing on
  * screen. The page's one dialog is [dialogs]: a choice row and turning the custom services on open theirs, the host
@@ -115,6 +118,14 @@ fun SettingsScreen(
                     .testTag(SettingsTestTags.WIDGET_PREVIEW),
             ) { widgetPreview(settings) }
         }
+        if (state.themePreview != null) {
+            AppearanceSample(
+                Modifier
+                    .padding(horizontal = ItmoTheme.spacing.screenMargin)
+                    .padding(bottom = ItmoTheme.spacing.compact)
+                    .testTag(SettingsTestTags.THEME_SAMPLE),
+            )
+        }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when {
                 // The scroll column appears only with rows, so a restored position is not clamped to an empty page.
@@ -123,7 +134,7 @@ fun SettingsScreen(
             }
         }
     }
-    SettingsDialogs(dialogs, state.sections, actions)
+    SettingsDialogs(dialogs, state.sections, actions, state.themePreview)
 }
 
 @Composable
@@ -210,6 +221,14 @@ private fun SettingRow(item: SettingItem, actions: SettingsActions, dialogs: Set
             description = item.description?.asString(),
             value = item.value?.asString(),
             trailingIcon = item.trailingIcon?.let { icon -> painterResource(icon.drawable) },
+            enabled = item.enabled,
+        )
+        // The picker lives in the accent colour dialog, next to the presets.
+        is SettingItem.CustomColor -> SettingsChoiceRow(
+            title = item.title.asString(),
+            value = HexColor.format(item.argb),
+            onClick = { dialogs.show(SettingsDialog.Choice(SettingRowId.ACCENT_COLOR)) },
+            modifier = tag,
             enabled = item.enabled,
         )
         is SettingItem.Info -> SettingsInfoRow(item.title.asString(), item.value.asString(), tag)

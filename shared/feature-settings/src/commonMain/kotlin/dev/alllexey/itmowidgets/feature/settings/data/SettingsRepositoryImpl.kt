@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
-import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -89,13 +89,13 @@ class SettingsRepositoryImpl(
             homeLayout.observeHiddenHomeCards(),
             deviceHints.observeBackgroundWorkHintShown(),
             deviceHints.observeQrTileAdded(),
-            appearance.observeAccentColor()
-        ) { hiddenHomeCards, backgroundWorkHintShown, qrTileAdded, accentColor ->
+            appearance.observeTheme()
+        ) { hiddenHomeCards, backgroundWorkHintShown, qrTileAdded, theme ->
             DeviceLocalSettings(
                 hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet(),
                 backgroundWorkHintShown = backgroundWorkHintShown,
                 qrTileAdded = qrTileAdded,
-                accentColor = accentColor
+                theme = theme
             )
         }
         // The typed combine takes at most five flows, so the three mark switches travel together.
@@ -139,7 +139,7 @@ class SettingsRepositoryImpl(
                 hiddenHomeCards = appSettings.device.hiddenHomeCards,
                 backgroundWorkHintShown = appSettings.device.backgroundWorkHintShown,
                 qrTileAdded = appSettings.device.qrTileAdded,
-                accentColor = appSettings.device.accentColor
+                theme = appSettings.device.theme
             )
         }
     }
@@ -204,8 +204,8 @@ class SettingsRepositoryImpl(
         deviceHints.setQrTileAdded(added)
     }
 
-    override suspend fun setAccentColor(color: AccentColor) {
-        appearance.setAccentColor(color)
+    override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
+        appearance.updateTheme(change)
     }
 
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
@@ -344,5 +344,5 @@ private data class DeviceLocalSettings(
     val hiddenHomeCards: Set<HomeCardKind>,
     val backgroundWorkHintShown: Boolean,
     val qrTileAdded: Boolean,
-    val accentColor: AccentColor
+    val theme: ThemeSpec
 )

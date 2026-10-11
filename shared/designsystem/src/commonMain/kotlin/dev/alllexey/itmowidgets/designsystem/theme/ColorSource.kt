@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.designsystem.theme
 
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+
 /** Where [ItmoTheme] takes its colour scheme from. */
 sealed interface ColorSource {
 
@@ -15,6 +17,6 @@ sealed interface ColorSource {
      */
     data class Seed(val argb: Int) : ColorSource
 
-    /** An accent colour preset: the brand scheme's TonalSpot variant from [argb] instead of the brand blue. */
-    data class Accent(val argb: Int) : ColorSource
+    /** The user's appearance choices, resolved by [resolveColorScheme]. */
+    data class Theme(val spec: ThemeSpec) : ColorSource
 }

@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
@@ -139,7 +139,7 @@ internal class FakeSettingsRepository(
     var hintShownCalls = 0
     val qrTileAdded = MutableStateFlow(initialLocal.qrTileAdded)
     val qrTileAddedRequests = mutableListOf<Boolean>()
-    val accentColorRequests = mutableListOf<AccentColor>()
+    val themeRequests = mutableListOf<ThemeSpec>()
     private val localAvailable = MutableStateFlow(localInitiallyAvailable)
     val sharing = MutableStateFlow(initialSharing)
     var refreshSharingCount = 0
@@ -342,9 +342,9 @@ internal class FakeSettingsRepository(
         qrTileAdded.value = added
     }
 
-    override suspend fun setAccentColor(color: AccentColor) {
-        accentColorRequests += color
-        local.value = local.value.copy(accentColor = color)
+    override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
+        local.value = local.value.copy(theme = change(local.value.theme))
+        themeRequests += local.value.theme
     }
 }
 

@@ -7,53 +7,48 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.Swatch
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Where [accent] takes its scheme from. The presets are hues around the brand blue, built with the brand scheme's
- * recipe ([accentColorScheme]), so each keeps its contrast; a grey seed would come out tinted there, so none is
- * offered.
- */
-val AccentColor.colorSource: ColorSource
-    get() = when (this) {
-        AccentColor.WALLPAPER -> ColorSource.Platform
-        AccentColor.BRAND -> ColorSource.Static
-        AccentColor.TEAL -> ColorSource.Accent(0xFF009688.toInt())
-        AccentColor.GREEN -> ColorSource.Accent(0xFF43A047.toInt())
-        AccentColor.AMBER -> ColorSource.Accent(0xFFFFA000.toInt())
-        AccentColor.RED -> ColorSource.Accent(0xFFE53935.toInt())
-        AccentColor.PINK -> ColorSource.Accent(0xFFD81B60.toInt())
-        AccentColor.PURPLE -> ColorSource.Accent(0xFF8E24AA.toInt())
-    }
-
-/**
- * The app's accent colour setting: the source every [ItmoTheme] draws with unless its caller passes one. The app hosts
- * feed it from the stored choice once at start ([follow]); until the first value it is [ColorSource.Platform], the
- * scheme the app had before the choice existed. A snapshot state, so every open screen recolours at once.
+ * The app's appearance setting: the source every [ItmoTheme] draws with unless its caller passes one. The app hosts
+ * feed it from the stored choices once at start ([follow]); until the first value it is [ColorSource.Platform], the
+ * scheme the app had before the choices existed. A snapshot state, so every open screen recolours at once.
  */
 object AppColorSource {
 
     var current: ColorSource by mutableStateOf(ColorSource.Platform)
         internal set
 
-    /** Follows [accents] until the caller's scope ends. */
-    suspend fun follow(accents: Flow<AccentColor>) {
-        accents.collect { current = it.colorSource }
+    /** Follows [themes] until the caller's scope ends. */
+    suspend fun follow(themes: Flow<ThemeSpec>) {
+        themes.collect { current = ColorSource.Theme(it) }
     }
 }
 
 /** The scheme [ItmoTheme] draws for [source] in [dark] mode; a colour picker shows its swatches from it. */
 @Composable
 fun colorSchemeOf(source: ColorSource, dark: Boolean): ColorScheme {
-    val platform = if (source == ColorSource.Platform) platformColorScheme(dark) else null
-    return platform ?: remember(source, dark) { generatedColorScheme(source, dark) }
+    val wallpaper = platformWallpaperPalette()
+    return remember(source, dark, wallpaper) { source.colorScheme(dark, wallpaper) }
 }
 
-/** [accent] as a swatch named [label]: the primary of its scheme, checked in its on-primary. */
+internal fun ColorSource.colorScheme(dark: Boolean, wallpaper: WallpaperPalette?): ColorScheme = when (this) {
+    ColorSource.Platform -> resolveColorScheme(ThemeSpec(), dark, wallpaper)
+    ColorSource.Static -> staticColorScheme(dark)
+    is ColorSource.Seed -> seededColorScheme(argb, dark)
+    is ColorSource.Theme -> resolveColorScheme(spec, dark, wallpaper)
+}
+
+/**
+ * The accent of [spec] as a swatch named [label]: the primary of its scheme, checked in its on-primary. Under
+ * Монохром every accent is grey, so the swatches show the hues of the default style to stay told apart.
+ */
 @Composable
-fun accentSwatch(accent: AccentColor, label: String, dark: Boolean = isSystemInDarkTheme()): Swatch {
-    val scheme = colorSchemeOf(accent.colorSource, dark)
+fun accentSwatch(spec: ThemeSpec, label: String, dark: Boolean = isSystemInDarkTheme()): Swatch {
+    val shown = if (spec.style == ThemeStyle.MONOCHROME) spec.copy(style = ThemeStyle.TONAL_SPOT) else spec
+    val scheme = colorSchemeOf(ColorSource.Theme(shown), dark)
     return Swatch(label, scheme.primary, scheme.onPrimary)
 }

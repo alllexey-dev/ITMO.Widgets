@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
@@ -28,6 +29,9 @@ interface SettingsPageProvider {
 
     /** The widget [page] configures, drawn above its rows. */
     fun preview(page: SettingsPage, local: LocalSettings): WidgetPreviewSettings? = null
+
+    /** The appearance [page] shows a sample of above its rows. */
+    fun themePreview(page: SettingsPage, local: LocalSettings): ThemeSpec? = null
 
     fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) = Unit
 

@@ -68,6 +68,17 @@ sealed interface SettingItem {
         val enabled: Boolean = true
     ) : SettingItem
 
+    /**
+     * The user's own colour, opaque [argb]: the custom accent. Android opens the accent colour dialog with its picker,
+     * iOS shows the system colour well; both report the new colour as `#RRGGBB` through the choice callback.
+     */
+    data class CustomColor(
+        override val id: SettingRowId,
+        val title: UiText,
+        val argb: Int,
+        val enabled: Boolean = true
+    ) : SettingItem
+
     /** Read-only fact, such as the application version. */
     data class Info(
         override val id: SettingRowId,
@@ -78,5 +89,7 @@ sealed interface SettingItem {
 
 data class ChoiceOption(
     val key: String,
-    val label: UiText
+    val label: UiText,
+    /** A line under the option in the choice dialog, such as what a palette style does. */
+    val description: UiText? = null
 )
