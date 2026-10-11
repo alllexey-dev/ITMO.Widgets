@@ -12,3 +12,8 @@
   no argument. The logo stays without an accessibility focus stop.
 - The logo moved to the shared module's `composeResources/drawable`, and the
   `strings_auth.xml` Android export is retired.
+- When ITMO.ID rejects the refresh token, or it expires while the app runs,
+  the session ends as an expired one does at launch: the sign-in screen with
+  «Сессия истекла. Войдите снова, чтобы продолжить.». Tokens, caches and
+  settings stay until the next sign-in. A timeout, an ITMO.ID 5xx or My ITMO's
+  own 401/403 keep the session (`RefreshRejections`).

@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
@@ -72,6 +73,9 @@ interface CoreBridgeEntryPoint {
 
     /** The one MyItmoApi 2.x client of the process; its token manager is the only refresher. */
     fun myItmoClient(): MyItmoClient
+
+    /** The signal that client's refresh raises when ITMO.ID rejects the session; the session listens to it. */
+    fun refreshRejections(): RefreshRejections
 
     /** The one `app_preferences` DataStore of the process; a second instance over the file would throw. */
     @AppPreferences
@@ -151,6 +155,7 @@ val coreBridgeModule = module {
     single<PlatformCapabilities> { CoreBridgeEntryPoint.from(androidContext()).platformCapabilities() }
     single<Clock> { CoreBridgeEntryPoint.from(androidContext()).clock() }
     single<MyItmoClient> { CoreBridgeEntryPoint.from(androidContext()).myItmoClient() }
+    single<RefreshRejections> { CoreBridgeEntryPoint.from(androidContext()).refreshRejections() }
     // Unqualified in Koin: `app_preferences` is the only preferences DataStore of the app.
     single<DataStore<Preferences>> { CoreBridgeEntryPoint.from(androidContext()).appPreferences() }
     single<AppDirectories> { CoreBridgeEntryPoint.from(androidContext()).appDirectories() }

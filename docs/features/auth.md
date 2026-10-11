@@ -76,8 +76,9 @@ cookies are off.
 shows «Вставьте Refresh token»; the field is cleared on submit and on dismiss.
 The dialog is the kit `ConfirmDialog`; the token is held with `remember` only,
 never in saved instance state, and the dialog does not survive recreation.
-`DefaultRefreshTokenAuthenticator` refreshes the trimmed token through a fresh
-MyItmoApi `MyItmo` client off the main thread.
+`SessionRepositoryImpl.signInWithRefreshToken` refreshes the trimmed token once
+through the MyItmoApi client's stateless `identity.refresh` off the main
+thread; the current session stays until that succeeds.
 
 ## Session
 
@@ -87,6 +88,23 @@ MyItmoApi `MyItmo` client off the main thread.
   is `SignedOut`; an expired refresh token is `ReauthenticationRequired`;
   otherwise `SignedIn` with the user decoded from the ID token, then the
   Backend sync below.
+- Tokens are refreshed on demand only: MyItmoApi's `TokenManager` refreshes
+  an access token that expires within 30 s before a request, and a My ITMO
+  401 gets one forced refresh and one retry. There is no refresh timer; the
+  widget and background workers keep the session alive by their requests.
+- A refresh ITMO.ID rejects ends a signed-in session while the app runs:
+  `ReauthenticationRequired`, as at `initialize()`, with the tokens, caches
+  and settings left until the next sign-in. "Rejected" is a
+  `MyItmoException.Auth` thrown inside the refresh transaction, which
+  `RefreshRejections.guard` wraps: the token endpoint answered a non-5xx
+  status with an OAuth `error` JSON, or the stored refresh token has expired
+  locally. A timeout or other I/O failure, an ITMO.ID 5xx, a garbled answer
+  and My ITMO's own 401/403 are not rejections: the session stays and the
+  request fails with a retriable error.
+- Lifetimes ITMO.ID issues (observed 2026-10-11): access token 30 minutes
+  (`expires_in` 1800), refresh token 30 days (`refresh_expires_in` 2592000),
+  sliding: every refresh returns a new refresh token with a fresh 30 days.
+  The old refresh token is not revoked by a rotation.
 - A sign-in accepts a token response of at most 32 KiB whose access, refresh
   and ID tokens are not blank and whose expirations are positive. It then
   prepares widgets for the change, runs every `SessionDataCleaner`, clears the

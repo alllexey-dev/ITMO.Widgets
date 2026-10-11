@@ -32,6 +32,7 @@ import dev.alllexey.itmowidgets.core.services.IosBackendGate
 import dev.alllexey.itmowidgets.core.session.AppGroupSessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.KeychainSessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.KeychainTokenStorage
+import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionSnapshotWriter
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
@@ -144,12 +145,13 @@ fun iosCoreModule(
     // only refresher, under the cross-process lock the notification service takes too.
     single { KeychainTokenStorage(get(), get(), get()) } binds arrayOf(TokenStorage::class, SessionTokenStore::class)
     single<HttpClientEngine> { darwinHttpEngine() }
+    single { RefreshRejections() }
     single<MyItmoClient> {
         MyItmoClientFactory.create(
             storage = get(),
             engine = get(),
             clock = get(),
-            refreshGuard = get<CrossProcessLock>().myItmoRefreshGuard()
+            refreshGuard = get<RefreshRejections>().guard(get<CrossProcessLock>().myItmoRefreshGuard())
         )
     }
     single<BackendClient> {

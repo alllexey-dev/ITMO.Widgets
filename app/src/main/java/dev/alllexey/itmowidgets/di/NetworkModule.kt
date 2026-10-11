@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.network.BackendClientFactory
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.network.PublicWebClient
+import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import io.ktor.client.engine.HttpClientEngine
 import java.util.concurrent.TimeUnit
 import javax.inject.Qualifier
@@ -45,11 +46,23 @@ object NetworkModule {
     @Singleton
     fun provideHttpClientEngine(): HttpClientEngine = defaultEngine()
 
-    /** MyItmoApi 2.x over the session's [TokenStorage]; its `tokens` is the only refresher and writer. */
     @Provides
     @Singleton
-    fun provideMyItmoClient(storage: TokenStorage, engine: HttpClientEngine, clock: Clock): MyItmoClient =
-        MyItmoClientFactory.create(storage = storage, engine = engine, clock = clock)
+    fun provideRefreshRejections(): RefreshRejections = RefreshRejections()
+
+    /**
+     * MyItmoApi 2.x over the session's [TokenStorage]; its `tokens` is the only refresher and writer. A refresh
+     * ITMO.ID rejects is reported to the session through [rejections].
+     */
+    @Provides
+    @Singleton
+    fun provideMyItmoClient(
+        storage: TokenStorage,
+        engine: HttpClientEngine,
+        clock: Clock,
+        rejections: RefreshRejections
+    ): MyItmoClient =
+        MyItmoClientFactory.create(storage = storage, engine = engine, clock = clock, refreshGuard = rejections.guard())
 
     @Provides
     @BackendBaseUrl
