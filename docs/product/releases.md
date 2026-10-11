@@ -32,9 +32,9 @@ Achievements, messaging, posts, followers and free-window discovery are outside
 the roadmap. Do not add them opportunistically.
 
 Development happens on `master`, which builds `2.3-SNAPSHOT` at the code of
-the last beta (20291 after `2.3.0-beta.1`); the latest release is `2.2`
-(version code 6), the latest prerelease `2.3.0-beta.1` (tag `v2.3.0-beta.1` on
-`2e5ab822`, published 2026-10-10). The steps of a release
+the last beta (20292 after `2.3.0-beta.2`); the latest release is `2.2`
+(version code 6), the latest prerelease `2.3.0-beta.2` (tag `v2.3.0-beta.2` on
+`5c405114`, published 2026-10-11). The steps of a release
 and the owner's decision points are in the
 [release checklist](../process/release-checklist.md).
 
@@ -75,7 +75,8 @@ either updates the other:
   beta's code once a beta is tagged. Previews ship only as a GitHub
   `--prerelease` or a Play internal upload; `2.3.0-beta.1` went out on
   2026-10-10 only as an APK in the Telegram channel, with no GitHub release,
-  so `releases/latest` stays `v2.2`.
+  and `2.3.0-beta.2` (2026-10-11) has no GitHub release either, so
+  `releases/latest` stays `v2.2`.
 - Until the Play listing is public, GitHub is the only channel; the README and
   the site get the Google Play button only after publication.
 
