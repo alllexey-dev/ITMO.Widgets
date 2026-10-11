@@ -21,7 +21,7 @@ class QrModuleTest {
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theQrModuleResolvesWithThePlatformCoreTypes() {
+    fun theQrModuleResolvesWithTheBridgedCoreTypes() {
         qrModule.verify(
             extraTypes = listOf(
                 MyItmoClient::class,
