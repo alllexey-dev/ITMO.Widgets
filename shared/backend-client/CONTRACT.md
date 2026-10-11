@@ -29,7 +29,7 @@ push decoder needs no client instance.
 
 | Property | Package, API | Routes | Backend contract |
 |---|---|---|---|
-| `users` | `users`, `UsersApi` | `GET /api/users/{isu}`, `GET /api/users/{isu}/friends`, `POST /api/users/lookup`, `GET` and `PUT /api/users/me/privacy`, `PUT /api/users/me/id-token`, `GET /api/users/me/data`, `GET /api/users/me/web-login/{code}`, `POST /api/users/me/web-login/{challengeId}/approve` | `B/docs/contracts/privacy.md`, `B/docs/contracts/friendships.md`, `B/docs/contracts/web.md` |
+| `users` | `users`, `UsersApi` | `GET /api/users/{isu}`, `GET /api/users/{isu}/friends`, `POST /api/users/lookup`, `GET` and `PUT /api/users/me/privacy`, `PUT /api/users/me/id-token`, `GET /api/users/me/data`, `GET /api/users/me/web-login/{code}`, `POST /api/users/me/web-login/{challengeId}/approve`, `DELETE /api/users/me` | `B/docs/contracts/privacy.md`, `B/docs/contracts/friendships.md`, `B/docs/contracts/web.md` |
 | `friends` | `friends`, `FriendsApi` | `GET /api/friends`, `GET /api/friends/requests/incoming` and `outgoing`, `POST /api/friends/{isu}/request`, `accept`, `reject` and `cancel`, `DELETE /api/friends/{isu}` | `B/docs/contracts/friendships.md` |
 | `sport` | `sport`, `SportApi` | `POST /api/sport/sign/sync`, `GET /api/sport/friends/sport-bookings`, `GET /api/sport/users/{isu}/bookings`, `GET /api/sport/auto-sign/limits`; under `/api/sport/free-sign` and `/api/sport/auto-sign` each: `GET entry/my`, `POST entry/create`, `entry/{id}/cancel`, `lesson/{lessonId}/cancel` and `lesson/{lessonId}/mark-satisfied`, `queue/current` (`GET` for free-sign, `POST` for auto-sign) | `B/docs/contracts/sport-automation.md`, `B/docs/contracts/privacy.md` |
 | `links` | `links`, `SubjectLinksApi` | `GET /api/subjects/{subjectId}/links`, `PUT /api/subjects/{subjectId}/links/pin`, `PUT` and `DELETE /api/links/{id}`, `PUT /api/links/{id}/vote`, `POST /api/links/{id}/report`, `GET /api/users/me/restrictions` | `B/docs/contracts/subject-links.md` |
@@ -103,7 +103,7 @@ internal. The status is mapped before the body is decoded, so an HTML 502 or an 
 
 | Failure | Exception |
 |---|---|
-| HTTP 401 | `Unauthorized` (never retried with a refreshed token) |
+| HTTP 401 | `Unauthorized` whatever the body (`unauthorized`, `reauth_required` or none); never retried with a refreshed token |
 | HTTP 403 | `Forbidden(code)`, distinct from 401 |
 | HTTP 404 | `NotFound(code)` |
 | Any other non-2xx status | `Http(status, code)` |
@@ -111,7 +111,7 @@ internal. The status is mapped before the body is decoded, so an HTML 502 or an 
 | A 2xx answer that fails decoding or an invariant, `success=false`, no `data` for a value call, or a request body that cannot be encoded | `Contract(cause)` |
 
 `code` is Backend's `error.code` (`restricted`, `permission_denied`, `access_denied`, `not_found`,
-`invalid_request`, `unauthorized`, `csrf`) or `null` when the error body is empty or not Backend's envelope. The
+`invalid_request`, `unauthorized`, `csrf`, `recent_sign_in_required`) or `null` when the error body is empty or not Backend's envelope. The
 server `message` is never kept: user-visible text belongs to the apps. Tokens, headers and bodies are never logged.
 
 ## Request headers
@@ -206,9 +206,8 @@ and an OpenAPI snapshot (`B/docs/openapi.json`). This module tests against a ven
   constants except `UNKNOWN` equal the schema's `enum`, a nested model names the same schema, and the sealed sport
   types have the schema's `oneOf` with the `type` values `free` and `auto`. A model that reaches an unlisted model
   or enum fails, so a new top-level request or answer type joins `WireModels`.
-- `PendingBackendFields` lists the client fields Backend has not shipped yet, each with its Backend card
-  (`RegisterDeviceRequest.platform`, `alertsAllowed` and `appVersion`: BK-16b). An entry the snapshot already has
-  fails, so the list cannot go stale.
+- `PendingBackendFields` lists the client fields Backend has not shipped yet, each with its Backend card; it is
+  empty since Backend 1.9.1. An entry the snapshot already has fails, so the list cannot go stale.
 - Seeded-drift tests (a renamed field, an extra enum value, an unknown route, an unlisted operation, an unclaimed
   fixture and others) prove that each check fails.
 

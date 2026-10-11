@@ -1,0 +1,60 @@
+{
+  "success": true,
+  "data": {
+    "last7d": {
+      "activeDevices": 640,
+      "unknownDevices": 590,
+      "builds": [
+        {
+          "platform": "ANDROID",
+          "distribution": "github",
+          "version": "2.3.0-beta.1",
+          "build": 20291,
+          "devices": 38
+        },
+        {
+          "platform": "ANDROID",
+          "distribution": "play",
+          "version": "2.3.0-beta.1",
+          "build": 20291,
+          "devices": 9
+        },
+        {
+          "platform": "IOS",
+          "distribution": "appstore",
+          "version": "2.3.0-beta.1",
+          "build": 20291,
+          "devices": 3
+        }
+      ]
+    },
+    "last30d": {
+      "activeDevices": 910,
+      "unknownDevices": 858,
+      "builds": [
+        {
+          "platform": "ANDROID",
+          "distribution": "github",
+          "version": "2.3.0-beta.1",
+          "build": 20291,
+          "devices": 40
+        },
+        {
+          "platform": "ANDROID",
+          "distribution": "play",
+          "version": "2.3.0-beta.1",
+          "build": 20291,
+          "devices": 9
+        },
+        {
+          "platform": "IOS",
+          "distribution": "appstore",
+          "version": "2.3.0-beta.1",
+          "build": 20291,
+          "devices": 3
+        }
+      ]
+    }
+  },
+  "error": null
+}
