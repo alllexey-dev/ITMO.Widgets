@@ -7,6 +7,7 @@ import android.view.View
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -25,9 +26,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -67,7 +65,6 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.CALENDAR_PERMISSIONS
 import dev.alllexey.itmowidgets.feature.settings.ui.CalendarAccessAnswer
 import dev.alllexey.itmowidgets.feature.settings.ui.CalendarAccessStep
-import dev.alllexey.itmowidgets.feature.settings.ui.ICS_DATES_TAG
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsActions
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsDialog
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsDialogState
@@ -75,6 +72,7 @@ import dev.alllexey.itmowidgets.feature.settings.ui.SettingsScreen
 import dev.alllexey.itmowidgets.feature.settings.ui.calendarAccessAnswer
 import dev.alllexey.itmowidgets.feature.settings.ui.calendarAccessStep
 import dev.alllexey.itmowidgets.feature.settings.ui.canOpenIcs
+import dev.alllexey.itmowidgets.feature.settings.ui.closeIcsDatePicker
 import dev.alllexey.itmowidgets.feature.settings.ui.copyDiagnosticsJournal
 import dev.alllexey.itmowidgets.feature.settings.ui.diagnostics.DiagnosticsActions
 import dev.alllexey.itmowidgets.feature.settings.ui.diagnostics.DiagnosticsScreen
@@ -98,7 +96,7 @@ import org.koin.core.parameter.parametersOf
 /**
  * The settings keys (route map rows 10-12 and S6): every settings page under its `SettingsScreenArgs.PAGE`, the error
  * journal and the `.ics` sheet. A page's rows open the next page, the journal and the sheet through the navigator;
- * the permission, picker and system-page launchers are the ones `SettingsFragment` uses, through the same helpers.
+ * the permission, picker and system-page launchers go through the helpers of `feature/settings/ui/`.
  */
 internal fun EntryRegistry.Builder.settingsEntries() {
     entry<AppRoutes.Settings>(args = { bundleOf(SettingsScreenArgs.PAGE to it.page) }) { key, navigator ->
@@ -109,7 +107,7 @@ internal fun EntryRegistry.Builder.settingsEntries() {
 }
 
 /**
- * One settings page (row 10), hosted as `SettingsFragment` hosts it: the page's widget preview, the shown dialog and
+ * One settings page (row 10): the page's widget preview, the shown dialog and
  * a pending calendar request in this entry's saved state, the row states refreshed on every resume, and on the QR
  * widget page the custom spoiler image with its own ViewModel. A sub-page opens as another [AppRoutes.Settings].
  */
@@ -123,7 +121,7 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
     val viewModel: SettingsViewModel = entryViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val page = remember(viewModel) { viewModel.uiState.value.page }
-    // Only the QR widget page reads the spoiler image, as only it touches the Fragment's lazy ViewModel.
+    // Only the QR widget page reads the spoiler image.
     val spoiler: CustomSpoilerViewModel? = if (page == SettingsPage.QR_WIDGET) entryViewModel() else null
     val dialogs = rememberSaveable(saver = DialogsSaver) { SettingsDialogState() }
     var pendingCalendarAccess by rememberSaveable { mutableStateOf(false) }
@@ -225,7 +223,7 @@ private fun showSettingsMessage(event: SettingsEvent, context: Context, view: Vi
 
 /**
  * The QR widget page's custom image: its state drives the image rows, and a saved or reset image redraws the preview
- * and says so, as `SettingsFragment.observeCustomSpoiler` does while the page is started.
+ * and says so while the page is started.
  */
 @Composable
 private fun CustomSpoilerEffects(
@@ -252,7 +250,7 @@ private fun CustomSpoilerEffects(
 
 /**
  * The page's one widget preview, a View of [factory]: built on first use with the state saved before, then reused,
- * stopped with the entry and closed when the composition drops it, as `SettingsFragment` keeps its preview.
+ * stopped with the entry and closed when the composition drops it.
  */
 private class SettingsWidgetPreview(val factory: WidgetPreviewFactory, private var savedState: Bundle?) {
     private var preview: WidgetPreview? = null
@@ -315,7 +313,7 @@ private fun rememberWidgetPreview(context: Context): SettingsWidgetPreview {
     return preview
 }
 
-/** The shown dialog by name, as `SettingsFragment` keeps it in its saved state. */
+/** The shown dialog by name, kept in the entry's saved state. */
 private val DialogsSaver = Saver<SettingsDialogState, String>(
     save = { it.save() },
     restore = { SettingsDialogState.restore(it) },
@@ -346,7 +344,7 @@ private fun DiagnosticsEntry(onBack: () -> Unit) {
 /**
  * «Выгрузить в .ics» (S6): the date range picker for «Свои даты» runs on the activity's fragment manager, listened to
  * again after recreation and closed with the sheet; the written file is shared or opened through the FileProvider
- * intents `IcsExportBottomSheet` sends.
+ * intents.
  */
 @Composable
 private fun IcsExportEntry() {
@@ -355,7 +353,7 @@ private fun IcsExportEntry() {
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel: IcsExportViewModel = entryViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val dates = (activity as? FragmentActivity)?.supportFragmentManager
+    val dates = activity as? AppCompatActivity
     DisposableEffect(viewModel, dates) {
         dates?.listenToIcsDatePicker(viewModel::onDates)
         onDispose { if (activity?.isChangingConfigurations != true) dates?.closeIcsDatePicker() }
@@ -379,11 +377,6 @@ private fun IcsExportEntry() {
         )
     }
     IcsExportSheetContent(state, actions, canOpen = { file -> context.canOpenIcs(file) })
-}
-
-/** The picker belongs to the sheet: selecting a tab or Back closes both, as a child of the Fragment sheet did. */
-private fun FragmentManager.closeIcsDatePicker() {
-    (findFragmentByTag(ICS_DATES_TAG) as? DialogFragment)?.dismissAllowingStateLoss()
 }
 
 private fun snackbar(view: View, message: Int, duration: Int) {

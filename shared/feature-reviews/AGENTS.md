@@ -11,7 +11,7 @@
 - `commonTest`: repositories, store and ViewModels over `ReviewsBackendHarness`; `androidHostTest`:
   `ReviewsKoinModuleTest`, editor and report tests, `ReviewsScreenshotTest`.
 - Not here: the review rows and summary card of a profile (`:shared:feature-social`, `ui/reviews/`), and
-  `ReviewEditorBottomSheet`, `ReportReviewDialogFragment` in `app/` under `feature/reviews/`.
+  their shell entries in `app/shell/entries/ReviewsEntries.kt`.
 
 ## Depends on
 - `:shared:core`, `:shared:designsystem`; `:shared:testing` in tests only. Koin and the KMP lifecycle.

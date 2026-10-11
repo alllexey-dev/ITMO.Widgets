@@ -400,8 +400,8 @@ it is kept, also in the saved state, until the root schedule is `STARTED`.
 `SportLessonRequest` works the same way for the root sport screen, which hands
 it to its sign page. Links and sharing: [features/app-links.md](features/app-links.md).
 
-Every Fragment opens a person profile with `Fragment.openUserProfile(isu)` in
-`core/ui/navigation/AppNavigator.kt`. A sheet dismisses before invoking it.
+Every entry opens a person profile with `Nav3AppNavigator.openUserProfile(isu)` in
+`app/shell/entries/SocialEntries.kt`. A sheet dismisses before invoking it.
 `UserScreenArgs.profileIsu(Long?)` accepts only `1..Int.MAX_VALUE`; absent or
 out-of-range teacher IDs leave rows informational. The friendship notification
 entry point stays in `MainActivity` and uses `navigation.openScreen` directly.

@@ -74,7 +74,7 @@ import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.feature.me.ui.MeTestTags
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
-import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
+import dev.alllexey.itmowidgets.feature.onboarding.ui.ONBOARDING_ROOT_TEST_TAG
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateReminder
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
@@ -203,7 +203,7 @@ class AccountEntriesTest {
         surface = ShellSurface.Onboarding
         show()
 
-        compose.onNodeWithTag(OnboardingFragment.ROOT_TEST_TAG).assertIsDisplayed()
+        compose.onNodeWithTag(ONBOARDING_ROOT_TEST_TAG).assertIsDisplayed()
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.Onboarding)).assertDoesNotExist()
     }
 

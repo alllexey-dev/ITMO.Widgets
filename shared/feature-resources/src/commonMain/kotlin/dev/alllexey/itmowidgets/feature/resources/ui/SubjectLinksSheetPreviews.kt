@@ -15,7 +15,7 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiSta
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and LX-1c recorded the XML references as
  * `SubjectLinksSheetContent_<state>`. Each state therefore is a function called `SubjectLinksSheetContent` in a holder
- * class of its own. The sheet wraps its content on the sheet's colour, as `SubjectLinksBottomSheet` opens it; the full
+ * class of its own. The sheet wraps its content on the sheet's colour, as the shell's sheet opens it; the full
  * lists get the tall window of the references, so every section is in the capture.
  */
 

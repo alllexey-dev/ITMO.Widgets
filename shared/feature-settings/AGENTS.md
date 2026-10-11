@@ -11,7 +11,7 @@
 - `strings_settings.xml` in `composeResources/values/`, exported to `:app` as Android resources.
 - `commonTest`: data, domain, ViewModels; `androidHostTest`: `SettingsModuleTest`, screens, dialogs and
   `SettingsScreenshotTest`, whose baselines also stand for the app's hosts.
-- Not here: `SettingsFragment`, `DiagnosticsFragment`, `IcsExportBottomSheet`, the calendar and background-work
+- Not here: the shell entries (`app/shell/entries/SettingsEntries.kt`), the calendar and background-work
   dialogs, `AndroidBackgroundWorkAccess`, `AndroidQuickSettingsTileAccess` and `CustomSpoilerRepositoryImpl` stay in
   `app/` under `feature/settings/`; `di/bridge/SettingsBridge.kt` bridges Koin and Hilt.
 

@@ -15,7 +15,7 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and LX-1c recorded the XML references as
  * `LinkEditorSheetContent_<state>`. Each state therefore is a function called `LinkEditorSheetContent` in a holder
- * class of its own. The editor wraps its content on the sheet's colour, as `LinkEditorBottomSheet` opens it.
+ * class of its own. The editor wraps its content on the sheet's colour, as the shell's sheet opens it.
  */
 
 /** A pasted Google Sheet: `Таблица баллов` guessed, three nested flows offered, only me chosen. */

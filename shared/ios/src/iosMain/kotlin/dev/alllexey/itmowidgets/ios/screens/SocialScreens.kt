@@ -64,7 +64,7 @@ fun meViewController(open: (AppRoute) -> Unit): UIViewController {
     }
 }
 
-/** The viewer's friends and requests (`AppRoutes.Friends`), as `FriendsFragment` hosts them. */
+/** The viewer's friends and requests (`AppRoutes.Friends`), as the Android shell hosts them. */
 fun friendsViewController(open: (AppRoute) -> Unit, onBack: () -> Unit): UIViewController = screenController {
     Hosted {
         FriendsRoute(
@@ -77,7 +77,7 @@ fun friendsViewController(open: (AppRoute) -> Unit, onBack: () -> Unit): UIViewC
 }
 
 /**
- * People search (`AppRoutes.UserSearch`), as `UserSearchFragment` hosts it: the invite action shares the invitation
+ * People search (`AppRoutes.UserSearch`), as the Android shell hosts it: the invite action shares the invitation
  * through the share sheet. The field is Compose's own text field on the system keyboard.
  */
 fun userSearchViewController(open: (AppRoute) -> Unit, onBack: () -> Unit): UIViewController {
@@ -95,7 +95,7 @@ fun userSearchViewController(open: (AppRoute) -> Unit, onBack: () -> Unit): UIVi
 }
 
 /**
- * The person profile (`AppRoutes.UserProfile`), as `UserProfileFragment` hosts it: a user's friends, schedule and
+ * The person profile (`AppRoutes.UserProfile`), as the Android shell hosts it: a user's friends, schedule and
  * sport open through [open] with the name the page shows, the share button sends the profile link, [copyIsu] is the
  * Swift host's (the clipboard and its confirmation), a source link opens in Safari. A teacher's reviews section
  * (`PlatformCapabilities.reviews`, IO-09f) opens the review editor through [open] (a SwiftUI sheet) and shows the
@@ -145,7 +145,7 @@ private data class ReviewReport(val args: TeacherReviewArgs, val reviewId: Strin
 /** Android's `reviewArgs()`: the teacher of the page. */
 private fun UserProfileUiState.Content.reviewArgs() = TeacherReviewArgs(isu, name)
 
-/** Another user's friends (`AppRoutes.UserFriends`), as `UserFriendsFragment` hosts them. */
+/** Another user's friends (`AppRoutes.UserFriends`), as the Android shell hosts them. */
 fun userFriendsViewController(
     isu: Int,
     name: String,

@@ -10,9 +10,9 @@
 - `strings_resources.xml` in `composeResources/values/`, exported to `:app` as Android resources.
 - `commonTest`: repository, store, ViewModels and rows over `LinksBackendHarness`; `androidHostTest`: the sheets
   and dialog, `ResourcesKoinModuleTest`, `ResourcesScreenshotTest`.
-- Not here: the bottom sheet and dialog hosts (`SubjectLinksBottomSheet`, `LinkEditorBottomSheet`,
-  `LinkActionsBottomSheet`, `ReportLinkDialogFragment`) stay in `app/` under `feature/resources/`; the subject page
-  that opens them is in `:shared:feature-recordbook`.
+- Not here: the shell entries that host the sheets and the dialog (`app/shell/entries/ResourcesEntries.kt`) and their
+  Android helpers in `app/` under `feature/resources/`; the subject page that opens them is in
+  `:shared:feature-recordbook`.
 
 ## Depends on
 - `:shared:core`, `:shared:designsystem`; `:shared:testing` in tests only. Koin and the KMP lifecycle.

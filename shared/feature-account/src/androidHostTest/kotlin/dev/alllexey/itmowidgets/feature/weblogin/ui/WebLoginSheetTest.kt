@@ -49,7 +49,7 @@ import kotlinx.coroutines.CompletableDeferred
  * Every case of the deleted `WebLoginVisualTest` on the Compose sheet over the real `WebLoginViewModel` and a
  * synthetic repository, at 320 dp and font scale 1.3: the approve flow, wrong and expired codes, the longest browser
  * name, the scanner that cannot start. The Play services scanner itself and the sheet's height stay in
- * `WebLoginBottomSheet`; the looks live in the `WebLoginSheetContent_*` goldens.
+ * the shell's entry; the looks live in the `WebLoginSheetContent_*` goldens.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)

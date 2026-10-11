@@ -12,7 +12,7 @@
 - `strings_social.xml` in `composeResources/values/`, exported to `:app` as Android resources.
 - `commonTest`: repositories, ViewModels, screens; `androidHostTest`: `SocialModuleTest`, `FriendSelectorModuleTest`,
   `FriendSelectorSheetTest`, `SocialScreenshotTest`.
-- Not here: the four Fragments, `FriendSelectorDialogFragment` and `FriendshipPushHandler` stay in `app/` under
+- Not here: the Android sharing helpers and `FriendshipPushHandler` stay in `app/` under
   `feature/social/` and `feature/friendselector/`; `di/bridge/SocialBridge.kt` bridges Koin and Hilt.
 
 ## Depends on

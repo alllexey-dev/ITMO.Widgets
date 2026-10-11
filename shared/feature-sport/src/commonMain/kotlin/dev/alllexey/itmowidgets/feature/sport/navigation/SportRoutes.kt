@@ -32,7 +32,7 @@ object SportRoutes {
     ) : AppRoute {
         override val kind get() = RouteKind.SHEET
 
-        /** 90 % of the window however short the content, as the Fragment's `SheetHeight.Tall`. */
+        /** 90 % of the window however short the content. */
         override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.TALL)
         override val exclusiveGroup get() = AppRoutes.SPORT_DETAILS_GROUP
     }

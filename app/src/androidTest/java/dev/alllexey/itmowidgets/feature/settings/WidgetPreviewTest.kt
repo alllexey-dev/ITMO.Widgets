@@ -385,7 +385,7 @@ class WidgetPreviewTest {
                 QrColorResolver(activity, PreviewQrPreferences) { null },
                 SchedulePreviewScenario(ScheduleWidgetSelector())
             )
-            // The page as SettingsFragment hosts it: SettingsScreen with the factory's View in the preview slot.
+            // The page as the settings entry hosts it: SettingsScreen with the factory's View in the preview slot.
             val colors = spec.colorSeed?.let(ColorSource::Seed) ?: ColorSource.Platform
             composeView = ComposeView(activity).apply {
                 setContent {

@@ -32,7 +32,7 @@ fun bottomSheet(policy: SheetPolicy): Map<String, Any> = metadata { put(SheetPol
 /**
  * Navigation 3 1.2 has no first-party sheet scene (SP-14): an entry with [bottomSheet] metadata becomes an
  * [OverlayScene] in a material3 [ModalBottomSheet] above the entries below it, which stay composed. The sheet is the
- * container (`ItmoBottomSheetFragment`'s): expanded without a collapsed step, as tall as its content up to
+ * container (the former Fragment sheet's): expanded without a collapsed step, as tall as its content up to
  * [MAX_HEIGHT_FRACTION] of the window or always that tall ([SheetPolicy.Height.TALL]); the body (a `SheetScaffold`)
  * draws its own handle.
  */

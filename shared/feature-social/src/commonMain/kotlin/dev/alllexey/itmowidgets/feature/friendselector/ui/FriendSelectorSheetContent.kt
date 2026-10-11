@@ -80,7 +80,7 @@ class FriendSelectorActions(
  * The friend picker with its Koin ViewModel, which reads the opening ISU from the host's arguments
  * (`FriendSelectionContract.ARG_SELECTED_ISU`). The query lives here, saved with the composition, and reaches the
  * ViewModel again after process death. A confirmed choice goes to [onDeliver] once: the person, or `null` for the own
- * schedule. Android hosts it in `FriendSelectorDialogFragment`; the iOS shell hosts the same route.
+ * schedule. Android hosts it in the Compose shell's sheet; the iOS shell hosts the same route.
  */
 @Composable
 fun FriendSelectorSheetRoute(

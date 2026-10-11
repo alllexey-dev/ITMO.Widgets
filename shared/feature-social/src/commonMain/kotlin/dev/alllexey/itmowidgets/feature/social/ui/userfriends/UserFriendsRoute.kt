@@ -23,7 +23,7 @@ import org.koin.compose.viewmodel.koinViewModel
 /**
  * Another user's friends with their Koin ViewModel, which reads the owner's ISU and name from the destination's
  * arguments. A failed refresh of a shown list offers a retry in a snackbar. Android hosts it in
- * `UserFriendsFragment`; the iOS shell hosts the same route.
+ * the Compose shell; the iOS shell hosts the same route.
  */
 @Composable
 fun UserFriendsRoute(

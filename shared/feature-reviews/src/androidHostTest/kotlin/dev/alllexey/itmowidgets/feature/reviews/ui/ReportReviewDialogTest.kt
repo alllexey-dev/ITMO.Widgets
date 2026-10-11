@@ -41,7 +41,7 @@ import kotlin.test.assertTrue
 
 /**
  * The report case of the deleted `ReviewEditorVisualTest` on the real `ReportReviewViewModel`, wired as
- * `ReportReviewDialogFragment` wires it, at font scale 1.3: the four reasons in order, `Отправить` only with a reason,
+ * the shell entry wires it, at font scale 1.3: the four reasons in order, `Отправить` only with a reason,
  * a failure under the comment that keeps the dialog and goes with the next send, closing once the report is accepted,
  * the comment's 500 characters and the cancel button. The looks are the `ReportReviewDialog_*` goldens.
  */

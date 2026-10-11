@@ -32,7 +32,7 @@ import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.home.HomeSemantics
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
-import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
+import dev.alllexey.itmowidgets.feature.me.ui.MeHost
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreenTestTags
@@ -70,14 +70,14 @@ class StoreScreenshotCapture {
     @Before
     fun startSignedOut() {
         TestSession.signOut()
-        MeFragment.releaseLook = true
+        MeHost.releaseLook = true
         StoreLook.hideDemoBanner = true
     }
 
     @After
     fun leaveTheDemo() {
         StoreLook.hideDemoBanner = false
-        MeFragment.releaseLook = false
+        MeHost.releaseLook = false
         TestSession.signOut()
     }
 

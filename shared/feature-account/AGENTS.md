@@ -12,7 +12,7 @@
   `strings_update.xml` in `composeResources/values/`; not exported to `:app`.
 - `commonTest`: repositories, ViewModels, policies; `androidHostTest`: one Koin graph test per package, screens and
   `AccountScreenshotTest`; `iosTest`: the iOS modules and the App Store listing.
-- Not here: `LoginActivity`, the account Fragments, `WebLoginBottomSheet`, `WebSessionDataCleaner` and the update
+- Not here: `LoginActivity`, the Android helpers of the account entries, `WebSessionDataCleaner` and the update
   action of each distribution (`app/src/github`, `app/src/play`) stay in `app/` under `feature/<package>/`; the
   bridges are `di/bridge/AccountAuthBridge.kt`, `AccountOnboardingBridge.kt` and `AccountUpdateBridge.kt`.
 

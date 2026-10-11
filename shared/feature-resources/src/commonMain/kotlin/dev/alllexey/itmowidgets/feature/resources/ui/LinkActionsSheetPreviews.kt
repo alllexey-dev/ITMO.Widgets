@@ -14,7 +14,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 /*
  * LX-1c recorded the XML references as `LinkActionsSheetContent_<state>`, so each state is a function called
  * `LinkActionsSheetContent` in a holder class of its own. The sheet wraps its content on the sheet's colour, as
- * `LinkActionsBottomSheet` opens it, over the links of `SubjectLinksSamples`.
+ * the shell's sheet opens it, over the links of `SubjectLinksSamples`.
  */
 
 /** Another student's Google Sheet: the pill with the own vote, the author, `Мои баллы` and `Пожаловаться`. */

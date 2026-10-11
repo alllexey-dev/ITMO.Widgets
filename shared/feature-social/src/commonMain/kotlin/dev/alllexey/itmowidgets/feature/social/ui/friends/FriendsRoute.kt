@@ -24,7 +24,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * The viewer's friends and requests with their Koin ViewModel. A failed action shows a snackbar; a remove asks in a
- * confirmation first. Android hosts it in `FriendsFragment`; the iOS shell hosts the same route.
+ * confirmation first. Android hosts it in the Compose shell; the iOS shell hosts the same route.
  */
 @Composable
 fun FriendsRoute(

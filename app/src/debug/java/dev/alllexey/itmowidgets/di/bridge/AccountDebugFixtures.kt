@@ -12,7 +12,7 @@ import org.koin.dsl.module
 
 /**
  * The Me tab's and the first-run flow's fixture in Koin: a debug host builds both ViewModels over its own fakes while
- * it lives, so `MeFragment`, `OnboardingFragment` and its step pages obtain them exactly as in release.
+ * it lives, so the shell's Me tab root and onboarding entry obtain them exactly as in release.
  *
  * The ViewModels are overridden rather than their bridged types: the two screens read the custom-services opt-in from
  * different fakes, and the host's other screens keep the release session, social data and opt-in.

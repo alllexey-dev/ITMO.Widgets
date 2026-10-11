@@ -65,7 +65,7 @@ link unpins it) and report a link (`Не открывается`, `Другой 
 `Другое`, optional comment). Any HTTPS host is accepted; the app checks the scheme, the host and
 the absence of user info, and Backend never fetches a URL. Links open in the
 browser only through `core/util/HttpsNavigationPolicy`
-(`core/ui/LinkOpener.kt`); without a browser a snackbar says so.
+(`app/shell/entries/ResourcesEntries.kt`); without a browser a snackbar says so.
 
 ## Subject page
 

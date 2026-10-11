@@ -47,7 +47,7 @@ enum class SheetClosePlacement {
  * one content area and an optional [footer]. The content area is bounded: it gets the height the sheet has left after
  * the header and the footer, so a scrolling list inside it scrolls instead of pushing the footer away, and it is at
  * least [contentMinHeight] tall, so loading, content and error switch without the sheet jumping (the 288 dp cases).
- * The host owns the container (colour, corners, insets, dismissal): `ItmoBottomSheetFragment` on Android.
+ * The host owns the container (colour, corners, insets, dismissal): the Compose shell's sheet scene on Android.
  *
  * Under the iOS style the host is SwiftUI's `.sheet`, which draws the grabber, so no [handle] is drawn; the header is
  * a sheet's navigation bar on the grouped background: the title in headline (subheadline semibold over a [subtitle] in

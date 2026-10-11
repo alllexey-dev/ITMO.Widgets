@@ -54,7 +54,12 @@ internal const val CORE_STORAGE_PACKAGE = "dev.alllexey.itmowidgets.core.storage
 internal const val MIN_GATED_CLASSES = 20
 internal const val MIN_VIEW_MODELS = 34
 internal const val MIN_DOMAIN_FILES = 95
-internal const val MIN_DEBUG_ONLY_CLASSES = 5
+
+/**
+ * The two sport debug stores, the time override store and the refresh token controller. SH-1d3 deleted the fifth, the
+ * debug tools Fragment; the shell registers the debug tools entry only in debug builds (`ShellEntries.kt`).
+ */
+internal const val MIN_DEBUG_ONLY_CLASSES = 4
 internal const val MIN_BACKEND_GATED_CLASSES = 16
 internal const val MIN_KMP_SOURCE_FILES = 250
 internal const val MIN_SHARED_FEATURE_MODULES = 10
