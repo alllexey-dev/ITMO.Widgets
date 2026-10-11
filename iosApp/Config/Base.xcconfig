@@ -6,10 +6,10 @@ APP_BUNDLE_ID = dev.alllexey.itmowidgets
 APP_GROUP_ID = group.dev.alllexey.itmowidgets
 KEYCHAIN_GROUP = $(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared
 
-// The Backend of every configuration, BackendBaseURL in the app's Info.plist (L18 IO-04b). Dev until Backend 1.8.0
-// is in production (gate R); then Release switches to https://widgets.alllexey.dev. `$()` keeps xcconfig from
-// reading `//` as a comment.
+// The Backend, BackendBaseURL in the app's Info.plist: dev for Debug, production for Release. `$()` keeps xcconfig
+// from reading `//` as a comment.
 BACKEND_BASE_URL = https:/$()/dev.widgets.alllexey.dev
+BACKEND_BASE_URL[config=Release] = https:/$()/widgets.alllexey.dev
 
 // The App Store record of the app, AppStoreID in the app's Info.plist (L18 IO-08b): the update offer opens
 // https://apps.apple.com/app/id$(APP_STORE_ID) and offers nothing while it is empty. Empty until the record exists

@@ -726,8 +726,8 @@ sign-out cleaners.
   social, schedule and recordbook graphs had before (IO-09f).
 - `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
   controller for the share sheet.
-- Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`; dev
-  (`https://dev.widgets.alllexey.dev`) in every configuration until Backend 1.8.0 is in production (gate R).
+- Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`: dev
+  (`https://dev.widgets.alllexey.dev`) for Debug, production (`https://widgets.alllexey.dev`) for Release.
 - `AppDiagnostics` (`IosAppDiagnostics`) keeps this launch's records in memory and writes each to unified logging;
   an error contributes only its type until the journal's sanitiser is shared. `startKoinIos` installs
   `IosCrashHook` (Kotlin/Native's `setUnhandledExceptionHook`): an uncaught Kotlin exception becomes a crash record
