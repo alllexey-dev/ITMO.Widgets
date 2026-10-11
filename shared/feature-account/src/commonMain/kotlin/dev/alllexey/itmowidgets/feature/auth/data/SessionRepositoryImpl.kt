@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.network.asAppError
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
@@ -18,6 +19,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
@@ -27,6 +29,9 @@ import kotlin.time.Clock
  *
  * This class is the [SessionState] machine: it picks the transition and publishes each state, while [transitions]
  * runs the side effects in between.
+ *
+ * ITMO.ID rejecting the refresh while signed in ([RefreshRejections]) ends the session as an expired one does at
+ * [initialize]: `ReauthenticationRequired`, with the tokens, caches and settings left for the next sign-in.
  */
 class SessionRepositoryImpl(
     private val tokenStore: SessionTokenStore,
@@ -34,11 +39,20 @@ class SessionRepositoryImpl(
     private val clock: Clock,
     private val transitions: SessionTransitions,
     private val demo: DemoMode,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
+    rejections: RefreshRejections
 ) : SessionRepository {
 
     private val mutableState = MutableStateFlow<SessionState>(SessionState.Initializing)
     override val state: StateFlow<SessionState> = mutableState.asStateFlow()
+
+    init {
+        rejections.onRejected {
+            mutableState.update { state ->
+                if (state is SessionState.SignedIn && !state.demo) SessionState.ReauthenticationRequired else state
+            }
+        }
+    }
 
     override suspend fun initialize() {
         if (mutableState.value !is SessionState.Initializing) return

@@ -1,7 +1,9 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
+import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
@@ -12,6 +14,7 @@ import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionState
@@ -29,6 +32,7 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -300,6 +304,52 @@ class SessionRepositoryImplTest {
         assertEquals(SessionState.SignedOut, fixture.repository.state.value)
     }
 
+    /** AUTH-FIX1: ITMO.ID rejecting the refresh ends the session as an expired one does, keeping tokens and data. */
+    @Test
+    fun aRefreshItmoIdRejectsWhileSignedInNeedsANewSignIn() = runTest(dispatcher) {
+        val fixture = fixture(session = stored(), currentUser = CurrentUser(123456, "Иванов Иван", null)) {
+            respondJson("""{"error":"invalid_grant"}""", HttpStatusCode.BadRequest)
+        }
+        fixture.repository.initialize()
+        clock.advanceBy(301.seconds)
+
+        assertFailsWith<MyItmoException.Auth> { fixture.client.tokens.validAccessToken() }
+
+        assertEquals(SessionState.ReauthenticationRequired, fixture.repository.state.value)
+        assertEquals("stored-refresh", fixture.storage.refreshToken)
+        assertEquals(0, fixture.cleaner.requests)
+    }
+
+    @Test
+    fun aRefreshTokenThatExpiresWhileSignedInNeedsANewSignIn() = runTest(dispatcher) {
+        val fixture = fixture(session = stored(refreshExpiresAt = clock.now() + 600.seconds))
+        fixture.repository.initialize()
+        clock.advanceBy(601.seconds)
+
+        assertFailsWith<MyItmoException.Auth> { fixture.client.tokens.validAccessToken() }
+
+        assertEquals(SessionState.ReauthenticationRequired, fixture.repository.state.value)
+        assertTrue(fixture.requests.isEmpty())
+    }
+
+    @Test
+    fun transientRefreshFailuresAndAMyItmo401KeepTheSessionSignedIn() = runTest(dispatcher) {
+        val answers: List<suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData> = listOf(
+            { respondJson("{}", HttpStatusCode.ServiceUnavailable) },
+            { throw IOException("timeout") },
+            { if (it.url.host == "id.itmo.ru") respondJson(TOKEN_RESPONSE) else respondJson("{}", HttpStatusCode.Unauthorized) }
+        )
+        for (answer in answers) {
+            val fixture = fixture(session = stored(), answer = answer)
+            fixture.repository.initialize()
+            clock.advanceBy(301.seconds)
+
+            assertFailsWith<Exception> { fixture.client.system.getDashboard() }
+
+            assertTrue(fixture.repository.state.value is SessionState.SignedIn, fixture.requests.toString())
+        }
+    }
+
     @Test
     fun aHugeTokenLifetimeSaturatesLikeTwoPointTwo() = runTest(dispatcher) {
         val fixture = fixture(session = null)
@@ -331,10 +381,12 @@ class SessionRepositoryImplTest {
             requests += request
             answer(request)
         }
+        val rejections = RefreshRejections()
         val client = MyItmoClientFactory.create(
             storage = OrderedTokenStorage(storage, order),
             engine = engine,
-            clock = clock
+            clock = clock,
+            refreshGuard = rejections.guard()
         )
         val cleaner = FakeSessionDataCleaner(order)
         val effects = FakeEffects(order)
@@ -363,10 +415,12 @@ class SessionRepositoryImplTest {
             clock = clock,
             transitions = transitions,
             demo = DataStoreDemoMode(settings),
-            dispatchers = dispatchers
+            dispatchers = dispatchers,
+            rejections = rejections
         )
         return Fixture(
             repository,
+            client,
             storage,
             requests,
             cleaner,
@@ -388,6 +442,7 @@ class SessionRepositoryImplTest {
 
     private inner class Fixture(
         val repository: SessionRepositoryImpl,
+        val client: MyItmoClient,
         val storage: InMemoryTokenFile,
         val requests: List<HttpRequestData>,
         val cleaner: FakeSessionDataCleaner,
