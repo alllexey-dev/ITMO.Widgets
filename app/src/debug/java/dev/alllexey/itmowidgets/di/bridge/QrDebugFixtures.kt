@@ -9,7 +9,7 @@ import org.koin.dsl.module
 
 /**
  * The QR pass screen's fixture in Koin: a debug host replaces the bridged repository and the wall clock with its own
- * while it lives, so `QrCodeFragment` obtains its ViewModel exactly as in release.
+ * while it lives, so the QR pass screen obtains its ViewModel exactly as in release.
  *
  * Koin is process-wide: a host calls [load] in `onCreate` before `super.onCreate()` and [unload] in `onDestroy`, or
  * later tests in the same process (`QrTileFlowTest`) would get the fake. Main thread only, like the host callbacks.

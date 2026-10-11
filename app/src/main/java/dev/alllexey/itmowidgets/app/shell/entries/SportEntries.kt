@@ -83,8 +83,8 @@ internal fun EntryRegistry.Builder.sportEntries() {
 /**
  * The sport tab's root (route map row 7): `SportRoute` with both page ViewModels in the root's own store, so `Запись`
  * keeps its week and filters across tab switches. A [TabRequest.SportLesson] (a shared link, a sport notification)
- * opens its lesson on `Запись` once; the pages' details sheets reply on their own result keys, as `SportFragment`
- * routed the sheet's Fragment result to the page that opened it.
+ * opens its lesson on `Запись` once; the pages' details sheets reply on their own result keys, as v2.2's
+ * sport tab routed the sheet's Fragment result to the page that opened it.
  */
 @Composable
 internal fun SportTabRoot(navigator: Nav3AppNavigator) {
@@ -205,7 +205,7 @@ private fun UserSportEntry(onBack: () -> Unit) {
 }
 
 /**
- * The details sheet (route map S10), `SportCommonDetailsBottomSheet`'s body on its `surfaceContainerLowest`
+ * The details sheet (route map S10), v2.2's details sheet body on its `surfaceContainerLowest`
  * background: whether its action was sent survives recreation, the action goes to the opener and closes the sheet,
  * a profile opens in the sheet's place, sharing and the map stay on this activity.
  */

@@ -31,11 +31,6 @@
         android:label="App update" />
 
     <fragment
-        android:id="@+id/recordbook_subject"
-        android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookSubjectFragment"
-        android:label="Record book subject" />
-
-    <fragment
         android:id="@+id/friends"
         android:name="dev.alllexey.itmowidgets.feature.social.ui.FriendsFragment"
         android:label="Friends" />
@@ -61,42 +56,6 @@
             android:name="user_isu"
             app:argType="integer" />
     </fragment>
-
-    <fragment
-        android:id="@+id/user_schedule"
-        android:name="dev.alllexey.itmowidgets.feature.schedule.ui.UserScheduleFragment"
-        android:label="User schedule">
-        <argument
-            android:name="user_isu"
-            app:argType="integer" />
-        <argument
-            android:name="user_name"
-            android:defaultValue=""
-            app:argType="string" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/user_sport"
-        android:name="dev.alllexey.itmowidgets.feature.sport.ui.user.UserSportFragment"
-        android:label="User sport">
-        <argument
-            android:name="user_isu"
-            app:argType="integer" />
-        <argument
-            android:name="user_name"
-            android:defaultValue=""
-            app:argType="string" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/schedule_changes"
-        android:name="dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesFragment"
-        android:label="@string/schedule_changes_title" />
-
-    <fragment
-        android:id="@+id/qr_pass"
-        android:name="dev.alllexey.itmowidgets.feature.qr.ui.QrCodeFragment"
-        android:label="@string/title_qr" />
 
     <fragment
         android:id="@+id/my_itmo_web"

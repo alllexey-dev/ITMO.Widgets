@@ -11,7 +11,7 @@ import org.koin.compose.viewmodel.koinViewModel
 /**
  * The schedule changes history with its Koin ViewModel. The screen counts as visible while its lifecycle is started,
  * so opening it marks every change read and a screen stopped under another one marks nothing. Android hosts it in
- * `ScheduleChangesFragment`, iOS in IO-09b.
+ * the shell's `ScheduleChanges` entry, iOS in IO-09b.
  */
 @Composable
 fun ScheduleChangesRoute(

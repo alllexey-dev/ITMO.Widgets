@@ -16,7 +16,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.recordbookPeriodOptions
 
 /**
  * Synthetic spring 2025/2026 recordbooks for the previews and host tests, the same scenes the XML references of
- * LR-1c showed (`RecordbookPreviewFixtures`): the middle of the semester with BARS on and the session.
+ * LR-1c showed: the middle of the semester with BARS on and the session.
  */
 internal object RecordbookPreviewSamples {
 

@@ -44,7 +44,7 @@ import kotlin.test.assertEquals
  * The cases of the deleted View-only `LessonDetailsVisualTest` checks on the Compose sheet, at 320 dp and font scale
  * 1.3 in the sheet's 802 dp: what the header shows, the teacher's profile, the reserved tone dot, the change block,
  * the meeting link, the map and every state of `Друзья на паре`. The host's own effects (closing before the profile,
- * the intents, the snackbars) stay in `LessonDetailsBottomSheet` and its instrumented test; the looks live in the
+ * the intents, the snackbars) stay in the shell's lesson entry and its instrumented test; the looks live in the
  * `LessonDetailsContent_*` goldens.
  */
 @OptIn(ExperimentalTestApi::class)

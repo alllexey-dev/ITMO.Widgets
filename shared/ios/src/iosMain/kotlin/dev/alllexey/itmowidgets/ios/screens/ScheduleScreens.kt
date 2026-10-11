@@ -39,7 +39,7 @@ import platform.UIKit.UIViewController
 
 /**
  * The schedule tab's root (`AppRoutes.TabRoot(SCHEDULE)`): L10's `ScheduleRoute` of the own schedule with the
- * [controller] Swift hosts and the requests `ScheduleFragment` takes as Fragment results. [showToday] is the `today`
+ * [controller] Swift hosts and the requests Android's schedule tab root takes as results. [showToday] is the `today`
  * entry route (the own schedule on today); [showFriend] is the friend picker's answer. Requests sent before the
  * first frame wait in an unlimited buffer, as on Android.
  */
@@ -80,7 +80,7 @@ fun scheduleRootScreen(open: (AppRoute) -> Unit, pickFriend: (Int) -> Unit): Sch
 }
 
 /**
- * Another user's schedule (`AppRoutes.UserSchedule`), as `UserScheduleFragment` hosts it: every lesson opens the
+ * Another user's schedule (`AppRoutes.UserSchedule`), as Android's shell hosts it: every lesson opens the
  * lesson sheet through [open]; no pending rows, no friend picker, no `today` request.
  */
 fun userScheduleViewController(
@@ -95,7 +95,7 @@ fun userScheduleViewController(
     Padded { UserScheduleIosRoute(isu, name, actions, onBack) }
 }
 
-/** The found schedule changes (`AppRoutes.ScheduleChanges`), as `ScheduleChangesFragment` hosts them. */
+/** The found schedule changes (`AppRoutes.ScheduleChanges`), as Android's shell hosts them. */
 fun scheduleChangesViewController(onBack: () -> Unit): UIViewController = screenController {
     Padded { ScheduleChangesRoute(onBack = onBack) }
 }
