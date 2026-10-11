@@ -72,8 +72,8 @@ playAppUpdate = "2.1.0"
 okhttp = "5.5.0"
 mockwebserver = "5.5.0"
 lifecycle = "2.11.0"
-fragment = "1.6.2"
-fragmentCompose = "1.8.9"
+fragment = "1.9.1"
+fragmentCompose = "1.9.1"
 
 [libraries]
 # Gradle plugins on build-logic's classpath (the only place they are versioned).
