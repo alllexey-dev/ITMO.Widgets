@@ -24,7 +24,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.messageRes
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewEvent
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewViewModel
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorEvent

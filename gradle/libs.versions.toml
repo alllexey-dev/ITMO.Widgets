@@ -1,10 +1,8 @@
 [versions]
-# Toolchain (ADR 0018). AGP, Kotlin, CMP, KSP, Hilt, google-services and Roborazzi reach the build classpath
+# Toolchain (ADR 0018). AGP, Kotlin, CMP, google-services and Roborazzi reach the build classpath
 # only through build-logic's dependencies below; modules apply them by plugin id without a version.
 agp = "9.3.3"
 kotlin = "2.4.20"
-ksp = "2.3.12"
-hilt = "2.60.1"
 googleGmsGoogleServices = "4.4.4"
 # androidx.compose 1.12.1 (CMP 1.12.1) AAR metadata requires compileSdk >= 37 (SP-13a); targetSdk stays 36.
 android-compileSdk = "37"
@@ -87,8 +85,6 @@ kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", ve
 kotlin-composeCompiler-gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
 kotlin-serialization-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 compose-gradlePlugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "composeMultiplatform" }
-ksp-gradlePlugin = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
-hilt-gradlePlugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt" }
 google-services-gradlePlugin = { module = "com.google.gms:google-services", version.ref = "googleGmsGoogleServices" }
 roborazzi-gradlePlugin = { module = "io.github.takahirom.roborazzi:roborazzi-gradle-plugin", version.ref = "roborazzi" }
 
@@ -177,7 +173,6 @@ roborazzi-compose-preview-scanner-support = { module = "io.github.takahirom.robo
 roborazzi-accessibility-check = { module = "io.github.takahirom.roborazzi:roborazzi-accessibility-check", version.ref = "roborazzi" }
 # The android scanner finds commonMain @Preview functions; the deprecated common scanner finds none (SP-13b).
 composable-preview-scanner-android = { module = "io.github.sergio-sastre.ComposablePreviewScanner:android", version.ref = "composablePreviewScanner" }
-hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
 
 android-image-cropper = { module = "com.vanniktech:android-image-cropper", version.ref = "androidImageCropper" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -202,8 +197,6 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigation" }
-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
-hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 konsist-kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "konsistKotlinCompiler" }
 play-services-code-scanner = { module = "com.google.android.gms:play-services-code-scanner", version.ref = "codeScanner" }
@@ -220,7 +213,7 @@ androidx-viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref =
 
 [plugins]
 # Only plugins that are not on build-logic's classpath carry a version here. AGP, Kotlin (multiplatform,
-# compose, serialization), CMP, KSP, Hilt, google-services and Roborazzi come from build-logic: apply them by
+# compose, serialization), CMP, google-services and Roborazzi come from build-logic: apply them by
 # id without a version, or Gradle fails with "already on the classpath with an unknown version".
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
 koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompiler" }

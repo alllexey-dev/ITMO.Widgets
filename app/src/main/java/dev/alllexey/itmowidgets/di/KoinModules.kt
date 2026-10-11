@@ -1,25 +1,5 @@
-package dev.alllexey.itmowidgets.di.bridge
+package dev.alllexey.itmowidgets.di
 
-import dev.alllexey.itmowidgets.di.androidHomeModule
-import dev.alllexey.itmowidgets.di.androidQrModule
-import dev.alllexey.itmowidgets.di.androidRecordbookModule
-import dev.alllexey.itmowidgets.di.androidScheduleModule
-import dev.alllexey.itmowidgets.di.androidSettingsModule
-import dev.alllexey.itmowidgets.di.androidSportModule
-import dev.alllexey.itmowidgets.di.androidUpdateModule
-import dev.alllexey.itmowidgets.di.componentBindingsModule
-import dev.alllexey.itmowidgets.di.coroutinesModule
-import dev.alllexey.itmowidgets.di.debugModule
-import dev.alllexey.itmowidgets.di.diagnosticsModule
-import dev.alllexey.itmowidgets.di.linksModule
-import dev.alllexey.itmowidgets.di.locationModule
-import dev.alllexey.itmowidgets.di.networkModule
-import dev.alllexey.itmowidgets.di.notificationModule
-import dev.alllexey.itmowidgets.di.sessionModule
-import dev.alllexey.itmowidgets.di.storageModule
-import dev.alllexey.itmowidgets.di.timeModule
-import dev.alllexey.itmowidgets.di.updateActionModule
-import dev.alllexey.itmowidgets.di.webModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule

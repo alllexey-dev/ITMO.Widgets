@@ -19,14 +19,14 @@ import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
-import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
+import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportWeekStripTestTags
 import dev.alllexey.itmowidgets.testing.ShellProbe
+import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
 import kotlinx.coroutines.runBlocking
@@ -58,8 +58,7 @@ class TabSwipeTest {
     @Before
     fun startTheDemo() {
         TestSession.signOut()
-        val dependencies = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java)
-        runBlocking { dependencies.session().startDemo() }
+        runBlocking { TestGraph.get<SessionRepository>().startDemo() }
     }
 
     @After

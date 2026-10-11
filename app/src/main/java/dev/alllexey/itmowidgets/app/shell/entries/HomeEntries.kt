@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
 import dev.alllexey.itmowidgets.feature.home.ui.HomeActions
 import dev.alllexey.itmowidgets.feature.home.ui.HomeHints

@@ -6,7 +6,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.NetworkType
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import dagger.hilt.android.EntryPointAccessors
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
+import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
@@ -23,15 +25,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ScheduleChangesWorkTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val dependencies = EntryPointAccessors.fromApplication(context, ScheduleChangesTestEntryPoint::class.java)
-    private val scheduler = dependencies.scheduleChangesScheduler()
+    private val scheduler = TestGraph.get<ScheduleChangesScheduler>()
     private val workManager = WorkManager.getInstance(context)
 
     @After
     fun restoreOwnerState() {
         scheduler.cancel()
         // The switch and the session decide again, as on an app start.
-        runBlocking { dependencies.scheduleChangeTracking().syncWork() }
+        runBlocking { TestGraph.get<ScheduleChangeTracking>().syncWork() }
     }
 
     @Test

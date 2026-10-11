@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule

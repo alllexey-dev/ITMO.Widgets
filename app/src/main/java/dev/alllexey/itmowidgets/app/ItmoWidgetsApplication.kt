@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.app
 
 import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticsCrashHandler
 import dev.alllexey.itmowidgets.core.diagnostics.FileAppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
@@ -11,12 +10,10 @@ import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.ui.AppLocale
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
 import dev.alllexey.itmowidgets.designsystem.theme.AppColorSource
-import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.KoinStarter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/** `@HiltAndroidApp` only anchors the debug test entry points of the androidTests until KM-12c; Koin is the graph. */
-@HiltAndroidApp
 class ItmoWidgetsApplication : Application() {
 
     override fun onCreate() {

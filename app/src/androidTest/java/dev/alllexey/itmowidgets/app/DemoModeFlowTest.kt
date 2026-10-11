@@ -9,23 +9,31 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.app.shell.ShellHost
 import dev.alllexey.itmowidgets.app.shell.ShellModeRule
 import dev.alllexey.itmowidgets.app.shell.ShellTags
+import dev.alllexey.itmowidgets.core.demo.DemoPeople
+import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
-import dev.alllexey.itmowidgets.core.navigation.ShellSurface
-import dev.alllexey.itmowidgets.core.demo.DemoPeople
-import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
@@ -35,20 +43,13 @@ import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
 import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.ShellProbe
-import java.time.LocalDate
-import java.time.ZoneId
-import kotlinx.datetime.toKotlinLocalDate
-import androidx.test.core.app.ActivityScenario
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso.onView
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import dagger.hilt.android.EntryPointAccessors
-import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
-import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -69,12 +70,6 @@ class DemoModeFlowTest {
 
     @get:Rule
     val shells = ShellModeRule()
-
-    private val dependencies
-        get() = EntryPointAccessors.fromApplication(
-            ApplicationProvider.getApplicationContext<Context>(),
-            NotificationDebugEntryPoint::class.java
-        )
 
     @Before
     fun startSignedOut() {
@@ -97,8 +92,8 @@ class DemoModeFlowTest {
             repeat(5) { AuthSemantics.tap(activity, AuthTestTags.LOGO) }
 
             awaitShown(AppTab.HOME)
-            assertEquals(true, (dependencies.session().state.value as? SessionState.SignedIn)?.demo)
-            assertTrue(runBlocking { dependencies.demoPreferences().getDemoActive() })
+            assertEquals(true, (TestGraph.get<SessionRepository>().state.value as? SessionState.SignedIn)?.demo)
+            assertTrue(runBlocking { TestGraph.get<DemoPreferences>().getDemoActive() })
 
             scenario.recreate()
             scenario.onActivity { activity = it }
@@ -110,14 +105,14 @@ class DemoModeFlowTest {
             eventually { assertTrue("The sign-in screen shows", AuthSemantics.isShown(activity)) }
             // The sign-in screen already shows while `SigningOut` (docs/features/auth.md), and the Compose shell
             // shows it before the sign-out finishes.
-            eventually { assertEquals(SessionState.SignedOut, dependencies.session().state.value) }
-            assertFalse(runBlocking { dependencies.demoPreferences().getDemoActive() })
+            eventually { assertEquals(SessionState.SignedOut, TestGraph.get<SessionRepository>().state.value) }
+            assertFalse(runBlocking { TestGraph.get<DemoPreferences>().getDemoActive() })
         }
     }
 
     @Test
     fun everyMainScreenOfTheDemoHasContentAndWritesAreRefused() {
-        runBlocking { dependencies.session().startDemo() }
+        runBlocking { TestGraph.get<SessionRepository>().startDemo() }
         val today = LocalDate.now(ZoneId.of("Europe/Moscow"))
         val period = DemoRecordbook.programs(today.toKotlinLocalDate()).single().periods.single { it.actual }
         val algorithms = DemoStudy.ALGORITHMS

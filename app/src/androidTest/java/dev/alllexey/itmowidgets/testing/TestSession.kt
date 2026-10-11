@@ -2,9 +2,9 @@ package dev.alllexey.itmowidgets.testing
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import dagger.hilt.android.EntryPointAccessors
-import dev.alllexey.itmowidgets.app.OnboardingTestEntryPoint
-import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
+import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import java.io.File
 import java.util.Base64
 import kotlinx.coroutines.runBlocking
@@ -17,8 +17,7 @@ object TestSession {
     private const val SIGN_IN_TIMEOUT_MILLIS = 30_000L
 
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
-    private val dependencies get() = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java)
-    private val onboarding get() = EntryPointAccessors.fromApplication(context, OnboardingTestEntryPoint::class.java).onboarding()
+    private val onboarding get() = TestGraph.get<OnboardingRepository>()
 
     /**
      * Signs in through the application's own repository.
@@ -30,14 +29,14 @@ object TestSession {
     fun seedActiveSession() {
         runBlocking {
             withTimeout(SIGN_IN_TIMEOUT_MILLIS) {
-                dependencies.session().completeItmoIdLogin(tokenResponse())
+                TestGraph.get<SessionRepository>().completeItmoIdLogin(tokenResponse())
             }
         }
     }
 
     fun signOut() {
-        runBlocking { dependencies.session().signOut() }
-        dependencies.tokens().clearTokens()
+        runBlocking { TestGraph.get<SessionRepository>().signOut() }
+        TestGraph.get<SessionTokenStore>().clearTokens()
         File(context.noBackupFilesDir, TOKEN_FILE_NAME).delete()
     }
 

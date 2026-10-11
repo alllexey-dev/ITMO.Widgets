@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
+import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import kotlin.time.Clock

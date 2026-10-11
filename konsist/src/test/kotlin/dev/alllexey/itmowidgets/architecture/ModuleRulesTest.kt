@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.architecture
 
 import com.lemonappdev.konsist.api.Konsist
-import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.verify.assertTrue
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.testFiles
@@ -38,22 +37,6 @@ class ModuleRulesTest {
             }
     }
 
-    @Test
-    fun `no hilt binding outside di bridge`() {
-        // Koin constructs everything since KM-12b; the Koin -> Hilt forwards of di/bridge for the debug test entry
-        // points are the only Hilt bindings left. L17 deletes this rule with Hilt (KM-12c).
-        productionFiles
-            .filterNot { it.projectPath.startsWith(KOIN_TO_HILT_BRIDGE) }
-            .flatMap { file -> file.hiltBindings() }
-            .let { assertEquals("Hilt bindings outside di/bridge", emptyList<String>(), it) }
-    }
-
-    /** `<file>:<function>` of every `@Provides` and `@Binds` function. */
-    private fun KoFileDeclaration.hiltBindings(): List<String> =
-        functions(includeNested = true, includeLocal = false)
-            .filter { it.hasAnnotationWithName(PROVIDES, BINDS) }
-            .map { function -> "$projectPath:${function.name}" }
-
     private fun sharedFeatureBuildFiles(): List<File> =
         File(Konsist.projectRootPath, SHARED).listFiles { file -> file.name.startsWith(FEATURE_MODULE_PREFIX) }
             .orEmpty()
@@ -65,9 +48,6 @@ class ModuleRulesTest {
         const val SHARED = "shared"
         const val FEATURE_MODULE_PREFIX = "feature-"
         const val BUILD_FILE = "build.gradle.kts"
-        const val KOIN_TO_HILT_BRIDGE = "/app/src/main/java/dev/alllexey/itmowidgets/di/bridge/"
-        const val PROVIDES = "Provides"
-        const val BINDS = "Binds"
 
         /** `project(":shared:feature-x")` or the type-safe `projects.shared.featureX`. */
         val FEATURE_DEPENDENCY = Regex("""project\(\s*":shared:(feature-[\w-]+)"\s*\)|projects\.shared\.(feature\w+)""")

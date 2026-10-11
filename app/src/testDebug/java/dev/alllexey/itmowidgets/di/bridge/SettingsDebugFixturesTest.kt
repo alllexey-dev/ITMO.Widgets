@@ -77,7 +77,7 @@ class SettingsDebugFixturesTest {
         override fun icsExportViewModel(savedStateHandle: SavedStateHandle): IcsExportViewModel = error("not built")
     }
 
-    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
+    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */
     private fun bootApplication(): ItmoWidgetsApplication {
         val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()
         if (failure != null) {

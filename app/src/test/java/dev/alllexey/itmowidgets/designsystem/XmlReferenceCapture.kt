@@ -17,7 +17,6 @@ import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
-import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewAppearance
 import dev.alllexey.itmowidgets.testkit.screenshot.CaptureSize
@@ -38,8 +37,8 @@ import dev.alllexey.itmowidgets.core.debug.PreviewAppearance as HostAppearance
  *
  * The three ways in, all in the app theme, Russian, at the appearance's font scale, night mode and window width:
  * - [layout]: a layout inflated into [ReferenceHostActivity], filled by `bind`;
- * - [fragment]: a Fragment, Hilt included, in [ReferenceHostActivity];
- * - [host]: an `@AndroidEntryPoint` debug host from `app/src/debug`, which reads its own static appearance.
+ * - [fragment]: a Fragment in [ReferenceHostActivity];
+ * - [host]: a debug host Activity from `app/src/debug`, which reads its own static appearance.
  *
  * Seeded appearances get MDC's content-based scheme (`DynamicColorsOptions.setContentBasedSource`), the one DS-01a's
  * `ColorSource.Seed` reproduces. `DynamicColors.applyToActivityIfAvailable`, which the debug hosts call, trips an
@@ -141,7 +140,6 @@ class XmlReferenceCapture(
 }
 
 /** The host of [XmlReferenceCapture.layout] and [XmlReferenceCapture.fragment]; Robolectric needs no manifest entry. */
-@AndroidEntryPoint
 class ReferenceHostActivity : AppCompatActivity() {
 
     lateinit var container: FrameLayout

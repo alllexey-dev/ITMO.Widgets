@@ -6,13 +6,13 @@ import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
 import org.junit.Test
 
 /**
- * What common and iOS source sets may import (master plan 3.1). Android `R` is `UiTextRulesTest`'s; Hilt and Dagger
- * outside these source sets are `DiRulesTest`'s.
+ * What common and iOS source sets may import (master plan 3.1). Android `R` is `UiTextRulesTest`'s; the ban of
+ * dependency-injection annotations everywhere is `DiRulesTest`'s.
  */
 class KmpRulesTest {
 
     @Test
-    fun `common and ios code imports no android java javax or dagger`() {
+    fun `common and ios code imports no android, java or javax`() {
         kmpFiles().assertFalse { file -> file.imports.any { import -> PLATFORM_ONLY.any(import.name::startsWith) } }
     }
 
@@ -36,7 +36,7 @@ class KmpRulesTest {
         /** `commonMain`, `iosMain` and the per-target `ios*Main` sets. */
         val KMP_SOURCE_SET = Regex("""/src/(common|ios\w*)Main/""")
 
-        val PLATFORM_ONLY = listOf("android.", "java.", "javax.", "dagger.")
+        val PLATFORM_ONLY = listOf("android.", "java.", "javax.")
 
         /** The KMP artifacts TC-04a declares. */
         val multiplatformAndroidx = listOf(
