@@ -5,10 +5,9 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
-import javax.inject.Inject
 import kotlinx.coroutines.withContext
 
-class CustomSpoilerRepositoryImpl @Inject constructor(
+class CustomSpoilerRepositoryImpl(
     private val manager: CustomSpoilerManager,
     private val widgetRefreshRequester: WidgetRefreshRequester,
     private val dispatchers: AppDispatchers

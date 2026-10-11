@@ -141,11 +141,8 @@ repositories, `DemoRecordbook`) lives in `commonMain` of
 one instance of each per process. The platform supplies the engine,
 `BarsLogin`, the WebView ports `ItmoIdCookies` (`WebViewItmoIdCookies`) and
 `BarsSilentLogin` (`BarsWebSilentLogin`) and `BarsSessionListener`; on Android
-they are Hilt's and reach Koin through `di/bridge/RecordbookBridge.kt`, which
-also hands Koin's `BarsClient`, `RecordbookRepository`,
-`BarsPreferenceRepository` and `BarsMarkSource` to the Hilt-built mark
-tracking. The three cleaners of that data join sign-out's set through
-`SessionCleanersBridge`. The ITMO.ID session in the app's WebView lives
+they are bound in `di/RecordbookModule.kt` of the same Koin graph. The three
+cleaners of that data join sign-out's qualified set. The ITMO.ID session in the app's WebView lives
 about 90 days, so `BarsWebSilentLogin` renews the token by loading the official
 OIDC URL in a hidden WebView and intercepting only the exact callback with a
 checked `state`; the library retries once on 401 through the suspend

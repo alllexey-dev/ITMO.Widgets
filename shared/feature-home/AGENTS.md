@@ -11,7 +11,7 @@
 - `commonTest`: ViewModel, stores, hint source and screen tests (`HomeFakes`); `androidHostTest`: `HomeModuleTest`,
   `HomeScreenshotTest`.
 - Not here: the cards of other features (each feature's `home/` package); `HomeHints` and
-  `AndroidHomeHintStatus` in `app/` under `feature/home/`, bound through `di/bridge/HomeBridge.kt`.
+  `AndroidHomeHintStatus` in `app/` under `feature/home/`, bound in `di/HomeModule.kt`.
 
 ## Depends on
 - `:shared:core` (the `HomeCardSource` contract, layout preferences, opt-in, clock), `:shared:designsystem`;

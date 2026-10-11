@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.DefaultAcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
@@ -44,9 +45,6 @@ object ScheduleDebugFixtures {
         fun teacherLevels(): TeacherLevelsRepository
     }
 
-    /** The bridge modules that define the overridden types, loaded again once the last fixture goes. */
-    private val bridgeModules: List<Module> get() = listOf(coreBridgeModule)
-
     private var current: Module? = null
 
     /** Overrides every type the schedule list and the lesson sheet read; returns the handle [unload] takes. */
@@ -58,9 +56,8 @@ object ScheduleDebugFixtures {
 
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
-     * overrode, so the bridge modules load again; their singles forward Hilt's instances, as before. Koin owns the
-     * opt-in and the schedule preferences (`settingsDataModule`), the schedule data and the calendar sync
-     * (`scheduleDataModule`), the teacher levels (`reviewsModule`) and the pending sport rows (`sportModule`): loading
+     * overrode. Koin owns the time (`timeModule`), the opt-in and the schedule preferences (`settingsDataModule`),
+     * the schedule data and the calendar sync (`scheduleDataModule`), the teacher levels (`reviewsModule`) and the pending sport rows (`sportModule`): loading
      * those modules again would build second repositories, so the contracts point back at their singles, which the
      * fixture never overrode. A fixture that a newer host already replaced is left to that host.
      */
@@ -68,7 +65,7 @@ object ScheduleDebugFixtures {
         if (current !== fixture) return
         val koin = KoinStarter.ensureStarted(context)
         koin.unloadModules(listOf(fixture))
-        koin.loadModules(bridgeModules, allowOverride = true)
+        koin.declare<AcademicTimeProvider>(koin.get<DefaultAcademicTimeProvider>(), allowOverride = true)
         koin.declare<CustomServicesRepository>(koin.get<CustomServicesRepositoryImpl>(), allowOverride = true)
         koin.declare<SchedulePreferencesRepository>(koin.get<SchedulePreferencesRepositoryImpl>(), allowOverride = true)
         koin.declare<ScheduleRepository>(koin.get<ScheduleRepositoryImpl>(), allowOverride = true)

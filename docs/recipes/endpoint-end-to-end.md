@@ -112,9 +112,8 @@ Core 2.0.
 ### 5. App repository
 
 - The client: `di/NetworkModule.kt` builds the one `BackendClient` and
-  provides each area (`provideUsersApi` and the like) to Hilt. A Koin-built
-  repository gets the area from `di/bridge/CoreBridge.kt`, where a type more
-  than one feature reads is bridged once.
+  defines each area (`UsersApi` and the like) in Koin once, for every
+  repository that reads it.
 - The repository lives in `data` (`shared/feature-<x>` once the feature is
   shared) and takes the area API, `DemoMode`, `BackendGate` and
   `AppDispatchers`. Each call checks, in this order: the demo session (reads
@@ -181,7 +180,7 @@ The pass moved from MyItmoApi 1.x onto the 2.x client and then into
 | Data source | `feature/qr/data/remote/QrCodeRemoteDataSourceImpl.kt`, demo answer `feature/qr/data/demo/DemoQr.kt` |
 | Repository | `feature/qr/data/repository/QrCodeRepositoryImpl.kt` (maps `MyItmoException` to `AppError`) |
 | Tests | `feature/qr/data/remote/QrCodeRemoteDataSourceImplTest.kt` with `feature/qr/data/remote/QrRemoteFixtures.kt`, the QR case of `core/demo/DemoNetworkGateTest.kt` |
-| Binding | `feature/qr/di/QrModule.kt`, with `MyItmoClient` bridged in `di/bridge/CoreBridge.kt` |
+| Binding | `feature/qr/di/QrModule.kt`, with `MyItmoClient` from `di/NetworkModule.kt` |
 
 ### 1. MyItmoApi area
 

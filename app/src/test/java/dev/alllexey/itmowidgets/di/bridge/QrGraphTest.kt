@@ -3,10 +3,13 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
-import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
-import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
-import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
-import dev.alllexey.itmowidgets.core.storage.SecureStore
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCache
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCacheImpl
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrToolkit
+import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
+import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
+import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrWidgetImages
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -22,24 +25,31 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
 @LazyApplication(LazyLoad.ON)
-class PlatformPortsBridgeTest {
+class QrGraphTest {
 
     @get:Rule
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the platform ports resolve in Koin to the instances Hilt builds`() {
-        val application = bootApplication()
-        val hilt = CoreBridgeEntryPoint.from(application)
+    fun `the screen and the widget share the one repository Koin builds`() {
+        bootApplication()
         val koin = GlobalContext.get()
 
-        assertSame(hilt.secureStore(), koin.get<SecureStore>())
-        assertSame(hilt.crossProcessLock(), koin.get<CrossProcessLock>())
-        assertSame(hilt.secureStore(), hilt.secureStore())
-        assertEquals(AndroidPlatformCapabilities, koin.get<PlatformCapabilities>())
+        assertSame(koin.get<QrCodeRepositoryImpl>(), koin.get<QrCodeRepository>())
+        assertSame(koin.get<QrCodeRepository>(), koin.get<QrToolkit>().repository)
     }
 
-    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
+    @Test
+    fun `the widget bitmaps and their cache are Koin singles, the cache a session cleaner`() {
+        bootApplication()
+        val koin = GlobalContext.get()
+
+        assertSame(koin.get<QrWidgetImages>(), koin.get<QrWidgetImages>())
+        assertSame(koin.get<QrBitmapCacheImpl>(), koin.get<QrBitmapCache>())
+        assertEquals(1, koin.getAll<SessionDataCleaner>().count { it === koin.get<QrBitmapCacheImpl>() })
+    }
+
+    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */
     private fun bootApplication(): ItmoWidgetsApplication {
         val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()
         if (failure != null) {

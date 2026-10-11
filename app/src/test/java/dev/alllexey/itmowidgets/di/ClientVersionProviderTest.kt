@@ -10,7 +10,7 @@ class ClientVersionProviderTest {
 
     @Test
     fun `the header names versionName, versionCode, android and the distribution flavor`() {
-        val value = NetworkModule.provideClientVersion().headerValue
+        val value = clientVersion().headerValue
 
         assertEquals("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}); android; ${BuildConfig.FLAVOR}", value)
         assertTrue(BuildConfig.FLAVOR, BuildConfig.FLAVOR in setOf("github", "play"))

@@ -4,15 +4,12 @@ import android.graphics.Bitmap
 import androidx.core.graphics.scale
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /** Bounded, process-local sample images. Never retains an Activity or a real access pass. */
-@Singleton
-class QrPreviewBitmapCache @Inject constructor(
+class QrPreviewBitmapCache(
     private val generator: QrCodeGenerator,
     private val renderer: QrBitmapRenderer,
     private val spoilers: CustomSpoilerManager,

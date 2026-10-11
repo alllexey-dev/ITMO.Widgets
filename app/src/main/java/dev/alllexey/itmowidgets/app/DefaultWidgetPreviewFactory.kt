@@ -9,13 +9,12 @@ import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrPreviewBitmapCache
 import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrSettingsPreview
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleSettingsPreview
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /** Composition belongs at the app boundary; features only see the shared preview contract. */
-class DefaultWidgetPreviewFactory @Inject constructor(
+class DefaultWidgetPreviewFactory(
     private val images: QrPreviewBitmapCache,
     private val colors: QrColorResolver,
     private val scheduleScenario: SchedulePreviewScenario

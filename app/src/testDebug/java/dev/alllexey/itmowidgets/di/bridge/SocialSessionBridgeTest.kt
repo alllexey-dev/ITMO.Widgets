@@ -5,18 +5,15 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.test.core.app.ApplicationProvider
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
-import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
-import dev.alllexey.itmowidgets.feature.sport.data.SportSessionBindingsEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -24,7 +21,6 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -36,9 +32,8 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The social data on the real graph: Hilt's remaining readers get Koin's singles through `SocialBridge`, and
- * sign-out (Hilt's `Set<SessionDataCleaner>`, which holds Koin's qualified cleaners through `SessionCleanersBridge`)
- * forgets every social cache and the picker's recent friends.
+ * The social data on the real graph: sign-out (`SessionDataCleaners`, every qualified Koin cleaner) forgets every
+ * social cache and the picker's recent friends.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -49,21 +44,10 @@ class SocialSessionBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `Hilt and Koin hand out the same social repository and friend list`() {
-        val application = bootApplication()
+    fun `the cleaner list holds each social cleaner once`() {
+        bootApplication()
         val koin = GlobalContext.get()
-        val hilt = EntryPointAccessors.fromApplication(application, SocialHiltBindingsEntryPoint::class.java)
-
-        assertSame(koin.get<SocialRepository>(), hilt.socialRepository())
-        assertSame(hilt.socialRepository(), hilt.socialRepository())
-        assertSame(koin.get<FriendRepository>(), hilt.friendRepository())
-    }
-
-    @Test
-    fun `the cleaner set holds each social cleaner once`() {
-        val application = bootApplication()
-        val koin = GlobalContext.get()
-        val cleaners = cleaners(application)
+        val cleaners = cleaners()
 
         assertEquals(1, cleaners.count { it === koin.get<SocialRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<PersonRepositoryImpl>() })
@@ -72,7 +56,7 @@ class SocialSessionBridgeTest {
 
     @Test
     fun `sign-out clears every social cache and the recent friends`() = runBlocking {
-        val application = bootApplication()
+        bootApplication()
         val koin = GlobalContext.get()
         val dataStore = koin.get<DataStore<Preferences>>()
         val social = koin.get<SocialRepositoryImpl>()
@@ -93,7 +77,7 @@ class SocialSessionBridgeTest {
         assertNotNull(people.cachedPerson(DemoPeople.MARIA.isu))
         assertEquals(listOf(DemoPeople.IVAN.isu), history.getRecentIsu())
 
-        cleaners(application).forEach { it.clearSessionData() }
+        cleaners().forEach { it.clearSessionData() }
 
         assertNull(social.cachedProfile(DemoPeople.ARTEM.isu))
         assertNull(social.cachedUserFriends(DemoPeople.IVAN.isu))
@@ -107,8 +91,7 @@ class SocialSessionBridgeTest {
         assertNull(dataStore.data.first()[stringPreferencesKey("recent_schedule_friends")])
     }
 
-    private fun cleaners(context: Context): Set<SessionDataCleaner> =
-        EntryPointAccessors.fromApplication(context, SportSessionBindingsEntryPoint::class.java).sessionDataCleaners()
+    private fun cleaners(): Collection<SessionDataCleaner> = GlobalContext.get().get<SessionDataCleaners>().current()
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
     private fun bootApplication(): ItmoWidgetsApplication {

@@ -2,12 +2,11 @@ package dev.alllexey.itmowidgets.core.services
 
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-class DefaultBackendGate @Inject constructor(
+class DefaultBackendGate(
     private val servicesOptIn: ServicesOptInPreferences,
     private val demo: DemoMode
 ) : BackendGate {

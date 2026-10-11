@@ -11,7 +11,7 @@
 - `androidHostTest`: repositories, mappers, screens, `SportModuleTest`, `SportScreenshotTest` and `SportGoldenTest`
   over `src/androidHostTest/resources/sport/golden/` and the MyITMO fixtures in `resources/myitmo/sport/`.
 - Not here: the shell's sport entries, `SportSignPushHandler` and the debug
-  template provider stay in `app/` under `feature/sport/`; `di/bridge/SportBridge.kt` bridges Koin and Hilt.
+  template provider stay in `app/` under `feature/sport/`; their Koin bindings are in `di/SportModule.kt`.
 
 ## Depends on
 - `:shared:core`, `:shared:designsystem`; `:shared:testing` in tests only. Koin and the KMP lifecycle.

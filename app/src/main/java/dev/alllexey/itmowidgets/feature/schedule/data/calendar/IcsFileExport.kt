@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
 import android.content.Context
 import androidx.core.content.FileProvider
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.network.toAppError
@@ -15,7 +14,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvents
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.IcsWriter
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
 import java.io.File
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
@@ -32,8 +30,8 @@ class IcsFileExport internal constructor(
     private val uriOf: (File) -> String
 ) : ScheduleIcsExport {
 
-    @Inject constructor(
-        @ApplicationContext context: Context,
+    constructor(
+        context: Context,
         schedule: OwnScheduleSource,
         time: AcademicTimeProvider,
         buildings: BuildingDirectory,

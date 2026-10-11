@@ -6,9 +6,8 @@ import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCache.Companion.bitmapMeta
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
-class QrToolkit @Inject constructor(
+class QrToolkit(
     val repository: QrCodeRepository,
     val bitmapCache: QrBitmapCache,
     val generator: QrCodeGenerator,

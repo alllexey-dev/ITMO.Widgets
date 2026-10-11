@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -10,20 +11,15 @@ import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.feature.auth.data.DataStoreDemoMode
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
-import dev.alllexey.itmowidgets.feature.auth.di.authModule
-import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.data.OnboardingRepositoryImpl
-import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
-import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
-import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
-import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
+import dev.alllexey.itmowidgets.feature.update.ui.InstallStateWatcher
+import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -63,38 +59,25 @@ class AccountKoinGraphTest {
     }
 
     @Test
-    fun `the update check reads the installed version Hilt provides and asks for Android`() {
+    fun `the update check reads the installed version and asks for Android`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
 
-        assertEquals(AccountUpdateBridgeEntryPoint.from(application).installedVersion(), koin.get<AppVersionName>())
+        assertEquals(AppVersionName(application.getString(R.string.app_version)), koin.get<AppVersionName>())
         assertEquals(DevicePlatform.ANDROID, koin.get<DevicePlatform>())
     }
 
-    /**
-     * Onboarding and Me read the services opt-in, which `settingsDataModule` constructs since KM-11e, and Me reads
-     * `SocialRepository`, which `socialModule` constructs since KM-11d (its profile reads the teacher reviews of
-     * `reviewsModule` since KM-11f, checked with `scheduleDataGraph`); the session, the demo switch and the first-run
-     * flag come from `authDataModule` and `onboardingDataModule` since KM-11h1.
-     */
+    /** Each distribution flavor's unit tests run this against its own `updateActionModule`. */
     @Test
-    fun `the account modules pass the graph check against the release bridges`() {
-        KoinGraphCheck.assertValid(
-            KoinModules.bridges,
-            listOf(
-                socialModule,
-                authModule,
-                onboardingDataModule,
-                onboardingModule,
-                meModule,
-                webLoginDataModule,
-                webLoginModule,
-                updateModule,
-            ) + scheduleDataGraph,
-        )
+    fun `the flavor's update action and install watcher resolve`() {
+        bootApplication()
+        val koin = GlobalContext.get()
+
+        assertNotNull(koin.get<UpdateAction>())
+        assertNotNull(koin.get<InstallStateWatcher>())
     }
 
-    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
+    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */
     private fun bootApplication(): ItmoWidgetsApplication {
         val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()
         if (failure != null) {

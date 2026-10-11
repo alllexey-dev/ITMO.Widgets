@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
-/** Koin's (`di/bridge/DebugToolsBridge`), so the Fragment and the shell's entry obtain it alike. */
+/** Koin's (`di/DebugModule`), so the shell's entry obtains it like every other screen. */
 class DebugToolsViewModel(
     private val timeProvider: AcademicTimeProvider,
     private val timeOverrideController: AcademicTimeOverrideController,

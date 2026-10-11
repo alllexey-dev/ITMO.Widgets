@@ -8,14 +8,12 @@ import android.graphics.Path
 import android.graphics.RectF
 import androidx.annotation.ColorInt
 import androidx.core.graphics.createBitmap
-import dev.alllexey.itmowidgets.core.time.WallClock
 import java.time.Clock
 import kotlin.math.roundToInt
 import kotlin.random.Random
-import javax.inject.Inject
 
-class QrBitmapRenderer @Inject constructor(
-    @param:WallClock private val clock: Clock
+class QrBitmapRenderer(
+    private val clock: Clock
 ) {
 
     /**

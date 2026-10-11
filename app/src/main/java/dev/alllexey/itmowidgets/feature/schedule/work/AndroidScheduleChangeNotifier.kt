@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.work
 
 import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
@@ -13,11 +12,10 @@ import dev.alllexey.itmowidgets.core.ui.withAppLocale
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigests
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
-import javax.inject.Inject
 
 /** "Расписание изменилось: 3 пары" with the nearest change; only today and tomorrow make a sound. */
-class AndroidScheduleChangeNotifier @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class AndroidScheduleChangeNotifier(
+    private val context: Context,
     private val notifier: AppNotifier
 ) : ScheduleChangeNotifier {
 

@@ -55,7 +55,7 @@ class ScheduleDebugFixturesTest {
     fun `a fixture replaces what the schedule screens read until its host unloads it`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
-        val core = CoreBridgeEntryPoint.from(application)
+        val time = koin.get<AcademicTimeProvider>()
         val calendarSync = koin.get<CalendarSync>()
 
         val fixture = ScheduleDebugFixtures.load(application, Fakes)
@@ -70,7 +70,7 @@ class ScheduleDebugFixturesTest {
         assertSame(Fakes.teacherLevels, koin.get<TeacherLevelsRepository>())
 
         ScheduleDebugFixtures.unload(application, fixture)
-        assertSame(core.academicTimeProvider(), koin.get<AcademicTimeProvider>())
+        assertSame(time, koin.get<AcademicTimeProvider>())
         // The data module's own singles again, not second repositories beside the ones sign-out and the widget hold.
         assertSame(koin.get<ScheduleRepositoryImpl>(), koin.get<ScheduleRepository>())
         assertSame(koin.get<ScheduleChangesRepositoryImpl>(), koin.get<ScheduleChangesRepository>())

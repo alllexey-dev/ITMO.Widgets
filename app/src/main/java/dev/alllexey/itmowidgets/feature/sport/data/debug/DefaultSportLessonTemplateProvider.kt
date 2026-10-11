@@ -5,7 +5,6 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
@@ -15,7 +14,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
-class DefaultSportLessonTemplateProvider @Inject constructor(
+class DefaultSportLessonTemplateProvider(
     private val timeProvider: AcademicTimeProvider,
     private val templateController: SportLessonTemplateController
 ) : SportLessonTemplateProvider {

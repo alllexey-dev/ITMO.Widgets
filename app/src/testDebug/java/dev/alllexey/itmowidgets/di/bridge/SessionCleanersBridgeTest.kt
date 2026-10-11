@@ -2,13 +2,12 @@ package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSource
 import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCacheImpl
-import dev.alllexey.itmowidgets.feature.sport.data.SportSessionBindingsEntryPoint
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -25,9 +24,7 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * Hilt's `Set<SessionDataCleaner>`, which sign-out iterates, holds Koin's qualified cleaners through
- * `SessionCleanersBridge`. Read through the debug-only identity entry point of the real graph: a test `@EntryPoint`
- * would only join a `@HiltAndroidTest` component.
+ * The cleaners sign-out iterates (`SessionDataCleaners`, every qualified Koin cleaner) on the real graph.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -38,10 +35,10 @@ class SessionCleanersBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the set holds Koin's QR repository once beside Hilt's bitmap cache`() {
-        val application = bootApplication()
+    fun `the list holds the QR repository and the bitmap cache once each`() {
+        bootApplication()
         val repository = GlobalContext.get().get<QrCodeRepositoryImpl>()
-        val cleaners = cleaners(application)
+        val cleaners = cleaners()
 
         assertEquals(1, cleaners.count { it === repository })
         assertEquals(1, cleaners.count { it is QrBitmapCacheImpl })
@@ -62,15 +59,14 @@ class SessionCleanersBridgeTest {
         assertTrue(qrHex.readText().endsWith("|$PASS_HEX"))
         assertEquals(PASS_HEX, runBlocking { repository.currentQrHex(allowExpired = true) })
 
-        runBlocking { cleaners(application).forEach { it.clearSessionData() } }
+        runBlocking { cleaners().forEach { it.clearSessionData() } }
 
         assertFalse(qrHex.exists())
         assertFalse(bitmap.exists())
         assertNull(runBlocking { repository.currentQrHex(allowExpired = true) })
     }
 
-    private fun cleaners(context: Context): Set<SessionDataCleaner> =
-        EntryPointAccessors.fromApplication(context, SportSessionBindingsEntryPoint::class.java).sessionDataCleaners()
+    private fun cleaners(): Collection<SessionDataCleaner> = GlobalContext.get().get<SessionDataCleaners>().current()
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
     private fun bootApplication(): ItmoWidgetsApplication {

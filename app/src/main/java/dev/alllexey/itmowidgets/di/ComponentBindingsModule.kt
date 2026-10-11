@@ -18,8 +18,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
- * The Android-only bindings the workers, the widgets, the tile and the FCM service read (L17 KM-12a); Koin is their
- * only graph. Hilt's remaining readers (the diagnostics, the session effects) take them through `di/bridge`.
+ * The Android-only bindings the workers, the widgets, the tile and the FCM service read (L17 KM-12a).
  */
 val componentBindingsModule = module {
     singleOf(::AndroidAppLog) { bind<AppLog>() }

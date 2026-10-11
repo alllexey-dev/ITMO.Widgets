@@ -4,15 +4,13 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import androidx.core.app.NotificationManagerCompat
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
-import javax.inject.Inject
 import kotlinx.coroutines.withContext
 
-class AndroidHomeHintStatus @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class AndroidHomeHintStatus(
+    private val context: Context,
     private val dispatchers: AppDispatchers
 ) : HomeHintStatus {
 

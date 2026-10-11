@@ -13,7 +13,7 @@
 - `commonTest`: repositories, ViewModels, screens; `androidHostTest`: `SocialModuleTest`, `FriendSelectorModuleTest`,
   `FriendSelectorSheetTest`, `SocialScreenshotTest`.
 - Not here: the Android sharing helpers and `FriendshipPushHandler` stay in `app/` under
-  `feature/social/` and `feature/friendselector/`; `di/bridge/SocialBridge.kt` bridges Koin and Hilt.
+  `feature/social/` and `feature/friendselector/`; their Koin bindings are in `di/ComponentBindingsModule.kt`.
 
 ## Depends on
 - `:shared:core`, `:shared:designsystem`; `:shared:testing` in tests only. Koin and the KMP lifecycle.

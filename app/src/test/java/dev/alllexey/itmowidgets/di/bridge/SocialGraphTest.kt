@@ -10,14 +10,12 @@ import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
-import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
 import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
-import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -34,7 +32,7 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
 @LazyApplication(LazyLoad.ON)
-class SocialBridgeTest {
+class SocialGraphTest {
 
     @get:Rule
     val stopKoin = StopKoinRule()
@@ -66,16 +64,7 @@ class SocialBridgeTest {
         assertEquals(1, cards.count { it === koin.get<SocialHomeCardSource>() })
     }
 
-    /**
-     * The repository reads the services opt-in, which `settingsDataModule` constructs since KM-11e, and the profile the
-     * teacher reviews of `reviewsModule` since KM-11f (checked with `scheduleDataGraph`).
-     */
-    @Test
-    fun `the social and picker modules resolve against the bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(socialModule, friendSelectorModule) + scheduleDataGraph)
-    }
-
-    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
+    /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */
     private fun bootApplication(): ItmoWidgetsApplication {
         val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()
         if (failure != null) {

@@ -14,13 +14,12 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import javax.inject.Inject
 
 fun interface FirebaseTokenProvider {
     suspend fun currentToken(): String
 }
 
-class DefaultFirebaseTokenProvider @Inject constructor() : FirebaseTokenProvider {
+class DefaultFirebaseTokenProvider : FirebaseTokenProvider {
     override suspend fun currentToken(): String = suspendCancellableCoroutine { continuation ->
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!continuation.isActive) return@addOnCompleteListener
@@ -34,7 +33,7 @@ class DefaultFirebaseTokenProvider @Inject constructor() : FirebaseTokenProvider
  * Registers this installation again only when the token, the owner or the build ([version], the `X-App-Version`
  * Backend records) differs from what Backend last accepted: one call after an update, none on an unchanged launch.
  */
-class DefaultFcmTokenSync @Inject constructor(
+class DefaultFcmTokenSync(
     private val tokens: FirebaseTokenProvider,
     private val utility: UtilityStorage,
     private val gate: BackendGate,

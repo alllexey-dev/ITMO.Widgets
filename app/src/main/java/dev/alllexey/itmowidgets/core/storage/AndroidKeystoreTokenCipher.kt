@@ -9,11 +9,7 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class AndroidKeystoreTokenCipher @Inject constructor() : TokenCipher {
+class AndroidKeystoreTokenCipher : TokenCipher {
 
     override fun encrypt(value: String): String {
         val cipher = Cipher.getInstance(TRANSFORMATION)

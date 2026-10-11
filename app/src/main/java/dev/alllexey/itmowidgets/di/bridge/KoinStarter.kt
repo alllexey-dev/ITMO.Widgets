@@ -8,11 +8,11 @@ import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 
 /**
- * Starts the app's one Koin graph (ADR 0019) beside Hilt.
+ * Starts the app's one Koin graph (ADR 0019).
  *
- * `ItmoWidgetsApplication.onCreate()` calls [ensureStarted] before `super.onCreate()`, where Hilt injects the
- * Application's fields. Every Koin to Hilt bridge calls it as well: WorkManager's `InitializationProvider` can run a
- * worker, and Android can deliver a widget broadcast, before `Application.onCreate()`.
+ * `ItmoWidgetsApplication.onCreate()` calls [ensureStarted] first. The Android components and the Koin to Hilt
+ * bridge call it as well: WorkManager's `InitializationProvider` can run a worker, and Android can deliver a widget
+ * broadcast, before `Application.onCreate()`.
  */
 object KoinStarter {
 

@@ -4,28 +4,24 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.work.WorkerParameters
-import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
-import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
-import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
-import dev.alllexey.itmowidgets.feature.schedule.di.scheduleDataModule
-import dev.alllexey.itmowidgets.feature.schedule.di.scheduleModule
-import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
-import dev.alllexey.itmowidgets.feature.social.di.socialModule
-import dev.alllexey.itmowidgets.feature.sport.di.sportModule
-import kotlin.reflect.KClass
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
+import dev.alllexey.itmowidgets.client.AccessTokenSource
+import dev.alllexey.itmowidgets.core.location.BuildingDirectory
+import java.io.File
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.datetime.TimeZone
 import org.koin.core.annotation.KoinExperimentalAPI
-import org.koin.core.annotation.KoinInternalApi
 import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
+import org.koin.test.verify.definition
+import org.koin.test.verify.injectedParameters
 import org.koin.test.verify.verify
 
 /**
  * The graph check every Koin module goes through (ADR 0019), on the plain JVM.
  *
- * - `verify()` fails on a missing binding or a cycle in the [constructed][KoinModules.constructed] modules: it reads
- *   the constructor of each definition's type. Bridged types count as given, since Hilt constructs them;
- *   `KoinStartTest` resolves the bridges on the real application.
+ * - `verify()` fails on a missing binding or a cycle: it reads the constructor of each definition's type.
  * - Loading every module with `allowOverride(false)` fails on a type defined in two modules.
  * - Koin keeps the last of two definitions of one type inside one module without an error; `DiRulesTest` catches
  *   that in the source.
@@ -40,44 +36,27 @@ internal object KoinGraphCheck {
         WorkerParameters::class,
     )
 
+    /** Values the app modules pass to a constructor in place: dispatchers, the zone, files, a clock, flags, names. */
+    private val inPlaceTypes = listOf(
+        CoroutineDispatcher::class,
+        TimeZone::class,
+        File::class,
+        java.time.Clock::class,
+        Boolean::class,
+        String::class,
+        MyItmoConfiguration::class,
+        AccessTokenSource::class,
+    )
+
+    /** Definitions whose constructor takes a list the module parses in place. */
+    private val inPlaceLists = injectedParameters(definition<BuildingDirectory>(List::class))
+
     @OptIn(KoinExperimentalAPI::class)
-    fun assertValid(bridges: List<Module>, constructed: List<Module>) {
-        module { includes(constructed) }.verify(extraTypes = platformTypes + typesDefinedIn(bridges))
+    fun assertValid(modules: List<Module>) {
+        module { includes(modules) }.verify(extraTypes = platformTypes + inPlaceTypes, injections = inPlaceLists)
         koinApplication {
             allowOverride(false)
-            modules(bridges + constructed)
+            modules(modules)
         }.close()
     }
-
-    @OptIn(KoinInternalApi::class)
-    private fun typesDefinedIn(modules: List<Module>): List<KClass<*>> {
-        val application = koinApplication { modules(modules) }
-        return try {
-            application.koin.instanceRegistry.instances.values
-                .map { factory -> factory.beanDefinition }
-                .flatMap { definition -> listOf(definition.primaryType) + definition.secondaryTypes }
-                .distinct()
-        } finally {
-            application.close()
-        }
-    }
 }
-
-/**
- * The schedule data Koin constructs (`scheduleDataModule`, KM-11a2) with the modules it reads (the demo flag, the
- * opt-in and the schedule preferences, the selectors, the teacher levels of `reviewsModule` since KM-11f, whose
- * review editor reads the teacher lessons gateway back, and the pending sport rows of `sportModule` since KM-11c with
- * the friend list it reads). A feature that reads the schedule gateways, the change tracking or the reviews checks
- * its module together with these.
- */
-internal val scheduleDataGraph: List<Module>
-    get() = listOf(
-        authDataModule,
-        settingsDataModule,
-        reviewsModule,
-        socialModule,
-        friendSelectorModule,
-        sportModule,
-        scheduleModule,
-        scheduleDataModule,
-    )

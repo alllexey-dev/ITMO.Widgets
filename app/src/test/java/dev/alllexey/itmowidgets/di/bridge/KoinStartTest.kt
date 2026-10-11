@@ -1,56 +1,39 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
+import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
+import dev.alllexey.itmowidgets.core.debug.DefaultSportScoreOverrideProvider
+import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
+import dev.alllexey.itmowidgets.core.demo.DemoCurrentUserProvider
+import dev.alllexey.itmowidgets.core.diagnostics.FileAppDiagnostics
+import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
+import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
+import dev.alllexey.itmowidgets.core.time.DefaultAcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
+import org.junit.Assert.assertNotSame
 import androidx.test.core.app.ApplicationProvider
-import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
-import dev.alllexey.itmowidgets.client.friends.FriendsApi
-import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
-import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
-import dev.alllexey.itmowidgets.client.sport.SportApi
-import dev.alllexey.itmowidgets.client.users.UsersApi
-import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
-import dev.alllexey.itmowidgets.core.location.BuildingDirectory
-import dev.alllexey.itmowidgets.core.notification.AppNotifier
-import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
-import dev.alllexey.itmowidgets.core.services.BackendGate
-import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
-import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
-import dev.alllexey.itmowidgets.core.storage.AppDirectories
-import dev.alllexey.itmowidgets.core.storage.DemoPreferences
-import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
-import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
-import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
-import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
-import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
-import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
-import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
-import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
-import dev.alllexey.itmowidgets.core.storage.UtilityStorage
-import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.time.Clock
-import kotlinx.coroutines.CoroutineScope
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Assert.assertNotNull
 import org.koin.core.Koin
+import org.koin.core.annotation.KoinInternalApi
+import org.koin.core.definition.Kind
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.stopKoin
 import org.robolectric.RobolectricTestRunner
@@ -59,7 +42,7 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * Boots the real `@HiltAndroidApp` Application with Koin, in both distribution flavors (the github and play unit-test
+ * Boots the real Application with Koin, in both distribution flavors (the github and play unit-test
  * tasks each run it). Every test creates a new Application in the same JVM, so each one is also a second boot.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -71,57 +54,43 @@ class KoinStartTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the application boots with Koin and Hilt`() {
+    fun `the application boots with Koin`() {
         val application = bootApplication()
 
         val koin = GlobalContext.get()
         assertSame(application, koin.get<Context>())
-        assertSame(application.diagnostics, koin.get<AppDiagnostics>())
+        assertSame(koin.get<FileAppDiagnostics>(), koin.get<AppDiagnostics>())
     }
 
     @Test
-    fun `core contracts resolve in Koin to the instances Hilt builds`() {
-        val application = bootApplication()
-        val hilt = CoreBridgeEntryPoint.from(application)
+    fun `a type bound under several keys is one instance`() {
+        bootApplication()
         val koin = GlobalContext.get()
 
-        assertSame(hilt.academicTimeProvider(), koin.get<AcademicTimeProvider>())
-        assertSame(hilt.appDiagnostics(), koin.get<AppDiagnostics>())
-        assertSame(hilt.backendGate(), koin.get<BackendGate>())
-        assertSame(hilt.appDispatchers(), koin.get<AppDispatchers>())
-        assertSame(hilt.currentUserProvider(), koin.get<CurrentUserProvider>())
-        assertSame(hilt.clock(), koin.get<Clock>())
-        assertSame(hilt.myItmoClient(), koin.get<MyItmoClient>())
-        assertSame(hilt.appPreferences(), koin.get<DataStore<Preferences>>())
-        assertSame(hilt.appDirectories(), koin.get<AppDirectories>())
-        assertSame(hilt.qrSettingsPreferences(), koin.get<QrSettingsPreferences>())
-        assertSame(hilt.deviceHintPreferences(), koin.get<DeviceHintPreferences>())
-        assertSame(hilt.appearancePreferences(), koin.get<AppearancePreferences>())
-        assertSame(hilt.homeLayoutPreferences(), koin.get<HomeLayoutPreferences>())
-        assertSame(hilt.servicesOptInPreferences(), koin.get<ServicesOptInPreferences>())
-        assertSame(hilt.scheduleCheckPreferences(), koin.get<ScheduleCheckPreferences>())
-        assertSame(hilt.widgetSettingsPreferences(), koin.get<WidgetSettingsPreferences>())
-        assertSame(hilt.sportSignSelectorPreferences(), koin.get<SportSignSelectorPreferences>())
-        assertSame(hilt.markSourcePreferences(), koin.get<MarkSourcePreferences>())
-        assertSame(hilt.usersApi(), koin.get<UsersApi>())
-        assertSame(hilt.friendsApi(), koin.get<FriendsApi>())
-        assertSame(hilt.subjectLinksApi(), koin.get<SubjectLinksApi>())
-        assertSame(hilt.teacherReviewsApi(), koin.get<TeacherReviewsApi>())
-        assertSame(hilt.sportApi(), koin.get<SportApi>())
-        assertSame(hilt.backendIdentitySync(), koin.get<BackendIdentitySync>())
-        assertSame(hilt.backendDeviceSession(), koin.get<BackendDeviceSession>())
-        assertSame(hilt.fcmTokenSync(), koin.get<FcmTokenSync>())
-        assertSame(hilt.appNotifier(), koin.get<AppNotifier>())
-        assertSame(hilt.sessionTokenStore(), koin.get<SessionTokenStore>())
-        assertSame(hilt.sessionLifecycleEffects(), koin.get<SessionLifecycleEffects>())
-        assertSame(hilt.demoPreferences(), koin.get<DemoPreferences>())
-        assertSame(hilt.utilityStorage(), koin.get<UtilityStorage>())
-        assertSame(hilt.customSpoilerRepository(), koin.get<CustomSpoilerRepository>())
-        assertSame(hilt.buildingDirectory(), koin.get<BuildingDirectory>())
-        // Unscoped in Hilt, a factory in Koin: the same implementation, a new instance each time.
-        assertEquals(hilt.scheduleIcsExport()::class, koin.get<ScheduleIcsExport>()::class)
-        assertSame(hilt.applicationScope(), koin.get<CoroutineScope>())
-        assertSame(hilt.scheduleWidgetRefreshRequester(), koin.get<ScheduleWidgetRefreshRequester>())
+        assertSame(koin.get<MyItmoStorage>(), koin.get<TokenStorage>())
+        assertSame(koin.get<MyItmoStorage>(), koin.get<SessionTokenStore>())
+        assertSame(koin.get<DefaultAcademicTimeProvider>(), koin.get<AcademicTimeProvider>())
+        assertSame(koin.get<DefaultAcademicTimeProvider>(), koin.get<AcademicTimeOverrideController>())
+        assertSame(koin.get<WidgetRefreshCoordinator>(), koin.get<WidgetRefreshRequester>())
+        assertSame(koin.get<WidgetRefreshCoordinator>(), koin.get<ScheduleWidgetRefreshRequester>())
+        assertSame(koin.get<DemoCurrentUserProvider>(), koin.get<CurrentUserProvider>())
+        assertSame(koin.get<DefaultSportScoreOverrideProvider>(), koin.get<SportScoreOverrideController>())
+        // A factory: the export keeps no state, so every reader gets a new one.
+        assertNotSame(koin.get<ScheduleIcsExport>(), koin.get<ScheduleIcsExport>())
+    }
+
+    /** `verify()` reads constructors only; this builds every single the way the app does, lambdas included. */
+    @OptIn(KoinInternalApi::class)
+    @Test
+    fun `every single of the release graph builds on the application`() {
+        bootApplication()
+        val koin = GlobalContext.get()
+
+        koin.instanceRegistry.instances.values
+            .map { it.beanDefinition }
+            .filter { it.kind == Kind.Singleton }
+            .distinct()
+            .forEach { definition -> assertNotNull(koin.get<Any>(definition.primaryType, definition.qualifier)) }
     }
 
     @Test
@@ -158,7 +127,7 @@ class KoinStartTest {
 
     /**
      * Creates the Application. Robolectric runs no `androidx.startup` provider, so `onCreate()` stops at
-     * `FcmWork.syncToken` with "WorkManager is not initialized", after Koin started and Hilt injected the fields.
+     * `FcmWork.syncToken` with "WorkManager is not initialized", after Koin started.
      */
     private fun bootApplication(): ItmoWidgetsApplication {
         val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()

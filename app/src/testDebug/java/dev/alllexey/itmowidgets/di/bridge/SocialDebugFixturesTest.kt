@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -52,6 +51,7 @@ class SocialDebugFixturesTest {
         val koin = GlobalContext.get()
         val social = FakeSocialRepository()
         val reviews = FakeTeacherReviewsRepository()
+        val currentUser = koin.get<CurrentUserProvider>()
 
         val fixture = SocialDebugFixtures.load(
             application,
@@ -69,7 +69,7 @@ class SocialDebugFixturesTest {
         assertSame(koin.get<PersonRepositoryImpl>(), koin.get<PersonRepository>())
         assertSame(koin.get<DataStoreFriendSelectionHistory>(), koin.get<FriendSelectionHistory>())
         assertSame(koin.get<TeacherReviewsRepositoryImpl>(), koin.get<TeacherReviewsRepository>())
-        assertSame(CoreBridgeEntryPoint.from(application).currentUserProvider(), koin.get<CurrentUserProvider>())
+        assertSame(currentUser, koin.get<CurrentUserProvider>())
     }
 
     @Test
@@ -93,8 +93,6 @@ class SocialDebugFixturesTest {
         assertSame(social, koin.get<SocialRepository>())
         assertSame(friends, koin.get<FriendRepository>())
         assertSame(history, koin.get<FriendSelectionHistory>())
-        val hilt = EntryPointAccessors.fromApplication(application, SocialHiltBindingsEntryPoint::class.java)
-        assertSame(social, hilt.socialRepository())
     }
 
     @Test
