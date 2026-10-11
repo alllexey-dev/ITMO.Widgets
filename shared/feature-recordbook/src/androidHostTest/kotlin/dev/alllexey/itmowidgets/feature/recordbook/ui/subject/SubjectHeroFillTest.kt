@@ -16,7 +16,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** The result card's scale fill (M3-04e): at once on the page's first frame, on the hero spring after that. */
+/** The result card's scale fill: at once on the page's first frame, on the hero spring after that. */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
 class SubjectHeroFillTest {

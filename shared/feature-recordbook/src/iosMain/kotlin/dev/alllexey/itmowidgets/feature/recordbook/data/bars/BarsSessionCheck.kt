@@ -6,10 +6,10 @@ import kotlin.io.encoding.Base64
 import kotlin.time.Instant
 
 /**
- * The owner's check of the BARS session on the simulator, which the Debug launch arguments of the app run until the
- * recordbook reaches iOS (IO-09d2): the saved header is replaced with one BARS rejects, then a request renews it as
- * an expired session would, through the hidden WebView ([renewInForeground]) or the cookie replay
- * ([renewInBackground]). Reports only the header's length and expiry, never a value.
+ * A manual check of the BARS session on the simulator, run by the app's Debug launch arguments: the saved header is
+ * replaced with one BARS rejects, then a request renews it as an expired session would, through the hidden WebView
+ * ([renewInForeground]) or the cookie replay ([renewInBackground]). Reports only the header's length and expiry, never
+ * a value.
  */
 class BarsSessionCheck(
     private val client: BarsClient,

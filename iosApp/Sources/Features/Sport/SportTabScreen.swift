@@ -1,11 +1,10 @@
 import Shared
 import SwiftUI
 
-/// The sport tab's root: LP-6's Compose route with its my and sign pages (`sportViewController`, IO-09c). What
-/// Android's `SportFragment` does beside the route stays here: a lesson the router hands the tab
+/// The sport tab's root: the Compose route with its my and sign pages (`sportViewController`). What
+/// iOS adds beside the route stays here: a lesson the router hands the tab
 /// (`TabRequest.SportLesson`, from a `/sport/<id>` link or a sport notification) goes to the sign page, and a booking
-/// or lesson opens its details sheet as a SwiftUI sheet hosting the shared sheet content (recipe ios-cmp-host,
-/// Sheets).
+/// or lesson opens its details sheet as a SwiftUI sheet hosting the shared sheet content.
 struct SportTabScreen: View {
     let router: AppRouter
     @State private var host = SportHost()
@@ -76,8 +75,8 @@ struct SportDetailsSheetView: View {
     }
 }
 
-/// Another user's sport (`AppRoutes.UserSport`, from a profile): the Compose route (`userSportViewController`,
-/// IO-09c), read-only.
+/// Another user's sport (`AppRoutes.UserSport`, from a profile): the Compose route (`userSportViewController`),
+/// read-only.
 struct UserSportScreen: View {
     let isu: Int32
     let name: String

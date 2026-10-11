@@ -36,7 +36,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** The Compose port of the View `SportScoreCollapseTest`: the card over a list of rows, as LP-4b mounts it. */
+/** The score card over a list of rows, as `SportMyScreen` mounts it. */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
 class SportScoreCollapseTest {

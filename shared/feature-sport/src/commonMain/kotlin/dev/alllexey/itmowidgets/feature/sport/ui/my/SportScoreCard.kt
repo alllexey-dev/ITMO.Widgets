@@ -304,7 +304,7 @@ private fun ScoreDetails(score: SportScore, animate: Boolean, modifier: Modifier
 }
 
 /**
- * A dot, the number and its label in one row, as in the View. When the label does not fit beside the number (320 dp
+ * A dot, the number and its label in one row. When the label does not fit beside the number (320 dp
  * at font 1.3), it moves under the line, from the dot, instead of breaking inside a word.
  */
 @Composable
@@ -397,7 +397,7 @@ private val StatusVerticalPadding = 7.dp
 private val StatusIconSize = 18.dp
 private val StatusIconGap = 7.dp
 
-/** The chip waits for the counters to get going before it scales in (v2.2's status animation delay). */
+/** The chip waits for the counters to get going before it scales in. */
 private const val STATUS_DELAY_MILLIS = 380L
 private const val STATUS_START_SCALE = 0.84f
 

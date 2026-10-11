@@ -12,9 +12,9 @@ import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 
 /**
- * What `MainActivity` shows, in the shell's own values (SH-1a2): the [surface], the selected [tab] (null off the
+ * What `MainActivity` shows, in the shell's own values: the [surface], the selected [tab] (null off the
  * tabs), the [overlays] bottom to top and the top sheet or dialog ([floating]). [swipeEnabled]: a horizontal swipe on
- * the tab content switches the tab now (SH-SW1).
+ * the tab content switches the tab now.
  */
 data class ShellView(
     val surface: ShellSurface,

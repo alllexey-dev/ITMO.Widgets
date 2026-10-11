@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LA-1c recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `WebLoginSheetContent_<state>`. Each state therefore is a function called `WebLoginSheetContent` in a holder class
  * of its own. The sheet fits its content, so every preview wraps it on the sheet's colour under rounded top corners,
  * as the shell's sheet opens it.

@@ -16,7 +16,7 @@ import org.koin.dsl.module
 /**
  * The subject links data and sheets. Koin is the only graph for these types: one `SubjectLinksRepositoryImpl` serves
  * the sheets, the recordbook and the session cleaners. The core types (`BackendGate`, Core 2.0's `SubjectLinksApi`,
- * `AppDirectories`, the wall `Clock`, `DemoMode`, `AppDispatchers`) come from the platform (`CoreBridge` on Android);
+ * `AppDirectories`, the wall `Clock`, `DemoMode`, `AppDispatchers`) come from the platform's Koin modules;
  * the `SavedStateHandle` carries the host's `SubjectLinksArgs`.
  */
 val resourcesModule = module {

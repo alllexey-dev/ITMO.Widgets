@@ -11,14 +11,13 @@ import org.koin.dsl.module
 import platform.Foundation.NSBundle
 
 /**
- * The iOS ports of [scheduleDataModule] and [scheduleModule] (IO-09b), what `:app`'s `ScheduleBridge`, `CoreBridge`
- * and `ReviewsBridge` give Android; load it with those two modules and `scheduleChangesIosModule`, which binds the
- * change notifier and scheduler. Core 2.0's schedule area comes from the one `BackendClient`; the known buildings of
- * the map hand-off from [buildingsJson], by default the app bundle's `itmo_buildings.json` (the file Android reads
- * from `res/raw`, copied by `iosApp/project.yml`).
+ * The iOS bindings of [scheduleDataModule] and [scheduleModule], what the app's Koin modules give Android; load it with
+ * those two modules and `scheduleChangesIosModule`, which binds the change notifier and scheduler. Core 2.0's schedule
+ * area comes from the one `BackendClient`; the known buildings of the map hand-off from [buildingsJson], by default the
+ * app bundle's `itmo_buildings.json` (the file Android reads from `res/raw`, copied by `iosApp/project.yml`).
  *
- * The phone calendar and the sync's scheduler are `calendarIosModule`'s (IO-15b), the teacher tones `reviewsModule`'s
- * (IO-09f) and the pending sport rows `sportModule`'s (IO-09c).
+ * The phone calendar and the sync's scheduler are `calendarIosModule`'s, the teacher tones `reviewsModule`'s and the
+ * pending sport rows `sportModule`'s.
  */
 fun scheduleIosModule(buildingsJson: () -> String? = ::bundledBuildings): Module = module {
     single<ScheduleApi> { get<BackendClient>().schedule }

@@ -4,7 +4,7 @@ import Shared
 import UIKit
 import XCTest
 
-/// The system entries of IO-11 into the router: the QR Control's `OpenRouteIntent`, the App Shortcuts' intents and
+/// The system entries into the router: the QR Control's `OpenRouteIntent`, the App Shortcuts' intents and
 /// the Home Screen quick actions all offer a route id through `RouteInbox` to `AppRouter.open(id:)`. XCUITest cannot
 /// drive Siri, Control Center or the springboard reliably, so each `perform()` and the quick-action handler run here
 /// against a router of the test's own.

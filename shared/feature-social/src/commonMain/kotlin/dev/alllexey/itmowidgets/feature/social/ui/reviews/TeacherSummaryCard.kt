@@ -68,8 +68,8 @@ import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
- * Backend's AI summary of a teacher's reviews, first in the reviews section (port of `SummaryViews.kt` and
- * `item_teacher_summary.xml`): the header with the review count and `ИИ`, the tone (only when [TeacherSummary.showsLevel],
+ * Backend's AI summary of a teacher's reviews, first in the reviews section: the header with the review count and
+ * `ИИ`, the tone (only when [TeacherSummary.showsLevel],
  * never at low confidence), the description, pros and cons, tags and the five scales folded behind a text button.
  * Texts are plain; empty blocks are hidden. Whether the scales are open ([expanded]) belongs to the screen, which
  * [onToggle] asks to flip it; opening them only grows the card.
@@ -317,7 +317,7 @@ private fun ScalesToggle(expanded: Boolean, onToggle: () -> Unit) {
     }
 }
 
-/** DS-01a's `teacher_level_*` token of the tone. */
+/** The `teacher_level_*` token of the tone. */
 @Composable
 private fun TeacherLevel.color(): Color {
     val colors = ItmoTheme.extendedColors

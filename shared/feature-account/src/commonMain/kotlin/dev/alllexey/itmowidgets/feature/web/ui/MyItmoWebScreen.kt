@@ -66,8 +66,7 @@ enum class MyItmoWebState {
  * the overflow), a 4 dp progress line that keeps
  * its height while hidden so the page never jumps, and the platform [browser] below. [browser] is composed in every
  * state, so the host's platform view lives as long as the screen; on [MyItmoWebState.Failed] the error page covers it
- * and the host hides the view itself, since a platform view's touches and accessibility bypass Compose's drawing order
- * (recipe platform-view-slot).
+ * and the host hides the view itself, since a platform view's touches and accessibility bypass Compose's drawing order.
  */
 @Composable
 fun MyItmoWebScreen(
@@ -180,7 +179,7 @@ private fun OverflowMenu(onOpenExternal: () -> Unit) {
     }
 }
 
-/** Tags named after the View ids of the XML screen they replace, for host and instrumented tests. */
+/** Tags for host and instrumented tests. */
 object MyItmoWebTestTags {
     const val CLOSE = "web_close"
     const val RELOAD = "web_reload"

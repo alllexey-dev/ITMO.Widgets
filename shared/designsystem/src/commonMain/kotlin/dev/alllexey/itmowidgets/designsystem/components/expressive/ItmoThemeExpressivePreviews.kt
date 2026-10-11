@@ -19,7 +19,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.designsystem.theme.ProvideItmoExpressive
 
 // The kit's own components with the theme's switch on. Their switch-off baselines are their own previews
-// (ContentStateLoading*, AppRefreshBox*), which stay as they are until the M3E token change.
+// (ContentStateLoading*, AppRefreshBox*).
 
 /** `ContentStateLoading` in a section with the switch on: the morphing indicator. */
 @Preview

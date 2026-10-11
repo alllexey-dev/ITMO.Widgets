@@ -123,7 +123,7 @@ data class MeActions(
     val onSignOut: () -> Unit = {},
 )
 
-/** Tags named after the View ids of the XML screen they replace, for host and instrumented tests. */
+/** Tags for host and instrumented tests. */
 object MeTestTags {
     const val ROOT = "main"
     const val PROFILE_NAME = "profile_name"

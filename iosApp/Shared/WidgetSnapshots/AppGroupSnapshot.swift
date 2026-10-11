@@ -5,7 +5,7 @@ import Foundation
 /// here, in every process, without Kotlin.
 ///
 /// Reading never throws: a missing file, a corrupt one and one written by a newer version (a `version` above the
-/// reader's) all come back as nil, and the reader shows its placeholder (ADR 0027).
+/// reader's) all come back as nil, and the reader shows its placeholder.
 enum AppGroupSnapshot {
     /// The App Group container of this process: the group in its own Info.plist (`AppGroupID`), then any group
     /// AltStore lists in `ALTAppGroups`, as the Kotlin `AppGroupDirectory` resolves it. Nil in a build

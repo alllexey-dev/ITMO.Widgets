@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginFixtureRepository
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 
 /**
- * The Koin parameters of the web sign-in's ViewModel when SwiftUI owns it (IO-08b, recipe ios-swiftui-screen):
+ * The Koin parameters of the web sign-in's ViewModel when SwiftUI owns it:
  * `ScreenViewModelStore` has no saved-state registry, so the sheet gets a fresh `SavedStateHandle` and a reopened
  * sheet starts with an empty field. Swift passes them to `store.resolve(type: WebLoginViewModel.self, parameters:)`;
  * Core 2.0's users area of the repository comes from `iosCoreModule`.

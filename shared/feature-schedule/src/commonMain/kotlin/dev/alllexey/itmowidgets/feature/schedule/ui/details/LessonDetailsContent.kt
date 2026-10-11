@@ -26,7 +26,7 @@ import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.core.common_close
 
 /**
- * The lesson details sheet of [lesson] with its view model: the host-facing entry the Fragment host and the SwiftUI
+ * The lesson details sheet of [lesson] with its view model: the host-facing entry the Android shell and the SwiftUI
  * host call. The view model reads the occurrence from its saved state (`ARG_PAIR_ID`, `ARG_DATE`, `ARG_TEACHER_ISU`);
  * `Повторить` asks it for the friends again, every other action goes to the host.
  */

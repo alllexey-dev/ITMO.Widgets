@@ -28,7 +28,7 @@ import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingStep
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiState
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetKind
 
-/** Synthetic states of the first-run flow, as the LA-1c references drove the View flow. */
+/** Synthetic states of the first-run flow. */
 internal object OnboardingPreviewSamples {
 
     /** A fresh install: the stored defaults answered, no custom spoiler image, nothing pinned. */

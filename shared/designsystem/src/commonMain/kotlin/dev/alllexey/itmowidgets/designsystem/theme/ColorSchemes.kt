@@ -14,21 +14,21 @@ import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 internal const val BRAND_SEED: Int = 0xFF4984E2.toInt()
 
 /**
- * The static scheme of API 26-30 and iOS (owner, item 14 Q1 (b)): the TonalSpot variant of the 2021 spec from
+ * The static scheme of API 26-30 and iOS: the TonalSpot variant of the 2021 spec from
  * [BRAND_SEED], Material's default way to build a scheme from a brand colour. Android 12+ keeps the wallpaper's.
  */
 internal fun staticColorScheme(dark: Boolean): ColorScheme = if (dark) BrandDark else BrandLight
 
 /**
  * The M3 baseline (`#6750A4` family), pinned to MDC 1.13's `Theme.Material3.Light`/`Dark` values: what the View
- * screens and widgets still draw on API 26-30, and the roles MDC's DynamicColors theme leaves at baseline
+ * theme and widgets still draw on API 26-30, and the roles MDC's DynamicColors theme leaves at baseline
  * ([withViewThemeRoles]).
  */
 internal fun baselineColorScheme(dark: Boolean): ColorScheme = if (dark) BaselineDark else BaselineLight
 
 /**
  * MDC's `DynamicColorsOptions.setContentBasedSource(seed)`: the Content variant of the 2021 spec. TonalSpot or the
- * 2025 spec give other secondary and surface roles (SP-06).
+ * 2025 spec give other secondary and surface roles.
  */
 internal fun seededColorScheme(argb: Int, dark: Boolean): ColorScheme = dynamicColorScheme(
     seedColor = Color(argb),

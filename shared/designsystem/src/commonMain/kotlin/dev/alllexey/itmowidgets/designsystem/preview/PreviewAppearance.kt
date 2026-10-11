@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
  * One entry of the appearance matrix every preview is captured in: night mode, font scale, a colour seed (null: the
  * platform scheme) and a window width (null: the capture size's), and the platform style the kit draws in. [name] is
  * the baseline file suffix (`<Preview>_<state>_<name>.png`). The four Material entries ([All]) equal the View tests'
- * `Appearances.all`, so an XML reference and its Compose port are captured alike; the three iOS entries ([IosAll])
+ * `Appearances.all`, so an XML reference and a Compose preview are captured alike; the three iOS entries ([IosAll])
  * draw the kit's iOS variants on the static scheme, as iOS gets it.
  */
 @Immutable

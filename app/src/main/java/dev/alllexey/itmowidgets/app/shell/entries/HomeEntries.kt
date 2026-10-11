@@ -21,13 +21,13 @@ import dev.alllexey.itmowidgets.feature.home.ui.HomeRoute
 import dev.alllexey.itmowidgets.feature.home.ui.onHomeNotificationResult
 import dev.alllexey.itmowidgets.feature.qr.ui.QrPassRoute
 
-/** The home tab's overlays: the QR pass (route map row 20), opened by the home button, the tile and the shortcut. */
+/** The home tab's overlays: the QR pass, opened by the home button, the tile and the shortcut. */
 internal fun EntryRegistry.Builder.homeEntries() {
     entry<AppRoutes.QrPass> { key, navigator -> QrPassRoute(onBack = { navigator.close(key) }) }
 }
 
 /**
- * The home tab's root (route map row 5): `HomeRoute` with its ViewModel from Koin's definition, kept in the root's own
+ * The home tab's root: `HomeRoute` with its ViewModel from Koin's definition, kept in the root's own
  * store, so the hint callbacks reach the feed's instance. Cards open their sheets, overlays and tabs through
  * [navigator]; the hint actions are [HomeHints], owned by this entry's composition from its
  * start to its end.
@@ -51,7 +51,7 @@ internal fun HomeTabRoot(navigator: Nav3AppNavigator) {
 }
 
 /**
- * The routes of the home cards (route map rows 3, 6, 8, 13, 16, 19-21, S11, S12); a sport row goes through [sport],
+ * The routes of the home cards; a sport row goes through [sport],
  * which opens the sport tab's sheet when it finds the booking.
  */
 private fun homeActions(navigator: Nav3AppNavigator, hints: HomeHints, sport: SportDetailsRedirect) = HomeActions(

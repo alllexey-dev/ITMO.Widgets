@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 
 /**
- * An in-memory links repository for the links hosts' JVM tests. It has no API, token or session dependency and
+ * An in-memory links repository for the links JVM tests. It has no API, token or session dependency and
  * cannot transmit synthetic data.
  */
 internal class LinksHostRepository : SubjectLinksRepository {

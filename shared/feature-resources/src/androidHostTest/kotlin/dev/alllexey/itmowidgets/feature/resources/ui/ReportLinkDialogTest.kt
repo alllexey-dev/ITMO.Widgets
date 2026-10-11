@@ -103,7 +103,7 @@ class ReportLinkDialogTest {
         assertTrue(links.actions.isEmpty())
     }
 
-    /** As the Fragment host: the view model's busy flag, its failure until the next send, its done event. */
+    /** As the app's host: the view model's busy flag, its failure until the next send, its done event. */
     @Composable
     private fun Report(model: SubjectLinksViewModel) {
         var failure by remember { mutableStateOf<AppError?>(null) }

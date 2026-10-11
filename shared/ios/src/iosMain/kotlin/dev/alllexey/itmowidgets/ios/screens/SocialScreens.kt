@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 import platform.UIKit.UIViewController
 
 /**
- * The me tab's root (`AppRoutes.TabRoot(ME)`), LA-3's route as Android's shell hosts it (`MeTabRoot`): its rows open
+ * The me tab's root (`AppRoutes.TabRoot(ME)`), the me route as Android's shell hosts it (`MeTabRoot`): its rows open
  * their keys through [open], the Swift router (the web sign-in is a shell sheet the demo refuses there), the share
  * button sends the profile link through the share sheet and the project links open in Telegram or Safari. iOS has no
  * developer tools row. The tab has no top bar, so the content keeps clear of the status bar and the tab bar.
@@ -98,7 +98,7 @@ fun userSearchViewController(open: (AppRoute) -> Unit, onBack: () -> Unit): UIVi
  * The person profile (`AppRoutes.UserProfile`), as the Android shell hosts it: a user's friends, schedule and
  * sport open through [open] with the name the page shows, the share button sends the profile link, [copyIsu] is the
  * Swift host's (the clipboard and its confirmation), a source link opens in Safari. A teacher's reviews section
- * (`PlatformCapabilities.reviews`, IO-09f) opens the review editor through [open] (a SwiftUI sheet) and shows the
+ * (`PlatformCapabilities.reviews`) opens the review editor through [open] (a SwiftUI sheet) and shows the
  * report of a review as the Compose dialog over the profile, as Android's `ReportReviewEntry` over its screen.
  */
 fun userProfileViewController(
@@ -163,7 +163,7 @@ fun userFriendsViewController(
     }
 }
 
-/** The social routes draw their own top bar and no insets (DS-03), so the host pads the safe area on every side. */
+/** The social routes draw their own top bar and no insets, so the host pads the safe area on every side. */
 @Composable
 private fun Hosted(content: @Composable () -> Unit) {
     Box(

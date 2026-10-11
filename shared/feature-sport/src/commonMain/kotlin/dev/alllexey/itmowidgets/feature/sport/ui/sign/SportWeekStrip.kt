@@ -162,8 +162,8 @@ private fun MonthLabel(month: String, modifier: Modifier) {
 }
 
 /**
- * A 48 dp arrow at half opacity while there is no week that way. Tinted `onSurface`: the View's
- * `colorOnPrimaryContainer` sat on the surface, not on a container, and all but vanished in both themes.
+ * A 48 dp arrow at half opacity while there is no week that way. Tinted `onSurface`: it sits on the surface, not on
+ * a container, where `onPrimaryContainer` all but vanishes in both themes.
  */
 @Composable
 private fun WeekArrow(

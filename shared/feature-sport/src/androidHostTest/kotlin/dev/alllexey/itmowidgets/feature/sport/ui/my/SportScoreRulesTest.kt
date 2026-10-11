@@ -43,7 +43,7 @@ class SportScoreRulesTest {
         assertEquals(SportScoreCounts.Zero, SportScoreCounts.Zero.towards(target, 0f))
         assertEquals(SportScoreCounts(45, 20, 65), SportScoreCounts.Zero.towards(target, 0.5f))
         assertEquals(target, SportScoreCounts.Zero.towards(target, 1f))
-        // A refresh that lowers the score counts down; frames truncate like the View counters did.
+        // A refresh that lowers the score counts down; frames truncate.
         assertEquals(SportScoreCounts(85, 35, 120), target.towards(SportScoreCounts(80, 30, 110), 0.5f))
     }
 

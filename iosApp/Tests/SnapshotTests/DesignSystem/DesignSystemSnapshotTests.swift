@@ -3,7 +3,7 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// The SwiftUI kit (IO-06a) in all four appearances: form rows, the loading, empty and error states, the progress
+/// The SwiftUI kit in all four appearances: form rows, the loading, empty and error states, the progress
 /// button and the demo banner. Texts are synthetic; the kit's own defaults (retry, demo banner) come from the catalog.
 final class DesignSystemSnapshotTests: XCTestCase {
     /// Tall enough for the section at AX1; a `Form` scrolls, so it has no height of its own.

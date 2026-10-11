@@ -58,7 +58,7 @@ import platform.UIKit.UIViewController
 
 /**
  * The shared session on its iOS ports, as `IosKoinModules` loads it: the core module, [authDataModule] and ours, with
- * the web sign-in and the update offer on theirs (IO-08b).
+ * the web sign-in and the update offer on theirs.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AccountIosModuleTest {
@@ -98,9 +98,9 @@ class AccountIosModuleTest {
         }
 
         assertIs<SessionRepositoryImpl>(koin.get<SessionRepository>())
-        // The Keychain, the App Group container and WebKit's data (IO-04b); features loaded later add theirs.
+        // The Keychain, the App Group container and WebKit's data; features loaded later add theirs.
         assertEquals(3, koin.get<SessionDataCleaners>().current().size)
-        // One push registration answers the session's token sync and device session (IO-13a).
+        // One push registration answers the session's token sync and device session.
         val registration = koin.get<PushDeviceRegistration>()
         assertSame<Any>(registration, koin.get<FcmTokenSync>())
         assertSame<Any>(registration, koin.get<BackendDeviceSession>())

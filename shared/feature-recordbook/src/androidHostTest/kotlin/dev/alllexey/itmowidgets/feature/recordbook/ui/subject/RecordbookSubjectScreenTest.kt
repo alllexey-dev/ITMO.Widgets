@@ -36,7 +36,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * The subject page on its Compose list (LR-4b): the header in every state, the error retry, `Все пары` opening in
+ * The subject page on its Compose list: the header in every state, the error retry, `Все пары` opening in
  * place, the snackbars of a failed vote and of an ended BARS session, and the sheet-link picker. The looks live in the
  * `RecordbookSubjectScreen_*` goldens, the sections' actions in `SubjectHubSectionsTest`.
  */

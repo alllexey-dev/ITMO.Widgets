@@ -2,7 +2,7 @@ import OSLog
 import Shared
 import SwiftUI
 
-/// The app refresh task of iOS (IO-14): the system wakes the app in the background now and then, and each wake runs
+/// The app refresh task of iOS: the system wakes the app in the background now and then, and each wake runs
 /// the Kotlin `BackgroundRunner` (widget snapshots, then the schedule change, marks and calendar steps) within its
 /// deadline; the runner asks for the next wake at the end. `start()` (in `App.init`, after the graph) also runs it at
 /// launch and on every return to the foreground, so Swift only starts it and hands it the system's task.

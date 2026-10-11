@@ -34,7 +34,7 @@ object NotMirrored {
         NotMirroredRoute(
             method = null,
             path = "/api/moderation/**",
-            reason = "CO-02, ADR 0026: no Kotlin consumer; moderators work in Web, which uses /api/admin",
+            reason = "no Kotlin consumer; moderators work in Web, which uses /api/admin",
             fixtures = listOf(
                 "http/moderation/",
                 "requests/ModerationDecisionRequest.json",

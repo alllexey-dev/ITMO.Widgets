@@ -12,9 +12,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiStat
 import dev.alllexey.itmowidgets.feature.recordbook.ui.preview.RecordbookPreviewSamples
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LR-1c recorded the XML references as
- * `RecordbookScreen_<state>` and `RecordbookPeriodSheet_content`. Each state therefore is a function called after the
- * screen in a holder class of its own; the scanner instantiates each holder by reflection.
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are `RecordbookScreen_<state>` and
+ * `RecordbookPeriodSheet_content`. Each state therefore is a function called after the screen in a holder class of its
+ * own; the scanner instantiates each holder by reflection.
  */
 
 @Composable

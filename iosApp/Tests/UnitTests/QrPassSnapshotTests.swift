@@ -1,7 +1,7 @@
 @testable import ITMOWidgets
 import XCTest
 
-/// The QR widget's App Group file (IO-21) as Swift reads it: `Fixtures/qr-pass-v1.json` is what the shared
+/// The QR widget's App Group file as Swift reads it: `Fixtures/qr-pass-v1.json` is what the shared
 /// `QrPassSnapshotWriter` writes for the demo pass (`QrPassSnapshotWriterTest` in `:shared:feature-qr` fails while
 /// the two differ), so both sides decode one file.
 final class QrPassSnapshotTests: XCTestCase {

@@ -12,7 +12,7 @@ import kotlin.test.fail
 
 /**
  * One public function of an area API called with synthetic arguments. Each area lists one case per public function
- * in its `<Area>RouteCases`; the area's request assertions run them, and the conformance test (CO-09b) aggregates
+ * in its `<Area>RouteCases`; the area's request assertions run them, and the conformance test aggregates
  * every area's cases.
  */
 class RouteCase(val name: String, val call: suspend BackendClient.() -> Unit) {

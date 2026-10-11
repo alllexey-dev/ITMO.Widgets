@@ -178,11 +178,10 @@ enum class SelectionMode {
 }
 
 /**
- * One option of a list the user picks from (port of `core/ui/SelectionAccessibility.kt`): the whole row is the
- * target, a check in `primary` shows the selection, and TalkBack reads the row once with its selected state. A closed
- * row ([onSelect] null, a private profile) is neither a target nor selected and never shows the check. Under the iOS
- * style the check is UIKit's checkmark accessory in the tint, and a pick plays the selection haptic (a single
- * choice) or the toggle one (a multiple choice).
+ * One option of a list the user picks from: the whole row is the target, a check in `primary` shows the selection, and
+ * TalkBack reads the row once with its selected state. A closed row ([onSelect] null, a private profile) is neither a
+ * target nor selected and never shows the check. Under the iOS style the check is UIKit's checkmark accessory in the
+ * tint, and a pick plays the selection haptic (a single choice) or the toggle one (a multiple choice).
  */
 @Composable
 fun SettingsSelectionRow(

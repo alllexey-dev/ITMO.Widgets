@@ -13,10 +13,9 @@ import androidx.compose.ui.unit.sp
 data class TypeRole(val size: Float, val lineHeight: Float, val tracking: Float, val weight: Int)
 
 /**
- * The M3 type scale on the system font (Roboto, SF; 03 Q11) at MDC 1.13's `TextAppearance.Material3.*` values, each
- * role with its `.Emphasized` twin. Pinned here rather than taken from material3's defaults, so a material3 bump
- * cannot change the text of a ported screen unnoticed (M3E keeps the type scale, item 14); `TypographyParityTest`
- * compares them.
+ * The M3 type scale on the system font (Roboto, SF) at MDC 1.13's `TextAppearance.Material3.*` values, each role
+ * with its `.Emphasized` twin. Pinned here rather than taken from material3's defaults, so a material3 bump cannot
+ * change the text of a screen unnoticed (M3E keeps the type scale); `TypographyParityTest` compares them.
  */
 object TypeScaleTokens {
     private const val REGULAR = 400

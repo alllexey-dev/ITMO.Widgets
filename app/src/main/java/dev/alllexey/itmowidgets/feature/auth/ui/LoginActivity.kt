@@ -59,7 +59,7 @@ class LoginActivity : AppCompatActivity() {
     var browser: WebView? = null
         private set
 
-    /** A fresh start loads the sign-in page; a recreated activity does not, as before the port. */
+    /** A fresh start loads the sign-in page; a recreated activity does not. */
     private var loadOnCreate = false
 
     override fun onCreate(savedInstanceState: Bundle?) {

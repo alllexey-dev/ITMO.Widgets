@@ -27,7 +27,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.userProfileUiState
 import kotlinx.datetime.YearMonth
 
 /**
- * Synthetic people for the profile previews and host tests, the fixtures LC-1c captured the XML references with:
+ * Synthetic people for the profile previews and host tests:
  * a teacher with long texts and an AI summary, a student who is a friend, and the same student under every
  * relationship. Each page goes through [userProfileUiState], as the ViewModel's does; no real person or text.
  */

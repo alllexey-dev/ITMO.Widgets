@@ -12,7 +12,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 
 /**
- * The Koin graph a worker test runs on: Robolectric's plain `Application` (no Hilt, no `onCreate()` start) with only
+ * The Koin graph a worker test runs on: Robolectric's plain `Application` (no `onCreate()` start) with only
  * the [definitions] the worker reads, started before the worker is built, so `KoinStarter` finds it and keeps it.
  * Pair with `StopKoinRule` and `@Config(application = Application::class)`.
  */

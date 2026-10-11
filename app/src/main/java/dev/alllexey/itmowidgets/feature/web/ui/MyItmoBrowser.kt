@@ -79,7 +79,7 @@ class MyItmoBrowser(
     private var browserState: Bundle? = null
     private var failed = false
 
-    /** The last official page the browser started; its host is the bar's subtitle, as in 2.2. */
+    /** The last official page the browser started; its host is the bar's subtitle. */
     var lastTrustedUrl by mutableStateOf(MyItmoWebPolicy.HOME_URL)
         private set
     var screenState by mutableStateOf(MyItmoWebState.Loading)

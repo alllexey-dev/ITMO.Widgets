@@ -15,9 +15,8 @@ import kotlin.test.assertFalse
 import kotlin.time.Instant
 
 /**
- * Port of Core 1.7.0 `FcmPayloadContractTest`. 1.x wrote the wire with Gson and kept an `OffsetDateTime`; 2.0 only
- * decodes and keeps an `Instant`, so the offset time is checked as the same instant. 1.x Gson exceptions become
- * [BackendException.Contract].
+ * The FCM payloads. The client only decodes and keeps an `Instant`, so the offset time is checked as the same
+ * instant; a malformed payload is [BackendException.Contract].
  */
 class FcmPayloadContractTest {
 

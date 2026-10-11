@@ -270,7 +270,7 @@ class RecordbookScreenTest {
         }
 
         assertTouchTargets()
-        // Subject names may end in an ellipsis on their second line, as the View rows did; nothing else may.
+        // Subject names may end in an ellipsis on their second line; nothing else may.
         val names = RecordbookPreviewSamples.content().subjects.map { it.name }.toSet()
         assertNoTextOverflow(allowed = SemanticsMatcher("a subject name") { node ->
             node.config.getOrNull(SemanticsProperties.Text)?.joinToString { it.text } in names

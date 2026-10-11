@@ -67,7 +67,7 @@ class ScheduleTimelineWriterTest {
     fun deleteDevice() = FileSystem.SYSTEM.deleteRecursively(root)
 
     /**
-     * LS-3's reference fixture through the writer is the fixture in the App Group envelope: the Swift reader's tests
+     * The reference fixture through the writer is the fixture in the App Group envelope: the Swift reader's tests
      * (`ScheduleTimelineTests`) wrap the same file the same way.
      */
     @Test

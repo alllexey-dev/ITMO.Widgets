@@ -254,7 +254,7 @@ internal fun Int.toVote(): Vote? = when {
     else -> null
 }
 
-/** `sheet_subject_links.xml`'s 256 dp skeleton of three list rows. */
+/** The 256 dp skeleton of three list rows. */
 private val LoadingHeight = 256.dp
 private const val LOADING_ROWS = 3
 

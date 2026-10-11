@@ -69,7 +69,7 @@ class AppScreenshotRule : TestRule {
         val appBaselines: BaselineDirectory
             get() = BaselineDirectory(ShotsRun.gallery?.let { File(it, "app") } ?: File(root, "app/screenshots"))
 
-        /** `shared/<module>/screenshots`, where XML references wait for their port; `<gallery>/<module>` there. */
+        /** `shared/<module>/screenshots`, where XML references wait for their preview; `<gallery>/<module>` there. */
         fun moduleBaselines(module: String): BaselineDirectory =
             ShotsRun.gallery?.let { BaselineDirectory(File(it, module)) } ?: BaselineDirectory.ofModule(root, module)
     }

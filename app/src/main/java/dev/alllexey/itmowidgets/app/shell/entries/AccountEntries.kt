@@ -82,7 +82,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.parameter.parametersOf
 
 /**
- * The account lane's keys (route map rows 1, 2, 9, 17, 22, 23 and S9): sign-in and the first-run flow (the gate
+ * The account keys: sign-in and the first-run flow (the gate
  * surfaces), the web sign-in sheet, My ITMO in the browser, the update offer keyed by the feature's
  * [UpdateRoutes.AppUpdate], and the debug tools when [debugTools] (debug builds only, as the Me row that opens them).
  * The shell's guard refuses the web sign-in and My ITMO in the demo session before they open.
@@ -101,7 +101,7 @@ internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
 }
 
 /**
- * The Me tab's root (route map row 9): `MeRoute` with its ViewModel in the root's own store. Its rows open the
+ * The Me tab's root: `MeRoute` with its ViewModel in the root's own store. Its rows open the
  * social screens, the settings (the privacy page for the privacy row), the web sign-in sheet and, in debug builds,
  * the debug tools through [navigator]; sharing and the project pages go through the Android helpers of `MeHost.kt`.
  */
@@ -127,7 +127,7 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenProjectLink = { link -> context.openProjectLink(link) },
 )
 
-/** Sign-in (row 1): ITMO ID in `LoginActivity` for a result; five taps on the logo enter the demo. */
+/** Sign-in: ITMO ID in `LoginActivity` for a result; five taps on the logo enter the demo. */
 @Composable
 private fun AuthEntry() {
     val context = LocalContext.current
@@ -144,8 +144,8 @@ private fun AuthEntry() {
 }
 
 /**
- * The first-run flow (row 2): the real widget previews, the launcher pin (its receiver lives as long as this entry,
- * so a pin confirmed while the app is stopped still counts), the notification permission (AA-11), the spoiler photo
+ * The first-run flow: the real widget previews, the launcher pin (its receiver lives as long as this entry,
+ * so a pin confirmed while the app is stopped still counts), the notification permission, the spoiler photo
  * picker and crop screen, links, and Back as a step back from the second step on. The shell leaves the flow on its
  * own once the first-run flag is set.
  */
@@ -207,7 +207,7 @@ private fun OnboardingEntry() {
     )
 }
 
-/** The web sign-in sheet (S9): Google's code scanner runs in Play services. */
+/** The web sign-in sheet: Google's code scanner runs in Play services. */
 @Composable
 private fun WebLoginEntry(onClose: () -> Unit) {
     val context = LocalContext.current
@@ -216,7 +216,7 @@ private fun WebLoginEntry(onClose: () -> Unit) {
 }
 
 /**
- * My ITMO in the browser (row 22): one [MyItmoBrowser] whose history, page and failure survive recreation in this
+ * My ITMO in the browser: one [MyItmoBrowser] whose history, page and failure survive recreation in this
  * entry's saved state. Back goes back in the browser's history first; without history the shell's overlay handler
  * takes it, so the predictive gesture previews closing the screen.
  */
@@ -249,7 +249,7 @@ private fun MyItmoWebEntry(onClose: () -> Unit) {
     MyItmoWebContent(browser, onClose, snackbars)
 }
 
-/** The update offer (row 23): its update button runs the distribution's `UpdateAction` on this activity. */
+/** The update offer: its update button runs the distribution's `UpdateAction` on this activity. */
 @Composable
 private fun AppUpdateEntry(onClose: () -> Unit) {
     val context = LocalContext.current
@@ -263,7 +263,7 @@ private fun AppUpdateEntry(onClose: () -> Unit) {
     )
 }
 
-/** The debug tools (row 17), only ever registered in debug builds; overrides recreate the activity, as before. */
+/** The debug tools, only ever registered in debug builds; overrides recreate the activity. */
 @Composable
 private fun DebugToolsEntry(onBack: () -> Unit) {
     val activity = LocalActivity.current
@@ -280,8 +280,8 @@ private fun DebugToolsEntry(onBack: () -> Unit) {
 }
 
 /**
- * The system photo picker, then the square crop screen (`SpoilerCropActivity`), as `SpoilerImagePicker` runs them for
- * a Fragment; a device without a picker answers [SpoilerCropResult.Failed]. The first-run flow and the QR widget's
+ * The system photo picker, then the square crop screen (`SpoilerCropActivity`); a device without a picker answers
+ * [SpoilerCropResult.Failed]. The first-run flow and the QR widget's
  * settings page pick with it.
  */
 @Composable

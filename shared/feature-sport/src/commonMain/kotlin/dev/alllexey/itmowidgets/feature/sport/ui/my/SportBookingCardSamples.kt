@@ -21,8 +21,7 @@ import kotlin.time.Instant
 
 /**
  * Synthetic bookings for the booking card and `Мой спорт` previews and their host tests, seen on Monday
- * 7 September 2026 at noon, the day the XML reference of the screen used: tomorrow's swimming in the auto-sign
- * queue, then volleyball on two Thursdays.
+ * 7 September 2026 at noon: tomorrow's swimming in the auto-sign queue, then volleyball on two Thursdays.
  */
 internal object SportBookingSamples {
 

@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import kotlin.time.Instant
 
 /**
- * The phone's calendars on iOS (IO-15b): EventKit with full access through [store], the identifiers as numbers
+ * The phone's calendars on iOS: EventKit with full access through [store], the identifiers as numbers
  * through [ids]. The app's own calendar is the one titled [OWN_CALENDAR_TITLE] that it created, in the iCloud source,
  * else the local one; after a reinstall a calendar of that title in those sources counts as the app's, as Android
  * finds its local calendar by its account. The app's events carry the tag line in their notes

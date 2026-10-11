@@ -13,7 +13,7 @@ import kotlin.test.assertFailsWith
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
-/** Port of Core 1.7.0 `weblogin/WebLoginContractTest`; a duplicate key keeps its last value by 07 Q4 (b). */
+/** The web login models; a duplicate key keeps its last value. */
 class WebLoginContractTest {
 
     private val preview = WebLoginPreview(

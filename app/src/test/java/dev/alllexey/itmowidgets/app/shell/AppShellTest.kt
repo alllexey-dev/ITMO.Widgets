@@ -41,7 +41,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
 
-/** The Compose shell with fake entries: layers, Back, tab state, sheets, arguments and gates (v2.2 parity). */
+/** The Compose shell with fake entries: layers, Back, tab state, sheets, arguments and gates. */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = PreviewHostApplication::class)
 class AppShellTest {
@@ -247,7 +247,7 @@ class AppShellTest {
     }
 
     /**
-     * A profile opened from a sheet (2.2: the sheet dismisses first) slides in from the end and, on Back, out to the
+     * A profile opened from a sheet (the sheet dismisses first) slides in from the end and, on Back, out to the
      * end over the tab, full height on every frame: the layer never animates its size between no overlay and one.
      */
     @Test

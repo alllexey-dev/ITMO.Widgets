@@ -4,7 +4,7 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// The `.ics` sheet (IO-15b) in all four appearances, one reference per state of `IcsExportViewModel`, rendered
+/// The `.ics` sheet in all four appearances, one reference per state of `IcsExportViewModel`, rendered
 /// without the ViewModel on the days of Android's references (Friday 2 October 2026). The spinner of the preparing
 /// state animates, so it is recorded at the default text size only.
 @MainActor

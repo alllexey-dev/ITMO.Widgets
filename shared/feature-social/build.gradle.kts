@@ -1,4 +1,4 @@
-// A feature module: Compose UI, Res strings, host and screenshot tests (recipe kmp-module-build-file).
+// A feature module: Compose UI, Res strings, host and screenshot tests.
 // Features read core and designsystem, never another feature.
 plugins {
     id("itmowidgets.cmp.ui")
@@ -10,12 +10,11 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
-            // The five social and picker ViewModels are KMP ViewModels that :app obtains through Koin (L13 LC-2,
-            // recipe koin-module).
+            // The five social and picker ViewModels are KMP ViewModels that :app obtains through Koin.
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
-            // The screens' routes (L13 LC-3a on): koinViewModel() and lifecycle-aware collection; the iOS shell hosts
+            // The screens' routes: koinViewModel() and lifecycle-aware collection; the iOS shell hosts
             // the same routes.
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.jetbrains.lifecycle.runtime.compose)

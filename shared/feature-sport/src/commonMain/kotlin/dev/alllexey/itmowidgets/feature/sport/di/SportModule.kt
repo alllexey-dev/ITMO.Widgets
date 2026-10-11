@@ -44,12 +44,11 @@ import org.koin.dsl.module
 val sportCardsQualifier: Qualifier = named("sport")
 
 /**
- * Sport, data and screens. Koin is the only graph for these types; the app's FCM handlers, the schedule's home card
- * and widget and `MainActivity` read them through `SportBridge`. The core contracts (`MyItmoClient`, `SportApi`, the
- * academic and wall clocks, `DemoMode`, `BackendGate`, `AppDispatchers`, `AppDiagnostics`, the sport-sign
- * preferences, the application `CoroutineScope`, the schedule refresh contracts) come from the app's `CoreBridge`,
- * `FriendRepository` from `friendSelectorModule`, the opt-in from `settingsDataModule`, and the debug ports
- * (`SportLessonTemplateProvider`, `SportScoreOverrideSource`) from the platform (`SportBridge` on Android).
+ * Sport, data and screens. Koin is the only graph for these types. The core contracts (`MyItmoClient`, `SportApi`,
+ * the academic and wall clocks, `DemoMode`, `BackendGate`, `AppDispatchers`, `AppDiagnostics`, the sport-sign
+ * preferences, the application `CoroutineScope`, the schedule refresh contracts) come from the platform's Koin
+ * modules, `FriendRepository` from `friendSelectorModule`, the opt-in from `settingsDataModule`, and the debug ports
+ * (`SportLessonTemplateProvider`, `SportScoreOverrideSource`) from the platform (`androidSportModule` on Android).
  */
 val sportModule = module {
     // One instance per repository for the screens, the home card, the widgets and sign-out; the cleaner and home card
@@ -68,7 +67,7 @@ val sportModule = module {
     single<HomeCardSource>(qualifier = sportCardsQualifier) { get<SportHomeCardSource>() }
     singleOf(::SportSignPushBooker)
 
-    // Unscoped as under Hilt: the holder, the sign screen and the auto-sign flow each hold their own delegate.
+    // Unscoped: the holder, the sign screen and the auto-sign flow each hold their own delegate.
     factoryOf(::SportBookingDelegate)
     factoryOf(::SportAutoSignFlow)
     factoryOf(::SportSignFilterController)

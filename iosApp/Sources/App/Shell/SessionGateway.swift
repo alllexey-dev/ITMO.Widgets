@@ -1,7 +1,7 @@
 import Shared
 
-/// What the shell's gate needs from the shared session (KM-11h1): the `SessionRepository` states, the first-run flag
-/// as `OnboardingGateViewModel` answers it (IO-07b) and the sign-out. A Swift protocol, so the hosted tests drive the
+/// What the shell's gate needs from the shared session: the `SessionRepository` states, the first-run flag
+/// as `OnboardingGateViewModel` answers it and the sign-out. A Swift protocol, so the hosted tests drive the
 /// gate with a fake instead of a Kotlin session.
 @MainActor
 protocol SessionGateway: AnyObject {

@@ -8,8 +8,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
- * Durations in milliseconds at the View screens' values (03 §Motion), one easing and Material's [MotionScheme] slot
- * for components. A kit animation shows its end state at once when [rememberReducedMotion] is true.
+ * Durations in milliseconds, one easing and Material's [MotionScheme] slot for components. A kit animation shows its
+ * end state at once when [rememberReducedMotion] is true.
  */
 @Immutable
 data class ItmoMotion(

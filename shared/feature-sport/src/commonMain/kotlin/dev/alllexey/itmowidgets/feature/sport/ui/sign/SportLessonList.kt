@@ -64,8 +64,8 @@ fun SportSignUiState.lessonListState(): SportLessonListState = when (this) {
 }
 
 /**
- * The `Запись` lessons as a list of their own, with [header] items above them (the filters and the week strip,
- * LP-5c). A screen whose list has more above it adds [sportLessons] to its own `LazyColumn` instead.
+ * The `Запись` lessons as a list of their own, with [header] items above them (the filters and the week strip). A
+ * screen whose list has more above it adds [sportLessons] to its own `LazyColumn` instead.
  */
 @Composable
 fun SportLessonList(

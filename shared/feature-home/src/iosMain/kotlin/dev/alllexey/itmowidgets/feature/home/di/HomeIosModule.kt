@@ -8,8 +8,8 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 /**
- * The iOS ports of [homeModule], what `:app`'s `HomeBridge` gives Android; load it with that module: the device's
- * [HomeHintStatus] over the app's placed widgets ([widgets], WidgetKit through the Swift app) and
+ * The iOS bindings of [homeModule], what `:app`'s `androidHomeModule` gives Android; load it with that module: the
+ * device's [HomeHintStatus] over the app's placed widgets ([widgets], WidgetKit through the Swift app) and
  * `UNUserNotificationCenter`. The feed's other sources and renderers arrive with their features' modules.
  */
 fun homeIosModule(widgets: PlacedWidgetKinds): Module = module {

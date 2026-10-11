@@ -1,8 +1,8 @@
 import Shared
 import SwiftUI
 
-/// The QR pass above home: LH-3's Compose route (`qrPassViewController`) with the screen at full brightness while it
-/// is on screen and the app is active, so a turnstile reads the code (master P8; Android's pass keeps the user's
+/// The QR pass above home: the Compose route (`qrPassViewController`) with the screen at full brightness while it
+/// is on screen and the app is active, so a turnstile reads the code (Android's pass keeps the user's
 /// brightness).
 struct QrPassScreen: View {
     @Environment(\.dismiss) private var dismiss

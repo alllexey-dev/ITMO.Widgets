@@ -29,7 +29,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.StringResource
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 
-/** One row of the subject page (port of 2.2's `SubjectHubAdapter.DetailItem`, LR-4a1). */
+/** One row of the subject page. */
 sealed interface SubjectHubItem {
     /** The result with the own sheet total, or the offer to connect one, at its bottom. */
     data class Hero(
@@ -79,8 +79,8 @@ sealed interface SubjectHubItem {
 }
 
 /**
- * The whole subject page as one list (2.2's `SubjectHubAdapter.submitContent`): the result with the sheet total, links,
- * chats, controls, teachers and the nearest lessons. Every list section is a heading over one connected group.
+ * The whole subject page as one list: the result with the sheet total, links, chats, controls, teachers and the nearest
+ * lessons. Every list section is a heading over one connected group.
  *
  * Without [linksEnabled] (`PlatformCapabilities.reviews` off: a platform that does not offer subject links yet) the
  * links section keeps only the course's LMS page and the chats go, so no shared link, vote or link sheet is offered.

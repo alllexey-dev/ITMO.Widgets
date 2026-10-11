@@ -2,7 +2,7 @@ import Foundation
 import Shared
 import WebKit
 
-/// The hidden `WKWebView` of the BARS renewal (IO-09d1, 11 row 13): Android's headless `BarsWebSilentLogin` on
+/// The hidden `WKWebView` of the BARS renewal: Android's headless `BarsWebSilentLogin` on
 /// `WKWebsiteDataStore.default()`, so ITMO.ID's SSO cookies of the sign-in pages sign it in. Never shown. Kotlin's
 /// `BarsWebNavigation` decides each main-frame URL: an ITMO.ID page loads, the exact BARS callback is cancelled and
 /// handed over, anything else stops the flow; other frames load only over https, no window opens. A page that
@@ -91,7 +91,7 @@ final class HiddenBarsBrowser: NSObject, BarsWebLoad, WKNavigationDelegate {
         }
     }
 
-    /// SP-21 saw `decidePolicyFor` catch the callback redirect; this is the fallback it kept.
+    /// A fallback: `decidePolicyFor` already catches the callback redirect.
     func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
         guard let url = webView.url?.absoluteString else { return }
         switch self.navigation.step(url: url) {

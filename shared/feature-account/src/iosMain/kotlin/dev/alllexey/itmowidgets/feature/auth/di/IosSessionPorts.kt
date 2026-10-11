@@ -17,11 +17,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 /**
- * The session's ports of the iOS app process for `SessionTransitions`, what `:app` gives Android through
- * `CoreBridge`. iOS has no background work, notifications or widgets to stop yet, and the App Group snapshots
+ * The session's ports of the iOS app process for `SessionTransitions`, what the platform's Koin modules give
+ * Android. iOS has no background work, notifications or widgets to stop yet, and the App Group snapshots
  * follow the session state ([SessionSnapshotSync]) and the data (each feature's writer), so the effects do nothing;
- * the cleaners run through `SessionDataCleaners`. The card that adds iOS background refresh (IO-16) or notifications
- * (IO-14) gives these effects their work.
+ * the cleaners run through `SessionDataCleaners`.
  */
 internal object IosSessionLifecycleEffects : SessionLifecycleEffects {
     override suspend fun prepareForSessionChange() = Unit
@@ -32,8 +31,7 @@ internal object IosSessionLifecycleEffects : SessionLifecycleEffects {
 }
 
 /**
- * No identity upload before an iOS card turns custom services on: nothing on iOS reads Backend yet. Reports
- * success, as Android's sync does when nothing is due.
+ * iOS uploads no identity to Backend; the sync reports success, as Android's sync does when nothing is due.
  */
 internal object NoBackendIdentitySync : BackendIdentitySync {
     override suspend fun sync(scheduleRetry: Boolean): Boolean = true

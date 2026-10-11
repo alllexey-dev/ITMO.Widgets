@@ -252,7 +252,7 @@ class DemoModeFlowTest {
         Screenshots.capture(DIRECTORY, name) { settle() }
     }
 
-    /** The schedule is Compose (LS-6b): the first placed lesson row opens its sheet by its semantics click. */
+    /** The first placed lesson row opens its sheet by its semantics click. */
     private fun openFirstLesson(activity: MainActivity) {
         val row = activity.window.decorView.descendants().filter { it.isShown }.filterIsInstance<ViewRootForTest>()
             .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }
@@ -263,7 +263,7 @@ class DemoModeFlowTest {
         checkNotNull(row.config[SemanticsActions.OnClick].action) { "the lesson row has no click" }.invoke()
     }
 
-    /** The subject page is Compose (LR-4b): the first link's up arrow votes by its semantics click. */
+    /** The first link's up arrow votes by its semantics click. */
     private fun voteOnFirstLink(activity: MainActivity) {
         val label = activity.getString(R.string.links_vote_up)
         val arrow = composedNodes(activity).first { node ->
@@ -334,10 +334,7 @@ class DemoModeFlowTest {
         const val MIN_TEXTS = 6
         const val DIRECTORY = "demo-check"
 
-        /**
-         * The test tag of DS-03a's `ContentState`, the Compose counterpart of the View screens' former
-         * `state_container` (the tag itself is L08's hand-in to `ContentState`).
-         */
+        /** The test tag of the design system's `ContentState`. */
         const val CONTENT_STATE_TAG = "ContentState"
     }
 }

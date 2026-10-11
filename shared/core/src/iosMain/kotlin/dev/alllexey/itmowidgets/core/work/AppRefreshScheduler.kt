@@ -43,7 +43,7 @@ object SystemAppRefreshSubmitter : AppRefreshSubmitter {
 }
 
 /**
- * The iOS [CheckScheduler] of every background check (IO-14). iOS has one app refresh task for the app,
+ * The iOS [CheckScheduler] of every background check. iOS has one app refresh task for the app,
  * [TASK_IDENTIFIER], which runs the background runner of `shared/ios`; each check keeps its own period inside that
  * runner. So [ensurePeriodic] only asks the system for the next wake, [runOnce] asks the running app for a run now,
  * and [cancel] does nothing: the task also refreshes the widgets, and the runner skips a check whose switch is off.

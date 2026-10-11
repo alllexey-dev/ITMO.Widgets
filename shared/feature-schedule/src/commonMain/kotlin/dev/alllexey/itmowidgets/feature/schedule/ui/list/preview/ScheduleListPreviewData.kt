@@ -20,9 +20,9 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 
 /**
- * Synthetic schedule for the previews, on the XML references' clock (LS-0, `ScheduleReferenceFixtures`): Monday,
- * 7 September 2026, 12:00 in Moscow. The 8:20 lesson is over, 10:00 is over and changed, 11:40 is in progress, 15:20
- * is next and has a link, two auto-sign rows follow; tomorrow is upcoming.
+ * Synthetic schedule for the previews, on the previews' clock: Monday, 7 September 2026, 12:00 in Moscow. The 8:20
+ * lesson is over, 10:00 is over and changed, 11:40 is in progress, 15:20 is next and has a link, two auto-sign rows
+ * follow; tomorrow is upcoming.
  */
 internal object ScheduleListPreviewData {
 

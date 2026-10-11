@@ -30,7 +30,7 @@ fun routeArgs(args: Bundle): Map<String, Any> = metadata { put(RouteArgsKey, arg
 /**
  * Seeds each entry's [RouteArgsKey] into the default creation extras ([DEFAULT_ARGS_KEY]) of the entry's
  * `ViewModelStoreOwner`, so a ViewModel created inside it (`koinViewModel()` in a feature's `<Name>Route`) finds its
- * arguments in `SavedStateHandle` exactly as under its Fragment host. Goes after the ViewModel store decorator, whose
+ * arguments in `SavedStateHandle`. Goes after the ViewModel store decorator, whose
  * per-entry owner it wraps; an entry without arguments is left alone.
  */
 class RouteArgsDecorator<T : Any> : NavEntryDecorator<T>(

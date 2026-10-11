@@ -11,7 +11,7 @@ import dev.alllexey.itmowidgets.feature.auth.ui.LoginActivity
 import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity
 
 /**
- * The three Activities the Compose shell keeps as Activities, with their FQCNs (route map section 6): they are never
+ * The three Activities the Compose shell keeps as Activities, with their FQCNs: they are never
  * back-stack keys. The shell starts an entry route's [ActivityRoute] above everything; the entries launch them for a
  * result through these intents and the spoiler contract.
  */

@@ -8,7 +8,7 @@ import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 
 /**
- * Starts the app's one Koin graph (ADR 0019).
+ * Starts the app's one Koin graph.
  *
  * `ItmoWidgetsApplication.onCreate()` calls [ensureStarted] first. The Android components call it as well:
  * WorkManager's `InitializationProvider` can run a worker, and Android can deliver a widget broadcast, before

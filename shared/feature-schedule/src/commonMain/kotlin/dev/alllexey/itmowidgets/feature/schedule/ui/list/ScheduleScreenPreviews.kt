@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.SelectedUser
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.preview.ScheduleListPreviewData
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LS-0 recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `ScheduleScreen_<state>`. Each state therefore is a function called `ScheduleScreen` in a holder class of its own;
  * the scanner instantiates each holder by reflection.
  */

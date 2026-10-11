@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 
 extension Routes {
-    /// The teacher reviews (IO-09f): the review editor is a Compose sheet above the shell, opened from a teacher's
+    /// The teacher reviews: the review editor is a Compose sheet above the shell, opened from a teacher's
     /// profile (`ReviewEditorSheet.swift`). The report of a review is the Compose dialog over the profile that asks for
     /// it, so its key has no iOS surface of its own.
     static func reviews(_ route: any AppRoute) -> RouteTarget {

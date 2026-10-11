@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.sport.data.debug
 
 /**
  * The debug tools' points for the current sport period, which replace MyITMO's attendance and bonus sums. Only a debug
- * build stores one; every other build answers `null`. The platform binds it: on Android `SportBridge` adapts the
+ * build stores one; every other build answers `null`. The platform binds it: on Android `androidSportModule` adapts the
  * app's `core/debug` override store.
  */
 fun interface SportScoreOverrideSource {

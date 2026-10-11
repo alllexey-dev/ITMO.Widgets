@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 import XCTest
 @testable import ITMOWidgets
 
-/// The calendar on iOS (IO-15b): what turning the sync on asks of EventKit, the settings rows iOS now lists, the
+/// The calendar on iOS: what turning the sync on asks of EventKit, the settings rows iOS now lists, the
 /// `.ics` sheet's ViewModel in the app's graph and, with full access granted to the simulator
 /// (`xcrun simctl privacy <udid> grant calendar dev.alllexey.itmowidgets`), the app's calendar made and removed in
 /// EventKit through the shared sync. The sync's rules over a fake event store are `EventKitCalendarSyncTest`.

@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyUiState
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LP-1d recorded the XML reference as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baseline is named
  * `SportMyScreen_content`. Each state therefore is a function called `SportMyScreen` in a holder class of its own;
  * the scanner instantiates each holder by reflection.
  */

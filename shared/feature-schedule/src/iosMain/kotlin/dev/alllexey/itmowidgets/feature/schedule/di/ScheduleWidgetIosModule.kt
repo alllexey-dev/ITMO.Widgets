@@ -38,9 +38,9 @@ import platform.Foundation.NSOperationQueue
 import platform.UIKit.UIApplicationWillEnterForegroundNotification
 
 /**
- * The schedule widgets' App Group timeline (IO-10b): [ScheduleTimelineWriter] starts with the graph and writes on the
- * main queue (WidgetKit reloads are asked there) on every trigger for the life of the app process; IO-14's background
- * runner publishes it as its widget snapshot step. It is also the iOS `ScheduleWidgetRefreshRequester`, which sport
+ * The schedule widgets' App Group timeline: [ScheduleTimelineWriter] starts with the graph and writes on the main
+ * queue (WidgetKit reloads are asked there) on every trigger for the life of the app process; the background runner
+ * publishes it as its widget snapshot step. It is also the iOS `ScheduleWidgetRefreshRequester`, which sport
  * asks after a booking.
  *
  * The provider and the cached schedule are resolved at each write from the schedule data graph (`scheduleDataModule`,
@@ -60,7 +60,7 @@ val scheduleWidgetIosModule = module {
             writer.launchIn(CoroutineScope(SupervisorJob() + get<AppDispatchers>().main), triggers())
         }
     } bind ScheduleWidgetRefreshRequester::class
-    // The background runner's first step (IO-14): the timeline again on every wake, launch and foreground.
+    // The background runner's first step: the timeline again on every wake, launch and foreground.
     single(named(RefreshStepKeys.WIDGET_SNAPSHOTS)) {
         val writer = get<ScheduleTimelineWriter>()
         RefreshStep(RefreshStepKeys.WIDGET_SNAPSHOTS, Duration.ZERO) {

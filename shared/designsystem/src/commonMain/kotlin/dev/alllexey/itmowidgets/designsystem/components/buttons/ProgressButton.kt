@@ -181,7 +181,7 @@ private fun IosButtonContent(label: String, icon: Painter?, inProgress: Boolean)
 }
 
 /**
- * Container and content of each style, from `UIButton.Configuration` on the pinned runtime (DS-IOS-02): `.filled()`
+ * Container and content of each style, from `UIButton.Configuration` on the pinned runtime: `.filled()`
  * draws the tint under white text, `.tinted()` the tint at 0x2E alpha under tint text, `.plain()` no container. A
  * disabled button takes the tertiary fill and label, as UIKit's disabled configurations do.
  */
@@ -199,7 +199,7 @@ private fun iosColors(style: ProgressButtonStyle, enabled: Boolean): Pair<Color,
 }
 
 /**
- * `UIButton.Configuration.tinted()`'s background: the tint at alpha 0x2E, measured on the pinned runtime (DS-IOS-02).
+ * `UIButton.Configuration.tinted()`'s background: the tint at alpha 0x2E, measured on the pinned runtime.
  */
 private const val IOS_TINTED_FILL_ALPHA = 0x2E / 255f
 

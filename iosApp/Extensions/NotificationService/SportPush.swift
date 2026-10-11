@@ -59,7 +59,7 @@ struct PushedLesson: Equatable {
     }
 
     /// ISO 8601 with an offset where seconds and the fraction are optional: Java writes `2026-10-05T17:00+03:00`
-    /// for a lesson on the minute (SP-16a trap).
+    /// for a lesson on the minute.
     static func parseOffsetDateTime(_ text: String) -> Date? {
         guard let match = offsetDateTime.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) else {
             return nil
@@ -76,7 +76,7 @@ struct PushedLesson: Equatable {
     )
 }
 
-/// What MyITMO answered to a sign-up: Kotlin's `SportSignOutcome` (KM-11c), golden `sign-outcomes.txt`.
+/// What MyITMO answered to a sign-up: Kotlin's `SportSignOutcome`, golden `sign-outcomes.txt`.
 enum SportSignOutcome: String {
     case signedIn = "SIGNED_IN"
     case noCapacity = "NO_CAPACITY"
@@ -146,7 +146,7 @@ struct SportPushCalls {
     }
 }
 
-/// Android's `SportSignPushBooker` (KM-11c) in the notification service: each lesson decoded on its own and skipped
+/// Android's `SportSignPushBooker` in the notification service: each lesson decoded on its own and skipped
 /// when malformed, unnamed, repeated or already ended, then booked on MyITMO. A booking is reported and marked
 /// satisfied on Backend, MyITMO's refusal is reported and cancels the queue entry, a full lesson stays queued, any
 /// other failure is retried by Backend. Bookings, pending queues and widgets refresh when the app runs next.

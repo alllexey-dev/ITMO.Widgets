@@ -10,9 +10,8 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
- * The first-run flag, one single over the platform's `UtilityStorage`; Hilt-built code reads it through the app's
- * `AccountOnboardingBridge`. A separate module from [onboardingModule], so a debug fixture that reloads the flow never
- * builds a second repository.
+ * The first-run flag, one single over the platform's `UtilityStorage`. A separate module from [onboardingModule], so
+ * a debug fixture that reloads the flow never builds a second repository.
  */
 val onboardingDataModule = module {
     singleOf(::OnboardingRepositoryImpl) { bind<OnboardingRepository>() }

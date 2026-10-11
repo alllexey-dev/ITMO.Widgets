@@ -28,7 +28,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The navigation bar of a sheet presented by SwiftUI (DS-IOS-05, measured on iOS 27): [IosMetrics.navigationBarHeight]
+ * The navigation bar of a sheet presented by SwiftUI (measured on iOS 27): [IosMetrics.navigationBarHeight]
  * high, [IosMetrics.sheetBarTop] below the sheet's edge where the host's grabber sits, bar buttons
  * [IosMetrics.barEdgeInset] from the sides. The title is headline alone, or subheadline semibold over the subtitle in
  * caption, centred on the bar and kept clear of the wider side; both wrap rather than lose words.
@@ -137,7 +137,6 @@ private val TitleGap = 8.dp
 private val TextClosePadding = 6.dp
 
 /**
- * The Material Symbols close at the size whose glyph (7/12 of the box) matches the bar's 17 x 16 pt `xmark` image;
- * glyph-exact checks are DS-IOS-06's.
+ * The Material Symbols close at the size whose glyph (7/12 of the box) matches the bar's 17 x 16 pt `xmark` image.
  */
 private val CloseMarkSize = 28.dp

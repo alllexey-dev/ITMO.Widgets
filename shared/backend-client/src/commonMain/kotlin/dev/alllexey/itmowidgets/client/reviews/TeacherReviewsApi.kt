@@ -18,7 +18,7 @@ import kotlin.uuid.Uuid
  * `invalid_request_data`; voting on or reporting one's own review, reporting a copy, a repeated report and the
  * daily limits are 409 `business_rule_violation`.
  *
- * Not mirrored: the moderation routes under `/api/moderation` (moderators only, CO-02) and the moderation-only types
+ * Not mirrored: the moderation routes under `/api/moderation` (moderators only) and the moderation-only types
  * `TeacherReviewRevision`, `ModeratedTeacherReview`, `ReviewRevisionStatus` and `ReviewVerification`.
  */
 interface TeacherReviewsApi {

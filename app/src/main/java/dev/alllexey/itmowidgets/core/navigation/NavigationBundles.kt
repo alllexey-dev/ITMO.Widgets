@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 
 /*
  * The Android `Bundle` side of the navigation arguments, kept out of the argument classes so they stay
- * platform-free. The keys are the ones notifications, saved state and the Fragment hosts already use.
+ * platform-free. The keys are the ones notifications, saved state and the shell entries use.
  */
 
 fun RecordbookSubjectArgs.toBundle(): Bundle = Bundle().apply {

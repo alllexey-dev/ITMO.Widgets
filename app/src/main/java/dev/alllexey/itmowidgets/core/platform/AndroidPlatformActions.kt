@@ -14,8 +14,8 @@ import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
 import dev.alllexey.itmowidgets.core.url.TelegramLinks
 
 /**
- * [PlatformActions] over activities, with the intents of the View screens: `ShareText.kt`, `LinkOpener.kt` and
- * `MapLauncher.kt`. [context] is the host's; outside an activity a new task is started.
+ * [PlatformActions] over activities, with the intents of `ShareText.kt` and `MapLauncher.kt`. [context] is the host's;
+ * outside an activity a new task is started.
  */
 class AndroidPlatformActions(private val context: Context) : PlatformActions {
 

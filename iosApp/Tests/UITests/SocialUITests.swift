@@ -1,8 +1,8 @@
 import XCTest
 
-/// The me tab and the social screens on the shared demo session (IO-09e): LA-3's Compose Me tab as the root of the me
+/// The me tab and the social screens on the shared demo session: the Compose Me tab as the root of the me
 /// stack, people search with Compose's text field on the system keyboard, the person profile with the demo's refusal
-/// of a friendship action and a teacher's reviews section (IO-09f, `ReviewsLinksUITests` covers its editor and
+/// of a friendship action and a teacher's reviews section (`ReviewsLinksUITests` covers its editor and
 /// report), the friends list and a user's friends, the home feed's friend-requests card, and the Me tab at the accessibility text size AX1. Compose maps `testTag` to the accessibility
 /// identifier (`MeTestTags`, `UserSearchTestTags`, `UserListTestTags`, `UserProfileTestTags`); the texts are Russian
 /// on an English iPhone. The ISUs are the demo set's (`DemoPeople`).
@@ -74,7 +74,7 @@ final class SocialUITests: XCTestCase {
         let reviews = element(app, "user_profile_reviews")
         for _ in 0..<6 where !reviews.exists { element(app, "user_profile_list").swipeUp(velocity: .slow) }
         attachScreenshot(named: "teacher-profile")
-        XCTAssertTrue(reviews.waitForExistence(timeout: stepTimeout), "the reviews section (IO-09f)")
+        XCTAssertTrue(reviews.waitForExistence(timeout: stepTimeout), "the reviews section")
         XCTAssertTrue(element(app, "user_profile_write_review").exists)
     }
 

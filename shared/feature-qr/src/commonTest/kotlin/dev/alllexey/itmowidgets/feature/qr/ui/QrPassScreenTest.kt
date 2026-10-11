@@ -42,7 +42,7 @@ class QrPassScreenTest {
         var state by mutableStateOf<QrCodeUiState>(QrCodeUiState.Loading)
         var width by mutableStateOf(NarrowWidth)
         setContent {
-            // The sides below are Material's (16 dp screen margin); DS-IOS-06's QR pilot checks the iOS look.
+            // The sides below are Material's (16 dp screen margin).
             ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
                 Box(Modifier.requiredSize(width, WindowHeight)) { QrPassScreen(state, onRefresh = {}, onBack = {}) }
             }

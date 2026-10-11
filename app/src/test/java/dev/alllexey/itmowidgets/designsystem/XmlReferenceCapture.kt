@@ -30,19 +30,19 @@ import com.google.android.material.R as MaterialR
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance as HostAppearance
 
 /**
- * Captures a View screen of today on the JVM in the appearances of [PreviewAppearance], under the name of the
- * Compose preview that will replace it, so the port's first record overwrites the reference and its diff is the
- * parity diff. With a [module] the baselines go to `shared/<module>/screenshots/` and the name is listed in its
- * `references.txt` (record adds it, verify requires it); without one, to `app/screenshots/`.
+ * Captures a View screen on the JVM in the appearances of [PreviewAppearance], under the name of the Compose
+ * preview that replaces it, so the preview's first record overwrites the reference and its diff shows what changed.
+ * With a [module] the baselines go to `shared/<module>/screenshots/` and the name is listed in its `references.txt`
+ * (record adds it, verify requires it); without one, to `app/screenshots/`.
  *
  * The three ways in, all in the app theme, Russian, at the appearance's font scale, night mode and window width:
  * - [layout]: a layout inflated into [ReferenceHostActivity], filled by `bind`;
  * - [fragment]: a Fragment in [ReferenceHostActivity];
  * - [host]: a debug host Activity from `app/src/debug`, which reads its own static appearance.
  *
- * Seeded appearances get MDC's content-based scheme (`DynamicColorsOptions.setContentBasedSource`), the one DS-01a's
+ * Seeded appearances get MDC's content-based scheme (`DynamicColorsOptions.setContentBasedSource`), the one
  * `ColorSource.Seed` reproduces. `DynamicColors.applyToActivityIfAvailable`, which the debug hosts call, trips an
- * AssetManager check under Robolectric (SP-06), so the hosts get no seed and [SeededActivities] seeds every activity
+ * AssetManager check under Robolectric, so the hosts get no seed and [SeededActivities] seeds every activity
  * before its `onCreate`.
  */
 class XmlReferenceCapture(

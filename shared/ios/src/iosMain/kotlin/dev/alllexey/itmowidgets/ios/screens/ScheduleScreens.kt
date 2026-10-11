@@ -38,7 +38,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import platform.UIKit.UIViewController
 
 /**
- * The schedule tab's root (`AppRoutes.TabRoot(SCHEDULE)`): L10's `ScheduleRoute` of the own schedule with the
+ * The schedule tab's root (`AppRoutes.TabRoot(SCHEDULE)`): `ScheduleRoute` of the own schedule with the
  * [controller] Swift hosts and the requests Android's schedule tab root takes as results. [showToday] is the `today`
  * entry route (the own schedule on today); [showFriend] is the friend picker's answer. Requests sent before the
  * first frame wait in an unlimited buffer, as on Android.
@@ -163,7 +163,7 @@ fun friendSelectorViewController(
     )
 }
 
-/** The routes draw their own top bar and no insets (DS-03), so the host pads the safe area on every side. */
+/** The routes draw their own top bar and no insets, so the host pads the safe area on every side. */
 @Composable
 private fun Padded(content: @Composable () -> Unit) {
     Box(

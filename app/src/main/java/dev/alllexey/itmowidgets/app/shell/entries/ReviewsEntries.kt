@@ -35,8 +35,8 @@ import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorSheet
 import org.koin.core.parameter.parametersOf
 
 /**
- * The reviews keys (route map S8, D1): the review editor, a form sheet that asks before a draft is discarded, and the
- * report of a review. Both read the teacher under `TeacherReviewArgs`, as the Fragment hosts do.
+ * The reviews keys: the review editor, a form sheet that asks before a draft is discarded, and the
+ * report of a review. Both read the teacher under `TeacherReviewArgs`.
  */
 internal fun EntryRegistry.Builder.reviewsEntries() {
     entry<AppRoutes.ReviewEditor>(args = { it.args.toArguments() }) { key, navigator ->
@@ -53,7 +53,7 @@ private fun TeacherReviewArgs.toArguments() =
     bundleOf(TeacherReviewArgs.TEACHER_ISU to teacherIsu, TeacherReviewArgs.TEACHER_NAME to teacherName)
 
 /**
- * The review editor (S8). The shell's form sheet ignores drag, a tap outside and its own Back, so Back and the close
+ * The review editor. The shell's form sheet ignores drag, a tap outside and its own Back, so Back and the close
  * button come here: unsaved changes ask `Не сохранять отзыв?` first (not restored after recreation, like the View
  * dialog), an untouched form closes. A saved review closes the sheet; a failed save says so.
  */
@@ -95,7 +95,7 @@ private fun ReviewEditorEntry(onClose: () -> Unit) {
 }
 
 /**
- * The report of a review (D1) on the kit's report dialog, which stays until the report is accepted; a failure shows
+ * The report of a review on the kit's report dialog, which stays until the report is accepted; a failure shows
  * under the comment until the next send.
  */
 @Composable

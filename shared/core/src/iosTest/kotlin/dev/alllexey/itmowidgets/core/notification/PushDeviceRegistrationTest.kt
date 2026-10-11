@@ -21,7 +21,7 @@ import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 
 /**
- * The iOS push registration against Core 2.0 on a MockEngine (IO-13a): what reaches Backend in each state of the
+ * The iOS push registration against Core 2.0 on a MockEngine: what reaches Backend in each state of the
  * opt-in, the demo, the alerts answer, the push token and the account. Every token and ISU is synthetic.
  */
 class PushDeviceRegistrationTest {

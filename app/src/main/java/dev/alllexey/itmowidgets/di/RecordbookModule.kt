@@ -32,8 +32,8 @@ import org.koin.dsl.module
  * All recordbook data is `recordbookModule`'s.
  */
 val androidRecordbookModule = module {
-    // The BARS engine, apart from MyITMO's: the ADR 0012 policy of MyItmoApi's `defaultEngine()` (no cookie jar,
-    // cache or redirects) with the BARS timeouts. Neither client closes it; it lives as long as the process.
+    // The BARS engine, apart from MyITMO's: the policy of MyItmoApi's `defaultEngine()` (no cookie jar, cache or
+    // redirects) with the BARS timeouts. Neither client closes it; it lives as long as the process.
     single<HttpClientEngine>(barsEngineQualifier) {
         OkHttp.create {
             config {

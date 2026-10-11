@@ -2,7 +2,7 @@ import SnapshotTesting
 import SwiftUI
 import XCTest
 
-/// The harness proof (IO-17): the sample card's references in all four appearances, and a one-pixel change that
+/// The harness proof: the sample card's references in all four appearances, and a one-pixel change that
 /// the shared precision must reject.
 final class SampleSnapshotTests: XCTestCase {
     func testSampleCard() {

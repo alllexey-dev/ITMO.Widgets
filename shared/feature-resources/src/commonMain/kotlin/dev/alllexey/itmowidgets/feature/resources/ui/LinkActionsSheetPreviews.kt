@@ -12,7 +12,7 @@ import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /*
- * LX-1c recorded the XML references as `LinkActionsSheetContent_<state>`, so each state is a function called
+ * The references are named `LinkActionsSheetContent_<state>`, so each state is a function called
  * `LinkActionsSheetContent` in a holder class of its own. The sheet wraps its content on the sheet's colour, as
  * the shell's sheet opens it, over the links of `SubjectLinksSamples`.
  */

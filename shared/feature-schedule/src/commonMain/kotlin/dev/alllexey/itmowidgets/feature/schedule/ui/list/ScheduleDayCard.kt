@@ -53,7 +53,7 @@ object ScheduleListTestTags {
 }
 
 /**
- * One day of the schedule (`Card.ScheduleDay`, port of `item_day_schedule.xml`): the weekday and the date, the
+ * One day of the schedule (`Card.ScheduleDay`): the weekday and the date, the
  * summary pill, then [day]'s rows on one timeline. Today has a 2 dp `primary` stroke, a `primary` title and pill; a
  * past day fades its content once to 0.72 and its rows add no alpha of their own. Rendered only from [day].
  */

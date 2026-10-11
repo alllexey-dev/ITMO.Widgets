@@ -52,12 +52,12 @@ class SportModuleTest {
 
     /**
      * The data, the push decision, the controllers, the holder and the three screens resolve inside the module; the
-     * core contracts (the app's `CoreBridge`, `friendSelectorModule` and `settingsDataModule`) and the debug ports
-     * (the app's `SportBridge`) are given.
+     * core contracts (the platform's Koin modules, `friendSelectorModule` and `settingsDataModule`) and the debug
+     * ports (`androidSportModule`) are given.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theSportModuleResolvesWithTheBridgedTypes() {
+    fun theSportModuleResolvesWithThePlatformTypes() {
         sportModule.verify(
             extraTypes = listOf(
                 MyItmoClient::class,

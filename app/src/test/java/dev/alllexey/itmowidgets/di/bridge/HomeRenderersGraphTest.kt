@@ -13,7 +13,7 @@ import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
 /**
- * The home feed draws each card with the renderer of its producing feature (L09 LH-4): across the release modules,
+ * The home feed draws each card with the renderer of its producing feature: across the release modules,
  * every `HomeCardKind` has exactly one `HomeCardRenderer`.
  */
 class HomeRenderersGraphTest {

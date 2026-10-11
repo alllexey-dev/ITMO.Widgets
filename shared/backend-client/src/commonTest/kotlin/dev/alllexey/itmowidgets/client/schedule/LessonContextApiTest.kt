@@ -14,8 +14,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * Port of Core 1.7.0 `schedule/LessonContextApiTest`. The Retrofit reflection check that `usersByPairId` is gone
- * becomes an assertion that every schedule route case sends one of the three mirrored routes.
+ * The lesson context routes; every schedule route case sends one of the three mirrored routes (`usersByPairId` is
+ * gone).
  */
 class LessonContextApiTest {
 

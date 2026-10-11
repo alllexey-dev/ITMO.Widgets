@@ -53,14 +53,9 @@ import org.jetbrains.compose.resources.StringResource
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.core.sport_registration_waiting
 
-/*
- * The sport card and details texts in commonMain, the only copy since LP-6 deleted `:app`'s View helpers they were
- * ported from (`SportCardPresentation`, `OccupancyTone`, `SportBookingRestrictionText`, `SportLessonPresentation`).
- */
-
 /**
- * Stable status semantics of sport conditions, independent of the wallpaper's primary colour; the Compose twin of
- * `:app`'s `ConditionTone`. The colours are `ItmoTheme.extendedColors.sportCondition*` ([accent] in SportCardParts).
+ * Stable status semantics of sport conditions, independent of the wallpaper's primary colour. The colours are
+ * `ItmoTheme.extendedColors.sportCondition*` ([accent] in SportCardParts).
  */
 enum class SportConditionTone { ALLOWED, WAITING, WARNING, BLOCKED }
 

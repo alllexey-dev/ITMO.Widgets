@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LA-1c recorded the XML reference as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baseline is named
  * `MyItmoWebScreen_error`. Each state therefore is a function called `MyItmoWebScreen` in a holder class of its own.
  */
 

@@ -26,8 +26,8 @@ val hintCardsQualifier: Qualifier = named("hints")
 /**
  * The home feed definitions Koin constructs. The feed takes every Koin `HomeCardSource` and every `HomeCardRenderer`
  * (`getAll()`); home's own renderer draws the hints. The `HomeLayoutPreferences` store, the services opt-in and the
- * wall clock come from the app's `CoreBridge`, the device's `HomeHintStatus` from the platform (`HomeBridge` on
- * Android).
+ * wall clock come from the platform's Koin modules, the device's `HomeHintStatus` from the platform's home module
+ * (`androidHomeModule`, `homeIosModule`).
  */
 val homeModule = module {
     singleOf(::DataStoreHomeCardPreferences) { bind<HomeCardPreferences>() }

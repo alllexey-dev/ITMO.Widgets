@@ -94,7 +94,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.parameter.parametersOf
 
 /**
- * The settings keys (route map rows 10-12 and S6): every settings page under its `SettingsScreenArgs.PAGE`, the error
+ * The settings keys: every settings page under its `SettingsScreenArgs.PAGE`, the error
  * journal and the `.ics` sheet. A page's rows open the next page, the journal and the sheet through the navigator;
  * the permission, picker and system-page launchers go through the helpers of `feature/settings/ui/`.
  */
@@ -107,7 +107,7 @@ internal fun EntryRegistry.Builder.settingsEntries() {
 }
 
 /**
- * One settings page (row 10): the page's widget preview, the shown dialog and
+ * One settings page: the page's widget preview, the shown dialog and
  * a pending calendar request in this entry's saved state, the row states refreshed on every resume, and on the QR
  * widget page the custom spoiler image with its own ViewModel. A sub-page opens as another [AppRoutes.Settings].
  */
@@ -319,7 +319,7 @@ private val DialogsSaver = Saver<SettingsDialogState, String>(
     restore = { SettingsDialogState.restore(it) },
 )
 
-/** «Журнал ошибок» (row 11): the journal goes to the clipboard; Android 13 and later confirm a copy themselves. */
+/** «Журнал ошибок»: the journal goes to the clipboard; Android 13 and later confirm a copy themselves. */
 @Composable
 private fun DiagnosticsEntry(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -342,7 +342,7 @@ private fun DiagnosticsEntry(onBack: () -> Unit) {
 }
 
 /**
- * «Выгрузить в .ics» (S6): the date range picker for «Свои даты» runs on the activity's fragment manager, listened to
+ * «Выгрузить в .ics»: the date range picker for «Свои даты» runs on the activity's fragment manager, listened to
  * again after recreation and closed with the sheet; the written file is shared or opened through the FileProvider
  * intents.
  */

@@ -201,7 +201,7 @@ internal fun RecordbookSubjectEventSnackbars(events: Flow<RecordbookSubjectEvent
             events.collect { event ->
                 when (event) {
                     is RecordbookSubjectEvent.VoteFailed -> {
-                        // As 2.2's snackbar did, the failure replaces whatever snackbar is shown.
+                        // The failure replaces whatever snackbar is shown.
                         val message = getString(event.error.textResource())
                         snackbars.currentSnackbarData?.dismiss()
                         launch { snackbars.showSnackbar(message, duration = SnackbarDuration.Short) }
@@ -213,9 +213,9 @@ internal fun RecordbookSubjectEventSnackbars(events: Flow<RecordbookSubjectEvent
 }
 
 /**
- * One page per subject (2.2's `fragment_recordbook_subject.xml`): the subject's name in up to two lines with its
- * assessment and semester under the back button, then one list of the result card (or the sport overview for physical
- * education), links, chats, controls, teachers and the nearest lessons ([subjectHubItems]).
+ * One page per subject: the subject's name in up to two lines with its assessment and semester under the back button,
+ * then one list of the result card (or the sport overview for physical education), links, chats, controls, teachers and
+ * the nearest lessons ([subjectHubItems]).
  *
  * The first load without a cache shows list placeholders under the header, a failed one the error with a retry in the
  * same area; a pull shows the indicator over the list. Several sheet links ask which one to connect, own ones marked.
@@ -395,8 +395,8 @@ private fun SubjectHubRow(
 }
 
 /**
- * A key per row that stays with the row while the page updates (the identities 2.2's `SubjectHubAdapter` diff used): a
- * link, chat, control, lesson or teacher by its own id, every other row by its kind. A repeated key gets a suffix.
+ * A key per row that stays with the row while the page updates: a link, chat, control, lesson or teacher by its own id,
+ * every other row by its kind. A repeated key gets a suffix.
  */
 internal fun subjectHubKeys(items: List<SubjectHubItem>): List<String> {
     val seen = mutableSetOf<String>()
@@ -446,17 +446,17 @@ private fun TextStyle.russian(): TextStyle =
 
 private const val TITLE_LINES = 2
 
-/** `?attr/actionBarSize` of the XML toolbar under Material 3. */
+/** The Material 3 top app bar's height. */
 private val HeaderMinHeight = 64.dp
 
-/** The back button 4 dp in from the edge and the title 4 dp after it, at the 56 dp of the XML toolbar's title. */
+/** The back button 4 dp in from the edge and the title 4 dp after it. */
 private val HeaderEdgePadding = 4.dp
 private val SubtitleGap = 2.dp
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LR-1c recorded the XML references as
- * `RecordbookSubjectScreen_<state>`. Each state therefore is a function called after the screen in a holder class of
- * its own; the scanner instantiates each holder by reflection.
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are `RecordbookSubjectScreen_<state>`.
+ * Each state therefore is a function called after the screen in a holder class of its own; the scanner instantiates
+ * each holder by reflection.
  */
 
 @Composable

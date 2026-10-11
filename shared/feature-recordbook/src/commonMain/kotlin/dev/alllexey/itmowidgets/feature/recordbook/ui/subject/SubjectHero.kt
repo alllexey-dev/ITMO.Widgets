@@ -50,9 +50,9 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_score_out_of
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The result card at the top of a subject page (2.2's `item_subject_hero.xml`): the points out of 100 with the final
- * grade once it is set, the grade scale filled in the result's colour and the hint to the next grade. TalkBack reads
- * the result as one description. [sheet] is the own sheet total or the offer to connect one (LR-4a2), at the bottom.
+ * The result card at the top of a subject page: the points out of 100 with the final grade once it is set, the grade
+ * scale filled in the result's colour and the hint to the next grade. TalkBack reads the result as one description.
+ * [sheet] is the own sheet total or the offer to connect one, at the bottom.
  *
  * The card is the subject page's one hero: the points take the emphasized type, and the scale is filled to [fill],
  * which the page animates with [rememberSubjectHeroFill]; by default it is the subject's points as they are.

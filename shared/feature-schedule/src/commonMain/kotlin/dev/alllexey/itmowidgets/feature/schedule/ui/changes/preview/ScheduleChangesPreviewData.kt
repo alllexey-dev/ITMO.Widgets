@@ -11,7 +11,7 @@ import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 
-/** The history LS-0's references show (`ScheduleReferenceFixtures.history()`), grouped as the ViewModel groups it. */
+/** The change history of the previews, grouped as the ViewModel groups it. */
 internal object ScheduleChangesPreviewData {
 
     private const val TEACHER_NAME = "Тестовый преподаватель с очень длинным именем"

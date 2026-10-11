@@ -1,8 +1,8 @@
 import XCTest
 
-/// The home tab on the shared demo session (IO-09a): LH-2's Compose feed as the root of the home stack, its hints
-/// (the widget hint's instruction sheet, a closed hint that stays closed across a relaunch), the new-marks card
-/// (IO-09d3), the QR and My ITMO buttons, and the feed at the accessibility text size AX1. Compose maps `testTag` to the accessibility identifier
+/// The home tab on the shared demo session: the Compose feed as the root of the home stack, its hints
+/// (the widget hint's instruction sheet, a closed hint that stays closed across a relaunch), the new-marks card,
+/// the QR and My ITMO buttons, and the feed at the accessibility text size AX1. Compose maps `testTag` to the accessibility identifier
 /// (`HomeTestTags`, `HomeCardTestTags`); the texts are Russian on an English iPhone. A launch with
 /// `-itmoForgetHomeHints` starts with every hint the simulator's state shows: no widget is placed there, so the widget
 /// hint always shows.
@@ -28,7 +28,7 @@ final class HomeUITests: XCTestCase {
         attachScreenshot(named: "demo-feed")
     }
 
-    /// The new-marks card (IO-09d3): the demo's two unread subjects, and a tap opens the recordbook tab.
+    /// The new-marks card: the demo's two unread subjects, and a tap opens the recordbook tab.
     func testDemoFeedShowsTheNewMarksCardThatOpensTheRecordbook() {
         let app = XCUIApplication.itmo()
         app.launch()
@@ -56,7 +56,7 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(scrollTo(hint, in: app))
         reveal(element(app, "home_hint_action"), in: app)
 
-        // The schedule cards come first since IO-09b, so the close button is the one inside the hint.
+        // The schedule cards come first, so the close button is the one inside the hint.
         closeButton(app, of: hint).tap()
 
         XCTAssertTrue(hint.waitForNonExistence(timeout: stepTimeout))
@@ -120,7 +120,7 @@ final class HomeUITests: XCTestCase {
         app.launch()
         waitForFeed(app)
         attachScreenshot(named: "demo-feed-ax1")
-        // The schedule cards come first since IO-09b; the hint follows them below the fold.
+        // The schedule cards come first; the hint follows them below the fold.
         let hint = element(app, "home_card_hint_widgets")
         for _ in 0..<4 where !hint.exists {
             element(app, "home_feed").swipeUp()
@@ -163,7 +163,7 @@ final class HomeUITests: XCTestCase {
         return target.waitForExistence(timeout: stepTimeout)
     }
 
-    /// Scrolls the feed until `target` can be tapped: the schedule (IO-09b) and sport (IO-09c) cards come first, so
+    /// Scrolls the feed until `target` can be tapped: the schedule and sport cards come first, so
     /// the hint can start under the tab bar. A tap during the fling only stops it, so this waits for the feed to rest.
     private func reveal(_ target: XCUIElement, in app: XCUIApplication) {
         for _ in 0..<4 where !target.isHittable {

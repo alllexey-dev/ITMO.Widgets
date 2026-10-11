@@ -18,7 +18,7 @@ import org.junit.Test
 
 /**
  * Every policy that gates a WebView or a link decides on the corpus exactly as its `java.net.URI` version did
- * ([Released], copied from 2.2 unchanged).
+ * ([Released], the released implementation kept unchanged).
  */
 class UrlPolicyParityTest {
 
@@ -77,7 +77,7 @@ class UrlPolicyParityTest {
         return grid.map { it + tails.random(random) } + grid.map { it + tails.random(random) }
     }
 
-    /** The 2.2 policies on `java.net.URI`, `URLEncoder` and `URLDecoder`. */
+    /** The released policies on `java.net.URI`, `URLEncoder` and `URLDecoder`. */
     private object Released {
 
         private fun parse(url: String): URI? = runCatching { URI(url) }.getOrNull()

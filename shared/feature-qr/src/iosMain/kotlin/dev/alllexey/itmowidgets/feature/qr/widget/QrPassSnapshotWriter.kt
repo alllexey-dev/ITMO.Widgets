@@ -32,7 +32,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 /**
- * What the QR widget draws, `qr-pass-v1.json` in the App Group container (ADR 0027): the widget extension links no
+ * What the QR widget draws, `qr-pass-v1.json` in the App Group container: the widget extension links no
  * Kotlin, so it gets the modules of the shared [QrCodeGenerator] (version 1, ECC LOW), the very code the pass
  * screen and Android's widget draw, and never encodes a QR code itself.
  */
@@ -80,9 +80,9 @@ data class QrWidgetAppearance(
 /**
  * Keeps [FILE] on the pass that [QrCodeRepository] holds, on the QR widget options of [settings] and on the widget
  * theme of [appearance]: every new valid pass and every changed option is written with the pass's expiry and the QR
- * widget kind is reloaded, so a changed switch reaches placed widgets at once. Nothing is written while there is no valid pass; on sign-out the App Group
- * cleaner removes the file and the cleared cache emits nothing new, so the file stays gone until the next pass.
- * Times come from the wall [clock].
+ * widget kind is reloaded, so a changed switch reaches placed widgets at once. Nothing is written while there is no
+ * valid pass; on sign-out the App Group cleaner removes the file and the cleared cache emits nothing new, so the file
+ * stays gone until the next pass. Times come from the wall [clock].
  */
 class QrPassSnapshotWriter(
     private val repository: QrCodeRepository,
@@ -148,7 +148,7 @@ class QrPassSnapshotWriter(
     companion object {
         val FILE = SnapshotFile(name = "qr-pass", version = 1, serializer = QrPassSnapshot.serializer())
 
-        /** The QR widget's WidgetKit kind (ADR 0027), a stable identifier. */
+        /** The QR widget's WidgetKit kind, a stable identifier. */
         const val QR_WIDGET_KIND = "dev.alllexey.itmowidgets.widget.qr"
 
         private const val DARK = '1'

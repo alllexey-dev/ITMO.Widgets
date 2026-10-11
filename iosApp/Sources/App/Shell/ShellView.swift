@@ -19,7 +19,7 @@ struct ShellView: View {
             }
             .task { await session.follow() }
             .sheet(item: $router.sheet) { sheet in
-                // Route sheets open further routes and answer their opener through the router (IO-09b).
+                // Route sheets open further routes and answer their opener through the router.
                 ShellSheetView(sheet: sheet)
                     .environment(router)
             }
@@ -74,7 +74,7 @@ struct ShellStack: View {
 
     var body: some View {
         // The banner sits under the stack, not in a `safeAreaInset`: the inset never reaches the screens a stack
-        // pushes, so the end of a pushed Compose screen would scroll behind the banner (IO-21).
+        // pushes, so the end of a pushed Compose screen would scroll behind the banner.
         VStack(spacing: 0) {
             NavigationStack(path: path) {
                 root
@@ -84,7 +84,7 @@ struct ShellStack: View {
                             .shellChrome(destination.chrome)
                     }
             }
-            // SwiftUI screens open further routes and leave the stack through the router (settings, IO-08a).
+            // SwiftUI screens open further routes and leave the stack through the router (settings).
             .environment(router)
             if isDemo {
                 ItmoDemoBanner(signIn: leaveDemo)
@@ -92,8 +92,7 @@ struct ShellStack: View {
         }
     }
 
-    /// The tab's root: the Compose recordbook (IO-09d2), schedule (IO-09b), home feed (IO-09a), sport tab (IO-09c)
-    /// and Me tab (IO-09e).
+    /// The tab's root: the Compose recordbook, schedule, home feed, sport tab and Me tab.
     @ViewBuilder
     private var root: some View {
         switch tab {

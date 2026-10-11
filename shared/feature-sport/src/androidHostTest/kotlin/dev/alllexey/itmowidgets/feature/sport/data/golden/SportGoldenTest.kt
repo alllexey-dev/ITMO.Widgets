@@ -117,7 +117,7 @@ class SportGoldenTest {
 
         var user: Any? = null
         val requests = buildList {
-            // The free-sign and auto-sign requests of one refresh run concurrently (KM-10c): order them by path, each
+            // The free-sign and auto-sign requests of one refresh run concurrently: order them by path, each
             // refresh after the previous one.
             addAll(harness.requestsOf { data.refreshSportQueueEntries() }.sorted())
             addAll(harness.requestsOf { data.refreshSportQueues() }.sorted())
@@ -251,7 +251,7 @@ class SportGoldenTest {
         checkNotNull(javaClass.getResourceAsStream("/myitmo/sport/$name")) { "No fixture $name" }
             .use { it.readBytes().decodeToString() }
 
-    /** A golden contract fixture of Backend, vendored by L19 into `:shared:backend-client`; never copied. */
+    /** A golden contract fixture of Backend, vendored into `:shared:backend-client`; never copied. */
     private fun contractFixture(path: String): String =
         File("../backend-client/src/commonTest/resources/contract/$path").readText()
 

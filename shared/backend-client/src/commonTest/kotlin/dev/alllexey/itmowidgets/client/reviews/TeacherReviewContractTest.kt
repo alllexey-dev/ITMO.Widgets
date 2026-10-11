@@ -21,14 +21,12 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 /**
- * Port of Core 1.x `reviews/TeacherReviewContractTest`, one test per 1.x test with the same name. Not ported here:
- * the moderation types (`TeacherReviewRevision`, `ModeratedTeacherReview`, `ReviewRevisionStatus`,
- * `ReviewVerification`) inside the tests, since the moderation API is not mirrored (CO-02), and `lesson sync still
- * serializes and decodes its date boundaries`, which belongs to the schedule area (handed to CO-07).
+ * The teacher review models. The moderation types (`TeacherReviewRevision`, `ModeratedTeacherReview`,
+ * `ReviewRevisionStatus`, `ReviewVerification`) are left out, since the moderation API is not mirrored; the lesson
+ * sync date boundaries are in the schedule area.
  *
- * Where the 2.0 policy differs, the test asserts the new behaviour and says so: 07 Q4 (b) accepts quoted numbers and
- * booleans and keeps the last of duplicate keys; 13 Q7 (b) makes every review and summary enum a display enum, so an
- * unknown name decodes as `UNKNOWN` instead of failing the answer.
+ * Quoted numbers and booleans are accepted and the last of duplicate keys wins; every review and summary enum is a
+ * display enum, so an unknown name decodes as `UNKNOWN` instead of failing the answer.
  *
  * A malformed answer fails with a [SerializationException] or, for a model `init` invariant, an
  * [IllegalArgumentException]; both are [IllegalArgumentException]s, which the client turns into a contract failure.
@@ -229,8 +227,8 @@ class TeacherReviewContractTest {
             val response = responseJson.with("summary", summary.toString())
             assertDecodeFails(TeacherReviewsResponse.serializer(), response, "response: $name")
         }
-        // 2.0 policy (13 Q7 (b)): the summary enums are display enums, so an unknown kind, value, level or confidence
-        // decodes as UNKNOWN instead of failing the answer; 1.x rejected them.
+        // The summary enums are display enums, so an unknown kind, value, level or confidence decodes as UNKNOWN
+        // instead of failing the answer.
         val unknown = summaryJson()
             .withScale(4, "kind", "\"HUMOUR\"")
             .withScale(3, "value", "\"EXTREME\"")
@@ -262,8 +260,7 @@ class TeacherReviewContractTest {
         )) {
             assertFailsWith<IllegalArgumentException>(wire) { BackendJson.decodeFromString(serializer, wire) }
         }
-        // 2.0 policy: an unknown tone is UNKNOWN (13 Q7 (b)); a quoted ISU is accepted and the last of duplicate keys
-        // wins (07 Q4 (b)). 1.x rejected all three.
+        // An unknown tone is UNKNOWN; a quoted ISU is accepted and the last of duplicate keys wins.
         assertEquals(
             TeacherSummaryLevel(123456, SummaryLevel.UNKNOWN),
             BackendJson.decodeFromString(serializer, """{"teacherIsu":123456,"level":"NEUTRAL"}"""),
@@ -369,8 +366,8 @@ class TeacherReviewContractTest {
 
     @Test
     fun requiredValuesRejectIncompatibleJsonShapes() {
-        // 2.0 policy (07 Q4 (b)): a quoted number or boolean is accepted (`"100001"`, `"3"`, `"true"`, `"false"`,
-        // `["93724"]`); 1.x rejected them, so those cases moved to the acceptance list below.
+        // A quoted number or boolean is accepted (`"100001"`, `"3"`, `"true"`, `"false"`, `["93724"]`), so those
+        // cases are in the acceptance list below.
         assertMalformed(
             TeacherReviewsResponse.serializer(),
             fixtures.response,
@@ -444,15 +441,15 @@ class TeacherReviewContractTest {
         // 2.0: the app cannot build such a review either.
         assertFailsWith<IllegalArgumentException> { fixtures.copy.copy(author = fixtures.author) }
         assertFailsWith<IllegalArgumentException> { fixtures.named.copy(writtenBeforeYear = 2024) }
-        // 2.0 policy (07 Q4 (b)): a quoted year is accepted; 1.x rejected it.
+        // A quoted year is accepted.
         val quotedYear = decode(TeacherReview.serializer(), copy.with("writtenBeforeYear", "\"2024\""))
         assertEquals(2024, quotedYear.writtenBeforeYear)
     }
 
     @Test
     fun reviewEnumsAreStrict() {
-        // 2.0 policy (13 Q7 (b)): every review and summary enum is a display enum. An unknown name decodes as
-        // UNKNOWN instead of failing the answer (1.x rejected it); null, numbers and other shapes still fail, and
+        // Every review and summary enum is a display enum. An unknown name decodes as UNKNOWN instead of failing
+        // the answer; null, numbers and other shapes still fail, and
         // UNKNOWN is never encoded.
         assertDisplayEnum(TeacherReviewKindSerializer, TeacherReviewKind.entries, TeacherReviewKind.UNKNOWN)
         assertDisplayEnum(TeacherReviewStatusSerializer, TeacherReviewStatus.entries, TeacherReviewStatus.UNKNOWN)
@@ -471,7 +468,7 @@ class TeacherReviewContractTest {
 
     @Test
     fun duplicateKeysAreRejectedInTheResponseAndNestedModels() {
-        // 2.0 policy (07 Q4 (b)): duplicate keys are not rejected, the last value wins; 1.x rejected them.
+        // Duplicate keys are not rejected, the last value wins.
         val responseText = fixtures.responseJson()
         val duplicateResponse = responseText.dropLast(1) + ",\"canWrite\":false}"
         assertEquals(false, decodeResponse(duplicateResponse).canWrite)

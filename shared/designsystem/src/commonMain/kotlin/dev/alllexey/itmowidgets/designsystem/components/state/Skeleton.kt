@@ -128,10 +128,9 @@ private object Opaque : State<Float> {
     override val value: Float = 1f
 }
 
-/** `SkeletonView`'s 16 dp card corners, not the content cards' 20 dp. */
+/** 16 dp card corners, not the content cards' 20 dp. */
 private val CardRadius = ShapeTokens.Large
 
-// The rest of `SkeletonView.kt`'s geometry, kept at parity.
 private val RowGap = 12.dp
 private val BarRadius = 6.dp
 private val CardInset = 16.dp

@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 
 /// The review editor (`AppRoutes.ReviewEditor`, from `teacher_review_write` or an own review on a teacher's profile):
-/// the Compose sheet content (`reviewEditorViewController`, IO-09f) at full height, a form sheet as on Android: a drag
+/// the Compose sheet content (`reviewEditorViewController`) at full height, a form sheet as on Android: a drag
 /// down does not close it, the content's close button asks before unsaved changes are dropped. A saved review closes
 /// it; a failed save says why over it.
 struct ReviewEditorSheetView: View {

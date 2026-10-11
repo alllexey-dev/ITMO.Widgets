@@ -15,7 +15,7 @@ import org.koin.dsl.module
  * The Me tab's and the first-run flow's fixture in Koin: a debug host builds both ViewModels over its own fakes while
  * it lives, so the shell's Me tab root and onboarding entry obtain them exactly as in release.
  *
- * The ViewModels are overridden rather than their bridged types: the two screens read the custom-services opt-in from
+ * The ViewModels are overridden rather than the types behind them: the two screens read the custom-services opt-in from
  * different fakes, and the host's other screens keep the release session, social data and opt-in.
  *
  * Koin is process-wide: a host calls [load] in `onCreate` before `super.onCreate()` and [unload] in `onDestroy`, or
@@ -23,7 +23,7 @@ import org.koin.dsl.module
  */
 object AccountDebugFixtures {
 
-    /** Builds a ViewModel for each new Fragment, reading the host's fixture at that moment. */
+    /** Builds a ViewModel for each new screen, reading the host's fixture at that moment. */
     interface Fakes {
         fun me(): MeViewModel
         fun onboarding(savedStateHandle: SavedStateHandle): OnboardingViewModel

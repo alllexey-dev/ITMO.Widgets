@@ -1,7 +1,7 @@
 @testable import ITMOWidgets
 import XCTest
 
-/// The App Group readers the widget extension uses (IO-10a): a missing, corrupt or newer file is nil, never a crash,
+/// The App Group readers the widget extension uses: a missing, corrupt or newer file is nil, never a crash,
 /// so the widget shows its placeholder state; a file of this version reads back as written.
 final class SnapshotReaderTests: XCTestCase {
     private var container: URL!

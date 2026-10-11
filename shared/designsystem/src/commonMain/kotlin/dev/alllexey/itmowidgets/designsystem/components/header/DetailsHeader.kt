@@ -64,10 +64,9 @@ data class DetailsTeacher(
 data class DetailsMapAction(val label: String, val onClick: () -> Unit)
 
 /**
- * The head of every details sheet (port of `core/ui/DetailsHeader.kt` and `view_details_header.xml`): what ([title],
- * [kind] with an optional type colour), when ([date], [time] and [duration], all preformatted), who and where
- * ([teacher], [flow], [place]) and the [map] button. A missing row disappears instead of reading as empty. The caller
- * pads the header horizontally, as the sheets pad their content.
+ * The head of every details sheet: what ([title], [kind] with an optional type colour), when ([date], [time] and
+ * [duration], all preformatted), who and where ([teacher], [flow], [place]) and the [map] button. A missing row
+ * disappears instead of reading as empty. The caller pads the header horizontally, as the sheets pad their content.
  *
  * Under the iOS style the layout and the teacher-chevron rule stay; the title is title 2 semibold, the secondary text
  * and the icons take the secondary label colour, the chevron the tertiary one, and the map button is a tinted capsule.

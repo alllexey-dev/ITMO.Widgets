@@ -1,6 +1,6 @@
 import XCTest
 
-/// The QR pass on the shared demo session (IO-21): LH-3's Compose route in the SwiftUI shell, opened from home,
+/// The QR pass on the shared demo session: the Compose route in the SwiftUI shell, opened from home,
 /// refreshed, left by its own back button, and at the accessibility text size AX1. Compose maps `testTag` to the
 /// accessibility identifier, so the route's tags (`QrPassTestTags`) find its parts; its texts are Russian on an
 /// English iPhone.

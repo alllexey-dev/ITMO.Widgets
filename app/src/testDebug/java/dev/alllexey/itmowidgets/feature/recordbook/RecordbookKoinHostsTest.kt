@@ -20,7 +20,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * The BARS sign-in obtains its ViewModel from Koin (LR-2a) on the release graph with a fake session port.
+ * The BARS sign-in obtains its ViewModel from Koin on the release graph with a fake session port.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)

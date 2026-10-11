@@ -11,9 +11,9 @@ import org.koin.dsl.module
 import platform.Foundation.NSBundle
 
 /**
- * The iOS side of [updateModule], what `AccountUpdateBridge` gives Android: the installed version is the bundle's
+ * The iOS side of [updateModule], what `androidUpdateModule` gives Android: the installed version is the bundle's
  * `CFBundleShortVersionString` (`MARKETING_VERSION`), Core 2.0's app area comes from the one `BackendClient`, and the
- * check asks Backend for the iOS release (`version-info?platform=IOS`, BK-17). Load it with [updateModule].
+ * check asks Backend for the iOS release (`version-info?platform=IOS`). Load it with [updateModule].
  */
 val updateIosModule = module {
     single { AppVersionName(installedVersion()) }
@@ -22,7 +22,7 @@ val updateIosModule = module {
 }
 
 /**
- * The Koin parameters of the update screen's ViewModel when SwiftUI owns it (IO-08b): the offer the gate found, as
+ * The Koin parameters of the update screen's ViewModel when SwiftUI owns it: the offer the gate found, as
  * the `SavedStateHandle` keys `AppUpdateArgs` reads. Swift passes them to
  * `store.resolve(type: AppUpdateViewModel.self, parameters:)`.
  */

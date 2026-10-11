@@ -1,8 +1,8 @@
 @testable import ITMOWidgets
 import XCTest
 
-/// Pins every iOS identifier that is frozen from the first TestFlight build (lane L18 Invariants, ADR 0023), read
-/// from the built bundles. Each IO card that adds an identifier appends its assertion here.
+/// Pins every iOS identifier that is frozen from the first TestFlight build, read
+/// from the built bundles. A new identifier gets its assertion here.
 final class StableIdentifiersTests: XCTestCase {
     private let appGroup = "group.dev.alllexey.itmowidgets"
     private let keychainGroupSuffix = "dev.alllexey.itmowidgets.shared"
@@ -39,7 +39,7 @@ final class StableIdentifiersTests: XCTestCase {
         }
     }
 
-    /// Widgets, Controls and shortcuts hold `itmowidgets://route/<id>` URLs (IO-06b).
+    /// Widgets, Controls and shortcuts hold `itmowidgets://route/<id>` URLs.
     func testRouteUrls() throws {
         let urlTypes = try XCTUnwrap(Bundle.main.infoDictionary?["CFBundleURLTypes"] as? [[String: Any]])
         let schemes = urlTypes.flatMap { $0["CFBundleURLSchemes"] as? [String] ?? [] }
@@ -47,12 +47,11 @@ final class StableIdentifiersTests: XCTestCase {
         XCTAssertEqual(RouteURL.scheme, "itmowidgets")
         XCTAssertEqual(
             RouteURL.ids.compactMap { RouteURL.url(id: $0)?.absoluteString },
-            // The recordbook's URL since IO-09d2 made its tab visible.
             ["recordbook", "schedule", "home", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
         )
     }
 
-    /// Placed widgets keep their kind and URL; the extensions find their App Group files by name (IO-10a).
+    /// Placed widgets keep their kind and URL; the extensions find their App Group files by name.
     func testQrWidget() {
         XCTAssertEqual(QrWidget.kind, "dev.alllexey.itmowidgets.widget.qr")
         XCTAssertEqual(QrWidget.passURL, RouteURL.url(id: "qr_pass"))
@@ -62,7 +61,7 @@ final class StableIdentifiersTests: XCTestCase {
         )
     }
 
-    /// Placed Controls keep their kind; quick actions are `<bundle ID>.<route id>`, Android's shortcut ids (IO-11).
+    /// Placed Controls keep their kind; quick actions are `<bundle ID>.<route id>`, Android's shortcut ids.
     func testControlAndQuickActions() throws {
         XCTAssertEqual(QrControl.kind, "dev.alllexey.itmowidgets.control.qr")
         XCTAssertEqual(IntentRoute.allCases.map(\.rawValue), ["qr_pass", "today"])
@@ -74,7 +73,7 @@ final class StableIdentifiersTests: XCTestCase {
     }
 
     /// The lesson and the day widget keep their kinds, the app's writer reloads them by name and writes the timeline
-    /// file they read; a tap opens the schedule tab (IO-10b).
+    /// file they read; a tap opens the schedule tab.
     func testScheduleWidgets() {
         XCTAssertEqual(SingleLessonWidget.kind, "dev.alllexey.itmowidgets.widget.single-lesson")
         XCTAssertEqual(DayScheduleWidget.kind, "dev.alllexey.itmowidgets.widget.day-schedule")
@@ -83,7 +82,7 @@ final class StableIdentifiersTests: XCTestCase {
     }
 
     /// The app refresh task keeps its identifier: the system drops a scheduled request whose identifier the app no
-    /// longer permits (IO-14).
+    /// longer permits.
     func testBackgroundRefreshTask() {
         XCTAssertEqual(BackgroundRefresh.taskIdentifier, "dev.alllexey.itmowidgets.refresh")
         XCTAssertEqual(
@@ -93,7 +92,7 @@ final class StableIdentifiersTests: XCTestCase {
     }
 
     /// `$(AppIdentifierPrefix)` is the team ID plus a dot on a device, `FAKETEAMID.` on the simulator and empty for
-    /// a team-less device build (SP-23), so only the suffix is stable.
+    /// a team-less device build, so only the suffix is stable.
     private func assertKeychainGroup(_ group: String?, file: StaticString = #filePath, line: UInt = #line) {
         let group = group ?? ""
         XCTAssertTrue(group.hasSuffix(keychainGroupSuffix), "KeychainGroup = \(group)", file: file, line: line)

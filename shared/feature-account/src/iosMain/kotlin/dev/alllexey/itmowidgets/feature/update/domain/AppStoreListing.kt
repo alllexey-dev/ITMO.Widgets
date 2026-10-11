@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.update.domain
 
 /**
  * The iOS update channel: the app's App Store page and nothing else (no GitHub or Play link). The ID is the build
- * setting `APP_STORE_ID`, empty until the app has an App Store record (T13); an empty or malformed ID gives no page,
+ * setting `APP_STORE_ID`, empty until the app has an App Store record; an empty or malformed ID gives no page,
  * and without a page the app never offers an update.
  */
 object AppStoreListing {

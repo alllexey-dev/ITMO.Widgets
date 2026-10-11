@@ -7,7 +7,7 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 
-/** Synthetic Me states: the account of LA-1c's references, with and without Backend's answer. */
+/** Synthetic Me states: one account, with and without Backend's answer. */
 internal object MePreviewData {
     private const val ISU = 123456
     private const val NAME = "Александрова Мария Александровна"

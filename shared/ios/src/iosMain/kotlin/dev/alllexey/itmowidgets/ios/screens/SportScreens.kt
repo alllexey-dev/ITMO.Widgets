@@ -84,7 +84,7 @@ class SportDetailsRequest internal constructor(
 }
 
 /**
- * The sport tab's root (`AppRoutes.TabRoot(SPORT)`), LP-6's route as Android's shell hosts it: `Мой спорт`
+ * The sport tab's root (`AppRoutes.TabRoot(SPORT)`), the sport route as Android's shell hosts it: `Мой спорт`
  * and `Запись` with their ViewModels in this controller's store. [tab] is the Swift host's: it carries a shared
  * lesson to the sign page and the details sheet's actions back to the page that opened the sheet. A booking or a lesson
  * asks the host for its details sheet through [openDetails] (a SwiftUI sheet, not a Compose one); a booking's

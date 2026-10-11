@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportUiState
 
 /*
- * Baselines `IcsExportSheet_<state>`, the names LT-3a's XML references took: each state is a function called
+ * Baselines `IcsExportSheet_<state>`: each state is a function called
  * `IcsExportSheet` in a holder class of its own. The sheet fits its content, so it previews wrapping it on the colour
  * the shell's sheet gives it.
  */

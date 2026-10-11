@@ -57,7 +57,7 @@ data class ExtendedColorTokens(
             teacherLevelVeryPositive = Color(0xFF2E7D32),
         )
 
-        /** The lesson types keep their light values: their night values come with the M3E tokens (M3-02). */
+        /** The lesson types keep their light values in dark. */
         val Dark = Light.copy(
             recordbookPassed = Color(0xFF89D995),
             sportScoreAttendance = Color(0xFF85A2FF),
@@ -80,7 +80,7 @@ data class ExtendedColorTokens(
 /**
  * [ExtendedColorTokens] as a screen uses them under a scheme. Sport condition accents keep their meaning in every
  * palette and get containers mixed 12 % over `surfaceContainerLowest`; teacher levels keep red to green but are
- * harmonized towards the primary colour, as the View screens do.
+ * harmonized towards the primary colour.
  */
 @Immutable
 data class ItmoExtendedColors(

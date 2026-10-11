@@ -1,10 +1,10 @@
 import Shared
 import SwiftUI
 
-/// The app entry point: the SwiftUI shell (`ShellView`) gated on the shared session (IO-07a), or in a Debug build on
+/// The app entry point: the SwiftUI shell (`ShellView`) gated on the shared session, or in a Debug build on
 /// a fixture session from the launch arguments (`ShellFixtures`). Every `itmowidgets://route/<id>` URL, App Intent,
 /// quick action and notification tap (`NotificationTaps`) goes to the router; each return to the foreground refreshes
-/// the push registration (`PushRefresh`, IO-13a). `init` sets the app locale, starts the Kotlin graph and the
+/// the push registration (`PushRefresh`). `init` sets the app locale, starts the Kotlin graph and the
 /// background refresh (`BackgroundRefresh`), connects the router to `RouteInbox`, builds the shell's session, then
 /// starts the shared one.
 @main
@@ -45,7 +45,7 @@ struct ITMOWidgetsApp: App {
     static let demoArgument = "-itmoDemo"
 
     /// The launch argument of a Debug build that starts signed out, ending a stored session or demo first, for the UI
-    /// tests of the sign-in screen and its five taps (IO-07b).
+    /// tests of the sign-in screen and its five taps.
     static let signedOutArgument = "-itmoSignedOut"
 
     private static func makeSession() -> ShellSession {
@@ -60,7 +60,7 @@ struct ITMOWidgetsApp: App {
         return ShellSession(gateway: SharedSessionGateway.fromGraph(), previewsOnboarding: previewsOnboarding)
     }
 
-    /// Reads the stored session (KM-11h1). A Debug build launched with `demoArgument` opens the demo first unless it
+    /// Reads the stored session. A Debug build launched with `demoArgument` opens the demo first unless it
     /// is already on, so the gate never shows the sign-in screen on the way; one launched with `signedOutArgument`
     /// signs out first, so it never shows the tabs. The shell and the shared screens follow `SessionRepository` and
     /// `DemoMode`.

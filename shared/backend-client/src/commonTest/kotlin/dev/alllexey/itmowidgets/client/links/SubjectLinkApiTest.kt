@@ -23,10 +23,8 @@ import kotlin.test.assertNull
 import kotlin.test.fail
 
 /**
- * Port of Core 1.x `resources/SubjectLinkApiTest`. Not ported: `moderator routes are separate exact and decode the
- * link case target`, since the moderation API is not mirrored (CO-02). The 1.x reflection check that the removed
- * resource routes are gone has no 2.0 counterpart: [SubjectLinksApi] is new and `everyPublicFunctionHasOneCase`
- * pins its size.
+ * The subject link routes; the moderator routes are left out, since the moderation API is not mirrored.
+ * `everyPublicFunctionHasOneCase` pins the size of [SubjectLinksApi].
  */
 class SubjectLinkApiTest {
 

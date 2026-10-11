@@ -67,7 +67,7 @@ class DiagnosticsActions(
     val onClear: () -> Unit = {},
 )
 
-/** Tags named after the View ids of the old `fragment_diagnostics.xml`, for host and instrumented tests. */
+/** Tags for host and instrumented tests. */
 object DiagnosticsTestTags {
     const val BACK = "back_button"
     const val COPY = "copy_button"

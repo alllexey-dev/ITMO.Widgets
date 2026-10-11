@@ -35,8 +35,8 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 /**
- * Port of Core 1.7.0 `social/SocialApiContractTest`: friendships, public profiles and lookup. A duplicate key keeps
- * its last value by 07 Q4 (b); the 1.x Retrofit reflection check runs over the recorded route cases.
+ * Friendships, public profiles and lookup. A duplicate key keeps its last value; the routes are checked over the
+ * recorded route cases.
  */
 class SocialApiContractTest {
 

@@ -1,4 +1,4 @@
-// A feature module: Compose UI, Res strings, host and screenshot tests (recipe kmp-module-build-file).
+// A feature module: Compose UI, Res strings, host and screenshot tests.
 // Features read core and designsystem, never another feature.
 plugins {
     id("itmowidgets.cmp.ui")
@@ -10,11 +10,11 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
-            // The links sheets' ViewModels are KMP ViewModels that :app obtains through Koin (L15 LX-2b, recipe koin-module).
+            // The links sheets' ViewModels are KMP ViewModels that :app obtains through Koin.
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
-            // SubjectLinksSheetRoute collects the view model's state and events with the host's lifecycle (L15 LX-3b).
+            // SubjectLinksSheetRoute collects the view model's state and events with the host's lifecycle.
             implementation(libs.jetbrains.lifecycle.runtime.compose)
         }
         commonTest.dependencies {

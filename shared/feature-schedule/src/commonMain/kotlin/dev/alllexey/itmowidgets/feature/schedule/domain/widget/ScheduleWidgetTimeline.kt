@@ -46,9 +46,9 @@ data class ScheduleWidgetTimelineEntry(
 )
 
 /**
- * The timeline's JSON, the App Group contract read by iOS WidgetKit (L18 IO-10b); reference fixture
+ * The timeline's JSON, the App Group contract read by iOS WidgetKit; reference fixture
  * `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json`. Snapshot keys and enum names are those of
- * `widgets/schedule_snapshot.json` (KM-05a1), nulls are omitted, defaults are written (Swift has no Kotlin defaults),
+ * `widgets/schedule_snapshot.json`, nulls are omitted, defaults are written (Swift has no Kotlin defaults),
  * instants are ISO-8601 UTC strings that may carry fractional seconds. Data and keys only: labels such as lesson type
  * names are resolved on the reading side.
  *

@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 
 /**
  * The ring's two sectors in percent of the full turn. Up to the goal they are the points themselves; above it they
- * are shares of the total, so the ring stays closed with both colours in proportion (v2.2's score ring).
+ * are shares of the total, so the ring stays closed with both colours in proportion.
  */
 internal data class SportScoreRingShares(val attendance: Float, val bonus: Float)
 
@@ -22,7 +22,7 @@ internal fun SportScore.ringShares(): SportScoreRingShares? {
 /** The three numbers the card counts: attendance, the credited bonus (at most 40) and their sum. */
 internal data class SportScoreCounts(val attendances: Int, val bonus: Int, val total: Int) {
 
-    /** The frame [fraction] of the way to [target]; truncated like the View counters, so a frame never overshoots. */
+    /** The frame [fraction] of the way to [target]; truncated, so a frame never overshoots. */
     fun towards(target: SportScoreCounts, fraction: Float): SportScoreCounts = SportScoreCounts(
         attendances = countAt(attendances, target.attendances, fraction),
         bonus = countAt(bonus, target.bonus, fraction),

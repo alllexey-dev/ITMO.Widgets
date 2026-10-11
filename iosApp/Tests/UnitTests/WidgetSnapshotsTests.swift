@@ -2,7 +2,7 @@
 import Shared
 import XCTest
 
-/// The App Group files the widgets read, written by the app's started graph (IO-10a-FIX): after the demo starts and
+/// The App Group files the widgets read, written by the app's started graph: after the demo starts and
 /// the pass screen fetches its pass, the container this process resolves holds `session-v1.json` and
 /// `qr-pass-v1.json`, the QR widget's timeline reads a signed-in entry from them, and the session cleaners leave the
 /// container itself in place. Without its metadata file the system drops the container as stale and gives the next

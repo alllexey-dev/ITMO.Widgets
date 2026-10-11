@@ -29,7 +29,7 @@ internal fun interface ItmoHaptics {
 }
 
 /**
- * The platform's haptics. Under [ItmoPlatformStyle.Material] they do nothing, so Android keeps 2.2's behaviour. Under
+ * The platform's haptics. Under [ItmoPlatformStyle.Material] they do nothing, so Android plays no haptics. Under
  * [ItmoPlatformStyle.Ios] [ItmoHapticEvent.Success] and [ItmoHapticEvent.Error] go through [LocalHapticFeedback],
  * whose iOS implementation in CMP 1.12.1 plays `Confirm` and `Reject` on `UINotificationFeedbackGenerator` (success,
  * error); CMP has no warning and does not document its impact and selection mapping, so the other events drive

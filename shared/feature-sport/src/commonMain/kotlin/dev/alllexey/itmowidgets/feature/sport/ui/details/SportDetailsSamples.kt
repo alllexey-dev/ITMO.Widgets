@@ -22,8 +22,7 @@ import kotlin.time.Instant
 
 /**
  * Synthetic snapshots for the details sheet's previews and host tests, seen on Monday 7 September 2026 at noon, the
- * day before [SportCardFixtures]'s lesson, as v2.2's debug host and LP-1d's XML
- * references saw them.
+ * day before [SportCardFixtures]'s lesson.
  */
 internal object SportDetailsSamples {
 

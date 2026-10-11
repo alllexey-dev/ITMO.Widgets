@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.core.platform
 
 import android.os.Build
 
-/** Android offers every feature 2.2 showed; the wallpaper's colours only from Android 12 (API 31). */
+/** Android offers every feature; the wallpaper's colours only from Android 12 (API 31). */
 val AndroidPlatformCapabilities = PlatformCapabilities(
     quickSettingsTile = true,
     backgroundWorkSettings = true,

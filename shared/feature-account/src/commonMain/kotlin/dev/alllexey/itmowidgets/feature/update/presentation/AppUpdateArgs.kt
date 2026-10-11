@@ -5,8 +5,8 @@ import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import kotlinx.serialization.Serializable
 
 /**
- * The update screen's arguments: the result of the check, so the screen never repeats the request. The Fragment host
- * passes them under the keys below; a Navigation 3 entry keys the overlay with this class itself.
+ * The update screen's arguments: the result of the check, so the screen never repeats the request. A
+ * `SavedStateHandle` carries them under the keys below; a Navigation 3 entry keys the overlay with this class itself.
  */
 @Serializable
 data class AppUpdateArgs(

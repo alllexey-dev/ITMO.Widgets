@@ -12,7 +12,7 @@ fun interface WebsiteDataClearer {
 }
 
 /**
- * What the core graph needs from the Swift app, passed to `iosCoreModule`; IO-05's `IosPlatform` implements it.
+ * What the core graph needs from the Swift app, passed to `iosCoreModule`; the app's `IosPlatform` implements it.
  * Called on the main thread.
  */
 interface IosCoreHost : WidgetReloader, WebsiteDataClearer {

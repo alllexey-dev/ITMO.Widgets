@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 import WebKit
 
-/// Android's `MyItmoWebFragment` (IO-08b): `https://my.itmo.ru/` in a `WKWebView` (`MyItmoWebBrowser`), pushed on the
+/// Android's `MyItmoWebScreen`: `https://my.itmo.ru/` in a `WKWebView` (`MyItmoWebBrowser`), pushed on the
 /// tab's stack under the native bar with `my_itmo_web_title`, `my_itmo_web_reload` and the `my_itmo_web_more` menu
 /// with `my_itmo_web_external`. The system back button replaces Android's close; the edge swipe inside the page goes
 /// back in its history. The demo session never opens it (`ShellGate`).

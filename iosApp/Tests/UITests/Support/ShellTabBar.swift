@@ -1,7 +1,7 @@
 import XCTest
 
 extension XCUIApplication {
-    /// The roots of the tab bar in Android's order (`ShellTab`), the recordbook first since IO-09d2.
+    /// The roots of the tab bar in Android's order (`ShellTab`), the recordbook first.
     static let shellTabs = ["recordbook", "schedule", "home", "sport", "me"]
 
     /// Taps the tab of `root` (`shell.root.<root>`); the system tab bar's buttons carry no identifiers.

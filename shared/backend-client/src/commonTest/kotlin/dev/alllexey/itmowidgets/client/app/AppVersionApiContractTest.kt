@@ -22,9 +22,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 /**
- * Port of Core 1.7.0 `AppVersionApiContractTest`. Where 2.0 differs it asserts the new behaviour: the legacy
- * `GET /api/app/version` is not mirrored, and `success=false` is a [BackendException.Contract] on 200 (an error
- * status is a typed exception with Backend's code) instead of an `ApiResponse` with `null` data.
+ * The app version route. The legacy `GET /api/app/version` is not mirrored, and `success=false` is a
+ * [BackendException.Contract] on 200 (an error status is a typed exception with Backend's code).
  */
 class AppVersionApiContractTest {
 

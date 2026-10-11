@@ -65,7 +65,7 @@ import kotlinx.datetime.LocalTime
 import org.koin.core.parameter.parametersOf
 
 /**
- * The sport keys (route map rows 7, 18, S10 and the cancel question): another user's sport, the details sheet of a
+ * The sport keys: another user's sport, the details sheet of a
  * lesson or a booking and the question before a cancellation the shell asks. The sheet's booking action goes where
  * its [SportRoutes.SportCommonDetails.replyTo] says: to the sport page that opened it on the result bus, or, for a
  * sheet the [SportDetailsRedirect] opened from the feed or the schedule, to the shell's own question.
@@ -81,10 +81,10 @@ internal fun EntryRegistry.Builder.sportEntries() {
 }
 
 /**
- * The sport tab's root (route map row 7): `SportRoute` with both page ViewModels in the root's own store, so `Запись`
+ * The sport tab's root: `SportRoute` with both page ViewModels in the root's own store, so `Запись`
  * keeps its week and filters across tab switches. A [TabRequest.SportLesson] (a shared link, a sport notification)
- * opens its lesson on `Запись` once; the pages' details sheets reply on their own result keys, as v2.2's
- * sport tab routed the sheet's Fragment result to the page that opened it.
+ * opens its lesson on `Запись` once; the pages' details sheets reply on their own result keys, so a sheet's result
+ * reaches the page that opened it.
  */
 @Composable
 internal fun SportTabRoot(navigator: Nav3AppNavigator) {
@@ -191,7 +191,7 @@ internal fun rememberSportDetailsRedirect(): SportDetailsRedirect {
     }
 }
 
-/** Another user's sport (route map row 18); its ViewModel reads the ISU and the name from the entry's arguments. */
+/** Another user's sport; its ViewModel reads the ISU and the name from the entry's arguments. */
 @Composable
 private fun UserSportEntry(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -205,7 +205,7 @@ private fun UserSportEntry(onBack: () -> Unit) {
 }
 
 /**
- * The details sheet (route map S10), v2.2's details sheet body on its `surfaceContainerLowest`
+ * The details sheet, its body on a `surfaceContainerLowest`
  * background: whether its action was sent survives recreation, the action goes to the opener and closes the sheet,
  * a profile opens in the sheet's place, sharing and the map stay on this activity.
  */

@@ -23,7 +23,7 @@ import kotlin.time.Instant
 
 /**
  * [DateTexts] against java.time + Locale "ru" for every day 2025-09-01..2027-08-31 at 00:00, 09:30 and 23:59 in
- * Europe/Moscow (SP-07 harness). The kotlinx side starts from a `kotlin.time.Instant`, as the app starts from an
+ * Europe/Moscow. The kotlinx side starts from a `kotlin.time.Instant`, as the app starts from an
  * instant or an `OffsetDateTime` moved to the academic zone.
  */
 class DateTextsParityTest {

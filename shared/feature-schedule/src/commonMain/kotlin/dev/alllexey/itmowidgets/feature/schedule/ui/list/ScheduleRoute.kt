@@ -70,7 +70,7 @@ class ScheduleRouteActions(
  *
  * [ownTab] is the schedule tab (the friends button, the `Сегодня` shortcut); a user's schedule screen passes false.
  * [requests] carries the host's results (the picker, the shortcut). Android hosts it in the shell's schedule tab and
- * user schedule entries, iOS in IO-09b.
+ * user schedule entries, iOS in its own shell.
  */
 @Composable
 fun ScheduleRoute(

@@ -28,9 +28,8 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 /**
- * Port of Core 1.7.0 `SportApiContractTest` (5 tests). The Retrofit reflection check becomes an assertion over the
- * recorded request, Gson round trips go through `BackendJson` and the base serializer, and `JsonParseException`
- * becomes a `SerializationException`.
+ * The sport routes and models: each route is asserted over the recorded request, round trips go through
+ * `BackendJson` and the base serializer, and a malformed answer is a `SerializationException`.
  */
 class SportApiContractTest {
 

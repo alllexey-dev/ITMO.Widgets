@@ -2,7 +2,7 @@
 import Shared
 import XCTest
 
-/// The sign-in and first-run wiring on the app's graph (IO-07b): the screens' ViewModels resolve from `App.init`'s
+/// The sign-in and first-run wiring on the app's graph: the screens' ViewModels resolve from `App.init`'s
 /// Koin graph (the first-run flow with its `SavedStateHandle` parameter), the flow reads the stored widget appearance
 /// and walks its steps, and the gate's flag comes from `OnboardingGateViewModel`. Nothing here completes the flow or
 /// changes the stored choices.

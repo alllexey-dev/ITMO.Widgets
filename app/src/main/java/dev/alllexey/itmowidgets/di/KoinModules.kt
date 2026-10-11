@@ -23,8 +23,8 @@ import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import org.koin.core.module.Module
 
 /**
- * The Koin modules of the release graph, the app's only graph (ADR 0019), which [KoinStarter] loads and `KoinGraphTest`
- * checks. A lane adds one line per module, and L07 reviews it. Debug fixture overrides stay out.
+ * The Koin modules of the release graph, the app's only graph, which [KoinStarter] loads and `KoinGraphTest` checks.
+ * One line per module; debug fixture overrides stay out.
  */
 object KoinModules {
 

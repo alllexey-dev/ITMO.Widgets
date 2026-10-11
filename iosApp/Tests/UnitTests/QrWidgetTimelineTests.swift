@@ -2,7 +2,7 @@
 import WidgetKit
 import XCTest
 
-/// The QR widget's states from its App Group files (IO-10a): signed out, spoiler, revealed until the reveal ends,
+/// The QR widget's states from its App Group files: signed out, spoiler, revealed until the reveal ends,
 /// expired at the pass's deadline, and the demo pass.
 final class QrWidgetTimelineTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_788_250_000)

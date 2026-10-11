@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 import kotlinx.serialization.json.Json
 
 /**
- * The WidgetKit reference fixture (L18 IO-10b) is what this build writes for [ScheduleWidgetTimelineSamples.fixtureTimeline]
+ * The WidgetKit reference fixture is what this build writes for [ScheduleWidgetTimelineSamples.fixtureTimeline]
  * and reads back unchanged. A deliberate change to the timeline regenerates it with `ITMO_WRITE_TIMELINE_FIXTURE=1`.
  */
 class ScheduleWidgetTimelineFixtureTest {

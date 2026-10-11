@@ -30,7 +30,7 @@ object ShotsRun {
         get() = System.getProperty("shots.gallery")?.takeIf(String::isNotBlank)?.let(::File)
 
     /**
-     * `-Pshots.variant=<name>[,<name>...]` with `-Pshots.out=<absolute dir>` (M3-02a): every preview renders in light
+     * `-Pshots.variant=<name>[,<name>...]` with `-Pshots.out=<absolute dir>`: every preview renders in light
      * and dark once per named M3E candidate into `<out>/captures/<name>/<module>/`, and the module's contact sheets
      * into `<out>/<module>_<name>_<appearance>.png`, instead of being compared; the baselines stay untouched.
      */

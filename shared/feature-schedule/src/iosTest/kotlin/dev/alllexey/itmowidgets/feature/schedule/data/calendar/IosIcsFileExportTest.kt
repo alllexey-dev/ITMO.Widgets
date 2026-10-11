@@ -30,7 +30,7 @@ import okio.IOException
 import okio.Path.Companion.toPath
 
 /**
- * The `.ics` file of iOS's sheet (IO-15b) on okio's fake file system: the same range, events and file name as
+ * The `.ics` file of iOS's sheet on okio's fake file system: the same range, events and file name as
  * Android's `IcsFileExport`, in the temporary directory, by the address `ShareLink` takes.
  */
 class IosIcsFileExportTest {

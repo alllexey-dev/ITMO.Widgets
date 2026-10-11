@@ -16,10 +16,9 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 /**
- * The iOS ports of the schedule change check (IO-14): the notifier over `IosAppNotifier`, the scheduler (the app's
- * one refresh task, `AppRefreshScheduler`) and the background runner's step under
- * [RefreshStepKeys.SCHEDULE_CHANGES]. `scheduleDataModule` needs the first two; until the iOS graph loads it
- * (IO-09b) the step finds no check and skips.
+ * The iOS bindings of the schedule change check: the notifier over `IosAppNotifier`, the scheduler (the app's one
+ * refresh task, `AppRefreshScheduler`) and the background runner's step under [RefreshStepKeys.SCHEDULE_CHANGES].
+ * `scheduleDataModule` needs the first two; until the iOS graph loads it the step finds no check and skips.
  */
 val scheduleChangesIosModule = module {
     single { IosScheduleChangeNotifier(get()) } binds

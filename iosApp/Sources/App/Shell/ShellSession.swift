@@ -51,7 +51,7 @@ enum ShellSurfaceKind: Equatable {
 }
 
 /// The session as the shell sees it: the shared `SessionRepository` and the first-run flag through a
-/// `SessionGateway` (IO-07a, IO-07b), or a fixture (`ShellFixtures`) for snapshot tests and the UI tests of the gate.
+/// `SessionGateway`, or a fixture (`ShellFixtures`) for snapshot tests and the UI tests of the gate.
 @MainActor
 @Observable
 final class ShellSession {

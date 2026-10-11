@@ -22,10 +22,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The Compose shell is the default (SH-1c), so no key `MainActivity` can save or restore may fall back to the
- * placeholder: every `AppRoute` subtype of the `SerializersModule` (route map SH-0, the core keys plus the feature
- * registrations `MainActivity` passes to `ShellHost`) has an entry in [shellEntries]. The keys are read from the
- * module itself, so a key added there without an entry fails here.
+ * No key `MainActivity` can save or restore may fall back to the placeholder: every `AppRoute` subtype of the
+ * `SerializersModule` (the core keys plus the feature registrations `MainActivity` passes to `ShellHost`) has an
+ * entry in [shellEntries]. The keys are read from the module itself, so a key added there without an entry fails here.
  */
 class RegistryCompletenessTest {
 

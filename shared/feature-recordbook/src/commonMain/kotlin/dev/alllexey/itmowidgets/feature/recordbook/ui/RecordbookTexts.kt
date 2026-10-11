@@ -21,7 +21,7 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 
 /*
- * The recordbook's texts in common code: the list (LR-3) and the subject page (LR-4b) read the helpers here.
+ * The recordbook's texts in common code: the list and the subject page read the helpers here.
  */
 
 /** The official result in words: `Неявка`, `Зачёт`, `Без оценки` or the grade code as MyITMO wrote it. */

@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 /// All links of a subject period (`AppRoutes.SubjectLinks`, from the subject page): the Compose sheet content
-/// (`subjectLinksViewController`, IO-09f). A link's actions and the editor show over the list, as Android stacks them
+/// (`subjectLinksViewController`). A link's actions and the editor show over the list, as Android stacks them
 /// over its sheet; there each replaces the other, and the scores sheet replaces them, since a links sheet that leads
 /// on closes itself first.
 struct SubjectLinksSheetView: View {
@@ -34,7 +34,7 @@ struct SubjectLinksSheetView: View {
 }
 
 /// The link editor (`AppRoutes.LinkEditor`, a new link or an own one): the Compose sheet content
-/// (`linkEditorViewController`, IO-09f) at full height, since its fields bring the keyboard up. A saved link closes it;
+/// (`linkEditorViewController`) at full height, since its fields bring the keyboard up. A saved link closes it;
 /// a failed save says why over it.
 struct LinkEditorSheetView: View {
     let key: AppRoutes.LinkEditor
@@ -53,7 +53,7 @@ struct LinkEditorSheetView: View {
 }
 
 /// One link's actions (`AppRoutes.LinkActions`, a long press on a link): the Compose sheet content
-/// (`linkActionsViewController`, IO-09f); the system's drag indicator lies over the handle it draws. The author's
+/// (`linkActionsViewController`); the system's drag indicator lies over the handle it draws. The author's
 /// profile opens on the tab's stack and closes every sheet; the scores sheet and the editor open in this sheet's
 /// place: through `next` over all links, else as the router's sheet. A copied address is confirmed here, since iOS
 /// shows no confirmation itself.

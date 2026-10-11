@@ -11,7 +11,7 @@ import kotlin.test.assertFailsWith
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
-/** SP-02 case 13 (every date form 1.x reads) and case 14 (ISO dates), plus the UUID form. */
+/** Every observed offset date-time form, ISO dates and the UUID form. */
 class WireSerializersTest {
 
     private fun instant(text: String): Instant =
@@ -70,7 +70,7 @@ class WireSerializersTest {
 
     @Test
     fun nullNeverBecomesADeclaredDefault() {
-        // SP-02 rows 6 and 7: without coerceInputValues a null for a defaulted non-null field fails.
+        // Without coerceInputValues a null for a defaulted non-null field fails.
         assertFailsWith<SerializationException> { BackendJson.decodeFromString(String.serializer(), "null") }
         assertFailsWith<SerializationException> {
             BackendJson.decodeFromString(Defaulted.serializer(), """{"audience":null}""")

@@ -78,7 +78,7 @@ object SportSignScreenTestTags {
  * placeholder, empty or error state), under pull-to-refresh, with the screen's dialogs and snackbars on top.
  *
  * The header needs a [SportSignUiState.Content]; before the first one and behind an error the screen keeps the last
- * header it showed, as the View header did. Only a refresh the user asked for shows the indicator.
+ * header it showed. Only a refresh the user asked for shows the indicator.
  */
 @Composable
 fun SportSignScreen(
@@ -126,7 +126,7 @@ fun SportSignScreen(
     SportSignDialogs(dialogState, actions.onExecute)
 }
 
-/** The header of the last content: loading and error states keep it, as the View header kept its last bind. */
+/** The header of the last content: loading and error states keep it. */
 @Composable
 private fun rememberHeader(state: SportSignUiState): SportSignUiState.Content? {
     val kept = remember { HeaderHolder() }

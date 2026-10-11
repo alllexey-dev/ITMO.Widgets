@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The moved `strings_recordbook.xml` resolves from the module's `Res` with the Russian plural forms (LR-2b). */
+/** `strings_recordbook.xml` resolves from the module's `Res` with the Russian plural forms. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class, qualifiers = "ru")
 class RecordbookStringsTest {

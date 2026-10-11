@@ -67,7 +67,7 @@ internal data class IosAlertButton(
 )
 
 /**
- * An iOS alert drawn in Compose over the kit's dialog window, at the pinned runtime's measures (iOS 27, DS-IOS-05):
+ * An iOS alert drawn in Compose over the kit's dialog window, at the pinned runtime's measures (iOS 27):
  * [IosMetrics.alertWidth] wide with [IosMetrics.alertRadius] corners on the opaque overlay colour, the title in
  * semibold headline and the [message] in subheadline, both on the leading edge (a lone title is regular and centred,
  * as UIKit draws it; without a title the message starts at the top), an optional [content] (the caller makes it
@@ -281,7 +281,7 @@ private val IosRowVerticalPadding = 11.dp
 
 /**
  * The checkmark's box: the Material Symbols check at 24 dp draws a glyph close to the 19 x 17 pt `checkmark` accessory
- * of a cell (DS-IOS-05); glyph-exact checks are DS-IOS-06's.
+ * of a cell.
  */
 private val IosCheckSize = 24.dp
 

@@ -80,7 +80,6 @@ private const val MAX_SCORE = 100.0
 /** Measures one line of the label style. */
 private const val LINE_PROBE = "0"
 
-// `GradeScaleView`'s geometry, kept at parity.
 private val TrackHeight = 8.dp
 private val TickWidth = 2.dp
 private val TickOverhang = 3.dp

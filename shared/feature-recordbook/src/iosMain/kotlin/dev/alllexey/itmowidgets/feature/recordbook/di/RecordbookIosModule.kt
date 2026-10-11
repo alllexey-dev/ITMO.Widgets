@@ -33,18 +33,18 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 /**
- * The iOS ports of [recordbookModule], what `:app`'s `RecordbookModule` and `RecordbookBridge` give Android; load it
- * with that module. BARS (IO-09d1): its own Darwin engine without cookies, cache or redirects ([barsEngineQualifier],
- * never the MyITMO one), the ITMO.ID sign-in of the `bars` client over it, the ITMO.ID cookies in the Keychain, the
+ * The iOS bindings of [recordbookModule], what `:app`'s `androidRecordbookModule` gives Android; load it with that
+ * module. BARS: its own Darwin engine without cookies, cache or redirects ([barsEngineQualifier], never the MyITMO
+ * one), the ITMO.ID sign-in of the `bars` client over it, the ITMO.ID cookies in the Keychain, the
  * hidden-WebView renewal on [host], and the cookie copy after an interactive ITMO.ID sign-in. `recordbookModule`
  * keeps the one `BarsClient`, `BarsTokenStore` (`bars_tokens.enc`, a Keychain item through `SecureStore`) and
  * `OwnerBoundBarsStorage` of the process.
  *
- * The background mark check (IO-09d3): its notifier over `iosBackgroundModule`'s `IosAppNotifier` (IO-14), the app
+ * The background mark check: its notifier over `iosBackgroundModule`'s `IosAppNotifier`, the app
  * refresh task as its scheduler, and the runner's step under [RefreshStepKeys.MARKS] with Android's three hours.
  * BARS renews there through the ITMO.ID cookies only (`BarsCookieSilentLogin`), never the hidden WebView.
  *
- * The subject page's links come from `resourcesModule` and the teacher tones from `reviewsModule` (IO-09f).
+ * The subject page's links come from `resourcesModule` and the teacher tones from `reviewsModule`.
  */
 fun recordbookIosModule(host: BarsWebHost): Module = module {
     single<HttpClientEngine>(barsEngineQualifier) { darwinHttpEngine() }

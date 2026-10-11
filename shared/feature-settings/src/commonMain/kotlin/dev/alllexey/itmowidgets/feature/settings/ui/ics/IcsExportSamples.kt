@@ -18,8 +18,8 @@ import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_week
 import kotlinx.datetime.LocalDate
 
 /**
- * The sheet's five states on Friday 2 October 2026, as `IcsExportViewModel` builds them; the clock of LT-3a's XML
- * references, so the goldens show the same days.
+ * The sheet's five states on Friday 2 October 2026, as `IcsExportViewModel` builds them; a fixed clock,
+ * so the goldens show the same days.
  */
 internal object IcsExportSamples {
 

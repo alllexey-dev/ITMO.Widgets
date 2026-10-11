@@ -5,7 +5,7 @@ import SwiftUI
 /// The base class of every shared ViewModel, as the `Shared` framework names it.
 typealias SharedViewModel = Lifecycle_viewmodelViewModel
 
-/// A shared ViewModel as SwiftUI observes it (L18 IO-05, recipe ios-swiftui-screen).
+/// A shared ViewModel as SwiftUI observes it.
 ///
 /// - Owns a `ScreenViewModelStore`. The ViewModel is created on first use of `viewModel` or `state`, and `deinit`
 ///   clears the store, which runs `onCleared` and cancels `viewModelScope`; nothing else does that on iOS.

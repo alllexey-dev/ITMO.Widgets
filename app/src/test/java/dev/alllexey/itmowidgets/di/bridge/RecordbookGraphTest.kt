@@ -52,7 +52,6 @@ class RecordbookGraphTest {
         assertSame(koin.get<BarsSilentLogin>(), koin.get<BarsSilentLogin>())
     }
 
-    /** The sport scores come from `sportModule` since KM-11c, with the opt-in and the friend list it reads. */
     @Test
     fun `the mark tracking switches are one single, also the marks background check`() {
         bootApplication()

@@ -3,9 +3,9 @@ import Shared
 import UserNotifications
 import XCTest
 
-/// The notification service's push handling (IO-12a) on the Kotlin golden fixtures, read by path: Backend's FCM
-/// envelopes (BK-16), MyITMO's sign-up answers and KM-11c's golden sign-up outcomes and push traces, which Android's
-/// `SportSignPushBooker` produces. `simctl push` never runs an extension (SP-23), so the extension's sources are
+/// The notification service's push handling on the Kotlin golden fixtures, read by path: Backend's FCM
+/// envelopes, MyITMO's sign-up answers and the golden sign-up outcomes and push traces, which Android's
+/// `SportSignPushBooker` produces. `simctl push` never runs an extension, so the extension's sources are
 /// compiled into the app and driven here. Every ISU, token and lesson is synthetic.
 final class NotificationServiceTests: XCTestCase {
     private static let now = ISO8601DateFormatter().date(from: "2026-10-06T00:00:00Z")!

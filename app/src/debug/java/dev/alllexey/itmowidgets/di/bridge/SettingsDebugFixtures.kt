@@ -22,7 +22,7 @@ import org.koin.dsl.module
  */
 object SettingsDebugFixtures {
 
-    /** Builds a new ViewModel over the host's fakes for each Fragment that asks. */
+    /** Builds a new ViewModel over the host's fakes for each screen that asks. */
     interface Fakes {
         fun settingsViewModel(savedStateHandle: SavedStateHandle): SettingsViewModel
         fun customSpoilerViewModel(): CustomSpoilerViewModel

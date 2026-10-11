@@ -4,7 +4,7 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// The BARS session's entry points on the simulator until the recordbook reaches iOS (IO-09d2), Debug builds only:
+/// The BARS session's debug entry points on the simulator, Debug builds only:
 ///
 /// - `-itmoBarsLogin` presents `BarsLoginSheet` once a real (not demo) session is signed in;
 /// - `-itmoBarsRenew foreground` or `-itmoBarsRenew background` replaces the saved BARS header with one BARS rejects

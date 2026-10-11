@@ -23,8 +23,8 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * Which module's definition Koin resolves for each settings ViewModel while a host lives and after it goes. The
- * definitions are compared, not called, so no ViewModel is built outside a Fragment.
+ * Which module's definition Koin resolves for each settings ViewModel while a fixture is loaded and after it is
+ * unloaded. The definitions are compared, not called, so the test builds no ViewModel.
  */
 @OptIn(KoinInternalApi::class)
 @RunWith(RobolectricTestRunner::class)

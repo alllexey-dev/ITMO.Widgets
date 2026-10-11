@@ -21,7 +21,7 @@ import org.koin.test.verify.verify
 @OptIn(KoinExperimentalAPI::class)
 class AuthModuleTest {
 
-    /** The session and the demo switch resolve over the ports the platform supplies (`CoreBridge` on Android). */
+    /** The session and the demo switch resolve over the ports the platform's Koin modules supply. */
     @Test
     fun theAuthDataModuleResolvesWithThePlatformPorts() {
         authDataModule.verify(extraTypes = platformPorts)

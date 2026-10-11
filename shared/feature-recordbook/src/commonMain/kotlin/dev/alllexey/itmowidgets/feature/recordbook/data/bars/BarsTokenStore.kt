@@ -33,7 +33,7 @@ class BarsTokenStore(private val store: SecureStore) {
     suspend fun clear() = lock.withLock { store.delete(NAME) }
 
     private companion object {
-        /** The stable name of the session (G-03); never renamed, or every signed-in BARS user signs in again. */
+        /** The stable name of the session; never renamed, or every signed-in BARS user signs in again. */
         const val NAME = "bars_tokens.enc"
     }
 }

@@ -14,7 +14,7 @@ import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import kotlinx.coroutines.withContext
 
 /**
- * The side effects of every session change, in the order 2.2 ran them. [SessionRepositoryImpl] decides which
+ * The side effects of every session change, in a fixed order. [SessionRepositoryImpl] decides which
  * transition runs, publishes each [dev.alllexey.itmowidgets.core.session.SessionState] and holds the
  * `NonCancellable` sections, so a transition never publishes state itself.
  *

@@ -131,7 +131,7 @@ private fun lessonTeacher(
     )
 }
 
-/** The tone dot's colour, harmonized towards the palette's primary by the theme (DS-01a). */
+/** The tone dot's colour, harmonized towards the palette's primary by the theme. */
 @Composable
 private fun teacherLevelColor(level: TeacherLevel): Color = with(ItmoTheme.extendedColors) {
     when (level) {

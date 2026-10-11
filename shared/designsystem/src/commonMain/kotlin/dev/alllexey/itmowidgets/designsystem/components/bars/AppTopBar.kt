@@ -44,9 +44,9 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The small top bar of a contextual screen: an optional navigation button (back or close), a concise title of up to
- * two lines and trailing actions, on `surface`. An optional [subtitle] (the My ITMO page's host, as the toolbar
- * subtitle showed it in 2.2) takes one ellipsized line under the title, which then keeps to one line. It draws no
- * window insets; the host pads the system bars, or the caller adds `windowInsetsPadding` to [modifier].
+ * two lines and trailing actions, on `surface`. An optional [subtitle] (such as the My ITMO page's host) takes one
+ * ellipsized line under the title, which then keeps to one line. It draws no window insets; the host pads the system
+ * bars, or the caller adds `windowInsetsPadding` to [modifier].
  *
  * Under the iOS style it is the inline navigation bar: the title centred in one line of headline (the subtitle centred
  * under it), the navigation button leading and the actions trailing in the tint, no tonal elevation, and a hairline
@@ -254,7 +254,7 @@ private fun IosTopBar(
     }
 }
 
-/** The one line under the title: `TextAppearance.Material3.BodySmall` in `colorOnSurfaceVariant`, as in 2.2. */
+/** The one line under the title: `TextAppearance.Material3.BodySmall` in `colorOnSurfaceVariant`. */
 @Composable
 private fun Subtitle(text: String) {
     Text(
@@ -306,7 +306,7 @@ private val IosTextActionPadding = 6.dp
 
 /**
  * The Material Symbols chevron at the size whose glyph (half the box high) matches the bar's `chevron.backward`
- * symbol, a 16 by 23 pt image (DS-IOS-02); glyph-exact checks are DS-IOS-06's.
+ * symbol, a 16 by 23 pt image.
  */
 private val BackChevronSize = 32.dp
 

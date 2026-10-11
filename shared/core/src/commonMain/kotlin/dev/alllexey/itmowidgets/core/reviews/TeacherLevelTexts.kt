@@ -12,7 +12,7 @@ import org.jetbrains.compose.resources.StringResource
 
 /**
  * The tone of a teacher's reviews in words; TalkBack reads them with the dot. The dot's colour is a design-system
- * token (DS-01a), not part of the tone here.
+ * token, not part of the tone here.
  */
 enum class TeacherLevelTone(private val labelResource: StringResource) {
     VERY_NEGATIVE(Res.string.teacher_level_very_negative),

@@ -89,7 +89,7 @@ import org.robolectric.annotation.Config
 
 /**
  * The home tab root and the QR pass in the Compose shell with the real [shellEntries] and Koin ViewModels on
- * synthetic data: each key renders its screen, and every home card opens its route-map route (SH-0).
+ * synthetic data: each key renders its screen, and every home card opens its route.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = PreviewHostApplication::class)

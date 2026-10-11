@@ -67,9 +67,8 @@ import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
 /**
- * Sign-out runs every `SessionDataCleaner` (the app merges Koin's into Hilt's set): the module's six cleaners leave
- * no MyITMO cache, no BARS controls, no BARS session, no BARS switch, no subject binding and no marks or sheet files of
- * the previous account.
+ * Sign-out runs every `SessionDataCleaner`: the module's six cleaners leave no MyITMO cache, no BARS controls, no BARS
+ * session, no BARS switch, no subject binding and no marks or sheet files of the previous account.
  */
 class RecordbookSignOutTest {
 

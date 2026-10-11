@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.client.push
 
 /**
- * FCM `data` strings as Backend 1.7.0 writes them with Gson until gate R: declaration order, `null` fields omitted
- * and `OffsetDateTime.toString()`, which drops `:00` seconds. The values equal the vendored `fcm/` fixtures (BK-03's
+ * FCM `data` strings as Backend 1.7.0 writes them with Gson: declaration order, `null` fields omitted
+ * and `OffsetDateTime.toString()`, which drops `:00` seconds. The values equal the vendored `fcm/` fixtures (Backend's
  * synthetic data), so both must decode to equal payloads.
  */
 object SyntheticFcm {

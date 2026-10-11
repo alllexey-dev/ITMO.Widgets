@@ -7,8 +7,8 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 
 /**
- * Whether the Compose screen this Fragment root holds shows a node tagged [tag]: a ported page is a `ComposeView`,
- * so the debug hosts' frame probes read its semantics instead of view visibility. Main thread only.
+ * Whether the Compose screen under this view root shows a node tagged [tag], read from its semantics instead of view
+ * visibility. Main thread only.
  */
 internal fun View.hasSemanticsTag(tag: String): Boolean {
     val root = (this as? ViewGroup)?.getChildAt(0) as? ViewRootForTest ?: return false

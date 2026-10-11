@@ -39,7 +39,7 @@ import dev.alllexey.itmowidgets.feature.social.ui.userfriends.UserFriendsRoute
 import org.koin.core.parameter.parametersOf
 
 /**
- * The social keys (route map rows 13-16 and S2): the viewer's friends, another user's friends, people search, the
+ * The social keys: the viewer's friends, another user's friends, people search, the
  * person profile and the schedule's friend picker. Every profile link goes through [openUserProfile], so an ISU outside
  * `1..Int.MAX_VALUE` opens nothing. The picker hands its choice to the schedule as a [FriendSelection] on the result
  * bus under its default key (one opener).
@@ -101,7 +101,7 @@ internal fun Nav3AppNavigator.openUserProfile(isu: Int) {
     UserScreenArgs.profileIsu(isu.toLong())?.let { open(AppRoutes.UserProfile(it)) }
 }
 
-/** People search (row 15): `Пригласить` shares the invitation with this distribution's download link. */
+/** People search: `Пригласить` shares the invitation with this distribution's download link. */
 @Composable
 private fun UserSearchEntry(onBack: () -> Unit, navigator: Nav3AppNavigator) {
     val context = LocalContext.current
@@ -114,7 +114,7 @@ private fun UserSearchEntry(onBack: () -> Unit, navigator: Nav3AppNavigator) {
 }
 
 /**
- * The person profile (row 16): sharing, the clipboard and the source links stay on this activity; the person's
+ * The person profile: sharing, the clipboard and the source links stay on this activity; the person's
  * friends, schedule, sport, the review editor and the report open as their own keys, named as the page shows them.
  */
 @Composable
@@ -149,7 +149,7 @@ private fun userProfileExits(
 )
 
 /**
- * The schedule's friend picker (S2): the choice goes to the schedule before the sheet closes; a profile opens in the
+ * The schedule's friend picker: the choice goes to the schedule before the sheet closes; a profile opens in the
  * sheet's place, so the sheet closes before the person shows.
  */
 @Composable
@@ -167,7 +167,7 @@ private fun FriendSelectorEntry(onClose: () -> Unit, navigator: Nav3AppNavigator
     )
 }
 
-/** A review's source page outside the app; without a handler a snackbar says so, as `openLink` does for a Fragment. */
+/** A review's source page outside the app; without a handler a snackbar says so. */
 private fun openSource(platform: PlatformActions, anchor: View, url: String) {
     if (!platform.openLink(url)) Snackbar.make(anchor, R.string.link_open_failed, Snackbar.LENGTH_SHORT).show()
 }

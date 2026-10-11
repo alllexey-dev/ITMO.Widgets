@@ -17,10 +17,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScor
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.preview.SheetScoresPreviewSamples
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LR-1c recorded the XML references as
- * `SheetScoresSheet_<state>`. Each state therefore is a function called `SheetScoresSheet` in a holder class of its
- * own. Every preview is the sheet as tall as its content, at most 90 % of the 891 dp capture window, on the sheet's
- * colour, as the Android shell opens it.
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are `SheetScoresSheet_<state>`. Each
+ * state therefore is a function called `SheetScoresSheet` in a holder class of its own. Every preview is the sheet as
+ * tall as its content, at most 90 % of the 891 dp capture window, on the sheet's colour, as the Android shell opens it.
  */
 
 /** Downloading the sheet: the indicator in the middle of the shared area. */

@@ -75,7 +75,7 @@ class RussianLocaleTest {
         }
     }
 
-    /** The process-wide defaults after the override, recorded for the shared-module resolvers (KM-07, iOS). */
+    /** The process-wide defaults after the override, recorded for the shared-module resolvers. */
     private fun logDefaults(where: String) {
         Log.i(
             TAG,

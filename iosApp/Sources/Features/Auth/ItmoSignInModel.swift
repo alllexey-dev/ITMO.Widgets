@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import Shared
 
-/// The ITMO.ID page over Android's `InteractiveLoginViewModel` (IO-07b): the browser reports the page lifecycle and
+/// The ITMO.ID page over Android's `InteractiveLoginViewModel`: the browser reports the page lifecycle and
 /// the posted tokens to it, the ViewModel hands the tokens to `SessionRepository` and keeps the page state. A
 /// successful sign-in sends `Completed` and the shell's gate leaves the page as the session turns signed in; a
 /// failure replaces the page with an error and a retry, which loads a clean page.

@@ -45,49 +45,50 @@ import platform.Foundation.NSBundle
 
 /**
  * Every Koin module of the iOS app process, what `KoinModules` is on Android. One line per feature: its bindings live
- * in `shared/feature-<x>/src/iosMain/.../di/<Area>IosModule.kt`, and the feature's IO card appends the line.
+ * in `shared/feature-<x>/src/iosMain/.../di/<Area>IosModule.kt`.
  */
 object IosKoinModules {
 
     fun all(platform: IosPlatform): List<Module> = listOf(
         iosCoreModule(platform),
-        // The shared session and demo switch (KM-11h1) on their iOS ports (IO-21).
+        // The shared session and demo switch on their iOS ports.
         authDataModule, accountIosModule,
-        // The QR pass screen and the App Group snapshot of the QR widget (IO-21).
+        // The QR pass screen and the App Group snapshot of the QR widget.
         qrModule, qrIosModule,
-        // The sign-in and first-run screens with the first-run flag (IO-07b).
+        // The sign-in and first-run screens with the first-run flag.
         authModule, onboardingDataModule, onboardingModule,
-        // The SwiftUI settings and diagnostics over the shared pages (IO-08a); IO-07b's screens write the same data.
+        // The SwiftUI settings and diagnostics over the shared pages; the sign-in and first-run screens write the same
+        // data.
         settingsDataModule, settingsModule, settingsIosModule,
-        // The recordbook graph with the BARS session on WebKit and the Keychain (IO-09d1); the tab, the subject page
-        // and `Мои баллы` (IO-09d2).
+        // The recordbook graph with the BARS session on WebKit and the Keychain; the tab, the subject page
+        // and `Мои баллы`.
         recordbookModule, recordbookIosModule(platform),
-        // The schedule widgets' App Group timeline and the schedule widget refresh port (IO-10b).
+        // The schedule widgets' App Group timeline and the schedule widget refresh port.
         scheduleWidgetIosModule,
-        // The web sign-in sheet and the update offer on their iOS ports (IO-08b).
+        // The web sign-in sheet and the update offer on their iOS ports.
         webLoginDataModule, webLoginModule, updateModule, updateIosModule,
-        // The home feed with the hints over WidgetKit and UNUserNotificationCenter (IO-09a).
+        // The home feed with the hints over WidgetKit and UNUserNotificationCenter.
         homeModule, homeIosModule(PlacedWidgetKinds { completion -> platform.installedWidgetKinds(completion) }),
-        // The notifier, the app refresh task and the schedule change check's iOS ports and step (IO-14); the runner
+        // The notifier, the app refresh task and the schedule change check's iOS ports and step; the runner
         // is `IosBackgroundRefresh`, started after the graph.
         iosBackgroundModule, scheduleChangesIosModule,
         // The me tab, friends, search, profiles and a user's friends; the invitation names the App Store page or the
-        // site (IO-09e).
+        // site.
         socialModule, socialIosModule(inviteUrl()), meModule,
         // The schedule tab, another user's schedule, the changes, the lesson and pending sport sheets and the friend
-        // picker (IO-09b).
+        // picker.
         scheduleModule, scheduleDataModule, scheduleIosModule(), friendSelectorModule,
         // The sport tab, its details sheet and another user's sport; the lessons' friends come through the friend
-        // picker's `FriendRepository` above (IO-09c).
+        // picker's `FriendRepository` above.
         sportModule, sportIosModule,
-        // The calendar sync over EventKit with its refresh step and the `.ics` file (IO-15b).
+        // The calendar sync over EventKit with its refresh step and the `.ics` file.
         calendarIosModule,
         // The teacher reviews with the editor and the report, the teacher tones, and the subject links with their
-        // sheets and report (IO-09f).
+        // sheets and report.
         reviewsModule, reviewsIosModule, resourcesModule, resourcesIosModule,
     )
 
-    /** The App Store page of the bundle's `AppStoreID` once the app has a record (T13), the build's site until then. */
+    /** The App Store page of the bundle's `AppStoreID` once the app has a record, the build's site until then. */
     private fun inviteUrl(): String =
         AppStoreListing.url(NSBundle.mainBundle.objectForInfoDictionaryKey("AppStoreID") as? String)
             ?: BackendOrigin.fromMainBundle()

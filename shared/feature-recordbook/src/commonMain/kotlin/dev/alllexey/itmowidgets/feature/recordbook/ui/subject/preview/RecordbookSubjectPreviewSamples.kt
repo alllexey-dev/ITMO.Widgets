@@ -33,8 +33,8 @@ import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
 
 /**
- * Synthetic subject pages of spring 2025/2026 for the previews and host tests, the scenes of the LR-1c references
- * (LR-1c's debug host): today is 2026-06-01, the session's grades are set.
+ * Synthetic subject pages of spring 2025/2026 for the previews and host tests: today is 2026-06-01, the session's
+ * grades are set.
  */
 internal object RecordbookSubjectPreviewSamples {
     const val TEACHER = "Иванова Мария Сергеевна"

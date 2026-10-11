@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import org.jetbrains.compose.resources.getString
 
-/** The commonMain card and details texts read as the View helpers in `:app`'s `ui/common` and `ui/sign` do today. */
+/** The card and details texts of the sport lessons and bookings. */
 @RunWith(RobolectricTestRunner::class)
 class SportCardTextsTest {
 

@@ -98,7 +98,7 @@ class ScheduleCache22GoldenTest {
     private companion object {
         val DATE: LocalDate = LocalDate(2026, 10, 5)
 
-        /** The G-04 capture's entry. */
+        /** The device capture's entry. */
         val FRIEND_DAY = DaySchedule(
             dayNumber = 1,
             weekNumber = 6,
@@ -112,7 +112,7 @@ class ScheduleCache22GoldenTest {
             )
         )
 
-        /** SP-08's entry: the second lesson has no room and no building. */
+        /** The host JVM fixture's entry: the second lesson has no room and no building. */
         val OWN_DAY = DaySchedule(
             dayNumber = 1,
             weekNumber = 6,

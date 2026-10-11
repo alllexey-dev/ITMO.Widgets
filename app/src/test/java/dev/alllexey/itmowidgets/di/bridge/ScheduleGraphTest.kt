@@ -48,7 +48,7 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The schedule data on the real graph (KM-11a2, IO-15a): Koin constructs it and the calendar sync once, with the
+ * The schedule data on the real graph: Koin constructs it and the calendar sync once, with the
  * Android notifier, the phone's calendars, the WorkManager schedulers and Core 2.0's schedule area of the app modules.
  */
 @RunWith(RobolectricTestRunner::class)

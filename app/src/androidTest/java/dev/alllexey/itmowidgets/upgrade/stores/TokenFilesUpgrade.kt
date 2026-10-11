@@ -30,7 +30,7 @@ object TokenFilesUpgrade {
 
         assertCapturedSession(myItmoFile, fixture)
 
-        // The BARS session reads through the SecureStore the app builds over noBackupFilesDir (L12 KM-11b1).
+        // The BARS session reads through the SecureStore the app builds over noBackupFilesDir.
         val bars = BarsTokenStore(FileSecureStore(directories.noBackup, AndroidKeystoreTokenCipher()))
         assertEquals(Captured22.BARS_HEADER, runBlocking { bars.load(Captured22.ISU) })
         assertNull(runBlocking { bars.load(Captured22.ISU + 1) })

@@ -129,7 +129,7 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_version_title
 import org.jetbrains.compose.resources.StringResource
 
 /**
- * The settings pages of LT-3a's XML references, as the page providers build them over the presentation tests'
+ * The settings pages of the previews, as the page providers build them over the presentation tests'
  * fixture: custom services on, notifications allowed, no background restriction, no quick-settings tile, no custom
  * spoiler image, no diagnostics records, version `2.1-test`. `SettingsPreviewDataTest` checks every page against
  * the real providers, so a provider change that these previews miss fails a test instead of drifting.

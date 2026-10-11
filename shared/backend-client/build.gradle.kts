@@ -1,5 +1,4 @@
-// Core 2.0, the typed Backend client (L19). itmowidgets.kmp.library brings kotlinx.serialization
-// (recipe kmp-module-build-file).
+// Core 2.0, the typed Backend client. itmowidgets.kmp.library brings kotlinx.serialization.
 plugins {
     id("itmowidgets.kmp.library")
 }
@@ -38,7 +37,7 @@ tasks.named { it.contains("AndroidHostTest") && it.contains("Lint", ignoreCase =
 
 kotlin {
     sourceSets {
-        // No Ktor engine artifact: the caller passes the engine (OkHttp on Android, Darwin on iOS, ADR 0026).
+        // No Ktor engine artifact: the caller passes the engine (OkHttp on Android, Darwin on iOS).
         commonMain.dependencies {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)

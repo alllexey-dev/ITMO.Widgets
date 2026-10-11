@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.FriendsUiState
 import dev.alllexey.itmowidgets.feature.social.ui.friends.preview.FriendsPreviewData
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LC-1c recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `FriendsScreen_<state>`. Each state therefore is a function called `FriendsScreen` in a holder class of its own;
  * the scanner instantiates each holder by reflection.
  */

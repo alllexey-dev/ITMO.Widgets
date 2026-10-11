@@ -17,13 +17,13 @@ import org.koin.test.verify.verify
 class UpdateModuleTest {
 
     /**
-     * The installed version, its platform and Core 2.0's app area come from the platform (`AccountUpdateBridge` on
+     * The installed version, its platform and Core 2.0's app area come from the platform (`androidUpdateModule` on
      * Android), the gate, the demo switch, the reminder store, the wall clock, diagnostics and dispatchers from the
      * core bindings; the repository resolves inside the module.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theUpdateModuleResolvesWithTheBridgedTypes() {
+    fun theUpdateModuleResolvesWithThePlatformTypes() {
         updateModule.verify(
             extraTypes = listOf(
                 AppApi::class,

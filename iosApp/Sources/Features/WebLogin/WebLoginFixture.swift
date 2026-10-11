@@ -1,7 +1,7 @@
 import Shared
 import SwiftUI
 
-/// The web sign-in of a Debug build launched with `-itmoWebLoginFixture` (UI tests, IO-08b): once the tabs are on
+/// The web sign-in of a Debug build launched with `-itmoWebLoginFixture` (UI tests): once the tabs are on
 /// screen the sheet opens by itself, its ViewModel answers from `WebLoginIosFixture` instead of Backend, and the scan
 /// button hands over the fixture's link, since the simulator has no camera. A Release build ignores the argument.
 enum WebLoginFixture {

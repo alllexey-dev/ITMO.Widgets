@@ -17,7 +17,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 /**
- * The previews draw exactly what the page providers build for LT-3a's reference states, so the baselines stay a
+ * The previews draw exactly what the page providers build for the preview states, so the baselines stay a
  * picture of the real pages: custom services on, notifications allowed, everything else the fixture's default.
  */
 @OptIn(ExperimentalCoroutinesApi::class)

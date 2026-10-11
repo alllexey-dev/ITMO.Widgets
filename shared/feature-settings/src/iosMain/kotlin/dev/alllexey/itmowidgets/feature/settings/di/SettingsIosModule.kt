@@ -15,15 +15,15 @@ import kotlinx.datetime.LocalDate
 import org.koin.dsl.module
 
 /**
- * The iOS side of [settingsDataModule] and [settingsModule], what `:app`'s `SettingsBridge` gives Android: widget
- * reloads, Background App Refresh as the background work access, no quick settings tile, no custom spoiler image (iOS
- * hides that row until a card adds the picker), the bundle's version. The first-run flow (IO-07b) resolves the opt-in
- * and the widget appearance through it too. The core contracts come from `iosCoreModule`, the onboarding flag from
+ * The iOS side of [settingsDataModule] and [settingsModule], what `androidSettingsModule` and `androidScheduleModule`
+ * give Android: widget reloads, Background App Refresh as the background work access, no quick settings tile, no custom
+ * spoiler image (iOS hides that row), the bundle's version. The first-run flow resolves the opt-in and the widget
+ * appearance through it too. The core contracts come from `iosCoreModule`, the onboarding flag from
  * `onboardingDataModule`.
  *
- * The schedule change switch and the calendar sync are the schedule data graph's (`scheduleDataModule`, loaded since
- * IO-09b); the phone's calendar and the `.ics` export behind the calendar rows are `calendarIosModule`'s (IO-15b). Mark
- * tracking is `recordbookModule`'s (IO-09d1), scheduled on the app refresh task since IO-09d3, which shows its page.
+ * The schedule change switch and the calendar sync are the schedule data graph's (`scheduleDataModule`); the phone's
+ * calendar and the `.ics` export behind the calendar rows are `calendarIosModule`'s. Mark tracking is
+ * `recordbookModule`'s, scheduled on the app refresh task, which shows its page.
  */
 val settingsIosModule = module {
     single<WidgetRefreshRequester> { IosWidgetRefreshRequester(get()) }
@@ -43,7 +43,7 @@ fun settingsPageParameters(page: String): List<Any> =
     listOf(SavedStateHandle(mapOf(SettingsPage.ARGUMENT to SettingsPage.fromArgument(page).name)))
 
 /**
- * The Koin parameters of the `.ics` sheet's `IcsExportViewModel` (IO-15b): a fresh `SavedStateHandle`, since a SwiftUI
+ * The Koin parameters of the `.ics` sheet's `IcsExportViewModel`: a fresh `SavedStateHandle`, since a SwiftUI
  * store has no saved-state registry; the sheet starts at the range choice.
  */
 fun icsExportParameters(): List<Any> = listOf(SavedStateHandle())

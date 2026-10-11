@@ -13,11 +13,11 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toInstant
 
 /**
- * The mark check as one step of the iOS background runner (IO-09d3): KM-11b2's [MarksCheck] (My ITMO, BARS with the
+ * The mark check as one step of the iOS background runner: [MarksCheck] (My ITMO, BARS with the
  * cookie renewal and no WebView, the sheets), then the quiet hours. Android's check keeps marks found at night until
  * its first run after 06:00, which WorkManager makes within three hours; iOS may not wake the app for many hours, so
  * marks and the BARS reminder found between 00:00 and 06:00 (Moscow, the academic zone) are handed to the system for
- * 06:00 at once (a calendar trigger) and count as delivered, as the schedule change step does (IO-14).
+ * 06:00 at once (a calendar trigger) and count as delivered, as the schedule change step does.
  */
 class MarksRefresh(
     private val check: MarksCheck,

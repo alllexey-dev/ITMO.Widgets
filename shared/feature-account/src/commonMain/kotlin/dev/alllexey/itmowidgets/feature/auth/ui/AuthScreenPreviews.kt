@@ -17,7 +17,7 @@ import dev.alllexey.itmowidgets.shared.feature.account.Res
 import dev.alllexey.itmowidgets.shared.feature.account.auth_error_invalid_credentials
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LA-1c recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `AuthScreen_<state>` and `LoginScreen_error`. Each state therefore is a function called `AuthScreen` or
  * `LoginScreen` in a holder class of its own.
  */
@@ -53,7 +53,7 @@ internal class AuthScreenErrorPreview {
     fun AuthScreen() = AuthPreview(SignedOut.copy(error = UiText.Res(Res.string.auth_error_invalid_credentials)))
 }
 
-/** The dialog alone on the screen's background, as the XML reference mirrored the dialog window. */
+/** The dialog alone on the screen's background, mirroring the dialog window. */
 internal class AuthScreenTokenDialogPreview {
     @Preview(name = "token-dialog")
     @Composable

@@ -15,7 +15,7 @@ import org.koin.core.parameter.parametersOf
  * Koin's definition of [VM] with [arguments] as its `SavedStateHandle`, as Android's shell seeds an entry's handle from
  * its key, in a store of its own that is cleared when this call leaves the composition: a sheet's content lives as
  * long as its controller, a dialog inside it only while it shows. `koinViewModel()` would hand the definition the
- * controller's empty handle, since a Compose controller on iOS has no destination arguments (IO-09f).
+ * controller's empty handle, since a Compose controller on iOS has no destination arguments.
  */
 @Composable
 internal inline fun <reified VM : ViewModel> hostedViewModel(vararg arguments: Pair<String, Any?>): VM {

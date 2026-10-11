@@ -136,7 +136,7 @@ class TabSwipeTest {
         swipe(towardsNext = true)
         awaitTab(AppTab.SPORT)
         TestUi.settle(SETTLE_MILLIS)
-        assumeTrue("the sport root is registered in the Compose shell (SH-1b9)", showsText(MY_SPORT))
+        assumeTrue("the sport root is registered in the Compose shell", showsText(MY_SPORT))
 
         swipe(towardsNext = true)
         TestUi.settle(SETTLE_MILLIS)

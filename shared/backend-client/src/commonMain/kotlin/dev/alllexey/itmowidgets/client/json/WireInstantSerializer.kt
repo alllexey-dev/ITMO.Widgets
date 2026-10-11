@@ -16,7 +16,7 @@ import kotlin.time.Instant
 
 /**
  * A wire date-time with an offset (1.x `OffsetDateTime`). Reads Jackson's form and Gson's FCM form, which drops
- * `:00` seconds (`2026-10-03T12:00+03:00`, SP-02 case 13) and which no built-in parser accepts. Writes
+ * `:00` seconds (`2026-10-03T12:00+03:00`) and which no built-in parser accepts. Writes
  * `Instant.toString()` (UTC), which 1.x and Backend read.
  */
 internal object WireInstantSerializer : KSerializer<Instant> {

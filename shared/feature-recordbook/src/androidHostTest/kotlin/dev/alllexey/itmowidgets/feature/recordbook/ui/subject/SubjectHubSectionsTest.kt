@@ -38,7 +38,7 @@ import kotlin.test.assertEquals
 import kotlin.time.Instant
 
 /**
- * The actions of the subject page's remaining sections (LR-4a2): votes on a link, the sheet total's row and `⋮` menu,
+ * The actions of the subject page's remaining sections: votes on a link, the sheet total's row and `⋮` menu,
  * the offer to connect a sheet, confirming and rejecting a binding, and teachers who open a profile only with an ISU
  * that a profile accepts. Their looks live in the `SubjectLinkItem*`, `SubjectSheetTotal*`, `SubjectBinding*` and
  * `SubjectTeacherRow*` goldens.

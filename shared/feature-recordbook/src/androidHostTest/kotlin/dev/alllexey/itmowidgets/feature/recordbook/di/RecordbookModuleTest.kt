@@ -82,13 +82,14 @@ class RecordbookModuleTest {
     fun closeKoin() = koin.close()
 
     /**
-     * The Android side of BARS and the marks worker's scheduler and notifier come from the app's `RecordbookBridge`,
-     * the core contracts from `CoreBridge`, links and levels from the resources and reviews bridges, the handle from
-     * the platform; all recordbook data, the resolvers, the loaders and the ViewModels resolve inside the module.
+     * The Android side of BARS and the marks worker's scheduler and notifier come from the app's
+     * `androidRecordbookModule`, the core contracts from the platform's Koin modules, links and levels from the
+     * resources and reviews modules, the handle from the platform; all recordbook data, the resolvers, the loaders and
+     * the ViewModels resolve inside the module.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theRecordbookModuleResolvesWithTheBridgedTypes() {
+    fun theRecordbookModuleResolvesWithThePlatformTypes() {
         recordbookModule.verify(
             extraTypes = listOf(
                 SportScoreRepository::class,

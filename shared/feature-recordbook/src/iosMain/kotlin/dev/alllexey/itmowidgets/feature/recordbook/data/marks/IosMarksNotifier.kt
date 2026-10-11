@@ -27,7 +27,7 @@ interface MorningMarksNotifier : MarksNotifier {
 }
 
 /**
- * The iOS [MarksNotifier] (IO-09d3), Android's `AndroidMarksNotifier` over [IosAppNotifier] on the `marks` thread:
+ * The iOS [MarksNotifier], Android's `AndroidMarksNotifier` over [IosAppNotifier] on the `marks` thread:
  * "Новые оценки" with the subject names only, never the marks, and the one «Войдите в БАРС», by catalog key. A newer
  * digest replaces the shown or the scheduled one. One subject with a page leads to it, anything else to the
  * recordbook; the BARS reminder opens the BARS sign-in.

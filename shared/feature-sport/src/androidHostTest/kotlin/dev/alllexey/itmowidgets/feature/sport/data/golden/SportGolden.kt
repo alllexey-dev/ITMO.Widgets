@@ -7,8 +7,8 @@ import java.io.File
 import org.junit.Assert.assertEquals
 
 /**
- * Golden domain values of the sport data layer, in `src/androidHostTest/resources/sport/golden/`. They were recorded through the
- * MyItmoApi 1.x and Core 1.x path before KM-10c swapped it, so the same files prove the 2.x path keeps every value.
+ * Golden domain values of the sport data layer, in `src/androidHostTest/resources/sport/golden/`. They were recorded
+ * through the MyItmoApi 1.x and Core 1.x path, so the same files prove the 2.x path keeps every value.
  * `SPORT_GOLDEN_RECORD=1` rewrites them; only a deliberate behaviour change may do that.
  */
 object SportGolden {

@@ -20,7 +20,7 @@ import platform.Foundation.NSURL
 
 /**
  * The own schedule of a range as a `.ics` file in the app's temporary directory (`tmp/ics`), which the sheet hands
- * to `ShareLink` by its `file://` address (IO-15b). Only the latest file is kept. Events and UIDs are the
+ * to `ShareLink` by its `file://` address. Only the latest file is kept. Events and UIDs are the
  * synchronization's, as in Android's `IcsFileExport`.
  */
 class IosIcsFileExport internal constructor(

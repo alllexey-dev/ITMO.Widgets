@@ -65,8 +65,8 @@ class ScheduleWidgetDataProvider(
     }
 
     /**
-     * The widgets from now to [until] for a writer that cannot run [load] at every boundary (iOS WidgetKit, L18
-     * IO-10b). Same sources and gates as [load]; Android renders [load]'s current snapshot. [until] lies after now.
+     * The widgets from now to [until] for a writer that cannot run [load] at every boundary (iOS WidgetKit). Same
+     * sources and gates as [load]; Android renders [load]'s current snapshot. [until] lies after now.
      */
     suspend fun loadTimeline(until: Instant): ScheduleWidgetTimelineLoadResult {
         require(timeProvider.now() < until) { "Timeline ends at $until, which is not after now" }

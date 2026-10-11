@@ -15,8 +15,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
- * The three enum policies (13 Q7 (b), SP-02 cases 9 and 16) on synthetic stand-ins: the area cards apply them to
- * the real enums (`RestrictionCapability` in links, `QueueEntryStatus` in sport, ...).
+ * The three enum policies on synthetic stand-ins; the area tests apply them to the real enums
+ * (`RestrictionCapability` in links, `QueueEntryStatus` in sport, ...).
  */
 class EnumPolicyTest {
 
@@ -46,7 +46,7 @@ class EnumPolicyTest {
 
     @Test
     fun fallbackDecodesUnknownAsTheMostRestrictiveValue() {
-        // SP-02 case 9: a capability added by a newer server restricts everything on this client.
+        // A capability added by a newer server restricts everything on this client.
         assertEquals(Capability.ALL, decode(CapabilitySerializer, "\"UPLOAD_FILES\""))
         for (value in Capability.entries) {
             assertEquals(value, decode(CapabilitySerializer, "\"${value.name}\""))
@@ -59,7 +59,6 @@ class EnumPolicyTest {
 
     @Test
     fun tolerantDecodesUnknownAsUnknown() {
-        // SP-02 case 16: 1.x put a null into the non-null QueueEntryStatus field instead.
         assertEquals(Status.UNKNOWN, decode(StatusSerializer, "\"PAUSED\""))
         for (value in Status.entries - Status.UNKNOWN) {
             assertEquals(value, decode(StatusSerializer, "\"${value.name}\""))

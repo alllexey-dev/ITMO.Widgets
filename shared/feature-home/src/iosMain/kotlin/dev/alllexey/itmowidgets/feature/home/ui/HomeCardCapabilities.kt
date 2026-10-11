@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 
 /**
  * Whether the platform offers what a card of [kind] shows and opens. The new-marks card needs mark tracking and the
- * recordbook tab it opens (IO-09d2, IO-09d3); every other kind is on iOS.
+ * recordbook tab it opens; every other kind is on iOS.
  */
 fun PlatformCapabilities.offers(kind: HomeCardKind): Boolean = when (kind) {
     HomeCardKind.MARKS -> marks && recordbook

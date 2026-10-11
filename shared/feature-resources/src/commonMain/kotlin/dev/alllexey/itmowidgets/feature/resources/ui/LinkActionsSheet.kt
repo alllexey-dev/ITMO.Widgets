@@ -223,7 +223,7 @@ fun LinkActionsSheetRoute(
 }
 
 /**
- * What can be done with one link (`sheet_link_actions.xml`): its title and caption (as in the list), the vote pill at
+ * What can be done with one link: its title and caption (as in the list), the vote pill at
  * the end of the title, the moderator's reason under an own rejected or hidden link, then `Открыть`, `Автор: <name>`,
  * `Скопировать ссылку`, `Мои баллы` for a Google Sheet of any author, `Закрепить` / `Открепить`, `Изменить` and
  * `Удалить` for own links and `Пожаловаться` (see [linkActions]). Nothing is drawn while the links load or once the

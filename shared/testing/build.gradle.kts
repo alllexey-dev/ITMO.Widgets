@@ -1,4 +1,4 @@
-// Test helpers for the features' commonTest and the screenshot harness; core-free (recipe kmp-module-build-file).
+// Test helpers for the features' commonTest and the screenshot harness; core-free.
 // Every consumer test classpath gets the libraries below through `api`, so a test module needs only
 // `project(":shared:testing")`.
 plugins {

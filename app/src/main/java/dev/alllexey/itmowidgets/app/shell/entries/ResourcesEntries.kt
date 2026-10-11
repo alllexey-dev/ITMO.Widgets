@@ -51,8 +51,8 @@ import kotlinx.coroutines.flow.first
 import org.koin.core.parameter.parametersOf
 
 /**
- * The resources keys (route map S3-S5, D2): a subject period's links, the link editor, one link's actions and the
- * report. Each reads the arguments the Fragment sheets read under `SubjectLinksArgs`; a sheet that opens another
+ * The resources keys: a subject period's links, the link editor, one link's actions and the
+ * report. Each reads its arguments under `SubjectLinksArgs`; a sheet that opens another
  * sheet, a screen or the report closes itself first.
  */
 internal fun EntryRegistry.Builder.resourcesEntries() {
@@ -70,7 +70,7 @@ internal fun EntryRegistry.Builder.resourcesEntries() {
     }
 }
 
-/** All links of one subject period (S3): a link opens outside the app, its actions and the editor in sheets. */
+/** All links of one subject period: a link opens outside the app, its actions and the editor in sheets. */
 @Composable
 private fun SubjectLinksEntry(args: SubjectLinksArgs, onClose: () -> Unit, navigator: Nav3AppNavigator) {
     val view = LocalView.current
@@ -87,7 +87,7 @@ private fun SubjectLinksEntry(args: SubjectLinksArgs, onClose: () -> Unit, navig
 }
 
 /**
- * The link editor (S4): a new link's sheet starts with the clipboard link once its window first has focus, only on
+ * The link editor: a new link's sheet starts with the clipboard link once its window first has focus, only on
  * the sheet's first creation; a saved link closes it.
  */
 @Composable
@@ -113,7 +113,7 @@ private fun LinkEditorEntry(onDone: () -> Unit) {
 }
 
 /**
- * One link's actions (S5): a vote keeps the sheet; every other action closes it before the link, the profile, the
+ * One link's actions: a vote keeps the sheet; every other action closes it before the link, the profile, the
  * sheet scores, the editor or the report opens.
  */
 @Composable
@@ -176,7 +176,7 @@ private fun linkActions(
 )
 
 /**
- * The report of a link (D2): a reason and an optional comment on the kit's report dialog, which stays until the
+ * The report of a link: a reason and an optional comment on the kit's report dialog, which stays until the
  * report is accepted; a failure shows under the comment until the next send.
  */
 @Composable
@@ -210,7 +210,7 @@ private fun ReportLinkEntry(linkId: String, onClose: () -> Unit) {
 /**
  * The kit's report dialogs bring their own window, whose Back and tap outside close them only while nothing is being
  * sent; the Navigation 3 dialog scene's window under them only anchors it, transparent, undimmed and letting touches
- * through, as the Fragment hosts' own dialog does.
+ * through.
  */
 @Composable
 internal fun DialogSceneAnchor() {

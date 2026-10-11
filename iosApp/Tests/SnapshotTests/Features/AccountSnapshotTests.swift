@@ -4,7 +4,7 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// The web sign-in sheet, the update offer and the My ITMO page's chrome (IO-08b) in all four appearances, one
+/// The web sign-in sheet, the update offer and the My ITMO page's chrome in all four appearances, one
 /// reference per state Android's references cover. The content views are rendered directly, without ViewModels; the
 /// browser card comes from the fixture ViewModel (`WebLoginIosFixture`), whose texts are the shared ones.
 @MainActor

@@ -1,7 +1,7 @@
 import Foundation
 import Shared
 
-/// Catalog text in Swift (ADR 0028, the L05 TC-16b contract). A key is looked up in `Localizable` first, then in the
+/// Catalog text in Swift. A key is looked up in `Localizable` first, then in the
 /// file tables (`strings_<area>`); keys are unique across the catalog, so the first hit is the text.
 ///
 /// - A plural takes its count as argument 1: the forms show it as `%1$lld`, or the `count` substitution selects the

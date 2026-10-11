@@ -12,7 +12,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
 /**
- * The iOS [AppNotifier] (IO-14): local notifications through [center]. The channel becomes the thread identifier
+ * The iOS [AppNotifier]: local notifications through [center]. The channel becomes the thread identifier
  * (the system groups a channel's notifications), `<channel>-<id>` the request identifier, so a newer notification
  * replaces the shown one as Android's tag and id do. Texts are resolved from the catalog by key (`UiText.resolve`,
  * Russian through the app locale). A silent notification has no sound. iOS has no lock screen variant to set:

@@ -14,7 +14,7 @@ import kotlinx.serialization.json.Json
 
 /**
  * The iOS [ItmoIdCookies]: a copy of the `id.itmo.ru` cookies in one Keychain item, so the background replay
- * ([BarsCookieSilentLogin]) signs in to BARS without a WebView (11 row 14, SP-21). [replaceFromWebKit] copies WebKit's
+ * ([BarsCookieSilentLogin]) signs in to BARS without a WebView. [replaceFromWebKit] copies WebKit's
  * cookies after every WebView session; [store] merges the `Set-Cookie` values of a replay answer, the last of a name
  * winning (`KC_RESTART` may come twice). [cookieHeader] matches domain, path, `Secure` and expiry as RFC 6265 does.
  *

@@ -16,7 +16,7 @@ import kotlin.time.Duration
 
 /**
  * One periodic background check as WorkManager sees it. [periodicWork], [oneOffWork] and [tag] are stable
- * identifiers: WorkManager keeps them across app updates, so a rename needs an ADR and a cancel of the old name.
+ * identifiers: WorkManager keeps them across app updates, so a rename needs a cancel of the old name.
  */
 data class PeriodicCheckSpec(
     val worker: KClass<out ListenableWorker>,

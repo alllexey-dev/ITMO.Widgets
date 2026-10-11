@@ -1,9 +1,9 @@
 import SwiftUI
 import UIKit
 
-/// Who draws a pushed screen's top bar (owner may veto at T12).
+/// Who draws a pushed screen's top bar.
 ///
-/// - `compose`: a CMP route draws its own DS-03 top bar, so the SwiftUI bar is hidden.
+/// - `compose`: a CMP route draws its own top bar, so the SwiftUI bar is hidden.
 /// - `native`: a SwiftUI screen uses the navigation bar of its stack.
 enum ShellChrome {
     case compose

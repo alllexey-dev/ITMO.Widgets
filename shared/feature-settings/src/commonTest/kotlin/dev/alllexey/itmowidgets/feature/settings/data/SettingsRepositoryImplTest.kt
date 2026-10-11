@@ -447,7 +447,7 @@ class SettingsRepositoryImplTest {
         val repository: SettingsRepositoryImpl
     )
 
-    /** `/api/users/me/privacy` over Core 2.0 and MockEngine; the 2.2 wire default for friends is `ALL`. */
+    /** `/api/users/me/privacy` over Core 2.0 and MockEngine; the wire default for friends is `ALL`. */
     private class PrivacyBackend {
         val updatedSettings = mutableListOf<UserPrivacySettings>()
         var mySettings: MockRequestHandleScope.() -> HttpResponseData = {

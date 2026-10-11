@@ -101,7 +101,7 @@ object UserProfileTestTags {
 }
 
 /**
- * One person (port of `UserProfileFragment` and `UserProfileAdapter`): the top bar with `Поделиться` for a shown page,
+ * One person: the top bar with `Поделиться` for a shown page,
  * then a skeleton until the parts settle, `Профиль не найден` without an action, `Не удалось загрузить` with the reason
  * and `Повторить`, or the page. The page is a lazy list with stable keys in the order of `docs/features/social.md`
  * § Person profile: the hero card, `Должности`, `Где найти`, `ITMO.Widgets`, `Учёба`, then the reviews, so late

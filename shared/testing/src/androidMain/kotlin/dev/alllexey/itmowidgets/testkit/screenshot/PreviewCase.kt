@@ -8,8 +8,8 @@ import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
 /**
- * One capture: a preview in one appearance, its baseline file and its window; with a [variant] (M3-02a), the M3E
- * candidate it renders in instead of being compared.
+ * One capture: a preview in one appearance, its baseline file and its window; with a [variant], the M3E candidate it
+ * renders in instead of being compared.
  */
 class PreviewCase(
     val baseName: String,

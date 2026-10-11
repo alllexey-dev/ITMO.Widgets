@@ -8,7 +8,8 @@ import dev.alllexey.itmowidgets.feature.sport.ui.SportShares
 import org.koin.dsl.module
 
 /**
- * The iOS ports of [sportModule], what `:app`'s `CoreBridge` and `SportBridge` give Android; load it with that module.
+ * The iOS bindings of [sportModule], what `androidSportModule` and the app's other Koin modules give Android; load it
+ * with that module.
  * Core 2.0's sport area comes from the one `BackendClient`; the debug ports answer nothing, since the developer tools
  * stay Android-only; [SportShares] sends a lesson's link through the share sheet. The rest (MyItmoApi, the Backend
  * gate, time, dispatchers, the application scope, the share links, `DemoMode`, the sport-sign preferences, the

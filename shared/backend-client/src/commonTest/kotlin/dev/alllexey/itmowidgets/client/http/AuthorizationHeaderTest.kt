@@ -14,7 +14,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 
-/** Ports Core 1.x `TokenInterceptorTest` and adds the blank-token and per-request rules. */
+/** The bearer token header, with the blank-token and per-request rules. */
 class AuthorizationHeaderTest {
 
     @Test

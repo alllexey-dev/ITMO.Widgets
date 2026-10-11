@@ -1,6 +1,6 @@
 import XCTest
 
-/// The sign-in screen and the first-run flow on the shared session (IO-07b): five taps on the logo open the demo
+/// The sign-in screen and the first-run flow on the shared session: five taps on the logo open the demo
 /// with zero network calls, `Войти через ITMO.ID` opens the ITMO.ID page above the screen and its close button
 /// returns, and the flow walks every step in Android's order, answering iOS's notification dialog.
 final class OnboardingUITests: XCTestCase {

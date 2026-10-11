@@ -5,7 +5,7 @@ protocol PushTransport {
     func send(_ request: URLRequest) async throws -> (status: Int, body: Data)
 }
 
-/// URLSession without cookies, cache or redirects, as MyItmoApi's clients run (SP-16a): every request carries its
+/// URLSession without cookies, cache or redirects, as MyItmoApi's clients run: every request carries its
 /// own bearer token, and nothing of the exchange stays on disk.
 final class URLSessionPushTransport: NSObject, PushTransport, URLSessionTaskDelegate {
     private lazy var session: URLSession = {

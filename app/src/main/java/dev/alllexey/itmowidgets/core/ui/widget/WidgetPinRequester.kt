@@ -15,7 +15,7 @@ import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
  * provider class name (see [WidgetProviders]).
  *
  * The confirmation happens in the launcher, with the screen stopped, so the
- * receiver is tied to the Fragment instance rather than to its view.
+ * receiver stays registered from [start] to [stop], not only while the screen is visible.
  */
 class WidgetPinRequester(context: Context) {
 

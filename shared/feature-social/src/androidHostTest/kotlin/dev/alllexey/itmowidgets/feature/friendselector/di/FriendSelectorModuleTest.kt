@@ -13,7 +13,7 @@ class FriendSelectorModuleTest {
     /** The friend list and the history resolve inside the module over social's ports and the preferences store. */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theFriendSelectorModuleResolvesWithTheBridgedTypes() {
+    fun theFriendSelectorModuleResolvesWithThePlatformTypes() {
         friendSelectorModule.verify(
             extraTypes = listOf(
                 SocialRepository::class,

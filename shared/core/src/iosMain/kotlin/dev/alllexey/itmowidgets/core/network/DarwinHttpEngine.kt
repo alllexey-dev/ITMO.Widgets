@@ -8,10 +8,10 @@ import platform.Foundation.NSURLSessionConfiguration
 
 /**
  * The Ktor engine of every iOS client (MyITMO, BARS, Backend): URLSession without cookie storage, cookie handling
- * or URL cache, as SP-15a/SP-15b measured. Cookies are read from responses with Ktor's `setCookie()` and sent as an
+ * or URL cache. Cookies are read from responses with Ktor's `setCookie()` and sent as an
  * explicit `Cookie` header by the caller; nothing persists between requests or clients.
  *
- * The client still sets `followRedirects = false` where a redirect must surface (ML-03): the engine never follows,
+ * The client still sets `followRedirects = false` where a redirect must surface: the engine never follows,
  * Ktor's redirect plugin does. Never `usePreconfiguredSession`, which bypasses these settings.
  */
 fun darwinHttpEngine(): HttpClientEngine = Darwin.create {

@@ -60,9 +60,9 @@ class ScheduleTimelineTriggers(
 )
 
 /**
- * Keeps [FILE] in the App Group container on the schedule widgets' timeline (LS-3's `ScheduleWidgetTimeline`, from now
- * to the end of tomorrow) and reloads both schedule widget kinds after each write; the widget extension links no
- * Kotlin and only picks the entry of the moment (IO-10b, docs/ios.md, Data sharing).
+ * Keeps [FILE] in the App Group container on the schedule widgets' timeline (`ScheduleWidgetTimeline`, from now to the
+ * end of tomorrow) and reloads both schedule widget kinds after each write; the widget extension links no Kotlin and
+ * only picks the entry of the moment (docs/ios.md, Data sharing).
  *
  * The rooms and buildings in the file are the short titles Android's widget shows (`roomShortTitle`,
  * `buildingShortTitle`): the reader would need the catalog's Russian building names to shorten them. Everything else is the provider's data and keys.

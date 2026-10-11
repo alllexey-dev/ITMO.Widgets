@@ -20,7 +20,7 @@ interface ReferenceRepository {
 data class ReferenceItem(val id: Int, val title: String)
 
 /**
- * The ViewModel contract in its smallest form (recipe `viewmodel-contract`): one [uiState], one [events] flow,
+ * The ViewModel contract in its smallest form: one [uiState], one [events] flow,
  * `refresh(RefreshMode)`, row actions through [BusyKeys], state derived from the repository flow and never stranded.
  */
 class ReferenceViewModel(private val repository: ReferenceRepository) : ViewModel() {

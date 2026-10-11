@@ -1,7 +1,7 @@
 import Shared
 import SwiftUI
 
-/// The error journal (IO-08a): `DiagnosticsViewModel`'s records of this launch and a Kotlin crash of the previous
+/// The error journal: `DiagnosticsViewModel`'s records of this launch and a Kotlin crash of the previous
 /// one (`IosCrashHook`), newest first. Sharing hands the plain-text journal to the share sheet, which also copies it;
 /// clearing asks first, as on Android. Nothing leaves the device unless the user shares it.
 struct DiagnosticsScreen: View {

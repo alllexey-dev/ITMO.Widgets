@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// The viewer's friends and requests (`AppRoutes.Friends`): L13's Compose route (`friendsViewController`, IO-09e).
+/// The viewer's friends and requests (`AppRoutes.Friends`): the Compose route (`friendsViewController`).
 struct FriendsScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppRouter.self) private var router
@@ -19,7 +19,7 @@ struct FriendsScreen: View {
 }
 
 /// People search (`AppRoutes.UserSearch`): the Compose route with Compose's own field on the system keyboard
-/// (`userSearchViewController`, IO-09e).
+/// (`userSearchViewController`).
 struct UserSearchScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppRouter.self) private var router
@@ -36,7 +36,7 @@ struct UserSearchScreen: View {
 }
 
 /// The person profile (`AppRoutes.UserProfile`, also a `/u/<isu>` link and a friendship notification): the Compose
-/// route (`userProfileViewController`, IO-09e). The ISU goes to the clipboard here, with `person_isu_copied`, since
+/// route (`userProfileViewController`). The ISU goes to the clipboard here, with `person_isu_copied`, since
 /// iOS confirms no copy itself.
 struct UserProfileScreen: View {
     let isu: Int32
@@ -59,7 +59,7 @@ struct UserProfileScreen: View {
     }
 }
 
-/// Another user's friends (`AppRoutes.UserFriends`): the Compose route (`userFriendsViewController`, IO-09e).
+/// Another user's friends (`AppRoutes.UserFriends`): the Compose route (`userFriendsViewController`).
 struct UserFriendsScreen: View {
     let isu: Int32
     let name: String

@@ -14,7 +14,7 @@ import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The QR widget worker reads the pass from Koin (KM-12a), built as WorkManager builds it. */
+/** The QR widget worker reads the pass from Koin, built as WorkManager builds it. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)
 class QrWidgetUpdateWorkerKoinTest {

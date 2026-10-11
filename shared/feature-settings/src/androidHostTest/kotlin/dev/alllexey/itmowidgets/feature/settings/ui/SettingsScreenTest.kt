@@ -66,10 +66,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * `SettingsScreen` against the rules of the View renderer it replaced (the 13 cases of `SettingsRendererTest`): the
- * whole row is the target, unknown and disabled rows cannot change, restoring state emits no user action, rows keep
- * their identity across updates, the scroll position survives recreation, and long text fits at 320 dp and font 1.3.
- * Its dialogs keep the View dialogs' copy and buttons, survive recreation and never move a switch off its state.
+ * `SettingsScreen`'s row rules: the whole row is the target, unknown and disabled rows cannot change, restoring state
+ * emits no user action, rows keep their identity across updates, the scroll position survives recreation, and long text
+ * fits at 320 dp and font 1.3. Its dialogs show their copy and buttons, survive recreation and never move a switch off
+ * its state.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp")

@@ -3,7 +3,7 @@ import Shared
 import WebKit
 import XCTest
 
-/// The sign-in (IO-07a, on `InteractiveLoginViewModel` since IO-07b): the bundled interceptor's bridge and the
+/// The sign-in on `InteractiveLoginViewModel`: the bundled interceptor's bridge and the
 /// `postTokens` message handler in a real `WKWebView` hand the callback page's token response to the shared
 /// ViewModel and through it to `SessionRepository`, other pages and origins hand nothing, and the shell's gate follows
 /// the session states and the first-run flag. The page model runs on the app's graph; a token response it cannot

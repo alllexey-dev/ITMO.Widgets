@@ -24,8 +24,8 @@ import org.koin.dsl.module
 
 /**
  * The QR pass, data and screen. Koin is the only graph for these types; the app's widget, tile and worker read them
- * through `QrBridge`. The core types (`MyItmoClient`, the `app_preferences` DataStore and its stores,
- * `AppDirectories`, the wall clock, `DemoMode`, `AppDispatchers`) come from the app's `CoreBridge`.
+ * from it. The core types (`MyItmoClient`, the `app_preferences` DataStore and its stores, `AppDirectories`, the wall
+ * clock, `DemoMode`, `AppDispatchers`) come from the platform's Koin modules.
  */
 val qrModule = module {
     // Type arguments pick the public constructor; the internal one takes a file on a test file system.

@@ -7,7 +7,7 @@ import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeUiState
 
-/** A synthetic pass: the payload LH-0's references and the generator goldens use. */
+/** A synthetic pass: the payload the widget captures and the generator goldens use. */
 private val PreviewPass = QrCodeSnapshot("ITMO-TEST", 3_600_000)
 
 @Preview

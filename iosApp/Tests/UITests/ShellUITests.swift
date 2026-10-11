@@ -1,8 +1,8 @@
 import XCTest
 
-/// The shell (IO-06b): tabs in Android's order, `itmowidgets://route/<id>` URLs, the session gate and the demo banner
-/// on fixtures and on the shared session (IO-07a), and the edge swipe back from a screen that hides the navigation bar
-/// (the Compose QR pass, IO-21).
+/// The shell: tabs in Android's order, `itmowidgets://route/<id>` URLs, the session gate and the demo banner
+/// on fixtures and on the shared session, and the edge swipe back from a screen that hides the navigation bar
+/// (the Compose QR pass).
 final class ShellUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
@@ -110,8 +110,8 @@ final class ShellUITests: XCTestCase {
         XCTAssertTrue(element(app, "shell.gate.signedOut").waitForExistence(timeout: stepTimeout))
     }
 
-    /// The shared session (IO-07a): the Compose Me tab's sign-out (IO-09e) ends the demo through `SessionRepository`
-    /// after the route's confirmation, and the gate shows the sign-in screen instead of the tabs (IO-07b).
+    /// The shared session: the Compose Me tab's sign-out ends the demo through `SessionRepository`
+    /// after the route's confirmation, and the gate shows the sign-in screen instead of the tabs.
     func testSignOutOfTheSharedDemoOpensTheSignInPage() {
         let app = XCUIApplication.itmo()
         app.launch()

@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
 import dev.alllexey.itmowidgets.feature.social.presentation.statusText
 import dev.alllexey.itmowidgets.feature.social.presentation.subtitleText
 
-/** Synthetic people of the social list previews: LC-1c's reference owner and friends, long names included. */
+/** Synthetic people of the social list previews: an owner and friends, long names included. */
 internal object UserListPreviewData {
     const val OWNER_NAME = "Александра Константиновна Константинопольская"
 

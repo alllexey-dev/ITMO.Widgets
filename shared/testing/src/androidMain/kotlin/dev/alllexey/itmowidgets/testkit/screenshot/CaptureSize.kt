@@ -20,15 +20,15 @@ data class CaptureSize(
     }
 
     companion object {
-        /** A current phone in dp (the SP-13b screen tests). */
+        /** A current phone in dp. */
         const val PHONE_WIDTH_DP = 411
         const val PHONE_HEIGHT_DP = 891
 
-        /** 1080 x 1920 px at [DENSITY], the store screenshot frame (L17 SH-3a). */
+        /** 1080 x 1920 px at [DENSITY], the store screenshot frame. */
         const val STORE_WIDTH_DP = 360
         const val STORE_HEIGHT_DP = 640
 
-        /** Phone-density PNGs without changing dp sizes (SP-06). */
+        /** Phone-density PNGs without changing dp sizes. */
         const val DENSITY = "xxhdpi"
     }
 }

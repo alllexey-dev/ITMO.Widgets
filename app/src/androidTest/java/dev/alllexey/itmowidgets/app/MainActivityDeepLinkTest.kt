@@ -113,7 +113,7 @@ class MainActivityDeepLinkTest {
         signedIn()
         // ActivityScenario cannot close an activity that went through onNewIntent; this one finishes itself.
         // Not startActivitySync: it waits for an idle main thread, and the Sport tab animates its loading for as long
-        // as the real my.itmo.ru takes to answer the seeded session (SH-FIX-DL). awaitRoute polls instead.
+        // as the real my.itmo.ru takes to answer the seeded session. awaitRoute polls instead.
         context.startActivity(route(AppEntryIntents.ACTION_OPEN_SPORT))
         try {
             awaitRoute(AppTab.SPORT, overlay = null)
