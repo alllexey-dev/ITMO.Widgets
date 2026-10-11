@@ -11,6 +11,7 @@
 #   5. a run that started and never finished (the instrumentation crashed) fails
 #   6. Gradle's FAILED line counts when the device log is missing
 #   7. the repository's own ShellSuite parses to its members
+#   8. a device log with no run (logd stalled) counts the JUnit XML's tests, and an empty XML directory no test
 #
 # Portable: macOS /bin/bash 3.2 with BSD tools and GNU tools. Exit code: 0 pass, 1 fail, 2 environment error.
 
@@ -178,6 +179,29 @@ run_report gradle-only --gradle "$tmp/gradle-only.gradle"
 expect_rc gradle-only 1
 expect_line gradle-only "FAIL $TAB#swipes [run not in the device log; shell not named] (from Gradle's output"
 
+# ---- 8. no run in the device log: the JUnit XML counts --------------------------------------------------------
+
+echo 'itmo-verify-ui-start 1' > "$tmp/stalled.log"
+mkdir -p "$tmp/junit/debug" "$tmp/junit-empty" || exit 2
+cat > "$tmp/junit/debug/TEST-pool(AVD) - 15-_app-github.xml" << EOF
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="2">
+  <testsuite name="$QR" tests="2">
+    <testcase name="passIntent" classname="$QR" time="1.0" />
+    <testcase name="tileClick" classname="$QR" time="1.0" />
+  </testsuite>
+</testsuites>
+EOF
+run_report stalled --logcat "$tmp/stalled.log" --gradle "$tmp/green.gradle" --junit "$tmp/junit"
+expect_rc stalled 0
+expect_line stalled "ui-report: no TestRunner events after the marker"
+expect_line stalled "ui-report: 2 runs of 2 tests in Gradle's JUnit XML"
+run_report none --logcat "$tmp/stalled.log" --gradle "$tmp/green.gradle" --junit "$tmp/junit-empty"
+expect_rc none 0
+expect_no_line none "runs of"
+run_report logged --logcat "$tmp/green.log" --junit "$tmp/junit"
+expect_no_line logged "JUnit XML"
+
 # ---- 7. the repository's ShellSuite ----------------------------------------------------------------------------
 
 if [ -f "$repo/app/src/androidTest/java/dev/alllexey/itmowidgets/app/shell/ShellSuite.kt" ]; then
@@ -190,4 +214,4 @@ if [ "$failures" -gt 0 ]; then
   echo "$me: $failures check(s) failed" >&2
   exit 1
 fi
-echo "$me: ok (seeded duplicates, shells, markers, crashes, Gradle-only and the ShellSuite members)"
+echo "$me: ok (seeded duplicates, shells, markers, crashes, Gradle-only, the JUnit fallback and the ShellSuite members)"
