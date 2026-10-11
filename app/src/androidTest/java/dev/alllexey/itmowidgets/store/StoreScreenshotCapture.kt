@@ -258,7 +258,7 @@ class StoreScreenshotCapture {
      * the field, as `DemoModeFlowTest` does.
      */
     private fun MainActivity.navigator(): Nav3AppNavigator {
-        val host = checkNotNull(ShellHost.of(this)) { "MainActivity runs the legacy shell" }
+        val host = checkNotNull(ShellHost.of(this)) { "MainActivity has no shell yet" }
         val field = ShellHost::class.java.getDeclaredField("navigator").apply { isAccessible = true }
         return checkNotNull(field.get(host) as Nav3AppNavigator?) { "the Compose shell has not composed yet" }
     }

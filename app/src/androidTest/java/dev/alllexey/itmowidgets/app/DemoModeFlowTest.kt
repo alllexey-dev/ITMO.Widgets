@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.app
 
 import android.content.Context
-import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -10,7 +9,6 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
-import androidx.navigation.fragment.NavHostFragment
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.matcher.RootMatchers.isDialog
@@ -27,11 +25,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
-import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
-import dev.alllexey.itmowidgets.core.navigation.toBundle
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
-import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
-import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
@@ -39,7 +33,6 @@ import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksSheetTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
 import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
 import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
-import dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import java.time.LocalDate
@@ -48,8 +41,6 @@ import kotlinx.datetime.toKotlinLocalDate
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.R
@@ -71,8 +62,7 @@ import org.junit.runner.RunWith
 
 /**
  * The hidden demo entry through the real MainActivity, from the sign-in screen and back, and every main screen of the
- * demo. Navigation is read through `ShellProbe`, so each body runs in every shell [ShellModeRule] knows; it is driven
- * through the legacy `AppNavigator` calls or the Compose shell's navigator.
+ * demo. Navigation is read through `ShellProbe` and driven through the shell's navigator.
  */
 @RunWith(AndroidJUnit4::class)
 class DemoModeFlowTest {
@@ -140,7 +130,7 @@ class DemoModeFlowTest {
 
             shot(activity, "home")
 
-            open(scenario, legacy = { it.openRoot(AppRoot.SCHEDULE) }, nav3 = { it.select(AppTab.SCHEDULE) })
+            open(scenario) { it.select(AppTab.SCHEDULE) }
             awaitShown(AppTab.SCHEDULE)
             shot(activity, "schedule")
             scenario.onActivity(::openFirstLesson)
@@ -151,17 +141,13 @@ class DemoModeFlowTest {
             settle()
             awaitShown(AppTab.SCHEDULE)
 
-            open(scenario, legacy = { it.openRoot(AppRoot.RECORDBOOK) }, nav3 = { it.select(AppTab.RECORDBOOK) })
+            open(scenario) { it.select(AppTab.RECORDBOOK) }
             awaitShown(AppTab.RECORDBOOK)
             shot(activity, "recordbook")
             val subject = RecordbookSubjectArgs(
                 algorithms.id * 10 + period.semester, DemoStudy.PROGRAM_ID, period.semester, period.studyYear
             )
-            open(
-                scenario,
-                legacy = { it.openScreen(AppScreen.RECORDBOOK_SUBJECT, subject.toBundle()) },
-                nav3 = { it.open(AppRoutes.RecordbookSubject(subject)) },
-            )
+            open(scenario) { it.open(AppRoutes.RecordbookSubject(subject)) }
             eventually {
                 val overlays = ShellProbe.current().overlays
                 assertEquals(listOf(AppRoutes.RecordbookSubject::class), overlays.map { it::class })
@@ -170,7 +156,7 @@ class DemoModeFlowTest {
             scenario.onActivity(::voteOnFirstLink)
             eventually { assertComposedText(activity, R.string.error_demo_unavailable) }
             val links = SubjectLinksArgs(algorithms.id, algorithms.name, scope)
-            open(scenario, legacy = { it.openSubjectLinks(links) }, nav3 = { it.open(AppRoutes.SubjectLinks(links)) })
+            open(scenario) { it.open(AppRoutes.SubjectLinks(links)) }
             eventually { assertEquals("SubjectLinks", ShellProbe.current().floatingName) }
             Screenshots.capture(DIRECTORY, "links") { settle() }
             assertLinksSheetShows("Баллы потока")
@@ -178,21 +164,17 @@ class DemoModeFlowTest {
             settle()
             eventually { assertNull(ShellProbe.current().floating) }
 
-            open(scenario, legacy = { it.openRoot(AppRoot.SPORT) }, nav3 = { it.select(AppTab.SPORT) })
+            open(scenario) { it.select(AppTab.SPORT) }
             awaitShown(AppTab.SPORT)
             shot(activity, "sport-my")
-            open(
-                scenario,
-                legacy = { main -> main.sport().changeView(SportPage.SIGN.ordinal, animate = false) },
-                nav3 = { clickComposedTag(activity, SportScreenTestTags.tab(SportPage.SIGN)) },
-            )
+            open(scenario) { clickComposedTag(activity, SportScreenTestTags.tab(SportPage.SIGN)) }
             awaitShown(AppTab.SPORT)
             shot(activity, "sport-sign")
 
-            open(scenario, legacy = { it.openRoot(AppRoot.ME) }, nav3 = { it.select(AppTab.ME) })
+            open(scenario) { it.select(AppTab.ME) }
             awaitShown(AppTab.ME)
             shot(activity, "me")
-            open(scenario, legacy = { it.openScreen(AppScreen.FRIENDS) }, nav3 = { it.open(AppRoutes.Friends) })
+            open(scenario) { it.open(AppRoutes.Friends) }
             awaitShown(AppTab.ME, AppRoutes.Friends)
             shot(activity, "friends")
             openProfile(scenario, DemoPeople.MATH_TEACHER.isu)
@@ -202,30 +184,14 @@ class DemoModeFlowTest {
         }
     }
 
-    /**
-     * Runs one navigation step and waits for the screen to settle: [legacy] through the Fragment shell's
-     * `AppNavigator` calls on the activity, [nav3] through the Compose shell's navigator.
-     */
-    private fun open(
-        scenario: ActivityScenario<MainActivity>,
-        legacy: (MainActivity) -> Unit,
-        nav3: (Nav3AppNavigator) -> Unit,
-    ) {
-        scenario.onActivity { activity ->
-            when (shells.mode) {
-                ShellModeRule.Mode.LEGACY -> legacy(activity)
-                ShellModeRule.Mode.NAV3 -> nav3(activity.navigator())
-            }
-        }
+    /** Runs one navigation step through the shell's navigator and waits for the screen to settle. */
+    private fun open(scenario: ActivityScenario<MainActivity>, step: (Nav3AppNavigator) -> Unit) {
+        scenario.onActivity { activity -> step(activity.navigator()) }
         settle()
     }
 
     private fun openProfile(scenario: ActivityScenario<MainActivity>, isu: Int) {
-        open(
-            scenario,
-            legacy = { it.openScreen(AppScreen.USER_PROFILE, Bundle().apply { putInt(UserScreenArgs.ISU, isu) }) },
-            nav3 = { it.open(AppRoutes.UserProfile(isu)) },
-        )
+        open(scenario) { it.open(AppRoutes.UserProfile(isu)) }
         eventually {
             val shown = ShellProbe.current()
             assertEquals(AppTab.ME, shown.tab)
@@ -242,33 +208,25 @@ class DemoModeFlowTest {
         assertNull(shown.floating)
     }
 
-    /**
-     * The Compose shell's navigator, the counterpart of the legacy `AppNavigator` calls. `ShellHost` keeps it private
-     * (entries get it as callbacks), so the test reads the field.
-     */
+    /** The shell's navigator. `ShellHost` keeps it private (entries get it as callbacks), so the test reads the field. */
     private fun MainActivity.navigator(): Nav3AppNavigator {
-        val host = checkNotNull(ShellHost.of(this)) { "MainActivity runs the legacy shell" }
+        val host = checkNotNull(ShellHost.of(this)) { "MainActivity has no shell yet" }
         val field = ShellHost::class.java.getDeclaredField("navigator").apply { isAccessible = true }
         return checkNotNull(field.get(host) as Nav3AppNavigator?) { "the Compose shell has not composed yet" }
     }
 
-    /** The demo banner's sign-in: the legacy banner's button or the Compose banner's, by its semantics click. */
-    private fun signInFromTheDemoBanner(activity: MainActivity) {
-        when (shells.mode) {
-            ShellModeRule.Mode.LEGACY -> onView(withId(R.id.demo_banner_sign_in)).perform(click())
-            ShellModeRule.Mode.NAV3 -> TestUi.instrumentation.runOnMainSync {
-                val label = activity.getString(R.string.demo_banner_sign_in)
-                val banner = composedNodes(activity)
-                    .single { it.config.getOrNull(SemanticsProperties.TestTag) == ShellTags.DEMO_BANNER }
-                val button = banner.descendants().first { node ->
-                    SemanticsActions.OnClick in node.config &&
-                        node.descendants().any { child ->
-                            child.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text == label }
-                        }
+    /** The demo banner's sign-in, by its semantics click. */
+    private fun signInFromTheDemoBanner(activity: MainActivity) = TestUi.instrumentation.runOnMainSync {
+        val label = activity.getString(R.string.demo_banner_sign_in)
+        val banner = composedNodes(activity)
+            .single { it.config.getOrNull(SemanticsProperties.TestTag) == ShellTags.DEMO_BANNER }
+        val button = banner.descendants().first { node ->
+            SemanticsActions.OnClick in node.config &&
+                node.descendants().any { child ->
+                    child.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text == label }
                 }
-                checkNotNull(button.config[SemanticsActions.OnClick].action).invoke()
-            }
         }
+        checkNotNull(button.config[SemanticsActions.OnClick].action).invoke()
     }
 
     /** The placed Compose node tagged [tag] in [activity]'s window, clicked through its semantics; main thread. */
@@ -278,11 +236,6 @@ class DemoModeFlowTest {
         }
         checkNotNull(node.config[SemanticsActions.OnClick].action) { "$tag has no click" }.invoke()
     }
-
-    /** The sport tab's host, whose page API replaces the View pager. */
-    private fun MainActivity.sport(): SportFragment =
-        (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment)
-            .childFragmentManager.fragments.filterIsInstance<SportFragment>().single()
 
     /** The screen has content, no empty or error state, and the demo banner; then its screenshot. */
     private fun shot(activity: MainActivity, name: String) {
@@ -338,8 +291,8 @@ class DemoModeFlowTest {
             .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }.toList()
 
     /**
-     * The links sheet's Compose list, in the sheet's own dialog window (the legacy sheet Fragment's or the Compose
-     * shell's sheet scene's), shows a row titled [title] on screen.
+     * The links sheet's Compose list, in the sheet's own dialog window (the shell's sheet scene), shows a row titled
+     * [title] on screen.
      */
     private fun assertLinksSheetShows(title: String) {
         eventually {

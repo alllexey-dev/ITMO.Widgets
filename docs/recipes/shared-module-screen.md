@@ -178,8 +178,7 @@ The same route serves every host; only the host changes.
   helper or theme. `koinViewModel()` inside it scopes the ViewModel to the
   Fragment's store through Koin's factory, so Hilt's default factory does not
   create it, and it survives recreation. Drop the Fragment's `@Inject` fields
-  and its `by viewModels()`. A screen with no other entry is opened in debug
-  through `SettingsNavigationTestActivity.kt`.
+  and its `by viewModels()`.
 - **Android after the Navigation 3 shell.** The route becomes the content of
   a Navigation 3 entry for a `@Serializable` key in `commonMain`
   ([ADR 0020](../decisions/0020-navigation-3.md)); the shell registers the

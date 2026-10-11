@@ -99,7 +99,7 @@ object StoreLook {
 
 /**
  * The layers under the sheets and dialogs: the tab roots in the [TabPager] above the demo banner and the bar, and the
- * overlay screens full window above them, sliding in from the end in the standard 220 ms (`AppOverlayHostFragment`).
+ * overlay screens full window above them, sliding in from the end in the standard 220 ms.
  * While an overlay covers it, the tab layer keeps its size, takes no touches and is hidden from TalkBack. Back pops the
  * top overlay with the predictive gesture, then leads a tab other than the start one to the start tab; on the start
  * tab with nothing above it the system handles Back (leaves the app). The tabs also switch by a swipe on a tab root
@@ -190,7 +190,7 @@ private fun TabLayer(
     }
 }
 
-/** `activity_main.xml`'s bar: `bottom_nav.xml`'s order, labels and icons; select and reselect both reach [onSelect]. */
+/** The bar: the tabs in [AppTab]'s order with their labels and icons; select and reselect both reach [onSelect]. */
 @Composable
 internal fun ShellNavigationBar(selected: AppTab, onSelect: (AppTab) -> Unit, modifier: Modifier = Modifier) {
     ItmoNavigationBar(modifier.testTag(ShellTags.BAR)) {
@@ -217,7 +217,7 @@ private val AppTab.label: Int
         AppTab.ME -> R.string.title_me
     }
 
-/** The outlined icon and the FILL 1 one of the selected tab (`nav_*.xml`). */
+/** The outlined icon and the FILL 1 one of the selected tab. */
 private val AppTab.icons: Pair<DrawableResource, DrawableResource>
     get() = when (this) {
         AppTab.RECORDBOOK -> Res.drawable.ic_menu_book to Res.drawable.ic_menu_book_filled
@@ -227,7 +227,7 @@ private val AppTab.icons: Pair<DrawableResource, DrawableResource>
         AppTab.ME -> Res.drawable.ic_account_circle to Res.drawable.ic_account_circle_filled
     }
 
-/** `activity_main.xml`'s demo banner above the bar: the text and the sign-in action on `secondaryContainer`. */
+/** The demo banner above the bar: the text and the sign-in action on `secondaryContainer`. */
 @Composable
 internal fun DemoBanner(onSignIn: () -> Unit, modifier: Modifier = Modifier) {
     val colors = ItmoTheme.colorScheme
@@ -253,7 +253,7 @@ internal fun DemoBanner(onSignIn: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** The session or the first-run flag is not known yet: `activity_main.xml`'s centred progress. */
+/** The session or the first-run flag is not known yet: a centred progress. */
 @Composable
 internal fun GateProgress() {
     val description = stringResource(R.string.auth_initializing)

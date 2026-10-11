@@ -8,9 +8,6 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
@@ -35,8 +32,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Session and first-run routing of the real `MainActivity`. Navigation is read through `ShellProbe`, so each body runs
- * in every shell [ShellModeRule] knows; the bar is tapped by its legacy menu ids or its Compose test tags.
+ * Session and first-run routing of the real `MainActivity`. Navigation is read through `ShellProbe`; the bar is tapped
+ * by its Compose test tags.
  */
 @RunWith(AndroidJUnit4::class)
 class MainActivitySessionRoutingTest {
@@ -152,10 +149,7 @@ class MainActivitySessionRoutingTest {
     /** A tap on [tab] in the bar, repeated until the tab shows: right after the first-run flow a tap can get lost. */
     private fun selectTab(tab: AppTab) = eventually {
         if (ShellProbe.current().tab != tab) {
-            when (shells.mode) {
-                ShellModeRule.Mode.LEGACY -> onView(withId(TAB_ITEMS.getValue(tab))).perform(click())
-                ShellModeRule.Mode.NAV3 -> tapComposeTab(tab)
-            }
+            tapComposeTab(tab)
         }
         assertEquals(tab, ShellProbe.current().tab)
     }
@@ -200,14 +194,5 @@ class MainActivitySessionRoutingTest {
         const val RETRY_DELAY_MILLIS = 100L
         const val SETTLE_MILLIS = 300L
         val TABS = ShellSurface.Tabs(demoBanner = false)
-
-        /** The legacy bar's menu items. */
-        val TAB_ITEMS = mapOf(
-            AppTab.RECORDBOOK to R.id.navigation_recordbook,
-            AppTab.SCHEDULE to R.id.navigation_schedule,
-            AppTab.HOME to R.id.navigation_home,
-            AppTab.SPORT to R.id.navigation_sport,
-            AppTab.ME to R.id.navigation_me,
-        )
     }
 }

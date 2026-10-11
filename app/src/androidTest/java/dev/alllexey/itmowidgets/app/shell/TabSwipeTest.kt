@@ -44,8 +44,7 @@ import org.junit.runner.RunWith
  * The tab swipe on the real `MainActivity` in the demo session (design.md "Tab swipe"): through all five roots and
  * back, Back after swipes, an App Link while on another tab, and the sport segments handing the swipe over. Swipes
  * start inside the tab content, away from the system's back edges, at a height read from the screen's geometry, so no
- * status bar or cutout height moves them onto content that keeps drags from the tabs. Only the Compose shell has the
- * swipe: the legacy pass of [ShellModeRule] is skipped by an assumption, so these cases run from SH-1b9's switch on.
+ * status bar or cutout height moves them onto content that keeps drags from the tabs.
  */
 @RunWith(AndroidJUnit4::class)
 class TabSwipeTest {
@@ -149,16 +148,13 @@ class TabSwipeTest {
         awaitTab(AppTab.ME)
     }
 
-    /** Starts `MainActivity` and runs [body] when it hosts the Compose shell; the activity finishes itself after. */
+    /** Starts `MainActivity` and runs [body]; the activity finishes itself after. */
     private fun onComposeShell(body: () -> Unit) {
         instrumentation.startActivitySync(
             Intent(context, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
         )
         try {
-            var compose = false
-            onActivity { compose = ShellHost.of(it) != null }
-            assumeTrue("only the Compose shell has the tab swipe", compose)
             body()
         } finally {
             runCatching { onActivity { it.finish() } }
