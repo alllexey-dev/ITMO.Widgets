@@ -1,201 +1,109 @@
 # Widgets
 
-Three home-screen widgets: the single-lesson schedule widget, the day schedule
-widget and the QR pass widget. They render through WorkManager workers, keep
-their own launcher-adapted palette unless they follow the app's theme (Theme
-colours below) and never register a widget host from inside the app.
+Product behaviour: [Как это работает: виджеты](../how-it-works/widgets.md).
+
+Three home-screen widgets (single lesson, day schedule, QR pass), rendered by
+WorkManager workers; the app never registers a widget host.
 
 ## Schedule widgets
 
-The widgets stay RemoteViews in `:app`
-(`feature/schedule/ui/widget`: `SingleLessonWidgetProvider`,
-`DayScheduleWidgetProvider`, `ScheduleWidgetRenderer`,
-`ScheduleListRowRenderer`; `feature/schedule/work`:
-`ScheduleWidgetUpdateWorker`, `ScheduleWidgetRefreshReceiver`), read Koin
-through `KoinStarter` and render what the shared selector and data provider of
-`:shared:feature-schedule` compute ([schedule](schedule.md#modules)).
+RemoteViews in `:app` (`feature/schedule/ui/widget`, `feature/schedule/work`:
+`ScheduleWidgetRenderer`, `ScheduleWidgetUpdateWorker`), reading Koin through
+`KoinStarter` ([schedule](schedule.md#modules)).
 
-- `ScheduleWidgetDataProvider` loads only the own academic range. With both the
-  `Автозапись на спорт` preference and services enabled it also refreshes the
-  pending projection and reads its completed snapshot; this API has no synthetic
-  empty emission and no implicit network request.
+- `ScheduleWidgetDataProvider` loads only the own academic range. With
+  `Автозапись на спорт` and services enabled it also refreshes the pending
+  projection and reads its completed snapshot; no synthetic empty emission,
+  no implicit network request.
 - `ScheduleWidgetSelector` builds a widget-only timeline (never synthetic
-  academic lessons). Today/tomorrow selection, teacher visibility and smart
-  refresh boundaries include pending times. Every pending row carries a
-  persisted `WAITING` or `PREDICTED` marker rendered with a short label and an
-  outlined indicator; it never becomes a confirmed lesson.
-- Queue-enabled widgets request the next refresh within seven minutes or at the
-  next lesson boundary. The atomic presentation snapshot also holds an
-  official-only fallback, so dropping optional rows restores the correct next
-  lesson and remaining count. Pending data expires at its earliest start or after
-  seven minutes; snapshot reads re-check settings and authentication.
-- The snapshot is kotlinx JSON in
-  `noBackupFilesDir/widgets/schedule_snapshot.json`
-  (`ScheduleWidgetSnapshotStoreImpl`, written through `AtomicTextFile`) with a
-  top-level `formatVersion` 2, always written first; a file without it is a
-  2.2 snapshot with the same keys and reads as before, and 2.2 ignores the
-  marker. A file of another version reads as loading until the next refresh. The serial names are a
-  contract shared with the [iOS timeline](#timeline-widgetkit).
-- The snapshot store is a shared session cleaner; cleanup invalidates in-flight
-  worker tickets before clearing disk so an old account's snapshot cannot be
-  written into a new session.
-- A tap opens the schedule at its reading place through the shared route queue
-  of `MainActivity` ([navigation](../architecture.md#navigation)): Recents never
-  repeats it and Back leads home.
-- Successful sport actions, preference changes and the services gate enqueue a
-  forced schedule-widget update through `WidgetRefreshCoordinator`; QR widgets
-  are not touched. A sport action also enqueues a follow-up update 1 s later,
-  because MyITMO can answer the first fetch with the schedule from before the
-  change. A refresh that fails or falls back to the previous snapshot leaves a
-  `ScheduleWidget` warning in the diagnostics journal.
-- Compact and full widget settings are independent typed models in
-  `core/settings`. Each has its own teacher visibility. Early switching belongs
-  only to compact; hiding past lessons and tomorrow selection belong only to full.
-  The full list uses actual lesson ends, not the compact selection. Shared work
-  refreshes at the earliest start/end or compact early-switch boundary.
-- `WidgetSettingsPreferences` reads both formats atomically. New format-specific keys
-  override read-only shared fallback keys without changing the other format.
-- Smart update scheduling and the single visual style are fixed; there are no
-  selectors. Completed rows dim uniformly; the day widget centres its
-  `Сегодня`/`Завтра` header.
-- Text size is a per-format choice (`WidgetTextSize`: 1, 1.2 or 1.4). The
-  snapshot carries both formats' sizes (nullable, so older snapshots still
-  deserialise as normal) and `ScheduleWidgetRenderer` applies them with
-  `setTextViewTextSize` on every render, so a recycled launcher view never keeps
-  a previous size. The base sizes live in the renderer next to the layouts; the
-  list row's time column grows with its text instead of a fixed 44 dp.
-- The day widget sends its rows inline with the widget update
-  (`RemoteCollectionItems` through `core-remoteviews`, which falls back to an
-  adapter below Android 12), with stable ids taken from each row's identity, so
-  a refresh never shows rows of an older snapshot under a newer header.
-  `ScheduleWidgetRemoteViewsService` stays declared and serves the same rows
-  and ids to launchers that still hold the adapter intent of an earlier
-  build.
-- On Android 12+ both widgets follow the launcher's widget corner radius
-  (`system_app_widget_background_radius` in
-  `drawable-v31/widget_background_rounded.xml`, root `@android:id/background`
-  with `clipToOutline`); older launchers keep 20 dp. Both keep a 1 dp outline.
-- Provider descriptors for Android 12+ declare `targetCellWidth/Height` for the
-  default span and keep `minWidth` at 180 dp with explicit resize bounds, the
-  smallest span the layouts still read in. A launcher scales the whole widget
-  down when its cells are smaller than the declared minimum; the descriptors
-  never ask for more than the layouts need.
+  academic lessons); selection, teacher visibility and refresh boundaries
+  include pending times. Pending rows carry a persisted `WAITING` or
+  `PREDICTED` marker and never become confirmed lessons.
+- Queue-enabled widgets refresh within 7 minutes (`PERIODIC_UPDATE_DELAY`)
+  or at the next lesson boundary; pending data expires the same way, the
+  snapshot keeps an official-only fallback, and reads re-check settings and
+  authentication.
+- Snapshot: kotlinx JSON in `noBackupFilesDir/widgets/schedule_snapshot.json`
+  (`ScheduleWidgetSnapshotStoreImpl`, `AtomicTextFile`), top-level
+  `formatVersion` 2 written first; no field = a 2.2 snapshot with the same
+  keys; another version reads as loading until the next refresh. Serial names
+  are a contract with the [iOS timeline](#timeline-widgetkit).
+- The snapshot store is a session cleaner: cleanup invalidates in-flight
+  worker tickets before clearing disk, so an old account's snapshot cannot
+  land in a new session. `AndroidSessionLifecycleEffects` cancels widget work
+  before a session change and renders signed-out placeholders after.
+- A tap opens the schedule through the route queue of `MainActivity`
+  ([navigation](../architecture.md#navigation)): Recents never repeats it.
+- Sport actions, preference changes and the services gate force a schedule
+  widget update through `WidgetRefreshCoordinator` (QR untouched); a sport
+  action adds a follow-up 1 s later because MyITMO may first return the old
+  schedule. Failed refreshes log a `ScheduleWidget` diagnostics warning.
+- Compact and full settings are independent models in `core/settings`
+  (`WidgetSettingsPreferences`). Text size (`WidgetTextSize`) is in the
+  snapshot and applied on every render, so a recycled view keeps nothing.
+- The day widget sends rows inline (`RemoteCollectionItems`) with stable ids,
+  so old rows never show under a newer header.
+  `ScheduleWidgetRemoteViewsService` stays for launchers holding an old
+  adapter intent.
+- Descriptors (`res/xml-v31`: `minWidth` 180 dp) never ask for more than the
+  layouts need: a launcher scales the widget down below the minimum.
 
 ### Timeline (WidgetKit)
 
-`ScheduleWidgetSelector.timeline` computes what the widgets show up to a given
-instant (`ScheduleWidgetDataProvider.loadTimeline`; the iOS writer asks for
-the end of tomorrow): an entry at the start and at every instant where the
-snapshot can change (lesson starts and ends, the compact early switch,
-midnights, pending sport starts), adjacent equal entries merged. Every entry
-equals `select` at any instant of its interval. `ScheduleWidgetTimelineJson`
-is the JSON contract, version 1: `{"version", "generatedAt", "validUntil",
-"entries": [{"validFrom", "snapshot"}]}` with the snapshot in the keys of
-`schedule_snapshot.json`, nulls omitted, defaults (and so `version`) always
-written, ISO-8601 UTC instants. `version` stays for additive fields and goes
-up for a rename or a removal; a reader rejects a higher one. The reference
-fixture is `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json`
-(`ScheduleWidgetTimelineJsonTest`). Android does not use the timeline: its
-worker still renders the current snapshot.
+`ScheduleWidgetSelector.timeline` (via
+`ScheduleWidgetDataProvider.loadTimeline`) emits an entry at the start and at
+every instant the snapshot can change (lesson starts and ends, compact early
+switch, midnights, pending sport starts), merging equal neighbours; every
+entry equals `select` over its interval. `ScheduleWidgetTimelineJson`, version
+1: `{"version", "generatedAt", "validUntil", "entries": [{"validFrom",
+"snapshot"}]}`, snapshot in `schedule_snapshot.json` keys, nulls omitted,
+defaults written, ISO-8601 UTC. `version` stays for additive fields and goes
+up for a rename or removal; readers reject a higher one. Fixture:
+`shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json`. Android
+does not use the timeline.
 
 ### iOS
 
-The lesson widget (small, medium, Lock Screen rectangular and inline) and the
-day widget (medium, large) read the App Group file schedule-timeline-v1.json,
-which the app's `ScheduleTimelineWriter` computes with
-`ScheduleWidgetDataProvider.loadTimeline` to the end of tomorrow; WidgetKit switches between the precomputed entries, so
-Swift takes no time decision. The app writes on sign-in and sign-out, widget
-option changes, every return to the foreground, a changed cached schedule and
-sport actions. Degradation: no seven-minute pending sport refresh. The day
-widget shows the rows that fit, completed lessons leave first. In the demo
-session the widgets show the demo state. The QR widget and the details:
-[iOS app](../ios.md#widgets).
+The lesson and day widgets read the App Group file schedule-timeline-v1.json,
+which `ScheduleTimelineWriter` computes to the end of tomorrow; Swift makes no
+time decisions. Rewritten on sign-in/out, widget options, foreground, cache
+changes and sport actions. Details: [iOS app](../ios.md#widgets).
 
 ## QR widget
 
-Shows the building pass, hidden behind a spoiler by default, with dynamic
-colours and an opening animation (circle, fade or none). A custom spoiler image
-is picked through the photo picker, cropped square and stored as a bounded
-420 × 420 PNG; saving is atomic and refreshes widgets only after success.
-`core/qr/CustomSpoilerManager` stores and reads that image for the settings
-preview and the widget renderer.
-Expiry is passive: an expired code stops being emitted (known gap).
-
-The widget, its worker and its renderer stay in `:app`; the pass, the cache and
-the per-widget reveal state (`qr_widget_state_<appWidgetId>`) are the shared
-`QrCodeRepository` and `QrWidgetStateStore` of `:shared:feature-qr`, which the
-widget reads from Koin through `KoinStarter`. The
-widget and the pass screen share one repository and one cached pass; see
-[QR pass](qr.md#data).
+- Custom spoiler image (`core/qr/CustomSpoilerManager`): a bounded
+  420 x 420 PNG, saved atomically; widgets refresh only after success.
+- Expiry is passive: an expired code stops being emitted (known gap).
+- Widget, worker and renderer stay in `:app`; the pass, cache and per-widget
+  reveal state (`qr_widget_state_<appWidgetId>`) are `QrCodeRepository` and
+  `QrWidgetStateStore` of `:shared:feature-qr`, shared with the pass screen
+  ([QR pass](qr.md#data)).
 
 ## Theme colours
 
 `Виджеты в цвет темы` (`widgets_follow_app_theme`, off by default,
-[settings](../settings.md#widgets-in-the-apps-colours)) makes all three widgets
-draw with the app's scheme instead of their own palette.
+[settings](../settings.md#widgets-in-the-apps-colours)).
 
-- One resolver: `ThemeSpec.widgetPalette(context)` of `:shared:designsystem`
-  runs the stored appearance (`AppearancePreferences.observeTheme`) through
-  `resolveColorScheme`, the scheme `ItmoTheme` draws (accent or own colour,
-  palette style, contrast; the wallpaper's colours on Android 12+), without
-  `Чёрный фон`, and keeps the roles the widgets use, light and dark (`WidgetPalette` of `:shared:core`:
-  surface, surface container, on-surface, on-surface variant, outline variant,
-  primary). The renderers read it through `WidgetPaletteSource` (Android:
-  `AndroidWidgetPaletteSource`), null while the switch is off.
-- Schedule widgets: `WidgetColors` sets every label colour on every render, so
-  a reused launcher view drops the previous one. On, from Android 12 a colour
-  is a light and dark pair (`RemoteViews.setColorInt`), so the launcher
-  follows the system's mode; below 12 the colour of the render's mode. Off,
-  from Android 12 the layout's own `widget_*` resource (`setColor`), below 12
-  its colour in the render's mode. The background keeps its shape: two
-  layers of `widget_theme_background.xml` (the 1 dp outline and the surface
-  inside it, each tinted, since a RemoteViews tint colours a drawable as a
-  whole) show over the layout's own background only while the switch is on.
+- One resolver: `ThemeSpec.widgetPalette(context)` (`:shared:designsystem`,
+  without `Чёрный фон`) -> `WidgetPalette`; renderers read it via
+  `WidgetPaletteSource` (null while off).
+- Schedule widgets: `WidgetColors` sets every label colour on every render.
+  On Android 12+ colours are light/dark pairs (`RemoteViews.setColorInt`).
+  Background tint layers (`widget_theme_background.xml`) show only while on.
   Lesson type colours stay.
-- QR widget: `QrColorResolver` feeds the palette's surface and text roles into
-  its usual math while `Динамические цвета` is on; without them the code is
-  black on white whatever the switch says.
-- The QR tile, notifications and the launcher icon keep the system's colours.
-- Turning the switch or any change on `Оформление` refreshes installed
-  widgets (`WidgetRefreshRequester.refreshAll`); the settings previews redraw
-  with the palette (`WidgetPreviewSettings.theme`).
-- iOS: the app writes the palette into qr-pass-v1.json and
-  schedule-timeline-v1.json (`palette`) and reloads the widgets
-  ([iOS app](../ios.md#widgets)).
-- Tests: `WidgetPalettesTest` and `WidgetPalettesAndroidTest` (the resolver),
-  `WidgetThemeScreenshotTest` of `:app` (both schedule widgets and the QR code,
-  off and on, light and dark, the teal preset), `ScheduleWidgetRenderingTest`
-  (colours on reuse), `RootPageProviderTest`, `WidgetsPageProviderTest`,
-  `AppearancePreferencesTest`, `PreferenceKeyParityTest`.
+- QR: `QrColorResolver` uses the palette only while `Динамические цвета` is
+  on; otherwise black on white.
+- The switch or any `Оформление` change calls
+  `WidgetRefreshRequester.refreshAll`. iOS writes the palette into the widget
+  JSON files (`palette`).
 
-## Launcher picker previews
+## Previews
 
-The picker shows the real widgets. On Android 12+ each descriptor names a
-`previewLayout` (`widget_single_lesson_preview.xml`, `widget_lesson_list_preview.xml`,
-`widget_qr_code_preview.xml`): static copies of the widget layouts filled with
-the settings preview scenario (a current `Математический анализ` lesson, three
-lessons and `На сегодня всё`, the sample pass). Older launchers get
-`previewImage` PNGs under `drawable-420dpi` and `drawable-night-420dpi`, rendered
-by the real widget renderers through the instrumentation class
-`WidgetPreviewImageCapture` (run with `captureScreenshots=true`, pull
-`widget-previews-light` and `-night` from the cache). The same class draws the
-static layouts next to the real renders, so a drift between them is visible in
-one glance. Regenerate both whenever a widget layout changes.
-
-## Previews in settings
-
-Separate compact and full settings pages each show only their own live preview,
-with a saved sample-time selector and no format pager. Previews use fixed sample
-data and the real renderers: `ScheduleWidgetRenderer` and `ScheduleListRowRenderer` for schedule pages,
-the production bitmap and animation renderers with a labelled sample payload for
-QR. `core/ui/widget.WidgetPreviewFactory` is the UI contract; the app-level
-`DefaultWidgetPreviewFactory` composes feature implementations without
-cross-feature imports. `QrPreviewBitmapCache` keeps at most four bitmap pairs
-keyed by palette, spoiler revision and invalidation generation; rendering stays
-off the main thread. Previews never register a host, create PendingIntents,
-touch the network or write snapshots.
-
-## Sign-out
-
-`AndroidSessionLifecycleEffects` cancels widget work before a session change and
-renders signed-out placeholders afterwards.
+- Launcher picker: `previewLayout` (Android 12+) and `previewImage` PNGs
+  rendered by `WidgetPreviewImageCapture` (`captureScreenshots=true`).
+  Regenerate both whenever a widget layout changes.
+- Settings previews: real renderers on sample data via
+  `core/ui/widget.WidgetPreviewFactory` (`DefaultWidgetPreviewFactory`);
+  `QrPreviewBitmapCache` holds at most four bitmap pairs, off the main thread.
+  Previews never register a host, create PendingIntents, touch the network or
+  write snapshots.

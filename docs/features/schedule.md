@@ -1,323 +1,177 @@
 # Schedule
 
+Product behaviour: [Как это работает: расписание](../how-it-works/schedule.md).
+
 `feature/schedule` shows the own academic schedule from MyITMO, a friend's
-schedule chosen through the picker, and optional pending sport rows. It also
-checks the own schedule for changes in the background
-([schedule changes](schedule-changes.md)) and puts it into the phone's calendar
-or a `.ics` file ([calendar](calendar.md)).
+schedule chosen through the picker, and optional pending sport rows. The
+background change check is in [schedule changes](schedule-changes.md), the
+phone calendar and `.ics` export in [calendar](calendar.md).
 
 ## Modules
 
-- `:shared:feature-schedule` holds the feature in `commonMain`, under the
-  `dev.alllexey.itmowidgets.feature.schedule` packages of 2.2: `domain`
-  (lessons, changes, calendar events, the widget selector and timeline),
-  `presentation` (`ScheduleViewModel`, `ScheduleChangesViewModel`,
-  `LessonDetailsViewModel`), `ui/list`, `ui/changes`, `ui/details` and
-  `ui/home` (Compose Multiplatform), and `data` (the cache, the file stores,
-  the My ITMO and Backend sources, the calendar sync, `DemoSchedule`). Koin
-  builds all of it from `scheduleModule` and `scheduleDataModule` in `di`.
-  `androidMain` only supplies `ScheduleFileSystem`; `iosMain` adds the iOS
-  change check (`ScheduleChangesRefresh`, `IosScheduleChangeNotifier`) and the
-  widget timeline writer (`ScheduleTimelineWriter`). The module compiles for
-  iOS, and its strings live in its `composeResources`
-  (`strings_schedule.xml`).
+- `:shared:feature-schedule` (`commonMain`, package
+  `dev.alllexey.itmowidgets.feature.schedule`): `domain` (lessons, changes,
+  calendar events, widget selector and timeline), `presentation`
+  (`ScheduleViewModel`, `ScheduleChangesViewModel`, `LessonDetailsViewModel`),
+  `ui/list`, `ui/changes`, `ui/details`, `ui/home` (Compose Multiplatform) and
+  `data` (cache, file stores, My ITMO and Backend sources, calendar sync,
+  `DemoSchedule`). Koin: `scheduleModule`, `scheduleDataModule`. `androidMain`
+  only supplies `ScheduleFileSystem`; `iosMain` adds the iOS change check and
+  the widget timeline writer.
 - My ITMO comes through MyItmoApi 2.x, Backend through Core 2.0's
-  `ScheduleApi`: `syncLessons` uploads the own lessons best-effort behind
-  `BackendGate`, `userLessons` reads another user's schedule and
-  `friendsOnLesson` the friends on a lesson, also behind `BackendGate`. Every
-  network call checks `DemoMode` first (`DemoSchedule`).
-- `:app` keeps only what is Android: the map and link effects of the sheets
-  (`feature/schedule/ui/details/DetailsEffects.kt`), the two widgets, their
-  renderers and the list adapter service (`ui/widget`), the workers, the
-  change notification and the refresh receiver (`work`),
-  `AndroidPhoneCalendars` and `IcsFileExport` (`data/calendar`) and the
-  widget snapshot file (`data/widget/ScheduleWidgetSnapshotStoreImpl`). Koin
-  binds them in `androidScheduleModule` (`di/ScheduleModule.kt` of `:app`).
-  `ScheduleRulesTest` (`:konsist`) keeps the widget providers, the receiver,
-  the adapter service and the workers in `:app` under their packages.
+  `ScheduleApi`: `syncLessons` (best-effort upload of own lessons),
+  `userLessons` (another user's schedule) and `friendsOnLesson`, all behind
+  `BackendGate`. Every network call checks `DemoMode` first (`DemoSchedule`).
+- `:app` keeps only Android: map and link effects of the sheets
+  (`feature/schedule/ui/details/DetailsEffects.kt`), the widgets and the list
+  adapter service (`ui/widget`), workers, change notification and refresh
+  receiver (`work`), `AndroidPhoneCalendars` and `IcsFileExport`
+  (`data/calendar`), `ScheduleWidgetSnapshotStoreImpl`. Koin:
+  `androidScheduleModule` (`di/ScheduleModule.kt`). `ScheduleRulesTest`
+  (`:konsist`) keeps the widget providers, receiver, adapter service and
+  workers in `:app` under their packages.
 
-### Screens
-
-The own schedule is the schedule tab's root (`ScheduleTabRoot` in
-`shell/entries/ScheduleEntries.kt`): `ScheduleRoute` over the
-stateless `ScheduleScreen`, with `ScheduleViewModel`. The same file registers
-the keys `AppRoutes.UserSchedule` (`UserScheduleScreen` around
-`ScheduleRoute`), `AppRoutes.ScheduleChanges` (`ScheduleChangesRoute`),
-`AppRoutes.LessonDetails` (`LessonDetailsSheetRoute` over
-`LessonDetailsContent`) and `AppRoutes.PendingSportDetails`
-(`PendingSportDetailsContent`); the last two are sheets. `scheduleModule`
-registers `ScheduleViewModel`, `ScheduleChangesViewModel` and
-`LessonDetailsViewModel` with `viewModelOf`. A route's ViewModel defaults to
-`koinViewModel()`; the entry passes one from its own store, seeded with the
-key's arguments. The screens take state and callbacks only; the entry
-performs the effects (maps, links, profiles, the picker, navigation).
-
-Robolectric tests in `androidHostTest` (`ScheduleScreenTest`,
-`ScheduleRouteTest`, `UserScheduleScreenTest`, `ScheduleChangesScreenTest`,
-`ScheduleChangesRouteTest`, `LessonDetailsSheetTest`,
-`PendingSportDetailsSheetTest`) cover the behaviour, and
-`ScheduleScreenshotTest` keeps the goldens in four appearances under
-`shared/feature-schedule/screenshots/`.
+- Screens: `ScheduleTabRoot` (`app/shell/entries/ScheduleEntries.kt`) hosts
+  `ScheduleRoute` and registers `AppRoutes.UserSchedule`,
+  `AppRoutes.ScheduleChanges` and the sheets `AppRoutes.LessonDetails`,
+  `AppRoutes.PendingSportDetails`. Screens take state and callbacks only; the
+  entry performs effects (maps, links, profiles, picker, navigation).
 
 ### Files
 
-All schedule files are kotlinx JSON (`ScheduleStoreJson`: absent keys read
-as null or the default, nulls are omitted, defaults are written), with the
-keys 2.2 wrote through Gson, so 2.2 files read unchanged and either build
-reads the other's files. The `UpgradeFrom22Test` checkers in
-`app/src/androidTest/java/dev/alllexey/itmowidgets/upgrade/stores/` read 2.2's captured files.
+All schedule files are kotlinx JSON (`ScheduleStoreJson`) with the keys 2.2
+wrote, so 2.2 files read unchanged in both directions
+(`app/src/androidTest/.../upgrade/stores/`). Stores write through
+`AtomicTextFile` (`<name>.new`, sync, atomic move).
 
 | File | Format |
 |---|---|
-| `cacheDir/schedule_cache/<isu or default>_<date>.json` | gzipped day, no format field; a file that does not decode is a cache miss |
+| `cacheDir/schedule_cache/<isu or default>_<date>.json` | gzipped day; a file that does not decode is a cache miss |
 | `filesDir/schedule_changes/state.json` | `format` 1 ([storage](schedule-changes.md#storage)) |
 | `filesDir/teacher_lessons/weeks.json` | `format` 1 ([lessons with a teacher](#lessons-with-a-teacher)) |
 | `filesDir/calendar_sync/state.json` | `format` 1 ([synchronization](calendar.md#synchronization)) |
 | `noBackupFilesDir/widgets/schedule_snapshot.json` | top-level `formatVersion` 2 ([widgets](widgets.md#schedule-widgets)) |
 
-The stores write through `AtomicTextFile` (`<name>.new`, sync, atomic move).
-
 ## Data
 
-- `ScheduleViewModel` reads an optional `ARG_USER_ISU`. Without it the screen
-  shows the signed-in user and offers the friend picker FAB; with it the same
-  screen shows another user and hides the picker. `AppRoutes.UserSchedule`
-  wraps it with a titled header when opened from a public profile.
-- The cache is a file per user and date range with a 24-hour TTL. A refresh keeps
-  the loaded range, including pages fetched by scrolling, and replaces it with one
-  snapshot after a successful response; intermediate partial lists are never
-  published. Dates missing from the response are removed; other ranges and users
-  are kept.
-- A definitive denial of a foreign schedule (`Forbidden`) removes that user's
-  cache and visible content without touching own or other users' data. A
-  generation check prevents a late concurrent response from restoring a revoked
+- `ScheduleViewModel` reads an optional `ARG_USER_ISU`: without it the own
+  schedule with the picker FAB, with it another user without the picker.
+- Cache: a file per user and date, 24-hour TTL. A refresh keeps the loaded
+  range (including pages fetched by scrolling) and replaces it with one
+  snapshot after success; partial lists are never published. Dates missing
+  from the response are removed; other ranges and users are kept.
+- `Forbidden` for a foreign schedule removes that user's cache and content
+  only. A generation check stops a late response from restoring a revoked
   cache. Ordinary network failures keep cached content.
-- The first frame comes from memory: `ScheduleRepository.peekScheduleForRange`
-  returns the range without touching the disk when every date is already
-  hydrated, so the first load publishes `Content(loadingMore = true)` at
-  once and only a screen with nothing cached shows the skeleton (three
-  placeholder cards) until the cache flow answers.
-- The schedule data lives in `commonMain` of `:shared:feature-schedule` and is
-  constructed by Koin (`scheduleDataModule`), one instance of each per
-  process: the cache and remote sources, `ScheduleRepositoryImpl` (also the
-  `ScheduleRefreshGateway`), `LessonFriendsRepositoryImpl`, the subject and
-  teacher lesson gateways, `ScheduleChangesRepositoryImpl`,
-  `DefaultScheduleChangeTracking`, `ScheduleChangesCheck`, both home card
-  sources, `ScheduleWidgetDataProvider` and `DemoSchedule`. The platform
-  supplies Core 2.0's `ScheduleApi`, the change notification
-  (`ScheduleChangeNotifier`), the check's scheduler
-  (`ScheduleChangesScheduler`) and `AppNotifier`; on Android they are bound in
-  `di/ScheduleModule.kt` and `di/NotificationModule.kt`, and the workers, the
-  widget and the debug tools read the change tracking, change check, widget data
-  provider and preview scenario from the same Koin graph. The
-  phone calendar sync lives there too (`CalendarSyncRepositoryImpl`,
-  `DefaultCalendarSync`, `CalendarSyncFileStore`, `MyItmoOwnScheduleSource`);
-  the platform supplies the `PhoneCalendars` port and the
-  `CalendarSyncScheduler`; `CalendarSyncWorker` and `IcsFileExport` read the
-  sync and the source from Koin, and the change tracking and the sync join
-  the background checks as named `BackgroundCheck` bindings. The workers,
-  the widgets and the list adapter reach Koin through `KoinStarter`. The four
-  cleaners (the cache, the change history, the teacher weeks, the calendar
-  sync) are named `SessionDataCleaner` bindings that sign-out reads with
-  `getAll()`.
+- First frame from memory: `ScheduleRepository.peekScheduleForRange` returns
+  a fully hydrated range without disk access; only a screen with nothing
+  cached shows the skeleton.
+- `scheduleDataModule` holds one instance of each repository, gateway, check
+  and source per process. The platform supplies `ScheduleApi`,
+  `ScheduleChangeNotifier`, `ScheduleChangesScheduler`, `AppNotifier`,
+  `PhoneCalendars` and `CalendarSyncScheduler`. Workers, widgets and the list
+  adapter reach Koin through `KoinStarter`. Change tracking and calendar sync
+  are named `BackgroundCheck` bindings.
+- Sign-out: four named `SessionDataCleaner` bindings (cache, change history,
+  teacher weeks, calendar sync), read with `getAll()`.
 
 ## Lessons with a teacher
 
 `core/schedule/TeacherLessonsGateway.taughtBy(teacherIsu)` feeds the
-[review editor](reviews.md#editor): the subjects of the viewer's own academic
-lessons with that teacher (suggestions, newest first) and their `flowId`s
-(candidate ISU flows for Backend's check). `TeacherLessonsGatewayImpl` in
-`feature/schedule/data` samples the personal My ITMO schedule by Monday–Sunday
-weeks (`StudyWeeks.sampled`): in the current academic year and the 3 previous
-ones the weeks containing 25 September, 3 December, 24 February and 5 March,
-without weeks that start after today, plus the current week, which is asked
-once even when it is a sampled one. That is at most 17 requests; all of them
-run at once. It keeps academic lessons (`flowTypeId == 2`) whose `teacherId` is
-the teacher. It is read only: these lessons are never uploaded to Backend and
-do not touch the schedule cache.
+[review editor](reviews.md#editor): subjects of the viewer's own academic
+lessons with that teacher (newest first) and their `flowId`s.
+`TeacherLessonsGatewayImpl` samples the personal My ITMO schedule by
+Monday-Sunday weeks (`StudyWeeks.sampled`): in the current and 3 previous
+academic years the weeks containing 25 September, 3 December, 24 February and
+5 March (not starting after today), plus the current week once. At most 17
+requests, all in parallel. Keeps `flowTypeId == 2` lessons with that
+`teacherId`. Read only: never uploaded, never touches the schedule cache.
 
-The result is a flow: after each week answers it emits everything collected so
-far, newer weeks first, and it completes when every week has answered. A failed
-week is left out and asked again next time; only when every week fails is the
-single emission an error.
-
-Weeks that ended before today never change. `TeacherWeeksFileStore` keeps them
-in `filesDir/teacher_lessons/weeks.json` (format 1: per week's Monday, the
-teacher ISU, flow and subject of each academic lesson with a teacher), with
-atomic writes, excluded from backup and device transfer; weeks no longer
-sampled are dropped on write. They are emitted at once without a request; the
-current week is requested every time. A corrupt file or one of another format
-is ignored and replaced by the next write. The
-file belongs to the signed-in account: `clearSessionData()` deletes it, and an
-answer requested before the clear is not stored. The recordbook is not used,
-since its teachers carry no ISU.
+- The result is a flow: after each week it emits everything so far, newer
+  weeks first. A failed week is skipped and retried next time; only when all
+  fail is the single emission an error.
+- Past weeks never change: `TeacherWeeksFileStore` keeps them in
+  `filesDir/teacher_lessons/weeks.json` (format 1, atomic, excluded from
+  backup); weeks no longer sampled are dropped on write. The current week is
+  always requested. A corrupt or foreign-format file is ignored and replaced.
+- `clearSessionData()` deletes the file; an answer requested before the clear
+  is not stored. The recordbook is not used (its teachers carry no ISU).
 
 ## Friend picker
 
-The FAB opens the friend picker (the sheet `AppRoutes.FriendSelector`,
-`FriendSelectorSheetRoute` from `:shared:feature-social`); its choice comes
-back to `ScheduleTabRoot` as a `FriendSelection` on the result bus
-(`ResultEffect`). The sheet, its states and the recent chips are in
-[Friend selector](friend-selector.md).
+`AppRoutes.FriendSelector` ([Friend selector](friend-selector.md)) returns a
+`FriendSelection` to `ScheduleTabRoot` on the result bus (`ResultEffect`).
 
 ## Pending sport rows
 
-The `Автозапись на спорт` preference (`SchedulePreferencesRepository` in
-`core/schedule`, default off, DataStore) adds the user's own active sport queues
-to the schedule and both schedule widgets. It never applies to friends' schedules
-or the official cache.
+`Автозапись на спорт` (`SchedulePreferencesRepository`, default off) adds the
+own active sport queues to the schedule and both schedule widgets.
 
-- `PendingSportBookingsRepository` (`core/sport`, implemented in sport data)
-  projects active own queues: cancelled, terminal, started and already-signed
-  entries are excluded; several queues resolving to the same lesson produce one
-  row; unpublished predictions use prototype dates plus two weeks, a bound real
-  lesson its actual dates.
-- The schedule observes the projection only when the preference is on and both
-  the selected and loaded schedule belong to self. The Backend opt-in remains an
-  independent gate in the data layer.
-- `ScheduleUiState.Content.schedule` stays official data; `ScheduleDisplayDay`
-  adds pending rows, including dates without official lessons. Rows are labelled
-  waiting or predicted, never styled as a confirmed lesson, and do not change the
-  lesson count. An error or empty snapshot from the optional source removes the
-  pending rows; it never replaces the academic screen.
-- The list keys its days by date and recomposes the whole display day, so
-  live additions and cancellations render without clearing the cache or
-  resetting scroll.
-- A pending row opens the sheet `AppRoutes.PendingSportDetails`
-  (`PendingSportDetailsContent` in `ui/details`) with
-  `core/navigation/PendingSportDetailsArgs`; the home feed opens the same
-  sheet through the same redirect (see [lesson details](#lesson-details)).
+- `PendingSportBookingsRepository` (`core/sport`) excludes cancelled,
+  terminal, started and already-signed entries; queues on the same lesson
+  collapse into one row; unpublished predictions use prototype dates plus two
+  weeks.
+- Observed only when the preference is on and both the selected and the loaded
+  schedule are the own one; never for friends or the official cache. The
+  Backend opt-in stays an independent gate in the data layer.
+- `ScheduleUiState.Content.schedule` stays official; `ScheduleDisplayDay`
+  adds pending rows. They are never styled as confirmed and do not change the
+  lesson count. An error or empty snapshot from this source only removes the
+  rows.
+- Days are keyed by date, so live changes do not reset the cache or scroll.
 
 ## Behaviour
 
-- Timeline markers and day alpha follow [`design.md`](../design.md).
-- Lesson type names (`lessonTypeName` in `:shared:core`
-  `core/schedule/LessonTypeNames.kt`) and the short building and room titles
-  (`core/text/LocationTitles.kt`) are shared with the recordbook, the home
-  cards and the widgets; type colours are the design system's extended colours
-  (`ItmoTheme.extendedColors`).
-- `TabRequest.ScheduleToday` (`core/navigation/EntryRoute.kt`) shows today in
-  the own schedule (the `Сегодня` shortcut, see
-  [home](home.md#quick-settings-tile-and-app-shortcuts)). It waits on the
-  navigator (`pendingRequest`) until `ScheduleTabRoot` consumes it, once;
-  another user's schedule never reads it.
-- The list keeps its position across recreation (saved list state); a
-  restored position is never replaced by today, and it waits for late data.
-- Switching between own and a friend's schedule keeps the reader on the day and
-  offset they were reading: the visible day is anchored by date, the closest later
-  day is used when that date has no lessons, and a day past the initial range is
-  paged in (up to four pages) before the list is shown; meanwhile the list is
-  laid out but not drawn. An unreachable day opens the schedule on today
-  instead.
-- After the first successful load, later refresh failures show a snackbar while
-  content stays; the initial failure is an explicit error state.
+- Shared with recordbook, home and widgets: `core/schedule/LessonTypeNames.kt`,
+  `core/text/LocationTitles.kt`.
+- `TabRequest.ScheduleToday` (`core/navigation/EntryRoute.kt`, the `Сегодня`
+  shortcut, see [home](home.md#quick-settings-tile-and-app-shortcuts)) waits
+  in the navigator (`pendingRequest`) until `ScheduleTabRoot` consumes it
+  once; another user's schedule never reads it.
+- A restored list position is never replaced by today. Switching own/friend
+  anchors the visible day by date, paging in up to four pages, else today.
 
 ## Lesson details
 
-- Every ordinary lesson card opens the sheet `AppRoutes.LessonDetails` (body
-  `LessonDetailsContent` in `ui/details` of `:shared:feature-schedule`), in
-  the own and in a friend's schedule alike. Pending sport rows never open it.
-  A sport lesson (type 11) in the own schedule goes through
-  `SportDetailsRedirect` (`shell/entries/SportEntries.kt`), which
-  finds the booking with the same date and start in the sport tab's data
-  (`SportBookingsHolder`; a confirmed booking before a queue, then the
-  matching section name) and opens the sport sheet with `Отменить`; without a
-  match the lesson sheet appears. The sheet gets a
-  `@Serializable` `LessonDetailsArgs` (`core/navigation`) built from the
-  `Lesson` plus the day's date; nothing is fetched for the lesson itself.
-- The sheet starts with the design system's `DetailsHeader`, which every
-  details sheet shares: subject,
-  type and format with the type colour, the weekday and date with the time
-  range and duration, teacher, flow, room with the full building name and
-  `Открыть на карте`. Then, each only when present: the `Изменения` block, the
-  meeting info and password when MyITMO sends them, note. Buttons:
-  `Открыть на карте` (a known building from `core/location/BuildingDirectory`,
-  read from `res/raw/itmo_buildings.json`, else the raw building text) through
-  the generic `geo:` intent of a `core/location/MapDestination` in
-  `core/ui/navigation/MapLauncher`, and `Открыть видеозвонок` when the lesson
-  carries a link (MyITMO calls the field `zoom_url`, but lessons run on any
-  platform, so the link itself is not shown). No map provider setting. A card
-  whose lesson carries a link shows a small camera icon next to the type.
-- A pending sport row (queue or auto-sign prediction) goes through the same
-  `SportDetailsRedirect`. It looks the lesson up in the sport tab's data
-  (`SportBookingsHolder`) and opens the sport tab's own details sheet
-  (`SportRoutes.SportCommonDetails`) with its queue position, history and
-  `Отменить`; the cancellation asks first (`AppRoutes.CancelBookingConfirm`)
-  and runs only while the booking still offers it. Only when the sport data
-  has nothing about the queue does the schedule's own
-  `AppRoutes.PendingSportDetails` appear: the shared header, the status as
-  the kind line, one `Условия записи` card and `Открыть в спорте`.
-- A teacher in the lesson or pending-sport header opens the person profile when
-  the lesson carries a usable ISU. The row shows a chevron, has a 48 dp touch
-  target and a localized accessibility click action. The sheet dismisses first.
-  Without an ISU, including event teachers, the row remains informational with
-  no chevron, ripple or click action; no name lookup is attempted.
-- With `Подключение к ITMO.Widgets` and a teacher ISU the lesson sheet shows the
-  tone of the teacher's AI summary as a 10 dp dot between the name and the
-  chevron (`DetailsTeacher.tone`, its place kept by `reserveTone`).
-  `LessonDetailsViewModel` gets it
-  from `TeacherLevelsRepository` (`ARG_TEACHER_ISU`), cached for a day
-  ([teacher levels](reviews.md#teacher-levels)). The place of the dot is
-  reserved while the level loads or when there is none, so a late dot moves
-  neither the name nor the chevron; TalkBack reads `, тон отзывов: …` after the
-  teacher. Without an ISU the dot is gone, and sport sheets never show it.
-- `Друзья на паре` is the only place friends on a lesson appear.
-  `LessonDetailsViewModel` asks `LessonFriendsRepository` for
-  `GET /api/schedule/lessons/{pairId}/friends?date=`; Backend answers with the
-  viewer's accepted friends who attend that occurrence and share their schedule
-  with the viewer. Without the ITMO.Widgets opt-in the block is absent; while
-  loading it shows a spinner; an error offers `Повторить`; an empty answer says
-  so. A friend row (`UserRow`) opens the person profile.
-- `Поток` (`ic_group`) is the My ITMO flow of the lesson, for
-  example `ФИЗ ПИИКТ 3.2`: `LessonDetailsArgs.flowName` is the lesson's
-  `groupName`, trimmed, and a blank one hides the row. It is informational,
-  without a chevron or a click action; TalkBack reads `Поток: …`. The lesson
-  type is already in the kind line, so the row does not repeat it. It exists
-  only in the lesson sheet: schedule cards, the pending sport sheet and the
-  sport sheets have no flow.
-- `Изменения` (after the header and before the meeting info)
-  shows the newest [schedule change](schedule-changes.md) of the last 30 days
-  whose occurrences contain this lesson's `pairId` and date
-  (`LessonDetailsViewModel.change`, from the local store only). A divider, the
-  title and the change's `detailLines()`: one `было → стало` line per changed
-  field of an updated lesson, or the single line of an added or cancelled one
-  (`Добавлена: пн, 7 сентября, 08:20`). Without a change the block is gone;
-  the header above it never moves.
+- Ordinary lesson cards open `AppRoutes.LessonDetails` with a `@Serializable`
+  `LessonDetailsArgs` (`core/navigation`) built from the `Lesson` and date;
+  nothing is fetched for the lesson itself.
+- Sport lessons (type 11) in the own schedule and pending sport rows go
+  through `SportDetailsRedirect` (`app/shell/entries/SportEntries.kt`): it
+  finds the booking by date and start in `SportBookingsHolder` (confirmed
+  booking before a queue) and opens `SportRoutes.SportCommonDetails`;
+  cancellation asks first (`AppRoutes.CancelBookingConfirm`). Without a match
+  a sport lesson falls back to the lesson sheet, a pending row to
+  `AppRoutes.PendingSportDetails`.
+- Map: a known building from `core/location/BuildingDirectory`
+  (`res/raw/itmo_buildings.json`), else the raw text, via a generic `geo:`
+  intent (`core/ui/navigation/MapLauncher`). No map provider setting. The
+  video link (`zoom_url`) is opened, never displayed.
+- Teacher row opens the profile only with a usable ISU (48 dp target,
+  accessibility action); without one it is inert and no name lookup happens.
+- Teacher tone dot: only with the ITMO.Widgets opt-in and an ISU, from
+  `TeacherLevelsRepository`, cached for a day
+  ([teacher levels](reviews.md#teacher-levels)). Its place is reserved
+  (`reserveTone`) so a late dot moves nothing. Never on sport sheets.
+- `Друзья на паре` is the only place friends on a lesson appear:
+  `GET /api/schedule/lessons/{pairId}/friends?date=`; Backend returns accepted
+  friends who attend and share their schedule with the viewer. Absent without
+  the opt-in.
+- `Поток` is `LessonDetailsArgs.flowName` (the lesson's `groupName`, trimmed;
+  blank hides it). Lesson sheet only.
+- `Изменения` shows the newest [schedule change](schedule-changes.md) of the
+  last 30 days whose occurrences contain this `pairId` and date
+  (`LessonDetailsViewModel.change`, local store only).
 
 ## iOS
 
-The iOS app ([iOS app](../ios.md)) shows the same schedule on the same shared
-code: `ScheduleRoute` is the root of the schedule tab's stack, hosted by
+Same shared code ([iOS app](../ios.md)): `ScheduleRoute` hosted by
 `ScheduleScreen` (`iosApp/Sources/Features/Schedule/`) through
-`scheduleRootScreen` (`shared/ios`, `screens/ScheduleScreens.kt`), with
-`scheduleModule`, `scheduleDataModule`, `scheduleIosModule`,
-`scheduleChangesIosModule` and `calendarIosModule` in `IosKoinModules`. The
-route draws its own chrome and keeps clear of the bars and the demo banner.
-
-- A lesson opens the lesson sheet (`AppRoutes.LessonDetails`) from the
-  schedule, another user's schedule and the home card, as a full-height
-  SwiftUI sheet around `LessonDetailsSheetRoute`, with the teacher's tone dot
-  and `Друзья на паре` as on Android. `Открыть на карте` hands the place to
-  Apple Maps (`PlatformActions.openMap`): the pin of a known building from the
-  same `itmo_buildings.json` (bundled by path), else the building text. The
-  meeting link opens in Safari; when nothing takes either, the sheet says
-  `schedule_map_unavailable` or `link_open_failed`.
-- A queued or predicted sport row opens the schedule's pending sport sheet,
-  whose sport button selects the sport tab ([sport](sport.md#ios)).
-- `Расписание друзей` opens the friend picker as a sheet; its choice comes back
-  to the schedule through the router ([friend selector](friend-selector.md#ios)).
-- The `today` entry route (the App Shortcut and the quick action) puts the own
-  schedule back on today, as `TabRequest.ScheduleToday` does on Android; a lesson
-  widget's tap opens the schedule tab as it is.
-- Another user's schedule (`AppRoutes.UserSchedule`, from a profile) and the
-  changes (`AppRoutes.ScheduleChanges`, from the home card) open on the
-  selected tab's stack ([schedule changes](schedule-changes.md#ios)).
-- The calendar sync and the `.ics` export are on ([calendar](calendar.md#ios)).
-- The lesson and day widgets read the timeline the app writes
-  ([widgets](widgets.md#ios)).
-- Tests: `ScheduleIosModuleTest` (the graph resolves with no request, the
-  bundled buildings; `scripts/ios/test.sh kn :shared:feature-schedule`) and
-  `UITests/ScheduleUITests` on the demo session (days from today, the lesson
-  sheet with friends and the Maps hand-off, a drag down closing it, the picker
-  round trip and a profile from it, the `today` route, changes from home, a
-  lesson from home, another user's schedule, AX1).
+`scheduleRootScreen` (`shared/ios`); `scheduleIosModule`,
+`scheduleChangesIosModule`, `calendarIosModule` in `IosKoinModules`.
+Differences: maps go to Apple Maps (`PlatformActions.openMap`), links to
+Safari; a pending sport row opens the schedule's pending sheet
+([sport](sport.md#ios)); the picker returns through the router
+([friend selector](friend-selector.md#ios)). See also
+[schedule changes](schedule-changes.md#ios), [calendar](calendar.md#ios),
+[widgets](widgets.md#ios).

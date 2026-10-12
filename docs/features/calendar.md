@@ -1,232 +1,125 @@
 # Calendar
 
-The own personal schedule goes to the phone's calendar in two ways, both on
-the `Расписание` settings page ([settings](../settings.md#schedule)): a kept
-synchronization and a one-off `.ics` file. The schedule screen has no top-bar
-menu, so it offers neither; lessons and subjects have no calendar actions.
-Backend is not involved. The code is part of the schedule feature
-([modules](schedule.md#modules)).
+Product behaviour: [Как это работает: расписание](../how-it-works/schedule.md).
+
+The own personal schedule goes to the phone's calendar as a kept
+synchronization or a one-off `.ics` file, both on the `Расписание` settings
+page ([settings](../settings.md#schedule)). Backend is not involved. The code
+is part of the schedule feature ([modules](schedule.md#modules)).
 
 ## Events
 
-- `OwnScheduleSource` (`MyItmoOwnScheduleSource`) asks
-  `MyItmoApi.getPersonalSchedule` itself in pieces of at most 31 days, one
-  after another, like the change check: no schedule cache, no upload to
-  Backend.
-- `CalendarEvents.from` (`domain/calendar`) turns every lesson of the answer
-  into a `CalendarEvent`, as My ITMO sends it: academic lessons, sport and
-  room bookings alike. The key is `lesson-<pairId>`; a lesson without a
-  positive id is `lesson-<date>-<minute of start>-<flowId>-<subjectId>`. A
-  repeated key is kept once, at its first slot.
-- Title: the subject. Start and end: the date and times in `Europe/Moscow`
-  (`AcademicTimeProvider.zoneId`). Location: the room and the street address of
-  a known building (`BuildingDirectory`), otherwise the building as My ITMO
-  spells it. Description: the lesson type, the teacher and the flow, one per
-  line. The UID is `<key>@widgets.alllexey.dev`.
+- `MyItmoOwnScheduleSource` calls `MyItmoApi.getPersonalSchedule` itself in
+  sequential chunks of at most 31 days: no schedule cache, no Backend upload.
+- `CalendarEvents.from` (`domain/calendar`) maps every lesson as My ITMO sends
+  it (academic, sport, room bookings). Key `lesson-<pairId>`, or
+  `lesson-<date>-<minute of start>-<flowId>-<subjectId>` without a positive
+  id; a repeated key is kept once at its first slot. UID
+  `<key>@widgets.alllexey.dev`.
+- Times in `Europe/Moscow` (`AcademicTimeProvider.zoneId`); location from
+  `BuildingDirectory` when known, else My ITMO's text.
 
 ## Synchronization
 
-- `CalendarSyncRepositoryImpl` keeps the window today..today+28 in the app's
-  own local calendar `ITMO.Widgets` (`ACCOUNT_TYPE_LOCAL`, created and deleted
-  through the sync-adapter URI, colour `calendar_app`, owner access). There is
-  no calendar choice. The calendar exists only on this phone: calendar apps
-  that read the phone's calendars (Xiaomi, Samsung) show it; Google and Yandex
-  Calendar do not, since they show only their own accounts' calendars; for
-  Google Calendar there is the `.ics` export.
-- Google-account calendars are never written (decided on
-  2026-10-02): a delete there is final only once Google's sync adapter uploads
-  it, and Android's guard against too many deletions undoes bulk deletes, after
-  which the adapter writes the server's copies back as new rows. On the
-  developer's phone 37 of 38 events came back after turning off.
-- `AndroidPhoneCalendars` is the only `CalendarContract` code. Events are busy,
-  have no reminders and carry the event time zone. The last line of the
-  description is the app's tag `ITMO.Widgets · <key>`
-  (`CalendarEvent.taggedDescription`); `CUSTOM_APP_PACKAGE`, `CUSTOM_APP_URI`
-  and `UID_2445` are set too. Sweeps find the app's events by the tag, which
-  also survives rows Google's sync adapter writes back. The `.ics` file has no
-  tag; its UIDs name the occurrences.
-- The ids of the app's events, the calendar of each and the content they were
-  given live in `filesDir/calendar_sync/state.json` (format 1, with the
-  switch, the calendar and the reason it turned itself off), written
-  atomically, excluded from backup and device transfer. A restored device
-  therefore starts with synchronization off. A corrupt file is deleted and
-  synchronization is off.
-- `CalendarSyncPlanner.plan` (pure) compares the window with the stored
-  events. Only occurrences that have not ended are touched: a new one is
-  inserted, a changed one (title, time, location or description) is updated in
-  place, one that vanished from the window is deleted. A past event stays as
-  it was; nothing outside the window is deleted; an event that ended more than
-  180 days ago is forgotten (it stays in the calendar). A key is inserted once,
-  so repeated syncs add no duplicates. An event the user deleted is inserted
-  again by its next change. Every insert is written to the file at once, so an
-  event in the calendar never lacks its id.
-- Before planning, a sync deletes tagged events of the calendar in the window
-  that have not ended and whose ids the file lacks (a process death between an
-  insert and its write), then inserts them anew: lost ids never double the
-  lessons.
-- Turning off first stores the switch as off (the stop flag), so a sync queued
-  behind it writes nothing, then deletes the app's calendar with all its
-  events in one operation, under the same lock. Turning on reuses the app's
-  calendar only when the stored ids belong to it, otherwise recreates it.
-- Before each sync: without the calendar permission synchronization turns
-  off with `NO_PERMISSION` and keeps the ids, so turning on again adopts the
-  calendar with its events; a deleted calendar turns it off with
-  `CALENDAR_MISSING` and forgets them. Settings show the reason in the
-  switch's line.
-- Every operation (turning on, off, syncing, sign-out) runs behind one mutex,
-  so a switch-off waits for a running sync and then deletes all it wrote. Only
-  the request to My ITMO can be cancelled; calendar writes and the ids they
-  produce run to their end (`NonCancellable`) even when WorkManager cancels
-  the work. A sync whose calendar or session changed meanwhile writes nothing.
-  Sign-out and account change delete the app's calendar (when the permission
-  is there) and the file (`SessionDataCleaner`).
-
-## Earlier builds that wrote to Google
-
-Builds of 2026-10-02 before the decision could write into a Google calendar.
-A state with that target (`target = phone`) reads as off. The next run, or
-turning on, deletes the app's tracked events there and never inserts there
-again; turning on uses the app's own calendar. That Google calendar then stays
-in the file's `cleanups`: every run (the work stays on while one is pending,
-also with the switch off, and then asks My ITMO nothing) sweeps it by the tag
-from 180 days back to 400 days ahead, because Google may write the deleted
-events back. A sweep that finds events starts its 3 days anew; a calendar
-clean for 3 days or deleted is done. A delete drops its id only when it went
-through; failed ones stay in the file with their calendar and are retried.
+- `CalendarSyncRepositoryImpl` keeps today..today+28 (`WINDOW_DAYS`) in the
+  app's own local calendar `ITMO.Widgets` (`ACCOUNT_TYPE_LOCAL`, created and
+  deleted through the sync-adapter URI). No calendar choice.
+- Google-account calendars are never written: Google's sync adapter and
+  Android's mass-delete guard bring deleted events back. Google users get the
+  `.ics` export.
+- `AndroidPhoneCalendars` is the only `CalendarContract` code. Events are
+  busy, without reminders. The description's last line is the tag
+  `ITMO.Widgets · <key>` (`CalendarEvent.taggedDescription`); sweeps find the
+  app's events by it. The `.ics` file has no tag.
+- `filesDir/calendar_sync/state.json` (format 1): event ids, their calendar
+  and content, the switch, the calendar and the off-reason. Atomic, excluded
+  from backup and device transfer, so a restored device starts off. A corrupt
+  file is deleted and sync is off.
+- `CalendarSyncPlanner.plan` (pure) touches only occurrences not yet ended:
+  insert new, update changed in place, delete vanished from the window. Past
+  events stay; nothing outside the window is deleted; events ended more than
+  180 days ago (`RETENTION`) are forgotten. A key is inserted once. Every
+  insert is persisted immediately, so a calendar event never lacks its id.
+- Before planning, tagged future events in the window whose ids the file lacks
+  (process death between insert and write) are deleted and reinserted: lost
+  ids never double lessons.
+- Turning off stores the off switch first (so a queued sync writes nothing),
+  then deletes the app's calendar in one operation. Turning on reuses the
+  calendar only if the stored ids belong to it.
+- Before each sync: no calendar permission -> off with `NO_PERMISSION`, ids
+  kept (turning on adopts the calendar); calendar deleted -> off with
+  `CALENDAR_MISSING`, ids forgotten.
+- One mutex for on, off, sync and sign-out. Only the My ITMO request is
+  cancellable; calendar writes and their ids run `NonCancellable`. A sync
+  whose calendar or session changed meanwhile writes nothing.
+- Sign-out and account change delete the app's calendar (with permission) and
+  the file (`SessionDataCleaner`).
+- Legacy cleanup: a state with `target = phone` (builds of 2026-10-02 that
+  could write to a Google calendar) reads as off; that calendar stays in the
+  file's `cleanups` and every run sweeps it by tag from 180 days back to 400
+  days ahead until it is clean for 3 days or deleted. Failed deletes stay and
+  are retried. The work stays enqueued while a cleanup is pending, without
+  asking My ITMO.
 
 ## Work
 
 - `DefaultCalendarSync` (`core/schedule/CalendarSync`) owns the switch and the
-  work. `CalendarSyncWorker` runs the unique periodic work `calendar-sync`
-  every 2 hours with `NetworkType.CONNECTED`, backoff from 15 minutes,
-  `ExistingPeriodicWorkPolicy.UPDATE`, tag `calendar-sync`, with
-  `DefaultCalendarSync` from Koin; `PeriodicCheckScheduler` with
-  `CALENDAR_SYNC_SPEC` enqueues and cancels it. The worker and the spec live
-  in `:app`'s `feature/schedule/work`; the rest of the
-  synchronization, the `PhoneCalendars` port included, lives in `domain/calendar`
-  and `data/calendar` of `:shared:feature-schedule` `commonMain`, except
-  `AndroidPhoneCalendars` and `IcsFileExport` in `:app`. The work does not
-  depend on `Изменения расписания` and has no quiet hours, since it notifies nothing. Failures are retried through
-  `outcomeOf` and `workResultOf` like the background checks.
-- The one-off work `calendar-sync-now` (`ExistingWorkPolicy.REPLACE`, network)
-  runs right after turning on and after a successful
-  pull on the own schedule (`ScheduleViewModel` calls `requestSync()`, which
-  does nothing while synchronization is off).
-- `syncWork()` runs on application start and after sign-in, `stopWork()`
-  before a session change. The work stays while synchronization is on or a
-  Google calendar of an earlier build is still swept; otherwise a run cancels
-  it.
+  work. `CalendarSyncWorker` (`:app` `feature/schedule/work`): unique periodic
+  `calendar-sync`, every 2 hours, `CONNECTED`, backoff from 15 minutes,
+  `ExistingPeriodicWorkPolicy.UPDATE`, via `PeriodicCheckScheduler` with
+  `CALENDAR_SYNC_SPEC`. Independent of `Изменения расписания`, no quiet hours.
+  Retries through `outcomeOf` and `workResultOf`.
+- One-off `calendar-sync-now` (`ExistingWorkPolicy.REPLACE`) after turning on
+  and after a successful own-schedule pull (`ScheduleViewModel` calls
+  `requestSync()`, a no-op while off).
+- `syncWork()` on start and after sign-in, `stopWork()` before a session
+  change. The work stays while sync is on or a legacy cleanup is pending.
 
 ## `.ics` export
 
-`IcsFileExport` (`core/schedule/ScheduleIcsExport`) reads the range of a
-`ScheduleExportRange`: `Неделя` (today and 6 days), `2 недели` (today and 13
-days), `До конца семестра` (to 31 January from August to January, to 31 July
-from February to July) or `Свои даты` (a `MaterialDatePicker` range).
-`IcsWriter` writes RFC 5545: CRLF, lines folded at 75 octets without splitting
-a UTF-8 character, escaped text, times in UTC (no `VTIMEZONE`), the same UIDs
-as synchronization, `TRANSP:OPAQUE`. The file is
-`cacheDir/ics/itmo-schedule-<start>-<end>.ics` (only the latest is kept),
-shared through the `FileProvider` `${applicationId}.files`. A range without
-lessons writes nothing. This is the way into Google Calendar.
-
-`IcsExportBottomSheet` (`feature/settings/ui`, body `IcsExportSheetContent` in `:shared:feature-settings`)
-is the whole flow: the title `Выгрузить в .ics`, the subtitle `Своё расписание
-из My ITMO` and one area of at least 288 dp that every state shares, so the
-sheet does not jump. `IcsExportViewModel` holds the state:
-
-- Choose: the four ranges as one connected group (rows on
-  `colorSurfaceContainerHigh`, 56 dp rows, the whole row is the target), each
-  with its days on the second line from today (`2–8 октября`, `до 31 января`,
-  `Выбрать в календаре`; `IcsDateLabels`: one day, a month, two months, two
-  years). `Свои даты` opens the `MaterialDatePicker` and comes back with its
+- `IcsFileExport` (implements `core/schedule/ScheduleIcsExport`) reads a
+  `ScheduleExportRange`: `Week` (today + 6 days), `TwoWeeks` (+13), semester
+  end (31 January for August-January, 31 July for February-July) or a custom
   range.
-- Preparing: a progress indicator and `Готовим файл…`.
-- Ready: `Файл готов`, `23 пары, 2–8 октября`, the filled `Отправить`
-  (`ACTION_SEND`, `text/calendar`), the tonal `Открыть в календаре` only when
-  an app opens `.ics` files (`ACTION_VIEW`), and the hint `Импортируйте в
-  отдельный календарь — так его легко удалить или заменить свежим файлом`.
-- Empty: `В этом периоде пар нет` with `Выбрать другой период`.
-- Failed: the error's message with `Повторить`.
+- `IcsWriter`: RFC 5545, CRLF, lines folded at 75 octets without splitting a
+  UTF-8 character, UTC times (no `VTIMEZONE`), same UIDs as the sync,
+  `TRANSP:OPAQUE`.
+- File `cacheDir/ics/itmo-schedule-<start>-<end>.ics` (only the latest kept),
+  shared through `FileProvider` `${applicationId}.files`. An empty range writes
+  nothing.
+- UI: `IcsExportBottomSheet` (`feature/settings/ui`, body
+  `IcsExportSheetContent` in `:shared:feature-settings`) over
+  `IcsExportViewModel`; states Choose, Preparing, Ready, Empty, Failed share
+  one fixed-height area. Range and written file live in `SavedStateHandle`;
+  after process death the file is written again.
 
-The chosen range and the written file live in the `SavedStateHandle`:
-recreation shows the same state, and after a process death the file is
-written again; the date picker is listened to again by its tag.
-
-## Tests
-
-`CalendarEventsTest`, `CalendarSyncPlannerTest`, `IcsWriterTest` and
-`ScheduleExportRangeTest` cover the domain; `CalendarSyncFileStoreTest`,
-`CalendarSyncRepositoryImplTest` (fake calendars, fake file system) and
-`DefaultCalendarSyncTest` in `commonTest`, `MyItmoOwnScheduleSourceTest`,
-`CalendarSync22GoldenTest` and `IcsFileExportTest` the data and the work; `SettingsViewModelTest` and
-`ScheduleViewModelTest` the rows and the sync after a pull, `IcsExportViewModelTest`
-the sheet's states, saved state and date labels. Instrumented:
-`CalendarSyncProviderTest` against the emulator's CalendarProvider (the local
-calendar, two syncs without duplicates, update, delete, lost ids, turning off
-during the first sync, leaving an earlier build's calendar that behaves like a
-Google one, with `_SYNC_ID` rows and copies the sync adapter writes back) and
-`SettingsNavigationTest` for the rows, every state of the `.ics` sheet (in a
-light and a dark appearance, with the area height kept) and the permission
-dialog.
+Tests: `commonTest` of `shared/feature-schedule`, `CalendarSyncProviderTest`
+against the emulator's CalendarProvider (including Google-like sync-adapter
+write-backs) and `SettingsNavigationTest` for the sheet.
 
 ## iOS
 
-The iOS app has both ways, on the same `Расписание` settings page:
-`IosPlatformCapabilities.calendarExport` is on, so the shared provider lists
-the switch and `Выгрузить в .ics` there, and the SwiftUI settings form renders
-them. The events, the planner, the sync file and `DefaultCalendarSync` are the
-shared ones above; iOS adds only the platform side
-(`shared/feature-schedule/src/iosMain/.../data/calendar/`,
-`calendarIosModule`, `iosApp/Sources/Features/Calendar/`).
+Both ways exist on iOS (`IosPlatformCapabilities.calendarExport`), with the
+shared events, planner, sync file and `DefaultCalendarSync`; platform side in
+`shared/feature-schedule/src/iosMain/.../data/calendar/`,
+`calendarIosModule`, `iosApp/Sources/Features/Calendar/`.
 
-- Access. Turning the switch on asks EventKit for full access to events
-  (`EKEventStore.requestFullAccessToEvents`, `CalendarAccess`) with the
-  purpose string `NSCalendarsFullAccessUsageDescription`
-  (`ios_calendar_full_access_usage`): write-only access can neither create a
-  calendar nor read the app's events back. Granted, the sync turns on; a
-  refusal in the system prompt leaves the switch off with `Нет доступа к
-  календарю`; a refusal for good (or a restriction) shows `Доступ к
-  календарю`, `Чтобы записывать пары в календарь телефона.` with `Открыть
-  настройки` (the app's page in Settings) and `Не сейчас`. iOS shows the
-  system prompt only once.
-- Calendar. `EventKitPhoneCalendars` over `SystemEventStore`
-  (`platform.EventKit` called from Kotlin/Native) creates `ITMO.Widgets` in
-  the iCloud source, else the local one, colour `calendar_app`; never in an
-  Exchange, Google or subscribed source. After a reinstall a calendar of that
-  title in those sources is adopted, so a second one never appears. Events are
-  busy, have no alarms, carry `Europe/Moscow` and the tag line in their notes,
-  which the sweeps read as on Android.
-- Ids. EventKit names calendars and events by strings; `EventKitIdStore`
-  numbers them for `PhoneCalendars` in `<noBackup>/calendar_eventkit/ids.json` (`AppDirectories.noBackup`)
-  (format 1, a damaged or newer file starts empty), so the shared sync file
-  keeps its numbers. When EventKit gives an event a new identifier (an iCloud
-  sync), the tagged event takes over the number of the gone one, so the sync
-  neither deletes the lesson nor inserts it twice.
-- Work. The sync is the `calendar-sync` step of the app's one refresh task
-  (`RefreshStepKeys.CALENDAR_SYNC`, after schedule changes, see
-  [`docs/ios.md`](../ios.md#background-refresh)), with Android's two hours:
-  it runs at launch, on every return to the app and on the system's wakes once
-  its period has passed. Turning on and a pull on the own schedule make the
-  step due at once (`RefreshTaskCalendarScheduler.runOnce`), as
-  `calendar-sync-now`. A turned-off sync skips the step; sign-out deletes the
-  calendar through the shared `SessionDataCleaner`.
-- `.ics`. `IosIcsFileExport` writes the same file into the app's temporary
-  directory (`tmp/ics`, only the latest kept); `IcsExportSheet` (SwiftUI over
-  `IcsExportViewModel`) shows the same states and texts as Android, `Свои
-  даты` as two date pickers (`Первый день`, `Последний день`, `Выбрать`), and
-  `Отправить` is a `ShareLink` of a `public.calendar-event` (`text/calendar`)
-  file. The share sheet holds Calendar and Files, so there is no `Открыть в
-  календаре` button.
-- Demo: turning on says `Недоступно в демо`, as on Android; nothing asks
-  EventKit or My ITMO.
-- Tests: `EventKitCalendarSyncTest` (the shared sync over a fake event store:
-  the calendar created once, idempotent re-syncs, updates in place, renumbered
-  and lost events, turning off, sign-out, a deleted calendar, an earlier
-  install's calendar), `IosIcsFileExportTest`,
-  `RefreshTaskCalendarSchedulerTest` and `ScheduleIosModuleTest` in
-  `shared/feature-schedule` iosTest; `ITMOWidgetsTests/CalendarTests` (access
-  decisions, the purpose string, the settings rows, the sheet's ViewModel and,
-  with access granted to the simulator, the calendar made and removed in
-  EventKit); `CalendarSnapshotTests` for every state of the sheet and
-  `SettingsSnapshotTests.testScheduleWithTheCalendarDeleted` for the rows.
+- Access: turning on asks EventKit for full access
+  (`EKEventStore.requestFullAccessToEvents`, `CalendarAccess`,
+  `NSCalendarsFullAccessUsageDescription`); write-only access cannot create a
+  calendar or read events back. iOS prompts once; a permanent refusal offers
+  the app's Settings page.
+- `EventKitPhoneCalendars` creates `ITMO.Widgets` in the iCloud source, else
+  local; never Exchange, Google or subscribed. After a reinstall a same-titled
+  calendar there is adopted. Tag line in the notes, as on Android.
+- `EventKitIdStore` maps EventKit string ids to numbers in
+  `<noBackup>/calendar_eventkit/ids.json` (format 1; damaged or newer starts
+  empty). When iCloud renames an event, the tagged event takes over the old
+  number, so nothing is deleted or doubled.
+- Work: the `calendar-sync` step of the single refresh task
+  (`RefreshStepKeys.CALENDAR_SYNC`, after schedule changes,
+  [`docs/ios.md`](../ios.md#background-refresh)), 2-hour period;
+  `RefreshTaskCalendarScheduler.runOnce` replaces `calendar-sync-now`.
+- `.ics`: `IosIcsFileExport` writes to `tmp/ics`; `IcsExportSheet` (SwiftUI)
+  shares via `ShareLink`, so there is no open-in-calendar button.
+- Demo: turning on is refused; nothing calls EventKit or My ITMO.

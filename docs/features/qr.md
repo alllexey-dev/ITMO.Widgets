@@ -1,158 +1,83 @@
 # QR pass
 
-`feature/qr` shows the My ITMO turnstile pass inside the app, in the
-«QR-пропуск» quick-settings tile and behind the `qr_pass` launcher shortcut.
-The home-screen widget belongs to the same package and is described in
-[Widgets](widgets.md#qr-widget); its settings in
-[Settings](../settings.md#qr-widget). The pass comes from MyItmoApi 2.x; there
-is no second API client.
+Product behaviour: [Как это работает: QR-пропуск](../how-it-works/qr.md).
 
-The domain, the data, the presentation and the screen live in
-`:shared:feature-qr` `commonMain` (`dev.alllexey.itmowidgets.feature.qr.*`);
-`QrModule.kt` registers `QrCodeViewModel` with `viewModelOf`. `:app` keeps what
-only Android has: the widget (`ui/widget`), the bitmap rendering and its cache
-(`ui/rendering`), the worker (`work`), `QrTileService`, `QrTileClick` and
-`QrTileController`.
+`feature/qr` shows the My ITMO turnstile pass in the app, the quick-settings
+tile and the `qr_pass` launcher shortcut. The widget is in
+[Widgets](widgets.md#qr-widget), its settings in
+[Settings](../settings.md#qr-widget). The pass comes from MyItmoApi; there is
+no second API client.
+
+Domain, data, presentation and screen live in `:shared:feature-qr`
+`commonMain`; `QrModule.kt` registers `QrCodeViewModel`. `:app` keeps the
+widget (`ui/widget`), bitmap rendering and cache (`ui/rendering`), the worker
+(`work`), `QrTileService`, `QrTileClick` and `QrTileController`.
 
 ## Screen
 
-The screen is the key `AppRoutes.QrPass`, registered in `HomeEntries.kt` with
-the Compose route `QrPassRoute`, which obtains `QrCodeViewModel` with
-`koinViewModel()` and draws `QrPassScreen`. It opens from the home QR button,
-the shortcut and the tile; the two system entries send `ACTION_OPEN_QR_PASS`,
-which `EntryRouteParser` turns into the home tab with the pass above it.
-
-- Top bar «QR-пропуск» with «Назад»; the square code area (content
-  description «QR-код пропуска»); the line «Покажите код считывателю на входе
-  в корпус»; the button «Обновить QR-код».
-- `QrCodeUiState`: `Loading` (progress in the code area), `Content(code,
-  refreshing, useDynamicColors)`, `Empty` («QR-код пока недоступен» /
-  «Попробуйте обновить пропуск через My ITMO»), `Error` («Не удалось
-  загрузить» with the error's text). A code that cannot be drawn shows «Не
-  удалось загрузить» with the `Empty` description.
-- The code area stays square, at most 300 dp, and the instruction keeps its
-  space in every state (transparent, not removed). At large font sizes the
-  empty and error texts may extend below the square. The refresh button keeps
-  its place, shows its progress inside while `refreshing` and is disabled only
-  during `Loading`.
-- A refresh that fails while a valid code is shown keeps the code; the event
-  `QrCodeEvent.RefreshFailed` shows a snackbar with the error and «Повторить».
-
-`QrCodeViewModel` runs only while the screen is started (`start()` and `stop()`
-from `LifecycleStartEffect`).
-
-- `start()` drops an expired code to `Loading` and refreshes without forcing;
-  the button and «Повторить» force (`RefreshMode.Force`).
-- A fresh view model reads the cache before it publishes `Loading`, so a valid
-  cached pass is drawn in the first frame with `refreshing`.
-- At the cache deadline (`QrCodeSnapshot.expiresAtMillis`) the screen hides the
-  code even while a forced refresh is pending, then refreshes again.
-- Time is the injected wall `kotlin.time.Clock`, never the debug academic date.
-
-The screen draws the version 1 code of `QrCodeGenerator` with `QrCodeImage` in
-Compose, in the widget palette (`QrColors`): black on white, or with the QR colour setting the
-theme's surface and the darker of `onSurface` and `onSurfaceVariant`. The
-widget draws its bitmap with `QrToolkit` and `QrColorResolver` in `:app`.
+- Key `AppRoutes.QrPass` in `HomeEntries.kt`, route `QrPassRoute`, screen
+  `QrPassScreen`. The tile and the shortcut send `ACTION_OPEN_QR_PASS`, which
+  `EntryRouteParser` turns into the home tab with the pass above it.
+- `QrCodeViewModel` runs only while the screen is started (`start()`/`stop()`
+  from `LifecycleStartEffect`). A fresh one reads the cache before publishing
+  `Loading`, so a valid cached pass draws in the first frame.
+- At `QrCodeSnapshot.expiresAtMillis` the code is hidden even while a forced
+  refresh is pending. A failed refresh over a valid code keeps the code
+  (`QrCodeEvent.RefreshFailed` snackbar).
+- Time is the injected wall `kotlin.time.Clock`, never the debug academic
+  date; Konsist `QrRulesTest` forbids `AcademicTimeProvider` in `feature.qr`.
 
 ## Data
 
-All in `commonMain`, constructed by Koin (`feature/qr/di/QrModule.kt`, one
-`single` per binding):
+All in `commonMain`, one Koin `single` per binding
+(`feature/qr/di/QrModule.kt`):
 
-- `QrCodeRepositoryImpl` answers from the cache while it is valid and goes to
-  the network only when it is empty, expired or forced. A failure becomes an
-  `AppError` (a failure before any answer is `Network`, a MyItmoApi failure maps
-  through `MyItmoException.asAppError()`); the old valid code stays. One
-  instance serves the screen, the widget, the worker and sign-out: a second one
-  would read its own copy of the cached pass.
-- `QrCodeRemoteDataSourceImpl` checks `DemoMode` first and answers `DemoQr.HEX`
-  in the demo session, a code no turnstile accepts. Otherwise it calls
+- `QrCodeRepositoryImpl` answers from the cache while valid and hits the
+  network only when empty, expired or forced; failures become `AppError` and
+  the old valid code stays. One instance serves the screen, widget, worker and
+  sign-out; a second one would read its own copy of the cache.
+- `QrCodeRemoteDataSourceImpl` checks `DemoMode` first and answers
+  `DemoQr.HEX` (no turnstile accepts it). Otherwise
   `MyItmoClient.qr.getQrCode()`; an answer without a code gets one forced token
-  refresh and one more request. The client's own 401 handling refreshes the
-  session once; a server error fails at once and keeps a still valid cached
-  code.
+  refresh and one retry; a server error fails at once.
 - `QrCodeLocalDataSourceImpl` keeps `<epochMillis>|<hex>` in `cache/qr_hex`
-  (`AppDirectories.cache`, written through `AtomicTextFile`), valid for 60
-  minutes of wall-clock time. A file from v2.0 with only the payload (at least
-  six characters) is read as fresh, so an update does not blank a working pass.
-  The format is the 2.2 one byte for byte.
-- `QrWidgetStateStoreImpl` keeps each widget's reveal state under
-  `qr_widget_state_<appWidgetId>` in `app_preferences`, the `QrWidgetState`
-  name as the value; an unknown value reads as `HIDDEN`.
-- `QrAppearancePreferencesImpl` and `QrTilePreferencesImpl` read and write
+  (`AtomicTextFile`), valid for 60 minutes of wall-clock time. A payload-only
+  file (at least six characters) reads as fresh.
+- `QrWidgetStateStoreImpl` keeps `qr_widget_state_<appWidgetId>` in
+  `app_preferences`; an unknown value reads as `HIDDEN`.
+- `QrAppearancePreferencesImpl` and `QrTilePreferencesImpl` wrap
   `QrSettingsPreferences` and `DeviceHintPreferences` of `:shared:core`.
+- `:app`'s `di/QrModule.kt` holds Android rendering (`QrBitmapCache`,
+  `QrCodeGenerator`, the toolkit).
 
-The core types come from `:app`'s Koin modules in `di/`
-(`MyItmoClient`, the `app_preferences` DataStore, `AppDirectories`, the two
-preference stores, the wall clock, `DemoMode`, `AppDispatchers`). The widget,
-the worker, the tile and the session effects read the repository, the widget
-state store and the two preference ports from the same graph. `di/QrModule.kt`
-holds the Android rendering (`QrBitmapCache`, `QrCodeGenerator`, the toolkit).
+Sign-out: the repository is a `SessionDataCleaner` `named("qr")`, beside
+`QrBitmapCacheImpl` `named("qr-bitmaps")` (`di/SessionModule.kt`); it deletes
+`cache/qr_hex` and `cache/bitmap_cache/`.
 
-Sign-out: the repository is a `SessionDataCleaner` bound in Koin as
-`named("qr")`, beside `QrBitmapCacheImpl` as `named("qr-bitmaps")`; sign-out
-runs every Koin cleaner (`SessionDataCleaners`, `di/SessionModule.kt`).
-Sign-out deletes `cache/qr_hex` and `cache/bitmap_cache/`.
+## Tile and shortcut
 
-## Tile
-
-`QrTileService` (`feature/qr/ui`) is the tile labelled «QR-пропуск» with
-`ic_tile_qr`, white and tinted by SystemUI. `QrTileController.state()`
-initialises the session; the tile is `STATE_ACTIVE` with a signed-in session
-and `STATE_INACTIVE` otherwise, never toggleable. `QrTileClick.handle` opens
-the pass at once or, on a locked device, through `unlockAndRun`. The intent
-carries `ACTION_OPEN_QR_PASS` with `NEW_TASK | CLEAR_TOP | SINGLE_TOP`;
-`qrTileLaunchFor` picks `startActivityAndCollapse(PendingIntent)` on Android
-14+ and the `Intent` overload below it. Without a session the route waits for
-sign-in.
-
-`onTileAdded` and `onTileRemoved` write `qr_tile_added` (`QrTilePreferences`)
-in the application scope. The request to add the tile belongs to settings;
-see [Home and quick actions](home.md#quick-settings-tile-and-app-shortcuts).
-
-## Shortcut
-
-The static shortcut `qr_pass` («QR-пропуск» / «Открыть QR-пропуск») sends
-`ACTION_OPEN_QR_PASS` to `MainActivity`. Running the route reports the
-shortcut as used, for the tile too; the in-app button does not.
+- `QrTileService` (`feature/qr/ui`): `STATE_ACTIVE` with a signed-in session,
+  `STATE_INACTIVE` otherwise, never toggleable. `QrTileClick.handle` opens the
+  pass, through `unlockAndRun` on a locked device; `qrTileLaunchFor` uses
+  `startActivityAndCollapse(PendingIntent)` on Android 14+.
+- `onTileAdded`/`onTileRemoved` write `qr_tile_added`; the add-tile request
+  belongs to settings ([home](home.md#quick-settings-tile-and-app-shortcuts)).
+- The static shortcut `qr_pass` sends `ACTION_OPEN_QR_PASS`; running the route
+  reports the shortcut as used (tile too, in-app button not).
 
 ## iOS
 
-The iOS app ([iOS app](../ios.md)) shows the same pass on the same shared
-code; only the system surfaces are its own.
-
-- Pass. The Compose route `QrPassRoute` of `:shared:feature-qr`, hosted by
-  `QrPassScreen` (`iosApp/Sources/Features/Qr/`) above home, opens from the
-  home QR button, the widget, the Control, the App Shortcut and the quick
-  action. Unlike Android it raises the screen to full brightness while it is
-  on screen and the app is active, and puts the user's level back when it
-  leaves or the app goes to the background. The demo session shows the demo
-  pass with no network call.
-- QR widget (`dev.alllexey.itmowidgets.widget.qr`, small): Swift only, it
-  draws the code from `qr-pass-v1.json`, which the app writes from the shared
-  `QrCodeGenerator` on every new valid pass, and never fetches it itself.
-  States: signed out («Войдите в приложение», opens the app), spoiler
-  («Нажмите, чтобы показать», reveals the code for 30 s for every placed QR
-  widget at once), revealed (the demo pass labelled «Демо-режим»), expired
-  («Нажмите, чтобы обновить», opens the app, which writes a new pass).
-  It follows the spoiler and dynamic colour switches of settings and the
-  first-run flow, which the app writes into the same file (dark on light in
-  both themes, readable on a tinted home screen). Degradations: the reveal
-  fades instead of the circle, no custom spoiler image (v2.4)
+- `QrPassScreen` (`iosApp/Sources/Features/Qr/`) hosts the shared
+  `QrPassRoute`; unlike Android it raises brightness while shown and restores
+  it on leave or background.
+- QR widget (`dev.alllexey.itmowidgets.widget.qr`) is Swift only: it draws
+  from `qr-pass-v1.json`, which the app writes from `QrCodeGenerator` on every
+  new valid pass, and never fetches itself
   ([degradations](../ios.md#degradations)).
-- Control «QR-пропуск» (`dev.alllexey.itmowidgets.control.qr`) in Control
-  Center, on the Lock Screen and on the Action button: the counterpart of the
-  tile. It opens the app on the pass and cannot draw the code; there is no
-  active or inactive state, and without a session the route waits for
-  sign-in.
-- App Shortcuts «QR-пропуск» and «Сегодня» in Siri, Spotlight and Shortcuts,
-  with phrases such as «Открой QR-пропуск в ITMO.Widgets»; quick actions
-  «Открыть QR-пропуск» and «Расписание на сегодня» on the app icon, types
-  `dev.alllexey.itmowidgets.qr_pass` and `dev.alllexey.itmowidgets.today`.
-  Both open what Android's `qr_pass` and `today` shortcuts open.
-- Tests: `IntentsTests` (each intent and quick action against a router),
-  `StableIdentifiersTests`, `QrWidgetTimelineTests`, `QrPassSnapshotTests`,
-  `WidgetSnapshotTests`, `QrPassUITests`.
+- Control `dev.alllexey.itmowidgets.control.qr` is the tile counterpart: opens
+  the pass, no state. App Shortcuts and quick actions
+  `dev.alllexey.itmowidgets.qr_pass` / `dev.alllexey.itmowidgets.today` mirror
+  Android's shortcuts.
 
 ## Stable identifiers
 
@@ -173,21 +98,3 @@ Quoted from `StableIdentifiersTest`:
 Persisted and kept byte-compatible: `cache/qr_hex`, the
 `qr_widget_state_<appWidgetId>` keys and the enum names of `QrWidgetState` and
 `QrAnimationType`.
-
-## Tests
-
-- `:shared:feature-qr` `commonTest`: `QrCodeViewModelTest`, `QrPassScreenTest`,
-  `QrColorsTest`, `QrCodeRepositoryImplTest`, `QrCodeRemoteDataSourceImplTest`
-  (MockEngine through the real client), `QrCodeLocalDataSourceImplTest` (okio
-  `FakeFileSystem`: the 2.2 and v2.0 files, the expiry boundary, clear),
-  `QrWidgetStateStoreImplTest`, `QrTilePreferencesImplTest`.
-- `:shared:feature-qr` host tests: `QrModuleTest` (Koin `verify()`),
-  `QrCodeGeneratorGoldenTest`, `QrScreenshotTest` (Roborazzi baselines).
-- `:app` JVM: `QrGraphTest`, `QrWidgetUpdateWorkerKoinTest`, `QrSessionTest`
-  (debug: sign-out clears the cached pass and its bitmaps),
-  `QrDebugFixturesTest` (debug), `QrTileControllerTest`, `QrTileClickTest`,
-  `QrWidgetRefreshDecisionTest`, `DemoNetworkGateTest`.
-- Instrumented: `QrColorResolverTest`, `QrTileFlowTest` (`cmd statusbar
-  add-tile` and `click-tile` on the emulator), `WidgetPreviewTest`, `AppShortcutsTest`, and the `qrCaches` case of
-  `UpgradeFrom22Test` (the 2.2 `qr_hex` reads, writes and reads back).
-- Konsist: `QrRulesTest` (`feature.qr` never reads `AcademicTimeProvider`).

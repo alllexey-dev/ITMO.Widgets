@@ -1,193 +1,105 @@
 # Web sign-in
 
-The web version at `https://<domain>/app/` has no password and no ITMO.ID form
-of its own: a browser signs in when a phone that is already signed in to the app
-approves it. The browser shows an eight-character code and a QR with the same
-code; the app reads one of them, shows which browser asked and signs it in after
-`Войти`. `core/weblogin` holds the contract, `feature/weblogin` the parser, the
-data, the view model and the sheet. The Backend contract is
-`../itmo-widgets-backend/docs/contracts/web.md`; the web side is described in
+Product behaviour: [Как это работает: веб-версия](../how-it-works/web.md).
+
+The web version at `https://<domain>/app/` has no password form: a browser
+signs in when the signed-in app approves its eight-character code (typed or
+scanned from a QR). `core/weblogin` holds the contract, `feature/weblogin` the
+parser, data, view model and sheet. Backend contract:
+`../itmo-widgets-backend/docs/contracts/web.md`; web side:
 `../itmo-widgets-web/web/README.md`.
 
 ## Entry point
 
-`Вход на сайт` (`ic_computer`) is a row of the `Приложение` group on the profile
-tab, between the connection hint and `Настройки`. It is visible only while
-`Подключение к ITMO.Widgets` is on: `MeViewModel` maps
-`CustomServicesRepository.observeEnabled()` to `MeUiState.webLoginAvailable`,
-and `MeScreen` leaves out the row and its divider otherwise. Without the connection
-the profile shows the connection hint instead, so there is never a row that can
-only fail.
-
-The row opens the sheet key `AppRoutes.WebLogin`
-(`SheetPolicy(textInput = true)`), once: a second tap while it is open does
-nothing, and the demo session refuses it (`ShellGate`). The shell's sheet
-scene (`ShellScenes.kt`) opens it expanded to its content, up to 90 % of the
-window, without a collapsed step, and the window resizes for the keyboard so
-the field stays above it. It expands to its content again when the step
-changes, not on every keystroke.
-
-The body is `WebLoginSheetRoute` in `:shared:feature-account`
-(`feature/weblogin/ui/`): it collects `WebLoginViewModel.uiState` and draws the
-stateless `WebLoginSheetContent(state, actions)` on the kit's `SheetScaffold`.
-`AccountEntries.kt` registers the key: it passes the entry's own Koin
-ViewModel (`WebLoginModule.kt`, `viewModelOf`) to the route and keeps the
-effects that need Android: the QR scanner (`onScan`, `scanWebLoginCode` in
-`:app`) and closing (`onClose`).
+- `Вход на сайт` on the profile tab is shown only while
+  `Подключение к ITMO.Widgets` is on (`MeViewModel` maps
+  `CustomServicesRepository.observeEnabled()` to
+  `MeUiState.webLoginAvailable`), so there is never a row that can only fail.
+- It opens the sheet key `AppRoutes.WebLogin` (`SheetPolicy(textInput =
+  true)`) once; the demo session refuses it (`ShellGate`). The sheet scene
+  (`ShellScenes.kt`) opens it expanded to content, up to 90 % of the window,
+  and resizes for the keyboard.
+- Body: `WebLoginSheetRoute` (`:shared:feature-account`,
+  `feature/weblogin/ui/`). `AccountEntries.kt` registers the key and keeps the
+  Android effects: the scanner (`scanWebLoginCode` in `:app`) and `onClose`.
 
 ## Reading the code
 
-The sheet has one field, `Код с сайта`, a `Сканировать QR` button and
-`Продолжить`. `Продолжить` and the keyboard's Go action submit the field. The
-field follows the state: when the view model changes the code (a scanned code,
-the normalized code while it is checked) the field shows it with the cursor at
-the end; a keystroke the state has not caught up with yet is never overwritten.
-
-The scanner is Google's code scanner (`play-services-code-scanner` 16.1.0),
-limited to QR codes. It runs inside Play services, so the app needs no camera
-permission. The manifest declares `com.google.mlkit.vision.DEPENDENCIES` =
-`barcode_ui`, so Play installs the scanner module with the app instead of on the
-first scan. If the scanner cannot start, the field says
-`Сканер недоступен, введите код` and typing still works. The scan result is
-delivered to the view model captured before the scan, because the answer may
-arrive after the sheet's view is gone.
-
-`WebLoginCode.parse` accepts two inputs:
-
-- A typed code: eight characters from `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (no
-  `0 O 1 I L`). Case, spaces and dashes are ignored, so `abcd-efgh` and
-  `ABCD EFGH` are the same code.
-- A scanned link `https://<host>/app/login?code=<code>`. Any HTTPS host is
-  accepted so production and dev both work; the path must be exactly
-  `/app/login` (a trailing slash is allowed), the query must hold exactly one
-  `code`, and a link with user info (`https://user@host/...`) is rejected. The
-  value is URL-decoded and normalized like a typed code.
-
-Anything else with `://` is not a sign-in link.
-
-## Browser description
-
-`describeUserAgent` reads the User-Agent that Backend recorded for the browser
-and returns a browser and a platform, each null when unknown. Order matters
-because Chromium forks also say `Chrome/` and iOS says `like Mac OS X`.
-
-| Browser | Recognised by |
-|---|---|
-| `Яндекс Браузер` | `YaBrowser/`, `YaSearchBrowser/` |
-| Edge | `Edg/`, `EdgA/`, `EdgiOS/`, `Edge/` |
-| Opera | `OPR/`, `OPT/`, `Opera` |
-| Samsung Internet | `SamsungBrowser/` |
-| Firefox | `Firefox/`, `FxiOS/` |
-| Chrome | `Chrome/`, `CriOS/`, `Chromium/` |
-| Safari | `Safari/` together with `Version/` |
-
-Platforms: Windows, iOS (`iPhone`, `iPod`), iPadOS (`iPad`), Android, ChromeOS
-(`CrOS`), macOS, Linux. The card reads `Chrome на macOS`, `Chrome`,
-`Браузер на Android` or `Браузер`. `UiText.resolve()` resolves `UiText`
-arguments first, so the format takes localized names.
+- The field follows the state (scanned or normalized code, cursor at the end)
+  but never overwrites a keystroke the state has not caught up with.
+- Scanner: Google's code scanner (`play-services-code-scanner`), QR only, runs
+  inside Play services, so no camera permission. The manifest's
+  `com.google.mlkit.vision.DEPENDENCIES` = `barcode_ui` installs the module
+  with the app. The result goes to the view model captured before the scan,
+  since the sheet's view may be gone by then.
+- `WebLoginCode.parse` accepts a typed code (eight characters from
+  `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, case, spaces and dashes ignored) or a link
+  `https://<host>/app/login?code=<code>`: any HTTPS host (prod and dev), path
+  exactly `/app/login` (trailing slash allowed), exactly one `code`, no user
+  info. Anything else with `://` is not a sign-in link.
+- `describeUserAgent` turns Backend's recorded User-Agent into a browser and a
+  platform, each null when unknown. Order of checks matters: Chromium forks
+  also send the Chrome token and iOS says `like Mac OS X`.
 
 ## States
 
-`WebLoginViewModel` exposes one `WebLoginUiState`:
+`WebLoginViewModel` exposes one `WebLoginUiState`: `Input(code, error)`,
+`Checking(code)`, `Confirm(code, preview, browser, requestedAt, approving)`,
+`Done`, `Error(text, code)`.
 
-| State | Sheet |
-|---|---|
-| `Input(code, error)` | `Сканировать QR`, the field, `Продолжить` (enabled when the field is not blank); `error` under the field with the error icon |
-| `Checking(code)` | Same, disabled, progress inside `Продолжить` |
-| `Confirm(code, preview, browser, requestedAt, approving)` | Browser card (`Chrome на macOS`, `Запрошен в 12:04` in the academic clock's zone), `Подтверждайте только свой вход`, `Войти`, `Отмена` |
-| `Done` | Compact content state: check icon, `Готово — вернитесь в браузер`, `Закрыть` |
-| `Error(text, code)` | Compact content state: error icon, text, `Повторить` |
-
-The outcome of `Done` and `Error` is a polite live region, so TalkBack reads it
-when it appears. Every state, every error row below and the longest browser name
-have a `WebLoginSheetContent_<state>` golden in light, dark and the two narrow
-appearances (font 1.3 at 320 dp).
-
-The field value lives in `SavedStateHandle`, so it survives recreation. `Отмена`
-returns to the field with the code. While `Войти` is in flight both buttons are
-disabled: the approval may already have signed the browser in.
+- `requestedAt` uses the academic clock's zone; the field value lives in
+  `SavedStateHandle`.
+- While the approval is in flight both buttons are disabled: it may already
+  have signed the browser in.
+- `Done` and `Error` are polite live regions.
 
 ## Errors
 
 | Situation | Result |
 |---|---|
-| Field is not a valid code | `Нужен код из 8 символов` under the field |
-| Scanned QR is not a sign-in link | `Это не QR для входа на сайт`; the typed code stays |
-| Scanner cannot start | `Сканер недоступен, введите код` |
-| Preview answers `not_found` | `Код не найден или устарел` under the field, to fix in place |
-| Approval answers `not_found` | Error `Код не найден или устарел`; `Повторить` opens an empty field |
-| Connection is off | Error `Нужно подключение к ITMO.Widgets`; `Повторить` opens an empty field |
-| Network or any other error | The common `AppError` text; `Повторить` checks the same code again |
+| Invalid code or a non-sign-in QR | inline error, the typed code stays |
+| Scanner cannot start | inline hint, typing still works |
+| Preview `not_found` | inline error, fix in place |
+| Approval `not_found`, connection off | `Error`; `Повторить` opens an empty field |
+| Network or other error | common `AppError` text; `Повторить` checks the same code |
 
-`WebLoginRepositoryImpl` maps Backend codes `not_found` → `AppError.NotFound`,
-`permission_denied` → `Forbidden`, `restricted` → `Restricted`, anything else →
+`WebLoginRepositoryImpl` maps `not_found` -> `AppError.NotFound`,
+`permission_denied` -> `Forbidden`, `restricted` -> `Restricted`, else
 `Unknown`; exceptions go through `toAppError()`. A preview without data is
 `Unknown`. Server messages are never shown.
 
 ## Backend routes
 
-Both calls go through Core's `ItmoWidgetsApi` and the custom-services gate
-inside the repository:
+Both go through Core's `ItmoWidgetsApi` and the custom-services gate inside the
+repository:
 
-- `GET /api/users/me/web-login/{code}` → `WebLoginPreview`
+- `GET /api/users/me/web-login/{code}` -> `WebLoginPreview`
   `{challengeId, userAgent, createdAt, expiresAt}`; 404 `not_found` for an
   unknown, used or expired code. A blank User-Agent becomes null.
-- `POST /api/users/me/web-login/{challengeId}/approve` → empty success.
+- `POST /api/users/me/web-login/{challengeId}/approve` -> empty success.
 
-The browser side (`POST /api/web/auth/challenges`, polling
-`GET /api/web/auth/challenges/{id}`, the `iw_session` cookie) is not called by
-the app.
+The browser side (`POST /api/web/auth/challenges`, polling, the `iw_session`
+cookie) is never called by the app.
 
 ## Security
 
 - Only the app approves: both routes accept only the app's ITMO.ID bearer token
   and ignore the web cookie, so a web session can never approve another browser.
-- A code lives 2 minutes and is single-use; the browser renews it. Backend limits
-  unapproved codes per client address.
-- The user sees the browser and the request time before `Войти`, and the sheet
-  says to approve only one's own sign-in: a code read from someone else's screen
-  would sign that person in to the approver's account.
-- The app never sends its token to the browser. The browser gets its own
+- A code lives 2 minutes and is single-use; the browser renews it. Backend
+  limits unapproved codes per client address.
+- The user sees the browser and request time before `Войти`, and the sheet
+  says to approve only one's own sign-in: a code read from someone else's
+  screen would sign that person in to the approver's account.
+- The app never sends its token to the browser; the browser gets its own
   session cookie from Backend after the approval.
 
 ## iOS
 
-`WebLoginSheet` (`iosApp/Sources/Features/WebLogin/`) is the sheet in SwiftUI
-over the same `WebLoginViewModel`, the shell sheet of `AppRoutes.WebLogin`,
-opened from the Me tab's row ([iOS app](../ios.md#data-sharing)). The demo
-session refuses the route with `error_demo_unavailable`.
-
-- Scanner: VisionKit's `DataScannerViewController`, QR codes only, full screen
-  under a close button. Unlike Play services it needs the camera: iOS asks
-  once with `NSCameraUsageDescription` (`ios_web_login_camera_usage`). A
-  refused camera, a device without the scanner (the simulator) or a scanner
-  that stops shows `web_login_scanner_unavailable`, and typing still works.
-- The field types upper case without autocorrection and submits with the
-  keyboard's Go; the states, errors and texts are the shared ones above.
-- The ViewModel gets a fresh `SavedStateHandle` (`WebLoginIosParameters`): a
-  reopened sheet starts with an empty field.
-- Debug fixture: `-itmoWebLoginFixture` opens the sheet on the tabs, answers
-  from `WebLoginIosFixture` (code `ABCD2345`, no Backend) and hands the
-  fixture's QR link to the scan button.
-- Tests: `WebLoginIosModuleTest` (simulator), `ITMOWidgetsTests/AccountTests`,
-  `SnapshotTests/AccountSnapshotTests` (every state in four appearances),
-  `UITests/WebLoginUITests`.
-
-## Tests
-
-- JVM: `WebLoginCodeTest` (codes, links, rejected hosts and paths),
-  `BrowserDescriptionTest` (User-Agent table), `WebLoginRepositoryImplTest`
-  (gate, error codes, blank User-Agent), `WebLoginViewModelTest` (every state
-  and error path), `MeViewModelTest` (row visibility), `MeScreenTest` (the row
-  and its divider only with the connection).
-- Host (Robolectric, `:shared:feature-account`): `WebLoginSheetTest` drives
-  `WebLoginSheetRoute` over the real `WebLoginViewModel` and a synthetic
-  repository at 320 dp and font 1.3: the approve flow with the progress and the
-  normalized code, wrong and expired codes, the longest browser name, a scanner
-  that cannot start, a scanned link and another QR, both buttons disabled while
-  approving, and 48 dp targets without clipped text in every state.
-- Screenshots: `AccountScreenshotTest` renders `WebLoginSheetPreviews.kt`
-  (`WebLoginSheetContent_*` in `shared/feature-account/screenshots/`).
-- `:app` JVM: `AccountEntriesTest` approves a code through the registered
-  sheet and checks that it closes itself and that the demo session refuses it.
-  The Play services scanner is not covered on the JVM.
+- `WebLoginSheet` (`iosApp/Sources/Features/WebLogin/`) is SwiftUI over the
+  same `WebLoginViewModel` ([iOS app](../ios.md#data-sharing)); the demo
+  refuses the route.
+- Scanner: VisionKit `DataScannerViewController`, QR only; unlike Android it
+  needs the camera (`NSCameraUsageDescription`). A refused camera or no
+  scanner (simulator) falls back to typing.
+- A fresh `SavedStateHandle` (`WebLoginIosParameters`) per open; debug
+  fixture `-itmoWebLoginFixture` (`WebLoginIosFixture`, no Backend).
