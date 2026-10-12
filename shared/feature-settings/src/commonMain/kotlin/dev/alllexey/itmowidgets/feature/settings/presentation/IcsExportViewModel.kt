@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import org.jetbrains.compose.resources.StringResource
 
 /**
  * The «Выгрузить в .ics» sheet: a range is chosen, the file is written, then shared. The chosen range and a written
@@ -106,12 +105,16 @@ class IcsExportViewModel(
 
     private fun choice(): IcsExportUiState.Choose {
         val today = time.today()
-        fun option(kind: IcsRangeKind, title: StringResource, range: ScheduleExportRange) =
-            IcsRangeOption(kind, UiText.Res(title), IcsDateLabels.range(range.dates(today)))
+        fun option(kind: IcsRangeKind, title: UiText, range: ScheduleExportRange) =
+            IcsRangeOption(kind, title, IcsDateLabels.range(range.dates(today)))
         return IcsExportUiState.Choose(
             listOf(
-                option(IcsRangeKind.WEEK, Res.string.ics_range_week, ScheduleExportRange.Week),
-                option(IcsRangeKind.TWO_WEEKS, Res.string.ics_range_two_weeks, ScheduleExportRange.TwoWeeks),
+                option(IcsRangeKind.WEEK, UiText.Res(Res.string.ics_range_week), ScheduleExportRange.Week),
+                option(
+                    IcsRangeKind.TWO_WEEKS,
+                    UiText.Res(Res.string.ics_range_two_weeks),
+                    ScheduleExportRange.TwoWeeks
+                ),
                 IcsRangeOption(
                     IcsRangeKind.SEMESTER,
                     UiText.Res(Res.string.ics_range_semester),

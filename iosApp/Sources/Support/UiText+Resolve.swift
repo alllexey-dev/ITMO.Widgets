@@ -80,8 +80,12 @@ extension UiText {
             AppStrings.plural(text.resource.key, count: Int(text.count), text.arguments)
         case let text as UiTextDynamic:
             text.value
+        case let text as UiTextJoined:
+            text.parts.map { $0.resolved }.joined(separator: text.separator)
+        case let text as UiTextLowercaseFirst:
+            text.text.resolved.prefix(1).lowercased(with: AppStrings.locale) + text.text.resolved.dropFirst()
         default:
-            preconditionFailure("\(type(of: self)) holds an Android resource id; port the feature to UiText.Res")
+            preconditionFailure("\(type(of: self)) is not a UiText case this resolver knows")
         }
     }
 }

@@ -7,7 +7,7 @@ import org.junit.Test
 
 /**
  * Common code names text through `UiText.Res`/`UiText.Plural` and icons through `AppIcon`, never an Android `R` id
- * (ADR 0028). `UiText.Resource` carries an Android resource id, so only Android code may build it.
+ * (ADR 0028).
  */
 class UiTextRulesTest {
 
@@ -16,11 +16,6 @@ class UiTextRulesTest {
         commonMainFiles().assertFalse { file ->
             file.imports.any { it.name.endsWith(".R") || ".R." in it.name } || ANDROID_R.containsMatchIn(file.text)
         }
-    }
-
-    @Test
-    fun `common code builds no UiText Resource`() {
-        commonMainFiles().assertFalse { file -> "UiText.Resource(" in file.text }
     }
 
     private fun commonMainFiles(): List<KoFileDeclaration> = productionFiles
