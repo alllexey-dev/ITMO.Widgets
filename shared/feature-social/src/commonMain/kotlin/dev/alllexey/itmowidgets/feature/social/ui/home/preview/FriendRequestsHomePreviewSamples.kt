@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.core.model.UserSummary
 /** Synthetic friend requests home cards for the previews and host tests; no real person. */
 internal object FriendRequestsHomePreviewSamples {
 
-    /** Two requests, as in the debug host's `HomeFixture`. */
+    /** Two requests. */
     fun card(): HomeCard.FriendRequests =
         HomeCard.FriendRequests(listOf(user(300001, "Александра Константинопольская"), user(300002, "Иван Петров")))
 

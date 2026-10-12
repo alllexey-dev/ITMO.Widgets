@@ -32,7 +32,7 @@ class ScheduleModuleTest {
     /**
      * The schedule data, the calendar sync, the selectors and the three screens resolve inside the two modules; the
      * core contracts, the notifier, the phone's calendars and the schedulers, which the platform supplies (the app's
-     * bridges on Android), are given.
+     * Koin modules on Android), are given.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test

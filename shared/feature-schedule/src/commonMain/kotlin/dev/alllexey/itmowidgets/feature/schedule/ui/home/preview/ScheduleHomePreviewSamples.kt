@@ -19,9 +19,8 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 
 /**
- * Synthetic schedule home cards for the previews and host tests, the debug host's `HomeFixture` on Monday
- * 7 September 2026 in Moscow time: the default feed's, the same with long names, and the card's day states. No real
- * person, subject list or pass.
+ * Synthetic schedule home cards for the previews and host tests, on Monday 7 September 2026 in Moscow time: the
+ * default feed's, the same with long names, and the card's day states. No real person, subject list or pass.
  */
 internal object ScheduleHomePreviewSamples {
 
