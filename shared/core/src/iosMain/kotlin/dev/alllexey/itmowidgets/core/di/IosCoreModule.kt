@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.users.UsersApi
@@ -15,9 +16,8 @@ import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.diagnostics.IosAppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.OsLogAppLog
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
-import dev.alllexey.itmowidgets.core.network.BackendClientFactory
 import dev.alllexey.itmowidgets.core.network.BackendOrigin
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
+import dev.alllexey.itmowidgets.core.network.asBackendTokenSource
 import dev.alllexey.itmowidgets.core.network.darwinHttpEngine
 import dev.alllexey.itmowidgets.core.platform.AppBundleVersion
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
@@ -41,9 +41,9 @@ import dev.alllexey.itmowidgets.core.session.myItmoRefreshGuard
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
-import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.FileCrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
@@ -146,7 +146,8 @@ fun iosCoreModule(
     single<HttpClientEngine> { darwinHttpEngine() }
     single { RefreshRejections() }
     single<MyItmoClient> {
-        MyItmoClientFactory.create(
+        MyItmoClient(
+            MyItmoConfiguration.DEFAULT,
             storage = get(),
             engine = get(),
             clock = get(),
@@ -154,7 +155,7 @@ fun iosCoreModule(
         )
     }
     single<BackendClient> {
-        BackendClientFactory.create(backendOrigin, get<MyItmoClient>().tokens, get(), clientVersion)
+        BackendClient(backendOrigin, get<MyItmoClient>().tokens.asBackendTokenSource(), get(), clientVersion)
     }
     single<UsersApi> { get<BackendClient>().users }
 

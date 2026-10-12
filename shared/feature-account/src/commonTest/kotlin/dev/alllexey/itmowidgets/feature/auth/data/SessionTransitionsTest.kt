@@ -4,8 +4,9 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
@@ -51,7 +52,8 @@ class SessionTransitionsTest {
     private var cleaners: Collection<SessionDataCleaner> = listOf(cleaner)
 
     private val transitions = SessionTransitions(
-        myItmo = MyItmoClientFactory.create(
+        myItmo = MyItmoClient(
+            MyItmoConfiguration.DEFAULT,
             storage = tokenStorage,
             engine = MockEngine { request -> throw AssertionError("Unexpected request ${request.url}") },
             clock = clock

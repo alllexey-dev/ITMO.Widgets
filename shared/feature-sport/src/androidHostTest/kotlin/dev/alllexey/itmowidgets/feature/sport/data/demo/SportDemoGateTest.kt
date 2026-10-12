@@ -3,13 +3,12 @@ package dev.alllexey.itmowidgets.feature.sport.data.demo
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.client.sport.SportApi
-import dev.alllexey.itmowidgets.feature.sport.data.debug.SportScoreOverrideSource
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoSportSlots
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
@@ -18,23 +17,24 @@ import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.data.MainDispatcherRule
-import dev.alllexey.itmowidgets.feature.sport.data.unreachable
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
+import dev.alllexey.itmowidgets.feature.sport.data.debug.SportScoreOverrideSource
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScheduleRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScoreRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.UserSportRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.data.unreachable
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFreeSignEntry
 import io.ktor.client.engine.mock.MockEngine
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.toLocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -136,7 +136,8 @@ class SportDemoGateTest {
     }
 
     /** MyItmoApi 2.x whose session storage and engine both fail the test, as in `DemoNetworkGateTest`. */
-    private fun unreachableMyItmoClient(): MyItmoClient = MyItmoClientFactory.create(
+    private fun unreachableMyItmoClient(): MyItmoClient = MyItmoClient(
+        MyItmoConfiguration.DEFAULT,
         storage = object : TokenStorage {
             override suspend fun read(): TokenSet? = throw AssertionError("The demo session read the ITMO session")
 

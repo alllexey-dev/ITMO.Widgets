@@ -7,7 +7,7 @@ internal object MarksHomePreviewSamples {
 
     const val LONG_SUBJECT = "Проектирование и разработка распределённых информационных систем реального времени"
 
-    /** Three subjects, as in the debug host's `HomeFixture`. */
+    /** Three subjects. */
     fun card(): HomeCard.Marks =
         HomeCard.Marks(listOf("Базы данных", "Дискретная математика", "Алгоритмы и структуры данных"))
 

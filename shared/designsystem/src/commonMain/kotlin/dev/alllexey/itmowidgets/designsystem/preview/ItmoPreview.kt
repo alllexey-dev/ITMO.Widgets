@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ColorSource
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.designsystem.tokens.ProvideM3eCandidate
 
 /**
  * The frame of every `@Preview`: [ItmoTheme] in the night mode and colour seed of [LocalPreviewAppearance], over the
@@ -15,9 +14,7 @@ import dev.alllexey.itmowidgets.designsystem.tokens.ProvideM3eCandidate
  * which under Robolectric is its fixed system palette, the one the XML references get from
  * `Theme.Material3.DynamicColors` there. An iOS appearance draws the kit's iOS style on the static scheme, the one iOS
  * has. Font scale and window width come from the host configuration (the screenshot harness sets both), so a preview
- * reads them as a screen does. An M3E candidate the harness selects (`LocalM3eCandidate`) replaces the
- * theme's values in the Material style only (the M3E look is Material's); none is selected outside the
- * candidate renders. A [colorSource] replaces the appearance's own, for a preview of an accent colour preset.
+ * reads them as a screen does. A [colorSource] replaces the appearance's own, for a preview of an accent colour preset.
  */
 @Composable
 fun ItmoPreview(colorSource: ColorSource? = null, content: @Composable () -> Unit) {
@@ -28,12 +25,6 @@ fun ItmoPreview(colorSource: ColorSource? = null, content: @Composable () -> Uni
         ?: if (ios) ColorSource.Static else ColorSource.Platform
     val dark = appearance.dark || isSystemInDarkTheme()
     ItmoTheme(dark = dark, colorSource = source, platformStyle = appearance.platformStyle) {
-        if (ios) {
-            Surface(color = MaterialTheme.colorScheme.background, content = content)
-        } else {
-            ProvideM3eCandidate(dark) {
-                Surface(color = MaterialTheme.colorScheme.background, content = content)
-            }
-        }
+        Surface(color = MaterialTheme.colorScheme.background, content = content)
     }
 }

@@ -20,17 +20,16 @@ kotlin {
             api(libs.androidx.navigation3.runtime)
             // StringResource and PluralStringResource are in UiText's public signature.
             api(libs.compose.components.resources)
-            // MyItmoClientFactory builds the MyItmoApi 2.x client from an engine, a TokenStorage and a Clock, so the
-            // client, its storage and Ktor's engine type are in core's public signatures.
+            // The MyItmoApi 2.x client, its storage and Ktor's engine type are in core's public signatures.
             api(libs.my.itmo.api.kmp)
             api(libs.ktor.client.core)
-            // BackendClientFactory and BackendException.asAppError() have Core 2.0's client and errors in their
+            // asBackendTokenSource() and BackendException.asAppError() have Core 2.0's types and errors in their
             // signatures; the client never depends on core, the mapping lives here.
             api(project(":shared:backend-client"))
             // kotlinx.atomicfu.locks.SynchronizedObject of AtomicTextFile; library only, no plugin.
             implementation(libs.kotlinx.atomicfu)
         }
-        // The Darwin engine of every iOS Ktor client; the client factories take the engine.
+        // The Darwin engine of every iOS Ktor client; the clients take the engine.
         iosMain.dependencies {
             api(libs.ktor.client.darwin)
             // iosCoreModule, the core bindings of the iOS Koin graph; Android's come from :app's Koin modules.

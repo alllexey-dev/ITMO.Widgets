@@ -14,24 +14,19 @@ composeMultiplatform = "1.12.1"
 # JetBrains material3 1.12.0-alpha03 requires Jetpack material3 1.5.0-alpha22 (ADR 0021).
 material3 = "1.12.0-alpha03"
 material3Jetpack = "1.5.0-alpha22"
-material3Adaptive = "1.3.0-rc01"
 jetbrainsLifecycle = "2.11.0"
-jetbrainsSavedstate = "1.4.0"
 # Jetpack Compose that CMP 1.12.1 maps to on Android (test rules, manifest).
 androidxCompose = "1.12.1"
 navigation3 = "1.2.0"
 
 # Multiplatform libraries (master §3.1, ADRs 0019, 0025, 0026).
 koin = "4.2.2"
-koinCompiler = "1.2.1"
 ktor = "3.6.0"
 kotlinxSerialization = "1.11.0"
 atomicfu = "0.33.0"
 kotlinxDatetime = "0.8.0"
-kotlinxCollectionsImmutable = "0.5.2"
 okio = "3.18.2"
 coil = "3.6.3"
-qrose = "1.3.0"
 ksoup = "0.2.6"
 materialKolor = "5.0.1"
 skie = "0.10.15"
@@ -72,8 +67,6 @@ playAppUpdate = "2.1.0"
 okhttp = "5.5.0"
 mockwebserver = "5.5.0"
 lifecycle = "2.11.0"
-fragment = "1.6.2"
-fragmentCompose = "1.8.9"
 
 [libraries]
 # Gradle plugins on build-logic's classpath (the only place they are versioned).
@@ -93,24 +86,18 @@ compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-pre
 compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeMultiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
-compose-material3-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "material3Adaptive" }
 # Never a plain dependency: only as strictly("1.5.0-alpha22") beside compose-material3 (ADR 0021).
 androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Jetpack" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidxCompose" }
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidxCompose" }
 jetbrains-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "jetbrainsLifecycle" }
 jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "jetbrainsLifecycle" }
-jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetbrainsLifecycle" }
 jetbrains-lifecycle-viewmodel-savedstate = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-savedstate", version.ref = "jetbrainsLifecycle" }
-jetbrains-savedstate = { module = "org.jetbrains.androidx.savedstate:savedstate", version.ref = "jetbrainsSavedstate" }
-jetbrains-savedstate-compose = { module = "org.jetbrains.androidx.savedstate:savedstate-compose", version.ref = "jetbrainsSavedstate" }
 # Navigation 3 (ADR 0020): only the runtime has iOS klibs; navigation3-ui and the ViewModel decorator stay
 # in Android source sets.
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle" }
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
-androidx-fragment-compose = { module = "androidx.fragment:fragment-compose", version.ref = "fragmentCompose" }
 androidx-core-remoteviews = { module = "androidx.core:core-remoteviews", version.ref = "coreRemoteviews" }
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 
@@ -119,9 +106,7 @@ koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-core-viewmodel = { module = "io.insert-koin:koin-core-viewmodel", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
-koin-androidx-workmanager = { module = "io.insert-koin:koin-androidx-workmanager", version.ref = "koin" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
-koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4", version.ref = "koin" }
 
 # Ktor (ADRs 0025, 0026)
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -132,24 +117,19 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 
 # kotlinx and multiplatform utilities
-kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 # Library only, for kotlinx.atomicfu.locks.SynchronizedObject; no atomicfu plugin, atomics use
 # kotlin.concurrent.atomics.
 kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
-kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 okio-fakefilesystem = { module = "com.squareup.okio:okio-fakefilesystem", version.ref = "okio" }
 androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastorePreferences" }
 coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
-coil-core = { module = "io.coil-kt.coil3:coil-core", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
-coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 coil-test = { module = "io.coil-kt.coil3:coil-test", version.ref = "coil" }
-qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 # MyItmoApi 2.x KMP from Maven Central; MYITMOAPI_DIR swaps in a local checkout (settings.gradle.kts).
 my-itmo-api-kmp = { module = "dev.alllexey:my-itmo-api-kmp", version.ref = "myItmoApiKmp" }
@@ -164,7 +144,6 @@ robolectric-android-all = { module = "org.robolectric:android-all-instrumented",
 robolectric-android-all-sdk29 = { module = "org.robolectric:android-all-instrumented", version = "10-robolectric-5803371-i7" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
-roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
 roborazzi-compose-preview-scanner-support = { module = "io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support", version.ref = "roborazzi" }
 # ATF 4.1.1 through Roborazzi: accessibility checks of preview captures under Robolectric.
 roborazzi-accessibility-check = { module = "io.github.takahirom.roborazzi:roborazzi-accessibility-check", version.ref = "roborazzi" }
@@ -202,13 +181,11 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-savedstate = { module = "androidx.lifecycle:lifecycle-viewmodel-savedstate", version.ref = "lifecycle" }
-androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment" }
 
 [plugins]
 # Only plugins that are not on build-logic's classpath carry a version here. AGP, Kotlin (multiplatform,
 # compose, serialization), CMP, google-services and Roborazzi come from build-logic: apply them by
 # id without a version, or Gradle fails with "already on the classpath with an unknown version".
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
-koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompiler" }
 # Not in any plugins {} block: the root build.gradle.kts loads it only with -Pitmo.buildHealth=true.
 dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependencyAnalysis" }

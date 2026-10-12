@@ -20,7 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Core 2.0 over the MyItmoApi 2.x session: the token it sends and the released error semantics (report 92). */
-class BackendClientFactoryTest {
+class BackendTokenSourceTest {
 
     @Test
     fun `a request carries the stored access token and decodes Backend's fixture`() = runTest {

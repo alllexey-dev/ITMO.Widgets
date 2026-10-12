@@ -5,10 +5,11 @@ import android.content.ContextWrapper
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
+import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.device.DevicePlatform
-import dev.alllexey.itmowidgets.core.network.BackendClientFactory
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
+import dev.alllexey.itmowidgets.core.network.asBackendTokenSource
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -33,6 +34,8 @@ import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
 import io.ktor.client.engine.mock.MockEngine
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -41,8 +44,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
 
 /**
  * Single-call clients of the demo session: the pass, the update offer, web sign-in, privacy and Backend sessions.
@@ -69,8 +70,8 @@ class DemoNetworkGateTest {
         override suspend fun write(tokens: TokenSet?) = throw AssertionError("The demo session wrote the ITMO.ID session")
     }
     private val unreachableEngine = MockEngine { request -> throw AssertionError("The demo session asked ${request.url}") }
-    private val unreachableSession = MyItmoClientFactory.create(unreachableTokens, unreachableEngine, Clock.System)
-    private val backendClient = BackendClientFactory.create("https://backend.test", unreachableSession.tokens, unreachableEngine)
+    private val unreachableSession = MyItmoClient(MyItmoConfiguration.DEFAULT, unreachableTokens, unreachableEngine, Clock.System)
+    private val backendClient = BackendClient("https://backend.test", unreachableSession.tokens.asBackendTokenSource(), unreachableEngine)
 
     @Test
     fun `the pass is a code no turnstile accepts`() = runTest {
@@ -172,7 +173,8 @@ class DemoNetworkGateTest {
     )
 
     /** MyItmoApi 2.x whose every request, token read included, fails the test. */
-    private fun unreachableMyItmoClient(): MyItmoClient = MyItmoClientFactory.create(
+    private fun unreachableMyItmoClient(): MyItmoClient = MyItmoClient(
+        MyItmoConfiguration.DEFAULT,
         storage = object : TokenStorage {
             override suspend fun read(): TokenSet? = throw AssertionError("The demo session read the ITMO session")
 

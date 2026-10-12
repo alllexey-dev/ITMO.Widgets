@@ -10,8 +10,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 
 /**
- * Synthetic sport home cards for the previews and host tests, the debug host's `HomeFixture` on Monday 7 September
- * 2026 in Moscow time. No real person or pass.
+ * Synthetic sport home cards for the previews and host tests, on Monday 7 September 2026 in Moscow time. No real person or pass.
  */
 internal object SportHomePreviewSamples {
 

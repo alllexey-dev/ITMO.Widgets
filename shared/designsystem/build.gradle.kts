@@ -15,8 +15,6 @@ kotlin {
             implementation(libs.material.kolor)
             // Avatar loads through the host's ImageLoader (LocalAvatarImageLoader); no network fetcher here.
             api(libs.coil.compose)
-            // FakeImageLoaderEngine for the Avatar previews, which live in commonMain (coil-core only).
-            implementation(libs.coil.test)
         }
         androidMain.dependencies {
             // JetBrains 1.12.0-alpha03 only `requires` this mapping; a newer Jetpack material3 anywhere on the app
@@ -25,12 +23,11 @@ kotlin {
             implementation(jetpackMaterial3.module.toString()) {
                 version { strictly(jetpackMaterial3.versionConstraint.requiredVersion) }
             }
-            implementation(libs.androidx.fragment.ktx)
-            // Compile-only, so the kit draws nothing with MDC and :app's own MDC is the one at runtime.
-            compileOnly(libs.material)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
+            // FakeImageLoaderEngine for AvatarTest.
+            implementation(libs.coil.test)
         }
         getByName("androidHostTest").dependencies {
             // The View theme the theme tests compare against; never on a main classpath of this module.

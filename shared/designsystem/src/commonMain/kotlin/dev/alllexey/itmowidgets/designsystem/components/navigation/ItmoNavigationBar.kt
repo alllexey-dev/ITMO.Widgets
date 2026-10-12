@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Icon
@@ -40,7 +39,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.designsystem.tokens.navigationLabelsOnSelectedOnly
 import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 
 /**
@@ -69,9 +67,8 @@ fun ItmoNavigationBar(
 
 /**
  * One tab of [ItmoNavigationBar]: [icon], or [selectedIcon] (the FILL 1 variant) in the pill of the active indicator
- * while [selected], over its label on every tab ([NavigationBarTokens.LabelsOnSelectedOnly] is false; an M3E
- * candidate of the screenshot harness may say otherwise); TalkBack reads it as the tab's name either way (the
- * cell's description). The whole cell is the target.
+ * while [selected], over its label on every tab (M3E labels every destination); TalkBack reads it as the tab's name
+ * (the cell's description). The whole cell is the target.
  */
 @Composable
 fun RowScope.ItmoNavigationBarItem(
@@ -89,8 +86,6 @@ fun RowScope.ItmoNavigationBarItem(
         animationSpec = if (reducedMotion) snap() else tween(motion.standardMillis, easing = motion.easing),
         label = "indicator",
     )
-    val labelsOnSelectedOnly = navigationLabelsOnSelectedOnly(NavigationBarTokens.LabelsOnSelectedOnly)
-    val showLabel = selected || !labelsOnSelectedOnly
     Column(
         modifier
             .weight(1f)
@@ -119,19 +114,14 @@ fun RowScope.ItmoNavigationBarItem(
                 tint = if (selected) ItmoTheme.colorScheme.onSecondaryContainer else ItmoTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (showLabel) {
-            Spacer(Modifier.height(NavigationBarTokens.IndicatorLabelGap))
-            Text(
-                label,
-                // Alone in the bar, the selected label may run past its cell into its neighbours' empty label space
-                // rather than lose letters (`Расписание` at 1.3 in 320 dp); with every label shown it ellipsizes.
-                if (labelsOnSelectedOnly) Modifier.wrapContentWidth(unbounded = true) else Modifier,
-                color = if (selected) ItmoTheme.colorScheme.onSurface else ItmoTheme.colorScheme.onSurfaceVariant,
-                style = ItmoTheme.typography.labelMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        Spacer(Modifier.height(NavigationBarTokens.IndicatorLabelGap))
+        Text(
+            label,
+            color = if (selected) ItmoTheme.colorScheme.onSurface else ItmoTheme.colorScheme.onSurfaceVariant,
+            style = ItmoTheme.typography.labelMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -139,9 +129,6 @@ fun RowScope.ItmoNavigationBarItem(
  * The bar's values (MDC 1.13's M3 bar with a label on every tab), in one place.
  */
 object NavigationBarTokens {
-    /** False: M3E labels every destination. */
-    const val LabelsOnSelectedOnly: Boolean = false
-
     /** The bar's minimum height. */
     val MinHeight = 64.dp
 
