@@ -65,6 +65,8 @@ android {
 
     buildTypes {
         debug {
+            // The release key when keystore.properties is present, so a debug build installs over the GitHub release.
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             buildConfigField(
                 "String",
                 "WIDGETS_BASE_URL",
