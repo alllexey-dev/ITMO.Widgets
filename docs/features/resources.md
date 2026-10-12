@@ -28,9 +28,10 @@ moderation model: decision
   (every student of the subject). Flow ids are unique per cohort year. Backend
   records flows from the uploaded schedule and offers the viewer's current ones
   as `SubjectLinksSnapshot.audiences` (`LinkAudience`, sorted by depth, then
-  name). While `premoderation` is true Backend holds both `FLOW` and `ALL`
-  revisions for a moderator (Backend decision 0008, amended 2026-10-12); the
-  editor still shows the review hint only on `Все`.
+  name). While `premoderation` is true both wait for review: an `ALL` link for
+  a moderator; a `FLOW` link is approved by Backend's ISU check when ISU
+  confirms the author is in the flow and the flow has at most 50 members
+  (configurable on Backend), otherwise a moderator decides.
 - Others always see published content; the owner also sees review states and
   the moderator's reason. `С прошлых лет` holds approved `ALL` links of
   `MATERIALS`, `TASKS`, `RECORDINGS`, `NOTES` and `EXAM` from earlier periods.
@@ -72,7 +73,8 @@ sheet, a screen or the report closes itself first.
 - `LinkEditorSheetRoute`: pastes the clipboard on first focus when it holds a
   single HTTPS link. `guessCategory` suggests a category by site until the user
   picks one. Audiences are ordered widest to narrowest: `ALL`, the viewer's flows
-  broad to nested, `PRIVATE`; a chosen flow no longer offered falls back to
+  broad to nested, `PRIVATE`; while premoderation is on `ALL` and every flow
+  carry the review hint; a chosen flow no longer offered falls back to
   `PRIVATE`; without the connection only `PRIVATE`. The new link's UUID survives
   process death, so a retried save reaches the same link.
 - `LinkActionsSheetRoute` (long press): open, author profile (ISU above 0,

@@ -9,7 +9,6 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_marks
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_changes_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_sport_title
-import org.jetbrains.compose.resources.StringResource
 
 /** One switch per home feed card. */
 class HomePageProvider(
@@ -26,7 +25,7 @@ class HomePageProvider(
             items = HOME_CARDS.map { card ->
                 SettingItem.Toggle(
                     id = card.id,
-                    title = UiText.Res(card.title),
+                    title = card.title,
                     checked = card.kind !in state.local.hiddenHomeCards
                 )
             }
@@ -38,23 +37,35 @@ class HomePageProvider(
         scope.updateLocalSetting { repository.setHomeCardVisible(card.kind, checked) }
     }
 
-    private class HomeCardRow(val id: SettingRowId, val kind: HomeCardKind, val title: StringResource)
+    private class HomeCardRow(val id: SettingRowId, val kind: HomeCardKind, val title: UiText)
 
     private companion object {
         /** The feed order is the row order. */
         val HOME_CARDS = listOf(
-            HomeCardRow(SettingRowId.HOME_CARD_SCHEDULE, HomeCardKind.SCHEDULE, Res.string.settings_home_card_schedule_title),
+            HomeCardRow(
+                SettingRowId.HOME_CARD_SCHEDULE,
+                HomeCardKind.SCHEDULE,
+                UiText.Res(Res.string.settings_home_card_schedule_title)
+            ),
             HomeCardRow(
                 SettingRowId.HOME_CARD_SCHEDULE_CHANGES,
                 HomeCardKind.SCHEDULE_CHANGES,
-                Res.string.settings_home_card_schedule_changes_title
+                UiText.Res(Res.string.settings_home_card_schedule_changes_title)
             ),
-            HomeCardRow(SettingRowId.HOME_CARD_MARKS, HomeCardKind.MARKS, Res.string.settings_home_card_marks_title),
-            HomeCardRow(SettingRowId.HOME_CARD_SPORT, HomeCardKind.SPORT, Res.string.settings_home_card_sport_title),
+            HomeCardRow(
+                SettingRowId.HOME_CARD_MARKS,
+                HomeCardKind.MARKS,
+                UiText.Res(Res.string.settings_home_card_marks_title)
+            ),
+            HomeCardRow(
+                SettingRowId.HOME_CARD_SPORT,
+                HomeCardKind.SPORT,
+                UiText.Res(Res.string.settings_home_card_sport_title)
+            ),
             HomeCardRow(
                 SettingRowId.HOME_CARD_FRIENDS,
                 HomeCardKind.FRIEND_REQUESTS,
-                Res.string.settings_home_card_friends_title
+                UiText.Res(Res.string.settings_home_card_friends_title)
             )
         )
     }

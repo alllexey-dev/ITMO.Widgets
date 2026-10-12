@@ -57,7 +57,6 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_ton
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_vibrant
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_vibrant_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_widgets_theme_title
-import org.jetbrains.compose.resources.StringResource
 
 /**
  * The catalogue: one row per detail page, plus the notification permission and whether the widgets take the app's
@@ -164,9 +163,9 @@ class RootPageProvider(
                 SettingItem.Choice(
                     id = SettingRowId.THEME_PALETTE,
                     title = UiText.Res(Res.string.settings_theme_style_title),
-                    value = UiText.Res(theme.style.label),
+                    value = theme.style.label,
                     options = ThemeStyle.entries.map {
-                        ChoiceOption(it.name, UiText.Res(it.label), UiText.Res(it.description))
+                        ChoiceOption(it.name, it.label, it.description)
                     },
                     selectedOptionKey = theme.style.name
                 )
@@ -180,8 +179,8 @@ class RootPageProvider(
                 SettingItem.Choice(
                     id = SettingRowId.THEME_CONTRAST,
                     title = UiText.Res(Res.string.settings_theme_contrast_title),
-                    value = UiText.Res(theme.contrast.label),
-                    options = ThemeContrast.entries.map { ChoiceOption(it.name, UiText.Res(it.label)) },
+                    value = theme.contrast.label,
+                    options = ThemeContrast.entries.map { ChoiceOption(it.name, it.label) },
                     selectedOptionKey = theme.contrast.name
                 ),
                 SettingItem.Toggle(
@@ -236,51 +235,59 @@ class RootPageProvider(
         return SettingItem.Choice(
             id = SettingRowId.ACCENT_COLOR,
             title = UiText.Res(Res.string.settings_accent_color_title),
-            value = UiText.Res(selected.label),
-            options = options.map { ChoiceOption(it.name, UiText.Res(it.label)) },
+            value = selected.label,
+            options = options.map { ChoiceOption(it.name, it.label) },
             selectedOptionKey = selected.name
         )
     }
 
-    private val AccentColor.label: StringResource
-        get() = when (this) {
-            AccentColor.WALLPAPER -> Res.string.settings_accent_color_wallpaper
-            AccentColor.BRAND -> Res.string.settings_accent_color_brand
-            AccentColor.TEAL -> Res.string.settings_accent_color_teal
-            AccentColor.GREEN -> Res.string.settings_accent_color_green
-            AccentColor.AMBER -> Res.string.settings_accent_color_amber
-            AccentColor.RED -> Res.string.settings_accent_color_red
-            AccentColor.PINK -> Res.string.settings_accent_color_pink
-            AccentColor.PURPLE -> Res.string.settings_accent_color_purple
-            AccentColor.CUSTOM -> Res.string.settings_accent_color_custom
-        }
+    private val AccentColor.label: UiText
+        get() = UiText.Res(
+            when (this) {
+                AccentColor.WALLPAPER -> Res.string.settings_accent_color_wallpaper
+                AccentColor.BRAND -> Res.string.settings_accent_color_brand
+                AccentColor.TEAL -> Res.string.settings_accent_color_teal
+                AccentColor.GREEN -> Res.string.settings_accent_color_green
+                AccentColor.AMBER -> Res.string.settings_accent_color_amber
+                AccentColor.RED -> Res.string.settings_accent_color_red
+                AccentColor.PINK -> Res.string.settings_accent_color_pink
+                AccentColor.PURPLE -> Res.string.settings_accent_color_purple
+                AccentColor.CUSTOM -> Res.string.settings_accent_color_custom
+            }
+        )
 
-    private val ThemeStyle.label: StringResource
-        get() = when (this) {
-            ThemeStyle.TONAL_SPOT -> Res.string.settings_theme_style_tonal_spot
-            ThemeStyle.VIBRANT -> Res.string.settings_theme_style_vibrant
-            ThemeStyle.EXPRESSIVE -> Res.string.settings_theme_style_expressive
-            ThemeStyle.FIDELITY -> Res.string.settings_theme_style_fidelity
-            ThemeStyle.CONTENT -> Res.string.settings_theme_style_content
-            ThemeStyle.NEUTRAL -> Res.string.settings_theme_style_neutral
-            ThemeStyle.MONOCHROME -> Res.string.settings_theme_style_monochrome
-        }
+    private val ThemeStyle.label: UiText
+        get() = UiText.Res(
+            when (this) {
+                ThemeStyle.TONAL_SPOT -> Res.string.settings_theme_style_tonal_spot
+                ThemeStyle.VIBRANT -> Res.string.settings_theme_style_vibrant
+                ThemeStyle.EXPRESSIVE -> Res.string.settings_theme_style_expressive
+                ThemeStyle.FIDELITY -> Res.string.settings_theme_style_fidelity
+                ThemeStyle.CONTENT -> Res.string.settings_theme_style_content
+                ThemeStyle.NEUTRAL -> Res.string.settings_theme_style_neutral
+                ThemeStyle.MONOCHROME -> Res.string.settings_theme_style_monochrome
+            }
+        )
 
-    private val ThemeStyle.description: StringResource
-        get() = when (this) {
-            ThemeStyle.TONAL_SPOT -> Res.string.settings_theme_style_tonal_spot_description
-            ThemeStyle.VIBRANT -> Res.string.settings_theme_style_vibrant_description
-            ThemeStyle.EXPRESSIVE -> Res.string.settings_theme_style_expressive_description
-            ThemeStyle.FIDELITY -> Res.string.settings_theme_style_fidelity_description
-            ThemeStyle.CONTENT -> Res.string.settings_theme_style_content_description
-            ThemeStyle.NEUTRAL -> Res.string.settings_theme_style_neutral_description
-            ThemeStyle.MONOCHROME -> Res.string.settings_theme_style_monochrome_description
-        }
+    private val ThemeStyle.description: UiText
+        get() = UiText.Res(
+            when (this) {
+                ThemeStyle.TONAL_SPOT -> Res.string.settings_theme_style_tonal_spot_description
+                ThemeStyle.VIBRANT -> Res.string.settings_theme_style_vibrant_description
+                ThemeStyle.EXPRESSIVE -> Res.string.settings_theme_style_expressive_description
+                ThemeStyle.FIDELITY -> Res.string.settings_theme_style_fidelity_description
+                ThemeStyle.CONTENT -> Res.string.settings_theme_style_content_description
+                ThemeStyle.NEUTRAL -> Res.string.settings_theme_style_neutral_description
+                ThemeStyle.MONOCHROME -> Res.string.settings_theme_style_monochrome_description
+            }
+        )
 
-    private val ThemeContrast.label: StringResource
-        get() = when (this) {
-            ThemeContrast.STANDARD -> Res.string.settings_theme_contrast_standard
-            ThemeContrast.MEDIUM -> Res.string.settings_theme_contrast_medium
-            ThemeContrast.HIGH -> Res.string.settings_theme_contrast_high
-        }
+    private val ThemeContrast.label: UiText
+        get() = UiText.Res(
+            when (this) {
+                ThemeContrast.STANDARD -> Res.string.settings_theme_contrast_standard
+                ThemeContrast.MEDIUM -> Res.string.settings_theme_contrast_medium
+                ThemeContrast.HIGH -> Res.string.settings_theme_contrast_high
+            }
+        )
 }

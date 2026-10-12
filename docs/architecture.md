@@ -71,7 +71,7 @@ under `dev.alllexey.itmowidgets`. Dependencies point inward:
 |---|---|---|
 | `domain` | Models, repository interfaces, pure rules (selectors, digests, planners) | Platform APIs, wire DTOs, Ktor, Compose |
 | `data` | `*RepositoryImpl`, remote and local data sources, mappers, `data/demo` fictional data | `ui`, `presentation` |
-| `presentation` | `ViewModel`s and their `<Screen>UiState.kt` | `data`, wire DTOs, `Throwable` |
+| `presentation` | `ViewModel`s and their `<Screen>UiState.kt` | `data`, wire DTOs, `Throwable`, Compose |
 | `ui` | `<Name>Route` (owns the view model) and stateless `<Name>Screen` composables, previews | `data`, network, storage |
 | `di` | The feature's Koin modules | - |
 

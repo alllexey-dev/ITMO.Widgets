@@ -39,6 +39,12 @@ class PresentationRulesTest {
         }
     }
 
+    @Test
+    fun `presentation imports no Compose Multiplatform API`() {
+        // View models also serve SwiftUI (ADR 0031): text is UiText, never a CMP resource type.
+        presentationFiles().assertFalse { file -> file.imports.any { it.name.startsWith("org.jetbrains.compose.") } }
+    }
+
     private fun presentationFiles(): List<KoFileDeclaration> = productionFiles
         .filter { it.packagee?.name?.contains(".presentation") == true }
         .requireAtLeast(MIN_VIEW_MODELS, "presentation files")

@@ -77,6 +77,7 @@ import dev.alllexey.itmowidgets.shared.feature.resources.links_title_too_long
 import dev.alllexey.itmowidgets.shared.feature.resources.links_url_clear
 import dev.alllexey.itmowidgets.shared.feature.resources.links_url_hint
 import dev.alllexey.itmowidgets.shared.feature.resources.links_visibility_all_review
+import dev.alllexey.itmowidgets.shared.feature.resources.links_visibility_flow_review
 import dev.alllexey.itmowidgets.shared.feature.resources.links_who_sees
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -382,11 +383,13 @@ private fun AudienceRows(state: LinkEditorUiState, onSelect: (LinkAudienceOption
     }
 }
 
-/** A flow is its schedule name over the kind of classes; `Все` notes the review when there is one. */
+/** A flow is its schedule name over the kind of classes; a flow and `Все` note the review when there is one. */
 @Composable
 private fun audienceTexts(option: LinkAudienceOption, premoderation: Boolean): Pair<String, String?> = when (option) {
     LinkAudienceOption.Private -> stringResource(CoreRes.string.links_visibility_private) to null
-    is LinkAudienceOption.Flow -> option.audience.label to stringResource(lessonTypeName(option.audience.typeId))
+    is LinkAudienceOption.Flow -> option.audience.label to stringResource(lessonTypeName(option.audience.typeId)).let {
+        if (premoderation) stringResource(Res.string.links_visibility_flow_review, it) else it
+    }
     LinkAudienceOption.All -> stringResource(CoreRes.string.links_visibility_all) to
         if (premoderation) stringResource(Res.string.links_visibility_all_review) else null
 }

@@ -78,8 +78,13 @@ class LinkEditorSheetTest {
 
         onNodeWithText("Изменить ссылку").assert(isHeading())
         assertEquals(
-            listOf("Все\nПосле проверки", "ФИЗ ПИИКТ 3\nЛекция", "ФИЗ ПИИКТ 3.2\nПрактика", "ФИЗ ПИИКТ 3.2.1\nЛабораторная",
-                "Только я"),
+            listOf(
+                "Все\nПосле проверки",
+                "ФИЗ ПИИКТ 3\nЛекция · после проверки",
+                "ФИЗ ПИИКТ 3.2\nПрактика · после проверки",
+                "ФИЗ ПИИКТ 3.2.1\nЛабораторная · после проверки",
+                "Только я",
+            ),
             audienceRows(),
         )
         audience("ФИЗ ПИИКТ 3.2").assertIsSelected()
@@ -110,7 +115,7 @@ class LinkEditorSheetTest {
         url().performTextReplacement("https://docs.google.com/spreadsheets/d/synthetic")
         chip(LinkCategory.SCORES).assertIsSelected()
         onNodeWithTag(LinkEditorSheetTestTags.TITLE).assert(hasText("Таблица баллов"))
-        assertEquals(listOf("Все\nПосле проверки", "ФИЗ ПИИКТ 3\nЛекция", "Только я"), audienceRows())
+        assertEquals(listOf("Все\nПосле проверки", "ФИЗ ПИИКТ 3\nЛекция · после проверки", "Только я"), audienceRows())
         audience("Только я").assertIsSelected()
         audience("ФИЗ ПИИКТ 3").performClick()
         audience("ФИЗ ПИИКТ 3").assertIsSelected()

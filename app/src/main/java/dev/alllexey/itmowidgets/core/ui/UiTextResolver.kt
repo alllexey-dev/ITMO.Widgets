@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.text.UiText
  * exported strings ([ExportedStringIds]); arguments that are themselves [UiText] are resolved first, so a format can
  * take localized names.
  */
-@Suppress("DEPRECATION")
 fun UiText.resolve(context: Context): String {
     return when (this) {
         is UiText.Res -> context.getString(ExportedStringIds.string(resource.key), *arguments.resolved(context))
@@ -17,7 +16,6 @@ fun UiText.resolve(context: Context): String {
             count,
             *arguments.resolved(context)
         )
-        is UiText.Resource -> context.getString(resourceId, *arguments.resolved(context))
         is UiText.Dynamic -> value
         is UiText.Joined -> parts.joinToString(separator) { it.resolve(context) }
         is UiText.LowercaseFirst -> text.resolve(context).replaceFirstChar(Char::lowercaseChar)

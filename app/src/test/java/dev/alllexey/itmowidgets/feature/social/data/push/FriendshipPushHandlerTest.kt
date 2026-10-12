@@ -1,12 +1,15 @@
 package dev.alllexey.itmowidgets.feature.social.data.push
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.client.push.FriendshipEvent
 import dev.alllexey.itmowidgets.core.notification.*
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.shared.core.Res
+import dev.alllexey.itmowidgets.shared.core.notification_channel_friends
+import dev.alllexey.itmowidgets.shared.core.notification_friend_accepted
+import dev.alllexey.itmowidgets.shared.core.notification_friend_request
 import java.lang.reflect.Proxy
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -30,9 +33,9 @@ class FriendshipPushHandlerTest {
             assertEquals(AppNotificationChannels.FRIENDS, notification.channel)
             assertEquals(100001, notification.id)
             assertEquals(NotificationDestination.UserProfile(100001), notification.destination)
-            assertEquals(UiText.Resource(R.string.notification_channel_friends), notification.title)
-            assertEquals(UiText.Resource(
-                if (event == FriendshipEvent.REQUEST_RECEIVED) R.string.notification_friend_request else R.string.notification_friend_accepted,
+            assertEquals(UiText.Res(Res.string.notification_channel_friends), notification.title)
+            assertEquals(UiText.Res(
+                if (event == FriendshipEvent.REQUEST_RECEIVED) Res.string.notification_friend_request else Res.string.notification_friend_accepted,
                 listOf("Тестовый пользователь")
             ), notification.text)
             assertEquals(1, fixture.refreshes)
@@ -43,7 +46,7 @@ class FriendshipPushHandlerTest {
     @Test fun `blank name falls back to the isu`() = runTest {
         val fixture = Fixture()
         fixture.handler.handle(payload("REQUEST_ACCEPTED", name = "   "))
-        assertEquals(listOf("100001"), (fixture.notifier.shown.single().text as UiText.Resource).arguments)
+        assertEquals(listOf("100001"), (fixture.notifier.shown.single().text as UiText.Res).arguments)
     }
 
     @Test fun `cold repository is not refreshed while loaded repository refreshes without notification permission`() = runTest {
