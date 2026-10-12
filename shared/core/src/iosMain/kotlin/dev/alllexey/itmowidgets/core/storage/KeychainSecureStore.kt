@@ -38,7 +38,7 @@ import platform.Security.errSecMissingEntitlement
 import platform.Security.errSecSuccess
 import platform.Security.kSecAttrAccessGroup
 import platform.Security.kSecAttrAccessible
-import platform.Security.kSecAttrAccessibleAfterFirstUnlock
+import platform.Security.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
 import platform.Security.kSecAttrAccount
 import platform.Security.kSecAttrService
 import platform.Security.kSecClass
@@ -51,8 +51,10 @@ import platform.Security.kSecValueData
 /**
  * The iOS [SecureStore]: one Keychain generic password per name, service [SERVICE], account = name, in the access
  * group from this process's Info.plist (`KeychainGroup`), shared by the app and the notification service.
- * `kSecAttrAccessibleAfterFirstUnlock`: the notification service and background refresh read it while the device
- * is locked. Never synchronised to iCloud, never logged.
+ * `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`: the notification service and background refresh read it while
+ * the device is locked, and no backup restores it on another device (Android keeps its files in `noBackupFilesDir`).
+ * A write re-sets the attribute, so an item an earlier build stored as `AfterFirstUnlock` moves over on its next write.
+ * Never synchronised to iCloud, never logged.
  *
  * Without the access-group entitlement (an unsigned or re-signed build, a Kotlin/Native test binary) the Keychain
  * answers `errSecMissingEntitlement`; the store then uses the process's default group for the rest of its life and
@@ -84,12 +86,10 @@ class KeychainSecureStore(
         val data = encode(value)
         val status = withGroup { group ->
             val updated = query(name, group).use { search ->
-                attributes(kSecValueData to data, kSecAttrAccessible to kSecAttrAccessibleAfterFirstUnlock)
-                    .use { SecItemUpdate(search, it) }
+                attributes(kSecValueData to data, kSecAttrAccessible to ACCESSIBLE).use { SecItemUpdate(search, it) }
             }
             if (updated != errSecItemNotFound) return@withGroup updated
-            query(name, group, kSecValueData to data, kSecAttrAccessible to kSecAttrAccessibleAfterFirstUnlock)
-                .use { SecItemAdd(it, null) }
+            query(name, group, kSecValueData to data, kSecAttrAccessible to ACCESSIBLE).use { SecItemAdd(it, null) }
         }
         if (status != errSecSuccess) throw KeychainException("write", name, status)
     }
@@ -188,6 +188,8 @@ class KeychainSecureStore(
             KeychainSecureStore(BundleIdentifiers.fromMainBundle().keychainGroup, log)
 
         private const val TAG = "KeychainSecureStore"
+
+        private val ACCESSIBLE = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
     }
 }
 
