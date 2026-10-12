@@ -1,49 +1,29 @@
-# 0019 Koin modules per feature module, beside Hilt, then Koin only
+# 0019 Koin is the only dependency graph
 
-**Decision (2026-10-03).** Shared code uses Koin 4.2.2. It arrives one feature at a time
-beside Hilt and replaces Hilt after the Navigation 3 shell swap.
-- A feature's Koin module lives only in `feature-<x>/di` of its shared module;
-  common Koin modules only in `core/di` of `:shared:core`.
-- ViewModels in `commonMain` are created with `viewModelOf` and take
-  `SavedStateHandle`; a Hilt Fragment host obtains them with `koinViewModel()`.
-- Bridges live only in `app/.../di/bridge/**` (debug overrides in the debug
-  source set): Hilt to Koin through an `@EntryPoint` read in a Koin `single`,
-  Koin to Hilt through a `@Provides` that reads Koin after one idempotent
-  starter. Core contracts are bridged once in `CoreBridge.kt`, feature types
-  in the owning feature's `<Feature>Bridge.kt`.
-- One graph per binding: a type is constructed by Hilt or by Koin, never both.
-- Koin starts before `super.onCreate()` of the Application, and every Koin to
-  Hilt bridge calls the same starter, because WorkManager can run a worker
-  before the Application finishes.
-- Every Koin module has a graph check that fails on a missing binding, a
-  duplicate and a cycle.
-- After the shell swap Hilt leaves in three steps: workers, widget providers,
-  the QS tile and the FCM service via `KoinComponent` with unchanged class
-  names; then the Application and the three Activities; then the Hilt plugin,
-  the bridges and `EntryPointAccessors` in tests.
+**Decision (2026-10-03, revised 2026-10-12).** Dependency injection is Koin on both
+platforms.
+- A feature's Koin module lives in `feature/<x>/di` of its shared module; common
+  modules in `core/di` of `:shared:core`; Android-only bindings in `:app`'s `di`
+  package (debug fixtures in `di.bridge` of the debug source set); iOS-only
+  bindings in `iosMain` of the owning module, `<Area>IosModule.kt`.
+- ViewModels are declared with `viewModelOf` and take `SavedStateHandle` where
+  they read navigation arguments.
+- Android starts the one graph through `KoinStarter.ensureStarted`, called first in
+  `Application.onCreate()` and by any component that can run before it (workers,
+  widget broadcasts). It is the only reader of the global Koin context. iOS starts
+  its graph once with `startKoinIos` over `IosKoinModules.all`.
+- `allowOverride(false)`; a Koin module file defines each type once.
+- Every Koin module has a graph test that fails on a missing binding, a duplicate
+  and a cycle (Koin's `verify()` on the JVM, a resolving test in `iosTest`).
 
-**Why.** Compose in `commonMain` brings the ViewModels there, and
-`@HiltViewModel` is Android-only. A global swap before the feature work would
-freeze about 250 files for 2-4 days and edit 47 classes that the Compose ports
-delete anyway. Koin's runtime DSL bridges to Hilt entry points without code
-generation; Metro would need graph factories fed by Hilt, which is unverified.
-Koin needs no compiler plugin, which keeps the Kotlin lockstep small.
+**Why.** Shared ViewModels live in `commonMain`, and `@HiltViewModel` is
+Android-only. Koin needs no compiler plugin, which keeps the Kotlin lockstep small,
+and one graph per platform removes the bridges two frameworks would need.
 
-**Consequence.** Two DI frameworks coexist for weeks; Konsist (`DiRulesTest`)
-keeps Koin modules, `GlobalContext` and `EntryPointAccessors` in their places,
-and the bridges are deleted with Hilt.
+**Consequence.** Konsist (`DiRulesTest`) keeps Koin modules and the global context
+in their places.
 
-**Supersedes.** The Hilt part of the `AGENTS.md` § Hard rules line "Android
-stays on XML, Fragments, ViewBinding, Navigation, Hilt and WorkManager" (with
-ADR 0017).
+**Supersedes.** The Hilt part of the rule that Android stays on XML, Fragments,
+ViewBinding, Navigation, Hilt and WorkManager (with ADR 0017).
 
-**Revisit when.** A feature's DI shape cannot cross the bridges, or in v2.4, when Metro's compile-time
-graph can be weighed against a Koin-only app.
-
-**Settled.** Koin per feature module; Metro is kept for v2.4. No global DI
-swap before the feature work: the spikes below passed, and Koin's graph check
-(`koin-compiler-plugin` plus one JVM graph test) caught every seeded error.
-
-**Evidence.**
-- Hilt bridge spike: PASS (the bridge keeps Hilt for plain classes moved into a KMP module; `@HiltViewModel` cannot cross it: one `:app` binding module per VM, or Koin `viewModelOf`)
-- Koin spike: PASS (Koin 4.2.2 `commonMain` VM with `SavedStateHandle` in a Hilt Fragment survives recreation and process death, bridges both ways, `startKoin` before `super.onCreate()`; Koin covers all 5 DI shapes, Metro 1.4.5 also passes; no global DI swap)
+**Revisit when.** Metro's compile-time graph is weighed against Koin.

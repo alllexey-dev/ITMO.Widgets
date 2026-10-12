@@ -23,9 +23,9 @@ exceptions, `toString()`, files or Backend; a code is exchanged at once.
 
 **Parsing in MyItmoApi.** MyItmoApi is the only client of the official ITMO.ID
 and BARS endpoints, so the request and the reading of its answer are
-`BarsAuthHelper.requestCodeWithCookies(state, cookieHeader)` in the library
-(1.8.2-SNAPSHOT): `CODE`, `LOGIN_REQUIRED`, `REJECTED` or `HTTP_ERROR`, and a
-network failure as an exception. The app adds no second HTTP client for
+`BarsLogin.requestCodeWithCookies(state, cookieHeader)` in the library:
+`CODE`, `LOGIN_REQUIRED`, `REJECTED` or `HTTP_ERROR`, and a network failure
+as an exception. The app adds no second HTTP client for
 ITMO.ID.
 
 **Ended session versus failure.** Only no cookies or `LOGIN_REQUIRED` end the

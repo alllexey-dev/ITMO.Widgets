@@ -16,9 +16,7 @@ leaves the privacy boundary where it is and works without the connection.
 **A file, not Room.** The state is one JSON file,
 `filesDir/schedule_changes/state.json`, in the style of the other file stores
 (`teacher_lessons`, `teacher_levels`, `subject_links`). The project has neither
-Room nor KSP, and Room's compiler under kapt carries the same risk as
-`androidx.hilt`'s processor, which cannot read Kotlin 2.0 metadata (see
-`QrWidgetEntryPoint`). The data is small: up to about 60 lessons in a snapshot
+Room nor an annotation processor. The data is small: up to about 60 lessons in a snapshot
 and at most 500 changes of 30 days. The snapshot and the changes must be
 written together, and one atomically written file gives that without
 transactions; nothing queries the data. A corrupt file is deleted and the next

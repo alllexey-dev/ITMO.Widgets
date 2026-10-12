@@ -28,29 +28,19 @@ Konsist guard the whole client. A generator would lose the strict invariants and
 
 **Consequence.**
 - A wire change runs: privacy boundary → Backend + fixtures → OpenAPI → sync → Core 2.0 + conformance → apps.
-- The app swaps feature by feature and drops Core 1.x last. The Konsist `DemoMode` check keys on client type
-  names, so it lists the 2.0 types before the first swap; `DemoMode` and `BackendGate` stay in holders.
+- The app uses only Core 2.0. The Konsist `DemoMode` check keys on the client type names; `DemoMode` and
+  `BackendGate` stay in their holders.
 - Installed 2.1 and 2.2 keep their released Core; Backend stays additive while `app.minimum` ≤ 2.2.
 
-**Supersedes.** In `AGENTS.md`, § Source-of-truth boundaries on Core as a Retrofit library mirrored with
-MockWebServer tests, and the Core build block of § Build and verify; the earlier idea of a Core 2.0.0 artifact in
-its own repository.
+**Supersedes.** Core as a separately published Retrofit library mirrored with MockWebServer tests.
 
 **Revisit when.** A non-app consumer needs the client (publish it then); a wire variant needs lenient parsing;
 OpenAPI cannot express the sealed sport types; `app.minimum` reaches 2.3 (archive Core 1.x).
 
-**Settled.** 2026-10-03; reversible until the area it touches is ported.
-- The moderation API is not ported. iOS targets from day one, compile-only until Xcode.
+**Rules.**
 - No duplicate-key or quoted-number rejection, quoted booleans on capability fields accepted; the shape, enum and
   invariant checks stay.
-- The new package `dev.alllexey.itmowidgets.client`.
 - `Instant` + an explicit Moscow zone + `kotlin.uuid.Uuid` (a String value class if the opt-in is unacceptable at
   Kotlin 2.4.20). Display enums only get `UNKNOWN`, as above.
-- 401 for missing or invalid credentials from Backend 1.8.0. The OpenAPI snapshot on Boot 3.5 with springdoc 2.8,
-  bumped with Boot 4.
-
-**Evidence.**
-- JSON config spike: PASS (`BackendJson` = config A with the `UNKNOWN` table; privacy and capability fields fail on missing, `null` or unknown; sport subtypes by `@SerialName`, no `type` property)
-- Apple klibs spike: PASS (Apple klibs compile on the CLT-only Mac; the klib job runs on Linux inside `verify-quick`, no macOS `ios-klibs` job)
-- Darwin HTTP spike: PASS (Darwin sends the DELETE body, so `unregisterCurrent` stays a DELETE with a JSON body)
-- OpenAPI spike: PASS (springdoc 2.8.17 emits `oneOf` and the discriminator with a test-side `OpenApiCustomizer`; `ModerationCaseTarget` needs `discriminatorMapping`; no hand-written schemas)
+- 401 for missing or invalid credentials from Backend 1.8.0. The OpenAPI snapshot follows Backend's
+  Spring Boot and springdoc versions.
