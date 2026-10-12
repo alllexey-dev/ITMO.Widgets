@@ -6,10 +6,7 @@ import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_invalid_credentials
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_network
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_unknown
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -117,9 +114,9 @@ class AuthViewModelTest {
 
         assertEquals(
             listOf(
-                UiText.Res(Res.string.auth_error_network),
-                UiText.Res(Res.string.auth_error_invalid_credentials),
-                UiText.Res(Res.string.auth_error_unknown),
+                UiText.Res(AccountStrings.auth_error_network),
+                UiText.Res(AccountStrings.auth_error_invalid_credentials),
+                UiText.Res(AccountStrings.auth_error_unknown),
             ),
             texts,
         )

@@ -49,7 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.text.asString
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.text.userDisplayName
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoButtonGroup
@@ -63,8 +63,8 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorBody
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorScope
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorUiState
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
@@ -95,7 +95,7 @@ import dev.alllexey.itmowidgets.shared.feature.social.friends_empty_title
 import dev.alllexey.itmowidgets.shared.feature.social.user_search_clear
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
@@ -358,13 +358,13 @@ internal fun PickerBody(state: FriendSelectorUiState, actions: FriendSelectorAct
         is FriendSelectorBody.PeopleError -> PickerState(
             painterResource(KitRes.drawable.ic_error),
             stringResource(CoreRes.string.common_load_error_title),
-            stringResource(body.error.textResource()),
+            body.error.toUiText().asString(),
             ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
         )
         is FriendSelectorBody.Error -> PickerState(
             painterResource(KitRes.drawable.ic_error),
             stringResource(CoreRes.string.common_load_error_title),
-            stringResource(body.error.textResource()),
+            body.error.toUiText().asString(),
             ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
         )
     }

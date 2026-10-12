@@ -1,5 +1,5 @@
 // A feature module: Compose UI, Res strings, host and screenshot tests.
-// Features read core and designsystem, never another feature.
+// Features read core, designsystem and compose-strings, never another feature.
 plugins {
     id("itmowidgets.cmp.ui")
     id("itmowidgets.testing")
@@ -10,6 +10,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
+            implementation(project(":shared:compose-strings"))
             // The sport ViewModels and the bookings holder are KMP classes that :app obtains through Koin.
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)

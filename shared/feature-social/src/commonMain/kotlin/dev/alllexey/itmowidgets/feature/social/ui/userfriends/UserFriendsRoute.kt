@@ -12,11 +12,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -42,7 +43,7 @@ fun UserFriendsRoute(
                 when (event) {
                     is UserFriendsEvent.RefreshFailed -> {
                         val result = snackbars.showSnackbar(
-                            message = getString(event.error.textResource()),
+                            message = event.error.toUiText().resolve(),
                             actionLabel = getString(Res.string.common_retry),
                             duration = SnackbarDuration.Long,
                         )

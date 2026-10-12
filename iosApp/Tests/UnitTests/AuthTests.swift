@@ -201,7 +201,7 @@ final class AuthTests: XCTestCase {
     // MARK: Helpers
 
     private var errorKey: String? {
-        (model.state.error as? UiTextRes)?.resource.key
+        (model.state.error as? UiTextRes)?.key
     }
 
     private var postThroughBridge: String {

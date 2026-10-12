@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
@@ -43,16 +45,15 @@ import dev.alllexey.itmowidgets.shared.feature.sport.sport_bookings_empty_descri
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_bookings_empty_title
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_bookings_open_schedule
 import kotlin.time.Instant
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_partial_load_error
-import dev.alllexey.itmowidgets.shared.core.common_retry
-import dev.alllexey.itmowidgets.shared.core.sport_cancel_booking_action
-import dev.alllexey.itmowidgets.shared.core.sport_cancel_booking_question
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_partial_load_error
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_cancel_booking_action
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_cancel_booking_question
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_add
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
@@ -115,7 +116,7 @@ fun SportMyScreen(
                 title = stringResource(CoreRes.string.common_load_error_title),
                 modifier = Modifier.testTag(SportMyScreenTestTags.ERROR),
                 icon = painterResource(KitRes.drawable.ic_error),
-                description = stringResource(state.error.textResource()),
+                description = state.error.toUiText().asString(),
                 action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
             )
             is SportMyUiState.Content -> Bookings(state, time, actions, listState, animateScore)
@@ -149,7 +150,7 @@ fun SportMyUiState.cancelCandidate(lessonId: Long, action: String?, now: Instant
 /** Shows a one-off [SportMyEvent] (a cancellation failed) in [SportMyScreen]'s snackbar. */
 suspend fun SnackbarHostState.showSportMyEvent(event: SportMyEvent) {
     when (event) {
-        is SportMyEvent.ShowError -> showSnackbar(getString(event.error.textResource()), duration = SnackbarDuration.Long)
+        is SportMyEvent.ShowError -> showSnackbar(event.error.toUiText().resolve(), duration = SnackbarDuration.Long)
     }
 }
 

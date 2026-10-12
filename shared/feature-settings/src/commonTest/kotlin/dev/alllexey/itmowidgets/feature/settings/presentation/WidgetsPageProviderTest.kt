@@ -13,13 +13,8 @@ import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_selected
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_already_added
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_failed
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_title
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -235,7 +230,7 @@ class WidgetsPageProviderTest {
 
             assertTrue(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
             assertEquals(
-                UiText.Res(CoreRes.string.settings_qr_custom_image_selected),
+                UiText.Res(CoreStrings.settings_qr_custom_image_selected),
                 fixture.viewModel.action(SettingRowId.QR_CUSTOM_IMAGE).value
             )
             assertEquals(0, fixture.widgetRefresher.refreshCount)
@@ -277,8 +272,8 @@ class WidgetsPageProviderTest {
                 listOf(
                     SettingItem.Action(
                         id = SettingRowId.QR_TILE,
-                        title = UiText.Res(Res.string.settings_qr_tile_title),
-                        description = UiText.Res(Res.string.settings_qr_tile_description)
+                        title = UiText.Res(SettingsStrings.settings_qr_tile_title),
+                        description = UiText.Res(SettingsStrings.settings_qr_tile_description)
                     )
                 ),
                 first.items
@@ -316,13 +311,13 @@ class WidgetsPageProviderTest {
 
             assertEquals(listOf(true) to emptyList<SettingsEvent>(), answer(QrTileAddResult.ADDED))
             assertEquals(
-                listOf(true) to listOf(SettingsEvent.ShowMessage(UiText.Res(Res.string.settings_qr_tile_already_added))),
+                listOf(true) to listOf(SettingsEvent.ShowMessage(UiText.Res(SettingsStrings.settings_qr_tile_already_added))),
                 answer(QrTileAddResult.ALREADY_ADDED)
             )
             assertEquals(emptyList<Boolean>() to emptyList<SettingsEvent>(), answer(QrTileAddResult.NOT_ADDED))
             assertEquals(emptyList<Boolean>() to emptyList<SettingsEvent>(), answer(QrTileAddResult.IN_PROGRESS))
             assertEquals(
-                emptyList<Boolean>() to listOf(SettingsEvent.ShowMessage(UiText.Res(Res.string.settings_qr_tile_failed))),
+                emptyList<Boolean>() to listOf(SettingsEvent.ShowMessage(UiText.Res(SettingsStrings.settings_qr_tile_failed))),
                 answer(QrTileAddResult.FAILED)
             )
         }

@@ -11,7 +11,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
@@ -25,9 +26,9 @@ import dev.alllexey.itmowidgets.shared.feature.sport.sport_lessons_empty_descrip
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_lessons_empty_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_event_note
@@ -113,7 +114,7 @@ fun LazyListScope.sportLessons(
                 modifier = Modifier.testTag(SportLessonListTestTags.ERROR),
                 size = ContentStateSize.Compact,
                 icon = painterResource(KitRes.drawable.ic_error),
-                description = stringResource(state.error.textResource()),
+                description = state.error.toUiText().asString(),
                 action = ContentStateAction(stringResource(CoreRes.string.common_retry), onRetry),
             )
         }

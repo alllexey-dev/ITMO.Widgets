@@ -34,7 +34,8 @@ included build with the convention plugins (`itmowidgets.kmp.library`,
 | Module | Holds |
 |---|---|
 | `:app` | Android app: shell, Android-only surfaces, Koin start, Android ports |
-| `:shared:core` | Contracts and models every feature shares (`core/*` packages), common strings |
+| `:shared:core` | Contracts and models every feature shares (`core/*` packages), common strings; no Compose |
+| `:shared:compose-strings` | The Compose side of the catalog: one CMP `Res` over a copy of every module's strings, the `UiText` resolvers |
 | `:shared:designsystem` | `ItmoTheme`, tokens, the component kit, icons, preview helpers |
 | `:shared:backend-client` | Typed Ktor client of the ITMO.Widgets Backend (`BackendClient`, one `*Api` per area) |
 | `:shared:testing` | Test kit: Robolectric and screenshot harness, semantics checks, fake clocks |
@@ -51,9 +52,10 @@ included build with the convention plugins (`itmowidgets.kmp.library`,
 | `:shared:ios` | Umbrella that builds the static framework `Shared` for Xcode, iOS Koin start, iOS screen factories |
 | `:konsist` | Architecture rules over the sources of `app/` and `shared/` |
 
-Allowed edges: a feature module depends on `:shared:core` and
-`:shared:designsystem` only (`:shared:testing` in tests). Features never
-depend on each other. `:app` and `:shared:ios` depend on every shared module.
+Allowed edges: a feature module depends on `:shared:core`,
+`:shared:designsystem` and `:shared:compose-strings` only (`:shared:testing` in
+tests). Features never depend on each other. `:shared:compose-strings` depends
+on `:shared:core` only. `:app` and `:shared:ios` depend on every shared module.
 `:shared:backend-client` depends on nothing in this repository.
 
 Shared modules target `android`, `iosArm64` and `iosSimulatorArm64`. Source
@@ -230,11 +232,31 @@ behind shared ports. Details: [notifications](features/notifications.md).
 
 ## Strings
 
-User-visible text is Russian and lives in Compose resources:
+User-visible text is Russian and lives in catalog files:
 `shared/<module>/src/commonMain/composeResources/values/strings_<file>.xml`.
 `strings_common.xml` (`:shared:core`) holds text two modules share;
 `strings_platform.xml` holds text system surfaces read (manifest, widgets,
 notifications, the tile), with frozen keys in `scripts/strings-frozen-keys.txt`.
+
+- Code outside Compose names a string by its key: `UiText.Res(key, arguments)`
+  and `UiText.Plural(key, count, arguments)` (`core/text/UiText.kt`). The keys
+  are the `const val`s of `<Area>Strings` and `<Area>Plurals`, which
+  `itmowidgets.strings` generates in each module's namespace
+  (`dev.alllexey.itmowidgets.shared.core.CoreStrings`,
+  `dev.alllexey.itmowidgets.shared.feature.sport.SportPlurals`).
+- `:shared:core` compiles no CMP resources. `:shared:compose-strings` compiles
+  a copy of every module's catalog files into one public CMP `Res` and
+  resolves `UiText` in Compose (`asString()`) and in suspend code
+  (`resolve()`); screens read core strings from that `Res`. Feature modules
+  still compile their own catalog for their screens, so a string sits twice in
+  the app until the screens leave `commonMain`.
+- Android Views, widgets and notifications resolve `UiText` with
+  `resolve(context)` through the generated key -> `R` table
+  (`ExportedStringIds`), Swift with `UiText.resolved` from the `.xcstrings`
+  tables, iOS Kotlin outside Compose through the `UiTextResolver` port.
+- `:shared:core` and the `data`, `domain` and `presentation` packages import no
+  CMP resource, `Res` or Compose resolver (`UiTextRulesTest`).
+
 The `itmowidgets.strings` plugin exports what Android `res` still needs, and
 `./gradlew :app:exportAppleStrings` writes the `.xcstrings` tables and
 `AppSymbol.swift` under `iosApp/Shared/`. `scripts/strings-owners.py --where <id>`

@@ -43,10 +43,10 @@ import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_cancel
-import dev.alllexey.itmowidgets.shared.core.common_close
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.common_close
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
 import dev.alllexey.itmowidgets.shared.designsystem.ic_computer

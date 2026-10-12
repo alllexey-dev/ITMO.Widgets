@@ -34,7 +34,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
@@ -47,8 +48,8 @@ import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeUiState
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeImage
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.qrColors
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.feature.qr.Res
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_description
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_empty_description
@@ -64,7 +65,7 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [QrPassScreen], read by host tests and the instrumented home-to-pass flow. */
@@ -157,7 +158,7 @@ private fun QrPassBody(state: QrCodeUiState, onRefresh: () -> Unit, modifier: Mo
                 )
                 state is QrCodeUiState.Error -> PassState(
                     stringResource(CoreRes.string.common_load_error_title),
-                    stringResource(state.error.textResource()),
+                    state.error.toUiText().asString(),
                 )
             }
         }

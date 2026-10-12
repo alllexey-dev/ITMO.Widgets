@@ -3,9 +3,9 @@ package dev.alllexey.itmowidgets.feature.recordbook.ui.subject
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
-import dev.alllexey.itmowidgets.core.text.textResource
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
@@ -18,8 +18,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacher
-import dev.alllexey.itmowidgets.shared.core.links_chats
-import dev.alllexey.itmowidgets.shared.core.links_title
+import dev.alllexey.itmowidgets.shared.compose.strings.links_chats
+import dev.alllexey.itmowidgets.shared.compose.strings.links_title
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
 import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_controls_title
 import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_lessons_title
@@ -27,7 +27,7 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_teachers_title
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.StringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /** One row of the subject page. */
 sealed interface SubjectHubItem {
@@ -63,7 +63,7 @@ sealed interface SubjectHubItem {
         val spaced: Boolean = false,
     ) : SubjectHubItem
     /** No controls to show: [error] is the failure to load them, or null for «no details». */
-    data class Notice(val error: StringResource?) : SubjectHubItem
+    data class Notice(val error: AppError?) : SubjectHubItem
     data class Lesson(val lesson: SubjectLesson, val position: GroupPosition) : SubjectHubItem
     /** «Все пары, N»: the rest of the window opens in place. */
     data class AllLessons(val count: Int, val position: GroupPosition) : SubjectHubItem
@@ -122,7 +122,7 @@ fun subjectHubItems(state: RecordbookSubjectUiState.Content, linksEnabled: Boole
             // The sheet (or the offer of one) is the detail: «no details» goes, a failure to load the controls stays.
             // PE often has no control tree by design; it gets no empty card either.
             if (state.controlsError != null || (hub.sheet == null && !state.subject.isPhysicalEducation)) {
-                add(SubjectHubItem.Notice(state.controlsError?.textResource()))
+                add(SubjectHubItem.Notice(state.controlsError))
             }
         } else {
             add(SubjectHubItem.Section(Res.string.subject_controls_title))

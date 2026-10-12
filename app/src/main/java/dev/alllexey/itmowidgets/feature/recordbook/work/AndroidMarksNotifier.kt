@@ -12,10 +12,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigest
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigests
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.marks_bars_login_text
-import dev.alllexey.itmowidgets.shared.core.marks_bars_login_title
-import dev.alllexey.itmowidgets.shared.core.marks_new_title
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 
 /**
  * "Новые оценки" with subject names only, never the marks; the lock screen shows the title alone.
@@ -27,7 +24,7 @@ class AndroidMarksNotifier(
 ) : MarksNotifier {
 
     override fun showDigest(digest: MarkDigest, target: MarkSubjectTarget?) {
-        val title = UiText.Res(Res.string.marks_new_title)
+        val title = UiText.Res(CoreStrings.marks_new_title)
         notifier.show(AppNotification(
             channel = AppNotificationChannels.MARKS,
             id = MarkDigests.DIGEST_ID,
@@ -40,12 +37,12 @@ class AndroidMarksNotifier(
     }
 
     override fun showBarsPrompt() {
-        val title = UiText.Res(Res.string.marks_bars_login_title)
+        val title = UiText.Res(CoreStrings.marks_bars_login_title)
         notifier.show(AppNotification(
             channel = AppNotificationChannels.MARKS,
             id = MarkDigests.PROMPT_ID,
             title = title,
-            text = UiText.Res(Res.string.marks_bars_login_text),
+            text = UiText.Res(CoreStrings.marks_bars_login_text),
             destination = NotificationDestination.BarsLogin,
             publicTitle = title
         ))

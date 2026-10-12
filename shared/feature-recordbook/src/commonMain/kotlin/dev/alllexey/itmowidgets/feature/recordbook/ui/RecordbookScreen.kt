@@ -54,7 +54,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
@@ -74,8 +76,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiStat
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.displayedScore
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheetFallback
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_expand_more
@@ -104,7 +106,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [RecordbookScreen]; a subject row is [subject] of its `entryId`. */
@@ -184,7 +186,7 @@ internal fun RecordbookErrorSnackbars(
     LaunchedEffect(refreshError, barsError, snackbars) {
         val (message, action, perform) = when {
             refreshError != null -> Triple(
-                getString(Res.string.recordbook_refresh_error, getString(refreshError.textResource())),
+                getString(Res.string.recordbook_refresh_error, refreshError.toUiText().resolve()),
                 getString(CoreRes.string.common_retry),
                 onRetry,
             )
@@ -194,7 +196,7 @@ internal fun RecordbookErrorSnackbars(
                 onBarsLogin,
             )
             barsError != null -> Triple(
-                getString(Res.string.recordbook_bars_error, getString(barsError.textResource())),
+                getString(Res.string.recordbook_bars_error, barsError.toUiText().resolve()),
                 getString(CoreRes.string.common_retry),
                 onRetry,
             )
@@ -366,7 +368,7 @@ private fun RecordbookBody(
         is RecordbookUiState.Error -> RecordbookState(
             icon = KitRes.drawable.ic_error,
             title = stringResource(CoreRes.string.common_load_error_title),
-            description = stringResource(state.error.textResource()),
+            description = state.error.toUiText().asString(),
             onRetry = onRetry,
         )
         is RecordbookUiState.Empty -> EmptyState(onRetry)

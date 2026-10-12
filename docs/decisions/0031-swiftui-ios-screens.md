@@ -39,6 +39,12 @@ little once the view model is platform-neutral.
 - Until a route moves, its CMP host keeps working as described in
   [the iOS app](../ios.md).
 
+**Amended (2026-10-12).** `UiText.Res` and `UiText.Plural` carry the key as a
+`String` from the generated `<Area>Strings`/`<Area>Plurals` objects, and
+`:shared:core` builds without Compose. Until the screens leave `commonMain`,
+`:shared:compose-strings` compiles a copy of every catalog for Compose and the
+feature modules keep CMP for their screens, so strings sit twice in the app.
+
 **Supersedes.**
 - ADR 0023, the clause that iOS content screens are CMP screens hosted through
   `ComposeUIViewController`.

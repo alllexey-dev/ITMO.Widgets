@@ -14,8 +14,8 @@ import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
- * The `key -> R` table of the exported strings (ADR 0028): `UiText.Res` and `UiText.Plural` carry a CMP
- * resource whose `key` is the Android resource name, and the Android resolver turns it into `R.string.<key>` or
+ * The `key -> R` table of the exported strings (ADR 0028): `UiText.Res` and `UiText.Plural` carry a catalog key,
+ * which is also the Android resource name, and the Android resolver turns it into `R.string.<key>` or
  * `R.plurals.<key>` through this table instead of `Resources.getIdentifier`.
  */
 object AndroidStringIds {
@@ -38,7 +38,7 @@ object AndroidStringIds {
         appendLine()
         appendLine("import $appNamespace.R")
         appendLine()
-        appendLine("/** `StringResource.key` -> `R.string` and `PluralStringResource.key` -> `R.plurals` (ADR 0028). */")
+        appendLine("/** `UiText.Res.key` -> `R.string` and `UiText.Plural.key` -> `R.plurals` (ADR 0028). */")
         appendLine("internal object $OBJECT_NAME {")
         appendFunction("string", "string", keys.strings)
         appendFunction("plural", "plurals", keys.plurals)

@@ -6,14 +6,7 @@ import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_brand
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_teal
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_wallpaper
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_wallpaper_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_contrast_standard
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_tonal_spot
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_vibrant_description
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -51,14 +44,14 @@ class AppearancePageTest {
         val accent = fixture.viewModel.choice(SettingRowId.ACCENT_COLOR)
         assertEquals(AccentColor.entries.map { it.name }, accent.options.map { it.key })
         assertEquals(AccentColor.WALLPAPER.name, accent.selectedOptionKey)
-        assertEquals(UiText.Res(Res.string.settings_accent_color_wallpaper), accent.value)
-        assertEquals(UiText.Res(Res.string.settings_theme_style_tonal_spot), fixture.viewModel.choice(SettingRowId.THEME_PALETTE).value)
+        assertEquals(UiText.Res(SettingsStrings.settings_accent_color_wallpaper), accent.value)
+        assertEquals(UiText.Res(SettingsStrings.settings_theme_style_tonal_spot), fixture.viewModel.choice(SettingRowId.THEME_PALETTE).value)
         assertEquals(
-            UiText.Res(Res.string.settings_theme_contrast_standard),
+            UiText.Res(SettingsStrings.settings_theme_contrast_standard),
             fixture.viewModel.choice(SettingRowId.THEME_CONTRAST).value,
         )
         assertFalse(fixture.viewModel.toggle(SettingRowId.DARK_BLACK).checked)
-        assertEquals(UiText.Res(Res.string.settings_appearance_wallpaper_footer), state.sections.first().footer)
+        assertEquals(UiText.Res(SettingsStrings.settings_appearance_wallpaper_footer), state.sections.first().footer)
     }
 
     @Test
@@ -72,7 +65,7 @@ class AppearancePageTest {
         val choice = fixture.viewModel.choice(SettingRowId.ACCENT_COLOR)
         assertEquals(AccentColor.entries.drop(1).map { it.name }, choice.options.map { it.key })
         assertEquals(AccentColor.BRAND.name, choice.selectedOptionKey)
-        assertEquals(UiText.Res(Res.string.settings_accent_color_brand), choice.value)
+        assertEquals(UiText.Res(SettingsStrings.settings_accent_color_brand), choice.value)
         assertNull(fixture.viewModel.uiState.value.sections.first().footer)
     }
 
@@ -88,7 +81,7 @@ class AppearancePageTest {
         assertEquals(listOf(ThemeSpec(accent = AccentColor.TEAL)), fixture.repository.themeRequests)
         val choice = fixture.viewModel.choice(SettingRowId.ACCENT_COLOR)
         assertEquals(AccentColor.TEAL.name, choice.selectedOptionKey)
-        assertEquals(UiText.Res(Res.string.settings_accent_color_teal), choice.value)
+        assertEquals(UiText.Res(SettingsStrings.settings_accent_color_teal), choice.value)
         assertNull(fixture.viewModel.uiState.value.sections.first().footer)
         // Widgets that follow the theme redraw in the new colour.
         assertEquals(1, fixture.widgetRefresher.refreshCount)
@@ -128,7 +121,7 @@ class AppearancePageTest {
         val styles = fixture.viewModel.choice(SettingRowId.THEME_PALETTE)
         assertEquals(ThemeStyle.entries.map { it.name }, styles.options.map { it.key })
         assertEquals(
-            UiText.Res(Res.string.settings_theme_style_vibrant_description),
+            UiText.Res(SettingsStrings.settings_theme_style_vibrant_description),
             styles.options.single { it.key == ThemeStyle.VIBRANT.name }.description,
         )
         assertEquals(ThemeContrast.entries.map { it.name }, fixture.viewModel.choice(SettingRowId.THEME_CONTRAST).options.map { it.key })

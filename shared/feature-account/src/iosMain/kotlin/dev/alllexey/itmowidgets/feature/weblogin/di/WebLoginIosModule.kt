@@ -7,8 +7,11 @@ import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.weblogin.domain.HpkeSender
 import org.koin.dsl.module
 
-/** The iOS ports of pairing on the app's [PairingHost]: CryptoKit's HPKE and LocalAuthentication. */
+/**
+ * The iOS ports of pairing on the app's [PairingHost]: CryptoKit's HPKE and LocalAuthentication; the text resolver
+ * comes from `iosBackgroundModule`.
+ */
 fun webLoginIosModule(host: PairingHost) = module {
     single<HpkeSender> { IosHpkeSender(host) }
-    single<DeviceUnlock> { IosDeviceUnlock(host) }
+    single<DeviceUnlock> { IosDeviceUnlock(host, get()) }
 }

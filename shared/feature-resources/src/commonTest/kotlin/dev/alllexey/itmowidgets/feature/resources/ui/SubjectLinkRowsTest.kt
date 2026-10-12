@@ -11,17 +11,11 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkSection
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
-import dev.alllexey.itmowidgets.shared.core.links_chats
-import dev.alllexey.itmowidgets.shared.feature.resources.Res
-import dev.alllexey.itmowidgets.shared.feature.resources.links_pinned
-import dev.alllexey.itmowidgets.shared.feature.resources.links_previous
-import dev.alllexey.itmowidgets.shared.feature.resources.links_status_hidden
-import dev.alllexey.itmowidgets.shared.feature.resources.links_status_pending
-import dev.alllexey.itmowidgets.shared.feature.resources.links_status_rejected
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.resources.ResourcesStrings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 
 class SubjectLinkRowsTest {
 
@@ -48,9 +42,9 @@ class SubjectLinkRowsTest {
             listOf("shared" to GroupPosition.First, "own" to GroupPosition.Middle, "other" to GroupPosition.Last),
             rows.subList(1, 4).map { (it as LinkListRow.Item).link.id to it.position }
         )
-        assertEquals(LinkListRow.Header(UiText.Res(CoreRes.string.links_chats), first = false, key = "header:CHAT"), rows[4])
+        assertEquals(LinkListRow.Header(UiText.Res(CoreStrings.links_chats), first = false, key = "header:CHAT"), rows[4])
         assertEquals(GroupPosition.Single, (rows[5] as LinkListRow.Item).position)
-        assertEquals(LinkListRow.Header(UiText.Res(Res.string.links_previous), first = false, key = "header:previous"), rows[6])
+        assertEquals(LinkListRow.Header(UiText.Res(ResourcesStrings.links_previous), first = false, key = "header:previous"), rows[6])
         val previous = rows[7] as LinkListRow.Item
         assertEquals(GroupPosition.Single, previous.position)
         assertEquals(true, previous.previous)
@@ -75,8 +69,8 @@ class SubjectLinkRowsTest {
                 listOf(
                     UiText.Dynamic("example.org"),
                     LinkVisibility.ALL.label(),
-                    UiText.Res(Res.string.links_pinned),
-                    UiText.Res(Res.string.links_status_pending),
+                    UiText.Res(ResourcesStrings.links_pinned),
+                    UiText.Res(ResourcesStrings.links_status_pending),
                 ),
                 ", ",
             ),
@@ -95,9 +89,9 @@ class SubjectLinkRowsTest {
 
     @Test
     fun onlyStatesTheOwnerHasToNoticeGetABadge() {
-        assertEquals(UiText.Res(Res.string.links_status_pending), SubjectLinkStatus.PENDING.badge())
-        assertEquals(UiText.Res(Res.string.links_status_rejected), SubjectLinkStatus.REJECTED.badge())
-        assertEquals(UiText.Res(Res.string.links_status_hidden), SubjectLinkStatus.HIDDEN.badge())
+        assertEquals(UiText.Res(ResourcesStrings.links_status_pending), SubjectLinkStatus.PENDING.badge())
+        assertEquals(UiText.Res(ResourcesStrings.links_status_rejected), SubjectLinkStatus.REJECTED.badge())
+        assertEquals(UiText.Res(ResourcesStrings.links_status_hidden), SubjectLinkStatus.HIDDEN.badge())
         assertNull(SubjectLinkStatus.PRIVATE.badge())
         assertNull(SubjectLinkStatus.PUBLISHED.badge())
     }

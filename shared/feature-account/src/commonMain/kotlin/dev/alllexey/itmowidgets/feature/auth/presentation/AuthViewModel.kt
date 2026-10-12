@@ -8,10 +8,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_invalid_credentials
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_network
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_unknown
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import kotlin.time.TimeSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,7 +76,7 @@ class AuthViewModel(
 }
 
 internal fun AppError.toAuthText(): UiText = when (this) {
-    AppError.Network -> UiText.Res(Res.string.auth_error_network)
-    AppError.Unauthorized -> UiText.Res(Res.string.auth_error_invalid_credentials)
-    else -> UiText.Res(Res.string.auth_error_unknown)
+    AppError.Network -> UiText.Res(AccountStrings.auth_error_network)
+    AppError.Unauthorized -> UiText.Res(AccountStrings.auth_error_invalid_credentials)
+    else -> UiText.Res(AccountStrings.auth_error_unknown)
 }

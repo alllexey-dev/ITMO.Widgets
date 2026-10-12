@@ -28,7 +28,7 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateUiState
-import dev.alllexey.itmowidgets.shared.core.common_close
+import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_download
 import dev.alllexey.itmowidgets.shared.feature.account.Res
@@ -42,7 +42,7 @@ import dev.alllexey.itmowidgets.shared.feature.account.app_update_unsupported_ti
 import dev.alllexey.itmowidgets.shared.feature.account.app_update_versions
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Tags a test or a host looks the update offer up by; named after the view ids of the XML screen. */

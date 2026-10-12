@@ -9,12 +9,8 @@ import dev.alllexey.itmowidgets.core.social.PersonSearchResult
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.user_search_section_others
-import dev.alllexey.itmowidgets.shared.feature.social.user_search_section_registered
-import dev.alllexey.itmowidgets.shared.feature.social.user_status_outgoing
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -68,9 +64,9 @@ class UserSearchViewModelTest {
         val content = viewModel.uiState.value as UserSearchUiState.Content
         assertEquals(
             listOf(
-                UserListItem.Header(UiText.Res(Res.string.user_search_section_registered)),
+                UserListItem.Header(UiText.Res(SocialStrings.user_search_section_registered)),
                 "user:1",
-                UserListItem.Header(UiText.Res(Res.string.user_search_section_others)),
+                UserListItem.Header(UiText.Res(SocialStrings.user_search_section_others)),
                 "user:2",
                 UserListItem.LoadMore
             ),
@@ -110,7 +106,7 @@ class UserSearchViewModelTest {
             assertEquals(listOf("кто"), search.queries)
             val updated = ((viewModel.uiState.value as UserSearchUiState.Content).items[1] as UserListItem.User).row
             assertEquals(UserAction.CANCEL, updated.primary)
-            assertEquals(UiText.Res(Res.string.user_status_outgoing), updated.status)
+            assertEquals(UiText.Res(SocialStrings.user_status_outgoing), updated.status)
 
             social.actionError = AppError.Forbidden
             viewModel.onAction(updated, UserAction.CANCEL)
@@ -213,7 +209,7 @@ class UserSearchViewModelTest {
         viewModel.onQueryChanged("9")
         advanceUntilIdle()
         val row = ((viewModel.uiState.value as UserSearchUiState.Content).items[1] as UserListItem.User).row
-        assertEquals(UiText.Res(CoreRes.string.user_name_placeholder, listOf(9)), row.displayName)
+        assertEquals(UiText.Res(CoreStrings.user_name_placeholder, listOf(9)), row.displayName)
     }
 
     private class PagedPeopleSearch(

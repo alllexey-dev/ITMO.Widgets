@@ -196,7 +196,7 @@ struct SettingsIosCopy {
     let system: SettingsSystemState
 
     func text(_ text: UiText) -> String {
-        guard let resource = text as? UiTextRes, let key = replacement(for: resource.resource.key) else {
+        guard let resource = text as? UiTextRes, let key = replacement(for: resource.key) else {
             return text.resolved
         }
         return AppStrings.string(key)

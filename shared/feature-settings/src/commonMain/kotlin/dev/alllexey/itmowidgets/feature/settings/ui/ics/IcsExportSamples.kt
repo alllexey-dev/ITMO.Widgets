@@ -8,13 +8,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.IcsDateLabels
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsRangeKind
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsRangeOption
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_custom
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_custom_caption
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_semester
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_two_weeks
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_until
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_week
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import kotlinx.datetime.LocalDate
 
 /**
@@ -27,24 +21,28 @@ internal object IcsExportSamples {
 
     val choose = IcsExportUiState.Choose(
         listOf(
-            IcsRangeOption(IcsRangeKind.WEEK, UiText.Res(Res.string.ics_range_week), dates(ScheduleExportRange.Week)),
+            IcsRangeOption(
+                IcsRangeKind.WEEK,
+                UiText.Res(SettingsStrings.ics_range_week),
+                dates(ScheduleExportRange.Week),
+            ),
             IcsRangeOption(
                 IcsRangeKind.TWO_WEEKS,
-                UiText.Res(Res.string.ics_range_two_weeks),
+                UiText.Res(SettingsStrings.ics_range_two_weeks),
                 dates(ScheduleExportRange.TwoWeeks),
             ),
             IcsRangeOption(
                 IcsRangeKind.SEMESTER,
-                UiText.Res(Res.string.ics_range_semester),
+                UiText.Res(SettingsStrings.ics_range_semester),
                 UiText.Res(
-                    Res.string.ics_range_until,
+                    SettingsStrings.ics_range_until,
                     listOf(IcsDateLabels.day(ScheduleExportRange.Semester.dates(today).endInclusive)),
                 ),
             ),
             IcsRangeOption(
                 IcsRangeKind.CUSTOM,
-                UiText.Res(Res.string.ics_range_custom),
-                UiText.Res(Res.string.ics_range_custom_caption),
+                UiText.Res(SettingsStrings.ics_range_custom),
+                UiText.Res(SettingsStrings.ics_range_custom_caption),
             ),
         ),
     )

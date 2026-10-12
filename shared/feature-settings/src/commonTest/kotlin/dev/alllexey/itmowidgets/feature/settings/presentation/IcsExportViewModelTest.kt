@@ -9,13 +9,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_custom
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_custom_caption
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_semester
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_two_weeks
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_until
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_week
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlinx.datetime.LocalDateTime
 import kotlin.test.AfterTest
@@ -53,15 +47,15 @@ class IcsExportViewModelTest {
         assertEquals(
             IcsExportUiState.Choose(
                 listOf(
-                    IcsRangeOption(IcsRangeKind.WEEK, UiText.Res(Res.string.ics_range_week), UiText.Dynamic("2–8 октября")),
-                    IcsRangeOption(IcsRangeKind.TWO_WEEKS, UiText.Res(Res.string.ics_range_two_weeks), UiText.Dynamic("2–15 октября")),
+                    IcsRangeOption(IcsRangeKind.WEEK, UiText.Res(SettingsStrings.ics_range_week), UiText.Dynamic("2–8 октября")),
+                    IcsRangeOption(IcsRangeKind.TWO_WEEKS, UiText.Res(SettingsStrings.ics_range_two_weeks), UiText.Dynamic("2–15 октября")),
                     IcsRangeOption(
-                        IcsRangeKind.SEMESTER, UiText.Res(Res.string.ics_range_semester),
-                        UiText.Res(Res.string.ics_range_until, listOf("31 января"))
+                        IcsRangeKind.SEMESTER, UiText.Res(SettingsStrings.ics_range_semester),
+                        UiText.Res(SettingsStrings.ics_range_until, listOf("31 января"))
                     ),
                     IcsRangeOption(
-                        IcsRangeKind.CUSTOM, UiText.Res(Res.string.ics_range_custom),
-                        UiText.Res(Res.string.ics_range_custom_caption)
+                        IcsRangeKind.CUSTOM, UiText.Res(SettingsStrings.ics_range_custom),
+                        UiText.Res(SettingsStrings.ics_range_custom_caption)
                     )
                 )
             ),

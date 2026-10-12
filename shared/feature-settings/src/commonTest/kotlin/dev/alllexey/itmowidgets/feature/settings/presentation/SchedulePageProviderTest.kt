@@ -8,23 +8,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.background_work_hint
-import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_denied
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_background_work_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_calendar_missing
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_no_permission
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_schedule
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_changes_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_changes_notifications_off
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_changes_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sport_auto_sign_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sport_auto_sign_title
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -64,10 +48,10 @@ class SchedulePageProviderTest {
             }
             val toggle = fixture.viewModel.toggle(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN)
             assertEquals(listOf(toggle), section.items)
-            assertEquals(UiText.Res(Res.string.settings_group_schedule), fixture.viewModel.uiState.value.page.title)
-            assertEquals(UiText.Res(Res.string.settings_schedule_sport_auto_sign_title), toggle.title)
-            assertEquals(UiText.Res(Res.string.settings_schedule_sport_auto_sign_description), toggle.description)
-            assertEquals(UiText.Res(Res.string.settings_schedule_footer), section.footer)
+            assertEquals(UiText.Res(SettingsStrings.settings_group_schedule), fixture.viewModel.uiState.value.page.title)
+            assertEquals(UiText.Res(SettingsStrings.settings_schedule_sport_auto_sign_title), toggle.title)
+            assertEquals(UiText.Res(SettingsStrings.settings_schedule_sport_auto_sign_description), toggle.description)
+            assertEquals(UiText.Res(SettingsStrings.settings_schedule_footer), section.footer)
             assertTrue(toggle.enabled)
             assertTrue(toggle.stateKnown)
             assertFalse(toggle.checked)
@@ -103,10 +87,10 @@ class SchedulePageProviderTest {
             assertEquals(listOf(toggle), changes.items)
             assertEquals(null, changes.title)
             assertEquals(null, changes.footer)
-            assertEquals(UiText.Res(Res.string.settings_schedule_changes_title), toggle.title)
+            assertEquals(UiText.Res(SettingsStrings.settings_schedule_changes_title), toggle.title)
             assertFalse(toggle.checked)
             assertEquals(listOf(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN), autoSign.items.map { it.id })
-            assertEquals(UiText.Res(Res.string.settings_schedule_footer), autoSign.footer)
+            assertEquals(UiText.Res(SettingsStrings.settings_schedule_footer), autoSign.footer)
 
             fixture.tracking.enabled.value = true
             advanceUntilIdle()
@@ -144,15 +128,15 @@ class SchedulePageProviderTest {
             val fixture = createFixture(page = SettingsPage.SCHEDULE)
             advanceUntilIdle()
             val description = { fixture.viewModel.toggle(SettingRowId.SCHEDULE_CHANGES).description }
-            assertEquals(UiText.Res(Res.string.settings_schedule_changes_description), description())
+            assertEquals(UiText.Res(SettingsStrings.settings_schedule_changes_description), description())
 
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
             advanceUntilIdle()
-            assertEquals(UiText.Res(Res.string.settings_schedule_changes_notifications_off), description())
+            assertEquals(UiText.Res(SettingsStrings.settings_schedule_changes_notifications_off), description())
 
             fixture.viewModel.onNotificationPermissionChanged(granted = true)
             advanceUntilIdle()
-            assertEquals(UiText.Res(Res.string.settings_schedule_changes_description), description())
+            assertEquals(UiText.Res(SettingsStrings.settings_schedule_changes_description), description())
         }
 
     @Test
@@ -168,8 +152,8 @@ class SchedulePageProviderTest {
             advanceUntilIdle()
             assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES, SettingRowId.BACKGROUND_WORK), keys())
             val row = fixture.viewModel.action(SettingRowId.BACKGROUND_WORK)
-            assertEquals(UiText.Res(Res.string.settings_background_work_title), row.title)
-            assertEquals(UiText.Res(Res.string.background_work_hint), row.description)
+            assertEquals(UiText.Res(SettingsStrings.settings_background_work_title), row.title)
+            assertEquals(UiText.Res(SettingsStrings.background_work_hint), row.description)
             assertEquals(AppIcon.OPEN_IN_NEW, row.trailingIcon)
             assertTrue(row.enabled)
 
@@ -270,12 +254,12 @@ class SchedulePageProviderTest {
         assertEquals(null, calendar.footer)
         assertEquals(listOf(SettingRowId.CALENDAR_SYNC, SettingRowId.ICS_EXPORT), calendar.items.map { it.id })
         val toggle = fixture.viewModel.toggle(SettingRowId.CALENDAR_SYNC)
-        assertEquals(UiText.Res(Res.string.settings_calendar_sync_title), toggle.title)
-        assertEquals(UiText.Res(Res.string.settings_calendar_sync_description), toggle.description)
+        assertEquals(UiText.Res(SettingsStrings.settings_calendar_sync_title), toggle.title)
+        assertEquals(UiText.Res(SettingsStrings.settings_calendar_sync_description), toggle.description)
         assertFalse(toggle.checked)
         val export = fixture.viewModel.action(SettingRowId.ICS_EXPORT)
-        assertEquals(UiText.Res(Res.string.settings_ics_export_title), export.title)
-        assertEquals(UiText.Res(Res.string.settings_ics_export_description), export.description)
+        assertEquals(UiText.Res(SettingsStrings.settings_ics_export_title), export.title)
+        assertEquals(UiText.Res(SettingsStrings.settings_ics_export_description), export.description)
         assertEquals(AppIcon.DOWNLOAD, export.trailingIcon)
         assertTrue(export.enabled)
 
@@ -295,13 +279,13 @@ class SchedulePageProviderTest {
         advanceUntilIdle()
 
         assertEquals(
-            UiText.Res(Res.string.settings_calendar_sync_no_permission),
+            UiText.Res(SettingsStrings.settings_calendar_sync_no_permission),
             fixture.viewModel.toggle(SettingRowId.CALENDAR_SYNC).description
         )
         sync.state.value = CalendarSyncState(problem = CalendarSyncProblem.CALENDAR_MISSING)
         advanceUntilIdle()
         assertEquals(
-            UiText.Res(Res.string.settings_calendar_sync_calendar_missing),
+            UiText.Res(SettingsStrings.settings_calendar_sync_calendar_missing),
             fixture.viewModel.toggle(SettingRowId.CALENDAR_SYNC).description
         )
     }
@@ -338,7 +322,7 @@ class SchedulePageProviderTest {
         advanceUntilIdle()
 
         for ((result, expected) in listOf(
-            CalendarSyncResult.NO_PERMISSION to SettingsEvent.ShowMessage(UiText.Res(Res.string.calendar_access_denied)),
+            CalendarSyncResult.NO_PERMISSION to SettingsEvent.ShowMessage(UiText.Res(SettingsStrings.calendar_access_denied)),
             CalendarSyncResult.FAILED to SettingsEvent.ShowError(AppError.Unknown())
         )) {
             sync.enableResult = result

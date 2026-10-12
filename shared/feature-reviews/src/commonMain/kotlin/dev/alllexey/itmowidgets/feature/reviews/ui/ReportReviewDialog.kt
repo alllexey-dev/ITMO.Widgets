@@ -12,7 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ReportDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ReportDialogState
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ReportDialogSurface
@@ -28,8 +29,8 @@ import dev.alllexey.itmowidgets.shared.feature.reviews.review_report_title
 import dev.alllexey.itmowidgets.shared.feature.reviews.review_report_wrong_teacher
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 
 /**
  * What [ReportReviewDialog] shows: the picked [reason], the [comment], whether the report is on its way and the
@@ -125,7 +126,7 @@ private fun ReportReviewDialogState.toKit() = ReportDialogState(
     selectedReason = reason?.ordinal,
     comment = comment,
     sending = sending,
-    error = error?.let { stringResource(it.textResource()) },
+    error = error?.let { it.toUiText().asString() },
 )
 
 private fun ReviewReportReason.label(): StringResource = when (this) {

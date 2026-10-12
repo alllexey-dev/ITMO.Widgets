@@ -14,7 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
@@ -28,11 +29,11 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportUiState
 import dev.alllexey.itmowidgets.feature.sport.ui.my.SportBookingActions
 import dev.alllexey.itmowidgets.feature.sport.ui.my.SportBookingCard
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
-import dev.alllexey.itmowidgets.shared.core.user_profile_hidden
-import dev.alllexey.itmowidgets.shared.core.user_profile_sport_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.user_profile_hidden
+import dev.alllexey.itmowidgets.shared.compose.strings.user_profile_sport_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_exercise
@@ -44,7 +45,7 @@ import dev.alllexey.itmowidgets.shared.feature.sport.user_sport_hidden_title
 import dev.alllexey.itmowidgets.shared.feature.sport.user_sport_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What another user's sport asks of its host: back, the user's pull, a retry after an error, a building's map. */
@@ -115,7 +116,7 @@ fun UserSportScreen(
                 UserSportState(
                     painterResource(KitRes.drawable.ic_error),
                     stringResource(CoreRes.string.common_load_error_title),
-                    stringResource(state.error.textResource()),
+                    state.error.toUiText().asString(),
                     body,
                     ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
                 )

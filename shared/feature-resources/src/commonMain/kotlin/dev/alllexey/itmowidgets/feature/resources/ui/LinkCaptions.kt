@@ -5,17 +5,13 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.resources.host
 import dev.alllexey.itmowidgets.core.resources.label
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.feature.resources.Res
-import dev.alllexey.itmowidgets.shared.feature.resources.links_pinned
-import dev.alllexey.itmowidgets.shared.feature.resources.links_status_hidden
-import dev.alllexey.itmowidgets.shared.feature.resources.links_status_pending
-import dev.alllexey.itmowidgets.shared.feature.resources.links_status_rejected
+import dev.alllexey.itmowidgets.shared.feature.resources.ResourcesStrings
 
 /** Only states the owner has to notice get a badge. */
 fun SubjectLinkStatus.badge(): UiText? = when (this) {
-    SubjectLinkStatus.PENDING -> UiText.Res(Res.string.links_status_pending)
-    SubjectLinkStatus.REJECTED -> UiText.Res(Res.string.links_status_rejected)
-    SubjectLinkStatus.HIDDEN -> UiText.Res(Res.string.links_status_hidden)
+    SubjectLinkStatus.PENDING -> UiText.Res(ResourcesStrings.links_status_pending)
+    SubjectLinkStatus.REJECTED -> UiText.Res(ResourcesStrings.links_status_rejected)
+    SubjectLinkStatus.HIDDEN -> UiText.Res(ResourcesStrings.links_status_hidden)
     SubjectLinkStatus.PRIVATE, SubjectLinkStatus.PUBLISHED -> null
 }
 
@@ -29,7 +25,7 @@ fun linkMeta(link: SubjectLink, pinned: Boolean, previous: Boolean): UiText = Ui
         UiText.Dynamic(link.host()).takeIf { link.title != null },
         link.visibility.label(link.audienceLabel),
         link.scope.periodKey.studyYear()?.takeIf { previous }?.let(UiText::Dynamic),
-        UiText.Res(Res.string.links_pinned).takeIf { pinned },
+        UiText.Res(ResourcesStrings.links_pinned).takeIf { pinned },
         link.status.badge()?.takeIf { link.isMine },
     ),
     separator = ", ",

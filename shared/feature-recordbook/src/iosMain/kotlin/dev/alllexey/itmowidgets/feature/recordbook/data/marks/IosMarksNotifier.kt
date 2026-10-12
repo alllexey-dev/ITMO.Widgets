@@ -11,10 +11,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigest
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigests
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.marks_bars_login_text
-import dev.alllexey.itmowidgets.shared.core.marks_bars_login_title
-import dev.alllexey.itmowidgets.shared.core.marks_new_title
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.time.Instant
 
 /** A [MarksNotifier] that can also hand its notifications to the system for a later moment. */
@@ -45,7 +42,7 @@ class IosMarksNotifier(private val notifier: IosAppNotifier) : MorningMarksNotif
     override suspend fun showBarsPromptAt(at: Instant) = notifier.post(barsPrompt(), deliverAt = at)
 
     private fun digestOf(digest: MarkDigest, target: MarkSubjectTarget?): AppNotification {
-        val title = UiText.Res(Res.string.marks_new_title)
+        val title = UiText.Res(CoreStrings.marks_new_title)
         return AppNotification(
             channel = AppNotificationChannels.MARKS,
             id = MarkDigests.DIGEST_ID,
@@ -58,12 +55,12 @@ class IosMarksNotifier(private val notifier: IosAppNotifier) : MorningMarksNotif
     }
 
     private fun barsPrompt(): AppNotification {
-        val title = UiText.Res(Res.string.marks_bars_login_title)
+        val title = UiText.Res(CoreStrings.marks_bars_login_title)
         return AppNotification(
             channel = AppNotificationChannels.MARKS,
             id = MarkDigests.PROMPT_ID,
             title = title,
-            text = UiText.Res(Res.string.marks_bars_login_text),
+            text = UiText.Res(CoreStrings.marks_bars_login_text),
             destination = NotificationDestination.BarsLogin,
             publicTitle = title,
         )

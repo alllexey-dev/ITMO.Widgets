@@ -10,9 +10,9 @@ import dev.alllexey.itmowidgets.core.text.UiText
  */
 fun UiText.resolve(context: Context): String {
     return when (this) {
-        is UiText.Res -> context.getString(ExportedStringIds.string(resource.key), *arguments.resolved(context))
+        is UiText.Res -> context.getString(ExportedStringIds.string(key), *arguments.resolved(context))
         is UiText.Plural -> context.resources.getQuantityString(
-            ExportedStringIds.plural(resource.key),
+            ExportedStringIds.plural(key),
             count,
             *arguments.resolved(context)
         )

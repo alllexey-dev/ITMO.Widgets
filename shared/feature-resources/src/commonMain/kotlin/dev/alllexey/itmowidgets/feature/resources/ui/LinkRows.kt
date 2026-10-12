@@ -7,10 +7,8 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkSection
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
-import dev.alllexey.itmowidgets.shared.core.links_chats
-import dev.alllexey.itmowidgets.shared.feature.resources.Res
-import dev.alllexey.itmowidgets.shared.feature.resources.links_previous
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.resources.ResourcesStrings
 
 /** One row of the `Все ссылки` list: a section heading or a link inside its section's connected group. */
 sealed interface LinkListRow {
@@ -37,11 +35,16 @@ fun SubjectLinksUiState.linkRows(): List<LinkListRow> {
     return sections.flatMapIndexed { index, section ->
         val header = when (section) {
             is LinkSection.Category -> LinkListRow.Header(
-                if (section.category == LinkCategory.CHAT) UiText.Res(CoreRes.string.links_chats) else section.category.title(),
+                if (section.category == LinkCategory.CHAT) {
+                    UiText.Res(CoreStrings.links_chats)
+                } else {
+                    section.category.title()
+                },
                 first = index == 0,
                 key = "header:${section.category.name}",
             )
-            is LinkSection.Previous -> LinkListRow.Header(UiText.Res(Res.string.links_previous), index == 0, "header:previous")
+            is LinkSection.Previous ->
+                LinkListRow.Header(UiText.Res(ResourcesStrings.links_previous), index == 0, "header:previous")
         }
         listOf(header) + section.links.mapIndexed { position, link ->
             LinkListRow.Item(

@@ -13,7 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
 import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
@@ -25,10 +26,10 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsUiState
 import dev.alllexey.itmowidgets.feature.social.ui.list.UserList
 import dev.alllexey.itmowidgets.feature.social.ui.list.UserListTestTags
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
-import dev.alllexey.itmowidgets.shared.core.settings_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
@@ -44,7 +45,7 @@ import dev.alllexey.itmowidgets.shared.feature.social.user_friends_owner
 import dev.alllexey.itmowidgets.shared.feature.social.user_friends_refresh
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [UserFriendsScreen]; the list and its rows carry [UserListTestTags]. */
@@ -122,7 +123,7 @@ private fun UserFriendsBody(
         is UserFriendsUiState.Error -> FriendsState(
             painterResource(KitRes.drawable.ic_error),
             stringResource(CoreRes.string.common_load_error_title),
-            stringResource(state.error.textResource()),
+            state.error.toUiText().asString(),
             ContentStateAction(stringResource(CoreRes.string.common_retry), onRetry),
         )
         is UserFriendsUiState.Content -> if (state.items.isEmpty()) {

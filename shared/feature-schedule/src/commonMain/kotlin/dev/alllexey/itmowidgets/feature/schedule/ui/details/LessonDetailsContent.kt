@@ -22,8 +22,8 @@ import dev.alllexey.itmowidgets.shared.feature.schedule.Res
 import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_lesson_details_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_close
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 
 /**
  * The lesson details sheet of [lesson] with its view model: the host-facing entry the Android shell and the SwiftUI

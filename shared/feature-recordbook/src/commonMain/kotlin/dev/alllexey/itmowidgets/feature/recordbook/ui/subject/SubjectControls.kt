@@ -23,7 +23,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.DateTexts
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.groups.SectionHeading
 import dev.alllexey.itmowidgets.designsystem.components.groups.SectionHeadingSpacing
 import dev.alllexey.itmowidgets.designsystem.components.groups.SectionSubheading
@@ -39,8 +40,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookProgre
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.ui.formatRecordbookNumber
 import dev.alllexey.itmowidgets.feature.recordbook.ui.preview.RecordbookPreviewSamples
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_absent
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_additional_points
@@ -56,10 +57,9 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_score_pendi
 import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_scores_title
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Instant
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /**
  * The heading of a control group: its title, the sum `30 / 48` and, while a control of it is under its minimum, the
@@ -159,7 +159,7 @@ fun SubjectControlRow(item: SubjectHubItem.Control, modifier: Modifier = Modifie
  * a retry.
  */
 @Composable
-fun SubjectNotice(error: StringResource?, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+fun SubjectNotice(error: AppError?, onRetry: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
@@ -175,7 +175,7 @@ fun SubjectNotice(error: StringResource?, onRetry: () -> Unit, modifier: Modifie
             style = ItmoTheme.typography.titleMedium,
         )
         Text(
-            stringResource(error ?: Res.string.recordbook_details_empty_description),
+            error?.toUiText()?.asString() ?: stringResource(Res.string.recordbook_details_empty_description),
             Modifier.padding(top = ItmoTheme.spacing.compact),
             color = ItmoTheme.colorScheme.onSurfaceVariant,
             style = ItmoTheme.typography.bodyMedium,
@@ -341,7 +341,7 @@ private fun SubjectNoticeEmptyPreview() = ItmoPreview {
 @Composable
 private fun SubjectNoticeErrorPreview() = ItmoPreview {
     SubjectNotice(
-        error = AppError.Network.textResource(),
+        error = AppError.Network,
         onRetry = {},
         modifier = Modifier.padding(horizontal = ItmoTheme.spacing.screenMargin),
     )

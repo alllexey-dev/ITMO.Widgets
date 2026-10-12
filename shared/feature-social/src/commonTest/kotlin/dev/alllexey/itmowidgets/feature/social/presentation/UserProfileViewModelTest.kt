@@ -24,8 +24,7 @@ import dev.alllexey.itmowidgets.core.testing.teacherReviews
 import dev.alllexey.itmowidgets.core.testing.teacherSummary
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -796,7 +795,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(FakeSocialRepository().apply { profiles = mapOf(5 to unnamed) })
         val events = events(viewModel)
         runCurrent()
-        val placeholder = UiText.Res(Res.string.user_name_placeholder, listOf(5))
+        val placeholder = UiText.Res(CoreStrings.user_name_placeholder, listOf(5))
         assertEquals(placeholder, viewModel.content().displayName)
 
         viewModel.onPrimaryAction()

@@ -27,7 +27,7 @@ import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.buildingShortTitle
 import dev.alllexey.itmowidgets.core.text.roomShortTitle
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
 import dev.alllexey.itmowidgets.designsystem.components.groups.SectionHeading
@@ -38,7 +38,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsState
 import dev.alllexey.itmowidgets.feature.recordbook.ui.preview.RecordbookPreviewSamples
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.ic_expand_more
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
 import dev.alllexey.itmowidgets.shared.feature.recordbook.schedule_break_range_short
@@ -51,7 +51,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
@@ -135,9 +135,9 @@ fun SubjectAllLessonsRow(item: SubjectHubItem.AllLessons, onClick: () -> Unit) {
 @Composable
 fun SubjectLessonsMessage(state: SubjectLessonsState, onRetry: () -> Unit) {
     val message = when (state) {
-        SubjectLessonsState.Loading -> Res.string.subject_lessons_loading
-        is SubjectLessonsState.Error -> state.error.textResource()
-        else -> Res.string.subject_lessons_unmatched
+        SubjectLessonsState.Loading -> stringResource(Res.string.subject_lessons_loading)
+        is SubjectLessonsState.Error -> state.error.toUiText().asString()
+        else -> stringResource(Res.string.subject_lessons_unmatched)
     }
     Row(
         Modifier
@@ -156,7 +156,7 @@ fun SubjectLessonsMessage(state: SubjectLessonsState, onRetry: () -> Unit) {
             ItmoActivityIndicator(Modifier.padding(end = ItmoTheme.spacing.content))
         }
         Text(
-            stringResource(message),
+            message,
             Modifier.weight(1f),
             color = ItmoTheme.colorScheme.onSurfaceVariant,
             style = ItmoTheme.typography.bodyMedium,
@@ -170,7 +170,7 @@ fun SubjectLessonsMessage(state: SubjectLessonsState, onRetry: () -> Unit) {
 /** «Лекция, 1506, Кронва»: the type's name, the short room and the building cut to ten letters. */
 @Composable
 private fun SubjectLesson.typeText(): String = listOfNotNull(
-    stringResource(lessonTypeName(typeId)),
+    lessonTypeName(typeId).asString(),
     room?.let { roomShortTitle(it).asString() },
     building?.let { buildingShortTitle(it, maxLength = BUILDING_MAX_LENGTH).asString() },
 ).joinToString(LIST_SEPARATOR)

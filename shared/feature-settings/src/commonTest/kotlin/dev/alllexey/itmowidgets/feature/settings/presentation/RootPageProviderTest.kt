@@ -2,15 +2,8 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.me_group_app
-import dev.alllexey.itmowidgets.shared.core.title_recordbook
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_allowed
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_checking
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_widgets
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_enabled
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_widgets_theme_title
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -55,9 +48,9 @@ class RootPageProviderTest {
             )
             assertTrue(navigation.all { it.description == null })
             assertTrue(navigation.filter { it.page != SettingsPage.SERVICES }.all { it.value == null })
-            assertEquals(UiText.Res(Res.string.settings_services_enabled), navigation.first().value)
+            assertEquals(UiText.Res(SettingsStrings.settings_services_enabled), navigation.first().value)
             val applicationSection = fixture.viewModel.uiState.value.sections.single {
-                it.title == UiText.Res(CoreRes.string.me_group_app)
+                it.title == UiText.Res(CoreStrings.me_group_app)
             }
             assertEquals(
                 listOf(
@@ -81,14 +74,14 @@ class RootPageProviderTest {
             advanceUntilIdle()
 
             assertEquals(
-                UiText.Res(Res.string.settings_notifications_checking),
+                UiText.Res(SettingsStrings.settings_notifications_checking),
                 fixture.viewModel.action(SettingRowId.NOTIFICATIONS).value
             )
             fixture.viewModel.onNotificationPermissionChanged(granted = true)
             advanceUntilIdle()
 
             assertEquals(
-                UiText.Res(Res.string.settings_notifications_allowed),
+                UiText.Res(SettingsStrings.settings_notifications_allowed),
                 fixture.viewModel.action(SettingRowId.NOTIFICATIONS).value
             )
             val maintenance = createFixture(page = SettingsPage.MAINTENANCE)
@@ -109,7 +102,7 @@ class RootPageProviderTest {
             val index = pages.indexOf(SettingsPage.RECORDBOOK)
             assertEquals(SettingsPage.SCHEDULE, pages[index - 1])
             assertEquals(SettingsPage.SPORT, pages[index + 1])
-            assertEquals(UiText.Res(CoreRes.string.title_recordbook), SettingsPage.RECORDBOOK.title)
+            assertEquals(UiText.Res(CoreStrings.title_recordbook), SettingsPage.RECORDBOOK.title)
         }
 
     @Test
@@ -119,11 +112,11 @@ class RootPageProviderTest {
             advanceUntilIdle()
 
             val widgets = fixture.viewModel.uiState.value.sections.single {
-                it.title == UiText.Res(Res.string.settings_group_widgets)
+                it.title == UiText.Res(SettingsStrings.settings_group_widgets)
             }
             assertEquals(SettingRowId.WIDGETS_FOLLOW_THEME, widgets.items.last().id)
             val toggle = fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME)
-            assertEquals(UiText.Res(Res.string.settings_widgets_theme_title), toggle.title)
+            assertEquals(UiText.Res(SettingsStrings.settings_widgets_theme_title), toggle.title)
             assertFalse(toggle.checked)
 
             fixture.viewModel.onToggleChanged(SettingRowId.WIDGETS_FOLLOW_THEME, true)

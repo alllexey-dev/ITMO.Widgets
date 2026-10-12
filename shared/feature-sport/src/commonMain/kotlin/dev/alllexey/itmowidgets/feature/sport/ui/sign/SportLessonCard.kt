@@ -42,12 +42,11 @@ import dev.alllexey.itmowidgets.feature.sport.ui.common.sportQueuePositionText
 import dev.alllexey.itmowidgets.feature.sport.ui.common.text
 import dev.alllexey.itmowidgets.feature.sport.ui.common.timeRangeText
 import dev.alllexey.itmowidgets.shared.feature.sport.Res
+import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_title
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_card_cancel_auto
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_lesson_prediction
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_lesson_sign_out
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_lesson_sign_up
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_lesson_unavailable
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
@@ -182,14 +181,14 @@ private class OfferButton(val label: StringResource, val tone: SportConditionTon
 
 private fun SportBookingAvailability.offer(lesson: SportLesson): LessonOffer {
     if (action == SportBookingAction.NONE) {
-        val reason = restrictions.firstOrNull()?.text() ?: UiText.Res(Res.string.sport_lesson_unavailable)
+        val reason = restrictions.firstOrNull()?.text() ?: UiText.Res(SportStrings.sport_lesson_unavailable)
         return LessonOffer(OfferStatus(reason, SportConditionTone.BLOCKED), null)
     }
     val status = when {
         action == SportBookingAction.CANCEL_AUTO -> lesson.signEntry?.let {
             OfferStatus(sportQueuePositionText(it.position, it.total), SportConditionTone.WAITING)
         }
-        !lesson.isLessonReal -> OfferStatus(UiText.Res(Res.string.sport_lesson_prediction), null)
+        !lesson.isLessonReal -> OfferStatus(UiText.Res(SportStrings.sport_lesson_prediction), null)
         else -> null
     }
     val button = when (action) {

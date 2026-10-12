@@ -6,10 +6,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.notification_channel_friends
-import dev.alllexey.itmowidgets.shared.core.notification_friend_accepted
-import dev.alllexey.itmowidgets.shared.core.notification_friend_request
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import java.lang.reflect.Proxy
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -33,9 +30,9 @@ class FriendshipPushHandlerTest {
             assertEquals(AppNotificationChannels.FRIENDS, notification.channel)
             assertEquals(100001, notification.id)
             assertEquals(NotificationDestination.UserProfile(100001), notification.destination)
-            assertEquals(UiText.Res(Res.string.notification_channel_friends), notification.title)
+            assertEquals(UiText.Res(CoreStrings.notification_channel_friends), notification.title)
             assertEquals(UiText.Res(
-                if (event == FriendshipEvent.REQUEST_RECEIVED) Res.string.notification_friend_request else Res.string.notification_friend_accepted,
+                if (event == FriendshipEvent.REQUEST_RECEIVED) CoreStrings.notification_friend_request else CoreStrings.notification_friend_accepted,
                 listOf("Тестовый пользователь")
             ), notification.text)
             assertEquals(1, fixture.refreshes)

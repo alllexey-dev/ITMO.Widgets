@@ -11,23 +11,14 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.buildingShortTitle
 import dev.alllexey.itmowidgets.core.text.headline
 import dev.alllexey.itmowidgets.core.text.roomShortTitle
-import dev.alllexey.itmowidgets.shared.core.home_pending_predicted
-import dev.alllexey.itmowidgets.shared.core.home_pending_waiting
-import dev.alllexey.itmowidgets.shared.core.home_schedule_today
-import dev.alllexey.itmowidgets.shared.core.title_sport
-import dev.alllexey.itmowidgets.shared.feature.schedule.Res
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_completed
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_done
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_empty
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_next
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_now
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_tomorrow
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.schedule.SchedulePlurals
+import dev.alllexey.itmowidgets.shared.feature.schedule.ScheduleStrings
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 
 /**
  * The schedule card as it is drawn: [title] is `Сегодня` or `Завтра`; [footer] counts finished lessons or says the
@@ -75,14 +66,16 @@ class ScheduleHomeCardFormatter(private val timeZone: TimeZone) {
 
     fun schedule(card: HomeCard.Schedule): HomeScheduleCardUi {
         val footer = when {
-            card.rows.isEmpty() && card.completed == 0 -> UiText.Res(Res.string.home_schedule_empty)
-            card.rows.isEmpty() -> UiText.Res(Res.string.home_schedule_done)
+            card.rows.isEmpty() && card.completed == 0 -> UiText.Res(ScheduleStrings.home_schedule_empty)
+            card.rows.isEmpty() -> UiText.Res(ScheduleStrings.home_schedule_done)
             card.completed > 0 && !card.tomorrow ->
-                UiText.Plural(Res.plurals.home_schedule_completed, card.completed, listOf(card.completed))
+                UiText.Plural(SchedulePlurals.home_schedule_completed, card.completed, listOf(card.completed))
             else -> null
         }
         return HomeScheduleCardUi(
-            title = UiText.Res(if (card.tomorrow) Res.string.home_schedule_tomorrow else CoreRes.string.home_schedule_today),
+            title = UiText.Res(
+                if (card.tomorrow) ScheduleStrings.home_schedule_tomorrow else CoreStrings.home_schedule_today,
+            ),
             date = card.date.format(DateTexts.WEEKDAY_DAY_MONTH),
             rows = card.rows.map(::scheduleRow),
             footer = footer,
@@ -101,7 +94,7 @@ class ScheduleHomeCardFormatter(private val timeZone: TimeZone) {
                 title = args.subjectName,
                 subtitle = UiText.Joined(
                     listOfNotNull(
-                        UiText.Res(lessonTypeName(args.typeId)),
+                        lessonTypeName(args.typeId),
                         args.room?.let(::roomShortTitle),
                         args.building?.let { buildingShortTitle(it) },
                     ),
@@ -109,8 +102,8 @@ class ScheduleHomeCardFormatter(private val timeZone: TimeZone) {
                 ),
                 typeId = args.typeId,
                 badge = when (row.state) {
-                    HomeLessonState.CURRENT -> UiText.Res(Res.string.home_schedule_now)
-                    HomeLessonState.NEXT -> UiText.Res(Res.string.home_schedule_next)
+                    HomeLessonState.CURRENT -> UiText.Res(ScheduleStrings.home_schedule_now)
+                    HomeLessonState.NEXT -> UiText.Res(ScheduleStrings.home_schedule_next)
                     HomeLessonState.UPCOMING -> null
                 },
                 progress = row.progress?.coerceIn(0f, 1f),
@@ -125,14 +118,14 @@ class ScheduleHomeCardFormatter(private val timeZone: TimeZone) {
                 title = args.sectionName,
                 subtitle = UiText.Joined(
                     listOfNotNull(
-                        UiText.Res(CoreRes.string.title_sport),
+                        UiText.Res(CoreStrings.title_sport),
                         args.roomName.takeIf { it.isNotBlank() }?.let(UiText::Dynamic),
                     ),
                     SEPARATOR,
                 ),
                 typeId = SPORT_TYPE_ID,
                 badge = UiText.Res(
-                    if (row.predicted) CoreRes.string.home_pending_predicted else CoreRes.string.home_pending_waiting,
+                    if (row.predicted) CoreStrings.home_pending_predicted else CoreStrings.home_pending_waiting,
                 ),
                 progress = null,
                 target = HomeRowTarget.PendingSport(args),

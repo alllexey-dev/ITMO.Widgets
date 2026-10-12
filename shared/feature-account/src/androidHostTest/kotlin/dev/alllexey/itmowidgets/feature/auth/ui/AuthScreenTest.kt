@@ -28,8 +28,7 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthUiState
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_network
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import kotlin.test.assertEquals
@@ -178,7 +177,7 @@ class AuthScreenTest {
             SignedOut,
             SignedOut.copy(reauthenticationRequired = true),
             SignedOut.copy(manualLoginInProgress = true),
-            SignedOut.copy(error = UiText.Res(Res.string.auth_error_network)),
+            SignedOut.copy(error = UiText.Res(AccountStrings.auth_error_network)),
         )
     }
 }

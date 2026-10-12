@@ -10,24 +10,15 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.headline
-import dev.alllexey.itmowidgets.shared.core.home_pending_predicted
-import dev.alllexey.itmowidgets.shared.core.home_schedule_today
-import dev.alllexey.itmowidgets.shared.core.schedule_building_kronva
-import dev.alllexey.itmowidgets.shared.core.title_sport
-import dev.alllexey.itmowidgets.shared.feature.schedule.Res
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_completed
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_done
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_empty
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_next
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_now
-import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_tomorrow
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.schedule.SchedulePlurals
+import dev.alllexey.itmowidgets.shared.feature.schedule.ScheduleStrings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 
 class ScheduleHomeCardFormatterTest {
     private val moscow = TimeZone.of("Europe/Moscow")
@@ -38,7 +29,7 @@ class ScheduleHomeCardFormatterTest {
         val row = lessonRow(pairId = 1, state = HomeLessonState.NEXT)
         val card = formatter.schedule(scheduleCard(row))
 
-        assertEquals(UiText.Res(CoreRes.string.home_schedule_today), card.title)
+        assertEquals(UiText.Res(CoreStrings.home_schedule_today), card.title)
         assertEquals("понедельник, 7 сентября", card.date)
         val formatted = card.rows.single()
         assertEquals("09:30", formatted.start)
@@ -46,12 +37,12 @@ class ScheduleHomeCardFormatterTest {
         assertEquals("Предмет 1", formatted.title)
         assertEquals(
             UiText.Joined(
-                listOf(UiText.Res(lessonTypeName(1)), UiText.Dynamic("1506"), UiText.Res(CoreRes.string.schedule_building_kronva)),
+                listOf(lessonTypeName(1), UiText.Dynamic("1506"), UiText.Res(CoreStrings.schedule_building_kronva)),
                 " \u00B7 ",
             ),
             formatted.subtitle,
         )
-        assertEquals(UiText.Res(Res.string.home_schedule_next), formatted.badge)
+        assertEquals(UiText.Res(ScheduleStrings.home_schedule_next), formatted.badge)
         assertNull(formatted.progress)
         assertEquals(HomeRowTarget.Lesson(row.args), formatted.target)
     }
@@ -65,7 +56,7 @@ class ScheduleHomeCardFormatterTest {
             )
         )
 
-        assertEquals(UiText.Res(Res.string.home_schedule_now), card.rows[0].badge)
+        assertEquals(UiText.Res(ScheduleStrings.home_schedule_now), card.rows[0].badge)
         assertEquals(1f, card.rows[0].progress)
         assertNull(card.rows[1].badge)
         assertNull(card.rows[1].progress)
@@ -85,8 +76,8 @@ class ScheduleHomeCardFormatterTest {
         assertEquals("12:00", row.start)
         assertEquals("13:30", row.end)
         assertEquals(ScheduleHomeCardFormatter.SPORT_TYPE_ID, row.typeId)
-        assertEquals(UiText.Res(CoreRes.string.home_pending_predicted), row.badge)
-        assertEquals(UiText.Joined(listOf(UiText.Res(CoreRes.string.title_sport), UiText.Dynamic("Бассейн")), " \u00B7 "), row.subtitle)
+        assertEquals(UiText.Res(CoreStrings.home_pending_predicted), row.badge)
+        assertEquals(UiText.Joined(listOf(UiText.Res(CoreStrings.title_sport), UiText.Dynamic("Бассейн")), " \u00B7 "), row.subtitle)
         assertEquals(HomeRowTarget.PendingSport(args), row.target)
     }
 
@@ -97,13 +88,13 @@ class ScheduleHomeCardFormatterTest {
             return formatter.schedule(schedule).footer
         }
 
-        assertEquals(UiText.Res(Res.string.home_schedule_empty), footer(rows = 0, completed = 0))
-        assertEquals(UiText.Res(Res.string.home_schedule_done), footer(rows = 0, completed = 3))
-        assertEquals(UiText.Plural(Res.plurals.home_schedule_completed, 2, listOf(2)), footer(rows = 1, completed = 2))
+        assertEquals(UiText.Res(ScheduleStrings.home_schedule_empty), footer(rows = 0, completed = 0))
+        assertEquals(UiText.Res(ScheduleStrings.home_schedule_done), footer(rows = 0, completed = 3))
+        assertEquals(UiText.Plural(SchedulePlurals.home_schedule_completed, 2, listOf(2)), footer(rows = 1, completed = 2))
         assertNull(footer(rows = 1, completed = 0))
         assertNull(footer(rows = 1, completed = 2, tomorrow = true))
         val tomorrow = formatter.schedule(scheduleCard().copy(tomorrow = true))
-        assertEquals(UiText.Res(Res.string.home_schedule_tomorrow), tomorrow.title)
+        assertEquals(UiText.Res(ScheduleStrings.home_schedule_tomorrow), tomorrow.title)
     }
 
     @Test

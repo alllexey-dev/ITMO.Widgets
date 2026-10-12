@@ -10,13 +10,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_custom
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_custom_caption
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_semester
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_two_weeks
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_until
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_week
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -109,24 +103,24 @@ class IcsExportViewModel(
             IcsRangeOption(kind, title, IcsDateLabels.range(range.dates(today)))
         return IcsExportUiState.Choose(
             listOf(
-                option(IcsRangeKind.WEEK, UiText.Res(Res.string.ics_range_week), ScheduleExportRange.Week),
+                option(IcsRangeKind.WEEK, UiText.Res(SettingsStrings.ics_range_week), ScheduleExportRange.Week),
                 option(
                     IcsRangeKind.TWO_WEEKS,
-                    UiText.Res(Res.string.ics_range_two_weeks),
+                    UiText.Res(SettingsStrings.ics_range_two_weeks),
                     ScheduleExportRange.TwoWeeks
                 ),
                 IcsRangeOption(
                     IcsRangeKind.SEMESTER,
-                    UiText.Res(Res.string.ics_range_semester),
+                    UiText.Res(SettingsStrings.ics_range_semester),
                     UiText.Res(
-                        Res.string.ics_range_until,
+                        SettingsStrings.ics_range_until,
                         listOf(IcsDateLabels.day(ScheduleExportRange.Semester.dates(today).endInclusive))
                     )
                 ),
                 IcsRangeOption(
                     IcsRangeKind.CUSTOM,
-                    UiText.Res(Res.string.ics_range_custom),
-                    UiText.Res(Res.string.ics_range_custom_caption)
+                    UiText.Res(SettingsStrings.ics_range_custom),
+                    UiText.Res(SettingsStrings.ics_range_custom_caption)
                 )
             )
         )

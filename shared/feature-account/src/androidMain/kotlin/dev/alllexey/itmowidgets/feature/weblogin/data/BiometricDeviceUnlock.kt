@@ -6,27 +6,31 @@ import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlockResult
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.pair_unlock_reason
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.jetbrains.compose.resources.getString
 
 /**
  * [DeviceUnlock] with `BiometricPrompt`: a fingerprint or face, or the PIN, pattern or password. `BIOMETRIC_WEAK`
  * because this confirms the owner's presence and unlocks no key; with `DEVICE_CREDENTIAL` it works from API 26 on.
  * Lives as long as the [activity]'s screen that asks; an error or a dismissal is [DeviceUnlockResult.CANCELLED].
+ * [texts] resolves the prompt's title.
  */
-class BiometricDeviceUnlock(private val activity: FragmentActivity) : DeviceUnlock {
+class BiometricDeviceUnlock(
+    private val activity: FragmentActivity,
+    private val texts: UiTextResolver,
+) : DeviceUnlock {
 
     override suspend fun unlock(): DeviceUnlockResult {
         if (BiometricManager.from(activity).canAuthenticate(AUTHENTICATORS) != BiometricManager.BIOMETRIC_SUCCESS) {
             return DeviceUnlockResult.NOT_SET_UP
         }
         val info = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(getString(Res.string.pair_unlock_reason))
+            .setTitle(texts.resolve(UiText.Res(AccountStrings.pair_unlock_reason)))
             .setAllowedAuthenticators(AUTHENTICATORS)
             .build()
         return suspendCancellableCoroutine { continuation ->

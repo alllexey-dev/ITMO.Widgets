@@ -17,8 +17,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginUiState
 import dev.alllexey.itmowidgets.feature.auth.presentation.LoginPage
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_network
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import kotlin.test.assertEquals
 import org.junit.Test
@@ -71,7 +70,7 @@ class LoginScreenTest {
         onNodeWithText("Вход через ITMO.ID").assertExists()
         onNodeWithText("Страница ITMO.ID не открылась.").assertExists()
 
-        state = InteractiveLoginUiState(page = LoginPage.Shown, error = UiText.Res(Res.string.auth_error_network))
+        state = InteractiveLoginUiState(page = LoginPage.Shown, error = UiText.Res(AccountStrings.auth_error_network))
         waitForIdle()
         onNodeWithText("Не удалось связаться с ITMO.ID. Проверьте интернет.").assertExists()
     }
@@ -102,7 +101,7 @@ class LoginScreenTest {
             InteractiveLoginUiState(page = LoginPage.Shown),
             InteractiveLoginUiState(page = LoginPage.Shown, completingLogin = true),
             InteractiveLoginUiState(page = LoginPage.Failed),
-            InteractiveLoginUiState(page = LoginPage.Shown, error = UiText.Res(Res.string.auth_error_network)),
+            InteractiveLoginUiState(page = LoginPage.Shown, error = UiText.Res(AccountStrings.auth_error_network)),
             InteractiveLoginUiState(),
         )
     }

@@ -13,11 +13,7 @@ import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.PersonSearchResult
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.user_search_section_others
-import dev.alllexey.itmowidgets.shared.feature.social.user_search_section_registered
-import dev.alllexey.itmowidgets.shared.feature.social.user_status_not_registered
-import dev.alllexey.itmowidgets.shared.feature.social.user_subtitle_isu
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -166,11 +162,11 @@ class UserSearchViewModel(
         val others = people.filter { it.registered == null }
         return buildList {
             if (registered.isNotEmpty()) {
-                add(UserListItem.Header(UiText.Res(Res.string.user_search_section_registered)))
+                add(UserListItem.Header(UiText.Res(SocialStrings.user_search_section_registered)))
                 registered.forEach { add(UserListItem.User(it.toRow(busy))) }
             }
             if (others.isNotEmpty()) {
-                add(UserListItem.Header(UiText.Res(Res.string.user_search_section_others)))
+                add(UserListItem.Header(UiText.Res(SocialStrings.user_search_section_others)))
                 others.forEach { add(UserListItem.User(it.toRow(busy))) }
             }
             if (offersMore) add(UserListItem.LoadMore)
@@ -195,8 +191,8 @@ class UserSearchViewModel(
                 isu = isu,
                 name = name,
                 pictureUrl = pictureUrl,
-                subtitle = UiText.Res(Res.string.user_subtitle_isu, listOf(isu)),
-                status = UiText.Res(Res.string.user_status_not_registered),
+                subtitle = UiText.Res(SocialStrings.user_subtitle_isu, listOf(isu)),
+                status = UiText.Res(SocialStrings.user_status_not_registered),
                 primary = UserAction.INVITE,
                 busy = false,
                 opensProfile = true

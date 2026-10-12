@@ -3,6 +3,8 @@ package dev.alllexey.itmowidgets.ios.di
 import dev.alllexey.itmowidgets.core.di.iosBackgroundModule
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.network.BackendOrigin
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
+import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
@@ -71,9 +73,9 @@ object IosKoinModules {
         webLoginDataModule, webLoginModule, webLoginIosModule(platform), updateModule, updateIosModule,
         // The home feed with the hints over WidgetKit and UNUserNotificationCenter.
         homeModule, homeIosModule(PlacedWidgetKinds { completion -> platform.installedWidgetKinds(completion) }),
-        // The notifier, the app refresh task and the schedule change check's iOS ports and step; the runner
-        // is `IosBackgroundRefresh`, started after the graph.
-        iosBackgroundModule, scheduleChangesIosModule,
+        // The notifier with the catalog's text resolver, the app refresh task and the schedule change check's iOS ports
+        // and step; the runner is `IosBackgroundRefresh`, started after the graph.
+        iosBackgroundModule(UiTextResolver { it.resolve() }), scheduleChangesIosModule,
         // The me tab, friends, search, profiles and a user's friends; the invitation names the App Store page or the
         // site.
         socialModule, socialIosModule(inviteUrl()), meModule,

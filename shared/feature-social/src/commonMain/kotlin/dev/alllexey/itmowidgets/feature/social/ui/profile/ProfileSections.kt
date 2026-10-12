@@ -33,10 +33,10 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.ProfileFact
 import dev.alllexey.itmowidgets.feature.social.presentation.ProfileFactKind
 import dev.alllexey.itmowidgets.feature.social.presentation.SocialBlock
-import dev.alllexey.itmowidgets.shared.core.sport_detail_fact_description
-import dev.alllexey.itmowidgets.shared.core.user_profile_hidden
-import dev.alllexey.itmowidgets.shared.core.user_profile_schedule_title
-import dev.alllexey.itmowidgets.shared.core.user_profile_sport_title
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_detail_fact_description
+import dev.alllexey.itmowidgets.shared.compose.strings.user_profile_hidden
+import dev.alllexey.itmowidgets.shared.compose.strings.user_profile_schedule_title
+import dev.alllexey.itmowidgets.shared.compose.strings.user_profile_sport_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit
 import dev.alllexey.itmowidgets.shared.designsystem.ic_exercise
@@ -68,7 +68,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**

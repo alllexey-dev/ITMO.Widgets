@@ -24,23 +24,23 @@ import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetKind
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetOption
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.options
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.textSize
-import dev.alllexey.itmowidgets.shared.core.common_cancel
-import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_default
-import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_selected
-import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_title
-import dev.alllexey.itmowidgets.shared.core.settings_qr_dynamic_colors_title
-import dev.alllexey.itmowidgets.shared.core.settings_qr_spoiler_description
-import dev.alllexey.itmowidgets.shared.core.settings_qr_spoiler_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_hide_past_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_hide_teacher_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_next_early_description
-import dev.alllexey.itmowidgets.shared.core.settings_widget_next_early_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_extra_large
-import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_large
-import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_normal
-import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_description
-import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_custom_image_default
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_custom_image_selected
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_custom_image_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_dynamic_colors_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_spoiler_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_spoiler_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_hide_past_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_hide_teacher_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_next_early_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_next_early_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_extra_large
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_large
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_normal
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_tomorrow_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_tomorrow_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_pin
 import dev.alllexey.itmowidgets.shared.feature.account.Res
@@ -55,7 +55,7 @@ import dev.alllexey.itmowidgets.shared.feature.account.onboarding_widget_manual_
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**

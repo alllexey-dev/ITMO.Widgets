@@ -212,8 +212,8 @@ object IosBackgroundRefresh {
 suspend fun postFixtureScheduleChange(center: LocalNotificationCenter) {
     val koin = IosKoin.koin()
     val time = koin.get<AcademicTimeProvider>()
-    val notifier = IosAppNotifier(center, koin.get(), koin.get())
-    IosScheduleChangeNotifier(notifier).show(ScheduleChangeFixture.digest(time.today(), time.now()))
+    val notifier = IosAppNotifier(center, koin.get(), koin.get(), koin.get())
+    IosScheduleChangeNotifier(notifier).show(ScheduleChangeFixture.digest(time.today(), time.now(), koin.get()))
     notifier.awaitPosts()
 }
 
@@ -226,7 +226,7 @@ suspend fun postFixtureScheduleChange() = postFixtureScheduleChange(IosKoin.koin
  */
 suspend fun postFixtureMarkDigest(center: LocalNotificationCenter) {
     val koin = IosKoin.koin()
-    val notifier = IosAppNotifier(center, koin.get(), koin.get())
+    val notifier = IosAppNotifier(center, koin.get(), koin.get(), koin.get())
     IosMarksNotifier(notifier).showDigest(MarksFixture.digest, target = null)
     notifier.awaitPosts()
 }
@@ -240,7 +240,7 @@ suspend fun postFixtureMarkDigest() = postFixtureMarkDigest(IosKoin.koin().get<L
  */
 suspend fun postFixtureBarsPrompt() {
     val koin = IosKoin.koin()
-    val notifier = IosAppNotifier(koin.get<LocalNotificationCenter>(), koin.get(), koin.get())
+    val notifier = IosAppNotifier(koin.get<LocalNotificationCenter>(), koin.get(), koin.get(), koin.get())
     IosMarksNotifier(notifier).showBarsPrompt()
     notifier.awaitPosts()
 }

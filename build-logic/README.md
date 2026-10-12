@@ -9,8 +9,9 @@ See [modules](../docs/architecture.md#modules) and
 - `convention/`: `itmowidgets.android.app`, `itmowidgets.kmp.library`,
   `itmowidgets.cmp.ui` and `itmowidgets.testing` (SDK levels, JVM 17, targets
   and source sets, Robolectric and Roborazzi defaults).
-- `strings/`: `itmowidgets.strings`: the catalog check, the Android string
-  export and ids, the Apple string and symbol export (`exportAppleStrings`),
+- `strings/`: `itmowidgets.strings`: the catalog check, the per-module key
+  objects (`<Area>Strings`, `<Area>Plurals`), the Android string export and
+  ids, the Apple string and symbol export (`exportAppleStrings`),
   with golden tests under `src/test/resources/`.
   `strings/apple-tables.properties` lists the Apple-only string tables.
 - Versions come only from the root catalog `gradle/libs.versions.toml`; the

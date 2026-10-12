@@ -1,17 +1,17 @@
 package dev.alllexey.itmowidgets.feature.weblogin.data
 
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlockResult
 import dev.alllexey.itmowidgets.feature.weblogin.domain.HpkeSender
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.pair_unlock_reason
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import kotlin.coroutines.resume
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.jetbrains.compose.resources.getString
 import platform.Foundation.NSData
 import platform.Foundation.create
 import platform.posix.memcpy
@@ -44,12 +44,15 @@ class IosHpkeSender(private val host: PairingHost) : HpkeSender {
     }
 }
 
-/** [DeviceUnlock] with LocalAuthentication through [host]: Face ID, Touch ID or the passcode. */
-class IosDeviceUnlock(private val host: PairingHost) : DeviceUnlock {
+/**
+ * [DeviceUnlock] with LocalAuthentication through [host]: Face ID, Touch ID or the passcode; [texts] resolves the
+ * reason.
+ */
+class IosDeviceUnlock(private val host: PairingHost, private val texts: UiTextResolver) : DeviceUnlock {
 
     override suspend fun unlock(): DeviceUnlockResult {
         if (!host.canUnlockDevice()) return DeviceUnlockResult.NOT_SET_UP
-        val reason = getString(Res.string.pair_unlock_reason)
+        val reason = texts.resolve(UiText.Res(AccountStrings.pair_unlock_reason))
         val unlocked = suspendCancellableCoroutine { continuation ->
             host.unlockDevice(reason) { unlocked -> if (continuation.isActive) continuation.resume(unlocked) }
         }

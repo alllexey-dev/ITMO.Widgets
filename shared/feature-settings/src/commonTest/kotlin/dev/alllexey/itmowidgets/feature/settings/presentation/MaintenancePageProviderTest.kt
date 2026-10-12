@@ -1,11 +1,8 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.app_unofficial_notice
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_policy_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_title
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -35,7 +32,7 @@ class MaintenancePageProviderTest {
             val fixture = createFixture(page = SettingsPage.MAINTENANCE)
             advanceUntilIdle()
             assertEquals(
-                UiText.Res(Res.string.settings_restart_onboarding_title),
+                UiText.Res(SettingsStrings.settings_restart_onboarding_title),
                 fixture.viewModel.action(SettingRowId.RESTART_ONBOARDING).title
             )
 
@@ -59,11 +56,11 @@ class MaintenancePageProviderTest {
                 keys.takeLast(2)
             )
             assertEquals(
-                UiText.Res(Res.string.settings_privacy_policy_title),
+                UiText.Res(SettingsStrings.settings_privacy_policy_title),
                 fixture.viewModel.action(SettingRowId.PRIVACY_POLICY).title
             )
             assertEquals(
-                UiText.Res(CoreRes.string.app_unofficial_notice),
+                UiText.Res(CoreStrings.app_unofficial_notice),
                 fixture.viewModel.uiState.value.sections.single().footer
             )
 

@@ -1,7 +1,8 @@
-// Domain models, ports, AppResult/LoadState, UiText with its resolvers and the cross-feature strings; a public Res
-// that features and :app read.
+// Domain models, ports, AppResult/LoadState, UiText and the cross-feature strings, without Compose: the catalog files
+// compile as CMP resources in :shared:compose-strings, code here names them by the generated CoreStrings keys.
 plugins {
-    id("itmowidgets.cmp.ui")
+    id("itmowidgets.kmp.library")
+    id("itmowidgets.strings")
     id("itmowidgets.testing")
 }
 
@@ -18,8 +19,6 @@ kotlin {
             api(libs.kotlinx.serialization.json)
             // AppRoute extends NavKey; only the runtime publishes iOS klibs, navigation3-ui stays in :app.
             api(libs.androidx.navigation3.runtime)
-            // StringResource and PluralStringResource are in UiText's public signature.
-            api(libs.compose.components.resources)
             // The MyItmoApi 2.x client, its storage and Ktor's engine type are in core's public signatures.
             api(libs.my.itmo.api.kmp)
             api(libs.ktor.client.core)

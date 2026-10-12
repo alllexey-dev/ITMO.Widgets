@@ -9,13 +9,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
 import dev.alllexey.itmowidgets.shared.feature.sport.Res
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_capacity_card
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_card_queue
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_card_today
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_card_tomorrow
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_date_today
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_date_tomorrow
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_friends_count_label
+import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_kind_free_short
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_kind_intermediate_short
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_kind_team_short
@@ -50,8 +44,8 @@ import dev.alllexey.itmowidgets.shared.feature.sport.sport_status_sign_failed
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_status_signed
 import kotlinx.datetime.format
 import org.jetbrains.compose.resources.StringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.sport_registration_waiting
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_registration_waiting
 
 /**
  * Stable status semantics of sport conditions, independent of the wallpaper's primary colour. The colours are
@@ -67,16 +61,16 @@ fun SportSessionTiming.timeRangeText(): String =
 fun SportSessionTiming.dateText(): UiText {
     val date = start.date.format(DateTexts.DAY_MONTH)
     return when {
-        isToday -> UiText.Res(Res.string.sport_date_today, listOf(date))
-        isTomorrow -> UiText.Res(Res.string.sport_date_tomorrow, listOf(date))
+        isToday -> UiText.Res(SportStrings.sport_date_today, listOf(date))
+        isTomorrow -> UiText.Res(SportStrings.sport_date_tomorrow, listOf(date))
         else -> UiText.Dynamic(start.date.format(DateTexts.SHORT_WEEKDAY_DAY_MONTH).capitalizeFirst())
     }
 }
 
 /** Card date line: relative while the session is near, otherwise the weekday alone, "Четверг". */
 fun SportSessionTiming.weekdayText(): UiText = when {
-    isToday -> UiText.Res(Res.string.sport_card_today)
-    isTomorrow -> UiText.Res(Res.string.sport_card_tomorrow)
+    isToday -> UiText.Res(SportStrings.sport_card_today)
+    isTomorrow -> UiText.Res(SportStrings.sport_card_tomorrow)
     else -> UiText.Dynamic(start.date.format(DateTexts.WEEKDAY).capitalizeFirst())
 }
 
@@ -113,14 +107,14 @@ fun SportOccupancy.tone(): SportConditionTone = when {
 }
 
 /** "Занято 13/20". */
-fun SportOccupancy.cardText(): UiText = UiText.Res(Res.string.sport_capacity_card, listOf(occupied, limit))
+fun SportOccupancy.cardText(): UiText = UiText.Res(SportStrings.sport_capacity_card, listOf(occupied, limit))
 
 /** "Автозапись · 3 из 12". */
 fun sportQueuePositionText(position: Int, total: Int): UiText =
-    UiText.Res(Res.string.sport_card_queue, listOf(position, total))
+    UiText.Res(SportStrings.sport_card_queue, listOf(position, total))
 
 /** "Друзья · 2". */
-fun sportFriendsCountText(count: Int): UiText = UiText.Res(Res.string.sport_friends_count_label, listOf(count))
+fun sportFriendsCountText(count: Int): UiText = UiText.Res(SportStrings.sport_friends_count_label, listOf(count))
 
 fun SportBookingObstacle.titleResource(): StringResource = when (this) {
     SportBookingObstacle.TIME_CONFLICT -> Res.string.sport_rule_time_conflict
@@ -137,7 +131,7 @@ fun SportBookingObstacle.titleResource(): StringResource = when (this) {
 }
 
 /** MyITMO's own words when it gave any, otherwise the obstacle's title. */
-fun SportBookingRestriction.text(): UiText = detail?.let(UiText::Dynamic) ?: UiText.Res(kind.titleResource())
+fun SportBookingRestriction.text(): UiText = detail?.let(UiText::Dynamic) ?: UiText.Res(kind.titleResource().key)
 
 fun SportLessonKind.titleResource(): StringResource = when (this) {
     SportLessonKind.TRAINING_SECTION -> Res.string.sport_lesson_training_section

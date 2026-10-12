@@ -43,12 +43,12 @@ import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialogSur
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthUiState
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.app_name
-import dev.alllexey.itmowidgets.shared.core.app_unofficial_notice
-import dev.alllexey.itmowidgets.shared.core.auth_initializing
-import dev.alllexey.itmowidgets.shared.core.auth_signing_in
-import dev.alllexey.itmowidgets.shared.core.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.app_name
+import dev.alllexey.itmowidgets.shared.compose.strings.app_unofficial_notice
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_initializing
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_signing_in
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_exercise
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group

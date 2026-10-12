@@ -8,23 +8,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_toggle
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_friends_sharing_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_all
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_friends
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_load_error
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_loading
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_nobody
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_retry
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_services_required
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_unknown
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sharing_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_sharing_title
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import kotlinx.coroutines.CancellationException
 
 /** The connection to ITMO.Widgets services and the privacy choices that need it. */
@@ -100,11 +84,11 @@ class ServicesPageProvider(
                 SettingItem.Toggle(
                     id = SettingRowId.CUSTOM_SERVICES,
                     // The screen is already titled by the page; the switch names the action.
-                    title = UiText.Res(Res.string.settings_custom_services_toggle),
+                    title = UiText.Res(SettingsStrings.settings_custom_services_toggle),
                     checked = state.local.customServicesEnabled
                 )
             ),
-            footer = UiText.Res(Res.string.settings_services_footer)
+            footer = UiText.Res(SettingsStrings.settings_services_footer)
         ),
         // Shown with the switch off too: an account may remain from an earlier connection.
         SettingSection(
@@ -112,8 +96,8 @@ class ServicesPageProvider(
             items = listOf(
                 SettingItem.Action(
                     id = SettingRowId.DELETE_ACCOUNT,
-                    title = UiText.Res(Res.string.settings_delete_account_title),
-                    description = UiText.Res(Res.string.settings_delete_account_description),
+                    title = UiText.Res(SettingsStrings.settings_delete_account_title),
+                    description = UiText.Res(SettingsStrings.settings_delete_account_description),
                     trailingIcon = AppIcon.OPEN_IN_NEW
                 )
             )
@@ -127,27 +111,27 @@ class ServicesPageProvider(
             ?.takeIf { local.customServicesEnabled }
         val editable = content != null && !content.updating
         val status = when {
-            !local.customServicesEnabled -> Res.string.settings_privacy_services_required
-            sharing is SharingSettingsState.Error -> Res.string.settings_privacy_load_error
-            content == null -> Res.string.settings_privacy_loading
+            !local.customServicesEnabled -> SettingsStrings.settings_privacy_services_required
+            sharing is SharingSettingsState.Error -> SettingsStrings.settings_privacy_load_error
+            content == null -> SettingsStrings.settings_privacy_loading
             else -> null
         }?.let(UiText::Res)
         val items = mutableListOf<SettingItem>(
             sharingChoice(
                 id = SettingRowId.SCHEDULE_SHARING,
-                title = UiText.Res(Res.string.settings_schedule_sharing_title),
+                title = UiText.Res(SettingsStrings.settings_schedule_sharing_title),
                 visibility = content?.settings?.scheduleVisibility,
                 enabled = editable
             ),
             sharingChoice(
                 id = SettingRowId.SPORT_SHARING,
-                title = UiText.Res(Res.string.settings_sport_sharing_title),
+                title = UiText.Res(SettingsStrings.settings_sport_sharing_title),
                 visibility = content?.settings?.sportVisibility,
                 enabled = editable
             ),
             sharingChoice(
                 id = SettingRowId.FRIENDS_SHARING,
-                title = UiText.Res(Res.string.settings_friends_sharing_title),
+                title = UiText.Res(SettingsStrings.settings_friends_sharing_title),
                 visibility = content?.settings?.friendsVisibility,
                 enabled = editable
             )
@@ -157,14 +141,14 @@ class ServicesPageProvider(
         } else if (sharing is SharingSettingsState.Error) {
             items += SettingItem.Action(
                 id = SettingRowId.RETRY_PRIVACY,
-                title = UiText.Res(Res.string.settings_privacy_retry)
+                title = UiText.Res(SettingsStrings.settings_privacy_retry)
             )
         }
         return listOf(
             SettingSection(
                 title = null,
                 items = items,
-                footer = status ?: UiText.Res(Res.string.settings_privacy_footer)
+                footer = status ?: UiText.Res(SettingsStrings.settings_privacy_footer)
             )
         )
     }
@@ -177,7 +161,7 @@ class ServicesPageProvider(
     ) = SettingItem.Choice(
         id = id,
         title = title,
-        value = visibility?.label() ?: UiText.Res(Res.string.settings_privacy_unknown),
+        value = visibility?.label() ?: UiText.Res(SettingsStrings.settings_privacy_unknown),
         options = SharingVisibility.entries.map { ChoiceOption(it.name, it.label()) },
         selectedOptionKey = visibility?.name,
         enabled = enabled
@@ -185,9 +169,9 @@ class ServicesPageProvider(
 
     private fun SharingVisibility.label() = UiText.Res(
         when (this) {
-            SharingVisibility.ALL -> Res.string.settings_privacy_all
-            SharingVisibility.FRIENDS -> Res.string.settings_privacy_friends
-            SharingVisibility.NOBODY -> Res.string.settings_privacy_nobody
+            SharingVisibility.ALL -> SettingsStrings.settings_privacy_all
+            SharingVisibility.FRIENDS -> SettingsStrings.settings_privacy_friends
+            SharingVisibility.NOBODY -> SettingsStrings.settings_privacy_nobody
         }
     )
 

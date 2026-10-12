@@ -7,20 +7,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_friends_sharing_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_all
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_friends
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_load_error
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_nobody
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_services_required
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_unknown
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sharing_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_sharing_title
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -117,10 +104,10 @@ class ServicesPageProviderTest {
             assertEquals(null, schedule.selectedOptionKey)
             assertFalse(sport.enabled)
             assertEquals(null, sport.selectedOptionKey)
-            assertEquals(UiText.Res(Res.string.settings_privacy_unknown), schedule.value)
-            assertEquals(UiText.Res(Res.string.settings_privacy_unknown), sport.value)
+            assertEquals(UiText.Res(SettingsStrings.settings_privacy_unknown), schedule.value)
+            assertEquals(UiText.Res(SettingsStrings.settings_privacy_unknown), sport.value)
             assertEquals(
-                UiText.Res(Res.string.settings_privacy_services_required),
+                UiText.Res(SettingsStrings.settings_privacy_services_required),
                 fixture.viewModel.uiState.value.sections.single().footer
             )
             assertEquals(1, fixture.repository.disableSharingCount)
@@ -203,7 +190,7 @@ class ServicesPageProviderTest {
                 fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).enabled
             )
             assertEquals(
-                UiText.Res(Res.string.settings_privacy_load_error),
+                UiText.Res(SettingsStrings.settings_privacy_load_error),
                 fixture.viewModel.uiState.value.sections.single().footer
             )
             fixture.viewModel.action(SettingRowId.RETRY_PRIVACY)
@@ -226,12 +213,12 @@ class ServicesPageProviderTest {
                     fixture.viewModel.allItems().map { it.id }
                 )
                 val delete = fixture.viewModel.action(SettingRowId.DELETE_ACCOUNT)
-                assertEquals(UiText.Res(Res.string.settings_delete_account_title), delete.title)
-                assertEquals(UiText.Res(Res.string.settings_delete_account_description), delete.description)
+                assertEquals(UiText.Res(SettingsStrings.settings_delete_account_title), delete.title)
+                assertEquals(UiText.Res(SettingsStrings.settings_delete_account_description), delete.description)
                 assertTrue(delete.enabled)
                 // The switch keeps its own footer; the deletion row is a group of its own below it.
                 assertEquals(
-                    UiText.Res(Res.string.settings_services_footer),
+                    UiText.Res(SettingsStrings.settings_services_footer),
                     fixture.viewModel.uiState.value.sections.first().footer
                 )
 
@@ -251,25 +238,25 @@ class ServicesPageProviderTest {
             advanceUntilIdle()
             val choices = fixture.viewModel.allItems().filterIsInstance<SettingItem.Choice>()
             assertEquals(listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING, SettingRowId.FRIENDS_SHARING), choices.map { it.id })
-            assertEquals(listOf(UiText.Res(Res.string.settings_schedule_sharing_title), UiText.Res(Res.string.settings_sport_sharing_title), UiText.Res(Res.string.settings_friends_sharing_title)), choices.map { it.title })
+            assertEquals(listOf(UiText.Res(SettingsStrings.settings_schedule_sharing_title), UiText.Res(SettingsStrings.settings_sport_sharing_title), UiText.Res(SettingsStrings.settings_friends_sharing_title)), choices.map { it.title })
             choices.forEach { choice ->
                 assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), choice.options.map { it.key })
-                assertEquals(listOf(Res.string.settings_privacy_all, Res.string.settings_privacy_friends, Res.string.settings_privacy_nobody).map(UiText::Res), choice.options.map { it.label })
+                assertEquals(listOf(SettingsStrings.settings_privacy_all, SettingsStrings.settings_privacy_friends, SettingsStrings.settings_privacy_nobody).map(UiText::Res), choice.options.map { it.label })
                 val isFriends = choice.id == SettingRowId.FRIENDS_SHARING
                 assertEquals((if (isFriends) SharingVisibility.ALL else SharingVisibility.FRIENDS).name, choice.selectedOptionKey)
-                assertEquals(UiText.Res(if (isFriends) Res.string.settings_privacy_all else Res.string.settings_privacy_friends), choice.value)
+                assertEquals(UiText.Res(if (isFriends) SettingsStrings.settings_privacy_all else SettingsStrings.settings_privacy_friends), choice.value)
                 assertTrue(choice.enabled)
             }
-            assertEquals(UiText.Res(Res.string.settings_privacy_footer), fixture.viewModel.uiState.value.sections.single().footer)
+            assertEquals(UiText.Res(SettingsStrings.settings_privacy_footer), fixture.viewModel.uiState.value.sections.single().footer)
 
             fixture.repository.sharing.value = SharingSettingsState.Content(
                 SharingSettings(SharingVisibility.ALL, SharingVisibility.NOBODY)
             )
             advanceUntilIdle()
             assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
-            assertEquals(UiText.Res(Res.string.settings_privacy_all), fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).value)
+            assertEquals(UiText.Res(SettingsStrings.settings_privacy_all), fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).value)
             assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingRowId.SPORT_SHARING).selectedOptionKey)
-            assertEquals(UiText.Res(Res.string.settings_privacy_nobody), fixture.viewModel.choice(SettingRowId.SPORT_SHARING).value)
+            assertEquals(UiText.Res(SettingsStrings.settings_privacy_nobody), fixture.viewModel.choice(SettingRowId.SPORT_SHARING).value)
         }
 
     @Test
@@ -346,7 +333,7 @@ class ServicesPageProviderTest {
                     fixture.viewModel.allItems().filterIsInstance<SettingItem.Choice>().forEach { choice ->
                         assertFalse(choice.enabled)
                         assertEquals(null, choice.selectedOptionKey)
-                        assertEquals(UiText.Res(Res.string.settings_privacy_unknown), choice.value)
+                        assertEquals(UiText.Res(SettingsStrings.settings_privacy_unknown), choice.value)
                     }
                 }
             }

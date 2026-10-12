@@ -75,9 +75,9 @@ extension UiText {
     var resolved: String {
         switch self {
         case let text as UiTextRes:
-            AppStrings.string(text.resource.key, text.arguments)
+            AppStrings.string(text.key, text.arguments)
         case let text as UiTextPlural:
-            AppStrings.plural(text.resource.key, count: Int(text.count), text.arguments)
+            AppStrings.plural(text.key, count: Int(text.count), text.arguments)
         case let text as UiTextDynamic:
             text.value
         case let text as UiTextJoined:

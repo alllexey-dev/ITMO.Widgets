@@ -131,6 +131,7 @@ dependencies {
     // String paths: type-safe project accessors reject the dotted root name ITMO.Widgets.
     implementation(project(":shared:core"))
     implementation(project(":shared:designsystem"))
+    implementation(project(":shared:compose-strings"))
     implementation(project(":shared:backend-client"))
     implementation(project(":shared:feature-qr"))
     implementation(project(":shared:feature-home"))

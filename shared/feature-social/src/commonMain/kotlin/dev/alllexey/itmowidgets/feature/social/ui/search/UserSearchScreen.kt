@@ -38,7 +38,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
@@ -51,9 +52,9 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
 import dev.alllexey.itmowidgets.feature.social.presentation.UserSearchUiState
 import dev.alllexey.itmowidgets.feature.social.ui.list.UserList
 import dev.alllexey.itmowidgets.feature.social.ui.list.UserListTestTags
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
@@ -67,7 +68,7 @@ import dev.alllexey.itmowidgets.shared.feature.social.user_search_idle_title
 import dev.alllexey.itmowidgets.shared.feature.social.user_search_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [UserSearchScreen]; the list and its rows carry [UserListTestTags]. */
@@ -233,7 +234,7 @@ private fun SearchBody(
         is UserSearchUiState.Error -> SearchState(
             painterResource(KitRes.drawable.ic_error),
             stringResource(CoreRes.string.common_load_error_title),
-            stringResource(state.error.textResource()),
+            state.error.toUiText().asString(),
             ContentStateAction(stringResource(CoreRes.string.common_retry), onRetry),
         )
         is UserSearchUiState.Content -> UserList(

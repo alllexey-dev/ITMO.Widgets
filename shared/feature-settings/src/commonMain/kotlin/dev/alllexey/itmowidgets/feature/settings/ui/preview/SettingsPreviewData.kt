@@ -19,25 +19,26 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.app_unofficial_notice
-import dev.alllexey.itmowidgets.shared.core.me_group_app
-import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_default
-import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_title
-import dev.alllexey.itmowidgets.shared.core.settings_qr_dynamic_colors_title
-import dev.alllexey.itmowidgets.shared.core.settings_qr_spoiler_description
-import dev.alllexey.itmowidgets.shared.core.settings_qr_spoiler_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_hide_past_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_hide_teacher_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_next_early_description
-import dev.alllexey.itmowidgets.shared.core.settings_widget_next_early_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_extra_large
-import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_large
-import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_normal
-import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_title
-import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_description
-import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_title
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.app_unofficial_notice
+import dev.alllexey.itmowidgets.shared.compose.strings.me_group_app
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_custom_image_default
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_custom_image_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_dynamic_colors_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_spoiler_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_spoiler_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_hide_past_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_hide_teacher_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_next_early_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_next_early_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_extra_large
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_large
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_normal
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_tomorrow_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_tomorrow_title
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_group_colors
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_group_contrast
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_wallpaper_footer
@@ -77,7 +78,6 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_t
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_toggle
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_diagnostics_count
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_diagnostics_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_friends_sharing_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_access
@@ -480,7 +480,7 @@ internal object SettingsPreviewData {
                 SettingItem.Action(
                     id = SettingRowId.DIAGNOSTICS,
                     title = res(Res.string.settings_diagnostics_title),
-                    value = UiText.Res(Res.string.settings_diagnostics_count, listOf(0)),
+                    value = UiText.Res(SettingsStrings.settings_diagnostics_count, listOf(0)),
                     trailingIcon = AppIcon.CHEVRON_RIGHT
                 ),
                 SettingItem.Action(
@@ -591,7 +591,7 @@ internal object SettingsPreviewData {
         preview: WidgetPreviewSettings? = null
     ) = SettingsUiState(page, sections.toList(), loaded = true, previewSettings = preview)
 
-    private fun res(resource: StringResource) = UiText.Res(resource)
+    private fun res(resource: StringResource) = UiText.Res(resource.key)
 
     private fun SharingVisibility.label() = res(
         when (this) {

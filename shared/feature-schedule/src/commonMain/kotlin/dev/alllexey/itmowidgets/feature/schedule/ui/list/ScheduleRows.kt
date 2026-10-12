@@ -52,9 +52,9 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.presentation.PendingSportStatus
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleLessonState
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleRowUi
-import dev.alllexey.itmowidgets.shared.core.schedule_auto_sign_prediction_description
-import dev.alllexey.itmowidgets.shared.core.schedule_auto_sign_waiting_description
-import dev.alllexey.itmowidgets.shared.core.schedule_unknown_subject
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_auto_sign_prediction_description
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_auto_sign_waiting_description
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_unknown_subject
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_calendar
 import dev.alllexey.itmowidgets.shared.designsystem.ic_location_on
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
@@ -76,7 +76,7 @@ import kotlinx.datetime.format
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
@@ -146,7 +146,7 @@ internal fun LessonRow(row: ScheduleRowUi.LessonRow, gutter: TimelineGutter, onC
             if (row.state == ScheduleLessonState.COMPLETED) colors.onSurfaceVariant else colors.onSurface,
         )
         MetaLine(leading = { TypeDot(lessonTypeColor(lesson.typeId.raw)) }) {
-            MetaText(stringResource(lessonTypeName(lesson.typeId.raw)))
+            MetaText(lessonTypeName(lesson.typeId.raw).asString())
             if (!lesson.zoomUrl.isNullOrBlank()) {
                 Mark(KitRes.drawable.ic_videocam, stringResource(Res.string.schedule_lesson_link_indicator), colors.onSurfaceVariant)
             }

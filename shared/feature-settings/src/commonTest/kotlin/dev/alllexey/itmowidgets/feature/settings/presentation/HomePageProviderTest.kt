@@ -3,10 +3,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_home
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_marks_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_changes_title
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -37,7 +34,7 @@ class HomePageProviderTest {
             advanceUntilIdle()
 
             val section = fixture.viewModel.uiState.value.sections.single()
-            assertEquals(UiText.Res(Res.string.settings_group_home), fixture.viewModel.uiState.value.page.title)
+            assertEquals(UiText.Res(SettingsStrings.settings_group_home), fixture.viewModel.uiState.value.page.title)
             assertEquals(null, section.footer)
             assertEquals(
                 listOf(
@@ -65,7 +62,7 @@ class HomePageProviderTest {
 
             val row = fixture.viewModel.uiState.value.sections.single().items[1] as SettingItem.Toggle
             assertEquals(SettingRowId.HOME_CARD_SCHEDULE_CHANGES, row.id)
-            assertEquals(UiText.Res(Res.string.settings_home_card_schedule_changes_title), row.title)
+            assertEquals(UiText.Res(SettingsStrings.settings_home_card_schedule_changes_title), row.title)
             assertTrue(row.checked)
 
             fixture.viewModel.onToggleChanged(SettingRowId.HOME_CARD_SCHEDULE_CHANGES, false)
@@ -83,7 +80,7 @@ class HomePageProviderTest {
 
             val row = fixture.viewModel.uiState.value.sections.single().items[2] as SettingItem.Toggle
             assertEquals(SettingRowId.HOME_CARD_MARKS, row.id)
-            assertEquals(UiText.Res(Res.string.settings_home_card_marks_title), row.title)
+            assertEquals(UiText.Res(SettingsStrings.settings_home_card_marks_title), row.title)
             assertTrue(row.checked)
 
             fixture.viewModel.onToggleChanged(SettingRowId.HOME_CARD_MARKS, false)

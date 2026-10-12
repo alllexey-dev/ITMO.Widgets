@@ -9,11 +9,8 @@ import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.friends_section_incoming
-import dev.alllexey.itmowidgets.shared.feature.social.friends_section_outgoing
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -70,9 +67,9 @@ class FriendsViewModelTest {
             val requestsTab = viewModel.uiState.value as FriendsUiState.Content
             assertEquals(
                 listOf(
-                    UserListItem.Header(UiText.Res(Res.string.friends_section_incoming)),
+                    UserListItem.Header(UiText.Res(SocialStrings.friends_section_incoming)),
                     "user:2",
-                    UserListItem.Header(UiText.Res(Res.string.friends_section_outgoing)),
+                    UserListItem.Header(UiText.Res(SocialStrings.friends_section_outgoing)),
                     "user:3"
                 ),
                 requestsTab.items.map { if (it is UserListItem.User) "user:${it.row.isu}" else it }
@@ -188,7 +185,7 @@ class FriendsViewModelTest {
         val viewModel = FriendsViewModel(repository)
         advanceUntilIdle()
         val row = ((viewModel.uiState.value as FriendsUiState.Content).items.single() as UserListItem.User).row
-        val placeholder = UiText.Res(CoreRes.string.user_name_placeholder, listOf(7))
+        val placeholder = UiText.Res(CoreStrings.user_name_placeholder, listOf(7))
         assertEquals(placeholder, row.displayName)
 
         viewModel.onAction(row, UserAction.REMOVE)

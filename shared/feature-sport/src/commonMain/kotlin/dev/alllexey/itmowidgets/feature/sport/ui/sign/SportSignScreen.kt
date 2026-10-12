@@ -24,7 +24,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -35,8 +36,8 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignCommand
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignEvent
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignUiState
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
-import dev.alllexey.itmowidgets.shared.core.common_partial_load_error
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_partial_load_error
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.feature.sport.Res
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_lesson_unavailable
 import kotlin.time.Instant
@@ -51,7 +52,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /** Everything the `Запись` screen asks of its route: the filters, the week strip, the lessons and the list states. */
 @Immutable
@@ -177,7 +178,7 @@ fun SportSignRoute(
                         when (event) {
                             is SportSignEvent.ShowToast -> feedback.show { showSportSignMessage(event) }
                             is SportSignEvent.ShowError -> feedback.show {
-                                showSnackbar(getString(event.error.textResource()), duration = SnackbarDuration.Long)
+                                showSnackbar(event.error.toUiText().resolve(), duration = SnackbarDuration.Long)
                             }
                             is SportSignEvent.OpenLessonDetails ->
                                 openLesson(event.lesson, viewModel.uiState.value.isBusy(event.lesson.lessonId))

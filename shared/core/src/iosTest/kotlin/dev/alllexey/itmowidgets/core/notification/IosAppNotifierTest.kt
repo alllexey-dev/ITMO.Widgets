@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -74,7 +75,12 @@ class IosAppNotifierTest {
 
     private fun kotlinx.coroutines.test.TestScope.notifier(): IosAppNotifier {
         val dispatcher = StandardTestDispatcher(testScheduler)
-        return IosAppNotifier(center, AppDispatchers(dispatcher, dispatcher, dispatcher), RecordingAppLog())
+        return IosAppNotifier(
+            center,
+            AppDispatchers(dispatcher, dispatcher, dispatcher),
+            RecordingAppLog(),
+            UiTextResolver { (it as UiText.Dynamic).value },
+        )
     }
 
     private fun notification(silent: Boolean = false) = AppNotification(

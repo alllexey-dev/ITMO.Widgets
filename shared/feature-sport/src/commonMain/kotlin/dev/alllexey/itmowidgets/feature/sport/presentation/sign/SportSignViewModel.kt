@@ -19,16 +19,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
-import dev.alllexey.itmowidgets.shared.feature.sport.Res
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_existing_day
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_existing_entry
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_free_description
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_future_description
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_limit_reached
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_title
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_community_services_disabled
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_sign_success
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_unsign_success
+import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -143,13 +134,13 @@ class SportSignViewModel(
     fun selectTime(time: String?) = filterController.selectTime(time)
 
     fun signUpForLesson(lesson: SportLesson) {
-        performLessonAction(lesson.lessonId, UiText.Res(Res.string.sport_sign_success)) {
+        performLessonAction(lesson.lessonId, UiText.Res(SportStrings.sport_sign_success)) {
             bookingDelegate.signIn(lesson)
         }
     }
 
     fun unSignForLesson(lesson: SportLesson) {
-        performLessonAction(lesson.lessonId, UiText.Res(Res.string.sport_unsign_success)) {
+        performLessonAction(lesson.lessonId, UiText.Res(SportStrings.sport_unsign_success)) {
             bookingDelegate.signOut(lesson)
         }
     }
@@ -207,28 +198,28 @@ class SportSignViewModel(
 
     private fun SportAutoSignDecision.toEvent(): SportSignEvent = when (this) {
         SportAutoSignDecision.ServicesDisabled ->
-            SportSignEvent.ShowInfoDialog(message = UiText.Res(Res.string.sport_community_services_disabled))
+            SportSignEvent.ShowInfoDialog(message = UiText.Res(SportStrings.sport_community_services_disabled))
         is SportAutoSignDecision.LeaveQueue -> SportSignEvent.ShowAutoSignDeleteDialog(
-            message = UiText.Res(Res.string.sport_auto_sign_existing_entry, listOf(position, total)),
+            message = UiText.Res(SportStrings.sport_auto_sign_existing_entry, listOf(position, total)),
             command = command
         )
         is SportAutoSignDecision.ConfirmFreeSign -> SportSignEvent.ShowAutoSignConfirmDialog(
-            title = UiText.Res(Res.string.sport_auto_sign_title),
-            message = UiText.Res(Res.string.sport_auto_sign_free_description),
+            title = UiText.Res(SportStrings.sport_auto_sign_title),
+            message = UiText.Res(SportStrings.sport_auto_sign_free_description),
             showForceSignButton = true,
             command = command
         )
         is SportAutoSignDecision.ConfirmAutoSign -> SportSignEvent.ShowAutoSignConfirmDialog(
-            title = UiText.Res(Res.string.sport_auto_sign_title),
-            message = UiText.Res(Res.string.sport_auto_sign_future_description),
+            title = UiText.Res(SportStrings.sport_auto_sign_title),
+            message = UiText.Res(SportStrings.sport_auto_sign_future_description),
             showForceSignButton = false,
             command = command
         )
         is SportAutoSignDecision.DayTaken -> SportSignEvent.ShowInfoDialog(
-            message = UiText.Res(Res.string.sport_auto_sign_existing_day, listOf(section, teacher))
+            message = UiText.Res(SportStrings.sport_auto_sign_existing_day, listOf(section, teacher))
         )
         is SportAutoSignDecision.LimitReached -> SportSignEvent.ShowInfoDialog(
-            message = UiText.Res(Res.string.sport_auto_sign_limit_reached, listOf(nextAvailable))
+            message = UiText.Res(SportStrings.sport_auto_sign_limit_reached, listOf(nextAvailable))
         )
         is SportAutoSignDecision.Failed -> SportSignEvent.ShowError(error)
     }

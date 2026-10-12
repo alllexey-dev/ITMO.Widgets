@@ -42,7 +42,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
@@ -51,8 +52,8 @@ import dev.alllexey.itmowidgets.designsystem.components.state.Skeleton
 import dev.alllexey.itmowidgets.designsystem.components.state.SkeletonStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.schedule.presentation.SelectedUser
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_event_note
@@ -71,7 +72,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [ScheduleScreen]; days and rows carry [ScheduleListTestTags]. */
@@ -168,7 +169,7 @@ private fun ScheduleBody(state: ScheduleScreenState, actions: ScheduleScreenActi
             title = stringResource(CoreRes.string.common_load_error_title),
             modifier = Modifier.fillMaxSize().testTag(ScheduleScreenTestTags.STATE),
             icon = painterResource(KitRes.drawable.ic_error),
-            description = stringResource(body.error.textResource()),
+            description = body.error.toUiText().asString(),
             action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
         )
         is ScheduleScreenBody.Days -> AppRefreshBox(state.refreshing, actions.onRefresh, Modifier.fillMaxSize()) {

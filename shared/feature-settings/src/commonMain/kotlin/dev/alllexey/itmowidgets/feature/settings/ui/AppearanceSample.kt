@@ -13,8 +13,8 @@ import androidx.compose.ui.semantics.contentDescription
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsToggleRow
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_sample
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_sample_action

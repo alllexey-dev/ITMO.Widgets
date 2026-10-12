@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ButtonRow
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
@@ -40,8 +40,8 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsRangeKind
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsRangeOption
-import dev.alllexey.itmowidgets.shared.core.common_retry
-import dev.alllexey.itmowidgets.shared.core.schedule_lesson_count
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_lesson_count
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_event_note
@@ -59,7 +59,7 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_titl
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What the sheet asks of its host and its view model; sending and opening the file are the host's intents. */
@@ -292,7 +292,7 @@ private fun Problem(state: IcsExportUiState, actions: IcsExportActions) {
     val failed = state as? IcsExportUiState.Failed
     ContentState(
         title = when {
-            failed != null -> stringResource(failed.error.textResource())
+            failed != null -> failed.error.toUiText().asString()
             state == IcsExportUiState.Empty -> stringResource(Res.string.ics_empty)
             else -> ""
         },

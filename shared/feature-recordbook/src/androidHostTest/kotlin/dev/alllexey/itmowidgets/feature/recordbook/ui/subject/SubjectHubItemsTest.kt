@@ -11,7 +11,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
-import dev.alllexey.itmowidgets.core.text.textResource
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroupKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
@@ -24,8 +23,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectHubState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacher
-import dev.alllexey.itmowidgets.shared.core.links_chats
-import dev.alllexey.itmowidgets.shared.core.links_title
+import dev.alllexey.itmowidgets.shared.compose.strings.links_chats
+import dev.alllexey.itmowidgets.shared.compose.strings.links_title
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
 import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_controls_title
 import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_lessons_title
@@ -38,7 +37,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Instant
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /** `subjectHubItems` keeps `SubjectHubAdapter.submitContent`'s order, groups and counts. */
 class SubjectHubItemsTest {
@@ -252,7 +251,7 @@ class SubjectHubItemsTest {
 
         assertEquals(emptyList(), subjectHubItems(hinted).filterIsInstance<SubjectHubItem.Notice>())
         assertEquals(
-            listOf(SubjectHubItem.Notice(AppError.Network.textResource())),
+            listOf(SubjectHubItem.Notice(AppError.Network)),
             subjectHubItems(hinted.copy(controlsError = AppError.Network)).filterIsInstance<SubjectHubItem.Notice>(),
         )
     }
@@ -264,7 +263,7 @@ class SubjectHubItemsTest {
         val items = subjectHubItems(state)
 
         assertEquals(
-            listOf(SubjectHubItem.Notice(AppError.Network.textResource())),
+            listOf(SubjectHubItem.Notice(AppError.Network)),
             items.filterIsInstance<SubjectHubItem.Notice>(),
         )
         assertEquals(emptyList(), items.filterIsInstance<SubjectHubItem.Control>())

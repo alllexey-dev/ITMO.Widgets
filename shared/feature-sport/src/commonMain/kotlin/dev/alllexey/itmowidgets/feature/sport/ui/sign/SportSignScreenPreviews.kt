@@ -11,10 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignUiState
-import dev.alllexey.itmowidgets.shared.core.common_partial_load_error
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_partial_load_error
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and the baseline is named

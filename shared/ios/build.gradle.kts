@@ -35,6 +35,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":shared:core"))
             implementation(project(":shared:designsystem"))
+            implementation(project(":shared:compose-strings"))
             implementation(project(":shared:backend-client"))
             implementation(project(":shared:feature-qr"))
             implementation(project(":shared:feature-home"))

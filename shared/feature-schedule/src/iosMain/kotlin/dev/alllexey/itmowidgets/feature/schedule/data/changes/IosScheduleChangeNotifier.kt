@@ -9,8 +9,7 @@ import dev.alllexey.itmowidgets.core.text.headline
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigests
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.schedule_changes_notification_title
+import dev.alllexey.itmowidgets.shared.core.CorePlurals
 import kotlin.time.Instant
 
 /** A [ScheduleChangeNotifier] that can also hand a digest to the system for a later moment. */
@@ -34,7 +33,7 @@ class IosScheduleChangeNotifier(private val notifier: IosAppNotifier) : MorningS
     private fun notificationOf(digest: ScheduleChangeDigest) = AppNotification(
         channel = AppNotificationChannels.SCHEDULE_CHANGES,
         id = ScheduleChangeDigests.NOTIFICATION_ID,
-        title = UiText.Plural(Res.plurals.schedule_changes_notification_title, digest.unread, listOf(digest.unread)),
+        title = UiText.Plural(CorePlurals.schedule_changes_notification_title, digest.unread, listOf(digest.unread)),
         text = digest.first.headline(),
         destination = NotificationDestination.ScheduleChanges,
         silent = !digest.audible,

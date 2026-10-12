@@ -12,13 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ReportDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ReportDialogState
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ReportDialogSurface
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.shared.core.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.feature.resources.Res
 import dev.alllexey.itmowidgets.shared.feature.resources.links_report_broken
 import dev.alllexey.itmowidgets.shared.feature.resources.links_report_comment
@@ -29,7 +30,7 @@ import dev.alllexey.itmowidgets.shared.feature.resources.links_report_title
 import dev.alllexey.itmowidgets.shared.feature.resources.links_report_wrong_subject
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /**
  * What [ReportLinkDialog] shows: the picked [reason], the [comment], whether the report is on its way and the [error]
@@ -125,7 +126,7 @@ private fun ReportLinkDialogState.toKit() = ReportDialogState(
     selectedReason = reason?.ordinal,
     comment = comment,
     sending = sending,
-    error = error?.let { stringResource(it.textResource()) },
+    error = error?.let { it.toUiText().asString() },
 )
 
 private fun ResourceReportReason.label(): StringResource = when (this) {

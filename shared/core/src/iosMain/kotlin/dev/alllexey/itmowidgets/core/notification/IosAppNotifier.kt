@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.core.notification
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
@@ -14,8 +14,8 @@ import kotlinx.coroutines.launch
 /**
  * The iOS [AppNotifier]: local notifications through [center]. The channel becomes the thread identifier
  * (the system groups a channel's notifications), `<channel>-<id>` the request identifier, so a newer notification
- * replaces the shown one as Android's tag and id do. Texts are resolved from the catalog by key (`UiText.resolve`,
- * Russian through the app locale). A silent notification has no sound. iOS has no lock screen variant to set:
+ * replaces the shown one as Android's tag and id do. [texts] resolves the texts from the catalog by key (Russian
+ * through the app locale). A silent notification has no sound. iOS has no lock screen variant to set:
  * whether the lock screen shows the text is the user's "Show Previews" setting, so `publicTitle` is not used.
  *
  * [show] does not wait for the post; [awaitPosts] does, so the background runner finishes only after its
@@ -25,6 +25,7 @@ class IosAppNotifier(
     private val center: LocalNotificationCenter,
     dispatchers: AppDispatchers,
     private val log: AppLog,
+    private val texts: UiTextResolver,
 ) : AppNotifier, SessionDataCleaner {
 
     private val posts = SupervisorJob()
@@ -62,8 +63,8 @@ class IosAppNotifier(
     private suspend fun requestOf(notification: AppNotification, deliverAt: Instant?) = LocalNotificationRequest(
         identifier = identifierOf(notification.channel, notification.id),
         threadIdentifier = notification.channel,
-        title = notification.title.resolve(),
-        body = notification.text.resolve(),
+        title = texts.resolve(notification.title),
+        body = texts.resolve(notification.text),
         silent = notification.silent,
         deliverAt = deliverAt,
         userInfo = NotificationTapRoutes.userInfoOf(notification.destination),
