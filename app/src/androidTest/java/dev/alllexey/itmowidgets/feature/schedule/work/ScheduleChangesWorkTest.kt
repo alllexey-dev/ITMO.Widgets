@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.NetworkType
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
 import dev.alllexey.itmowidgets.testing.TestGraph
@@ -15,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -27,6 +29,15 @@ class ScheduleChangesWorkTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val scheduler = TestGraph.get<ScheduleChangesScheduler>()
     private val workManager = WorkManager.getInstance(context)
+
+    /**
+     * Without a session the app start cancels both unique works from a coroutine; joined first, it can no longer
+     * cancel the work a test has just enqueued.
+     */
+    @Before
+    fun awaitAppStartSync() = runBlocking {
+        ApplicationProvider.getApplicationContext<ItmoWidgetsApplication>().backgroundChecksSync.join()
+    }
 
     @After
     fun restoreOwnerState() {
