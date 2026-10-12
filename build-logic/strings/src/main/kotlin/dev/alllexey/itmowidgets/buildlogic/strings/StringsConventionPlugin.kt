@@ -9,10 +9,11 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
  * The string catalog (ADR 0028). itmowidgets.android.app and itmowidgets.cmp.ui apply it, so a module never adds a
- * line for it.
+ * line for it; `:shared:core`, a plain KMP library, applies it itself.
  *
  * - Every module gets the `itmowidgetsStrings { androidExport(...) }` extension.
  * - A shared module publishes the declared files (and its drawables after `androidExportDrawables()`) as its
@@ -20,12 +21,14 @@ import org.gradle.kotlin.dsl.register
  * - `:app` runs `checkStringCatalog` before every build (`preBuild`) and merges the exports of its project
  *   dependencies into a generated `res` directory of each variant, with the `core.ui.ExportedStringIds` table
  *   ([AndroidStringIds]) that resolves `UiText.Res`/`UiText.Plural` keys to `R` ids.
+ * - A shared module with a catalog compiles its key objects ([StringKeys]) in `commonMain`.
  * - `:app:exportAppleStrings` writes the committed `iosApp/Shared` tables and `AppSymbol.swift` ([AppleExport]).
  */
 class StringsConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         val extension = extensions.create<StringsExtension>(EXTENSION)
         pluginManager.withPlugin("com.android.kotlin.multiplatform.library") { publishAndroidExports(extension) }
+        pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") { generateStringKeys() }
         pluginManager.withPlugin("com.android.application") {
             registerCatalogCheck()
             consumeAndroidExports()
@@ -54,6 +57,23 @@ class StringsConventionPlugin : Plugin<Project> {
         configurations.consumable(ELEMENTS) {
             attributes.attribute(Usage.USAGE_ATTRIBUTE, objects.named(USAGE))
             outgoing.artifact(export.flatMap { it.outputDir })
+        }
+    }
+
+    private fun Project.generateStringKeys() {
+        val values = layout.projectDirectory.dir("$COMPOSE_RESOURCES/values")
+        if (!values.asFile.isDirectory) return
+        val keysPackage = KEYS_PACKAGE_PREFIX + path.removePrefix(":").replace(':', '.').replace('-', '.')
+        val keysArea = StringKeys.area(name)
+        val keys = tasks.register<GenerateStringKeys>("generateStringKeys") {
+            description = "Writes the const val key objects of this module's catalog (UiText.Res, UiText.Plural)."
+            resourcesDir.set(layout.projectDirectory.dir(COMPOSE_RESOURCES))
+            packageName.set(keysPackage)
+            area.set(keysArea)
+            outputDir.set(layout.buildDirectory.dir("generated/itmowidgets/stringKeys"))
+        }
+        extensions.getByType<KotlinMultiplatformExtension>().sourceSets.named("commonMain") {
+            kotlin.srcDir(keys.flatMap { it.outputDir })
         }
     }
 
@@ -131,5 +151,8 @@ class StringsConventionPlugin : Plugin<Project> {
         const val COMPOSE_RESOURCES = "src/commonMain/composeResources"
         const val APPLE_SHARED = "iosApp/Shared"
         const val STRING_IDS_PACKAGE = "core.ui"
+
+        /** The key objects sit in the module namespace, beside its CMP `Res`. */
+        const val KEYS_PACKAGE_PREFIX = "dev.alllexey.itmowidgets."
     }
 }

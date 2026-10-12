@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.core.ui
 
 import dev.alllexey.itmowidgets.R
 
-/** `StringResource.key` -> `R.string` and `PluralStringResource.key` -> `R.plurals` (ADR 0028). */
+/** `UiText.Res.key` -> `R.string` and `UiText.Plural.key` -> `R.plurals` (ADR 0028). */
 internal object ExportedStringIds {
 
     fun string(key: String): Int = when (key) {
