@@ -36,11 +36,11 @@ The top bar «Инструменты разработчика» with «Наза�
   show/hide toggle) and «Проверить и сохранить»; an empty field shows «Вставьте
   Refresh token». The token lives only in the dialog's memory state, never in
   saved state.
-  `DebugRefreshTokenController` stores the token, runs every
-  `SessionDataCleaner` and forces a token refresh through MyItmoApi. Success
-  shows «Токен проверен и сохранён» and recreates the activity; a failure
-  clears the tokens and the data and shows «Токен не подошёл: <ошибка>». The
-  demo session refuses with `AppError.DemoUnavailable`.
+  The debug tools sign in with it through
+  `SessionRepository.signInWithRefreshToken`, the same session transition as a
+  normal sign-in (the previous account's data is cleared). Success shows
+  «Токен проверен и сохранён» and recreates the activity; a failure shows
+  «Токен не подошёл: <ошибка>».
 - «Тестовое академическое время»: «Системная дата» or «Тестовая дата: <дата>»,
   «Выбрать дату» (material3's date picker on the current override or the
   effective date, as a kotlinx `LocalDate`) and
@@ -82,8 +82,7 @@ names `schedule-changes-now` and `marks-check-now`.
 
 ## Tests
 
-JVM: `DebugToolsViewModelTest`, `DebugRulesTest`,
-`DefaultDebugRefreshTokenControllerTest`. `DebugToolsScreenshotTest` renders the
+JVM: `DebugToolsViewModelTest`, `DebugRulesTest`. `DebugToolsScreenshotTest` renders the
 previews `DebugToolsScreen_{content,refresh-token-dialog,sport-score-dialog}`
 (the dialogs without their window) into `app/screenshots/` in light and dark.
 `AccountEntriesTest` opens the screen from the Me row and checks that only a
