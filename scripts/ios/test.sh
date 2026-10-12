@@ -12,8 +12,7 @@
 # - Runs every scripts/ios/check-*.sh before building (add a check as a new file).
 # - xcodegen generates iosApp/ITMOWidgets.xcodeproj (ignored); xcodebuild runs build-for-testing, then
 #   test-without-building, with DerivedData in iosApp/build/DerivedData and the result bundle in
-#   iosApp/build/test-results/. The app target's Run Script builds the Kotlin framework with Gradle; test.sh links it
-#   first, while the simulator boots in the background.
+#   iosApp/build/test-results/. The app target's Run Script builds the Kotlin framework with Gradle.
 # - One simulator per worktree, `itmo-<worktree directory>` (`itmo-ci` with --ci), created from the pinned device
 #   type and runtime on first use; --cleanup (and the end of a --ci run) deletes it. No other simulator is touched.
 # - The default run and --only skip the UITests target; `ui` runs only it (XCUITest launches the app, so it is slower).
@@ -201,16 +200,6 @@ run_xcode() { # label
     -destination "platform=iOS Simulator,id=$udid"
     -derivedDataPath iosApp/build/DerivedData
   )
-  # A fresh simulator (one per CI run) takes minutes to boot, and xcodebuild stalls while its destination boots, so
-  # it boots while Gradle links the Kotlin framework; the Run Script inside xcodebuild then finds it up to date.
-  xcrun simctl bootstatus "$udid" -b > /dev/null 2>&1 &
-  local boot=$!
-  note "./gradlew :shared:ios:linkDebugFrameworkIosSimulatorArm64 while $sim_name boots"
-  if ! ./gradlew :shared:ios:linkDebugFrameworkIosSimulatorArm64; then
-    kill "$boot" 2> /dev/null
-    return 1
-  fi
-  wait "$boot" || note "simulator $sim_name did not report a boot; xcodebuild boots it"
   note "xcodebuild build-for-testing for $sim_name"
   xcodebuild "${xcode_args[@]}" build-for-testing || return 1
   note "xcodebuild test-without-building on $sim_name ${test_args[*]:-}"
