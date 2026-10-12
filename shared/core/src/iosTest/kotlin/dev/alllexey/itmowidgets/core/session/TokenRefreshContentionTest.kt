@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.core.session
 
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.storage.FileCrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.storage.TemporaryDirectory
@@ -78,7 +78,8 @@ class TokenRefreshContentionTest {
     /** One process: its own storage object, lock object and client over the shared Keychain and lock files. */
     private fun process(): ProcessSession {
         val storage = KeychainTokenStorage(keychain, RecordingAppLog())
-        val client = MyItmoClientFactory.create(
+        val client = MyItmoClient(
+            MyItmoConfiguration.DEFAULT,
             storage = storage,
             engine = identity,
             clock = FixedClock,

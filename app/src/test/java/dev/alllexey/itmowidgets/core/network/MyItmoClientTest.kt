@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.network
 
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
@@ -30,8 +31,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-/** The 2.x client the factory builds, over `MyItmoStorage` and a MockEngine standing in for ITMO.ID and MyITMO. */
-class MyItmoClientFactoryTest {
+/** The 2.x client over `MyItmoStorage` and a MockEngine standing in for ITMO.ID and MyITMO. */
+class MyItmoClientTest {
 
     @get:Rule
     val folder = TemporaryFolder()
@@ -175,7 +176,7 @@ class MyItmoClientFactoryTest {
             requests += request
             answer(request)
         }
-        return MyItmoClientFactory.create(storage = storage, engine = engine, clock = clock)
+        return MyItmoClient(MyItmoConfiguration.DEFAULT, storage = storage, engine = engine, clock = clock)
     }
 
     private suspend fun failure(block: suspend () -> Unit): AppError {

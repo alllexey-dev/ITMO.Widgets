@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.social.data
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -36,11 +36,12 @@ internal fun personalitiesClient(
         if (request.url.host != MY_ITMO_HOST) throw AssertionError("Unexpected host ${request.url.host}")
         answer(request)
     }
-    return MyItmoClientFactory.create(storage = InMemoryTokenStorage(tokens), engine = engine, clock = clock)
+    return MyItmoClient(MyItmoConfiguration.DEFAULT, storage = InMemoryTokenStorage(tokens), engine = engine, clock = clock)
 }
 
 /** A 2.x client whose session and engine fail the test: the demo session must not reach My ITMO. */
-internal fun unreachablePersonalitiesClient(): MyItmoClient = MyItmoClientFactory.create(
+internal fun unreachablePersonalitiesClient(): MyItmoClient = MyItmoClient(
+    MyItmoConfiguration.DEFAULT,
     storage = object : TokenStorage {
         override suspend fun read(): TokenSet? = throw AssertionError("The demo session read the ITMO session")
 

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.di
 
 import dev.alllexey.itmoapi.core.defaultEngine
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.ClientVersion
@@ -13,8 +14,7 @@ import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
-import dev.alllexey.itmowidgets.core.network.BackendClientFactory
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
+import dev.alllexey.itmowidgets.core.network.asBackendTokenSource
 import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import io.ktor.client.engine.HttpClientEngine
 import org.koin.dsl.module
@@ -27,7 +27,8 @@ val networkModule = module {
     // MyItmoApi 2.x over the session's TokenStorage; its `tokens` is the only refresher and writer. A refresh ITMO.ID
     // rejects is reported to the session through RefreshRejections.
     single<MyItmoClient> {
-        MyItmoClientFactory.create(
+        MyItmoClient(
+            MyItmoConfiguration.DEFAULT,
             storage = get(),
             engine = get(),
             clock = get(),
@@ -38,9 +39,9 @@ val networkModule = module {
     // Core 2.0. Its token comes from the 2.x client's `tokens`; every request, workers' and FCM's included, carries
     // the ClientVersion.
     single<BackendClient> {
-        BackendClientFactory.create(
+        BackendClient(
             baseUrl = BuildConfig.WIDGETS_BASE_URL,
-            tokens = get<MyItmoClient>().tokens,
+            tokens = get<MyItmoClient>().tokens.asBackendTokenSource(),
             engine = get(),
             version = get()
         )

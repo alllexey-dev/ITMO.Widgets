@@ -4,9 +4,9 @@ import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -382,7 +382,8 @@ class SessionRepositoryImplTest {
             answer(request)
         }
         val rejections = RefreshRejections()
-        val client = MyItmoClientFactory.create(
+        val client = MyItmoClient(
+            MyItmoConfiguration.DEFAULT,
             storage = OrderedTokenStorage(storage, order),
             engine = engine,
             clock = clock,

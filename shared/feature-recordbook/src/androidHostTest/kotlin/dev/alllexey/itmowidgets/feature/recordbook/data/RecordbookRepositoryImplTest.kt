@@ -2,8 +2,9 @@ package dev.alllexey.itmowidgets.feature.recordbook.data
 
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
@@ -289,7 +290,7 @@ class RecordbookRepositoryImplTest {
                 else -> throw AssertionError("Unexpected host ${request.url.host}")
             }
         }
-        val client = MyItmoClientFactory.create(storage = storage, engine = engine, clock = clock)
+        val client = MyItmoClient(MyItmoConfiguration.DEFAULT, storage = storage, engine = engine, clock = clock)
         return RecordbookRepositoryImpl(client, FixedAcademicTime(), FakeDemoMode(active = demo), dispatchers)
     }
 

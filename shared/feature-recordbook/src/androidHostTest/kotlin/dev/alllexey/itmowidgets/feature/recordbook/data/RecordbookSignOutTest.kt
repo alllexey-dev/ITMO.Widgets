@@ -6,13 +6,13 @@ import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
@@ -120,7 +120,8 @@ class RecordbookSignOutTest {
     /** The app's bridges as fakes: MyITMO answers the programs, BARS is [BarsTestServer], the session [tokens]. */
     private fun bridged() = module {
         single<MyItmoClient> {
-            MyItmoClientFactory.create(
+            MyItmoClient(
+                MyItmoConfiguration.DEFAULT,
                 storage = SignedIn,
                 engine = MockEngine { request ->
                     check(request.url.encodedPath == "/api/record_book/specializations") { "Unexpected request" }

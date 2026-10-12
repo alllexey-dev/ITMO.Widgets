@@ -3,9 +3,9 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.demo
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
@@ -48,7 +48,8 @@ class RecordbookDemoGateTest {
     }
 
     /** MyItmoApi 2.x whose every request, token read included, fails the test. */
-    private fun unreachableMyItmoClient(): MyItmoClient = MyItmoClientFactory.create(
+    private fun unreachableMyItmoClient(): MyItmoClient = MyItmoClient(
+        MyItmoConfiguration.DEFAULT,
         storage = object : TokenStorage {
             override suspend fun read(): TokenSet? = throw AssertionError("The demo recordbook read the ITMO session")
 

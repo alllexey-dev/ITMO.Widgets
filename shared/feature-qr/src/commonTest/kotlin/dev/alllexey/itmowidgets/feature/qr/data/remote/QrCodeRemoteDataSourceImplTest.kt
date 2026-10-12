@@ -2,8 +2,9 @@ package dev.alllexey.itmowidgets.feature.qr.data.remote
 
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
@@ -137,7 +138,7 @@ class QrCodeRemoteDataSourceImplTest {
                 else -> throw AssertionError("Unexpected host ${request.url.host}")
             }
         }
-        val client = MyItmoClientFactory.create(storage = storage, engine = engine, clock = clock)
+        val client = MyItmoClient(MyItmoConfiguration.DEFAULT, storage = storage, engine = engine, clock = clock)
         val dispatchers = StandardTestDispatcher(testScheduler).let { AppDispatchers(io = it, default = it, main = it) }
         val remote = QrCodeRemoteDataSourceImpl(client, FakeDemoMode(active = demo), dispatchers)
         return QrCodeRepositoryImpl(local, remote, dispatchers)

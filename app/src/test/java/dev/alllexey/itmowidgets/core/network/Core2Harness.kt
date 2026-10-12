@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.core.network
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import dev.alllexey.itmowidgets.testkit.respondJson
@@ -38,8 +39,8 @@ class Core2Harness(
         if (request.url.host == ITMO_ID_HOST) identity(request) else backend(request)
     }
 
-    val myItmo: MyItmoClient = MyItmoClientFactory.create(storage = storage, engine = engine, clock = CLOCK)
-    val client: BackendClient = BackendClientFactory.create(BACKEND_URL, myItmo.tokens, engine)
+    val myItmo: MyItmoClient = MyItmoClient(MyItmoConfiguration.DEFAULT, storage = storage, engine = engine, clock = CLOCK)
+    val client: BackendClient = BackendClient(BACKEND_URL, myItmo.tokens.asBackendTokenSource(), engine)
 
     companion object {
         const val BACKEND_URL = "https://backend.test"

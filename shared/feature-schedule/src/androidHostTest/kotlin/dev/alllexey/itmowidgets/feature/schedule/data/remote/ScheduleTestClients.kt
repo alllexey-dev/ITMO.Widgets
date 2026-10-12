@@ -3,9 +3,9 @@ package dev.alllexey.itmowidgets.feature.schedule.data.remote
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.feature.schedule.data.Core2Harness
 import dev.alllexey.itmowidgets.feature.schedule.data.InMemoryTokenStorage
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import dev.alllexey.itmowidgets.testkit.respondJson
 import io.ktor.client.engine.mock.MockEngine
@@ -29,7 +29,8 @@ internal fun scheduleMyItmoClient(answer: (HttpRequestData) -> Pair<Int, String>
             else -> throw AssertionError("Unexpected host ${request.url.host}")
         }
     }
-    return MyItmoClientFactory.create(
+    return MyItmoClient(
+        MyItmoConfiguration.DEFAULT,
         storage = InMemoryTokenStorage(Core2Harness.session()),
         engine = engine,
         clock = FakeClock(Core2Harness.NOW)
@@ -37,7 +38,8 @@ internal fun scheduleMyItmoClient(answer: (HttpRequestData) -> Pair<Int, String>
 }
 
 /** A 2.x client whose session and engine fail the test: the demo session must not reach My ITMO. */
-internal fun unreachableScheduleMyItmoClient(): MyItmoClient = MyItmoClientFactory.create(
+internal fun unreachableScheduleMyItmoClient(): MyItmoClient = MyItmoClient(
+    MyItmoConfiguration.DEFAULT,
     storage = object : TokenStorage {
         override suspend fun read(): TokenSet? = throw AssertionError("The demo session read the ITMO session")
 

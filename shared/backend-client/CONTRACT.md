@@ -135,7 +135,8 @@ device exactly on `POST /api/device/register-device`, so both apps register agai
 ## Engines and iOS
 
 The module has no `androidMain` or `iosMain` code and no Ktor engine artifact: the caller passes the engine, builds
-the one `BackendClient` of the process through `BackendClientFactory` in `:shared:core` and closes the engine itself.
+the one `BackendClient` of the process with `TokenManager.asBackendTokenSource()` of `:shared:core` and closes the engine
+itself.
 
 - Android passes MyItmoApi's OkHttp `defaultEngine()` (`app/src/main/java/dev/alllexey/itmowidgets/di/NetworkModule.kt`).
 - iOS passes `darwinHttpEngine()`

@@ -7,10 +7,10 @@ import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
-import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
@@ -166,7 +166,8 @@ class RecordbookModuleTest {
     /** What the app's bridges supply, as fakes; no request leaves the test. */
     private fun bridged() = module {
         single<MyItmoClient> {
-            MyItmoClientFactory.create(
+            MyItmoClient(
+                MyItmoConfiguration.DEFAULT,
                 storage = object : TokenStorage {
                     override suspend fun read(): TokenSet? = null
                     override suspend fun write(tokens: TokenSet?) = Unit
