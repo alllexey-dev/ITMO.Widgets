@@ -13,9 +13,13 @@ final class WidgetSnapshotsTests: XCTestCase {
     private let containerMetadata = ".com.apple.mobile_container_manager.metadata.plist"
     private var session: SessionRepository!
     private var container: URL!
+    private var removeWebsiteData: ((@escaping () -> Void) -> Void)!
 
     override func setUp() async throws {
         try await super.setUp()
+        // The session cleaners run on every sign-out and demo start; WebKit's real removal hangs on a CI simulator.
+        removeWebsiteData = AppPlatform.removeWebsiteData
+        AppPlatform.removeWebsiteData = { $0() }
         session = try XCTUnwrap(IosKoin.shared.get(protocol: SessionRepository.self) as? SessionRepository)
         container = try XCTUnwrap(AppGroupSnapshot.container(), "the app resolves no App Group container")
         try await session.signOut()
@@ -23,6 +27,7 @@ final class WidgetSnapshotsTests: XCTestCase {
 
     override func tearDown() async throws {
         try await session.signOut()
+        AppPlatform.removeWebsiteData = removeWebsiteData
         try await super.tearDown()
     }
 

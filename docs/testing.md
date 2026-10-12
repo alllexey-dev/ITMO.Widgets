@@ -122,10 +122,11 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   device type and runtime and leaves other simulators alone.
 - Results go to `iosApp/build/test-results/`, snapshot failure images to
   `iosApp/build/snapshot-artifacts/`.
-- Unit tests that build a core graph pass `FakeCoreHost`, which only counts
-  WebKit clears: on a CI simulator the real `WKWebsiteDataStore.removeData`
-  also deletes Screen Time web history, hangs for minutes and stalls the
-  WebKit cookie store after it.
+- Unit tests never run the real `WKWebsiteDataStore.removeData`: on a CI
+  simulator it also deletes Screen Time web history, hangs for minutes and
+  stalls the WebKit cookie store after it. A test that builds a core graph
+  passes `FakeCoreHost`, which counts the clears; a test that signs out through
+  the app's graph replaces `AppPlatform.removeWebsiteData`.
 - The last line is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha>`.
 
 ## CI
