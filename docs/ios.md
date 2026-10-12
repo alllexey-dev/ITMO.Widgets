@@ -264,8 +264,9 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
 - The app target's Run Script builds `Shared` with `./gradlew :shared:ios:embedAndSignAppleFrameworkForXcode`.
 - To open the project in Xcode run `xcodegen generate --spec iosApp/project.yml` first.
 - MyItmoApi comes from Maven Central; `MYITMOAPI_DIR` builds against a local checkout.
-- CI: `.github/workflows/ios.yml` runs `ios-check` (`scripts/ios/test.sh --ci`) on every PR into and push to `master`;
-  `ios-nightly.yml` runs every module's `kn` tests and all `UITests`.
+- CI: `.github/workflows/ios.yml` runs `ios-check` (`scripts/ios/test.sh --ci`) on PRs that change iOS inputs and on
+  pushes to `master` that change `shared/` (see [testing.md](testing.md#ci)); `ios-nightly.yml` runs every module's
+  `kn` tests and all `UITests`.
 - Release builds: `scripts/ios/archive.sh --unsigned` (an `.ipa` for self-signing) or `--signed [--upload]` with
   `Signing.local.xcconfig`. The build number is `git rev-list --count HEAD`. Uploads are manual steps.
 

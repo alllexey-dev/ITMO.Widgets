@@ -126,16 +126,34 @@ scripts/ios/test.sh --cleanup                                  # delete this che
 
 ## CI
 
-All workflows are in `.github/workflows/` and need no secrets.
+All workflows are in `.github/workflows/` and need no secrets. None is a
+required check. A PR runs only what is fast and catches most breakage, so it
+finishes in about 10 minutes; the emulator and release suites run nightly on
+`master` instead. `scripts/ci-plan.sh` decides from the changed paths what a PR
+runs (`scripts/ci-plan.sh --self-test` lists the cases).
 
 | Workflow | When | What |
 |---|---|---|
-| `android-ci.yml` | every PR into and push to `master` | `verifyQuick` split into parallel jobs (app tests and APKs, shared tests, lintGithubDebug), lintPlayDebug, `verify.sh shots all` in 3 shards, `verify.sh checks` (docs links) and `verifyIosKlibs`. The `verify-quick` job is the required check |
-| `android-ui.yml` | every PR and push that touches app inputs | `verify.sh ui all` in 6 shards on an emulator without a cutout, `ShellSuite` in 2 shards with a tall cutout. Check `android-ui` |
-| `ios.yml` | every PR and push; ends green when no iOS input changed | `scripts/ios/test.sh --ci` on the `xcode-27` runner with the pinned Xcode and XcodeGen. Check `ios-check` |
-| `android-ship.yml` | every push to `master`, on demand | Release checks without the key: `scripts/ship-check.sh` stages version, unsigned release builds with `check-play-policy.sh`, the upgrade from v2.2 and the shrunk builds on an emulator |
-| `android-nightly.yml` | nightly | The platform list on a Gradle Managed Device, the advisory `buildHealth` report |
-| `ios-nightly.yml` | nightly | `test.sh --ci kn` over every shared module and all `UITests` |
+| `android-ci.yml` | every PR into `master`, when an Android input changed | `:app:testGithubDebugUnitTest`, Konsist, the build-logic tests and `:app:assembleGithubDebug`; the shared host tests; the screenshot tests of the changed modules (all of them in 3 shards when `designsystem`, `core`, `testing` or the build changed); `verifyIosKlibs`. `verify.sh checks` runs on every PR, docs-only included |
+| `android-ci.yml` | pushes to `master` and PRs labelled `full-ci` that change an Android input; every manual run | `verifyFull` (both flavours, `lintGithubDebug`, `lintPlayDebug`) and every screenshot module in 3 shards; these runs write the build caches PRs read |
+| `ios.yml` | PRs that change `iosApp/`, `scripts/ios/`, an iOS source set or the build; pushes to `master` that also change any `shared/` module; on demand, label `full-ci` | `scripts/ios/test.sh --ci` on the `xcode-27` runner with the pinned Xcode and XcodeGen |
+| `android-ui.yml` | nightly, on demand, label `full-ci` | `verify.sh ui all` in 6 shards on an emulator without a cutout, `ShellSuite` in 2 shards with a tall cutout |
+| `android-ship.yml` | nightly, on demand, label `full-ci` | Release checks without the key: `scripts/ship-check.sh` stages version, unsigned release builds with `check-play-policy.sh`, the upgrade from v2.2 and the shrunk builds on an emulator |
+| `android-nightly.yml` | nightly, on demand | The platform list on a Gradle Managed Device, the advisory `buildHealth` report |
+| `ios-nightly.yml` | nightly, on demand | `test.sh --ci kn` over every shared module and all `UITests` |
+
+- **The full suite on a PR.** Add the label `full-ci` to a risky PR (build
+  changes, the shell, navigation, release or CI scripts): the PR then also runs
+  `android-ui`, `android-ship`, `ios` and the full `android-ci`, on every push
+  until the label is removed. To run one workflow on a branch without the
+  label: `gh workflow run android-ui.yml --ref <branch>` (also `android-ship`,
+  `android-nightly`, `ios-nightly`, `ios`, `android-ci`).
+- **Nightly failures.** A failed nightly of `android-ui`, `android-ship`,
+  `android-nightly` (platform tests) or `ios-nightly` opens an issue titled
+  `Nightly <workflow> is failing`, or comments on the open one; the next passing
+  nightly closes it. Fix it before the next release.
+- **A newer push cancels** the older run of the same PR; every `master` push
+  keeps its own `android-ci` and `ios` result.
 
 On failure the jobs upload test reports, screenshot diffs or the `.xcresult`
 as artifacts.

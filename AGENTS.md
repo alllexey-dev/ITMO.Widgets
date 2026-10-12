@@ -23,7 +23,7 @@ scripts/ios/test.sh               # iOS app build and tests (Mac with Xcode)
 ```
 
 MyItmoApi comes from Maven Central; set `MYITMOAPI_DIR` to a my-itmo-api checkout to build against local changes.
-CI runs all of this on every PR into `master`, plus emulator tests (`android-ui`) and release checks (`android-ship`).
+A PR runs the fast part of this for what it touches; emulator tests (`android-ui`), release checks (`android-ship`) and lint run nightly or on `master`, and on a PR labelled `full-ci` ([docs/testing.md](docs/testing.md#ci)).
 
 ## Rules
 
