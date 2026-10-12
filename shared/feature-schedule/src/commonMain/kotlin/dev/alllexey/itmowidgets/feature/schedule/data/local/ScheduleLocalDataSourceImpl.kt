@@ -137,14 +137,18 @@ class ScheduleLocalDataSourceImpl internal constructor(
         withContext(dispatchers.io) {
             cacheMutex.withLock {
                 val prefix = "${userIsu}_"
-                fileSystem.listOrNull(cacheDir)?.filter { it.name.startsWith(prefix) }?.forEach(::delete)
-                memoryCache.value = memoryCache.value.filterKeys { !it.startsWith(prefix) }
+                try {
+                    fileSystem.listOrNull(cacheDir)?.filter { it.name.startsWith(prefix) }?.forEach(fileSystem::delete)
+                } finally {
+                    memoryCache.value = memoryCache.value.filterKeys { !it.startsWith(prefix) }
+                }
             }
         }
     }
 
     /**
-     * Existing observers remain attached to the same snapshot flow across a clear.
+     * Existing observers remain attached to the same snapshot flow across a clear. A failed delete throws: the days
+     * left on disk would be read again, so the sign-in that clears them must stop.
      */
     override suspend fun clear() {
         withContext(dispatchers.io) {
@@ -152,8 +156,9 @@ class ScheduleLocalDataSourceImpl internal constructor(
                 try {
                     fileSystem.deleteRecursively(cacheDir)
                     fileSystem.createDirectories(cacheDir)
-                } catch (_: Exception) {}
-                memoryCache.value = emptyMap()
+                } finally {
+                    memoryCache.value = emptyMap()
+                }
             }
         }
     }

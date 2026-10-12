@@ -138,6 +138,20 @@ class ScheduleRepositoryImplTest {
     }
 
     @Test
+    fun `a denial whose cache removal fails reports the removal failure instead of crashing`() = runTest {
+        val repository = createRepository(true)
+        val removal = IOException("Synthetic delete failure")
+        local.clearUserError = removal
+        remote.error = BackendException.Forbidden(null)
+
+        assertEquals(AppResult.Failure(AppError.Unknown(removal)), repository.refreshSchedule(123456, DATE, DATE))
+        assertEquals(
+            AppResult.Failure(AppError.Unknown(removal)),
+            createRepository(false).refreshSchedule(123456, DATE, DATE)
+        )
+    }
+
+    @Test
     fun `own authorization failure and foreign network failure preserve caches`() = runTest {
         val repository = createRepository(true)
         remote.error = MyItmoException.Http(403)
@@ -237,6 +251,7 @@ class ScheduleRepositoryImplTest {
         var clears = 0
         val clearedUsers = mutableListOf<Int>()
         var clearGate: CompletableDeferred<Unit>? = null
+        var clearUserError: Exception? = null
         val clearStarted = CompletableDeferred<Unit>()
         override fun observeRange(
             userIsu: Int?,
@@ -256,6 +271,7 @@ class ScheduleRepositoryImplTest {
         override suspend fun clearUser(userIsu: Int) {
             clearStarted.complete(Unit)
             clearGate?.await()
+            clearUserError?.let { throw it }
             clearedUsers += userIsu
         }
     }

@@ -5,7 +5,6 @@ import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import kotlin.io.encoding.Base64
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 /**
@@ -20,7 +19,6 @@ import kotlin.time.Instant
  */
 class KeychainTokenStorage(
     private val store: SecureStore,
-    private val clock: Clock,
     private val log: AppLog
 ) : TokenStorage, SessionTokenStore {
 
@@ -57,19 +55,6 @@ class KeychainTokenStorage(
     override fun getIdToken(): String? = load().idToken
 
     override fun replaceWithRefreshToken(refreshToken: String) = persist(TokenState(refreshToken = refreshToken))
-
-    override fun replaceWithTokens(tokens: SessionTokens) {
-        val now = clock.now().toEpochMilliseconds()
-        persist(
-            TokenState(
-                accessToken = tokens.accessToken,
-                accessExpiresAt = expiresAt(now, tokens.accessExpiresInSeconds),
-                refreshToken = tokens.refreshToken,
-                refreshExpiresAt = expiresAt(now, tokens.refreshExpiresInSeconds),
-                idToken = tokens.idToken
-            )
-        )
-    }
 
     override fun clearTokens() = store.delete(ITEM)
 
@@ -133,7 +118,6 @@ class KeychainTokenStorage(
         private const val NULL_VALUE = "~"
         private const val SEPARATOR = "\n"
         private const val FIELD_COUNT = 5
-        private const val MILLIS_PER_SECOND = 1000L
 
         // As MyItmoStorage: written unpadded, read with or without padding.
         private val FIELD_ENCODER = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT)
@@ -142,12 +126,5 @@ class KeychainTokenStorage(
         private fun String?.encode(): String = this?.let { FIELD_ENCODER.encode(it.encodeToByteArray()) } ?: NULL_VALUE
 
         private fun String.decode(): String? = if (this == NULL_VALUE) null else FIELD_DECODER.decode(this).decodeToString()
-
-        /** [now] plus [lifetimeSeconds], saturated as Android's `calculateTokenExpiration`. */
-        private fun expiresAt(now: Long, lifetimeSeconds: Long): Long {
-            val lifetime = lifetimeSeconds * MILLIS_PER_SECOND
-            val overflows = lifetimeSeconds != 0L && lifetime / lifetimeSeconds != MILLIS_PER_SECOND
-            return if (overflows || lifetime > Long.MAX_VALUE - now) Long.MAX_VALUE else now + lifetime
-        }
     }
 }

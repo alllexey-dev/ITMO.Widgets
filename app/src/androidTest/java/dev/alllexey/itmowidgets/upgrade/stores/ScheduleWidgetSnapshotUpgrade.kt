@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.upgrade.stores
 
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
@@ -88,7 +87,6 @@ object ScheduleWidgetSnapshotUpgrade {
         override fun hasRefreshToken() = true
         override fun getIdToken() = Captured22.ID_TOKEN
         override fun replaceWithRefreshToken(refreshToken: String) = Unit
-        override fun replaceWithTokens(tokens: SessionTokens) = Unit
         override fun clearTokens() = Unit
     }
 }

@@ -142,7 +142,7 @@ fun iosCoreModule(
 
     // The session: one Keychain item that both MyItmoApi and the session read; the client's TokenManager is its
     // only refresher, under the cross-process lock the notification service takes too.
-    single { KeychainTokenStorage(get(), get(), get()) } binds arrayOf(TokenStorage::class, SessionTokenStore::class)
+    single { KeychainTokenStorage(get(), get()) } binds arrayOf(TokenStorage::class, SessionTokenStore::class)
     single<HttpClientEngine> { darwinHttpEngine() }
     single { RefreshRejections() }
     single<MyItmoClient> {

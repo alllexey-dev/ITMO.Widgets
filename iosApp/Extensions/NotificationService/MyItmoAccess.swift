@@ -102,7 +102,7 @@ struct KeychainTokenItem: TokenItem {
     func write(_ value: String) throws {
         let attributes: [String: Any] = [
             kSecValueData as String: Data(value.utf8),
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]
         let status = withGroup { SecItemUpdate($0 as CFDictionary, attributes as CFDictionary) }
         guard status == errSecSuccess else { throw PushAccessError.refreshFailed }

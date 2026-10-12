@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.debug.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
-import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
@@ -12,6 +11,8 @@ import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +30,8 @@ class DebugToolsViewModel(
     private val timeOverrideController: AcademicTimeOverrideController,
     private val sportScoreOverrideController: SportScoreOverrideController,
     private val sportLessonTemplateController: SportLessonTemplateController,
-    private val refreshTokenController: DebugRefreshTokenController,
+    private val sessions: SessionRepository,
+    private val tokenStore: SessionTokenStore,
     private val customServicesRepository: CustomServicesRepository,
     private val scheduleChangeTracking: ScheduleChangeTracking,
     private val barsSessionProbe: BarsSessionProbe,
@@ -94,7 +96,8 @@ class DebugToolsViewModel(
 
         mutableUiState.value = state.copy(refreshTokenUpdateInProgress = true)
         viewModelScope.launch {
-            when (val result = refreshTokenController.replaceRefreshToken(refreshToken)) {
+            // A sign-in like any other: the session state machine replaces the session and clears its data.
+            when (val result = sessions.signInWithRefreshToken(refreshToken)) {
                 is AppResult.Success -> {
                     mutableUiState.value = readState()
                     queue.send(DebugToolsEvent.RefreshTokenUpdated)
@@ -122,7 +125,7 @@ class DebugToolsViewModel(
             dateOverride = timeOverrideController.getOverrideDate(),
             scoreOverride = sportScoreOverrideController.getOverride(),
             lessonTemplatesEnabled = sportLessonTemplateController.isEnabled(),
-            refreshTokenConfigured = refreshTokenController.hasRefreshToken(),
+            refreshTokenConfigured = tokenStore.hasRefreshToken(),
             refreshTokenUpdateInProgress = false,
             customServicesEnabled = customServicesEnabled
         )

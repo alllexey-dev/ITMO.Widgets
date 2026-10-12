@@ -27,7 +27,6 @@ import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.app.shell.ShellContent
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
-import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
 import dev.alllexey.itmowidgets.core.model.UserProfile
@@ -56,6 +55,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.FakeSportLessonTemplateController
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
@@ -163,7 +163,8 @@ class AccountEntriesTest {
                             NoTimeOverride,
                             NoScoreOverride,
                             FakeSportLessonTemplateController(),
-                            NoRefreshToken,
+                            sessions,
+                            FakeSessionTokenStore(signedIn = false),
                             FakeCustomServicesRepository(),
                             FakeScheduleChangeTracking(),
                             NoBarsProbe,
@@ -454,11 +455,6 @@ class AccountEntriesTest {
     private object NoScoreOverride : SportScoreOverrideController {
         override fun getOverride(): SportScoreOverride? = null
         override fun setOverride(value: SportScoreOverride?) = Unit
-    }
-
-    private object NoRefreshToken : DebugRefreshTokenController {
-        override fun hasRefreshToken(): Boolean = false
-        override suspend fun replaceRefreshToken(refreshToken: String): AppResult<Unit> = AppResult.Success(Unit)
     }
 
     private object NoBarsProbe : BarsSessionProbe {

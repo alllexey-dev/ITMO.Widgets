@@ -7,7 +7,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
@@ -155,7 +154,6 @@ class ScheduleWidgetSnapshotStoreTest {
         override fun hasRefreshToken() = signedIn
         override fun getIdToken(): String? = null
         override fun replaceWithRefreshToken(refreshToken: String) = Unit
-        override fun replaceWithTokens(tokens: SessionTokens) = Unit
         override fun clearTokens() { signedIn = false }
     }
 

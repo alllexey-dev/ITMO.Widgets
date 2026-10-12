@@ -30,7 +30,7 @@ final class KeychainTests: XCTestCase {
         XCTAssertEqual(store.read(name: itemName), "second, Grüße 漢字")
     }
 
-    func testItemSitsInTheInfoPlistAccessGroupAndOpensAfterFirstUnlock() throws {
+    func testItemSitsInTheInfoPlistAccessGroupAndOpensAfterFirstUnlockOnThisDeviceOnly() throws {
         let group = try XCTUnwrap(Bundle.main.object(forInfoDictionaryKey: "KeychainGroup") as? String)
 
         store.write(name: itemName, value: "synthetic")
@@ -39,8 +39,30 @@ final class KeychainTests: XCTestCase {
         XCTAssertEqual(attributes[kSecAttrAccessGroup as String] as? String, group)
         XCTAssertEqual(attributes[kSecAttrService as String] as? String, service)
         let accessible = attributes[kSecAttrAccessible as String] as? String
-        XCTAssertEqual(accessible, kSecAttrAccessibleAfterFirstUnlock as String)
+        XCTAssertEqual(accessible, kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String)
         XCTAssertNil(attributes[kSecValueData as String], "attributes only, never the value")
+    }
+
+    /// An item an earlier build stored as `AfterFirstUnlock` (backed up, restorable elsewhere) still reads, and the
+    /// next write keeps it on this device only.
+    func testAnItemStoredAfterFirstUnlockReadsAndMovesToThisDeviceOnlyOnTheNextWrite() throws {
+        let group = try XCTUnwrap(Bundle.main.object(forInfoDictionaryKey: "KeychainGroup") as? String)
+        let legacy: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: itemName,
+            kSecAttrAccessGroup as String: group,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+            kSecValueData as String: Data("legacy".utf8),
+        ]
+        XCTAssertEqual(SecItemAdd(legacy as CFDictionary, nil), errSecSuccess)
+
+        XCTAssertEqual(store.read(name: itemName), "legacy")
+        store.write(name: itemName, value: "rewritten")
+
+        XCTAssertEqual(store.read(name: itemName), "rewritten")
+        let accessible = try XCTUnwrap(itemAttributes())[kSecAttrAccessible as String] as? String
+        XCTAssertEqual(accessible, kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String)
     }
 
     func testDelete() {

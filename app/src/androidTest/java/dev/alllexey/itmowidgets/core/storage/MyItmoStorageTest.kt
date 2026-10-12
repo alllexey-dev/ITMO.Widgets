@@ -3,12 +3,10 @@ package dev.alllexey.itmowidgets.core.storage
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmowidgets.core.diagnostics.AndroidAppLog
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import java.io.File
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import kotlin.time.Instant
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -40,7 +38,7 @@ class MyItmoStorageTest {
 
     @Test
     fun writesEncryptedFileAndReadsPlainValue() {
-        storage.replaceWithTokens(sessionTokens(accessToken = "test-access-token"))
+        runBlocking { storage.write(tokenSet(accessToken = "test-access-token")) }
 
         assertEquals("test-access-token", storage.getAccessToken())
         assertFalse(tokenFile.readText().contains("test-access-token"))
@@ -48,7 +46,7 @@ class MyItmoStorageTest {
 
     @Test
     fun replacesSessionWithRefreshTokenOnly() {
-        storage.replaceWithTokens(sessionTokens(accessToken = "old-access-token"))
+        runBlocking { storage.write(tokenSet(accessToken = "old-access-token")) }
 
         storage.replaceWithRefreshToken("new-refresh-token")
 
@@ -100,18 +98,14 @@ class MyItmoStorageTest {
     private fun storage(cipher: TokenCipher) = MyItmoStorage(
         tokenFile = tokenFile,
         tokenCipher = cipher,
-        clock = Clock.fixed(
-            Instant.parse("2026-07-24T00:00:00Z"),
-            ZoneOffset.UTC
-        ),
         log = AndroidAppLog()
     )
 
-    private fun sessionTokens(accessToken: String) = SessionTokens(
+    private fun tokenSet(accessToken: String) = TokenSet(
         accessToken = accessToken,
-        accessExpiresInSeconds = 300,
+        accessExpiresAt = Instant.parse("2026-07-24T00:05:00Z"),
         refreshToken = "test-refresh-token",
-        refreshExpiresInSeconds = 600,
+        refreshExpiresAt = Instant.parse("2026-07-24T00:10:00Z"),
         idToken = "test.id.token"
     )
 

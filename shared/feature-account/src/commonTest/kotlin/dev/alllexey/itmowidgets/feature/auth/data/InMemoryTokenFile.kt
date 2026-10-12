@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.auth.data
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import kotlin.time.Instant
 
 /**
@@ -52,10 +51,6 @@ internal class InMemoryTokenFile : TokenStorage, SessionTokenStore {
     override fun replaceWithRefreshToken(refreshToken: String) {
         clearTokens()
         this.refreshToken = refreshToken
-    }
-
-    override fun replaceWithTokens(tokens: SessionTokens) {
-        error("The session writes through the client's TokenStorage")
     }
 
     override fun clearTokens() {

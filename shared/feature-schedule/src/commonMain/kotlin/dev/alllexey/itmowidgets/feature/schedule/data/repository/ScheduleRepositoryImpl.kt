@@ -51,8 +51,7 @@ class ScheduleRepositoryImpl(
         // refused here rather than in the data source, which cannot be reached
         // without going through this policy.
         if (userIsu != null && !customServices.isEnabled()) {
-            invalidateUser(userIsu)
-            return AppResult.Failure(AppError.CustomServicesDisabled)
+            return invalidateUser(userIsu, AppError.CustomServicesDisabled)
         }
 
         val revision = cacheMutation.withLock { cacheGeneration to accessGenerations[userIsu] }
@@ -74,20 +73,28 @@ class ScheduleRepositoryImpl(
         } catch (error: Exception) {
             val failure = error.toAppError()
             if (userIsu != null && failure in setOf(AppError.Forbidden, AppError.Unauthorized, AppError.NotFound)) {
-                invalidateUser(userIsu)
+                invalidateUser(userIsu, failure)
+            } else {
+                AppResult.Failure(failure)
             }
-            AppResult.Failure(failure)
         }
     }
 
-    private suspend fun invalidateUser(userIsu: Int) = withContext(NonCancellable) {
-        // Once a denial is known, leaving the screen must not interrupt the
-        // bounded local cleanup and leave forbidden rows available offline.
-        cacheMutation.withLock {
-            accessGenerations[userIsu] = (accessGenerations[userIsu] ?: 0) + 1
-            local.clearUser(userIsu)
+    /** [failure], or the error of a cleanup that left [userIsu]'s days on disk. */
+    private suspend fun invalidateUser(userIsu: Int, failure: AppError): AppResult.Failure =
+        withContext(NonCancellable) {
+            // Once a denial is known, leaving the screen must not interrupt the
+            // bounded local cleanup and leave forbidden rows available offline.
+            cacheMutation.withLock {
+                accessGenerations[userIsu] = (accessGenerations[userIsu] ?: 0) + 1
+                try {
+                    local.clearUser(userIsu)
+                    AppResult.Failure(failure)
+                } catch (error: Exception) {
+                    AppResult.Failure(AppError.Unknown(error))
+                }
+            }
         }
-    }
 
     override suspend fun clearCaches() {
         cacheMutation.withLock {

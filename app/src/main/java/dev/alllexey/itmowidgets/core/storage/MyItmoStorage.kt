@@ -4,9 +4,8 @@ import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import java.io.File
-import java.time.Clock
+import javax.crypto.AEADBadTagException
 import kotlin.io.encoding.Base64
 import kotlin.time.Instant
 
@@ -14,11 +13,14 @@ import kotlin.time.Instant
  * The only writer of `myitmo_tokens.enc`: the MyItmoApi 2.x [TokenStorage] and the session's [SessionTokenStore]
  * read and write the same 5-field state under one lock, so a write through one is what the other reads next. The
  * 2.x client's `tokens` is the only refresher.
+ *
+ * Only content that cannot be parsed or authenticated is discarded. A Keystore or file failure (`KeyStoreException`,
+ * `ProviderException`, an `IOException`) reads as no session for that call alone and keeps the file, so a transient
+ * failure never signs the user out; the next read tries again.
  */
 class MyItmoStorage(
     tokenFile: File,
     private val tokenCipher: TokenCipher,
-    private val clock: Clock,
     private val log: AppLog
 ) : TokenStorage, SessionTokenStore {
 
@@ -40,26 +42,6 @@ class MyItmoStorage(
 
     @Synchronized
     override fun getIdToken(): String? = currentState().idToken
-
-    @Synchronized
-    override fun replaceWithTokens(tokens: SessionTokens) {
-        val now = clock.millis()
-        persist(
-            TokenState(
-                accessToken = tokens.accessToken,
-                accessExpiresAt = calculateTokenExpiration(
-                    now,
-                    tokens.accessExpiresInSeconds
-                ),
-                refreshToken = tokens.refreshToken,
-                refreshExpiresAt = calculateTokenExpiration(
-                    now,
-                    tokens.refreshExpiresInSeconds
-                ),
-                idToken = tokens.idToken
-            )
-        )
-    }
 
     /** Null unless all three tokens are present: a refresh-token-only state is not a 2.x session yet. */
     override suspend fun read(): TokenSet? = synchronized(this) {
@@ -115,11 +97,8 @@ class MyItmoStorage(
 
     private fun currentState(): TokenState {
         cachedState?.let { return it }
-        return loadState().also { cachedState = it }
-    }
-
-    private fun updateState(transform: (TokenState) -> TokenState) {
-        persist(transform(currentState()))
+        // Not cached when unavailable, so the next call reads the kept file again.
+        return loadState()?.also { cachedState = it } ?: TokenState()
     }
 
     private fun persist(state: TokenState) {
@@ -131,14 +110,23 @@ class MyItmoStorage(
         cachedState = state
     }
 
-    private fun loadState(): TokenState {
-        val encrypted = runCatching(encryptedFile::read).getOrNull() ?: return TokenState()
-        return runCatching {
-            TokenState.deserialize(tokenCipher.decrypt(encrypted))
-        }.onFailure { error ->
-            log.warn(TAG, "Discarding unreadable token storage", error)
-            runCatching { encryptedFile.write(null) }
-        }.getOrDefault(TokenState())
+    /** The stored state, or null when the file or the Keystore cannot be read now. */
+    private fun loadState(): TokenState? = try {
+        encryptedFile.read()?.let { TokenState.deserialize(tokenCipher.decrypt(it)) } ?: TokenState()
+    } catch (error: IllegalArgumentException) {
+        discard(error)
+    } catch (error: AEADBadTagException) {
+        // The sealed text does not match the key: it never decrypts again.
+        discard(error)
+    } catch (error: Exception) {
+        log.warn(TAG, "Token storage unavailable; keeping it for the next read", error)
+        null
+    }
+
+    private fun discard(error: Exception): TokenState {
+        log.warn(TAG, "Discarding unreadable token storage", error)
+        runCatching { encryptedFile.write(null) }
+        return TokenState()
     }
 
     private data class TokenState(

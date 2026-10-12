@@ -51,7 +51,7 @@ class SecureStoreUpgradeTest {
         for (name in TOKEN_FILES) store.write(name, checkNotNull(source.read(name)))
 
         assertTrue(File(target, MY_ITMO).readText().startsWith("v1:"))
-        val myItmo = MyItmoStorage(File(target, MY_ITMO), AndroidKeystoreTokenCipher(), fixture.clock, AndroidAppLog())
+        val myItmo = MyItmoStorage(File(target, MY_ITMO), AndroidKeystoreTokenCipher(), AndroidAppLog())
         assertEquals("upgrade22-access-token", myItmo.getAccessToken())
         assertEquals("upgrade22-refresh-token", myItmo.getRefreshToken())
         assertEquals(Captured22.TOKEN_EXPIRES_AT, myItmo.getRefreshExpiresAt())

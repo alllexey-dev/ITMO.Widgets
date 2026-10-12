@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.debug.presentation
 
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
-import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
@@ -10,6 +9,10 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
@@ -32,7 +35,8 @@ class DebugToolsViewModelTest {
     private val timeController = FakeTimeOverrideController()
     private val scoreController = FakeScoreOverrideController()
     private val lessonController = FakeSportLessonTemplateController()
-    private val refreshTokenController = FakeRefreshTokenController()
+    private val tokenStore = FakeSessionTokenStore(signedIn = false)
+    private val sessions = RecordingSessions(tokenStore)
     private val customServicesRepository = FakeCustomServicesRepository()
     private val scheduleChangeTracking = FakeScheduleChangeTracking()
     private val barsSessionProbe = FakeBarsSessionProbe()
@@ -43,7 +47,8 @@ class DebugToolsViewModelTest {
         timeOverrideController = timeController,
         sportScoreOverrideController = scoreController,
         sportLessonTemplateController = lessonController,
-        refreshTokenController = refreshTokenController,
+        sessions = sessions,
+        tokenStore = tokenStore,
         customServicesRepository = customServicesRepository,
         scheduleChangeTracking = scheduleChangeTracking,
         barsSessionProbe = barsSessionProbe,
@@ -154,7 +159,7 @@ class DebugToolsViewModelTest {
     }
 
     @Test
-    fun `replaces refresh token without exposing it in state`() =
+    fun `signs in with the pasted refresh token through the session without exposing it in state`() =
         runTest(mainDispatcherRule.dispatcher) {
         val viewModel = createViewModel()
         val event = async { viewModel.events.first() }
@@ -162,7 +167,7 @@ class DebugToolsViewModelTest {
         viewModel.replaceRefreshToken("  secret-refresh-token  ")
         advanceUntilIdle()
 
-        assertEquals("secret-refresh-token", refreshTokenController.lastToken)
+        assertEquals("  secret-refresh-token  ", sessions.lastToken)
         assertEquals(DebugToolsEvent.RefreshTokenUpdated, event.await())
         assertEquals(
             true,
@@ -200,15 +205,15 @@ class DebugToolsViewModelTest {
         }
     }
 
-    private class FakeRefreshTokenController : DebugRefreshTokenController {
+    /** A session whose refresh-token sign-in records the token and stores it as the repository would. */
+    private class RecordingSessions(
+        private val tokenStore: FakeSessionTokenStore
+    ) : SessionRepository by FakeSessionRepository(SessionState.SignedOut) {
         var lastToken: String? = null
 
-        override fun hasRefreshToken(): Boolean = lastToken != null
-
-        override suspend fun replaceRefreshToken(
-            refreshToken: String
-        ): AppResult<Unit> {
-            lastToken = refreshToken.trim()
+        override suspend fun signInWithRefreshToken(refreshToken: String): AppResult<Unit> {
+            lastToken = refreshToken
+            tokenStore.refreshToken = refreshToken.trim()
             return AppResult.Success(Unit)
         }
     }
