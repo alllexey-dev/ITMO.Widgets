@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.weblogin.data
 
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlockResult
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -30,9 +31,10 @@ class PairingHostTest {
 
     @Test
     fun theScreenLockAnswersMapToTheResult() = runTest {
-        assertEquals(DeviceUnlockResult.NOT_SET_UP, IosDeviceUnlock(FakeHost(passcode = false)).unlock())
-        assertEquals(DeviceUnlockResult.UNLOCKED, IosDeviceUnlock(FakeHost(unlocks = true)).unlock())
-        assertEquals(DeviceUnlockResult.CANCELLED, IosDeviceUnlock(FakeHost(unlocks = false)).unlock())
+        val texts = UiTextResolver { "reason" }
+        assertEquals(DeviceUnlockResult.NOT_SET_UP, IosDeviceUnlock(FakeHost(passcode = false), texts).unlock())
+        assertEquals(DeviceUnlockResult.UNLOCKED, IosDeviceUnlock(FakeHost(unlocks = true), texts).unlock())
+        assertEquals(DeviceUnlockResult.CANCELLED, IosDeviceUnlock(FakeHost(unlocks = false), texts).unlock())
     }
 
     /** Seals by concatenating key and plaintext, so the test sees what crossed. */

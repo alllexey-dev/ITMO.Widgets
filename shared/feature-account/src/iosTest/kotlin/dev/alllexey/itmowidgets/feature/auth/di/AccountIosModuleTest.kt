@@ -20,6 +20,8 @@ import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
+import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.di.AppUpdateIosParameters
@@ -221,6 +223,8 @@ class AccountIosModuleTest {
         single<AppGroupDirectory> { appGroup }
         single<AppDispatchers> { AppDispatchers(Dispatchers.Default, Dispatchers.Default, Dispatchers.Default) }
         single<AppLog> { log }
+        // The app binds it in iosBackgroundModule, which needs the system notification centre.
+        single { UiTextResolver { it.resolve() } }
     }
 
     private fun graph(vararg modules: Module): Koin = koinApplication {
