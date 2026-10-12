@@ -85,7 +85,9 @@ the site, because Universal Links need a signed build with associated domains
 - Android 12+ verifies each host separately: release-signed builds on both, a
   debug-signed one only on dev. Android 8-11 verify all hosts together, so a
   debug-signed build is verified on none. Check with
-  `pm get-app-links dev.alllexey.itmowidgets`.
+  `pm get-app-links dev.alllexey.itmowidgets`. Debug builds use the release key
+  when `keystore.properties` is present (a local build), so only CI debug builds
+  are debug-signed.
 - Without the app, nginx answers `/u/*` with `site/link/profile.html` and
   `/sport/*` with `site/link/sport.html` (200, `noindex`, `no-referrer`). The pages
   make no API request and never print the ISU or lesson id. On Android the open
