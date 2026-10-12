@@ -32,7 +32,10 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
+import dev.alllexey.itmowidgets.feature.weblogin.data.PairingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingError
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingResult
 import io.ktor.client.engine.mock.MockEngine
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
@@ -46,7 +49,8 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Single-call clients of the demo session: the pass, the update offer, web sign-in, privacy and Backend sessions.
+ * Single-call clients of the demo session: the pass, the update offer, web sign-in, pairing, privacy and Backend
+ * sessions.
  * The Backend ones send nothing in the demo, even with the stored opt-in, and nothing without the opt-in; the Core 2.0
  * identity sync does not even read the ITMO.ID session.
  */
@@ -88,10 +92,14 @@ class DemoNetworkGateTest {
     fun `no update is offered and web sign-in is refused`() = runTest {
         val update = update(gate, demo)
         val webLogin = WebLoginRepositoryImpl(gate, backendClient.users, demo, dispatchers)
+        val pairing = PairingRepositoryImpl(gate, backendClient.pairing, demo, dispatchers)
 
         assertNull(update.loadUpdate())
         assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.preview("ABCD2345"))
         assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.approve(Uuid.random()))
+        assertEquals(PairingResult.Failure(PairingError.Failed(AppError.DemoUnavailable)), pairing.open("ABCD2345", null))
+        assertEquals(AppResult.Failure(AppError.DemoUnavailable), pairing.connections())
+        assertEquals(AppResult.Failure(AppError.DemoUnavailable), pairing.revoke(Uuid.random()))
     }
 
     @Test
@@ -115,11 +123,14 @@ class DemoNetworkGateTest {
         val stored = PreferenceStores()
         val optedOut = DefaultBackendGate(stored.servicesOptIn, noDemo)
         val webLogin = WebLoginRepositoryImpl(optedOut, backendClient.users, noDemo, dispatchers)
+        val pairing = PairingRepositoryImpl(optedOut, backendClient.pairing, noDemo, dispatchers)
         val privacy = settingsRepository(stored, optedOut, noDemo)
 
         assertNull(update(optedOut, noDemo).loadUpdate())
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.preview("ABCD2345"))
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.approve(Uuid.random()))
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), pairing.connections())
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), pairing.reject(Uuid.random()))
         privacy.refreshSharingSettings()
         assertEquals(SharingSettingsState.Disabled, privacy.observeSharingSettings().first())
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), privacy.setScheduleVisibility(SharingVisibility.ALL))

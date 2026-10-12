@@ -3,9 +3,11 @@ package dev.alllexey.itmowidgets.feature.weblogin.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
@@ -36,11 +39,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
+import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
+import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicatorSize
+import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoSwitch
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.weblogin.domain.AgentScope
+import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlock
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingKind
+import dev.alllexey.itmowidgets.feature.weblogin.presentation.ScopeChoice
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
@@ -49,15 +59,18 @@ import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
+import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
 import dev.alllexey.itmowidgets.shared.designsystem.ic_computer
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code_scanner
 import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_approve
+import dev.alllexey.itmowidgets.shared.feature.account.connections_title
+import dev.alllexey.itmowidgets.shared.feature.account.pair_rotating
+import dev.alllexey.itmowidgets.shared.feature.account.pair_sending
+import dev.alllexey.itmowidgets.shared.feature.account.pair_shared_session
+import dev.alllexey.itmowidgets.shared.feature.account.pair_unlocking
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_code_hint
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_continue
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_done
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_own_only
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_scan
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_title
 import org.jetbrains.compose.resources.DrawableResource
@@ -66,9 +79,10 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * What the web sign-in sheet asks of its host. [onScan] starts the platform's QR scanner: Android's Play services
- * scanner answers the ViewModel's `onScanned` or `onScannerUnavailable` itself. [onClose] closes the sheet after
- * `Done`. The rest are the ViewModel's own calls, which [WebLoginSheetRoute] wires.
+ * What the «Подключить устройство» sheet asks of its host. [onScan] starts the platform's QR scanner: Android's Play
+ * services scanner answers the ViewModel's `onScanned` or `onScannerUnavailable` itself. [onClose] closes the sheet
+ * after `Done`; [onOpenConnections] opens «Подключённые устройства». The rest are the ViewModel's own calls, which
+ * [WebLoginSheetRoute] wires.
  */
 @Immutable
 class WebLoginActions(
@@ -76,31 +90,38 @@ class WebLoginActions(
     val onSubmit: () -> Unit = {},
     val onScan: () -> Unit = {},
     val onApprove: () -> Unit = {},
+    val onScopeChanged: (AgentScope, Boolean) -> Unit = { _, _ -> },
     val onEditCode: () -> Unit = {},
     val onRetry: () -> Unit = {},
+    val onOpenConnections: () -> Unit = {},
     val onClose: () -> Unit = {},
 )
 
 /**
- * The web sign-in sheet over [viewModel]. The host passes its own ViewModel, since the Android scanner answers it
- * after the sheet's view may be gone, and performs [onScan] and [onClose].
+ * The «Подключить устройство» sheet over [viewModel]. The host passes its own ViewModel, since the Android scanner
+ * answers it after the sheet's view may be gone, the platform's screen lock [unlock], and performs [onScan],
+ * [onOpenConnections] and [onClose].
  */
 @Composable
 fun WebLoginSheetRoute(
     onScan: () -> Unit,
+    onOpenConnections: () -> Unit,
     onClose: () -> Unit,
+    unlock: DeviceUnlock,
     modifier: Modifier = Modifier,
     viewModel: WebLoginViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val actions = remember(viewModel, onScan, onClose) {
+    val actions = remember(viewModel, onScan, onOpenConnections, onClose, unlock) {
         WebLoginActions(
             onCodeChanged = viewModel::onCodeChanged,
             onSubmit = viewModel::submit,
             onScan = onScan,
-            onApprove = viewModel::approve,
+            onApprove = { viewModel.approve(unlock) },
+            onScopeChanged = viewModel::onScopeChanged,
             onEditCode = viewModel::editCode,
             onRetry = viewModel::retry,
+            onOpenConnections = onOpenConnections,
             onClose = onClose,
         )
     }
@@ -108,11 +129,13 @@ fun WebLoginSheetRoute(
 }
 
 /**
- * The body of the web sign-in sheet (`sheet_web_login.xml`): the title, then one step. `Input` and `Checking` show
- * `Сканировать QR`, the `Код с сайта` field with its error and `Продолжить`, all disabled with the progress inside
- * `Продолжить` while the code is checked. `Confirm` shows the browser card, the own-sign-in-only line, `Войти` and
- * `Отмена`, both disabled while the approval runs. `Done` and `Error` are the compact content state with `Закрыть`
- * or `Повторить`. The host owns the sheet's container and height.
+ * The body of the «Подключить устройство» sheet: the title, then one step. `Input` and `Checking` show
+ * `Сканировать QR`, the `Код с сайта` field with its error, `Продолжить` and the way to «Подключённые устройства»,
+ * all disabled with the progress inside `Продолжить` while the code is checked. `Confirm` shows the device card (its
+ * kind, own name, browser or version and time), what it gets, an agent's permissions, the shared-session notice and
+ * the verification code for a device that receives the ITMO session, the warning, then the approval and `Отмена`.
+ * `Unlocking`, `Rotating` and `Sending` show the progress; `Done` and `Error` are the compact content state with
+ * `Закрыть` or `Повторить`. The host owns the sheet's container and height.
  */
 @Composable
 fun WebLoginSheetContent(
@@ -130,9 +153,12 @@ fun WebLoginSheetContent(
                 is WebLoginUiState.Input -> CodeStep(state.code, state.error?.asString(), checking = false, actions)
                 is WebLoginUiState.Checking -> CodeStep(state.code, error = null, checking = true, actions)
                 is WebLoginUiState.Confirm -> ConfirmStep(state, actions)
-                WebLoginUiState.Done -> ResultStep(
+                WebLoginUiState.Unlocking -> ProgressStep(stringResource(Res.string.pair_unlocking))
+                WebLoginUiState.Rotating -> ProgressStep(stringResource(Res.string.pair_rotating))
+                WebLoginUiState.Sending -> ProgressStep(stringResource(Res.string.pair_sending))
+                is WebLoginUiState.Done -> ResultStep(
                     icon = KitRes.drawable.ic_check_circle,
-                    text = stringResource(Res.string.web_login_done),
+                    text = state.text.asString(),
                     action = ContentStateAction(stringResource(CoreRes.string.common_close), actions.onClose,
                         modifier = Modifier.testTag(WebLoginSheetTestTags.RESULT_ACTION)),
                 )
@@ -196,9 +222,22 @@ private fun CodeStep(code: String, error: String?, checking: Boolean, actions: W
         inProgress = checking,
         enabled = !checking && code.isNotBlank(),
     )
+    ProgressButton(
+        label = stringResource(Res.string.connections_title),
+        onClick = actions.onOpenConnections,
+        modifier = Modifier
+            .stepMargin()
+            .padding(top = ItmoTheme.spacing.related)
+            .testTag(WebLoginSheetTestTags.CONNECTIONS),
+        style = ProgressButtonStyle.Text,
+        enabled = !checking,
+    )
 }
 
-/** The browser that asked and when, the warning, then `Войти` and `Отмена`. */
+/**
+ * The device card (kind, own name, browser or version, time), what it gets, an agent's permissions, the
+ * shared-session notice and the verification code, the warning, then the approval and `Отмена`.
+ */
 @Composable
 private fun ConfirmStep(state: WebLoginUiState.Confirm, actions: WebLoginActions) {
     // A nested panel: the sheet itself already sits on surfaceContainerLow.
@@ -212,7 +251,7 @@ private fun ConfirmStep(state: WebLoginUiState.Confirm, actions: WebLoginActions
     ) {
         Row(Modifier.padding(ItmoTheme.spacing.cardPadding), verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                painterResource(KitRes.drawable.ic_computer),
+                painterResource(kindIcon(state.kind)),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(end = ItmoTheme.spacing.group)
@@ -221,21 +260,59 @@ private fun ConfirmStep(state: WebLoginUiState.Confirm, actions: WebLoginActions
             )
             Column(Modifier.weight(1f)) {
                 Text(
-                    state.browser.asString(),
+                    state.title.asString(),
                     color = ItmoTheme.colorScheme.onSurface,
                     style = ItmoTheme.typography.titleMedium,
                 )
-                Text(
-                    state.requestedAt.asString(),
-                    Modifier.padding(top = ItmoTheme.spacing.related),
-                    color = ItmoTheme.colorScheme.onSurfaceVariant,
-                    style = ItmoTheme.typography.bodyMedium,
-                )
+                listOfNotNull(state.name, state.client, state.requestedAt).forEach { line ->
+                    Text(
+                        line.asString(),
+                        Modifier.padding(top = ItmoTheme.spacing.related),
+                        color = ItmoTheme.colorScheme.onSurfaceVariant,
+                        style = ItmoTheme.typography.bodyMedium,
+                    )
+                }
             }
         }
     }
     Text(
-        stringResource(Res.string.web_login_own_only),
+        state.access.asString(),
+        Modifier
+            .stepMargin()
+            .padding(top = ItmoTheme.spacing.group),
+        color = ItmoTheme.colorScheme.onSurface,
+        style = ItmoTheme.typography.bodyMedium,
+    )
+    state.scopes.forEach { choice -> ScopeRow(choice, state.scopesEditable && !state.approving, actions) }
+    if (state.sharedSession) {
+        Text(
+            stringResource(Res.string.pair_shared_session),
+            Modifier
+                .stepMargin()
+                .padding(top = ItmoTheme.spacing.compact),
+            color = ItmoTheme.colorScheme.onSurfaceVariant,
+            style = ItmoTheme.typography.bodySmall,
+        )
+    }
+    state.verification?.let { verification ->
+        Surface(
+            Modifier
+                .stepMargin()
+                .padding(top = ItmoTheme.spacing.group)
+                .testTag(WebLoginSheetTestTags.VERIFICATION),
+            shape = ItmoTheme.shapes.cardContent,
+            color = ItmoTheme.colorScheme.secondaryContainer,
+        ) {
+            Text(
+                verification.asString(),
+                Modifier.padding(ItmoTheme.spacing.cardPadding),
+                color = ItmoTheme.colorScheme.onSecondaryContainer,
+                style = ItmoTheme.typography.titleSmall,
+            )
+        }
+    }
+    Text(
+        state.warning.asString(),
         Modifier
             .stepMargin()
             .padding(top = ItmoTheme.spacing.compact),
@@ -243,14 +320,14 @@ private fun ConfirmStep(state: WebLoginUiState.Confirm, actions: WebLoginActions
         style = ItmoTheme.typography.bodySmall,
     )
     ProgressButton(
-        label = stringResource(Res.string.web_login_approve),
+        label = state.approve.asString(),
         onClick = actions.onApprove,
         modifier = Modifier
             .stepMargin()
             .padding(top = ItmoTheme.spacing.group)
             .testTag(WebLoginSheetTestTags.APPROVE),
         inProgress = state.approving,
-        enabled = !state.approving,
+        enabled = state.canApprove,
     )
     ProgressButton(
         label = stringResource(CoreRes.string.common_cancel),
@@ -262,6 +339,58 @@ private fun ConfirmStep(state: WebLoginUiState.Confirm, actions: WebLoginActions
         style = ProgressButtonStyle.Text,
         enabled = !state.approving,
     )
+}
+
+/** A browser for the web, a client for every other kind. */
+internal fun kindIcon(kind: PairingKind): DrawableResource =
+    if (kind == PairingKind.WEB_SESSION) KitRes.drawable.ic_computer else KitRes.drawable.ic_code_blocks
+
+/** One permission: a switch for a new agent, a shown state for an agent session. The whole row is the toggle. */
+@Composable
+private fun ScopeRow(choice: ScopeChoice, editable: Boolean, actions: WebLoginActions) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = ScopeRowMinHeight)
+            .toggleable(
+                value = choice.checked,
+                enabled = editable,
+                role = Role.Switch,
+                onValueChange = { actions.onScopeChanged(choice.scope, it) },
+            )
+            .padding(horizontal = ItmoTheme.spacing.screenMargin)
+            .testTag(WebLoginSheetTestTags.scope(choice.scope)),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            choice.title.asString(),
+            Modifier.weight(1f),
+            color = ItmoTheme.colorScheme.onSurface,
+            style = ItmoTheme.typography.bodyLarge,
+        )
+        ItmoSwitch(checked = choice.checked, onCheckedChange = null, enabled = editable)
+    }
+}
+
+/** The screen lock, the hand-off or the upload: a spinner and what happens. */
+@Composable
+private fun ProgressStep(text: String) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = ItmoTheme.spacing.section)
+            .testTag(WebLoginSheetTestTags.PROGRESS)
+            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        ItmoActivityIndicator(size = ItmoActivityIndicatorSize.Large)
+        Text(
+            text,
+            Modifier.padding(top = ItmoTheme.spacing.group),
+            color = ItmoTheme.colorScheme.onSurface,
+            style = ItmoTheme.typography.titleMedium,
+        )
+    }
 }
 
 /** Done and error share the compact content state; TalkBack reads the outcome when it appears. */
@@ -318,7 +447,15 @@ object WebLoginSheetTestTags {
     const val CANCEL = "web_login_cancel_button"
     const val RESULT = "web_login_result"
     const val RESULT_ACTION = "web_login_result_button"
+    const val CONNECTIONS = "web_login_connections_button"
+    const val VERIFICATION = "web_login_verification"
+    const val PROGRESS = "web_login_progress"
+
+    fun scope(scope: AgentScope): String = "web_login_scope:${scope.name}"
 }
 
-/** The browser card's 24 dp icon. */
+/** The device card's 24 dp icon. */
 private val BrowserIconSize = 24.dp
+
+/** A permission row keeps the 48 dp touch target. */
+private val ScopeRowMinHeight = 48.dp

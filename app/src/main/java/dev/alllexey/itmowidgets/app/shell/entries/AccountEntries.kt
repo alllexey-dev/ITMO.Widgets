@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -42,6 +43,8 @@ import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
+import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
@@ -77,7 +80,12 @@ import dev.alllexey.itmowidgets.feature.update.ui.toBundle
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoBrowser
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebContent
 import dev.alllexey.itmowidgets.feature.web.ui.openExternalPage
+import dev.alllexey.itmowidgets.feature.weblogin.data.BiometricDeviceUnlock
+import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlock
+import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlockResult
+import dev.alllexey.itmowidgets.feature.weblogin.presentation.ConnectionsViewModel
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
+import dev.alllexey.itmowidgets.feature.weblogin.ui.ConnectionsRoute
 import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginSheetRoute
 import dev.alllexey.itmowidgets.feature.weblogin.ui.scanWebLoginCode
 import kotlinx.coroutines.launch
@@ -85,14 +93,21 @@ import org.koin.core.parameter.parametersOf
 
 /**
  * The account keys: sign-in and the first-run flow (the gate
- * surfaces), the web sign-in sheet, My ITMO in the browser, the update offer keyed by the feature's
+ * surfaces), the «Подключить устройство» sheet and «Подключённые устройства», My ITMO in the browser, the update offer keyed by the feature's
  * [UpdateRoutes.AppUpdate], and the debug tools when [debugTools] (debug builds only, as the Me row that opens them).
  * The shell's guard refuses the web sign-in and My ITMO in the demo session before they open.
  */
 internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
     entry<AppRoutes.Auth> { _, _ -> AuthEntry() }
     entry<AppRoutes.Onboarding> { _, _ -> OnboardingEntry() }
-    entry<AppRoutes.WebLogin> { key, navigator -> WebLoginEntry(key.code, onClose = { navigator.close(key) }) }
+    entry<AppRoutes.WebLogin> { key, navigator ->
+        WebLoginEntry(
+            key.code,
+            onOpenConnections = { navigator.open(AppRoutes.Connections) },
+            onClose = { navigator.close(key) },
+        )
+    }
+    entry<AppRoutes.Connections> { key, navigator -> ConnectionsEntry(onBack = { navigator.close(key) }) }
     entry<AppRoutes.MyItmoWeb> { key, navigator -> MyItmoWebEntry(onClose = { navigator.close(key) }) }
     entry<UpdateRoutes.AppUpdate>(args = { it.args.toBundle() }) { key, navigator ->
         AppUpdateEntry(onClose = { navigator.close(key) })
@@ -210,12 +225,18 @@ private fun OnboardingEntry() {
 }
 
 /**
- * The web sign-in sheet: Google's code scanner runs in Play services. A [link] from an App Link (a pairing link) is
- * read once as a scan, not again after recreation.
+ * The «Подключить устройство» sheet: Google's code scanner runs in Play services, the screen lock is `BiometricPrompt`
+ * on this activity. A [link] from an App Link (a pairing link) is read once as a scan, not again after recreation.
  */
 @Composable
-private fun WebLoginEntry(link: String?, onClose: () -> Unit) {
+private fun WebLoginEntry(link: String?, onOpenConnections: () -> Unit, onClose: () -> Unit) {
     val context = LocalContext.current
+    val activity = LocalActivity.current
+    // MainActivity is a FragmentActivity; a host without fragments (a test) has no screen lock to ask.
+    val unlock = remember(activity) {
+        (activity as? FragmentActivity)?.let { BiometricDeviceUnlock(it, UiTextResolver { text -> text.resolve() }) }
+            ?: DeviceUnlock { DeviceUnlockResult.NOT_SET_UP }
+    }
     val viewModel: WebLoginViewModel = entryViewModel()
     var linkRead by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(link) {
@@ -224,7 +245,20 @@ private fun WebLoginEntry(link: String?, onClose: () -> Unit) {
             viewModel.onScanned(link)
         }
     }
-    WebLoginSheetRoute(onScan = { scanWebLoginCode(context, viewModel) }, onClose = onClose, viewModel = viewModel)
+    WebLoginSheetRoute(
+        onScan = { scanWebLoginCode(context, viewModel) },
+        onOpenConnections = onOpenConnections,
+        onClose = onClose,
+        unlock = unlock,
+        viewModel = viewModel,
+    )
+}
+
+/** «Подключённые устройства», opened from the sheet and from the settings. */
+@Composable
+private fun ConnectionsEntry(onBack: () -> Unit) {
+    val viewModel: ConnectionsViewModel = entryViewModel()
+    ConnectionsRoute(onBack = onBack, viewModel = viewModel)
 }
 
 /**

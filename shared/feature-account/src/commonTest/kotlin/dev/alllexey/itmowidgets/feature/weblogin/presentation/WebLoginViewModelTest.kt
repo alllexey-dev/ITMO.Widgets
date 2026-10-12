@@ -8,7 +8,13 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
+import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlock
+import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlockResult
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingHandoff
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingKind
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingSealer
 import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
+import dev.alllexey.itmowidgets.testkit.FakeClock
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -31,6 +37,12 @@ class WebLoginViewModelTest {
     fun tearDown() = main.reset()
 
     private val repository = FakeWebLoginRepository()
+    private val pairing = FakePairingRepository()
+    private val session = FakeSession()
+    private val hpke = RecordingHpke()
+    private val handoff = PairingHandoff(session, PairingSealer(hpke), SignedIn, FakeClock(Instant.parse("2026-10-12T09:00:00Z")))
+    private val unlocked = DeviceUnlock { DeviceUnlockResult.UNLOCKED }
+    private val webDone = WebLoginUiState.Done(UiText.Res(AccountStrings.web_login_done))
     private val challenge = Uuid.parse("00000000-0000-0000-0000-000000000042")
     private val preview = WebLoginPreview(
         challengeId = challenge,
@@ -48,18 +60,19 @@ class WebLoginViewModelTest {
         runCurrent()
 
         val confirm = vm.uiState.value as WebLoginUiState.Confirm
-        assertEquals(challenge, confirm.preview.challengeId)
+        assertEquals(PairingKind.WEB_SESSION, confirm.kind)
+        assertEquals(null, confirm.verification)
         assertEquals(UiText.Res(AccountStrings.web_login_browser_on_platform, listOf(
-            UiText.Res(AccountStrings.web_login_browser_chrome), UiText.Res(AccountStrings.web_login_platform_macos))), confirm.browser)
+            UiText.Res(AccountStrings.web_login_browser_chrome), UiText.Res(AccountStrings.web_login_platform_macos))), confirm.client)
         // Moscow time, as the rest of the app shows it.
         assertEquals(UiText.Res(AccountStrings.web_login_requested_at, listOf("12:04")), confirm.requestedAt)
 
-        vm.approve()
+        vm.approve(unlocked)
         assertTrue((vm.uiState.value as WebLoginUiState.Confirm).approving)
-        vm.approve()
+        vm.approve(unlocked)
         runCurrent()
 
-        assertEquals(WebLoginUiState.Done, vm.uiState.value)
+        assertEquals(webDone, vm.uiState.value)
         assertEquals(listOf("preview:ABCD2345", "approve:$challenge"), repository.calls)
     }
 
@@ -90,22 +103,6 @@ class WebLoginViewModelTest {
         assertTrue(repository.calls.isEmpty())
     }
 
-    @Test fun aScannedOrPastedPairingLinkIsRecognisedButNotSentAnywhere() = runTest(main.dispatcher) {
-        val link = "https://widgets.alllexey.dev/pair#v1.ABCD2345." +
-            "QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
-        val vm = model()
-        vm.onCodeChanged("ABCD")
-
-        vm.onScanned(link)
-
-        val refused = UiText.Res(AccountStrings.web_login_pair_unavailable)
-        assertEquals(WebLoginUiState.Input("ABCD", refused), vm.uiState.value)
-        vm.onCodeChanged(link)
-        vm.submit()
-        assertEquals(WebLoginUiState.Input(link, refused), vm.uiState.value)
-        assertTrue(repository.calls.isEmpty())
-    }
-
     @Test fun anUnavailableScannerLeavesManualEntry() = runTest(main.dispatcher) {
         val vm = model()
         vm.onCodeChanged("ABCD")
@@ -132,7 +129,7 @@ class WebLoginViewModelTest {
         vm.onScanned("ABCD2345")
         runCurrent()
 
-        vm.approve()
+        vm.approve(unlocked)
         runCurrent()
         assertEquals(WebLoginUiState.Error(UiText.Res(AccountStrings.web_login_not_found), ""), vm.uiState.value)
 
@@ -162,7 +159,7 @@ class WebLoginViewModelTest {
         runCurrent()
 
         val confirm = vm.uiState.value as WebLoginUiState.Confirm
-        assertEquals(UiText.Res(AccountStrings.web_login_browser_unknown), confirm.browser)
+        assertEquals(UiText.Res(AccountStrings.web_login_browser_unknown), confirm.client)
         assertEquals(listOf("preview:ABCD2345", "preview:ABCD2345"), repository.calls)
     }
 
@@ -179,14 +176,14 @@ class WebLoginViewModelTest {
 
         vm.submit()
         runCurrent()
-        vm.approve()
+        vm.approve(unlocked)
         runCurrent()
         vm.editCode()
         assertTrue((vm.uiState.value as WebLoginUiState.Confirm).approving)
 
         pending.complete(AppResult.Success(Unit))
         runCurrent()
-        assertEquals(WebLoginUiState.Done, vm.uiState.value)
+        assertEquals(webDone, vm.uiState.value)
     }
 
     @Test fun theTypedCodeSurvivesProcessDeath() = runTest(main.dispatcher) {
@@ -197,7 +194,7 @@ class WebLoginViewModelTest {
     }
 
     private fun model(handle: SavedStateHandle = SavedStateHandle()) =
-        WebLoginViewModel(handle, repository, FixedAcademicTime())
+        WebLoginViewModel(handle, repository, pairing, handoff, FixedAcademicTime())
 
     private class FakeWebLoginRepository : WebLoginRepository {
         val previews = mutableMapOf<String, AppResult<WebLoginPreview>>()

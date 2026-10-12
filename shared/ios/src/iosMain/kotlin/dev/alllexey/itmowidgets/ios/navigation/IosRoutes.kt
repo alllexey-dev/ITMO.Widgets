@@ -79,6 +79,7 @@ object IosRoutes {
         AppRoutes.Onboarding::class to RouteFeature.ACCOUNT,
         AppRoutes.MyItmoWeb::class to RouteFeature.ACCOUNT,
         AppRoutes.WebLogin::class to RouteFeature.ACCOUNT,
+        AppRoutes.Connections::class to RouteFeature.ACCOUNT,
         AppRoutes.Settings::class to RouteFeature.SETTINGS,
         AppRoutes.Diagnostics::class to RouteFeature.SETTINGS,
         AppRoutes.DebugTools::class to RouteFeature.DEBUG,

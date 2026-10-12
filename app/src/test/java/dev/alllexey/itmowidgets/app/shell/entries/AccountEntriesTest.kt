@@ -86,6 +86,17 @@ import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateTestTags
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebTestTags
+import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.weblogin.PairLink
+import dev.alllexey.itmowidgets.feature.weblogin.domain.AgentScope
+import dev.alllexey.itmowidgets.feature.weblogin.domain.Connection
+import dev.alllexey.itmowidgets.feature.weblogin.domain.HpkeSender
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingHandoff
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingRepository
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingRequest
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingResult
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingSealer
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginSheetTestTags
 import kotlin.time.Instant
@@ -146,7 +157,9 @@ class AccountEntriesTest {
                 module {
                     viewModel { AuthViewModel(sessions, TimeSource.Monotonic) }
                     viewModel { MeViewModel(sessions, EmptySocial, FakeCustomServicesRepository(enabled = true)) }
-                    viewModel { WebLoginViewModel(get<SavedStateHandle>(), OneBrowser, FixedAcademicTime()) }
+                    viewModel {
+                        WebLoginViewModel(get<SavedStateHandle>(), OneBrowser, NoPairing, NoHandoff, FixedAcademicTime())
+                    }
                     viewModel { AppUpdateViewModel(updates, get<SavedStateHandle>()) }
                     viewModel {
                         OnboardingViewModel(
@@ -423,6 +436,25 @@ class AccountEntriesTest {
 
         override suspend fun approve(challengeId: Uuid): AppResult<Unit> = AppResult.Success(Unit)
     }
+
+    /** The Me tab's sheet pairs no device here. */
+    private object NoPairing : PairingRepository {
+        override suspend fun open(code: String, link: PairLink?): PairingResult<PairingRequest> = error("no pairing")
+        override suspend fun approve(request: PairingRequest, sealedBundle: String, scopes: Set<AgentScope>) =
+            error("no pairing")
+        override suspend fun reject(challengeId: Uuid): AppResult<Unit> = error("no pairing")
+        override suspend fun connections(): AppResult<List<Connection>> = AppResult.Success(emptyList())
+        override suspend fun revoke(id: Uuid): AppResult<Unit> = error("no pairing")
+    }
+
+    private val NoHandoff = PairingHandoff(
+        session = { error("no hand-off") },
+        sealer = PairingSealer(HpkeSender { _, _, _ -> error("no seal") }),
+        users = object : CurrentUserProvider {
+            override suspend fun getCurrentUser(): CurrentUser? = null
+        },
+        clock = kotlin.time.Clock.System,
+    )
 
     /** The stored appearance never answers, so the flow's preview cards stay empty. */
     private object NoAppearance : WidgetAppearanceRepository {

@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.feature.weblogin.domain
 
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,18 +14,27 @@ import kotlinx.coroutines.test.runTest
 
 class PairingHandoffTest {
     private val clock = FakeClock(Instant.parse("2026-10-12T09:00:00Z"))
-    private val challenge = PairingChallenge(PairingVectors.CHALLENGE_ID, PairingKind.AGENT, 100001)
+    private val users = object : CurrentUserProvider {
+        var isu: Int? = 100001
+
+        override suspend fun getCurrentUser() = CurrentUser(isu, name = null, pictureUrl = null)
+    }
     private val session = FakeSession(
         AppResult.Success(HandoffToken("test-refresh-token", Instant.parse("2026-11-11T09:00:00Z"))),
     )
     private val hpke = RecordingHpke()
-    private val handoff = PairingHandoff(session, PairingSealer(hpke), clock)
+    private val handoff = PairingHandoff(session, PairingSealer(hpke), users, clock)
 
     @Test
     fun anUnlockedPhoneSealsThePreviousTokenWithTheChallenge() = runTest {
-        val result = handoff.seal({ DeviceUnlockResult.UNLOCKED }, PairingVectors.link(), challenge)
+        var unlocked = 0
+        val result = handoff.seal(
+            { DeviceUnlockResult.UNLOCKED }, PairingVectors.link(), PairingVectors.CHALLENGE_ID, PairingKind.AGENT,
+            onUnlocked = { unlocked += 1 },
+        )
 
         assertIs<PairingHandoffResult.Sealed>(result)
+        assertEquals(1, unlocked)
         assertEquals(1, session.rotations)
         assertEquals(PairingVectors.BUNDLE_JSON, hpke.plaintext?.decodeToString())
     }
@@ -33,7 +44,7 @@ class PairingHandoffTest {
         listOf(DeviceUnlockResult.CANCELLED, DeviceUnlockResult.NOT_SET_UP).forEach { unlock ->
             assertEquals(
                 PairingHandoffResult.Locked(unlock),
-                handoff.seal({ unlock }, PairingVectors.link(), challenge),
+                handoff.seal({ unlock }, PairingVectors.link(), PairingVectors.CHALLENGE_ID, PairingKind.AGENT),
             )
         }
         assertEquals(0, session.rotations)
@@ -42,11 +53,11 @@ class PairingHandoffTest {
 
     @Test
     fun aFailedRotationSealsNothing() = runTest {
-        val rejected = PairingHandoff(FakeSession(AppResult.Failure(AppError.Unauthorized)), PairingSealer(hpke), clock)
+        val rejected = PairingHandoff(FakeSession(AppResult.Failure(AppError.Unauthorized)), PairingSealer(hpke), users, clock)
 
         assertEquals(
             PairingHandoffResult.Failed(AppError.Unauthorized),
-            rejected.seal({ DeviceUnlockResult.UNLOCKED }, PairingVectors.link(), challenge),
+            rejected.seal({ DeviceUnlockResult.UNLOCKED }, PairingVectors.link(), PairingVectors.CHALLENGE_ID, PairingKind.AGENT),
         )
         assertEquals(null, hpke.plaintext)
     }
@@ -54,9 +65,23 @@ class PairingHandoffTest {
     @Test
     fun aWebSessionNeverReceivesAnItmoSession() = runTest {
         assertFailsWith<IllegalArgumentException> {
-            val web = challenge.copy(kind = PairingKind.WEB_SESSION)
-            handoff.seal({ DeviceUnlockResult.UNLOCKED }, PairingVectors.link(), web)
+            handoff.seal(
+                { DeviceUnlockResult.UNLOCKED }, PairingVectors.link(), PairingVectors.CHALLENGE_ID,
+                PairingKind.WEB_SESSION,
+            )
         }
+        assertEquals(0, session.rotations)
+    }
+
+    @Test
+    fun withoutASignedInIsuNothingRotates() = runTest {
+        users.isu = null
+
+        val result = handoff.seal(
+            { DeviceUnlockResult.UNLOCKED }, PairingVectors.link(), PairingVectors.CHALLENGE_ID, PairingKind.AGENT,
+        )
+
+        assertEquals(PairingHandoffResult.Failed(AppError.Unauthorized), result)
         assertEquals(0, session.rotations)
     }
 

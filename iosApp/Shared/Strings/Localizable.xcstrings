@@ -373,6 +373,18 @@
         }
       }
     },
+    "notification_channel_connections" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключения устройств"
+          }
+        }
+      }
+    },
     "notification_channel_friends" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",
@@ -421,6 +433,54 @@
         }
       }
     },
+    "notification_device_connected_agent" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свой клиент «%1$@» — если это не вы, отключите его"
+          }
+        }
+      }
+    },
+    "notification_device_connected_other" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новое устройство — если это не вы, отключите его"
+          }
+        }
+      }
+    },
+    "notification_device_connected_title" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключено новое устройство"
+          }
+        }
+      }
+    },
+    "notification_device_connected_web" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход на сайт ITMO.Widgets — если это не вы, отключите его"
+          }
+        }
+      }
+    },
     "notification_friend_accepted" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",
@@ -441,6 +501,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ хочет добавить вас в друзья"
+          }
+        }
+      }
+    },
+    "notification_sport_agent_booked" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ — записал «%3$@»"
           }
         }
       }

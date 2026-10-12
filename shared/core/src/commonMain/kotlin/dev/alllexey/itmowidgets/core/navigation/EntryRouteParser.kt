@@ -32,6 +32,7 @@ object EntryRouteParser {
             overlay = subject?.validOrNull()?.let(AppRoutes::RecordbookSubject)
         )
         AppEntryIntents.ACTION_OPEN_BARS_LOGIN -> EntryRoute(AppTab.RECORDBOOK, activity = ActivityRoute.BARS_LOGIN)
+        AppEntryIntents.ACTION_OPEN_CONNECTIONS -> CONNECTIONS
         AppEntryIntents.ACTION_OPEN_QR_PASS ->
             EntryRoute(AppTab.HOME, overlay = AppRoutes.QrPass, shortcutId = EntryShortcuts.QR_PASS)
         AppEntryIntents.ACTION_OPEN_TODAY ->
@@ -51,4 +52,7 @@ object EntryRouteParser {
     }
 
     private fun profileRoute(isu: Int) = EntryRoute(AppTab.ME, overlay = AppRoutes.UserProfile(isu))
+
+    /** «Подключённые устройства» over the Me tab: a new-connection notification opens it. */
+    val CONNECTIONS = EntryRoute(AppTab.ME, overlay = AppRoutes.Connections)
 }

@@ -108,6 +108,7 @@ class AndroidAppNotifier(
                 putExtras(target.args.toBundle())
             }
             NotificationDestination.BarsLogin -> action = AppEntryIntents.ACTION_OPEN_BARS_LOGIN
+            NotificationDestination.Connections -> action = AppEntryIntents.ACTION_OPEN_CONNECTIONS
         }
     }
 

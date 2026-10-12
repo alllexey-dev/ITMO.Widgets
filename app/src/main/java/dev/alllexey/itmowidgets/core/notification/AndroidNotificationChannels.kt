@@ -14,7 +14,9 @@ fun AppNotificationChannels.create(context: Context) {
         NotificationChannel(FRIENDS, localized.getString(R.string.notification_channel_friends), NotificationManager.IMPORTANCE_DEFAULT),
         NotificationChannel(SCHEDULE_CHANGES, localized.getString(R.string.notification_channel_schedule_changes),
             NotificationManager.IMPORTANCE_DEFAULT),
-        NotificationChannel(MARKS, localized.getString(R.string.notification_channel_marks), NotificationManager.IMPORTANCE_DEFAULT)
+        NotificationChannel(MARKS, localized.getString(R.string.notification_channel_marks), NotificationManager.IMPORTANCE_DEFAULT),
+        NotificationChannel(CONNECTIONS, localized.getString(R.string.notification_channel_connections),
+            NotificationManager.IMPORTANCE_DEFAULT)
     ))
     manager.deleteNotificationChannel("fcm_default_channel")
 }

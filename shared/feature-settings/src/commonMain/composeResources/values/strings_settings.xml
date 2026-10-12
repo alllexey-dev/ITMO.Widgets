@@ -20,6 +20,7 @@
     <string name="settings_custom_services_consent_message">Сервер один раз проверит токен ITMO.ID, чтобы убедиться, что это вы. Токен не сохраняется.</string>
     <string name="settings_custom_services_enable">Подключиться</string>
     <string name="settings_notifications_title">Уведомления</string>
+    <string name="settings_connections_title">Подключённые устройства</string>
     <string name="settings_schedule_sharing_title">Кто видит моё расписание</string>
     <string name="settings_sport_sharing_title">Кто видит мой спорт</string>
     <string name="settings_privacy_all">Все</string>

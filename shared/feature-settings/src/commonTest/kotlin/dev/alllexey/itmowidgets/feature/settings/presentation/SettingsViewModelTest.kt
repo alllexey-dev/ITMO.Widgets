@@ -125,6 +125,7 @@ class SettingsViewModelTest {
                 setOf(
                     SettingRowId.CUSTOM_SERVICES,
                     SettingRowId.NOTIFICATIONS,
+                    SettingRowId.CONNECTIONS,
                     SettingRowId.SCHEDULE_SHARING,
                     SettingRowId.SPORT_SHARING,
                     SettingRowId.FRIENDS_SHARING,
@@ -181,6 +182,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             fixture.viewModel.onAction(SettingRowId.NOTIFICATIONS)
+            fixture.viewModel.onAction(SettingRowId.CONNECTIONS)
             fixture.viewModel.onAction(SettingRowId.QR_CUSTOM_IMAGE)
             fixture.viewModel.onAction(SettingRowId.QR_RESET_IMAGE)
             fixture.viewModel.onAction(SettingRowId.REFRESH_WIDGETS)
@@ -188,11 +190,12 @@ class SettingsViewModelTest {
             assertEquals(
                 listOf(
                     SettingsEvent.OpenNotificationSettings,
+                    SettingsEvent.OpenConnections,
                     SettingsEvent.ChooseCustomSpoiler,
                     SettingsEvent.ResetCustomSpoiler,
                     SettingsEvent.WidgetsRefreshStarted
                 ),
-                fixture.viewModel.events.take(4).toList()
+                fixture.viewModel.events.take(5).toList()
             )
             assertEquals(1, fixture.widgetRefresher.refreshCount)
         }

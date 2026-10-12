@@ -11,7 +11,9 @@ import dev.alllexey.itmowidgets.core.notification.FcmPayloadHandler
 import dev.alllexey.itmowidgets.feature.social.data.push.FriendshipPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
+import dev.alllexey.itmowidgets.feature.sport.data.push.SportAgentBookedPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushHandler
+import dev.alllexey.itmowidgets.feature.weblogin.data.push.DeviceConnectedPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.di.sportCardsQualifier
@@ -74,7 +76,9 @@ class SportGraphTest {
         val handlers = koin.getAll<FcmPayloadHandler>()
         assertEquals(2, handlers.count { it is SportSignPushHandler })
         assertEquals(1, handlers.count { it is FriendshipPushHandler })
-        assertEquals(3, handlers.map { it.type }.toSet().size)
+        assertEquals(1, handlers.count { it is SportAgentBookedPushHandler })
+        assertEquals(1, handlers.count { it is DeviceConnectedPushHandler })
+        assertEquals(5, handlers.map { it.type }.toSet().size)
         assertTrue(koin.get<SportLessonTemplateProvider>() is DefaultSportLessonTemplateProvider)
     }
 

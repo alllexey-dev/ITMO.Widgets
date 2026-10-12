@@ -7,6 +7,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 enum class SettingRowId(val key: String) {
     CUSTOM_SERVICES("custom_services"),
     NOTIFICATIONS("notifications"),
+    CONNECTIONS("connections"),
     SCHEDULE_SHARING("schedule_sharing"),
     SPORT_SHARING("sport_sharing"),
     FRIENDS_SHARING("friends_sharing"),
