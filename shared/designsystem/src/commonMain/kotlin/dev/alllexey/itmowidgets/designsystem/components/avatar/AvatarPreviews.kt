@@ -13,7 +13,9 @@ import androidx.compose.ui.unit.dp
 import coil3.ColorImage
 import coil3.ImageLoader
 import coil3.compose.LocalPlatformContext
-import coil3.test.FakeImageLoaderEngine
+import coil3.decode.DataSource
+import coil3.intercept.Interceptor
+import coil3.request.SuccessResult
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -37,11 +39,13 @@ private fun AvatarInitialsPreview() = ItmoPreview {
 private fun AvatarPhotoPreview() = ItmoPreview {
     val context = LocalPlatformContext.current
     val loader = remember(context) {
-        val engine = FakeImageLoaderEngine.Builder()
-            .intercept(PHOTO_URL, ColorImage(PHOTO_COLOR))
-            .build()
+        // Answers PHOTO_URL from memory and fails the rest; coil-test stays out of the kit's release classpath.
+        val fake = Interceptor { chain ->
+            check(chain.request.data == PHOTO_URL) { "No fake for ${chain.request.data}" }
+            SuccessResult(ColorImage(PHOTO_COLOR), chain.request, DataSource.MEMORY)
+        }
         // Unconfined: the fake answers within the first frame, so the capture shows the result, not the loading.
-        ImageLoader.Builder(context).components { add(engine) }.coroutineContext(Dispatchers.Unconfined).build()
+        ImageLoader.Builder(context).components { add(fake) }.coroutineContext(Dispatchers.Unconfined).build()
     }
     CompositionLocalProvider(LocalAvatarImageLoader provides loader) {
         AvatarRow {
@@ -63,7 +67,7 @@ private fun AvatarRow(content: @Composable () -> Unit) {
 
 private const val PHOTO_URL = "https://example.invalid/avatar.jpg"
 
-/** No fake and no network fetcher in the kit: the request fails. */
+/** Not faked and no network fetcher in the kit: the request fails. */
 private const val MISSING_URL = "https://example.invalid/missing.jpg"
 
 private const val PHOTO_COLOR = 0xFF5B7FA6.toInt()
