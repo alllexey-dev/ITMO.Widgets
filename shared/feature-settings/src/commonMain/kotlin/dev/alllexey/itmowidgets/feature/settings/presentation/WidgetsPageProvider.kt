@@ -41,7 +41,6 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_descrip
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_failed
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_title
 import kotlinx.coroutines.CancellationException
-import org.jetbrains.compose.resources.StringResource
 
 /**
  * The compact and full schedule widgets and the QR pass widget with its tile; each page draws its widget above. The
@@ -153,14 +152,15 @@ class WidgetsPageProvider(
     fun onQrTileResult(scope: SettingsPageScope, result: QrTileAddResult) {
         when (result) {
             QrTileAddResult.ADDED -> rememberQrTileAdded(scope)
-            QrTileAddResult.ALREADY_ADDED -> rememberQrTileAdded(scope, Res.string.settings_qr_tile_already_added)
+            QrTileAddResult.ALREADY_ADDED ->
+                rememberQrTileAdded(scope, UiText.Res(Res.string.settings_qr_tile_already_added))
             QrTileAddResult.NOT_ADDED, QrTileAddResult.IN_PROGRESS -> Unit
             QrTileAddResult.FAILED ->
                 scope.send(SettingsEvent.ShowMessage(UiText.Res(Res.string.settings_qr_tile_failed)))
         }
     }
 
-    private fun rememberQrTileAdded(scope: SettingsPageScope, message: StringResource? = null) {
+    private fun rememberQrTileAdded(scope: SettingsPageScope, message: UiText? = null) {
         scope.launch {
             try {
                 repository.setQrTileAdded(true)
@@ -170,7 +170,7 @@ class WidgetsPageProvider(
                 scope.emit(SettingsEvent.ShowError(AppError.Unknown(error)))
                 return@launch
             }
-            message?.let { scope.emit(SettingsEvent.ShowMessage(UiText.Res(it))) }
+            message?.let { scope.emit(SettingsEvent.ShowMessage(it)) }
         }
     }
 

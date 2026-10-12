@@ -22,13 +22,6 @@ sealed interface UiText {
         val arguments: List<Any> = emptyList()
     ) : UiText
 
-    /** An Android string id; only the Android resolver reads it. */
-    @Deprecated("Android-only resource id; use UiText.Res or UiText.Plural")
-    data class Resource(
-        val resourceId: Int,
-        val arguments: List<Any> = emptyList()
-    ) : UiText
-
     data class Dynamic(val value: String) : UiText
 
     /** [parts] resolved and joined by [separator], a symbol rather than a word: "1506 · Кронва". */

@@ -45,7 +45,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.compose.resources.StringResource
 
 /** Approves a browser's sign-in to the web version: code from the QR or typed, a look at the browser, then «Войти». */
 class WebLoginViewModel(
@@ -161,27 +160,31 @@ class WebLoginViewModel(
 /** «Chrome на macOS», «Chrome», «Браузер на Android» or just «Браузер». */
 internal fun browserText(userAgent: String?): UiText {
     val description = describeUserAgent(userAgent)
-    val browser = UiText.Res(description.browser?.nameRes() ?: Res.string.web_login_browser_unknown)
+    val browser = description.browser?.text() ?: UiText.Res(Res.string.web_login_browser_unknown)
     val platform = description.platform ?: return browser
-    return UiText.Res(Res.string.web_login_browser_on_platform, listOf(browser, UiText.Res(platform.nameRes())))
+    return UiText.Res(Res.string.web_login_browser_on_platform, listOf(browser, platform.text()))
 }
 
-private fun Browser.nameRes(): StringResource = when (this) {
-    Browser.YANDEX -> Res.string.web_login_browser_yandex
-    Browser.EDGE -> Res.string.web_login_browser_edge
-    Browser.OPERA -> Res.string.web_login_browser_opera
-    Browser.SAMSUNG -> Res.string.web_login_browser_samsung
-    Browser.FIREFOX -> Res.string.web_login_browser_firefox
-    Browser.CHROME -> Res.string.web_login_browser_chrome
-    Browser.SAFARI -> Res.string.web_login_browser_safari
-}
+private fun Browser.text(): UiText = UiText.Res(
+    when (this) {
+        Browser.YANDEX -> Res.string.web_login_browser_yandex
+        Browser.EDGE -> Res.string.web_login_browser_edge
+        Browser.OPERA -> Res.string.web_login_browser_opera
+        Browser.SAMSUNG -> Res.string.web_login_browser_samsung
+        Browser.FIREFOX -> Res.string.web_login_browser_firefox
+        Browser.CHROME -> Res.string.web_login_browser_chrome
+        Browser.SAFARI -> Res.string.web_login_browser_safari
+    }
+)
 
-private fun Platform.nameRes(): StringResource = when (this) {
-    Platform.WINDOWS -> Res.string.web_login_platform_windows
-    Platform.MACOS -> Res.string.web_login_platform_macos
-    Platform.LINUX -> Res.string.web_login_platform_linux
-    Platform.CHROME_OS -> Res.string.web_login_platform_chrome_os
-    Platform.ANDROID -> Res.string.web_login_platform_android
-    Platform.IOS -> Res.string.web_login_platform_ios
-    Platform.IPADOS -> Res.string.web_login_platform_ipados
-}
+private fun Platform.text(): UiText = UiText.Res(
+    when (this) {
+        Platform.WINDOWS -> Res.string.web_login_platform_windows
+        Platform.MACOS -> Res.string.web_login_platform_macos
+        Platform.LINUX -> Res.string.web_login_platform_linux
+        Platform.CHROME_OS -> Res.string.web_login_platform_chrome_os
+        Platform.ANDROID -> Res.string.web_login_platform_android
+        Platform.IOS -> Res.string.web_login_platform_ios
+        Platform.IPADOS -> Res.string.web_login_platform_ipados
+    }
+)

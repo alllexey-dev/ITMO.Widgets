@@ -72,6 +72,13 @@ final class StringsTests: XCTestCase {
         XCTAssertEqual(kotlin, text.resolved)
     }
 
+    func testJoinedAndLowercaseFirstResolveLikeKotlin() {
+        let joined = UiTextJoined(parts: [UiTextDynamic(value: "1506"), UiTextDynamic(value: "Кронва")], separator: " · ")
+
+        XCTAssertEqual(joined.resolved, "1506 · Кронва")
+        XCTAssertEqual(UiTextLowercaseFirst(text: UiTextDynamic(value: "Пара")).resolved, "пара")
+    }
+
     func testComposeSuspendResolverUsesRussianPluralRules() async throws {
         for (count, expected) in lessonCounts {
             let text = try XCTUnwrap(IosStrings.shared.corePlural(key: "schedule_lesson_count", count: Int32(count)))

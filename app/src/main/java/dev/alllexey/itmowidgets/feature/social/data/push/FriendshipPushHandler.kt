@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.social.data.push
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.push.FcmDecoder
 import dev.alllexey.itmowidgets.client.push.FriendshipEvent
@@ -14,6 +13,10 @@ import dev.alllexey.itmowidgets.core.notification.NotificationDestination
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.shared.core.Res
+import dev.alllexey.itmowidgets.shared.core.notification_channel_friends
+import dev.alllexey.itmowidgets.shared.core.notification_friend_accepted
+import dev.alllexey.itmowidgets.shared.core.notification_friend_request
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonElement
 
@@ -41,10 +44,10 @@ class FriendshipPushHandler(
             notifier.show(AppNotification(
                 channel = AppNotificationChannels.FRIENDS,
                 id = actor.isu,
-                title = UiText.Resource(R.string.notification_channel_friends),
-                text = UiText.Resource(when (event.event) {
-                    FriendshipEvent.REQUEST_RECEIVED -> R.string.notification_friend_request
-                    FriendshipEvent.REQUEST_ACCEPTED -> R.string.notification_friend_accepted
+                title = UiText.Res(Res.string.notification_channel_friends),
+                text = UiText.Res(when (event.event) {
+                    FriendshipEvent.REQUEST_RECEIVED -> Res.string.notification_friend_request
+                    FriendshipEvent.REQUEST_ACCEPTED -> Res.string.notification_friend_accepted
                 }, listOf(name)),
                 destination = NotificationDestination.UserProfile(actor.isu)
             ))
