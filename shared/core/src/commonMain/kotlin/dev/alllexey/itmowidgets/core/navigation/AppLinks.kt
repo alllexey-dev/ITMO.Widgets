@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.navigation
 
 import dev.alllexey.itmowidgets.core.url.StrictUri
+import dev.alllexey.itmowidgets.core.weblogin.PairLink
 
 /** What a verified `https` link to the site asks the app to open. */
 sealed interface AppLink {
@@ -11,6 +12,9 @@ sealed interface AppLink {
     /** A predicted lesson, named by the catalog lesson it repeats two weeks later. */
     data class PredictedSportLesson(val prototypeLessonId: Long) : AppLink
 
+    /** A device asks to be paired; the link holds its key, so it is never logged. */
+    data class Pair(val link: PairLink) : AppLink
+
     /** A link under an app prefix whose identifier cannot be read. */
     data object Malformed : AppLink
 }
@@ -20,7 +24,8 @@ sealed interface AppLink {
  *
  * Only `https` links on [PROD_HOST] and [DEV_HOST] under [PROFILE_PREFIX] and [SPORT_PREFIX] belong to the app; one
  * trailing slash is allowed, query and fragment are ignored. Anything else under those prefixes is [AppLink.Malformed],
- * so a damaged link still reaches the app and explains itself.
+ * so a damaged link still reaches the app and explains itself. The path exactly [PairLink.PATH] is a pairing link,
+ * read strictly by [PairLink.parse], fragment included.
  */
 object AppLinks {
     const val PROD_HOST = "widgets.alllexey.dev"
@@ -39,6 +44,7 @@ object AppLinks {
         if (uri.host?.lowercase() !in setOf(PROD_HOST, DEV_HOST)) return null
         val path = uri.rawPath.orEmpty()
         return when {
+            path == PairLink.PATH -> PairLink.parse(url)?.let(AppLink::Pair) ?: AppLink.Malformed
             path.startsWith(PROFILE_PREFIX) -> identifier(path, PROFILE_PREFIX, ISU)
                 ?.toIntOrNull()?.let(AppLink::Profile) ?: AppLink.Malformed
             path.startsWith(PREDICTED_SPORT_PREFIX) -> identifier(path, PREDICTED_SPORT_PREFIX, LESSON_ID)

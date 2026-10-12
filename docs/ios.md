@@ -99,7 +99,8 @@ Swift reaches Kotlin through `Shared` and SKIE (`shared/ios/build.gradle.kts`): 
   `shared/feature-<x>/src/iosMain/.../di/<Area>IosModule.kt`. Swift reads the graph with
   `IosKoin.shared.get(protocol:)` or `get(type:)`.
 - `IosPlatform` is the one Kotlin interface Swift implements (`Sources/Bridge/AppPlatform.swift`): WidgetKit reloads,
-  the top view controller, WebKit clearing and cookies, the hidden BARS web view.
+  the top view controller, WebKit clearing and cookies, the hidden BARS web view, pairing's CryptoKit HPKE and
+  LocalAuthentication (`PairingHost`).
 - SwiftUI screens. `ObservableViewModel<Model, State>` (`Sources/Bridge/ObservableViewModel.swift`) is `@Observable`,
   owns a `ScreenViewModelStore`, resolves the ViewModel from Koin on first use, follows `uiState` with
   `.observing(model)` and delivers events with `.onEvents(of:_:perform:)`. Its `deinit` clears the store, which

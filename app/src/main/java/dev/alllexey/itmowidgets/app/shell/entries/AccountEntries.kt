@@ -15,9 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
@@ -90,7 +92,7 @@ import org.koin.core.parameter.parametersOf
 internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
     entry<AppRoutes.Auth> { _, _ -> AuthEntry() }
     entry<AppRoutes.Onboarding> { _, _ -> OnboardingEntry() }
-    entry<AppRoutes.WebLogin> { key, navigator -> WebLoginEntry(onClose = { navigator.close(key) }) }
+    entry<AppRoutes.WebLogin> { key, navigator -> WebLoginEntry(key.code, onClose = { navigator.close(key) }) }
     entry<AppRoutes.MyItmoWeb> { key, navigator -> MyItmoWebEntry(onClose = { navigator.close(key) }) }
     entry<UpdateRoutes.AppUpdate>(args = { it.args.toBundle() }) { key, navigator ->
         AppUpdateEntry(onClose = { navigator.close(key) })
@@ -207,11 +209,21 @@ private fun OnboardingEntry() {
     )
 }
 
-/** The web sign-in sheet: Google's code scanner runs in Play services. */
+/**
+ * The web sign-in sheet: Google's code scanner runs in Play services. A [link] from an App Link (a pairing link) is
+ * read once as a scan, not again after recreation.
+ */
 @Composable
-private fun WebLoginEntry(onClose: () -> Unit) {
+private fun WebLoginEntry(link: String?, onClose: () -> Unit) {
     val context = LocalContext.current
     val viewModel: WebLoginViewModel = entryViewModel()
+    var linkRead by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(link) {
+        if (link != null && !linkRead) {
+            linkRead = true
+            viewModel.onScanned(link)
+        }
+    }
     WebLoginSheetRoute(onScan = { scanWebLoginCode(context, viewModel) }, onClose = onClose, viewModel = viewModel)
 }
 

@@ -93,6 +93,36 @@ cookie) is never called by the app.
 - The app never sends its token to the browser; the browser gets its own
   session cookie from Backend after the approval.
 
+## Device pairing
+
+Groundwork for «Подключить устройство» (connect a self-hosted agent or a site
+with ITMO access); nothing reaches Backend yet. The sheet recognises a pairing
+link (scanned, pasted, or from an App Link) and answers `Подключение устройств
+появится в следующей версии`. In `feature/weblogin/domain`:
+
+- `PairingCrypto`: the key commitment `SHA-256("iw-pair-commit-v1" || pk || s)`,
+  the HPKE `info` (`"itmo-widgets pair v1" || 0 || challengeId || kind || 0 ||
+  s`) and the six-digit verification code (first 20 bits of
+  `SHA-256("iw-pair-sas-v1" || challengeId || pk || s)` modulo 10^6).
+- `PairingSealer.sealBundle(link, bundle)`: the `PairingBundle` JSON (`v`,
+  `challengeId`, `kind`, `isu`, `refreshToken`, `refreshExpiresAt`,
+  `issuedAt`, instants as ISO-8601) sealed with HPKE base mode
+  DHKEM(X25519, HKDF-SHA256) / HKDF-SHA256 / ChaCha20-Poly1305, empty AAD, as
+  `base64url(enc || ciphertext)`, at most 16 KiB. `HpkeSender` is Tink
+  (`TinkHpkeSender`, `NO_PREFIX`) on Android and CryptoKit `HPKE.Sender`
+  through `PairingHost` on iOS.
+- `HandoffSession` (`TokenManagerHandoffSession`): one `forceRefresh` of
+  MyItmoApi's `TokenManager` keeps the new tokens as the phone's session and
+  returns the previous refresh token, never stored anywhere; the demo session
+  is refused.
+- `PairingHandoff.seal`: `DeviceUnlock` first (`BiometricDeviceUnlock` with
+  `BIOMETRIC_WEAK | DEVICE_CREDENTIAL` on Android, LocalAuthentication
+  `deviceOwnerAuthentication` on iOS), then the hand-off, then the seal; a
+  cancelled or missing screen lock rotates nothing.
+- Test vectors: `PairingVectors` (commonTest) and `PairingTests.swift` share
+  one bundle sealed by CryptoKit and one sealed by Tink; each platform opens
+  the other's, and iOS checks RFC 9180 A.2.
+
 ## iOS
 
 - `WebLoginSheet` (`iosApp/Sources/Features/WebLogin/`) is SwiftUI over the

@@ -28,7 +28,9 @@ import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
+import dev.alllexey.itmowidgets.feature.weblogin.data.PairingHost
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
+import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginIosModule
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
@@ -54,6 +56,7 @@ import org.koin.core.module.Module
 import org.koin.core.parameter.parametersOf
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
+import platform.Foundation.NSData
 import platform.UIKit.UIViewController
 
 /**
@@ -127,9 +130,18 @@ class AccountIosModuleTest {
 
     private fun accountGraph(): Koin = graph(
         iosCoreModule(FakeHost(), ORIGIN), authDataModule, accountIosModule,
-        webLoginDataModule, webLoginModule, updateModule, updateIosModule,
+        webLoginDataModule, webLoginModule, webLoginIosModule(NoPairingHost), updateModule, updateIosModule,
         testDevice(),
     )
+
+    /** Pairing's Swift host; resolving the graph calls none of it. */
+    private object NoPairingHost : PairingHost {
+        override fun hpkeSeal(recipientPublicKey: NSData, info: NSData, plaintext: NSData): NSData? = null
+
+        override fun canUnlockDevice(): Boolean = false
+
+        override fun unlockDevice(reason: String, completion: (Boolean) -> Unit) = completion(false)
+    }
 
     @Test
     fun theSessionSnapshotFollowsEverySignedInSessionAndIsWrittenAgainAfterASignOut() = runTest(

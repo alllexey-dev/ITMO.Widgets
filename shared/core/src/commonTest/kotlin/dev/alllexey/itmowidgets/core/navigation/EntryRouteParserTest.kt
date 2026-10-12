@@ -130,6 +130,20 @@ class EntryRouteParserTest {
     }
 
     @Test
+    fun aPairingLinkOpensTheWebSignInSheetWithTheLinkAndADamagedOneTheUnavailableDialog() {
+        val link = "https://dev.widgets.alllexey.dev/pair#v1.ABCD2345." +
+            "QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
+
+        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.WebLogin(code = link)), view(link))
+        assertEquals(
+            EntryRoute(AppTab.HOME, alert = AppRoutes.LinkUnavailable),
+            view("https://dev.widgets.alllexey.dev/pair#v1.ABCD2345")
+        )
+        // The route may reach a crash report; the device's key must not.
+        assertEquals("WebLogin(code=redacted)", AppRoutes.WebLogin(code = link).toString())
+    }
+
+    @Test
     fun anAppLinkReplayedFromRecentsOpensNoRoute() {
         listOf(
             "https://widgets.alllexey.dev/u/1",

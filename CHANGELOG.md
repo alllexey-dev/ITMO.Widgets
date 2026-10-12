@@ -153,6 +153,12 @@ new iOS app.
   `docs/testing.md`, `docs/troubleshooting.md` and `CONTRIBUTING.md`; the
   architecture and feature docs describe the Compose, Koin and Navigation 3
   code.
+- Groundwork for connecting devices from the phone: `https://<host>/pair#v1...`
+  links are read from the scanner, a pasted link or an Android App Link
+  (`Подключение устройств появится в следующей версии` until the UI ships);
+  HPKE sealing (Tink on Android, CryptoKit on iOS), the verification code, the
+  session hand-off over MyItmoApi's refresh and the screen-lock check exist
+  but send nothing to Backend yet.
 
 ## 2.2 — 2026-10-03
 

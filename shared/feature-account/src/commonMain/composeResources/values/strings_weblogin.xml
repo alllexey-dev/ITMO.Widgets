@@ -28,4 +28,6 @@
     <string name="web_login_platform_android">Android</string>
     <string name="web_login_platform_ios">iOS</string>
     <string name="web_login_platform_ipados">iPadOS</string>
+    <string name="web_login_pair_unavailable">Подключение устройств появится в следующей версии</string>
+    <string name="pair_unlock_reason">Подтвердите подключение устройства</string>
 </resources>

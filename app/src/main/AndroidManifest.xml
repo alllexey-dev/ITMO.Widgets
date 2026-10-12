@@ -56,7 +56,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Shared profile and sport lesson links; verified against /.well-known/assetlinks.json of each host. -->
+            <!-- Shared profile and sport lesson links and device pairing links (exactly /pair, the key in the fragment);
+                 verified against /.well-known/assetlinks.json of each host. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
 
@@ -68,6 +69,7 @@
                 <data android:host="dev.widgets.alllexey.dev" />
                 <data android:pathPrefix="/u/" />
                 <data android:pathPrefix="/sport/" />
+                <data android:path="/pair" />
             </intent-filter>
 
             <meta-data

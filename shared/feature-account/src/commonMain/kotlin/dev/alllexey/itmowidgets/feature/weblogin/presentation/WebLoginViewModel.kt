@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.weblogin.PairLink
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.feature.weblogin.domain.Browser
@@ -27,6 +28,7 @@ import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_unknown
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_yandex
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_code_invalid
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_not_found
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_pair_unavailable
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_android
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_chrome_os
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_ios
@@ -65,6 +67,7 @@ class WebLoginViewModel(
     /** A QR that is not a sign-in link leaves the typed code alone. */
     fun onScanned(raw: String) {
         val current = _uiState.value as? WebLoginUiState.Input ?: return
+        if (refusedPairLink(raw, current)) return
         val code = WebLoginCode.parse(raw)
         if (code == null) {
             _uiState.value = current.copy(error = UiText.Res(Res.string.web_login_qr_unknown))
@@ -81,6 +84,7 @@ class WebLoginViewModel(
 
     fun submit() {
         val current = _uiState.value as? WebLoginUiState.Input ?: return
+        if (refusedPairLink(current.code, current)) return
         val code = WebLoginCode.parse(current.code)
         if (code == null) {
             _uiState.value = current.copy(error = UiText.Res(Res.string.web_login_code_invalid))
@@ -117,6 +121,13 @@ class WebLoginViewModel(
     fun retry() {
         val current = _uiState.value as? WebLoginUiState.Error ?: return
         if (current.code.isEmpty()) onInput("") else check(current.code)
+    }
+
+    /** A device's pairing link (scanned, pasted or from an App Link) is recognised, but pairing is not offered yet. */
+    private fun refusedPairLink(raw: String, current: WebLoginUiState.Input): Boolean {
+        if (PairLink.parse(raw) == null) return false
+        _uiState.value = current.copy(error = UiText.Res(Res.string.web_login_pair_unavailable))
+        return true
     }
 
     private fun onInput(code: String) {
