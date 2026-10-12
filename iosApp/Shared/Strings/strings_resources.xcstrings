@@ -421,6 +421,18 @@
         }
       }
     },
+    "links_visibility_flow_review" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · после проверки"
+          }
+        }
+      }
+    },
     "links_who_sees" : {
       "comment" : "Generated from strings_resources.xml",
       "extractionState" : "manual",

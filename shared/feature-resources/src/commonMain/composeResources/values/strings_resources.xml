@@ -2,6 +2,7 @@
     <string name="links_url_clear">Очистить ссылку</string>
     <string name="sheet_scores_action">Мои баллы</string>
     <string name="links_visibility_all_review">После проверки</string>
+    <string name="links_visibility_flow_review">%1$s · после проверки</string>
     <string name="links_status_pending">на проверке</string>
     <string name="links_status_rejected">отклонена</string>
     <string name="links_status_hidden">скрыта</string>
