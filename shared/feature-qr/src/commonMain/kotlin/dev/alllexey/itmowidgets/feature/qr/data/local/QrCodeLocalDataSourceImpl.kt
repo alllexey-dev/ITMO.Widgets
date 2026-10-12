@@ -61,11 +61,13 @@ class QrCodeLocalDataSourceImpl internal constructor(
         } catch (_: Exception) {}
     }
 
+    /** A failed delete throws: the pass left on disk would be read again, so the sign-in that clears it must stop. */
     override fun clear() {
         try {
             file.write(null)
-        } catch (_: Exception) {}
-        _flow.value = null
+        } finally {
+            _flow.value = null
+        }
     }
 
     internal fun isExpired(entry: QrCacheEntry): Boolean {

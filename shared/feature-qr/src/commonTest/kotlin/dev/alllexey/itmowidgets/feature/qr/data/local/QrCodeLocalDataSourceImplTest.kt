@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.testkit.fakeFileSystemOf
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.milliseconds
@@ -14,6 +15,9 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import okio.ForwardingFileSystem
+import okio.IOException
+import okio.Path
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 
@@ -91,6 +95,19 @@ class QrCodeLocalDataSourceImplTest {
         assertFalse(fileSystem.exists(QR_HEX.toPath()))
         assertNull(source.get(allowExpired = true))
         assertNull(source().get(allowExpired = true))
+    }
+
+    @Test
+    fun aFailedDeleteIsReportedSoSignInStopsBeforeTheNextAccountReadsThePass() {
+        fileSystem = fakeFileSystemOf(QR_HEX to "${SAVED_AT.toEpochMilliseconds()}|$PASS_HEX", clock = clock)
+        val undeletable = object : ForwardingFileSystem(fileSystem) {
+            override fun delete(path: Path, mustExist: Boolean) = throw IOException("Synthetic delete failure")
+        }
+        val source = QrCodeLocalDataSourceImpl(AtomicTextFile(QR_HEX.toPath(), undeletable), clock)
+
+        assertFailsWith<IOException> { source.clear() }
+
+        assertNull(source.get(allowExpired = true))
     }
 
     private fun source() = QrCodeLocalDataSourceImpl(AtomicTextFile(QR_HEX.toPath(), fileSystem), clock)

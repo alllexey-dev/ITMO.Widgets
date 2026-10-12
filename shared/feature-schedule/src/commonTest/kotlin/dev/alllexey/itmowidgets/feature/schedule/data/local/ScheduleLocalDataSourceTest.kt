@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.testkit.fakeFileSystemOf
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -27,6 +28,10 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
+import okio.FileSystem
+import okio.ForwardingFileSystem
+import okio.IOException
+import okio.Path
 import okio.Path.Companion.toPath
 import okio.buffer
 import okio.fakefilesystem.FakeFileSystem
@@ -187,13 +192,27 @@ class ScheduleLocalDataSourceTest {
         assertNull(local.get(null, next))
     }
 
+    @Test
+    fun aFailedDeleteOnClearIsReportedSoSignInStopsBeforeTheNextAccountReadsTheDays() = withCache { fixture ->
+        fixture.local().save(day(DATE, "previous account"), null)
+        fixture.local().save(day(DATE, "friend"), 900001)
+        val undeletable = fixture.local(UndeletableFileSystem(fileSystem))
+
+        assertFailsWith<IOException> { undeletable.clear() }
+        assertFailsWith<IOException> { undeletable.clearUser(900001) }
+    }
+
+    private class UndeletableFileSystem(delegate: FakeFileSystem) : ForwardingFileSystem(delegate) {
+        override fun delete(path: Path, mustExist: Boolean) = throw IOException("Synthetic delete failure")
+    }
+
     private fun withCache(block: suspend TestScope.(Fixture) -> Unit) = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         block(Fixture(AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher)))
     }
 
     private inner class Fixture(private val dispatchers: AppDispatchers) {
-        fun local() = ScheduleLocalDataSourceImpl(clock, CACHE_DIR, dispatchers, fileSystem)
+        fun local(files: FileSystem = fileSystem) = ScheduleLocalDataSourceImpl(clock, CACHE_DIR, dispatchers, files)
     }
 
     private fun day(date: LocalDate, note: String? = null) = DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, note, emptyList())
