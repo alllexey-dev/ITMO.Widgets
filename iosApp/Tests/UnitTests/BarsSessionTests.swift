@@ -92,9 +92,11 @@ final class BarsSessionTests: XCTestCase {
         XCTAssertNotNil(itemValue(account: cookieItem))
 
         // The app graph's BARS cleaner, then the core's (the Keychain, the App Group, WebKit), as sign-out runs them.
+        // WebKit's removal is counted only (FakeCoreHost).
         try await graph(BarsPreferenceRepositoryImpl.self).clearSessionData()
         XCTAssertNil(itemValue(account: barsItem))
-        let core = IosCoreGraph(host: AppPlatform())
+        let host = FakeCoreHost()
+        let core = IosCoreGraph(host: host)
         defer { core.close() }
         for cleaner in core.sessionDataCleaners {
             try await cleaner.clearSessionData()
@@ -102,6 +104,7 @@ final class BarsSessionTests: XCTestCase {
 
         XCTAssertNil(itemValue(account: barsItem))
         XCTAssertNil(itemValue(account: cookieItem))
+        XCTAssertEqual(host.websiteDataClears, 1)
     }
 
     // MARK: Helpers

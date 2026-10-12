@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test.sh [--ci] [--record]                           checks, xcodegen, build test of the scheme without UITests
+# test.sh [--ci] [--record]                           checks, xcodegen, build and test of the scheme without UITests
 # test.sh [--ci] [--record] --only <Target>/<Class>   the same, one test class (xcodebuild -only-testing)
 # test.sh [--ci] ui [<Class>...]                      the XCUITest target UITests, or only the listed classes
 # test.sh [--ci] kn <module>...                       iosSimulatorArm64Test of shared modules (`core` or `:shared:core`)
@@ -10,9 +10,10 @@
 #
 # - Sources scripts/ios/env.sh first: a different Xcode or XcodeGen than the tested one warns.
 # - Runs every scripts/ios/check-*.sh before building (add a check as a new file).
-# - xcodegen generates iosApp/ITMOWidgets.xcodeproj (ignored); xcodebuild runs with DerivedData in
-#   iosApp/build/DerivedData and the result bundle in iosApp/build/test-results/. The app target's Run Script builds
-#   the Kotlin framework with Gradle.
+# - xcodegen generates iosApp/ITMOWidgets.xcodeproj (ignored); xcodebuild runs build-for-testing, then
+#   test-without-building, with DerivedData in iosApp/build/DerivedData and the result bundle in
+#   iosApp/build/test-results/. The app target's Run Script builds the Kotlin framework with Gradle. The simulator
+#   boots in the background during the build.
 # - One simulator per worktree, `itmo-<worktree directory>` (`itmo-ci` with --ci), created from the pinned device
 #   type and runtime on first use; --cleanup (and the end of a --ci run) deletes it. No other simulator is touched.
 # - The default run and --only skip the UITests target; `ui` runs only it (XCUITest launches the app, so it is slower).
@@ -193,16 +194,25 @@ run_xcode() { # label
   mkdir -p "$results"
   bundle="$results/$label.xcresult"
   rm -rf "$bundle"
-  note "xcodebuild build test on $sim_name ${test_args[*]:-}"
-  xcodebuild \
-    -project iosApp/ITMOWidgets.xcodeproj \
-    -scheme ITMOWidgets \
-    -configuration Debug \
-    -destination "platform=iOS Simulator,id=$udid" \
-    -derivedDataPath iosApp/build/DerivedData \
-    -resultBundlePath "$bundle" \
-    ${test_args[@]+"${test_args[@]}"} \
-    build test
+  local -a xcode_args=(
+    -project iosApp/ITMOWidgets.xcodeproj
+    -scheme ITMOWidgets
+    -configuration Debug
+    -destination "platform=iOS Simulator,id=$udid"
+    -derivedDataPath iosApp/build/DerivedData
+  )
+  # A fresh simulator takes minutes to boot (CI creates one per run), so it boots while the build runs.
+  xcrun simctl bootstatus "$udid" -b > /dev/null 2>&1 &
+  local boot=$!
+  note "xcodebuild build-for-testing for $sim_name"
+  if ! xcodebuild "${xcode_args[@]}" build-for-testing; then
+    kill "$boot" 2> /dev/null
+    return 1
+  fi
+  note "waiting for $sim_name to boot"
+  wait "$boot" || note "simulator $sim_name did not report a boot; xcodebuild boots it"
+  note "xcodebuild test-without-building on $sim_name ${test_args[*]:-}"
+  xcodebuild "${xcode_args[@]}" -resultBundlePath "$bundle" ${test_args[@]+"${test_args[@]}"} test-without-building
 }
 
 run_kn() {
