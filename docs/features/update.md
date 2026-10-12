@@ -1,103 +1,55 @@
 # Update offer
 
-`feature/update` compares the installed version with Backend's
-`GET /api/app/version-info` (`minVersion`, `latestVersion`, `note`) once per
-process after the session reports a signed-in user. Like every Backend call it
-is gated on the opt-in. A failed check offers nothing; the prompt is advisory and
-never opens a screen to show an error.
+Product behaviour: [Как это работает: аккаунт](../how-it-works/account.md).
 
-Versions are ordered by `AppVersionName`, so `2.10` follows `2.9` and a
-`-SNAPSHOT` build still recognises its own release. `PendingAppUpdate` applies
-the policy: at most one offer a day, none for a version the user skipped, and no
-limit once the installed build is below `minVersion`, in which case
-`Пропустить версию` disappears. The offer records when it was shown, so leaving
-by Back postpones it like `Напомнить позже`. The demo session never checks.
+`feature/update` compares the installed version with Backend's `GET /api/app/version-info`
+(`minVersion`, `latestVersion`, `note`).
+
+- Once per process, after the session reports a signed-in user; gated on the custom-services opt-in
+  like every Backend call; the demo session never checks.
+- A failed check offers nothing; the prompt never opens a screen to show an error.
+- Versions are ordered by `AppVersionName` (`2.10` after `2.9`; a `-SNAPSHOT` build recognises its
+  own release).
+- `PendingAppUpdate`: at most one offer per `REMINDER_INTERVAL` (1 day), none for a skipped version,
+  no limit once the installed build is below `minVersion` (then the skip action is hidden). Showing
+  the offer records the time, so leaving by Back postpones like `Напомнить позже`.
+- `R.string.app_version` is generated from `versionName`, so the displayed version and
+  version-dependent storage never drift from the APK metadata.
 
 ## Screen
 
-`ShellHost` runs the check (`AppUpdateGateViewModel`) once per process outside
-the demo and opens an offer only while the activity is resumed. The offer is
-the key `UpdateRoutes.AppUpdate` (`feature/update/navigation/UpdateRoutes.kt`),
-which carries the check result as `AppUpdateArgs`, so the screen has no loading
-or error state. `AccountEntries.kt` registers it with `AppUpdateRoute`, which
-obtains `AppUpdateViewModel` with `koinViewModel()` (`UpdateModule.kt`,
-`viewModelOf`) and draws the stateless `AppUpdateScreen(state, onUpdate,
-onLater, onClose, onSkip)` of `:shared:feature-account`.
+- `ShellHost` runs the check (`AppUpdateGateViewModel`) outside the demo and opens the offer only
+  while the activity is resumed.
+- Key `UpdateRoutes.AppUpdate` carries the result as `AppUpdateArgs`, so the screen has no loading or
+  error state. `AccountEntries.kt` registers `AppUpdateRoute` (`AppUpdateViewModel`, `UpdateModule.kt`)
+  over the stateless `AppUpdateScreen` in `:shared:feature-account` (no Android types).
+- `Пропустить версию` closes the screen only after the skipped version is stored.
 
-- A close button (48 dp minimum at any font scale), then one scrolling column:
-  the download icon, the title (`Вышла новая версия`, or `Эта версия устарела`
-  for an unsupported build), the versions line `2.1 → 2.2` in `primary`, the
-  reason, then Backend's note after a blank line when there is one.
-- Actions: `Скачать` (filled), `Напомнить позже` (tonal) and `Пропустить
-  версию` (text, hidden for an unsupported build). `Напомнить позже` and the
-  close button close the screen; `Пропустить версию` stores the skipped version
-  and closes the screen once the write finished.
-- `Скачать` hands `unsupported` to the host's `UpdateAction`; when nothing could
-  be opened the route shows the snackbar below.
+## Download action per distribution
 
-The screen holds no Android type, so iOS can drive the same ViewModel from
-SwiftUI.
+`UpdateAction.start(activity, unsupported, onFailed)` is bound per
+[variant](../architecture.md#distribution-variants); `onFailed` shows a snackbar.
 
-`R.string.app_version` is generated from `versionName`, so the settings display
-and version-dependent storage never drift from the APK metadata.
+- `github`: `GithubUpdateAction` opens `BuildConfig.DOWNLOAD_URL` (the latest GitHub release) through
+  `ReleasePageOpener`.
+- `play`: `PlayUpdateAction` uses Play In-App Updates: flexible for a supported build, immediate for
+  an unsupported one (also resumes an immediate update left halfway). Without an update of that type
+  it opens `market://details?id=...`, then `BuildConfig.DOWNLOAD_URL`.
+- `ShellHost` runs `InstallStateWatcher` between `onResume` and `onPause`; a downloaded flexible
+  update shows an indefinite snackbar whose action calls `completeUpdate()`. The `github` watcher
+  never reports.
 
-## «Обновить» per distribution
-
-The offer itself is the same in both [variants](../architecture.md#distribution-variants);
-the button calls `UpdateAction.start(activity, unsupported, onFailed)`, bound
-per variant. `onFailed` shows `Не удалось открыть страницу с релизом`.
-
-- `github`: `GithubUpdateAction` opens `BuildConfig.DOWNLOAD_URL`
-  (`https://github.com/alllexey-dev/ITMO.Widgets/releases/latest`) through
-  `ReleasePageOpener`; an unsupported build goes to the same page.
-- `play`: `PlayUpdateAction` asks Google Play In-App Updates for the update.
-  A supported build starts a flexible update (download in the background), an
-  unsupported one an immediate update, which also resumes an immediate update
-  left halfway. When Play offers no update of that type (not rolled out yet,
-  installed from GitHub, Play failed) it opens the app's card:
-  `market://details?id=…`, then `BuildConfig.DOWNLOAD_URL` in the browser.
-
-`ShellHost` starts `InstallStateWatcher` in `onResume` and stops it in
-`onPause`. When Play reports a flexible update as downloaded, also one that
-finished while the app was away, it shows the indefinite Snackbar
-`Обновление загружено` with `Перезапустить` (`completeUpdate()`, Play installs
-and restarts the app), anchored above the bottom bar. The `github` watcher
-never reports.
-
-Tests: `AppUpdateScreenTest` (JVM host test in `:shared:feature-account`:
-texts, the skip hidden for an unsupported build, callbacks, the skip stored
-before the route closes, the open-failed snackbar, nothing clipped at font 1.3
-in 320 dp), `AccountEntriesTest` (the key opens the offer and round-trips
-through the saved shell), the `AppUpdateScreen_{supported,unsupported,long-note}` goldens of
-`AccountScreenshotTest` in four appearances, `GithubUpdateActionTest` (JVM,
-`app/src/testGithub`) and `PlayUpdateActionTest` (instrumented,
-`app/src/androidTestPlay`: Play's `FakeAppUpdateManager` needs real
-`PendingIntent`s).
-
-```bash
-./gradlew :shared:feature-account:testAndroidHostTest --tests 'dev.alllexey.itmowidgets.feature.update.*'
-scripts/verify.sh shots feature-account
-./gradlew :app:testGithubDebugUnitTest
-./gradlew :app:connectedPlayDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.update.ui.PlayUpdateActionTest
-```
+Tests: `AppUpdateScreenTest` (`:shared:feature-account`), `GithubUpdateActionTest`
+(`app/src/testGithub`), `PlayUpdateActionTest` (instrumented, `app/src/androidTestPlay`: Play's
+`FakeAppUpdateManager` needs real `PendingIntent`s).
 
 ## iOS
 
-The iOS app runs the same check and policy (`AppUpdateGateViewModel`,
-`PendingAppUpdate`) once per process on the tabs of a real session and asks
-Backend for the iOS release: `updateIosModule` binds `DevicePlatform.IOS` and
-the bundle's `CFBundleShortVersionString` (`version-info?platform=IOS`). An
-offer opens `AppUpdateScreen` (SwiftUI over `AppUpdateViewModel`) as a sheet
-with the same texts and buttons ([iOS app](../ios.md#data-sharing)).
-
-- The only channel is the App Store page
-  `https://apps.apple.com/app/id<APP_STORE_ID>` (`AppStoreListing`); no GitHub
-  or Play link, so there is no downloaded-update snackbar.
-- `APP_STORE_ID` (`iosApp/Config/Base.xcconfig`, `AppStoreID` in the app's
-  Info.plist) stays empty until the App Store record exists (it needs the Apple developer account);
-  without it the app never checks or offers (`AppUpdateOffer`).
-- Until Backend 1.8.0 is in production the check goes to the dev Backend
-  (`BACKEND_BASE_URL`).
-- Tests: `AppStoreListingTest`, `UpdateIosModuleTest`, `AccountIosModuleTest`
-  (simulator), `ITMOWidgetsTests/AccountTests`,
-  `SnapshotTests/AccountSnapshotTests`.
+- Same check and policy; `updateIosModule` binds `DevicePlatform.IOS` and
+  `CFBundleShortVersionString` (`version-info?platform=IOS`). The offer is a SwiftUI sheet over
+  `AppUpdateViewModel` ([iOS app](../ios.md#data-sharing)).
+- The only channel is `https://apps.apple.com/app/id<APP_STORE_ID>` (`AppStoreListing`); no
+  downloaded-update snackbar.
+- `APP_STORE_ID` (`iosApp/Config/Base.xcconfig`) is empty until the App Store record exists; while
+  empty the app never checks or offers (`AppUpdateOffer`).
+- Backend: `BACKEND_BASE_URL` in `Base.xcconfig`, dev for Debug and production for Release.

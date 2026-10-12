@@ -4,6 +4,13 @@ Everything here describes the current state of the apps. History is in
 [`CHANGELOG.md`](../CHANGELOG.md); how to contribute is in
 [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 
+## Как это работает
+
+[Как это работает](how-it-works/README.md) - the product for students and
+non-developer contributors, in Russian: what each feature gives, where its data
+comes from, what stays on the phone and what goes to the server, the rules and
+limits. Start there; the documents below are the developer reference.
+
 ## Start here
 
 - [Getting started](getting-started.md) - prerequisites, first build and run

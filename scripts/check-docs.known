@@ -3,23 +3,6 @@
 
 docs/features/app-links.md:path:site/.well-known/assetlinks.json  # Web repository file without the W/ prefix
 
-docs/features/web-login.md:path:Chrome/  # user-agent product token, not a path
-docs/features/web-login.md:path:Chromium/  # user-agent product token, not a path
-docs/features/web-login.md:path:CriOS/  # user-agent product token, not a path
-docs/features/web-login.md:path:Edg/  # user-agent product token, not a path
-docs/features/web-login.md:path:EdgA/  # user-agent product token, not a path
-docs/features/web-login.md:path:Edge/  # user-agent product token, not a path
-docs/features/web-login.md:path:EdgiOS/  # user-agent product token, not a path
-docs/features/web-login.md:path:Firefox/  # user-agent product token, not a path
-docs/features/web-login.md:path:FxiOS/  # user-agent product token, not a path
-docs/features/web-login.md:path:OPR/  # user-agent product token, not a path
-docs/features/web-login.md:path:OPT/  # user-agent product token, not a path
-docs/features/web-login.md:path:SamsungBrowser/  # user-agent product token, not a path
-docs/features/web-login.md:path:Safari/  # user-agent product token, not a path
-docs/features/web-login.md:path:Version/  # user-agent product token, not a path
-docs/features/web-login.md:path:YaBrowser/  # user-agent product token, not a path
-docs/features/web-login.md:path:YaSearchBrowser/  # user-agent product token, not a path
-
 docs/product/releases.md:path:assetlinks.json  # Web repository file without the W/ prefix
 docs/product/releases.md:path:V8__service_credentials.sql  # Backend migration without the B/ prefix
 docs/product/releases.md:path:V9__teacher_reviews.sql  # Backend migration without the B/ prefix

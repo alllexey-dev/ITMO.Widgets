@@ -1,275 +1,151 @@
 # Schedule changes
 
-The application notices changes of the own personal schedule by itself and
-tells the user about them. The check runs only on the device and never talks to
-Backend (decision [0013](../decisions/0013-schedule-changes-on-device.md)).
-The code is part of the schedule feature ([modules](schedule.md#modules)).
+Product behaviour: [Как это работает: расписание](../how-it-works/schedule.md).
+
+The app detects changes of the own personal schedule on the device only and
+never talks to Backend about them (decision
+[0013](../decisions/0013-schedule-changes-on-device.md)). The code is part of
+the schedule feature ([modules](schedule.md#modules)).
 
 ## Background check
 
-- `ScheduleChangesWorker` (`feature/schedule/work`) runs the unique periodic
-  work `schedule-changes-check`: every 2 hours with `NetworkType.CONNECTED`,
-  exponential backoff from 15 minutes, tag `schedule-changes`.
-  `ExistingPeriodicWorkPolicy.UPDATE` keeps the enrolment time, so enqueuing it
-  again on every start does not push the next run away. The worker gets
-  `ScheduleChangesCheck` from Koin through `KoinStarter`, so it also runs
-  before `Application.onCreate()`. `PeriodicCheckScheduler` with
-  `SCHEDULE_CHANGES_SPEC` enqueues and cancels it, and
-  `AndroidScheduleChangeNotifier` posts the notification; the worker, the spec
-  and the notifier live in `feature/schedule/work`.
-- `ScheduleChangesCheck.run()` ends `SKIPPED` without a request when there is no
-  refresh token or the switch is off. Otherwise it runs
-  `ScheduleChangesRepository.check()` and then delivers the notification, even
-  when the check failed, so changes found in the quiet hours are delivered by
-  the first run after them whatever the network does. The outcome is
-  `outcomeOf(errors)` from `core/work`, shared with the mark check:
-  `Unauthorized` and success end the run; another error asks for a retry,
-  which `workResultOf` grants twice (`runAttemptCount < 2`) before it gives up
-  until the next period. The quiet hours are `QuietHours` from the same
-  package.
-- A network failure before any answer (`UnknownHostException` and other
-  `IOException`s anywhere in the cause chain, `isCausedByNetworkFailure` in
-  `core/network`), including a My ITMO token refresh that could not reach
-  ITMO.ID, is `AppError.Network`, not `Unauthorized`: the run is retried
-  through `outcomeOf` and the snapshot and the changes stay as they were.
-- `ScheduleChangeTracking` (`core/schedule`, implemented by
-  `DefaultScheduleChangeTracking`) keeps the work in line with the session and
-  the switch: `syncWork()` enqueues it with a refresh token and the switch on
-  and cancels it otherwise. It runs on application start
-  (`ItmoWidgetsApplication`, for every `BackgroundCheck` of the graph), after
-  sign-in and when the switch changes; `stopWork()` runs before a session
-  change. Cancelling removes both the periodic and the one-off work.
-- The check asks `MyItmoApi.getPersonalSchedule(today, today + 7)` itself,
-  8 days with Moscow dates from `AcademicTimeProvider`, like
-  `TeacherLessonsGatewayImpl`. It neither fills the schedule cache nor uploads
-  lessons to Backend, with the ITMO.Widgets connection too; the screen and the
-  widgets keep refreshing the cache with their own requests.
-- Android picks the moment of a run. Doze, App Standby and vendor limits can
-  delay a check by hours or stop it for an application that is not exempt from
-  battery optimisation. Prompt delivery is not promised.
-- On Xiaomi (MIUI, HyperOS) the default battery mode `Умный режим` cuts the
-  network of a backgrounded application although the `CONNECTED` constraint
-  holds, so every background run fails with `UnknownHostException` and is only
-  retried; `Без ограничений` lifts it. While the check is on and Android
-  restricts the application, the schedule settings show the row
-  `Работа в фоне` that opens the right system page
-  ([settings](../settings.md#schedule)).
+- `ScheduleChangesWorker` (`:app` `feature/schedule/work`): unique periodic
+  work `schedule-changes-check`, every 2 hours, `NetworkType.CONNECTED`,
+  exponential backoff from 15 minutes, tag `schedule-changes`,
+  `ExistingPeriodicWorkPolicy.UPDATE` (re-enqueuing on start keeps the next
+  run). `PeriodicCheckScheduler` with `SCHEDULE_CHANGES_SPEC` enqueues and
+  cancels; `AndroidScheduleChangeNotifier` posts. The worker gets
+  `ScheduleChangesCheck` through `KoinStarter`, so it also runs before
+  `Application.onCreate()`.
+- `ScheduleChangesCheck.run()` is `SKIPPED` without a request when there is
+  no refresh token or the switch is off. Otherwise it runs
+  `ScheduleChangesRepository.check()` and then always delivers the
+  notification, even after a failed check, so night findings go out on the
+  first run after the quiet hours.
+- Outcome via `outcomeOf(errors)` (`core/work`, shared with the mark check):
+  `Unauthorized` and success end the run; other errors retry, which
+  `workResultOf` grants twice (`runAttemptCount < 2`).
+- A network failure before any answer (`IOException` in the cause chain,
+  `isCausedByNetworkFailure` in `core/network`), including an unreachable
+  ITMO.ID token refresh, is `AppError.Network`, not `Unauthorized`: retried,
+  snapshot and changes untouched.
+- `ScheduleChangeTracking` (`DefaultScheduleChangeTracking`): `syncWork()`
+  enqueues with a refresh token and the switch on, cancels otherwise. Runs on
+  start (every `BackgroundCheck`), after sign-in and when the switch changes;
+  `stopWork()` before a session change. Cancelling removes periodic and
+  one-off work.
+- The check calls `MyItmoApi.getPersonalSchedule(today, today + 7)` itself
+  (Moscow dates from `AcademicTimeProvider`). It neither fills the schedule
+  cache nor uploads to Backend.
+- Timing is up to Android; Xiaomi's default battery mode cuts a background
+  app's network ([settings](../settings.md#schedule), `Работа в фоне`).
 
 ## Snapshot and comparison
 
-Only academic lessons (`flowTypeId == 2`, `ACADEMIC_FLOW`) are compared; sport
-(3) and room bookings (5) are ignored. `academicSnapshot()` builds a
-`ScheduleSnapshot` of the window from the mapped lessons: per lesson the
-`pairId`, date, start, end, subject, type, flow id and name, teacher ISU and
-name, room, building and format; blank strings become `null`, and lessons with
-the same positive `pairId` collapse into the earliest one.
+Only academic lessons (`flowTypeId == 2`) are compared. `academicSnapshot()`
+keeps per lesson `pairId`, date, start, end, subject, type, flow id and name,
+teacher ISU and name, room, building and format; blanks become `null`, equal
+positive `pairId`s collapse into the earliest.
 
-`ScheduleDiff.compare(previous, current, now)` is pure, with `now` in Moscow
-time:
+`ScheduleDiff.compare(previous, current, now)` is pure (`now` in Moscow):
 
-1. The overlap `O` of both windows; when it is empty (a snapshot older than
-   8 days) nothing changed.
-2. A lesson with the same positive `pairId` in both snapshots is the same
-   lesson wherever its dates are, so a move from yesterday or to the new last
-   day of the window is a move.
-3. The rest is linked only among lessons dated in `O`, grouped by subject, flow
-   and type: the same date and start first, then pairwise in time order.
-4. What stays unlinked in `O` is `CANCELLED` (old) or `ADDED` (new). Days that
-   left the window and the new last day are never changes; a reordered answer
-   is not a change either.
-5. A linked lesson compares `TIME` (date, start or end), `FORMAT` (`formatId`),
-   `PLACE` (room or building, trimmed, spaces collapsed, case ignored, blank as
-   missing) and `TEACHER` (the ISUs when both are known, otherwise the
-   normalized names). No difference is no change; otherwise it is one `UPDATED`
-   with every changed field, so a move to another room is one change
-   `{TIME, PLACE}`.
-6. A change is dropped when every side of it has ended by `now`; a move from a
-   past slot to a future one stays.
-7. Changes are ordered by the soonest start of their sides, the subject and the
-   `pairId`.
+1. Overlap `O` of both windows; empty (snapshot older than 8 days) means no
+   change.
+2. The same positive `pairId` in both is the same lesson wherever its date.
+3. The rest links only within `O`, grouped by subject, flow and type: same
+   date and start first, then pairwise in time order.
+4. Unlinked in `O` is `CANCELLED` (old) or `ADDED` (new). Days that left the
+   window, the new last day and a reordered answer are never changes.
+5. Linked lessons compare `TIME`, `FORMAT`, `PLACE` (trimmed, collapsed
+   spaces, case-insensitive, blank = missing) and `TEACHER` (ISUs when both
+   known, else normalized names); differences make one `UPDATED` with every
+   changed field.
+6. A change whose every side ended by `now` is dropped.
+7. Order: soonest start of the sides, subject, `pairId`.
 
-`ScheduleChangesRepositoryImpl.check()` around the comparison:
+`ScheduleChangesRepositoryImpl.check()`:
 
-- Without a snapshot the answer becomes the snapshot (`Baseline`) and nothing
-  changed: the first check after installation, sign-in or switching on.
-- An answer without academic lessons while the snapshot had lessons in `O` is
-  held once (`emptyHeld`, `EmptyHeld`), the snapshot stays; a second empty
-  answer in a row is accepted and cancels them. A single empty My ITMO answer
-  therefore never reads as «all lessons cancelled».
-- A snapshot without lessons in `O` followed by more than 5 lessons there is a
-  new schedule published after empty weeks (holidays, a new term): the snapshot
-  is replaced without changes (`Baseline`). Up to 5 are ordinary `ADDED`.
-- Otherwise the new changes are appended unread and not notified, with
-  `detectedAt` from the wall clock and the id `<millis>-<index>`; the snapshot
-  is replaced and `Compared(found)` returned.
-- A failed request returns its `AppError` and keeps the snapshot; an answer
-  without `data` is `AppError.Unknown`.
+- No snapshot: the answer becomes the snapshot (`Baseline`), no changes.
+- An answer without academic lessons while the snapshot had some in `O` is
+  held once (`emptyHeld`); a second empty answer in a row is accepted.
+- Snapshot empty in `O` followed by more than 5 lessons
+  (`PUBLICATION_THRESHOLD`) is a newly published schedule: `Baseline`. Up to
+  5 are ordinary `ADDED`.
+- Otherwise new changes are appended unread and unnotified (`detectedAt` from
+  the clock, id `<millis>-<index>`), the snapshot replaced, `Compared(found)`.
+- A failed request keeps the snapshot; an answer without `data` is
+  `AppError.Unknown`.
 
 ## Storage
 
-The change model, shared with the home card, is `ScheduleChange` in
-`core/schedule` with `LessonSlot` (one side of a change) and `LessonOccurrence`
-(a `pairId` on a date). `ScheduleChangesFileStore` keeps everything in
-`filesDir/schedule_changes/state.json` (format 1): the snapshot, `emptyHeld`
-and the changes with both sides, subject, type, flow, `read` and `notified`.
-The snapshot and the changes are written together, atomically
-(`AtomicTextFile`), and the directory is excluded from backup and
-device transfer. Changes older than 30 days by detection are dropped on every
-write and never emitted; at most the 500 newest are kept. A corrupt file or one
-of another format is deleted and the state starts empty, so the next check is a
-baseline.
+Model: `ScheduleChange`, `LessonSlot`, `LessonOccurrence` in `core/schedule`
+(shared with the home card). `ScheduleChangesFileStore` keeps the snapshot,
+`emptyHeld` and the changes in `filesDir/schedule_changes/state.json`
+(format 1), written together through `AtomicTextFile`, excluded from backup
+and device transfer. Changes older than 30 days are dropped on every write
+and never emitted; at most 500 newest are kept. A corrupt or foreign-format
+file is deleted, so the next check is a baseline.
 
-`ScheduleChangesRepositoryImpl` is a Koin `single` that reads the file once and
-keeps the state in memory:
+`ScheduleChangesRepositoryImpl` is a Koin `single` holding state in memory:
 
-- Two mutexes: `checks` runs one check at a time (the periodic and the one-off
-  work in one process), `lock` guards the state, so marking changes read never
-  waits for the network. The comparison and the write run under `lock` against
-  the state at the moment of writing.
-- It is a `SessionDataCleaner`: sign-out and account change delete the file,
-  and a check that started before that writes nothing and returns
-  `AppError.Unauthorized`.
-- `resetSnapshot()` forgets the snapshot and keeps the history. It moves a reset
-  counter, so a check that was already asking writes nothing and reports
-  `Baseline`.
-- When the write of `markNotified`, `markAllRead` or `resetSnapshot` fails, the
-  new state stays in memory and reaches the file with the next write.
+- Two mutexes: `checks` (one check at a time) and `lock` (state), so marking
+  read never waits for the network.
+- `SessionDataCleaner`: sign-out and account change delete the file; a check
+  started before that writes nothing and returns `AppError.Unauthorized`.
+- `resetSnapshot()` forgets the snapshot, keeps history and bumps a reset
+  counter so an in-flight check writes nothing and reports `Baseline`.
+- A failed write of `markNotified`, `markAllRead` or `resetSnapshot` keeps
+  the state in memory until the next write.
 
-The switch `Изменения расписания` ([settings](../settings.md#schedule)) turns
-the whole check off: the work is cancelled and the snapshot reset, the history
-stays. After switching on, the first check is a baseline again.
+Turning `Изменения расписания` off ([settings](../settings.md#schedule))
+cancels the work and resets the snapshot; history stays.
 
 ## Notification
 
-`ScheduleChangeDigests.decide(changes, now)` chooses one summary notification
-after every run; `now` is Moscow time:
+`ScheduleChangeDigests.decide(changes, now)` (Moscow time) after every run:
 
-- Pending changes are unread and not yet notified.
-- From 00:00 to 06:00 nothing is shown or marked. The first run at or after
-  06:00 delivers what was found at night.
-- Pending changes that are over by then are marked delivered without a
-  notification.
-- Otherwise the digest counts the unread changes that are not over, names the
-  fresh pending change with the soonest start (then subject, then id) and makes
-  a sound only when a fresh pending change touches today or tomorrow of the
-  delivery date.
-- Every pending change counts as delivered after the attempt, even without the
-  notification permission.
+- Pending = unread and not yet notified.
+- 00:00-06:00 (`QuietHours`): nothing shown or marked.
+- Pending changes already over are marked delivered silently.
+- Otherwise one digest counts unread not-over changes, names the pending one
+  with the soonest start, and makes a sound only when a pending change touches
+  today or tomorrow.
+- Every pending change counts as delivered after the attempt, even without
+  the notification permission.
 
-`AndroidScheduleChangeNotifier` shows `Расписание изменилось: 3 пары` with the
-named change's headline (`Физика — отменена: вт, 8 сентября, 10:00`) in the
-`schedule_changes` channel. The rest is in
+Channel `schedule_changes`; the rest is in
 [notifications](notifications.md#schedule-changes).
 
-## In the schedule
+## In the schedule and history
 
-- A lesson card whose occurrence (`pairId` and date) belongs to a change of the
-  30-day history shows `ic_edit_calendar` (16 dp, `primary`, `Изменена` for
-  TalkBack) after the video-call icon. The
-  occurrences of a change are the new slot plus the old one for a cancel or a
-  move, so a stale cache that still has the old slot is marked too. Read or
-  not does not matter.
-- `ScheduleViewModel` observes the changes and passes their occurrences to
-  `buildScheduleDisplayDays` (`ScheduleDisplayDay.changedPairIds`), in the own
-  and in a friend's schedule alike; a change that disappears removes its mark
-  without a new request. Pending sport rows never carry it.
-- The lesson sheet shows the change in `Изменения`
-  ([lesson details](schedule.md#lesson-details)).
-
-## History
-
-The history is the key `AppRoutes.ScheduleChanges` (`ScheduleChangesRoute`
-with `ScheduleChangesViewModel`, registered in `ScheduleEntries.kt`) above the
-schedule tab, with the contextual header (back, `Изменения в расписании`). The
-home card opens it, and the notification sends
-`ACTION_OPEN_SCHEDULE_CHANGES`, which `EntryRouteParser` turns into the
-schedule tab with the history above it.
-
-- Rows are grouped by the Moscow day of detection, newest first; within a day
-  newest first, then by the soonest lesson. Day titles are `Сегодня`, `Вчера`
-  or a date (`30 сентября`); a date of another year spells the year out
-  (`RelativeDay.OTHER_YEAR`, decided by `ScheduleChangesViewModel` from
-  `AcademicTimeProvider`).
-- A row (`ScheduleChangesScreen`) has the subject, a `primary` dot for
-  a new change, the main line, one line per changed field and `вид · поток`.
-  The main line of an added or cancelled lesson is its summary
-  (`Отменена: вт, 8 сентября, 10:00`); an updated lesson with several fields
-  has the summary of the first field (`Перенесена на ср, 9 сентября, 10:00`)
-  with the `было → стало` lines below; with one field the main line is that
-  field's `было → стало` line itself (`Формат: Очный → Дистанционный`) and
-  nothing repeats it. Texts are in `core/text/ScheduleChangeTexts.kt` (`:shared:core`).
-- Rows react to nothing. Each is one TalkBack node:
-  `Новое. Предмет. Итог. Строки. Мета`.
-- `Loading` keeps the area blank until the local file answers, without a
-  skeleton; `Empty` says `Изменений нет` and `За последние 30 дней`. There is
-  no error state: the store resets a broken file.
-- While the screen is visible (started; `ScheduleChangesRoute` reports it from
-  `LifecycleStartEffect`) every unread change is
-  marked read (`markAllRead()`, which also removes the notification). The rows
-  that were unread when shown keep the dot for the life of the screen; their
-  ids are kept in `SavedStateHandle`, so recreation keeps them. A screen hidden
-  under another screen marks nothing.
-
-## Debug tools
-
-`Проверить изменения расписания` in the debug tools calls
-`ScheduleChangeTracking.checkNow()`: the one-off work `schedule-changes-now`
-(`ExistingWorkPolicy.REPLACE`, network constraint, the same tag), which runs
-the same `ScheduleChangesCheck` on the real account. Debug builds only.
-
-## Tests
-
-`ScheduleDiffTest`, `ScheduleSnapshotTest`, `ScheduleChangeDigestTest` and
-`ScheduleChangeTest` cover the comparison, the snapshot, the quiet hours and the
-digest. `ScheduleChangesFileStoreTest` and `ScheduleChangesRepositoryImplTest`
-cover the file, the request, baselines, held empty answers, the publication
-rule, retention, the session clear and the snapshot reset against My ITMO stubs.
-`ScheduleChangesCheckTest`, `BackgroundChecksTest` (`:shared:core`, quiet
-hours, `outcomeOf`), `WorkResultsTest` (`workResultOf`),
-`PeriodicCheckSpecTest` and `DefaultScheduleChangeTrackingTest` cover the
-run, retries and the work, `ScheduleChangesRepositoryImplTest` also a network
-failure that keeps the file;
-`ScheduleChangesViewModelTest`, `ScheduleViewModelTest`,
-`LessonDetailsViewModelTest` and `LessonDetailsMappingTest` the history, the
-marks, the block and the flow; `ScheduleChangesScreenTest` and
-`ScheduleChangesRouteTest` (`:shared:feature-schedule`) the history rows and
-the read mark on start, the `ScheduleChangesScreen_*` goldens its look.
-Instrumented: `ScheduleChangesWorkTest` (the
-app's `WorkManager` and scheduler, read through `TestGraph`),
-`ScheduleChangesNotificationTest`; the marks and the block are covered by the
-`ScheduleList*` and `LessonDetailsContent_change` goldens. They use synthetic `pairId`s and
-dates and restore the WorkManager state they found.
+- A card whose occurrence (`pairId` and date) belongs to any change of the
+  30-day history gets a mark, read or not; occurrences include the old slot of
+  a cancel or move, so a stale cache is marked too. Own and friend's schedule
+  alike (`ScheduleDisplayDay.changedPairIds`); never pending sport rows.
+- History: `AppRoutes.ScheduleChanges` (`ScheduleChangesRoute`), opened by
+  the home card and the notification (`ACTION_OPEN_SCHEDULE_CHANGES` via
+  `EntryRouteParser`). Texts: `core/text/ScheduleChangeTexts.kt`.
+- While the screen is started (`LifecycleStartEffect`) every unread change is
+  marked read (`markAllRead()`, also removes the notification); rows shown
+  unread keep their dot via `SavedStateHandle`. A hidden screen marks nothing.
+- Debug builds: `Проверить изменения расписания` runs
+  `ScheduleChangeTracking.checkNow()` (one-off `schedule-changes-now`,
+  `ExistingWorkPolicy.REPLACE`) on the real account.
 
 ## iOS
 
-The iOS app ([iOS app](../ios.md#background-refresh)) runs the same
-`ScheduleChangesCheck`, comparison, store and digest; only the work and the
-notification are its own (`shared/feature-schedule/src/iosMain/.../data/changes/`,
-bound in `scheduleChangesIosModule`).
+Same `ScheduleChangesCheck`, comparison, store and digest
+([iOS app](../ios.md#background-refresh)); only work and notification differ
+(`shared/feature-schedule/src/iosMain/.../data/changes/`,
+`scheduleChangesIosModule`).
 
-- Work. The check is the `schedule-changes` step of the app's one refresh task
-  with Android's two hours and Android's retries: it runs at launch, on every
-  return to the app and on the system's wakes once its period has passed.
-  `ScheduleChangesRefresh` resolves the check from the schedule data graph at
-  each run; a switch turned on makes the step due at once.
-- Degradation. iOS picks the moments of the background refresh from how the
-  app is used, often hours apart, and never runs it with Background App
-  Refresh off or in Low Power Mode, so a change can arrive hours later than on
-  Android. The settings row `Обновление контента` shows while Background App
-  Refresh is off for the app; Android's battery and Xiaomi rows do not exist.
-- Notification. `IosScheduleChangeNotifier` posts Android's digest through
-  `IosAppNotifier` (same title, text and sound rule). A change found between
-  00:00 and 06:00 Moscow time is handed to the system for 06:00 at once (a
-  calendar trigger) and counts as delivered. A tap opens the app without a
-  route for now ([degradations](../ios.md#degradations)); the history opens
-  from the home card.
-- The marks in the schedule, the lesson sheet's `Изменения` and the history
-  screen are the shared Compose ones (`AppRoutes.ScheduleChanges`,
-  `scheduleChangesViewController`).
-- Debug: a Debug build launched with `-itmoRunRefresh` runs the refresh once
-  and posts a fixture change notification (`ScheduleChangeFixture`); there is
-  no `Проверить изменения расписания` button.
-- Tests: `ScheduleChangesRefreshTest` (`scripts/ios/test.sh kn
-  :shared:feature-schedule`), `BackgroundRunnerTest` (`shared/ios`),
-  `ITMOWidgetsTests/BackgroundRunnerTests` (the step in the app graph, the
-  fixture by catalog key) and `UITests/ScheduleUITests` (changes from home).
+- The check is the `schedule-changes` step of the app's single refresh task,
+  2-hour period, same retries; runs at launch, on return and on system wakes.
+  `ScheduleChangesRefresh` resolves the check per run; switching on makes the
+  step due at once.
+- Never runs with Background App Refresh off or in Low Power Mode.
+- `IosScheduleChangeNotifier` posts the same digest; a night change is
+  scheduled for 06:00 at once (calendar trigger) and counts as delivered. A
+  tap opens the app without a route ([degradations](../ios.md#degradations)).
+- Debug: `-itmoRunRefresh` posts a fixture notification
+  (`ScheduleChangeFixture`).
