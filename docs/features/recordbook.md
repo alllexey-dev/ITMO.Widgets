@@ -70,6 +70,12 @@ is not shown; `sem_id` is absent from the model and its relation to the sport
 The root is a period selector with the `БАРС` chip and one list; fewer than
 fifteen subjects, so no search or filters.
 
+The tab root is `RecordbookTabRoot` (`RecordbookEntries.kt`): `RecordbookRoute`
+over `RecordbookViewModel` (Koin, `RecordbookKoinModule.kt`, `viewModelOf`).
+The period selector opens the sheet key `AppRoutes.RecordbookPeriod`, whose
+pick comes back to the root once through `ResultEffect`; a subject opens
+`AppRoutes.RecordbookSubject` only with valid arguments.
+
 - A summary card `Сдано N из M` with a thin bar appears only once at least one
   subject has a final grade or credit, that is, in the session.
 - `Требуют внимания` lists the subjects that need action, then `Дисциплины`
@@ -130,8 +136,8 @@ from a MyITMO token. BARS goes through MyItmoApi 2.x: the library's
 `OwnerBoundBarsStorage` and `BarsRenewal`) and `BarsLogin` for the ITMO.ID side
 (`loginUrl`, `isCallback`, `isAllowedPage`, `extractCode`,
 `requestCodeWithCookies`). Both run on a Ktor OkHttp engine of their own
-(`@BarsHttp` in `di/RecordbookModule.kt`: connect 20 s, read 30 s, no cookie jar,
-cache or redirects), never MyITMO's.
+(`barsEngineQualifier` in `di/RecordbookModule.kt`: connect 20 s, read 30 s, no
+cookie jar, cache or redirects), never MyITMO's.
 
 The MyITMO and BARS data (`RecordbookRepositoryImpl`, `BarsClient`,
 `BarsRenewal`, `BarsTokenStore`, `OwnerBoundBarsStorage`,
@@ -139,11 +145,11 @@ The MyITMO and BARS data (`RecordbookRepositoryImpl`, `BarsClient`,
 repositories, `DemoRecordbook`) lives in `commonMain` of
 `:shared:feature-recordbook` and is constructed by Koin (`recordbookModule`),
 one instance of each per process. The platform supplies the engine,
-`BarsLogin`, the WebView ports `ItmoIdCookies` (`WebViewItmoIdCookies`) and
-`BarsSilentLogin` (`BarsWebSilentLogin`) and `BarsSessionListener`; on Android
-they are bound in `di/RecordbookModule.kt` of the same Koin graph. The three
-cleaners of that data join sign-out's qualified set. The ITMO.ID session in the app's WebView lives
-about 90 days, so `BarsWebSilentLogin` renews the token by loading the official
+`BarsLogin` and the WebView ports `ItmoIdCookies` (`WebViewItmoIdCookies`) and
+`BarsSilentLogin` (`BarsWebSilentLogin`); on Android they are bound in
+`di/RecordbookModule.kt` of the same Koin graph. The three cleaners of that
+data join sign-out's qualified set. The ITMO.ID session in the app's WebView
+lives about 90 days, so `BarsWebSilentLogin` renews the token by loading the official
 OIDC URL in a hidden WebView and intercepting only the exact callback with a
 checked `state`; the library retries once on 401 through the suspend
 `BarsCodeSupplier`, which is `BarsRenewal`. No JavaScript bridge, no
@@ -155,8 +161,8 @@ else a retriable `Unknown`). `OwnerBoundBarsStorage` is the library's suspend
 `BarsStorage` and the only writer of `bars_tokens.enc`, whose content
 (`<isu>\n<header>`, checked with `BarsClient.isValidAuthorization`) goes
 through `SecureStore` under that name: on Android the `noBackupFilesDir` file
-sealed by the Keystore `TokenCipher`, byte for byte the one 2.2 wrote. The library's locks are not reentrant, so a block never nests
-period changes. `BarsSessionRepositoryImpl` serves the interactive sign-in
+sealed by the Keystore `TokenCipher`, byte for byte the one 2.2 wrote. The
+library's locks are not reentrant, so a block never nests period changes. `BarsSessionRepositoryImpl` serves the interactive sign-in
 from `BarsLogin` and exchanges the code through `BarsClient.login`.
 `BarsPreferenceRepositoryImpl` is the session cleaner for both the token and
 the chip. `BarsRecordbookRepositoryImpl` keeps the controls of every journal it
@@ -195,9 +201,9 @@ instead (`BarsClient.backgroundAccount`, decision
   shows ([mark tracking](marks-tracking.md#bars-in-the-background)).
 
 ```text
-RecordbookFragment → RecordbookViewModel ─┬─ RecordbookRepository (MyItmoApi)
-                                          ├─ BarsRecordbookRepository → BarsClient → itmoapi.bars.BarsClient
-                                          └─ BarsPreferenceRepository (DataStore)
+RecordbookRoute -> RecordbookViewModel ────┬─ RecordbookRepository (MyItmoApi)
+                                           ├─ BarsRecordbookRepository → BarsClient → itmoapi.bars.BarsClient
+                                           └─ BarsPreferenceRepository (DataStore)
 RecordbookBarsMerge.apply(myItmo, bars)   pure merge by title
 ```
 
@@ -222,10 +228,11 @@ and [sheet scores](sheet-scores.md#tests) are listed there; the list and the
 period sheet are `RecordbookScreenTest`, `RecordbookPeriodSheetTest`,
 `RecordbookViewModelTest` (attention reasons, the session-only summary) and the
 `RecordbookScreen_*` goldens, with the samples in `ui/preview/RecordbookPreviewSamples`.
-The debug `RecordbookPreviewActivity` with `RecordbookPreviewFixtures` remains only
-for the site screenshots (`SiteScreenshotCapture`) and the Koin host checks
-(`RecordbookKoinHostsTest`); it uses in-memory repositories, its own link fixture
-`RecordbookPreviewLinks` included, and never reads a session.
+On `:app`'s JVM tests, `RecordbookEntriesTest` drives the registered keys (the
+tab root and a subject, invalid subject arguments, the period pick reaching the
+root once, `Мои баллы`, the BARS sign-in for a result) and
+`RecordbookKoinHostsTest` (debug) resolves the BARS sign-in's ViewModel from
+the release graph.
 
 ## iOS
 

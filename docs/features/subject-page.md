@@ -2,9 +2,13 @@
 
 Part of the [recordbook](recordbook.md): the page a subject row opens.
 
-`RecordbookSubjectRoute` (`ui/subject/RecordbookSubjectScreen.kt` in
-`:shared:feature-recordbook`, hosted by `RecordbookSubjectFragment`, the
-overlay destination `recordbook_subject`) is one page without tabs: the header
+The page is the key `AppRoutes.RecordbookSubject(args)`, registered in
+`RecordbookEntries.kt`, which closes a key whose arguments `validOrNull`
+refuses. The entry passes `RecordbookSubjectViewModel` (Koin,
+`RecordbookKoinModule.kt`, `viewModelOf`; it reads the arguments from its
+`SavedStateHandle`) to `RecordbookSubjectRoute`
+(`ui/subject/RecordbookSubjectScreen.kt` in `:shared:feature-recordbook`). It
+is one page without tabs: the header
 holds the back button, the subject name in up to two lines and
 `<assessment kind>, N семестр` (only `N семестр` while the subject loads or
 failed); below it one pull-to-refresh `LazyColumn` over `subjectHubItems`, one

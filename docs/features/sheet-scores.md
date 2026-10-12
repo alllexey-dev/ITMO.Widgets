@@ -16,10 +16,13 @@ and `ui/sheets`; `feature/resources` only offers the action.
   (`core/resources/GoogleSheetUrl`: `https://docs.google.com/spreadsheets/d/<id>`
   or `…/u/<n>/d/<id>`, `gid` from the fragment, then the parameter; published
   `/d/e/…` addresses are not sheets) has `Мои баллы` in its action sheet, own,
-  shared or from past years. It opens `SheetScoresBottomSheet` through
-  `AppNavigator.openSheetScores(SheetScoresArgs)` with the link's
-  `ResourceScope` (`discipline_id` and period). One connection per scope; a new
-  one replaces the old after a successful choice.
+  shared or from past years. It opens the sheet key
+  `AppRoutes.SheetScores(SheetScoresArgs)` with the link's `ResourceScope`
+  (`discipline_id` and period). `RecordbookEntries.kt` registers the key: it
+  passes `SheetScoresViewModel` (Koin, `viewModelOf`) to `SheetScoresSheet`,
+  closes the sheet when the state is `Done` and shows a failed save as a
+  snackbar. One connection per scope; a new one replaces the old after a
+  successful choice.
 - `SheetScoresViewModel` downloads every tab (`inspect`) and looks for the own
   row. Found in one row per tab with one key: the cells of that row are
   collected from every tab; a total found by its header is connected at once
@@ -181,9 +184,11 @@ the `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`; the sheet case
 `RecordbookDisplayedScoreTest`; the subject page's row, menu and offer in
 `SubjectHubSectionsTest`, the link picker in `RecordbookSubjectScreenTest` and
 the `SubjectSheetTotal*` and `RecordbookSubjectScreen_{sheet,offer}` goldens;
-`GoogleSheetUrlTest` in `:shared:core`. Instrumented:
-`SubjectLinksVisualTest.actionsSheetOffersMyScoresOnlyForAGoogleSheet`. No real
-sheet is opened; names and ISUs are made up.
+`GoogleSheetUrlTest` in `:shared:core`;
+`LinkActionsSheetTest.actionsSheetOffersMyScoresOnlyForAGoogleSheet` in
+`:shared:feature-resources`; `RecordbookEntriesTest` (`:app` JVM: the sheet
+renders its reading and closes itself when done). No real sheet is opened;
+names and ISUs are made up.
 
 ## iOS
 

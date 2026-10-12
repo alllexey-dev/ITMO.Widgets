@@ -26,36 +26,33 @@ or a `.ics` file ([calendar](calendar.md)).
   `BackendGate`, `userLessons` reads another user's schedule and
   `friendsOnLesson` the friends on a lesson, also behind `BackendGate`. Every
   network call checks `DemoMode` first (`DemoSchedule`).
-- `:app` keeps only what is Android: the Fragment and sheet hosts
-  (`feature/schedule/ui`), the two widgets, their renderers and the legacy
-  list adapter (`ui/widget`), the workers, the change notification and the
-  refresh receiver (`work`), `AndroidPhoneCalendars` and `IcsFileExport`
-  (`data/calendar`) and the widget snapshot file
-  (`data/widget/ScheduleWidgetSnapshotStoreImpl`). The Android side is
-  `di/ScheduleModule.kt`, in the same Koin graph. `ScheduleRulesTest` keeps the shared code free of Fragments, Views and
-  `R`, and the widget providers, the receiver, the adapter service and the
-  workers in `:app` under their packages.
+- `:app` keeps only what is Android: the map and link effects of the sheets
+  (`feature/schedule/ui/details/DetailsEffects.kt`), the two widgets, their
+  renderers and the list adapter service (`ui/widget`), the workers, the
+  change notification and the refresh receiver (`work`),
+  `AndroidPhoneCalendars` and `IcsFileExport` (`data/calendar`) and the
+  widget snapshot file (`data/widget/ScheduleWidgetSnapshotStoreImpl`). Koin
+  binds them in `androidScheduleModule` (`di/ScheduleModule.kt` of `:app`).
+  `ScheduleRulesTest` (`:konsist`) keeps the widget providers, the receiver,
+  the adapter service and the workers in `:app` under their packages.
 
 ### Screens
 
-Every screen and sheet is a stateless composable of
-`:shared:feature-schedule` drawn by its unchanged host in `:app`, which keeps
-the class name, the factories, the `TAG`, the arguments and the Fragment
-results:
+The own schedule is the schedule tab's root (`ScheduleTabRoot` in
+`shell/entries/ScheduleEntries.kt`): `ScheduleRoute` over the
+stateless `ScheduleScreen`, with `ScheduleViewModel`. The same file registers
+the keys `AppRoutes.UserSchedule` (`UserScheduleScreen` around
+`ScheduleRoute`), `AppRoutes.ScheduleChanges` (`ScheduleChangesRoute`),
+`AppRoutes.LessonDetails` (`LessonDetailsSheetRoute` over
+`LessonDetailsContent`) and `AppRoutes.PendingSportDetails`
+(`PendingSportDetailsContent`); the last two are sheets. `scheduleModule`
+registers `ScheduleViewModel`, `ScheduleChangesViewModel` and
+`LessonDetailsViewModel` with `viewModelOf`. A route's ViewModel defaults to
+`koinViewModel()`; the entry passes one from its own store, seeded with the
+key's arguments. The screens take state and callbacks only; the entry
+performs the effects (maps, links, profiles, the picker, navigation).
 
-| Host | Compose body | Route |
-|---|---|---|
-| `ScheduleFragment` | `ScheduleScreen` | `ScheduleRoute` |
-| `UserScheduleFragment` | `UserScheduleScreen` around `ScheduleScreen` | `ScheduleRoute` |
-| `ScheduleChangesFragment` | `ScheduleChangesScreen` | `ScheduleChangesRoute` |
-| `LessonDetailsBottomSheet` | `LessonDetailsContent` | `LessonDetailsSheetRoute` |
-| `PendingSportDetailsBottomSheet` | `PendingSportDetailsContent` | - |
-
-The screens take state and callbacks only; the ViewModels come from Koin in
-the route or its host, and the host performs the effects (maps, links,
-profiles, the picker, navigation). The sheets sit on the design
-system's `ItmoBottomSheetFragment`. The XML layouts, adapters and View tests
-of these screens are gone: JVM host tests (`ScheduleScreenTest`,
+Robolectric tests in `androidHostTest` (`ScheduleScreenTest`,
 `ScheduleRouteTest`, `UserScheduleScreenTest`, `ScheduleChangesScreenTest`,
 `ScheduleChangesRouteTest`, `LessonDetailsSheetTest`,
 `PendingSportDetailsSheetTest`) cover the behaviour, and
@@ -82,10 +79,10 @@ The stores write through `AtomicTextFile` (`<name>.new`, sync, atomic move).
 
 ## Data
 
-- `ScheduleFragment` takes an optional `ARG_USER_ISU`. Without it the screen
+- `ScheduleViewModel` reads an optional `ARG_USER_ISU`. Without it the screen
   shows the signed-in user and offers the friend picker FAB; with it the same
-  screen shows another user and hides the picker. `UserScheduleFragment` wraps
-  it with a titled header when opened from a public profile.
+  screen shows another user and hides the picker. `AppRoutes.UserSchedule`
+  wraps it with a titled header when opened from a public profile.
 - The cache is a file per user and date range with a 24-hour TTL. A refresh keeps
   the loaded range, including pages fetched by scrolling, and replaces it with one
   snapshot after a successful response; intermediate partial lists are never
@@ -116,12 +113,13 @@ The stores write through `AtomicTextFile` (`<name>.new`, sync, atomic move).
   phone calendar sync lives there too (`CalendarSyncRepositoryImpl`,
   `DefaultCalendarSync`, `CalendarSyncFileStore`, `MyItmoOwnScheduleSource`);
   the platform supplies the `PhoneCalendars` port and the
-  `CalendarSyncScheduler`, and the bridge hands the sync to
-  `CalendarSyncWorker` and the background check set and the source to
-  `IcsFileExport`. The workers, the widgets and the list adapter read Koin
-  through `KoinStarter`. The
-  four Koin cleaners (the cache, the change history, the teacher weeks, the
-  calendar sync) join sign-out's set through `SessionCleanersBridge`.
+  `CalendarSyncScheduler`; `CalendarSyncWorker` and `IcsFileExport` read the
+  sync and the source from Koin, and the change tracking and the sync join
+  the background checks as named `BackgroundCheck` bindings. The workers,
+  the widgets and the list adapter reach Koin through `KoinStarter`. The four
+  cleaners (the cache, the change history, the teacher weeks, the calendar
+  sync) are named `SessionDataCleaner` bindings that sign-out reads with
+  `getAll()`.
 
 ## Lessons with a teacher
 
@@ -156,10 +154,11 @@ since its teachers carry no ISU.
 
 ## Friend picker
 
-The FAB opens the friend picker (`FriendSelectorDialogFragment`, body
-`FriendSelectorSheetRoute` from `:shared:feature-social`); its result arrives
-through `FriendSelectionContract` fragment results. The sheet, its states and
-the recent chips are in [Friend selector](friend-selector.md).
+The FAB opens the friend picker (the sheet `AppRoutes.FriendSelector`,
+`FriendSelectorSheetRoute` from `:shared:feature-social`); its choice comes
+back to `ScheduleTabRoot` as a `FriendSelection` on the result bus
+(`ResultEffect`). The sheet, its states and the recent chips are in
+[Friend selector](friend-selector.md).
 
 ## Pending sport rows
 
@@ -184,9 +183,10 @@ or the official cache.
 - The list keys its days by date and recomposes the whole display day, so
   live additions and cancellations render without clearing the cache or
   resetting scroll.
-- A pending row opens `PendingSportDetailsBottomSheet`
-  (`feature/schedule/ui/details`) with `core/navigation/PendingSportDetailsArgs`;
-  the home feed opens the same sheet through `AppNavigator`.
+- A pending row opens the sheet `AppRoutes.PendingSportDetails`
+  (`PendingSportDetailsContent` in `ui/details`) with
+  `core/navigation/PendingSportDetailsArgs`; the home feed opens the same
+  sheet through the same redirect (see [lesson details](#lesson-details)).
 
 ## Behaviour
 
@@ -196,9 +196,11 @@ or the official cache.
   (`core/text/LocationTitles.kt`) are shared with the recordbook, the home
   cards and the widgets; type colours are the design system's extended colours
   (`ItmoTheme.extendedColors`).
-- `core/navigation/ScheduleTodayRequest` is the Fragment result `MainActivity`
-  sends to show today in the own schedule (the `Сегодня` shortcut, see
-  [home](home.md#quick-settings-tile-and-app-shortcuts)).
+- `TabRequest.ScheduleToday` (`core/navigation/EntryRoute.kt`) shows today in
+  the own schedule (the `Сегодня` shortcut, see
+  [home](home.md#quick-settings-tile-and-app-shortcuts)). It waits on the
+  navigator (`pendingRequest`) until `ScheduleTabRoot` consumes it, once;
+  another user's schedule never reads it.
 - The list keeps its position across recreation (saved list state); a
   restored position is never replaced by today, and it waits for late data.
 - Switching between own and a friend's schedule keeps the reader on the day and
@@ -212,14 +214,15 @@ or the official cache.
 
 ## Lesson details
 
-- Every ordinary lesson card opens `LessonDetailsBottomSheet` (body
-  `LessonDetailsContent` in `ui/details` of `:shared:feature-schedule`) from
-  the schedule fragment's child fragment manager, in the own and in a friend's
-  schedule alike. Pending sport rows never open it. A sport lesson (type 11) in the own schedule goes through
-  `AppNavigator.openLessonDetails` to `MainActivity`, which finds the booking
-  with the same date and start in the sport tab's data (a confirmed booking
-  before a queue, then the matching section name) and opens the sport sheet
-  with `Отменить`; without a match the lesson sheet appears. The sheet gets a
+- Every ordinary lesson card opens the sheet `AppRoutes.LessonDetails` (body
+  `LessonDetailsContent` in `ui/details` of `:shared:feature-schedule`), in
+  the own and in a friend's schedule alike. Pending sport rows never open it.
+  A sport lesson (type 11) in the own schedule goes through
+  `SportDetailsRedirect` (`shell/entries/SportEntries.kt`), which
+  finds the booking with the same date and start in the sport tab's data
+  (`SportBookingsHolder`; a confirmed booking before a queue, then the
+  matching section name) and opens the sport sheet with `Отменить`; without a
+  match the lesson sheet appears. The sheet gets a
   `@Serializable` `LessonDetailsArgs` (`core/navigation`) built from the
   `Lesson` plus the day's date; nothing is fetched for the lesson itself.
 - The sheet starts with the design system's `DetailsHeader`, which every
@@ -235,14 +238,14 @@ or the official cache.
   carries a link (MyITMO calls the field `zoom_url`, but lessons run on any
   platform, so the link itself is not shown). No map provider setting. A card
   whose lesson carries a link shows a small camera icon next to the type.
-- A pending sport row (queue or auto-sign prediction) goes through
-  `AppNavigator.openPendingSportDetails`. `MainActivity` looks the lesson up in
-  the sport tab's `SportBookingRepository` (refreshing once when nothing is
-  cached) and opens the sport tab's own `SportCommonDetailsBottomSheet` with its
-  queue position, history and `Отменить`; the cancellation runs through the
-  shared `SportMyViewModel` after the usual confirmation. Only when the sport
-  data has nothing about the queue does the schedule's own
-  `PendingSportDetailsBottomSheet` appear: the shared header, the status as
+- A pending sport row (queue or auto-sign prediction) goes through the same
+  `SportDetailsRedirect`. It looks the lesson up in the sport tab's data
+  (`SportBookingsHolder`) and opens the sport tab's own details sheet
+  (`SportRoutes.SportCommonDetails`) with its queue position, history and
+  `Отменить`; the cancellation asks first (`AppRoutes.CancelBookingConfirm`)
+  and runs only while the booking still offers it. Only when the sport data
+  has nothing about the queue does the schedule's own
+  `AppRoutes.PendingSportDetails` appear: the shared header, the status as
   the kind line, one `Условия записи` card and `Открыть в спорте`.
 - A teacher in the lesson or pending-sport header opens the person profile when
   the lesson carries a usable ISU. The row shows a chevron, has a 48 dp touch
@@ -270,8 +273,8 @@ or the official cache.
   `groupName`, trimmed, and a blank one hides the row. It is informational,
   without a chevron or a click action; TalkBack reads `Поток: …`. The lesson
   type is already in the kind line, so the row does not repeat it. It exists
-  only in the lesson sheet: schedule cards, `PendingSportDetailsBottomSheet`
-  and the sport sheets have no flow.
+  only in the lesson sheet: schedule cards, the pending sport sheet and the
+  sport sheets have no flow.
 - `Изменения` (after the header and before the meeting info)
   shows the newest [schedule change](schedule-changes.md) of the last 30 days
   whose occurrences contain this lesson's `pairId` and date
@@ -304,7 +307,7 @@ route draws its own chrome and keeps clear of the bars and the demo banner.
 - `Расписание друзей` opens the friend picker as a sheet; its choice comes back
   to the schedule through the router ([friend selector](friend-selector.md#ios)).
 - The `today` entry route (the App Shortcut and the quick action) puts the own
-  schedule back on today, as `ScheduleTodayRequest` does on Android; a lesson
+  schedule back on today, as `TabRequest.ScheduleToday` does on Android; a lesson
   widget's tap opens the schedule tab as it is.
 - Another user's schedule (`AppRoutes.UserSchedule`, from a profile) and the
   changes (`AppRoutes.ScheduleChanges`, from the home card) open on the

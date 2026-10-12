@@ -1,7 +1,7 @@
 # Teacher reviews
 
 Reviews of a teacher appear at the bottom of the
-[person profile](social.md#person-profile-overlay-user_profile-argument-userscreenargsisu);
+[person profile](social.md#person-profile);
 there is no separate teacher screen and no «My reviews» screen. One list holds
 own reviews of ITMO.Widgets users and anonymous copies from the Reviews
 project, in Backend's order, under Backend's AI summary of them. With
@@ -34,12 +34,15 @@ defines the routes, limits, premoderation and the ISU check.
   `ReviewEditorSheet` (the hosts' entry) and its stateless `ReviewEditorSheetContent`, and `ReportReviewDialog.kt`
   with `ReportReviewForm` (the entry) over `ReportReviewDialog` on the kit's report dialog; previews and goldens of
   both live there.
-- `feature/reviews/ui` (`:app`): the Fragment hosts `ReviewEditorBottomSheet` (on the kit's
-  `ItmoBottomSheetFragment`) and `ReportReviewDialogFragment`; they keep their class names, tags and `newInstance`
-  and perform the effects: closing, the snackbar of a failed save.
+- `ReviewsEntries.kt` (`:app`) registers the keys `AppRoutes.ReviewEditor` (a
+  sheet with `SheetPolicy.Dismissal.FORM`) and `AppRoutes.ReportReview` (a
+  dialog), both carrying `TeacherReviewArgs`. Each entry passes its Koin view
+  model (`ReviewsKoinModule.kt`, `viewModelOf`) to the screen and performs the
+  effects: closing, the snackbar of a failed save.
 
-The profile (`feature/social`) opens both through `AppNavigator.openReviewEditor`
-and `openReviewReport`, so the two features never import each other.
+The profile (`feature/social`) opens both through its route's exits, which
+`SocialEntries.kt` turns into those keys, so the two features never import
+each other.
 
 ## Connection and cache
 
@@ -241,8 +244,8 @@ with a typographic minus in the error colour.
 
 ## Editor
 
-`ReviewEditorBottomSheet` hosts `ReviewEditorSheet` and writes a new review or
-edits the own one:
+The editor entry hosts `ReviewEditorSheet` and writes a new review or edits
+the own one:
 
 - The title is `Новый отзыв` or `Изменить отзыв`, with the teacher's short name
   on a second line; a close button stands next to it. The sheet has no handle,
@@ -275,8 +278,8 @@ error.
 
 ## Report
 
-`ReportReviewDialogFragment` hosts `ReportReviewForm` on the kit's report
-dialog, which brings its own window; the Fragment's own dialog only anchors it.
+The report entry hosts `ReportReviewForm` on the kit's report dialog, which
+brings its own window; the dialog scene only anchors it.
 It is `Жалоба на отзыв` with the reasons `Оскорбления`, `Не тот преподаватель`,
 `Спам`, `Другое` and an optional `Комментарий` of up to 500 characters; the
 chosen reason and the comment survive recreation. `Отправить` is enabled once a
@@ -355,10 +358,13 @@ expanded, sparse, long texts) and the profile in four appearances.
 320 dp and font 1.3) cover the editor and the report: the new and the edited form, suggestions arriving with the
 history and filling or clearing the subject, anonymity, the minimum as a hint and then the error, the discard
 question, text and cursor after recreation and process death, one save at a time, `Отправить` above the keyboard,
-the reasons, a failure under the comment, the comment's limit and cancel. `ReviewsHostsKoinTest` (`:app`) covers the
-hosts: Koin view models, the form sheet (no tap outside, no drag, resized for the keyboard), back with and without
-changes, the snackbar of a failed save, closing after a save or an accepted report. The
-`ReviewEditorSheetContent_*` and `ReportReviewDialog_*` goldens of `ReviewsScreenshotTest` show every state in the
-four appearances. The `LessonDetailsContent_teacher-level` goldens and
-`RecordbookVisualTest` cover the tone dots. Use the [visual test commands](../design.md#running-the-visual-tests)
-and inspect the saved PNGs.
+the reasons, a failure under the comment, the comment's limit and cancel.
+`ReviewsEntriesTest` (`:app` JVM) covers the entries: Koin view models, the
+editor as a form sheet that survives Back with a draft and asks before it is
+discarded, an untouched editor closing on Back, the report on the kit's dialog
+closing with its cancel button. The `ReviewEditorSheetContent_*` and
+`ReportReviewDialog_*` goldens of `ReviewsScreenshotTest` show every state in
+the four appearances. The `LessonDetailsContent_teacher-level` goldens,
+`SubjectHubItemsTest` and `SubjectHubSectionsTest` cover the tone dots. Use the
+[screenshot test commands](../testing.md#screenshot-tests) and inspect the
+saved PNGs.

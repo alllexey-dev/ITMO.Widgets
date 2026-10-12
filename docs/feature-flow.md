@@ -78,7 +78,8 @@ the wall clock directly. `di/ScheduleModule.kt` registers it with
 
 - The tab root is `ScheduleTabRoot` in
   `app/src/main/java/dev/alllexey/itmowidgets/app/shell/entries/ScheduleEntries.kt`.
-  It renders `ScheduleRoute` and maps its actions to `Nav3AppNavigator`: a
+  It renders `ScheduleRoute` with a view model scoped to the entry
+  (`entryViewModel()`) and maps its actions to `Nav3AppNavigator`: a
   lesson opens `AppRoutes.LessonDetails` (a sheet), the friends button opens
   `AppRoutes.FriendSelector`, whose answer comes back through the result bus.
 - The same file registers `AppRoutes.UserSchedule`, `AppRoutes.ScheduleChanges`

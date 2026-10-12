@@ -13,11 +13,10 @@ two FABs at the bottom end; the list reserves space under them.
 own close button: `HomeViewModel.dismissCard(kind)` passes it to every source,
 and only the owner of that kind resets what the card shows; the default does
 nothing. Every feature that owns data contributes a source from its `data`
-package: a source still built by Hilt through the `@IntoSet` multibinding in its
-Hilt module (`HomeBridge` hands the set to Koin as one composite), a source in a
-shared module as a Koin single under the feature's own qualifier (home's hints,
-social's friend requests, the schedule's two cards, the recordbook's new marks);
-`HomeViewModel` (`:shared:feature-home`, built by Koin) receives the sources,
+package as a Koin `single<HomeCardSource>` under the feature's own qualifier
+(home's hints, social's friend requests, the schedule's two cards, the
+recordbook's new marks, sport's card); `HomeViewModel` (`:shared:feature-home`,
+registered in `homeModule` with every source through `getAll()`) receives them,
 flattens the flows, drops the kinds hidden in settings and sorts by
 `HomeCardKind`, whose declaration order is the feed order. Nothing in
 `feature/home` imports another feature.
@@ -44,11 +43,13 @@ draws `HomeUiState` with them. The schedule and sport renderers format their
 times and dates in the `AcademicTimeProvider` zone (`ScheduleHomeCardFormatter`,
 `SportHomeCardFormatter`: `HH:mm` with `DateTexts`, the date as
 `понедельник, 7 сентября`, sport queues as `пн, 7 сент. · 16:00–17:30`), so no
-UI parses ISO text; `HomeRulesTest` keeps `java.time` and `kotlinx.datetime`
-out of `feature.home.ui`. `HomeFragment` keeps its class name and hosts the
-route through `itmoComposeView`; it owns what only Android does: navigation
-through `AppNavigator`, the widget pin (`WidgetPinRequester`), the
-notification permission and the services settings page (`SERVICES_PAGE`).
+UI parses ISO text. On Android the home tab's root is `HomeTabRoot`
+(`shell/entries/HomeEntries.kt`), which keeps `HomeViewModel` in the root's
+own store and does what only Android does: navigation through the shell's
+navigator (`homeActions`), and the hint actions of `HomeHints`
+(`feature/home/ui/HomeHints.kt`): the widget pin (`WidgetPinRequester`), the
+notification permission and the services settings page
+(`SERVICES_SETTINGS_PAGE`).
 Home's own strings (the buttons, the empty state, the hints) are
 `strings_home.xml` in the module's `composeResources`.
 
@@ -61,16 +62,18 @@ Home's own strings (the buttons, the empty state, the hints) are
 | `Заявки в друзья` | `feature/social/data/home/SocialHomeCardSource`: the first three incoming requests as the kit's `UserRow` with `Avatar` and the primary group, `Все заявки` opens the friends screen | at least one incoming request behind the opt-in |
 | Hints | `feature/home/data/HintHomeCardSource`: no widget on the launcher (`Добавить` pins the single-lesson widget through `core/ui/widget/WidgetPinRequester`), notifications off (`Включить` asks for the permission while the dialog can still appear, otherwise opens the app's notification page), user services off (`Включить` opens the services settings page) | while the reason holds and the hint was not closed; closed hints are kept per installation in `home_dismissed_hints` |
 
-Lesson and pending rows open sheets through `AppNavigator.openLessonDetails` /
-`openPendingSportDetails`; their arguments live in `core/navigation`. A pending
-row resolves to the sport tab's own `SportCommonDetailsBottomSheet` when the
-sport data knows the queue (`MainActivity` loads the sport tab's data through the shared
-`SportMyViewModel` when needed and looks the lesson up in `SportBookingRepository`), so the queue
-position, history and `Отменить` work from the feed and the schedule alike; the
-cancellation goes through the shared `SportMyViewModel` after the usual
-confirmation. The schedule's own `PendingSportDetailsBottomSheet` is the
-fallback. A booked sport lesson in the schedule card takes the same road by its
-date and start time, so an existing booking can be cancelled from the feed. The sport card opens the sport tab, a friend row the public profile.
+Lesson and pending rows open sheets through `SportDetailsRedirect`
+(`shell/entries/SportEntries.kt`), as in the schedule; their arguments live in
+`core/navigation`. A pending row resolves to the sport tab's own details sheet
+(`SportRoutes.SportCommonDetails`) when the sport data knows the queue (the
+redirect looks the lesson up in the shared `SportBookingsHolder`, which loads
+the sport data when needed), so the queue position, history and `Отменить`
+work from the feed and the schedule alike; the cancellation asks first
+(`AppRoutes.CancelBookingConfirm`). The schedule's own
+`AppRoutes.PendingSportDetails` is the fallback. A booked sport lesson in the
+schedule card takes the same road by its date and start time, so an existing
+booking can be cancelled from the feed. The sport card opens the sport tab, a
+friend row the public profile.
 
 Refresh: the first show refreshes every source once; pull-to-refresh and a
 return to the screen after five minutes do it again; every return also calls
@@ -92,10 +95,9 @@ not settings, only dismissible. The look is covered by JVM goldens: the screen
 feature's `screenshots/` (`Home<Card>Preview`, from synthetic samples in
 `ui/home/preview`). Behaviour by `HomeScreenTest` (touch targets, the FABs
 never covering the last card, drawing by kind, every action), each card's own
-test and the formatter tests.
-Instrumented flows (`HomeQrVisualTest`, `HomeWebVisualTest`,
-`MainNavigationTest`) replace the whole feed with one in-memory source
-(`HomeFixture`) and never touch MyITMO or Backend.
+test and the formatter tests. `HomeEntriesTest` (`app/src/test`) renders the
+tab root over a test graph and checks that rows, cards and buttons open their
+sheets, screens and tabs; it never touches MyITMO or Backend.
 
 ## QR pass
 
@@ -146,15 +148,16 @@ the QR button inside the app does not. The launcher starts a shortcut with
 uses the widget's flags and keeps it.
 
 Tests: `QrTileClickTest`, `QrTileControllerTest`, `QrTilePreferencesImplTest`,
-`QuickSettingsTilesTest`, `MainActivityIntentRoutingTest`, `MainRouteQueueTest`
-(JVM); `AppShortcutsTest`, `MainActivityDeepLinkTest`, `QrTileFlowTest`
-(`cmd statusbar add-tile` and `click-tile` on the emulator) and the today
-request cases of `ScheduleRouteTest` (`:shared:feature-schedule`, JVM).
+`QuickSettingsTilesTest`, `EntryRouteParserTest`, `RouteQueueTest`,
+`ShellHostTest` (JVM); `AppShortcutsTest`, `MainActivityDeepLinkTest`,
+`QrTileFlowTest` (`cmd statusbar add-tile` and `click-tile` on the emulator)
+and the today request cases of `ScheduleRouteTest` (`:shared:feature-schedule`)
+and `ScheduleEntriesTest` (`app/src/test`).
 
 ## MyITMO web
 
-The second FAB opens the official `https://my.itmo.ru/` website in the
-`MY_ITMO_WEB` overlay. The toolbar provides close, reload and an external-browser
+The second FAB opens the official `https://my.itmo.ru/` website as the key
+`AppRoutes.MyItmoWeb` above the feed. The toolbar provides close, reload and an external-browser
 fallback. Android Back follows web history first; rotation restores web history
 and an error state retains retry. A thin loading indicator reserves its space.
 
@@ -170,8 +173,9 @@ are entered only on the official ITMO pages; native refresh tokens are not copie
 into the website. Signing out or replacing the native account clears app-wide
 web cookies, DOM storage and HTTP cache through `WebSessionDataCleaner`.
 
-Debug visual tests intercept every WebView request with synthetic HTML and never
-send fixture data to MyITMO or Backend. URL policy is separately unit-tested.
+`AccountEntriesTest` (`app/src/test`, Robolectric) covers the toolbar and Back
+through the web history without reaching MyITMO or Backend;
+`MyItmoWebPolicyTest` covers the URL policy.
 
 ## iOS
 

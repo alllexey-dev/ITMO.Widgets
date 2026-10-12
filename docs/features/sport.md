@@ -2,8 +2,10 @@
 
 The sport tab has two pages: `Мой спорт` (score, official bookings, own
 queues) and `Запись` (catalog with filters). The screens are Compose in
-`shared/feature-sport` (`commonMain`); `:app` keeps only the Fragment hosts, the
-FCM adapter and the debug hosts. Both pages keep their
+`shared/feature-sport` (`commonMain`); `:app` keeps only the shell entries,
+the platform effects (`feature/sport/ui/common/SportHostEffects.kt`: the map,
+sharing, the debug template-lesson notice), the FCM adapter and the debug
+template provider. Both pages keep their
 content while they refresh: `SportMyUiState.Content.refreshing` and
 `SportSignUiState.Content.refreshing` drive the pull-to-refresh indicator,
 `Loading` exists only before the first snapshot and shows placeholder cards
@@ -24,28 +26,30 @@ custom-services gate.
 `HorizontalPager` whose pages are `SportMyScreen` and `SportSignScreen`. A tap
 on a tab slides to its page; a swipe moves one page, and the pager carries the
 kit's `tabSwipeHandover`, so its fling stops at `Запись` and only a new swipe
-at either end moves the bottom tabs (design.md, Tab swipe). Both pages stay
-composed, as the View pager kept its neighbour.
+at either end moves the bottom tabs ([tab swipe](../design.md#tab-swipe)).
+Both pages stay composed.
 
-`SportRoute` obtains `SportMyViewModel` and `SportSignViewModel` with
-`koinViewModel()` from the host's `ViewModelStoreOwner`: `SportFragment`'s on
-Android, a Nav3 entry's or the SwiftUI host's later. Navigation keeps the
-Fragment's store on the tab's saved back stack, so `Запись` keeps its week and
-filters across a round trip through the other tabs, and re-entering the tab
-with content loaded starts no request. No sport ViewModel is scoped to the
-activity; the feed, the schedule and `MainActivity` share the singleton
-`SportBookingsHolder` instead (`SportRulesTest`).
+`SportRoute` takes `SportMyViewModel` and `SportSignViewModel` (both
+registered with `viewModelOf` in `SportModule.kt`; the defaults are
+`koinViewModel()`). On Android the sport tab's root is `SportTabRoot`
+(`shell/entries/SportEntries.kt`), which keeps both ViewModels in the tab
+root's own store, so `Запись` keeps its week and filters across a round trip
+through the other tabs, and re-entering the tab with content loaded starts no
+request. No sport ViewModel is shared with other screens; the feed, the
+schedule and the shell's `SportDetailsRedirect` share the singleton
+`SportBookingsHolder` instead.
 
 Each page runs on a lifecycle of its own that stays `STARTED` while the other
 page is in front: a page shows its snackbars and dialogs only while it is the
 current one, and the page behind keeps them for later. A shared link reaches
 the route as a `SportSharedLesson`: it selects `Запись` at once and calls
-`openSharedLesson`. `SportFragment` relays `SportLessonRequest` from the
-activity's `FragmentManager`, opens the details sheet on its child
-`FragmentManager` and sends the sheet's result back to the page that opened it
-(remembered across recreation); it also keeps `changeView(index)` and exposes
-`currentPage` for the instrumented tests, starts the `geo:` map and shows the
-debug template-lesson Toast.
+`openSharedLesson`. `SportTabRoot` turns a pending `TabRequest.SportLesson`
+into that lesson, once. It opens the details sheet as the key
+`SportRoutes.SportCommonDetails` with the opening page as `replyTo`
+(`SportDetailsOpener.MY` or `SIGN`); the sheet's booking action comes back to
+that page on the result bus (`ResultEffect` under the opener's `resultKey`).
+`SportHostActions` start the `geo:` map and show the debug template-lesson
+notice.
 
 ## Repositories
 
@@ -91,11 +95,13 @@ schedule's pending sport sheet uses the same tones.
 The details bottom sheet adds a fixed bottom action: sign in, sign out, auto-sign
 or cancel the active queue, following the same offer policy as the card. Existing
 card buttons and menus remain unchanged. Read-only details and unavailable offers
-show no action. Selection dismisses the sheet and routes a one-shot Fragment
-Result to its owning sport tab, which resolves the current item and preserves
-existing confirmations, custom-services gates and busy protection. Time-dependent
-offers are rechecked on tap; recreation preserves the target and cannot duplicate
-a submitted result.
+show no action. Selection closes the sheet and sends one `SportSheetAction`
+on the result bus to the page that opened it, which resolves the current item
+and preserves existing confirmations, custom-services gates and busy
+protection. Time-dependent offers are rechecked on tap; recreation preserves
+the target and cannot duplicate a submitted result. A sheet the shell opened
+for the feed or the schedule (`SportDetailsOpener.SHELL`) asks before a
+cancellation itself (`AppRoutes.CancelBookingConfirm`).
 
 The details bottom sheet is its own layout. It shows the full title; an icon
 rail with date and duration, teacher and location; registration state; queue
@@ -134,7 +140,7 @@ relaxes only that deadline.
 ## Score card
 
 The `Мой спорт` score card collapses into a compact bar as the list scrolls.
-`SportScoreCollapseController` derives the collapse fraction from the list's
+`SportScoreCollapseState` derives the collapse fraction from the list's
 vertical scroll offset; the list reserves the expanded card height as top
 padding, and only drawing bounds, translations and alpha change during scrolling,
 so nothing is remeasured per frame. A half-collapsed header snaps to the nearer
@@ -156,8 +162,8 @@ in the Backend sport-automation contract.
 
 ## Another user's sport
 
-`UserSportScreen`, hosted by `UserSportRoute` in `UserSportFragment` (overlay
-`USER_SPORT`, arguments `UserScreenArgs.ISU` and `NAME`), lists confirmed
+`UserSportScreen`, drawn by `UserSportRoute` with `UserSportViewModel` for the
+key `AppRoutes.UserSport` (arguments `UserScreenArgs.ISU` and `NAME`), lists confirmed
 lessons resolved against the ITMO catalog plus pending queues returned by
 Backend, sorted by start, read-only: a card opens no details and offers no
 cancellation, shows no friends preview and no teacher profile action; its more
@@ -185,9 +191,9 @@ book nothing. Each report is a `SportSignNotice`; `toAppNotification()` turns
 it into the `sport` channel notification with the `notification_sport_*` texts
 and the Moscow start, opening the sport tab.
 
-On Android, `SportSignPushHandler` (`app/`, free and auto instances, Hilt
-`@IntoSet` of `FcmPayloadHandler`, run by `FcmMessageWorker`) is the adapter:
-it calls the booker, which Koin builds and `SportBridge` hands to Hilt, and posts
+On Android, `SportSignPushHandler` (`app/`, free and auto instances bound as
+named `FcmPayloadHandler`s in `di/ComponentBindingsModule.kt`, run by
+`FcmMessageWorker`) is the adapter: it calls the booker from Koin and posts
 each notice through `AppNotifier`. The iOS notification service calls the same
 booker. See [`notifications.md`](notifications.md).
 
@@ -222,7 +228,7 @@ the strip's arrows and tabs by the native tab bar only.
   `SportDetailsSheet` through `sportDetailsViewController`; the system drag
   indicator sits over the shared header, and the grouped sheet background
   shows under the home indicator. `SportTabState` carries the sheet's booking
-  action back to the page that opened it, as `SportFragment`'s result does,
+  action back to the page that opened it, as the result bus does on Android,
   and the page asks for the cancellation's confirmation itself.
 - Effects: sharing sends `share_sport_text` with `ShareLinkFactory`'s
   `/sport/<id>` link, or `/sport/p/<id>` for a predicted lesson, through the

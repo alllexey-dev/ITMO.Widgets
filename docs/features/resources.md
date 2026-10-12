@@ -98,19 +98,20 @@ first, so a second visit opens without a spinner, then refreshes the scope.
 
 ## Sheets
 
-The sheets sit on the Activity's FragmentManager and belong to no back stack.
-`AppNavigator.openSubjectLinks`, `openLinkEditor` and `openLinkActions` take
-`core/navigation/SubjectLinksArgs`; `MainNavigationCoordinator` shows one sheet
-per tag and nothing once the state is saved. Each sheet's body is Compose
-Multiplatform in `:shared:feature-resources` (package
-`dev.alllexey.itmowidgets.feature.resources.ui`), drawn inside a Fragment host in
-`app/` that keeps its class name, `TAG` and `newInstance` and runs the
-Android effects (opening a link, the clipboard, navigation, snackbars). The
-three sheets are `ItmoBottomSheetFragment`s that open expanded and as tall as
-their content; every host obtains its view model from Koin, and the actions
-sheet and the report dialog each have their own `SubjectLinksViewModel`.
+The sheets are the keys `AppRoutes.SubjectLinks`, `AppRoutes.LinkEditor` and
+`AppRoutes.LinkActions`, the report the dialog key `AppRoutes.ReportLink`; all
+carry `core/navigation/SubjectLinksArgs`. The shell refuses a second sheet or
+dialog of a class already shown. Each body is Compose Multiplatform in
+`:shared:feature-resources` (package
+`dev.alllexey.itmowidgets.feature.resources.ui`); `ResourcesEntries.kt` in
+`app/` registers the keys and runs the Android effects (opening a link, the
+clipboard, navigation, snackbars). The sheets open expanded and as tall as
+their content; every entry obtains its view model from Koin
+(`ResourcesKoinModule.kt`, `viewModelOf`) in its own store, so the actions
+sheet and the report dialog each have their own `SubjectLinksViewModel`. A
+sheet that opens another sheet, a screen or the report closes itself first.
 
-- `SubjectLinksBottomSheet` (`SubjectLinksSheetRoute`; `Ссылки` and the
+- `AppRoutes.SubjectLinks` (`SubjectLinksSheetRoute`; `Ссылки` and the
   subject name): one section per category in declaration order, `Чаты` after
   them, `С прошлых лет` last. A section is a heading over one connected group
   on the sheet's group surface, a tonal step above the sheet's
@@ -130,7 +131,7 @@ sheet and the report dialog each have their own `SubjectLinksViewModel`.
   failed one offers `Повторить`, an empty one says `Ссылок пока нет`. A tap
   opens a link, a long press its actions; the add button under the list opens
   the editor.
-- `LinkEditorBottomSheet` (`LinkEditorSheetRoute`; `Новая ссылка` /
+- `AppRoutes.LinkEditor` (`LinkEditorSheetRoute`; `Новая ссылка` /
   `Изменить ссылку`): the window resizes for the keyboard, so `Сохранить` stays
   pinned above it. The URL is pasted from the clipboard when the sheet first
   gets focus and the clipboard holds a single HTTPS link. `guessCategory`
@@ -146,7 +147,7 @@ sheet and the report dialog each have their own `SubjectLinksViewModel`.
   longer offered falls back to `Только я`; without the connection only
   `Только я` is listed with a line saying sharing needs the connection. The new
   link's UUID survives process death, so a retried save reaches the same link.
-- `LinkActionsBottomSheet` (`LinkActionsSheetRoute`, long press): the link's
+- `AppRoutes.LinkActions` (`LinkActionsSheetRoute`, long press): the link's
   title and caption as in the list. Another student's link has the vote pill at
   the end of its title (tapping the current arrow takes the vote back); the
   score follows the repository and a vote keeps the sheet open. The arrows are
@@ -154,22 +155,22 @@ sheet and the report dialog each have their own `SubjectLinksViewModel`.
   link shows its score without arrows, an own private one none. An own rejected
   or hidden link shows `Причина: <reason>` in the error colour. Then
   `Открыть`; for another student's link with a known profile (ISU above 0)
-  `Автор: <name>`, which opens their profile (`openUserProfile`);
+  `Автор: <name>`, which opens their profile (`navigator.openUserProfile`);
   `Скопировать ссылку` (the address to the clipboard; below Android 13 a toast
   `Ссылка скопирована`, the system shows its own above); `Мои баллы` for a
   Google Sheet address of any author (`GoogleSheetUrl.parse`), which closes the
-  sheet and opens the recordbook's connection sheet through
-  `AppNavigator.openSheetScores` with the link's address and scope
+  sheet and opens the recordbook's connection sheet `AppRoutes.SheetScores`
+  with the link's address and scope
   ([sheet scores](sheet-scores.md)); `Закрепить` / `Открепить`
   (own links always, others' with the connection); `Изменить` and `Удалить`
   for own links, the delete confirmed by the kit's `ConfirmDialog`
   (`Удалить ссылку?`); `Пожаловаться` for another student's link with the
   connection, no `REPORT` restriction and no earlier report, which opens
-  `ReportLinkDialogFragment`. Actions run one at a time: while one is in flight
+  the report dialog. Actions run one at a time: while one is in flight
   the rows that act ignore taps. A failure is a snackbar. Every action but a
   vote closes the sheet on success, and a link deleted here or elsewhere closes
   it unless an action is pending.
-- `ReportLinkDialogFragment` (`ReportLinkForm` on the kit's `ReportDialog`;
+- `AppRoutes.ReportLink` (`ReportLinkForm` on the kit's `ReportDialog`;
   `Жалоба на ссылку`): `Не открывается`, `Другой предмет`, `Спам`, `Другое` and
   an optional comment of up to 500 characters, trimmed and sent as none when
   blank. `Отправить` needs a reason and no report in flight; back and a tap
@@ -306,9 +307,10 @@ titles at 320 dp and font scale 1.3, the four states), `LinkEditorSheetTest` (th
 save), `LinkActionsSheetTest` (votes that keep the sheet open, `Мои баллы` only for a Google Sheet, the own score
 without arrows and none for a private link, a restriction, an own rejected link with its reason, pinning and
 reporting, the confirmed delete, a deleted link, one action at a time) and `ReportLinkDialogTest` (reasons, the
-failure under the comment, the comment's limit). In `:app`, `ResourcesHostsKoinTest` runs the four hosts over Koin
-and an in-memory repository (votes, pins, deletes and reports through the hosts, the report dialog across a
-recreation) and `LinkEditorPasteTest` the clipboard paste. Their looks are the four-appearance goldens
+failure under the comment, the comment's limit). In `:app`, `ResourcesEntriesTest` runs the four keys in the
+shell over Koin and a fake repository (the links sheet opens the editor and the actions above itself, the actions
+sheet closes itself before the editor or the report opens, the report on an undimmed scene window, the clipboard
+link once the editor's window has focus) and `LinkEditorPasteTest` (debug) the clipboard paste. Their looks are the four-appearance goldens
 `SubjectLinksSheetContent_*`, `LinkEditorSheetContent_*`, `LinkActionsSheetContent_*` and `ReportLinkDialog_*` in
 `shared/feature-resources/screenshots/`. The subject page's `Ссылки` rows, votes, `Все ссылки, N`,
 `Добавить ссылку` and chats are covered by the recordbook's tests; votes from the page and `canVote` by

@@ -1,10 +1,11 @@
 # First-run flow
 
-The flow runs inside `MainActivity` as a root destination, not as a separate
-activity. `AuthFragment` is the signed-out welcome: the application name, three
-lines of what the app does, and the two sign-in buttons. After sign-in the flow
-walks one screen per decision and then the bottom navigation appears for the
-first time. There is no summary screen: the last decision's footer says `Готово`.
+The flow runs inside `MainActivity` as the gate key `AppRoutes.Onboarding`, not
+as a separate activity. The sign-in screen ([Sign-in](auth.md)) is the
+signed-out welcome: the application name, three lines of what the app does,
+and the two sign-in buttons. After sign-in the flow walks one screen per
+decision and then the bottom navigation appears for the first time. There is
+no summary screen: the last decision's footer says `Готово`.
 
 Every choice is written through its own repository the moment it is made, so
 leaving at any point leaves a consistent app and nothing is replayed at the end.
@@ -17,31 +18,34 @@ stores one flag per installation. It survives sign-out: a second account on the
 same device does not repeat the flow.
 
 `OnboardingGateViewModel` combines the session state with that flag into
-`Unknown`, `Required` and `Passed`. `Unknown` is not "not required": it is the
-frame before DataStore answers, and `MainActivity` keeps the session progress
-indicator during it rather than starting at Home and switching a frame later.
+`Unknown`, `Required` and `Passed` (`OnboardingGate`). `Unknown` is not "not
+required": it is the frame before DataStore answers, and `ShellGate.surface`
+keeps the session progress (`ShellSurface.Progress`) during it rather than
+starting at Home and switching a frame later.
 
-While the gate is `Required` the flow owns the window: the bottom bar and the
-overlay container are hidden, `openScreen` refuses, the update offer is not
-checked, and a widget intent is kept in `pendingRootDestination` until the gate
-passes — exactly as it is kept during `Initializing`. When the gate flips to
-`Passed` the root graph moves to `navigation_home`, popping the flow inclusively.
+While the gate is `Required` the flow owns the window
+(`ShellSurface.Onboarding`): the bottom bar and the overlays are hidden, `ShellGate.check` ignores every
+open, the update offer is not checked, and an entry intent waits in the
+`RouteQueue` until the tabs show, exactly as it waits during `Initializing`.
+When the gate flips to `Passed` the shell shows the tabs and the flow's entry
+leaves the window.
 
 ## Steps
 
-`OnboardingFragment` (destination `onboarding`) hosts `OnboardingScreen` from
-`:shared:feature-account` in a `ComposeView`: the progress dots (the design
-system's `StepsIndicator`: 8 dp dots with 8 dp gaps, the current one a 24 dp
-pill, not tappable), a `HorizontalPager` with `userScrollEnabled = false` that
-only the footer moves, and a footer with `Пропустить` and `Далее`/`Готово`
-that clears the navigation bar. Back on the first step leaves the flow to the
-system; on later steps it is a step back. The screen is stateless:
-`OnboardingViewModel` is Koin's, in the Fragment's store, and the Fragment is
-the only collector of its events, because the events are one queue and a
-second collector would take them away. The Fragment serves what only Android
-can do: the launcher pin, the notification permission and settings page, the
-spoiler photo picker and crop screen, links, and snackbars for a failed image
-or write.
+`AccountEntries.kt` registers the key with `OnboardingContent` (`:app`,
+`feature/onboarding/ui/`), which draws `OnboardingScreen` from
+`:shared:feature-account`: the progress dots (the design system's
+`StepsIndicator`: 8 dp dots with 8 dp gaps, the current one a 24 dp pill, not
+tappable), a `HorizontalPager` with `userScrollEnabled = false` that only the
+footer moves, and a footer with `Пропустить` and `Далее`/`Готово` that clears
+the navigation bar. Back on the first step leaves the flow to the system; on
+later steps it is a step back. The screen is stateless: `OnboardingViewModel`
+is Koin's (`OnboardingModule.kt`, `viewModelOf`), in the entry's own store,
+and the entry is the only collector of its events, because the events are one
+queue and a second collector would take them away. The entry serves what only
+Android can do: the launcher pin, the notification permission and settings
+page, the spoiler photo picker and crop screen, links, and snackbars for a
+failed image or write.
 
 The step list is `OnboardingUiState.steps`: three widget steps, the services
 opt-in, and the notifications step only while the opt-in is on. Switching the
@@ -52,9 +56,9 @@ notifications step returns to the opt-in.
 real preview renderer used by settings (`WidgetPreviewFactory`) in the
 screen's preview slot, then the widget's own choices as the settings screen's
 own toggle rows (`SettingsToggleRow`), then one full-width
-`Добавить на главный экран`. The Fragment fills the slot with an `AndroidView`
-of the preview's View: built when the page is composed, bound to every
-appearance change, stopped with the Fragment and closed when the page is
+`Добавить на главный экран`. `OnboardingWidgetPreviews` fills the slot with an
+`AndroidView` of the preview's View: built when the page is composed, bound to
+every appearance change, stopped with the entry and closed when the page is
 released. The rows are `WidgetOption`s per kind: next lesson early and hidden
 teacher for the compact schedule; hidden teacher, hidden past lessons and
 tomorrow for the full schedule; dynamic colours and the spoiler for QR. The two
@@ -73,12 +77,13 @@ custom image already stored the tap first asks `Выбрать другое` or 
 стандартное`. The write goes through `core/settings/CustomSpoilerRepository`,
 which refreshes the installed widgets itself; the ViewModel counts every
 successful change in `spoilerRevision` so the preview re-reads the image, and
-a failed one is a snackbar from the Fragment.
+a failed one is a snackbar from the entry.
 
 The pin button calls `AppWidgetManager.requestPinAppWidget` with a broadcast
 `PendingIntent`; `core/ui/widget/WidgetPinRequester` (shared with the home feed
-hint) owns that receiver for the whole Fragment lifetime, because the launcher
-confirms the pin while this screen is stopped. A confirmed pin changes only the button's label and icon; nothing moves. When
+hint) owns that receiver for the whole entry lifetime, because the launcher
+confirms the pin while this screen is stopped. A confirmed pin changes only
+the button's label and icon; nothing moves. When
 `isRequestPinAppWidgetSupported` is false the button is replaced by one hint
 line pointing at the launcher's widget menu. Providers are addressed by name
 through `core/navigation/WidgetProviders`: the flow is its own feature and must
@@ -108,10 +113,10 @@ on older Android, it is `Открыть настройки`; once granted it is
 ## Replay
 
 `Повторить первоначальную настройку` in maintenance calls
-`OnboardingRepository.reset()` and closes the overlay stack. The gate then flips
-to `Required` and the root graph returns to the flow with an empty back stack.
-The ViewModel is scoped to `OnboardingFragment`, so a replay starts on the first
-step with nothing carried over from the previous run.
+`OnboardingRepository.reset()` and closes the overlays. The gate then flips
+to `Required` and the shell shows the flow again. The ViewModel lives in the
+flow entry's own store, which goes with the entry, so a replay starts on the
+first step with nothing carried over from the previous run.
 
 ## iOS
 
@@ -148,10 +153,8 @@ The screen is checked on the JVM in `:shared:feature-account`:
 four-appearance goldens of every step state in `AccountScreenshotTest`
 (`scripts/verify.sh shots feature-account`).
 
-`OnboardingVisualTest` keeps only what needs a device. It runs the real flow in
-the debug host (`SettingsNavigationTestActivity` with
-`startDestination = R.id.onboarding` and `onboardingFixture`) and asserts that
-every widget page draws its real preview in the slot at the widget's height,
-and that the pin button reaches `requestPinAppWidget` (the launcher's dialog
-takes the focus). `MainActivitySessionRoutingTest` finds the flow by its root
-test tag `onboarding_root`.
+On `:app`'s JVM tests, `AccountEntriesTest` checks that the flow fills the
+window and `ShellHostTest` that the gate follows the session and the
+first-run flag and that a pending route runs once after the flow. The
+instrumented `MainActivitySessionRoutingTest` finds the flow by its root test
+tag `onboarding_root`.

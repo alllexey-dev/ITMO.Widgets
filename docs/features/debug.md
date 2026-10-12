@@ -6,24 +6,25 @@ counterparts live in [Settings](../settings.md#debug-only-controls).
 
 ## Entry and gate
 
-`DebugToolsFragment` is the overlay destination `debug_tools`
-(`AppScreen.DEBUG_TOOLS`), opened by «Инструменты разработчика» on the
-[profile tab](me.md), a row shown only when `BuildConfig.DEBUG` is true. The
-fragment checks `BuildConfig.DEBUG` again before any UI: without it,
-`onCreateView` returns an empty view and the ViewModel is never created.
-The Konsist rule `debug code is gated` (`DebugRulesTest`) requires that check
-in every `File*` store, `*Fragment` and `*RefreshTokenController` of
-`core/debug` and `feature/debug` and in `FileAcademicTimeOverrideStore`; the
-rest only delegates to them.
+The screen is the key `AppRoutes.DebugTools`, opened by «Инструменты
+разработчика» on the [profile tab](me.md), a row shown only when
+`BuildConfig.DEBUG` is true. `shellEntries(debugTools = BuildConfig.DEBUG)` in
+`ShellEntries.kt` registers the key only in a debug build, so a release build's
+registry has no such key and nothing can open it. The Konsist rule `debug code
+is gated` (`DebugRulesTest`) requires `@DebugOnly` and a `BuildConfig.DEBUG`
+check in every `File*` store and `*RefreshTokenController` of `core/debug` and
+`feature/debug` and in `FileAcademicTimeOverrideStore`; the rest only delegates
+to them.
 
 ## Screen
 
 `DebugToolsScreen(state, actions)` in `feature/debug/ui/DebugToolsScreen.kt` is
 a stateless Compose screen built from the kit (`AppTopBar`, `ProgressButton`,
 `ItmoSwitch`) that stays in `:app`: debug tools never move to `shared/` or
-reach iOS. `DebugToolsFragment` hosts it in `itmoComposeView`, takes
-`DebugToolsViewModel` from Hilt and implements `DebugToolsActions` with it;
-toasts and activity recreation stay in the fragment. Strings stay in
+reach iOS. `DebugToolsEntry` in `AccountEntries.kt` takes `DebugToolsViewModel`
+from Koin (`viewModelOf` in the app's `DebugModule.kt`), builds
+`DebugToolsActions` with it and hands its events to `handleDebugToolsEvent`
+(`DebugToolsEffects.kt`) for toasts and activity recreation. Strings stay in
 `strings_debug.xml`.
 
 The top bar «Инструменты разработчика» with «Назад» (test tag
@@ -85,13 +86,14 @@ JVM: `DebugToolsViewModelTest`, `DebugRulesTest`,
 `DefaultDebugRefreshTokenControllerTest`. `DebugToolsScreenshotTest` renders the
 previews `DebugToolsScreen_{content,refresh-token-dialog,sport-score-dialog}`
 (the dialogs without their window) into `app/screenshots/` in light and dark.
-`MainNavigationTest` opens the screen in the overlay and leaves it through the
-back button's test tag. The screen has no debug host.
+`AccountEntriesTest` opens the screen from the Me row and checks that only a
+debug registry has the key; `RegistryCompletenessTest` checks that a release
+registry lacks only this key.
 
 ## iOS
 
 The iOS app has no debug tools screen: the Me tab shows no developer tools row
-(`showDebugTools` is false), and ADR 0016 keeps these tools Android-only. A
+(`showDebugTools` is false); the tools are Android-only. A
 Debug build of the iOS app takes launch arguments instead (`-itmoDemo`,
 `-itmoSignedOut`, `-itmoOnboarding`, `-itmoRunRefresh`,
 `-itmoNotificationFixture`, `-itmoWebLoginFixture`, `-itmoBarsLogin`,

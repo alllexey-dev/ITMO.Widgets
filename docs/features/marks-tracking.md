@@ -19,10 +19,11 @@ storage and delivery follow the schedule changes (decision
   `marks-check` for both sources: every 3 hours with
   `NetworkType.CONNECTED`, exponential backoff from 15 minutes, tag `marks`,
   `ExistingPeriodicWorkPolicy.UPDATE`, so enqueuing it on every start does not
-  push the next run away. It gets `MarksCheck` through `MarksEntryPoint`, not
-  `@HiltWorker`. `WorkManagerMarksScheduler` enqueues and cancels it, and
-  `AndroidMarksNotifier` posts the notification; all three live in
-  `feature/recordbook/work`.
+  push the next run away. It reads `MarksCheck` from Koin (`by inject()`).
+  `MARKS_SPEC` beside it describes the work; the `MarksScheduler` that
+  enqueues and cancels it is `PeriodicCheckScheduler` over that spec, bound in
+  `di/RecordbookModule.kt`, and `AndroidMarksNotifier`
+  (`feature/recordbook/work`) posts the notification.
 - `MarksCheck.run()` ends `SKIPPED` without a request when there is no refresh
   token or all three switches are off. Otherwise it runs `checkMyItmo()` when
   `Оценки My ITMO` is on, `checkBars()` when `Оценки БАРС` is on and
@@ -125,11 +126,11 @@ The mark tracking data (`MarksFileStore`, `MarkTrackingRepositoryImpl`,
 `DefaultMarkTracking`, `MarksCheck`, `BarsMarksActivation`,
 `MarksHomeCardSource`) lives in `:shared:feature-recordbook` `commonMain` and is
 built by Koin (`recordbookModule`); the files go through okio on the platform
-file system, the wall clock is the injected `kotlin.time.Clock`. The app's
-`RecordbookBridge` hands `MarksWorker` its `MarksCheck` (`MarksEntryPoint`),
-Hilt readers `DefaultMarkTracking` as `MarkTracking` and as one of the
-Application's background checks, and Koin the Android `MarksScheduler` and
-`MarksNotifier`.
+file system, the wall clock is the injected `kotlin.time.Clock`.
+`recordbookModule` binds `DefaultMarkTracking` as `MarkTracking`; the app's
+`di/RecordbookModule.kt` adds it to the background checks
+(`named("marks")`) and binds the Android `MarksScheduler` and `MarksNotifier`.
+`MarksWorker` reads its `MarksCheck` from the same graph.
 
 `MarkTrackingRepositoryImpl` is one Koin single that reads the file once and
 keeps the state in memory:
@@ -291,13 +292,13 @@ cookie renewal and `backgroundAccount`; `MarksHomeCardSourceTest`,
 qualified home card) and `RecordbookSignOutTest`; the dots, reading and
 advancing in `RecordbookViewModelTest`, `RecordbookBarsOverlayTest` and
 `RecordbookSubjectViewModelTest`. In `:shared:core`: `MarkSubjectsTest`,
-`BackgroundChecksTest` and `RecordbookSubjectArgsTest`. In `:app`:
-`MainActivityIntentRoutingTest`, and for the two graphs `RecordbookBridgeTest`,
-`RecordbookBindingsTest`, `BackgroundCheckGraphTest` and
-`HomeSourcesGraphTest`; the dot on the Compose list in `RecordbookScreenTest`.
-Instrumented: `MarksWorkTest` (the app's `WorkManager` through the debug
-`MarksTestEntryPoint`) and `MarksNotificationTest`; the marks card
-is in `HomeScreenTest` and the `HomeScreenshotTest` goldens. They use synthetic subjects and restore the
+`BackgroundChecksTest`, `RecordbookSubjectArgsTest` and `EntryRouteParserTest`
+(the marks taps). In `:app`, for the graph: `RecordbookBindingsTest` (debug),
+`BackgroundCheckGraphTest` and `HomeSourcesGraphTest`; the dot on the Compose
+list in `RecordbookScreenTest`. Instrumented: `MarksWorkTest` (the app's
+`WorkManager` through the `MarksScheduler` of `TestGraph`) and
+`MarksNotificationTest`; the marks card is in `HomeScreenTest` and the
+`HomeScreenshotTest` goldens. They use synthetic subjects and restore the
 WorkManager state they found.
 The iOS tests are listed in [iOS](#ios).
 

@@ -19,20 +19,21 @@ and `MeScreen` leaves out the row and its divider otherwise. Without the connect
 the profile shows the connection hint instead, so there is never a row that can
 only fail.
 
-The row calls `AppNavigator.openWebLogin()`, which shows `WebLoginBottomSheet`
-on the Activity's FragmentManager, once (a second tap while it is open or after
-the state is saved does nothing). The sheet is an `ItmoBottomSheetFragment`
-(`SheetSpec(textInput = true)`): it opens expanded to its content, up to 90 % of
-the screen, without a collapsed step, and the window resizes for the keyboard so
-the field stays above it. It expands to its content again through
-the shell's sheet scene when the step changes, not on every
-keystroke.
+The row opens the sheet key `AppRoutes.WebLogin`
+(`SheetPolicy(textInput = true)`), once: a second tap while it is open does
+nothing, and the demo session refuses it (`ShellGate`). The shell's sheet
+scene (`ShellScenes.kt`) opens it expanded to its content, up to 90 % of the
+window, without a collapsed step, and the window resizes for the keyboard so
+the field stays above it. It expands to its content again when the step
+changes, not on every keystroke.
 
 The body is `WebLoginSheetRoute` in `:shared:feature-account`
 (`feature/weblogin/ui/`): it collects `WebLoginViewModel.uiState` and draws the
 stateless `WebLoginSheetContent(state, actions)` on the kit's `SheetScaffold`.
-The Fragment passes its own Koin ViewModel to the route and keeps the effects
-that need Android: the QR scanner (`onScan`) and closing (`onClose`).
+`AccountEntries.kt` registers the key: it passes the entry's own Koin
+ViewModel (`WebLoginModule.kt`, `viewModelOf`) to the route and keeps the
+effects that need Android: the QR scanner (`onScan`, `scanWebLoginCode` in
+`:app`) and closing (`onClose`).
 
 ## Reading the code
 
@@ -187,5 +188,6 @@ session refuses the route with `error_demo_unavailable`.
   approving, and 48 dp targets without clipped text in every state.
 - Screenshots: `AccountScreenshotTest` renders `WebLoginSheetPreviews.kt`
   (`WebLoginSheetContent_*` in `shared/feature-account/screenshots/`).
-- The Play services scanner and the sheet's height stay in `WebLoginBottomSheet`
-  and are not covered on the JVM.
+- `:app` JVM: `AccountEntriesTest` approves a code through the registered
+  sheet and checks that it closes itself and that the demo session refuses it.
+  The Play services scanner is not covered on the JVM.

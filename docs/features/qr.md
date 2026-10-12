@@ -8,19 +8,19 @@ The home-screen widget belongs to the same package and is described in
 is no second API client.
 
 The domain, the data, the presentation and the screen live in
-`:shared:feature-qr` `commonMain`, packages unchanged
-(`dev.alllexey.itmowidgets.feature.qr.*`). `:app` keeps what only Android has:
-the Fragment host, the widget (`ui/widget`), the bitmap rendering and its cache
+`:shared:feature-qr` `commonMain` (`dev.alllexey.itmowidgets.feature.qr.*`);
+`QrModule.kt` registers `QrCodeViewModel` with `viewModelOf`. `:app` keeps what
+only Android has: the widget (`ui/widget`), the bitmap rendering and its cache
 (`ui/rendering`), the worker (`work`), `QrTileService`, `QrTileClick` and
 `QrTileController`.
 
 ## Screen
 
-`QrCodeFragment` is the overlay destination `qr_pass` (`AppScreen.QR_PASS`). It
-opens from the home QR button, the shortcut and the tile; the two system
-entries route through `ACTION_OPEN_QR_PASS` to home with the pass above it. The
-Fragment hosts the Compose route `QrPassRoute`, which obtains `QrCodeViewModel`
-from Koin and draws `QrPassScreen`.
+The screen is the key `AppRoutes.QrPass`, registered in `HomeEntries.kt` with
+the Compose route `QrPassRoute`, which obtains `QrCodeViewModel` with
+`koinViewModel()` and draws `QrPassScreen`. It opens from the home QR button,
+the shortcut and the tile; the two system entries send `ACTION_OPEN_QR_PASS`,
+which `EntryRouteParser` turns into the home tab with the pass above it.
 
 - Top bar «QR-пропуск» with «Назад»; the square code area (content
   description «QR-код пропуска»); the line «Покажите код считывателю на входе
@@ -183,11 +183,11 @@ Persisted and kept byte-compatible: `cache/qr_hex`, the
   `QrWidgetStateStoreImplTest`, `QrTilePreferencesImplTest`.
 - `:shared:feature-qr` host tests: `QrModuleTest` (Koin `verify()`),
   `QrCodeGeneratorGoldenTest`, `QrScreenshotTest` (Roborazzi baselines).
-- `:app` JVM: `QrBridgeTest`, `SessionCleanersBridgeTest` (debug),
+- `:app` JVM: `QrGraphTest`, `QrWidgetUpdateWorkerKoinTest`, `QrSessionTest`
+  (debug: sign-out clears the cached pass and its bitmaps),
   `QrDebugFixturesTest` (debug), `QrTileControllerTest`, `QrTileClickTest`,
   `QrWidgetRefreshDecisionTest`, `DemoNetworkGateTest`.
 - Instrumented: `QrColorResolverTest`, `QrTileFlowTest` (`cmd statusbar
-  add-tile` and `click-tile` on the emulator), `HomeQrVisualTest`,
-  `WidgetPreviewTest`, `AppShortcutsTest`, and the `qrCaches` case of
+  add-tile` and `click-tile` on the emulator), `WidgetPreviewTest`, `AppShortcutsTest`, and the `qrCaches` case of
   `UpgradeFrom22Test` (the 2.2 `qr_hex` reads, writes and reads back).
 - Konsist: `QrRulesTest` (`feature.qr` never reads `AcademicTimeProvider`).

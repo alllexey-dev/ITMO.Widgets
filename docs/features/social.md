@@ -14,17 +14,20 @@ current study groups in `UserData`, as described in
 Domain, presentation, data and the Compose screens of `feature/social` and
 `feature/friendselector` live in `:shared:feature-social` `commonMain`, with
 their packages unchanged; the module holds no Android type, so the iOS app
-hosts the same routes. On Android five hosts keep their names and render the
-shared routes: `FriendsFragment` (`FriendsRoute`), `UserSearchFragment`
-(`UserSearchRoute`), `UserFriendsFragment` (`UserFriendsRoute`),
-`UserProfileFragment` (`UserProfileRoute`) and `FriendSelectorDialogFragment`
+hosts the same routes. `SocialModule.kt` and `FriendSelectorModule.kt`
+register the ViewModels with `viewModelOf`. On Android
+`shell/entries/SocialEntries.kt` registers five keys: `AppRoutes.Friends`
+(`FriendsRoute`), `AppRoutes.UserSearch` (`UserSearchRoute`),
+`AppRoutes.UserFriends` (`UserFriendsRoute`), `AppRoutes.UserProfile`
+(`UserProfileRoute`) and the sheet `AppRoutes.FriendSelector`
 (`FriendSelectorSheetRoute`, see [friend selector](friend-selector.md)). The
-hosts perform the Android effects: sharing, the clipboard, the invitation,
-navigation and Fragment results. `app/` keeps besides them only
-`FriendshipPushHandler` (bound in `di/ComponentBindingsModule.kt`, see
-[notifications](notifications.md)) and the debug
-fixtures (`SocialDebugFixtures`, `FriendSelectorFixture`). The texts are the
-module's `strings_social.xml`; `:app` still reads four of its ids as Android
+entries perform the Android effects: sharing, the clipboard and the
+invitation (`feature/social/ui/SocialSharing.kt`), navigation and the
+picker's result. `app/` keeps besides them only `FriendshipPushHandler`
+(bound in `di/ComponentBindingsModule.kt`, see
+[notifications](notifications.md)) and the debug fixtures
+(`SocialDebugFixtures`, `FriendSelectorFixture`). The texts are the module's
+`strings_social.xml`; `:app` still reads four of its ids as Android
 resources (`person_isu_label`, `person_isu_copied`, `user_search_invite_text`,
 `user_search_invite_chooser`).
 
@@ -89,13 +92,13 @@ start, after sign-in and when services are enabled. A failed upload is retried
 by `IdentitySyncWork` with exponential backoff, up to six attempts, and every
 failure is recorded in the diagnostics journal. Until the upload lands,
 `UserData.name` from Backend is empty; views using that identity render
-`Пользователь ИСУ N` through `Context.userDisplayName`. The person profile
+`Пользователь ИСУ N` through `userDisplayName` (`core/text/UserNames.kt`). The person profile
 prefers its direct My ITMO identity when available.
 
 ## Profile tab (`feature/me`)
 
-A Compose screen in `:shared:feature-account` hosted by `MeFragment`
-([me.md](me.md)). Header with avatar, name, study group from Backend and ISU. A `Друзья` card
+The Compose screen `MeRoute` of `:shared:feature-account`, the root of the
+profile tab ([me.md](me.md)). Header with avatar, name, study group from Backend and ISU. A `Друзья` card
 with the friends count and an incoming-requests badge, `Найти людей` and
 `Приватность` rows (the latter opens the settings privacy page); when services
 are off, one row explains it and opens settings. An `Приложение` card holds
@@ -107,7 +110,7 @@ and when services are re-enabled. A `Поделиться` icon beside the own n
 shown once the ISU is known, shares the own profile link
 ([app-links.md](app-links.md)).
 
-## Friends screen (`feature/social`, overlay `FRIENDS`)
+## Friends screen (`feature/social`, `AppRoutes.Friends`)
 
 Two tabs on one list: `Друзья` (rows with `Удалить`, confirmed by a dialog) and
 `Заявки` (incoming with `Принять`/`Отклонить`, outgoing with `Отменить`),
@@ -119,10 +122,10 @@ list placeholders, a reload keeps the list on screen and only a pull shows the
 indicator. An empty `Друзья` tab offers `Найти людей`, an empty `Заявки` tab
 says `Заявок нет`; the tabs show only over content. Disabled services show a
 locked state that leads to settings, errors a retry. The screen is
-`FriendsRoute` from `:shared:feature-social`, hosted by `FriendsFragment` on
-Android; the remove confirmation is the kit's `ConfirmDialog`.
+`FriendsRoute` from `:shared:feature-social` with `FriendsViewModel`; the
+remove confirmation is the kit's `ConfirmDialog`.
 
-## People search (overlay `USER_SEARCH`)
+## People search (`AppRoutes.UserSearch`)
 
 Query after a 300 ms debounce; results split into `В ITMO.Widgets` (with the
 relationship action: add, cancel, accept) and `Остальные` (with `Пригласить`,
@@ -137,10 +140,10 @@ nobody found `Никого не нашли`, a failed first page a retry; the fi
 loads behind list placeholders, the next one under a bar at the bottom. A row
 in flight keeps its buttons inert; a failed action shows
 `Не получилось: <reason>` in a snackbar. The screen is `UserSearchRoute` from
-`:shared:feature-social`, hosted by `UserSearchFragment` on Android, which
-shares the invitation text with the download link of its distribution.
+`:shared:feature-social` with `UserSearchViewModel`; the Android entry shares
+the invitation text with the download link of its distribution.
 
-## Person profile (overlay `USER_PROFILE`, argument `UserScreenArgs.ISU`)
+## Person profile
 
 One screen opens for any positive ISU, not just registered users. It combines
 three independently loaded parts: `PersonRepository` (My ITMO identity and
@@ -148,7 +151,7 @@ facts), `SocialRepository.profile(isu)` (the ITMO.Widgets block), and
 `TeacherReviewsRepository` (reviews of the person as a teacher). A page exists
 when either identity source succeeds. Its name and photo come from My ITMO when
 that person exists, otherwise from Backend; a missing photo uses initials rather
-than another source's photo. Empty Backend names use `Context.userDisplayName`.
+than another source's photo. Empty Backend names use `userDisplayName` (`core/text/UserNames.kt`).
 
 `UserProfileScreen` renders one lazy list in the language of the subject
 page: a result card, then sections whose headings are in `colorPrimary` over
@@ -186,8 +189,9 @@ the badge `в друзьях` and the viewer `это вы`, without buttons; `З
 text button `Удалить из друзей` under the `ITMO.Widgets` group, after
 confirmation. Sharing rows follow Backend's viewer capabilities; own schedule
 and sport are available to self. A closed row keeps its surface, fades its
-content and shows a lock, not an action. Open rows lead to `USER_FRIENDS`,
-`USER_SCHEDULE` or `USER_SPORT` with the ISU and displayed name.
+content and shows a lock, not an action. Open rows lead to
+`AppRoutes.UserFriends`, `AppRoutes.UserSchedule` or `AppRoutes.UserSport`
+with the ISU and displayed name.
 
 ### Reviews
 
@@ -245,16 +249,18 @@ The list items have stable keys, so a late part or a vote never moves what is
 already on screen. Review text is never truncated; date and source formatting
 are specified in [reviews](reviews.md).
 
-The screen is `UserProfileRoute` from `:shared:feature-social`, hosted by
-`UserProfileFragment` on Android. The route shows the snackbars and asks
-`Удалить из друзей?` and `Удалить отзыв?` in the kit's confirm dialog; the host
-shares the profile link (`Поделиться` only with a page on screen), copies the
+The screen is the key `AppRoutes.UserProfile` (argument `UserScreenArgs.ISU`):
+`UserProfileRoute` from `:shared:feature-social` with `UserProfileViewModel`. The route shows the snackbars and asks
+`Удалить из друзей?` and `Удалить отзыв?` in the kit's confirm dialog; the
+entry (`UserProfileExits`) shares the profile link (`Поделиться` only with a page on screen), copies the
 ISU and opens user screens, the review editor and report, author profiles and
 source links.
 
 ### Entry points
 
-Fragments open profiles through `core/ui/navigation.Fragment.openUserProfile(isu)`:
+Android entries open profiles through `Nav3AppNavigator.openUserProfile(isu)`
+(`SocialEntries.kt`), which opens `AppRoutes.UserProfile` only for an ISU
+that `UserScreenArgs.profileIsu` accepts:
 
 - Friends, incoming/outgoing requests and another person's friends list.
 - Both people-search sections and people shown on the home feed.
@@ -267,14 +273,13 @@ Sheets dismiss before navigating. My ITMO `Long` identifiers pass through
 `UserScreenArgs.profileIsu` (`1..Int.MAX_VALUE`); no ISU is guessed from a name.
 Rows without a usable ISU remain informational and have neither chevron nor
 click action. Friend-sport cards remain read-only and do not open teacher
-profiles. Friendship pushes retain the Activity entry point
-`MainActivity.ACTION_OPEN_USER_PROFILE`, which opens `AppScreen.USER_PROFILE`
-through the navigation coordinator. A shared link `https://<host>/u/{isu}`
-opens it the same way above the profile tab. The top bar's `Поделиться` icon,
-shown only with a `Content` page (the own profile too), shares that link; see
-[app-links.md](app-links.md).
+profiles. A friendship push sends `AppEntryIntents.ACTION_OPEN_USER_PROFILE`,
+which `EntryRouteParser` turns into the profile tab with the person above it.
+A shared link `https://<host>/u/{isu}` opens it the same way. The top bar's
+`Поделиться` icon, shown only with a `Content` page (the own profile too),
+shares that link; see [app-links.md](app-links.md).
 
-## Another user’s friends (overlay `USER_FRIENDS`)
+## Another user’s friends (`AppRoutes.UserFriends`)
 
 The person profile has a `Друзья` row controlled by Backend’s `canViewFriends`.
 The screen shows only accepted friends, with every row and capability relative
@@ -283,8 +288,8 @@ buttons or request tabs. First loading, empty, denied, disabled services and
 retryable errors are distinct: list placeholders, `Пока нет друзей` with
 `Обновить`, the hidden list without an action, the settings action and a retry.
 A failed refresh of a shown list keeps it and offers `Повторить` in a snackbar.
-The screen is `UserFriendsRoute` from `:shared:feature-social`, hosted by
-`UserFriendsFragment` on Android. Refresh retains content on network failure,
+The screen is `UserFriendsRoute` from `:shared:feature-social` with
+`UserFriendsViewModel`. Refresh retains content on network failure,
 but discards it if authorization is revoked; returning to the screen rechecks
 access. No target list is stored in the viewer’s own friends cache, but the
 repository keeps the last answer per ISU (`cachedUserFriends`) and the last
@@ -344,13 +349,13 @@ decodes Core 2.0's users and friends answers and the viewer capabilities,
 2.x's personalities, `SocialDemoGateTest` answers friends, requests,
 profiles and people from the demo set and refuses actions, and `SocialHomeCardSourceTest` and
 `FriendRequestsHomeCardTest` cover the home card. `SocialModuleTest` and
-`FriendSelectorModuleTest` resolve the Koin modules over the bridged types; `FriendshipPushHandlerTest` (`app/src/test`) covers the push. On a
-device, the friends, teacher and friend steps of `DemoModeFlowTest` open the
+`FriendSelectorModuleTest` resolve the Koin modules;
+`FriendshipPushHandlerTest` (`app/src/test`) covers the push. On a device, the friends, teacher and friend steps of `DemoModeFlowTest` open the
 screens in the demo, and
 `MainActivityDeepLinkTest.profileLinkOpensTheProfileAboveTheProfileTab` opens
 a `/u/` link. `SocialRulesTest` (`:konsist`) keeps personality models in
 `feature/social/data` and `UserSharing` in data mappers and demo data.
-See [visual test commands](../design.md#running-the-visual-tests).
+See [screenshot tests](../testing.md#screenshot-tests).
 
 ## iOS
 
