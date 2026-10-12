@@ -98,9 +98,12 @@ class SportGoldenHarness(
     }
 
     private val booker = SportSignPushBooker(
-        actions, sportApi, bookings, NoPending, ScheduleWidgetRefreshRequester { requests += "widgets refresh" },
+        clients.myItmo, dispatchers, sportApi, bookings, NoPending, ScheduleWidgetRefreshRequester { requests += "widgets refresh" },
         clock, RecordingDiagnostics(), gate, noDemo()
     )
+
+    /** The push booker's MyITMO sign-up of one lesson. */
+    suspend fun signInLesson(lessonId: Long) = clients.myItmo.sport.signInLesson(lessonId)
 
     /** The push of [queue] as the app's FCM handler runs it: each report becomes its notification. */
     suspend fun push(queue: QueueKind, payload: JsonElement) = booker.book(queue, payload) { notice ->

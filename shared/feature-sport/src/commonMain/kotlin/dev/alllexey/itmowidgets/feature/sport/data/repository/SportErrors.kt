@@ -9,8 +9,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 /**
  * The app's released mapping for a sport call over MyItmoApi 2.x or Core 2.0: a failure before any answer is
  * [AppError.Network], then the first [MyItmoException] or [BackendException] in the cause chain maps in common code,
- * anything else is a retriable unknown. MyITMO's refusal stays an [AppError.Unknown] around its
- * `MyItmoException.Api`, which the push decision reads (`SportSignOutcome`).
+ * anything else is a retriable unknown.
  */
 internal fun Exception.toSportAppError(): AppError {
     if (isCausedByNetworkFailure()) return AppError.Network

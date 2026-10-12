@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.core.di
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import dev.alllexey.itmoapi.core.MOSCOW
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
@@ -67,7 +68,6 @@ import io.ktor.client.engine.HttpClientEngine
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.datetime.TimeZone
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -111,7 +111,7 @@ fun iosCoreModule(
     // The application scope, as Android's `CoroutinesModule`: work a screen starts that must outlive it.
     single<CoroutineScope> { CoroutineScope(SupervisorJob() + get<AppDispatchers>().default) }
     single<AcademicTimeProvider> {
-        DefaultAcademicTimeProvider(get(), TimeZone.of(ACADEMIC_TIME_ZONE), NoAcademicTimeOverride)
+        DefaultAcademicTimeProvider(get(), MOSCOW, NoAcademicTimeOverride)
     }
 
     single { BundleIdentifiers.fromMainBundle() }
@@ -166,9 +166,6 @@ fun iosCoreModule(
     single<SessionDataCleaner>(named("app-group")) { AppGroupSessionDataCleaner(get(), get()) }
     single<SessionDataCleaner>(named("website-data")) { WebsiteDataSessionDataCleaner(host, get()) }
 }
-
-/** As Android's `TimeModule`. */
-private const val ACADEMIC_TIME_ZONE = "Europe/Moscow"
 
 /** As Android's `StorageModule`: the one preferences DataStore of the app. */
 private const val APP_PREFERENCES = "app_preferences"

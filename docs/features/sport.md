@@ -109,7 +109,7 @@ refreshes.
 - `SportSignPushBooker` (`commonMain`, `feature/sport/data/push/`); iOS has
   a Swift port (`SportPushBooker`, `iosApp/Extensions/NotificationService/`).
   Per lesson it skips malformed, unnamed, repeated or ended ones, books through
-  `SportActionRepository.signIn` and classifies the answer (`SportSignOutcome`):
+  MyItmoApi's `SportApi.signInLesson`, which classifies the answer (`SportSignResult`):
   booked -> report, mark satisfied on Backend, refresh widgets; definite
   rejection -> report and cancel the queue entry; no free places -> stay
   silent, the queue keeps waiting; network, auth and other failures -> log

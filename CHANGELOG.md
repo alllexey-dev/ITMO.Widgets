@@ -144,6 +144,7 @@ new iOS app.
   MyItmoApi comes from Maven Central (`MYITMOAPI_DIR` builds against a local
   checkout). The QR encoder is a Kotlin port, Google Sheets parse
   with Ksoup, avatars load with Coil 3, OkHttp is 5.5.
+- MyItmoApi 2.1.0: MyITMO's HTTP 403 means no access, not an ended session.
 - `scripts/verify.sh` is the one build entry point. A PR runs the unit and
   host tests, Konsist, the debug APK and the Roborazzi screenshot baselines of
   the modules it changes (four Android appearances, plus iOS ones for the

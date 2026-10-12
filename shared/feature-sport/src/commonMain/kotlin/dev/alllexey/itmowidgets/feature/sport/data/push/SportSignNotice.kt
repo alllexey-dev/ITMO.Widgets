@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.data.push
 
+import dev.alllexey.itmoapi.core.MOSCOW
 import dev.alllexey.itmowidgets.client.push.SportAgentBookedPayload
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
@@ -8,7 +9,6 @@ import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 
@@ -56,6 +56,3 @@ fun SportAgentBookedPayload.toAppNotification(): AppNotification? {
         destination = NotificationDestination.Sport,
     )
 }
-
-/** ITMO's time zone, which the lesson times of the notification are in wherever the device is. */
-private val MOSCOW = TimeZone.of("Europe/Moscow")
