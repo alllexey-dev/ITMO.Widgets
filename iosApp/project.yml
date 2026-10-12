@@ -34,6 +34,9 @@ targets:
       - path: Sources
       # The generated string tables and AppSymbol.swift, and the custom symbol images.
       - path: Shared
+      # The app icon (ASSETCATALOG_COMPILER_APPICON_NAME in App.xcconfig): Android's adaptive icon vectors cropped
+      # to the 72 dp an Android launcher shows; the extensions do not need it.
+      - path: Resources/AppIcon.xcassets
       # The sign-in page's token interceptor: Android's asset by path, never a copy.
       - path: ../app/src/main/assets/token_refresh_interceptor.js
         buildPhase: resources
