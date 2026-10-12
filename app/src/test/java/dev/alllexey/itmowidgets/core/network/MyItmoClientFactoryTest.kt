@@ -20,7 +20,6 @@ import io.ktor.http.HttpStatusCode
 import java.io.File
 import java.io.IOException
 import java.net.SocketTimeoutException
-import java.time.ZoneOffset
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -43,7 +42,6 @@ class MyItmoClientFactoryTest {
         MyItmoStorage(
             tokenFile = File(folder.root, "myitmo_tokens.enc"),
             tokenCipher = PlainTokenCipher,
-            clock = java.time.Clock.fixed(java.time.Instant.parse("2026-07-24T00:00:00Z"), ZoneOffset.UTC),
             log = RecordingAppLog()
         )
     }
@@ -90,7 +88,6 @@ class MyItmoClientFactoryTest {
         val rotated = MyItmoStorage(
             tokenFile = File(folder.root, "myitmo_tokens.enc"),
             tokenCipher = PlainTokenCipher,
-            clock = java.time.Clock.fixed(java.time.Instant.parse("2026-07-24T00:00:00Z"), ZoneOffset.UTC),
             log = RecordingAppLog()
         ).read()!!
         assertEquals("access", rotated.accessToken)

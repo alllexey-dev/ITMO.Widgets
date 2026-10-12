@@ -30,28 +30,18 @@ final class SessionTests: XCTestCase {
 
     func testTokensReachBothInterfacesThroughOneKeychainItem() async throws {
         let storage = graph.tokenStorage
-        storage.replaceWithTokens(
-            tokens: SessionTokens(
-                accessToken: "synthetic-access",
-                accessExpiresInSeconds: 300,
-                refreshToken: "synthetic-refresh",
-                refreshExpiresInSeconds: 3600,
-                idToken: "synthetic-id"
-            )
-        )
+        // The five fields Android seals into myitmo_tokens.enc.
+        let value = [
+            base64URL("synthetic-access"), "1790000300000",
+            base64URL("synthetic-refresh"), "1790003600000",
+            base64URL("synthetic-id")
+        ].joined(separator: "\n")
+        IosSecureStore.shared.keychain().write(name: KeychainTokenStorage.companion.ITEM, value: value)
 
         let tokens = try await storage.read()
         XCTAssertEqual(tokens?.accessToken, "synthetic-access")
         XCTAssertEqual(tokens?.refreshToken, "synthetic-refresh")
         XCTAssertEqual(tokens?.idToken, "synthetic-id")
-
-        // The five fields Android seals into myitmo_tokens.enc.
-        let value = try XCTUnwrap(itemValue(account: KeychainTokenStorage.companion.ITEM))
-        let fields = value.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-        XCTAssertEqual(fields.count, 5)
-        XCTAssertEqual(fields[0], base64URL("synthetic-access"))
-        XCTAssertNotNil(Int64(fields[1]))
-        XCTAssertEqual(fields[4], base64URL("synthetic-id"))
 
         try await storage.write(tokens: nil)
         XCTAssertFalse(storage.hasRefreshToken())
@@ -60,6 +50,7 @@ final class SessionTests: XCTestCase {
         try await storage.write(tokens: tokens)
         XCTAssertTrue(storage.hasRefreshToken())
         XCTAssertEqual(storage.getIdToken(), "synthetic-id")
+        XCTAssertEqual(itemValue(account: KeychainTokenStorage.companion.ITEM), value)
     }
 
     func testSignOutCleanersEmptyTheKeychainTheAppGroupAndWebKit() async throws {

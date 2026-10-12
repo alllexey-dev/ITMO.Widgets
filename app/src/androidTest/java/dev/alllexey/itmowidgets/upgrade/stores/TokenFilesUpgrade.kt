@@ -51,7 +51,7 @@ object TokenFilesUpgrade {
     }
 
     private fun assertCapturedSession(myItmoFile: File, fixture: Upgrade22Fixture) {
-        val myItmo = MyItmoStorage(myItmoFile, AndroidKeystoreTokenCipher(), fixture.clock, AndroidAppLog())
+        val myItmo = MyItmoStorage(myItmoFile, AndroidKeystoreTokenCipher(), AndroidAppLog())
         assertTrue(myItmo.hasRefreshToken())
         assertEquals("upgrade22-access-token", myItmo.getAccessToken())
         assertEquals(Captured22.TOKEN_EXPIRES_AT, myItmo.getAccessExpiresAt())

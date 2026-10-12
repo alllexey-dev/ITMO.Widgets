@@ -9,9 +9,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
 
@@ -19,27 +17,7 @@ class KeychainTokenStorageTest {
 
     private val secrets = InMemorySecureStore()
     private val log = RecordingAppLog()
-    private val storage = KeychainTokenStorage(secrets, FixedClock, log)
-
-    @Test
-    fun tokensWrittenAsTheSessionReadAsAMyItmoApiTokenSet() = runTest {
-        storage.replaceWithTokens(
-            SessionTokens(
-                accessToken = "access",
-                accessExpiresInSeconds = 300,
-                refreshToken = "refresh",
-                refreshExpiresInSeconds = 3600,
-                idToken = "id"
-            )
-        )
-
-        val tokens = assertNotNull(storage.read())
-        assertEquals("access", tokens.accessToken)
-        assertEquals(NOW + 5.minutes, tokens.accessExpiresAt)
-        assertEquals("refresh", tokens.refreshToken)
-        assertEquals(NOW + 1.hours, tokens.refreshExpiresAt)
-        assertEquals("id", tokens.idToken)
-    }
+    private val storage = KeychainTokenStorage(secrets, log)
 
     @Test
     fun aTokenSetWrittenByMyItmoApiReadsAsTheSession() = runTest {
@@ -85,7 +63,7 @@ class KeychainTokenStorageTest {
 
     @Test
     fun anotherStorageOverTheSameItemReadsEveryWriteAtOnce() = runTest {
-        val otherProcess = KeychainTokenStorage(secrets, FixedClock, log)
+        val otherProcess = KeychainTokenStorage(secrets, log)
         storage.write(TokenSet("first", NOW, "refresh", NOW + 1.hours, "id"))
         assertEquals("first", otherProcess.read()?.accessToken)
 
@@ -107,15 +85,6 @@ class KeychainTokenStorageTest {
     }
 
     @Test
-    fun aLifetimeBeyondTheRangeSaturates() = runTest {
-        storage.replaceWithTokens(SessionTokens("access", Long.MAX_VALUE / 10, "refresh", Long.MAX_VALUE, "id"))
-
-        val tokens = assertNotNull(storage.read())
-        assertEquals(Long.MAX_VALUE, tokens.accessExpiresAt.toEpochMilliseconds())
-        assertEquals(Long.MAX_VALUE, tokens.refreshExpiresAt.toEpochMilliseconds())
-    }
-
-    @Test
     fun clearingRemovesTheItem() {
         storage.replaceWithRefreshToken("refresh")
 
@@ -123,10 +92,6 @@ class KeychainTokenStorageTest {
 
         assertNull(secrets.read(KeychainTokenStorage.ITEM))
         assertFalse(storage.hasRefreshToken())
-    }
-
-    private object FixedClock : Clock {
-        override fun now(): Instant = NOW
     }
 
     private companion object {

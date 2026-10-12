@@ -47,8 +47,7 @@ internal fun ItmoIdTokenResponse.toTokenSet(nowMillis: Long): TokenSet {
 }
 
 /**
- * [nowMillis] plus [lifetimeSeconds], [Long.MAX_VALUE] on overflow: the common form of the app's
- * `calculateTokenExpiration` (`Math.multiplyExact` and `Math.addExact`), which `MyItmoStorage` still uses.
+ * [nowMillis] plus [lifetimeSeconds], [Long.MAX_VALUE] on overflow (`Math.multiplyExact` and `Math.addExact`).
  */
 private fun expirationMillis(nowMillis: Long, lifetimeSeconds: Long): Long {
     if (lifetimeSeconds !in MIN_LIFETIME_SECONDS..MAX_LIFETIME_SECONDS) return Long.MAX_VALUE

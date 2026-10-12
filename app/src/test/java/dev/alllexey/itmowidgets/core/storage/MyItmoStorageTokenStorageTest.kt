@@ -3,8 +3,9 @@ package dev.alllexey.itmowidgets.core.storage
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import java.io.File
-import java.time.Clock
-import java.time.ZoneOffset
+import java.security.KeyStoreException
+import java.security.ProviderException
+import javax.crypto.AEADBadTagException
 import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -86,10 +87,42 @@ class MyItmoStorageTokenStorageTest {
         assertNull(storage().read())
     }
 
-    private fun storage() = MyItmoStorage(
+    @Test
+    fun `a keystore that fails for now keeps the session for the next read`() = runTest {
+        for (failure in listOf(KeyStoreException("Synthetic keystore failure"), ProviderException("Synthetic"))) {
+            tokenFile.writeText(SIGNED_IN_22)
+            val cipher = FlakyTokenCipher(failure)
+            val storage = storage(cipher)
+
+            assertNull(storage.read())
+            assertFalse(storage.hasRefreshToken())
+            assertEquals(SIGNED_IN_22, tokenFile.readText())
+
+            cipher.failure = null
+            assertEquals("upgrade22-access", storage.read()?.accessToken)
+        }
+    }
+
+    @Test
+    fun `content that cannot be parsed or authenticated is discarded`() = runTest {
+        val unreadable = listOf(
+            PlainTokenCipher to "not five fields",
+            PlainTokenCipher to "~\nnot-a-number\n~\n0\n~",
+            FlakyTokenCipher(IllegalArgumentException("Unsupported token encryption format")) to SIGNED_IN_22,
+            FlakyTokenCipher(AEADBadTagException("Synthetic tag mismatch")) to SIGNED_IN_22
+        )
+        for ((cipher, content) in unreadable) {
+            tokenFile.writeText(content)
+            val storage = storage(cipher)
+
+            assertNull(storage.read())
+            assertFalse(tokenFile.exists())
+        }
+    }
+
+    private fun storage(tokenCipher: TokenCipher = PlainTokenCipher) = MyItmoStorage(
         tokenFile = tokenFile,
-        tokenCipher = PlainTokenCipher,
-        clock = Clock.fixed(java.time.Instant.parse("2026-07-24T00:00:00Z"), ZoneOffset.UTC),
+        tokenCipher = tokenCipher,
         log = RecordingAppLog()
     )
 
@@ -97,6 +130,13 @@ class MyItmoStorageTokenStorageTest {
         override fun encrypt(value: String): String = value
 
         override fun decrypt(value: String): String = value
+    }
+
+    /** Plain text, or [failure] from every decrypt while it is set. */
+    private class FlakyTokenCipher(var failure: Exception?) : TokenCipher {
+        override fun encrypt(value: String): String = value
+
+        override fun decrypt(value: String): String = failure?.let { throw it } ?: value
     }
 
     private companion object {

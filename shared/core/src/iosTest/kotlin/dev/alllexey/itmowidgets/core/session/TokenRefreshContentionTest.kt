@@ -77,7 +77,7 @@ class TokenRefreshContentionTest {
 
     /** One process: its own storage object, lock object and client over the shared Keychain and lock files. */
     private fun process(): ProcessSession {
-        val storage = KeychainTokenStorage(keychain, FixedClock, RecordingAppLog())
+        val storage = KeychainTokenStorage(keychain, RecordingAppLog())
         val client = MyItmoClientFactory.create(
             storage = storage,
             engine = identity,

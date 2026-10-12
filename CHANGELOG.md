@@ -103,6 +103,18 @@ new iOS app.
   or from a day without lessons.
 - Links and system pages opened from the new screens (privacy policy, account
   deletion, subject links, calendar settings) work again after 2.3.0-beta.1.
+- Android no longer deletes the stored session when the Keystore or the token
+  file fails for a moment: only content that cannot be parsed or
+  authenticated is discarded, so a transient error no longer signs the user
+  out for good. The file format is unchanged.
+- A schedule or QR cache that cannot be deleted now fails the sign-in instead
+  of being ignored, so the next account never sees the previous user's or a
+  friend's schedule or the previous QR pass.
+- iOS keeps the session and BARS Keychain items on this device only
+  (`AfterFirstUnlockThisDeviceOnly`), so a backup no longer restores them on
+  another device; existing items move over on their next write.
+- The debug refresh-token tool signs in through the session like any other
+  sign-in instead of writing the token file directly.
 
 ### Architecture and build
 

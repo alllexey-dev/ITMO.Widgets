@@ -125,7 +125,6 @@ class DefaultFcmTokenSyncTest {
                 override fun hasRefreshToken() = signedIn
                 override fun getIdToken(): String? = null
                 override fun replaceWithRefreshToken(refreshToken: String) = Unit
-                override fun replaceWithTokens(tokens: SessionTokens) = Unit
                 override fun clearTokens() = Unit
             }, object : BackendDeviceSession {
                 override suspend fun registerCurrentDevice() {

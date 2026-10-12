@@ -44,9 +44,7 @@ val storageModule = module {
     singleOf(::AndroidKeystoreTokenCipher) { bind<TokenCipher>() }
     // One writer of `myitmo_tokens.enc`: MyItmoApi's token storage and the session's store are the same instance.
     single {
-        MyItmoStorage(
-            File(androidContext().noBackupFilesDir, TOKEN_FILE_NAME), get(), java.time.Clock.systemUTC(), get()
-        )
+        MyItmoStorage(File(androidContext().noBackupFilesDir, TOKEN_FILE_NAME), get(), get())
     } binds arrayOf(TokenStorage::class, SessionTokenStore::class)
     single<AppDirectories> { AndroidAppDirectories(androidContext()) }
     // The one instance of `app_preferences` in the process; a second one over the same file would throw.
