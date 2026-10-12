@@ -1,0 +1,37 @@
+{
+  "success": true,
+  "data": {
+    "events": [
+      {
+        "seq": 5,
+        "id": "sport-free:11:1",
+        "type": "SPORT_FREE_SIGN_LESSONS_PAYLOAD",
+        "occurredAt": "2026-10-05T09:00:00Z",
+        "expiresAt": "2026-10-05T10:00:00Z",
+        "payload": {
+          "sportLessons": [
+            {
+              "id": 9001,
+              "sectionId": 41,
+              "sectionName": "Плавание",
+              "sectionLevel": 1,
+              "level": 1,
+              "typeId": 2,
+              "buildingId": 13,
+              "roomName": "Бассейн",
+              "start": "2026-10-07T10:00:00+03:00",
+              "end": "2026-10-07T11:30:00+03:00",
+              "timeSlotId": 3,
+              "teacherIsu": 200001,
+              "teacherFio": "Тренер Тестовый"
+            }
+          ]
+        }
+      }
+    ],
+    "nextCursor": 7,
+    "hasMore": false,
+    "gap": false
+  },
+  "error": null
+}

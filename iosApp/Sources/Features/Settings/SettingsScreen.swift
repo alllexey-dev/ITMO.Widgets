@@ -115,6 +115,8 @@ struct SettingsScreen: View {
             Task { await openNotifications() }
         case .openDiagnostics:
             router.open(AppRoutes.Diagnostics.shared)
+        case .openConnections:
+            router.open(AppRoutes.Connections.shared)
         case .closeOverlays:
             // The onboarding flag is reset; the session gate shows the first-run flow, settings only leave.
             router.setPath([], of: router.selectedTab)

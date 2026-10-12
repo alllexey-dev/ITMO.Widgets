@@ -42,6 +42,16 @@ object FcmDecoder {
     fun sportAutoSignLessons(payload: JsonElement): SportAutoSignLessonsPayload =
         decode(SportAutoSignLessonsPayload.serializer(), payload)
 
+    /** The payload of a [DeviceConnectedPayload.TYPE] envelope; an unknown `kind` is `UNKNOWN`. */
+    @Throws(BackendException::class)
+    fun deviceConnected(payload: JsonElement): DeviceConnectedPayload =
+        decode(DeviceConnectedPayload.serializer(), payload)
+
+    /** The payload of a [SportAgentBookedPayload.TYPE] envelope. */
+    @Throws(BackendException::class)
+    fun sportAgentBooked(payload: JsonElement): SportAgentBookedPayload =
+        decode(SportAgentBookedPayload.serializer(), payload)
+
     private fun <T> decode(serializer: KSerializer<T>, payload: JsonElement): T = decode {
         BackendJson.decodeFromJsonElement(serializer, payload)
     }

@@ -144,6 +144,7 @@ new iOS app.
   MyItmoApi comes from Maven Central (`MYITMOAPI_DIR` builds against a local
   checkout). The QR encoder is a Kotlin port, Google Sheets parse
   with Ksoup, avatars load with Coil 3, OkHttp is 5.5.
+- MyItmoApi 2.1.0: MyITMO's HTTP 403 means no access, not an ended session.
 - `scripts/verify.sh` is the one build entry point. A PR runs the unit and
   host tests, Konsist, the debug APK and the Roborazzi screenshot baselines of
   the modules it changes (four Android appearances, plus iOS ones for the
@@ -155,12 +156,17 @@ new iOS app.
   `docs/testing.md`, `docs/troubleshooting.md` and `CONTRIBUTING.md`; the
   architecture and feature docs describe the Compose, Koin and Navigation 3
   code.
-- Groundwork for connecting devices from the phone: `https://<host>/pair#v1...`
-  links are read from the scanner, a pasted link or an Android App Link
-  (`Подключение устройств появится в следующей версии` until the UI ships);
-  HPKE sealing (Tink on Android, CryptoKit on iOS), the verification code, the
-  session hand-off over MyItmoApi's refresh and the screen-lock check exist
-  but send nothing to Backend yet.
+- `Подключить устройство` replaces `Вход на сайт` on the profile: the same
+  sheet signs a browser in and connects a self-hosted agent from its
+  `https://<host>/pair#v1...` QR, a pasted link or an Android App Link. The
+  card shows the device's own name, version, permissions, the shared My ITMO
+  session and a verification code; after the screen lock the phone hands its
+  previous ITMO session over HPKE (Tink on Android, CryptoKit on iOS) and
+  Backend sees only ciphertext. Typed codes work only for the site.
+- `Подключённые устройства` (from the sheet, `Настройки → Доступ` and the new
+  push) lists web sessions and agents with `Отключить`. Pushes
+  `DEVICE_CONNECTED_PAYLOAD` and `SPORT_AGENT_BOOKED_PAYLOAD` show on Android
+  (channel `Подключения устройств`) and iOS.
 
 ## 2.2 — 2026-10-03
 

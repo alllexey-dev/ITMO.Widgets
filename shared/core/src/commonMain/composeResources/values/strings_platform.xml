@@ -65,6 +65,7 @@
     <string name="notification_channel_friends">Друзья</string>
     <string name="notification_channel_schedule_changes">Изменения расписания</string>
     <string name="notification_channel_marks">Оценки</string>
+    <string name="notification_channel_connections">Подключения устройств</string>
     <string name="marks_new_title">Новые оценки</string>
     <string name="marks_subjects_more">%1$s и ещё\u00A0%2$d</string>
     <string name="marks_bars_login_title">Войдите в БАРС</string>
@@ -86,4 +87,9 @@
     <string name="shortcut_today_short">Сегодня</string>
     <string name="shortcut_today_long">Расписание на сегодня</string>
     <string name="notification_sport_place_free">Освободилось место на занятии</string>
+    <string name="notification_sport_agent_booked">%1$s, %2$s — записал «%3$s»</string>
+    <string name="notification_device_connected_title">Подключено новое устройство</string>
+    <string name="notification_device_connected_agent">Свой клиент «%1$s» — если это не вы, отключите его</string>
+    <string name="notification_device_connected_web">Вход на сайт ITMO.Widgets — если это не вы, отключите его</string>
+    <string name="notification_device_connected_other">Новое устройство — если это не вы, отключите его</string>
 </resources>

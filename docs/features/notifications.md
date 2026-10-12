@@ -12,7 +12,11 @@ contract ([schedule changes](#schedule-changes), [marks](#marks)).
 A data message: `data` holds the `{type, payload}` envelope from Core
 (`FcmJsonWrapper`), `recipient_isu` names the target account. Types: `SPORT_FREE_SIGN_LESSONS_PAYLOAD` and `SPORT_AUTO_SIGN_LESSONS_PAYLOAD`
 (`SportSignPushHandler`, `QueueKind.FREE`/`AUTO`), `FRIENDSHIP_EVENT_PAYLOAD`
-(`FriendshipPushHandler`). Unknown types and malformed payloads are logged by
+(`FriendshipPushHandler`), `DEVICE_CONNECTED_PAYLOAD` (`DeviceConnectedPushHandler`: `Подключено новое
+устройство`, the agent's name or the site, opens `Подключённые устройства`) and `SPORT_AGENT_BOOKED_PAYLOAD`
+(`SportAgentBookedPushHandler`: `Вы записаны на спорт` with `записал «<agent>»`, nothing booked). iOS shows
+Backend's alert for a new connection (`notification_device_connected_title`, `_agent`, `_web`) and rewrites the
+agent's booking with `notification_sport_agent_booked`. Unknown types and malformed payloads are logged by
 type only and ignored; payloads above 4 KB (`FcmPayloadDispatcher.MAX_PAYLOAD_BYTES`) are dropped.
 
 ## Flow
@@ -46,7 +50,7 @@ before clearing credentials.
 
 ## Channels
 
-`sport`, `friends`, `schedule_changes`, `marks`, all default importance,
+`sport`, `friends`, `schedule_changes`, `marks`, `connections`, all default importance,
 created on start (`AppNotificationChannels`). Android owns permission, sound
 and per-channel visibility; the app has no duplicate switches. Friend
 notifications use the actor's ISU as id (a repeated request replaces the old

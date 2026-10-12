@@ -1,0 +1,33 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "00000000-0000-4000-8000-000000000601",
+      "kind": "AGENT",
+      "name": "nas",
+      "userAgent": null,
+      "createdAt": "2026-10-05T09:00:00Z",
+      "lastUsedAt": "2026-10-05T09:01:00Z",
+      "live": true,
+      "itmoSession": true,
+      "current": false,
+      "scopes": [
+        "sport",
+        "friends:read"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000501",
+      "kind": "WEB_SESSION",
+      "name": null,
+      "userAgent": "Mozilla/5.0 (synthetic)",
+      "createdAt": "2026-10-05T09:00:00Z",
+      "lastUsedAt": null,
+      "live": false,
+      "itmoSession": false,
+      "current": true,
+      "scopes": null
+    }
+  ],
+  "error": null
+}

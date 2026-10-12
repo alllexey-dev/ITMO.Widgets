@@ -21,4 +21,5 @@ object AppEntryIntents {
     const val ACTION_OPEN_BARS_LOGIN = "dev.alllexey.itmowidgets.action.OPEN_BARS_LOGIN"
     const val ACTION_OPEN_QR_PASS = "dev.alllexey.itmowidgets.action.OPEN_QR_PASS"
     const val ACTION_OPEN_TODAY = "dev.alllexey.itmowidgets.action.OPEN_TODAY"
+    const val ACTION_OPEN_CONNECTIONS = "dev.alllexey.itmowidgets.action.OPEN_CONNECTIONS"
 }

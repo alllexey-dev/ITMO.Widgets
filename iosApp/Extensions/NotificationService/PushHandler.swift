@@ -6,7 +6,10 @@ import UserNotifications
 ///
 /// - Signed out, the demo or a push for another ISU (`recipient_isu` against session-v1.json): dropped; a sport
 ///   push without the services opt-in too.
-/// - Friendship: shown as Backend wrote it (`loc-key`, `loc-args`).
+/// - Friendship and a new connection (`notification_device_connected_*`): shown as Backend wrote it (`loc-key`,
+///   `loc-args`).
+/// - The user's agent booked a lesson: Backend's sport alert with the agent named in the body
+///   (`notification_sport_agent_booked`), as Android shows it; nothing is booked here.
 /// - Sport: booked as Android's handler books; a booking or MyITMO's refusal retitles the alert with
 ///   `notification_sport_success` or `_failure` over Android's text; a failure before MyITMO's answer keeps Backend's
 ///   "a place is free"; a full lesson, or nothing left to book, is dropped, as Android shows nothing.
@@ -20,6 +23,7 @@ struct PushHandler {
             return Self.dropped
         }
         if message.type == PushMessage.friendship { return content }
+        if message.type == PushMessage.agentBooked { return Self.agentBooked(content, payload: message.payload) }
         guard let queue = SportQueue(pushType: message.type) else { return content }
         guard session.servicesEnabled else { return Self.dropped }
 
@@ -39,6 +43,19 @@ struct PushHandler {
         mutable.title = String(localized: notice.booked ? .notificationSportSuccess : .notificationSportFailure)
         let start = lessonTime.string(from: notice.start)
         mutable.body = String(localized: .notificationSportLesson(notice.sectionName, start))
+        return mutable
+    }
+
+    /// Android's `SportAgentBookedPayload.toAppNotification`: the section, the Moscow start and the agent; a payload
+    /// without them keeps Backend's alert.
+    static func agentBooked(_ content: UNNotificationContent, payload: [String: Any]) -> UNNotificationContent {
+        guard let lesson = (payload["sportLessons"] as? [Any])?.first.flatMap(PushedLesson.init),
+              let agent = (payload["agentName"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let mutable = content.mutableCopy() as? UNMutableNotificationContent
+        else { return content }
+        let section = lesson.sectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+        mutable.title = String(localized: .notificationSportSuccess)
+        mutable.body = String(localized: .notificationSportAgentBooked(section, lessonTime.string(from: lesson.start), agent))
         return mutable
     }
 

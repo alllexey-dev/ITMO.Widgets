@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.push
 
+import dev.alllexey.itmoapi.core.MOSCOW
+import dev.alllexey.itmowidgets.client.push.SportAgentBookedPayload
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.NotificationDestination
@@ -7,7 +9,6 @@ import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 
@@ -34,5 +35,24 @@ fun SportSignNotice.toAppNotification(): AppNotification = AppNotification(
     destination = NotificationDestination.Sport
 )
 
-/** ITMO's time zone, which the lesson times of the notification are in wherever the device is. */
-private val MOSCOW = TimeZone.of("Europe/Moscow")
+/**
+ * The user's own agent booked a lesson: the same `sport` notification as a booking on the phone, its text naming the
+ * agent, "Плавание, 21 сент., 12:00 — записал «nas»". Null for a push without a lesson.
+ */
+fun SportAgentBookedPayload.toAppNotification(): AppNotification? {
+    val lesson = sportLessons.firstOrNull() ?: return null
+    return AppNotification(
+        channel = AppNotificationChannels.SPORT,
+        id = lesson.id.hashCode(),
+        title = UiText.Res(CoreStrings.notification_sport_success),
+        text = UiText.Res(
+            CoreStrings.notification_sport_agent_booked,
+            listOf(
+                lesson.sectionName.trim(),
+                lesson.start.toLocalDateTime(MOSCOW).format(DateTexts.DAY_SHORT_MONTH_TIME),
+                agentName.trim(),
+            ),
+        ),
+        destination = NotificationDestination.Sport,
+    )
+}

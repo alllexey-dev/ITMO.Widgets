@@ -95,7 +95,7 @@ Session:
   only the exact callback with a checked `state`; the library retries once on 401 through
   `BarsRenewal`. No JavaScript bridge, no localStorage reads.
 - The app's `BarsClient` binds the session to the current ISU, verifies `login`, serialises period
-  selection and maps `MyItmoException`: `Auth` 401 -> `Unauthorized`, `Auth` 403 and `Http` 423 ->
+  selection and maps `MyItmoException`: `Auth` 401 -> `Unauthorized`, `Http` 403 and 423 ->
   `Forbidden`, `Http` 404 -> `NotFound`, `Network` -> `Network`, else retriable `Unknown`.
 - `OwnerBoundBarsStorage` is the only writer of `bars_tokens.enc` (`<isu>\n<header>`, validated with
   `BarsClient.isValidAuthorization`) via `SecureStore` (Android: `noBackupFilesDir`, Keystore

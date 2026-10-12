@@ -48,10 +48,10 @@ including integral against floating numbers and `08:20` against `08:20:00`.
 ## Recording
 
 ```bash
-scripts/verify.sh run -- test --tests 'dev.alllexey.itmowidgets.backend.contract.*' -Pcontract.record=true
+./gradlew test --tests 'dev.alllexey.itmowidgets.backend.contract.*' -Pcontract.record=true
 ```
 
-- Only a card that adds a route or an optional response field records. Any other difference is a
+- Only a change that adds a route or an optional response field records. Any other difference is a
   wire change and needs the compatibility rule of `docs/contracts/` first; a refactor leaves every
   file here unchanged.
 - A recording run writes only missing or semantically different files and reproduces every

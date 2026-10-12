@@ -11,8 +11,8 @@ import kotlin.enums.EnumEntries
 
 /**
  * The enum policy of the client (table in `CONTRACT.md`). Every wire enum names its policy through one of
- * the subclasses below; the wire value is the constant's name. All three accept only a JSON string: `null`, a number
- * or an object fails. The unknown value itself is never put into the exception message.
+ * the subclasses below; the wire value is the constant's name unless [wireName] says otherwise. All three accept only a
+ * JSON string: `null`, a number or an object fails. The unknown value itself is never put into the exception message.
  */
 internal sealed class WireEnumSerializer<E : Enum<E>>(
     private val serialName: String,
@@ -23,10 +23,13 @@ internal sealed class WireEnumSerializer<E : Enum<E>>(
 
     final override fun deserialize(decoder: Decoder): E {
         val name = decoder.decodeString()
-        return entries.firstOrNull { it.name == name && isDecodable(it) } ?: unknown()
+        return entries.firstOrNull { wireName(it) == name && isDecodable(it) } ?: unknown()
     }
 
-    override fun serialize(encoder: Encoder, value: E) = encoder.encodeString(value.name)
+    override fun serialize(encoder: Encoder, value: E) = encoder.encodeString(wireName(value))
+
+    /** The value on the wire; a constant's name unless the wire value is no Kotlin identifier (`friends:read`). */
+    open fun wireName(value: E): String = value.name
 
     /** Whether [value] may come from the wire under its own name. */
     protected open fun isDecodable(value: E): Boolean = true

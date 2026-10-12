@@ -55,6 +55,14 @@ class EntryRouteParserTest {
     }
 
     @Test
+    fun aNewConnectionNotificationOpensTheConnectedDevicesOverTheMeTab() {
+        assertEquals(
+            EntryRoute(AppTab.ME, overlay = AppRoutes.Connections),
+            parse(AppEntryIntents.ACTION_OPEN_CONNECTIONS)
+        )
+    }
+
+    @Test
     fun aSubjectRouteWithoutValidArgumentsOpensOnlyTheRecordbook() {
         listOf(null, SUBJECT.copy(entryId = 0), SUBJECT.copy(studyYear = "2026")).forEach { subject ->
             assertEquals(
@@ -183,7 +191,8 @@ class EntryRouteParserTest {
             AppEntryIntents.ACTION_OPEN_RECORDBOOK_SUBJECT,
             AppEntryIntents.ACTION_OPEN_BARS_LOGIN,
             AppEntryIntents.ACTION_OPEN_QR_PASS,
-            AppEntryIntents.ACTION_OPEN_TODAY
+            AppEntryIntents.ACTION_OPEN_TODAY,
+            AppEntryIntents.ACTION_OPEN_CONNECTIONS
         )
     }
 }

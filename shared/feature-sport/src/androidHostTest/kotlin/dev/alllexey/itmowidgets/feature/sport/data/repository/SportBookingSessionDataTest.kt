@@ -79,8 +79,8 @@ class SportBookingSessionDataTest {
 
     @Test
     fun `HTTP errors are not reported as empty confirmed bookings`() = runTest {
-        // MyItmoApi 2.x reads a bare MyITMO 403 as a lost session, as it reads a 401.
-        for ((code, error) in listOf(403 to AppError.Unauthorized, 404 to AppError.NotFound)) {
+        // Since MyItmoApi 2.1.0 a bare MyITMO 403 is no access, not a lost session.
+        for ((code, error) in listOf(403 to AppError.Forbidden, 404 to AppError.NotFound)) {
             val fixture = fixture().apply {
                 responseCode = code
                 responseBody = { EMPTY_RESULT }

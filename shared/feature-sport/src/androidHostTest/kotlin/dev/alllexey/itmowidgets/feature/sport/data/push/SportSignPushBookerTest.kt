@@ -12,7 +12,6 @@ import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.sport.data.Core2Harness
 import dev.alllexey.itmowidgets.feature.sport.data.MainDispatcherRule
-import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.testkit.FakeClock
@@ -158,7 +157,7 @@ class SportSignPushBookerTest {
         }
         private val api = clients.client.sport
         private val booker = SportSignPushBooker(
-            SportActionRepositoryImpl(gate, clients.myItmo, api, demo, dispatchers), api,
+            clients.myItmo, dispatchers, api,
             proxy<SportBookingRepository> { method, _ ->
                 check(method == "refreshSportBookings")
                 bookingsRefresh++; Unit
@@ -181,6 +180,8 @@ class SportSignPushBookerTest {
     companion object {
         private inline fun <reified T> proxy(crossinline call: (String, Array<out Any?>?) -> Any?): T =
             Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { _, method, args -> call(method.name, args) } as T
+
+        private const val NO_CAPACITY_MESSAGE = "нельзя записать студента: нет свободных мест на занятии"
 
         private fun errorJson(message: String) = """{"error_code":2,"error_message":"$message","result":null}"""
         private fun lesson(id: Long, expired: Boolean = false): String {

@@ -78,7 +78,7 @@ internal class WebLoginSheetApprovingPreview {
 internal class WebLoginSheetDonePreview {
     @Preview(name = "done")
     @Composable
-    fun WebLoginSheetContent() = SheetPreview(WebLoginUiState.Done)
+    fun WebLoginSheetContent() = SheetPreview(WebLoginSamples.done)
 }
 
 /** A network error: `Повторить` checks the same code again. */
@@ -93,6 +93,53 @@ internal class WebLoginSheetExpiredPreview {
     @Preview(name = "expired")
     @Composable
     fun WebLoginSheetContent() = SheetPreview(WebLoginSamples.expired)
+}
+
+/** A new agent: its permissions as switches, the shared session and the verification code. */
+internal class WebLoginSheetAgentPreview {
+    @Preview(name = "agent")
+    @Composable
+    fun WebLoginSheetContent() = SheetPreview(WebLoginSamples.agent)
+}
+
+/** The longest name an agent may choose, one permission off. */
+internal class WebLoginSheetAgentLongNamePreview {
+    @Preview(name = "agent-long-name")
+    @Composable
+    fun WebLoginSheetContent() = SheetPreview(WebLoginSamples.agentLongName)
+}
+
+/** A connected agent asking for a new session: permissions shown, not switched. */
+internal class WebLoginSheetAgentSessionPreview {
+    @Preview(name = "agent-session")
+    @Composable
+    fun WebLoginSheetContent() = SheetPreview(WebLoginSamples.agentSession)
+}
+
+/** The phone takes a new session and hands out the previous one. */
+internal class WebLoginSheetRotatingPreview {
+    @Preview(name = "rotating")
+    @Composable
+    fun WebLoginSheetContent() = SheetPreview(WebLoginUiState.Rotating)
+}
+
+internal class WebLoginSheetSendingPreview {
+    @Preview(name = "sending")
+    @Composable
+    fun WebLoginSheetContent() = SheetPreview(WebLoginUiState.Sending)
+}
+
+internal class WebLoginSheetPairedPreview {
+    @Preview(name = "paired")
+    @Composable
+    fun WebLoginSheetContent() = SheetPreview(WebLoginSamples.paired)
+}
+
+/** The code of one QR with the key of another: no retry. */
+internal class WebLoginSheetMismatchPreview {
+    @Preview(name = "mismatch")
+    @Composable
+    fun WebLoginSheetContent() = SheetPreview(WebLoginSamples.mismatch)
 }
 
 @Composable

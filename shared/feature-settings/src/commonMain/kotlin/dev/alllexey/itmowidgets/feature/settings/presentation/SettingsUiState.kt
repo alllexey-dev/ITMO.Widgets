@@ -27,6 +27,8 @@ sealed interface SettingsEvent {
     data object ChooseCustomSpoiler : SettingsEvent
     data object ResetCustomSpoiler : SettingsEvent
     data object OpenDiagnostics : SettingsEvent
+    /** «Подключённые устройства». */
+    data object OpenConnections : SettingsEvent
     data object CloseOverlays : SettingsEvent
     /** Opens the system page where Android stops restricting the app in the background. */
     data object OpenBackgroundWorkSettings : SettingsEvent

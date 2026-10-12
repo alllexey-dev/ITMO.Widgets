@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.client.common.UserCapabilities
 import dev.alllexey.itmowidgets.client.common.UserData
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.json.BackendJson
+import dev.alllexey.itmowidgets.client.pairing.PairingKind
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -70,5 +71,32 @@ class FcmPayloadContractTest {
             val element = BackendJson.parseToJsonElement(wire)
             assertFailsWith<BackendException.Contract>(wire) { FcmDecoder.friendshipEvent(element) }
         }
+    }
+
+    @Test
+    fun aDeviceConnectionKeepsAnUnknownKindAndNeedsItsIdsAndTime() {
+        val valid = BackendJson.parseToJsonElement(
+            """{"connectionId":"00000000-0000-4000-8000-000000000601","kind":"WEB_SESSION",""" +
+                """"userAgent":"Mozilla/5.0","connectedAt":"2026-10-05T12:00+03:00"}""",
+        ).jsonObject
+
+        val web = FcmDecoder.deviceConnected(valid)
+        assertEquals(PairingKind.WEB_SESSION, web.kind)
+        assertEquals(null, web.name)
+        assertEquals(Instant.parse("2026-10-05T09:00:00Z"), web.connectedAt)
+        val unknown = JsonObject(valid + ("kind" to JsonPrimitive("TV")))
+        assertEquals(PairingKind.UNKNOWN, FcmDecoder.deviceConnected(unknown).kind)
+        for (field in listOf("connectionId", "kind", "connectedAt")) {
+            assertFailsWith<BackendException.Contract>(field) { FcmDecoder.deviceConnected(JsonObject(valid - field)) }
+        }
+    }
+
+    @Test
+    fun anAgentBookingNeedsTheAgentsName() {
+        val payload = JsonObject(mapOf("sportLessons" to BackendJson.parseToJsonElement("[]")))
+
+        assertFailsWith<BackendException.Contract> { FcmDecoder.sportAgentBooked(payload) }
+        val named = JsonObject(payload + ("agentName" to JsonPrimitive("nas")))
+        assertEquals(SportAgentBookedPayload(emptyList(), "nas"), FcmDecoder.sportAgentBooked(named))
     }
 }

@@ -29,7 +29,7 @@ nothing of it leaves the device. Rationale: decision
 - `demo_active` survives process death: `initialize()` restores the demo
   before looking at tokens. A real sign-in clears it.
 - `ShellGate` skips the first-run flow without marking it passed and refuses
-  `My ITMO` in the browser and `Вход на сайт`; `ShellHost` does not check for
+  `My ITMO` in the browser, `Подключить устройство` and `Подключённые устройства`; `ShellHost` does not check for
   updates.
 - The banner `demo_banner` sits above the bottom bar; its `Войти`, like
   `Выйти`, goes through `signOut()`, whose demo branch clears caches and the

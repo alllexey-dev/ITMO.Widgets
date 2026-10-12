@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.client.app.AppApi
 import dev.alllexey.itmowidgets.client.device.DeviceApi
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
+import dev.alllexey.itmowidgets.client.pairing.PairingApi
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.client.sport.SportApi
@@ -47,6 +48,7 @@ val networkModule = module {
         )
     }
     single<UsersApi> { get<BackendClient>().users }
+    single<PairingApi> { get<BackendClient>().pairing }
     single<FriendsApi> { get<BackendClient>().friends }
     single<SportApi> { get<BackendClient>().sport }
     single<SubjectLinksApi> { get<BackendClient>().links }

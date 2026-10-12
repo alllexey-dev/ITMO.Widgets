@@ -61,6 +61,7 @@ object ShellGate {
         return OpenDecision.OPEN
     }
 
-    /** My ITMO in the browser and the web sign-in need a real account. */
-    private fun AppRoute.needsRealAccount(): Boolean = this == AppRoutes.MyItmoWeb || this is AppRoutes.WebLogin
+    /** My ITMO in the browser, device pairing and the connected devices need a real account. */
+    private fun AppRoute.needsRealAccount(): Boolean =
+        this == AppRoutes.MyItmoWeb || this is AppRoutes.WebLogin || this == AppRoutes.Connections
 }

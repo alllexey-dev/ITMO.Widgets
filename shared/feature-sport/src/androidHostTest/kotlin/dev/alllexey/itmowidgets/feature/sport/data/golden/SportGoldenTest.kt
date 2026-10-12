@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.data.golden
 
+import dev.alllexey.itmoapi.myitmo.sport.SportSignResult
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking.QueueKind
@@ -7,8 +8,6 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.data.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.sport.data.golden.SportGolden.assertGolden
 import dev.alllexey.itmowidgets.feature.sport.data.golden.SportGoldenHarness.Companion.NETWORK
-import dev.alllexey.itmowidgets.feature.sport.data.push.NO_CAPACITY_MESSAGE
-import dev.alllexey.itmowidgets.feature.sport.data.push.sportSignOutcome
 import java.io.File
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
@@ -198,7 +197,13 @@ class SportGoldenTest {
 
         val outcomes = answers.mapValues { (_, answer) ->
             val harness = harness().apply { myItmo["POST /api/sport/sign/schedule/lessons"] = answer }
-            harness.actions.signIn(9001).sportSignOutcome()
+            // The golden names are the iOS notification service's outcomes (`SportPush.swift`).
+            when (harness.signInLesson(9001)) {
+                SportSignResult.Booked -> "SIGNED_IN"
+                SportSignResult.Full -> "NO_CAPACITY"
+                is SportSignResult.Rejected -> "REJECTED"
+                is SportSignResult.RetryLater -> "RETRY_LATER"
+            }
         }
 
         assertGolden("sign-outcomes", "outcomes" to outcomes)
@@ -256,6 +261,7 @@ class SportGoldenTest {
         File("../backend-client/src/commonTest/resources/contract/$path").readText()
 
     private companion object {
+        const val NO_CAPACITY_MESSAGE = "нельзя записать студента: нет свободных мест на занятии"
         val WALL_CLOCK: Instant = Instant.parse("2026-10-06T00:00:00Z")
     }
 }
