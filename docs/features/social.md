@@ -41,7 +41,7 @@ resources (`person_isu_label`, `person_isu_copied`, `user_search_invite_text`,
 - `PeopleSearchRepository` searches people by name through MyItmoApi 2.x
   (`MyItmoClient.personalities.searchPersonalities`, 20 per page) and annotates registered users through
   Backend lookup in chunks of 50. Phone and e-mail from the directory never leave
-  the data layer. See decision [0006](../decisions/0006-people-search.md).
+  the data layer. See decision [0006](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0006-people-search.md).
 - `feature/social/domain/PersonRepository` calls
   `MyItmoClient.personalities.getPersonality(isu)` through `PersonRepositoryImpl`, independently of the Backend opt-in. It keeps
   a memory cache by ISU and is a singleton `SessionDataCleaner`. The mapper

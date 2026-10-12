@@ -87,38 +87,10 @@ commands and hard rules is [`AGENTS.md`](../AGENTS.md).
 
 ## Decisions
 
-Short records of choices that were argued once. Add a new file instead of
-editing an old one when a decision changes.
-
-- [0001 Single Gradle module](decisions/0001-single-module.md) — superseded by 0018
-- [0002 Flyway V1 is immutable](decisions/0002-immutable-v1.md)
-- [0003 Snapshot versions until 2.1](decisions/0003-snapshot-versions.md) — superseded by 0024
-- [0004 Privacy audiences without reciprocity](decisions/0004-privacy-audiences.md)
-- [0005 Explicit friendships, crossed request accepts](decisions/0005-friendships.md)
-- [0006 People search via MyITMO plus lookup](decisions/0006-people-search.md)
-- [0007 Push delivery guard by recipient ISU](decisions/0007-push-guard.md)
-- [0008 Subject links: schedule-flow audiences, premoderation only for everybody](decisions/0008-community-moderation.md)
-- [0009 One person profile, direct My ITMO identity and copied reviews](decisions/0009-person-profile.md)
-- [0010 Own teacher reviews verified through ISU flows](decisions/0010-review-verification.md)
-- [0011 AI summaries of teacher reviews through Gemini behind a proxy](decisions/0011-ai-review-summaries.md)
-- [0012 BARS is renewed in the background by replaying ITMO.ID with cookies](decisions/0012-bars-background-renewal.md)
-- [0013 Schedule changes are detected on the device](decisions/0013-schedule-changes-on-device.md)
-- [0014 Own totals from public Google Sheets are read on the device](decisions/0014-sheet-scores-on-device.md)
-- [0015 A hidden demo session gated in the repositories](decisions/0015-demo-mode.md)
-- [0016 v2.3 is a behaviour-preserving rewrite](decisions/0016-parity-rewrite.md)
-- [0017 Compose Multiplatform screens in `commonMain` of shared modules](decisions/0017-cmp-ui-in-common-main.md)
-- [0018 Module graph and toolchain for v2.3](decisions/0018-module-graph-and-toolchain.md)
-- [0019 Koin modules per feature module, beside Hilt, then Koin only](decisions/0019-koin-per-lane.md)
-- [0020 One Navigation 3 shell with `@Serializable` routes](decisions/0020-navigation-3.md)
-- [0021 Material 3 Expressive through a token schema, behaviour-preserving ports, one flip and a component pass](decisions/0021-m3-expressive-order.md)
-- [0022 JVM screenshot tests replace emulator matrices; the full matrix runs before a release](decisions/0022-jvm-screenshot-tests.md)
-- [0023 The iOS client is a SwiftUI shell around the shared CMP screens](decisions/0023-ios-client.md)
-- [0024 MyItmoApi 2.x from Maven Central, a local checkout as an opt-in composite build](decisions/0024-pinned-composite-build.md)
-- [0025 MyItmoApi 2.x is a Kotlin Multiplatform library beside 1.x](decisions/0025-myitmoapi-2-kmp.md)
-- [0026 Core 2.0 is a client-only KMP module; Backend owns the wire DTOs](decisions/0026-core-2-backend-client.md)
-- [0027 Android widgets stay RemoteViews; a shared timeline feeds them and WidgetKit](decisions/0027-remoteviews-widgets.md)
-- [0028 One Russian string catalog generated outward; Material Symbols Rounded with an SF Symbol registry](decisions/0028-strings-and-icons.md)
-- [0030 Release lines, version codes and data continuity](decisions/0030-release-lines-and-data-continuity.md)
+Short records of choices that were argued once; the index with statuses is
+[decisions/README.md](decisions/README.md). Add a new file instead of editing an
+old one when a decision changes. The latest:
+[0031 iOS screens move to native SwiftUI](decisions/0031-swiftui-ios-screens.md).
 
 ## Related repositories
 

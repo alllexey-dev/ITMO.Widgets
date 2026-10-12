@@ -6,7 +6,7 @@ the recordbook (see [subject page](subject-page.md)); there is no
 separate links screen. `core/resources` holds the contract, `feature/resources`
 the data, the sheets and their view models. The Backend contract is
 `../itmo-widgets-backend/docs/contracts/subject-links.md`; the moderation model
-is decision [0008](../decisions/0008-community-moderation.md).
+is decision [0008](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0008-community-moderation.md).
 
 ## Model
 
@@ -281,7 +281,7 @@ for moderation results and no synchronization or version labels. Moderation
 has no Android UI; operators
 use the Backend moderation API (`../itmo-widgets-backend/docs/ops/moderation.md`).
 Strict verification of flow membership is deferred, see
-[0008](../decisions/0008-community-moderation.md).
+[0008](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0008-community-moderation.md).
 
 ## Verification
 

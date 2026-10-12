@@ -31,7 +31,7 @@ payloads above 4 KB are dropped.
 2. The worker checks `FcmDeliveryGuard`: services enabled, a signed-in session,
    and the recipient ISU equal to the current user's ISU. Token rotation inside
    the same account never drops a queued message (decision
-   [0007](../decisions/0007-push-guard.md)). Sign-out cancels queued work and
+   [0007](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0007-push-guard.md)). Sign-out cancels queued work and
    clears shown notifications.
 3. `FcmPayloadDispatcher` parses the envelope and calls the handler for its type.
 4. Handlers produce `AppNotification` values (channel, stable id, `UiText`
