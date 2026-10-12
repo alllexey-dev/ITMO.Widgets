@@ -6,4 +6,5 @@ object AppNotificationChannels {
     const val FRIENDS = "friends"
     const val SCHEDULE_CHANGES = "schedule_changes"
     const val MARKS = "marks"
+    const val CONNECTIONS = "connections"
 }

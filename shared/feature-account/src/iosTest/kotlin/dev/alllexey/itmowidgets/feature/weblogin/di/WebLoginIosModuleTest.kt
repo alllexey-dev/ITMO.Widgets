@@ -12,6 +12,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -42,9 +43,22 @@ class WebLoginIosModuleTest {
 
         val confirm = assertIs<WebLoginUiState.Confirm>(model.uiState.value)
         assertEquals(UiText.Res(AccountStrings.web_login_requested_at, listOf("12:04")), confirm.requestedAt)
-        model.approve()
+        model.approve(WebLoginIosFixture.unlock)
         runCurrent()
-        assertEquals(WebLoginUiState.Done, model.uiState.value)
+        assertIs<WebLoginUiState.Done>(model.uiState.value)
+    }
+
+    @Test
+    fun theFixturePairingLinkShowsTheAgentAndConnects() = runTest(main.dispatcher) {
+        val model = WebLoginIosFixture.viewModel(time)
+
+        model.onScanned(WebLoginIosFixture.PAIR_LINK)
+        runCurrent()
+
+        assertTrue(assertIs<WebLoginUiState.Confirm>(model.uiState.value).sharedSession)
+        model.approve(WebLoginIosFixture.unlock)
+        runCurrent()
+        assertIs<WebLoginUiState.Done>(model.uiState.value)
     }
 
     @Test

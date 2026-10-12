@@ -77,11 +77,12 @@ class ShellGateTest {
 
     @Test
     fun myItmoWebAndTheWebSignInAreRefusedOnlyInTheDemo() {
-        listOf(AppRoutes.MyItmoWeb, AppRoutes.WebLogin(), AppRoutes.WebLogin(code = "123456")).forEach { route ->
+        val real = listOf(AppRoutes.MyItmoWeb, AppRoutes.WebLogin(), AppRoutes.WebLogin(code = "123456"), AppRoutes.Connections)
+        real.forEach { route ->
             assertEquals(OpenDecision.REFUSE_IN_DEMO, ShellGate.check(route, demo, OnboardingStatus.UNKNOWN), "$route")
             assertEquals(OpenDecision.OPEN, ShellGate.check(route, signedIn, OnboardingStatus.PASSED), "$route")
         }
-        (RouteSamples.all - AppRoutes.MyItmoWeb - AppRoutes.WebLogin()).forEach { route ->
+        (RouteSamples.all - real.toSet()).forEach { route ->
             assertEquals(OpenDecision.OPEN, ShellGate.check(route, demo, OnboardingStatus.UNKNOWN), "$route")
         }
     }

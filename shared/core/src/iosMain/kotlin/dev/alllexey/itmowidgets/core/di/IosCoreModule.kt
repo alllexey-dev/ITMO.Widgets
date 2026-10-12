@@ -8,6 +8,7 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.ClientVersion
+import dev.alllexey.itmowidgets.client.pairing.PairingApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.systemAppDispatchers
@@ -158,6 +159,7 @@ fun iosCoreModule(
         BackendClient(backendOrigin, get<MyItmoClient>().tokens.asBackendTokenSource(), get(), clientVersion)
     }
     single<UsersApi> { get<BackendClient>().users }
+    single<PairingApi> { get<BackendClient>().pairing }
 
     // An open set: each contribution is qualified.
     single<SessionDataCleaner>(named("keychain")) { KeychainSessionDataCleaner(get(), get()) }

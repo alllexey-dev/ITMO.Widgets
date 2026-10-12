@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.client.device.DevicePlatformSerializer
 import dev.alllexey.itmowidgets.client.device.RegisterDeviceRequest
 import dev.alllexey.itmowidgets.client.device.UnregisterDeviceRequest
+import dev.alllexey.itmowidgets.client.json.WireEnumSerializer
 import dev.alllexey.itmowidgets.client.links.LinkAudience
 import dev.alllexey.itmowidgets.client.links.LinkCategory
 import dev.alllexey.itmowidgets.client.links.LinkCategorySerializer
@@ -29,6 +30,15 @@ import dev.alllexey.itmowidgets.client.links.SubjectLinkStatus
 import dev.alllexey.itmowidgets.client.links.SubjectLinkStatusSerializer
 import dev.alllexey.itmowidgets.client.links.SubjectLinksResponse
 import dev.alllexey.itmowidgets.client.links.UserRestriction
+import dev.alllexey.itmowidgets.client.pairing.AgentScope
+import dev.alllexey.itmowidgets.client.pairing.AgentScopeSerializer
+import dev.alllexey.itmowidgets.client.pairing.ApprovePairingRequest
+import dev.alllexey.itmowidgets.client.pairing.ConnectionInfo
+import dev.alllexey.itmowidgets.client.pairing.ConnectionKind
+import dev.alllexey.itmowidgets.client.pairing.ConnectionKindSerializer
+import dev.alllexey.itmowidgets.client.pairing.PairingKind
+import dev.alllexey.itmowidgets.client.pairing.PairingKindSerializer
+import dev.alllexey.itmowidgets.client.pairing.PairingPreview
 import dev.alllexey.itmowidgets.client.push.FriendshipEvent
 import dev.alllexey.itmowidgets.client.push.FriendshipEventSerializer
 import dev.alllexey.itmowidgets.client.reviews.OwnTeacherReview
@@ -107,6 +117,9 @@ object WireModels {
         model<UserLookupResponse>(),
         model<UserPrivacySettings>(),
         model<WebLoginPreview>(),
+        model<PairingPreview>(),
+        model<ApprovePairingRequest>(),
+        model<ConnectionInfo>(),
         model<ResourceVoteRequest>(),
         model<ModerationReportRequest>(),
         model<SubjectLink>(),
@@ -156,10 +169,13 @@ object WireModels {
         wireEnum(SummaryConfidenceSerializer, SummaryConfidence.entries),
         wireEnum(SummaryScaleKindSerializer, SummaryScaleKind.entries),
         wireEnum(SummaryScaleValueSerializer, SummaryScaleValue.entries),
+        wireEnum(PairingKindSerializer, PairingKind.entries),
+        wireEnum(ConnectionKindSerializer, ConnectionKind.entries),
+        wireEnum(AgentScopeSerializer, AgentScope.entries),
     )
 
     private inline fun <reified T : Any> model(): WireModel = WireModel(T::class.simpleName!!, serializer<T>())
 
-    private fun <E : Enum<E>> wireEnum(serializer: KSerializer<E>, entries: EnumEntries<E>): WireEnum =
-        WireEnum(serializer, entries.map { it.name })
+    private fun <E : Enum<E>> wireEnum(serializer: WireEnumSerializer<E>, entries: EnumEntries<E>): WireEnum =
+        WireEnum(serializer, entries.map { serializer.wireName(it) })
 }

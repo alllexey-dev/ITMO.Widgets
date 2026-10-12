@@ -1,15 +1,17 @@
 import Shared
 import SwiftUI
 
-/// Android's `WebLoginSheetContent` over the shared `WebLoginViewModel`: approves a browser's sign-in to the
-/// web version with a scanned QR (`WebLoginScanner`, VisionKit) or the code typed from the screen, shows which browser
-/// asked, then signs it in with `web_login_approve`. The router opens it as a shell sheet (`ShellSheet.webLogin`);
-/// a Universal Link's `code` is checked at once, as a scan.
+/// Android's `WebLoginSheetContent` over the shared `WebLoginViewModel`, the device connection sheet: approves a
+/// browser's sign-in to the web version or pairs a device with a scanned QR (`WebLoginScanner`, VisionKit), a pasted
+/// pairing link or the code typed from the screen. A device that takes the ITMO session asks for Face ID, Touch ID or
+/// the passcode first (`DeviceUnlock` from Koin, `IosDeviceUnlock`). The router opens it as a shell sheet
+/// (`ShellSheet.webLogin`); a link's `code` is checked at once, as a scan.
 struct WebLoginSheet: View {
     @State private var model: ObservableViewModel<WebLoginViewModel, WebLoginUiState>
     @State private var code = ""
     @State private var scanning = false
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppRouter.self) private var router
     private let linkCode: String?
 
     init(code: String? = nil) {
@@ -26,9 +28,11 @@ struct WebLoginSheet: View {
                     actions: WebLoginActions(
                         scan: scan,
                         submit: model.viewModel.submit,
-                        approve: model.viewModel.approve,
+                        approve: approve,
+                        scope: { scope, checked in model.viewModel.onScopeChanged(scope: scope, checked: checked) },
                         editCode: model.viewModel.editCode,
                         retry: model.viewModel.retry,
+                        openConnections: { router.open(AppRoutes.Connections.shared) },
                         close: { dismiss() }
                     )
                 )
@@ -79,6 +83,18 @@ struct WebLoginSheet: View {
         .accessibilityIdentifier("shell.sheet.webLogin")
     }
 
+    /// The screen lock of the app's Koin graph; the fixture build's passes at once.
+    private func approve() {
+        if WebLoginFixture.isOn {
+            model.viewModel.approve(unlock: WebLoginIosFixture.shared.unlock)
+            return
+        }
+        guard let unlock = IosKoin.shared.get(protocol: DeviceUnlock.self) as? DeviceUnlock else {
+            preconditionFailure("Koin resolved no DeviceUnlock")
+        }
+        model.viewModel.approve(unlock: unlock)
+    }
+
     /// The fixture build hands over the fixture link: the simulator has no camera.
     private func scan() {
         if WebLoginFixture.isOn {
@@ -108,8 +124,10 @@ struct WebLoginActions {
     var scan: () -> Void = {}
     var submit: () -> Void = {}
     var approve: () -> Void = {}
+    var scope: (AgentScope, Bool) -> Void = { _, _ in }
     var editCode: () -> Void = {}
     var retry: () -> Void = {}
+    var openConnections: () -> Void = {}
     var close: () -> Void = {}
 }
 
@@ -120,6 +138,9 @@ extension WebLoginUiState {
         case .input: "input"
         case .checking: "checking"
         case .confirm: "confirm"
+        case .unlocking: "unlocking"
+        case .rotating: "rotating"
+        case .sending: "sending"
         case .done: "done"
         case .error: "error"
         }
@@ -130,7 +151,7 @@ extension WebLoginUiState {
         switch onEnum(of: self) {
         case let .input(input): input.code
         case let .checking(checking): checking.code
-        case .confirm, .done, .error: nil
+        case .confirm, .unlocking, .rotating, .sending, .done, .error: nil
         }
     }
 }
@@ -150,12 +171,18 @@ struct WebLoginContent: View {
             case .checking:
                 codeInput(error: nil, checking: true, canSubmit: false)
             case let .confirm(confirm):
-                WebLoginConfirm(confirm: confirm, approve: actions.approve, cancel: actions.editCode)
-            case .done:
+                WebLoginConfirm(confirm: confirm, actions: actions)
+            case .unlocking:
+                WebLoginProgress(text: AppStrings.string("pair_unlocking"))
+            case .rotating:
+                WebLoginProgress(text: AppStrings.string("pair_rotating"))
+            case .sending:
+                WebLoginProgress(text: AppStrings.string("pair_sending"))
+            case let .done(done):
                 WebLoginResult(
                     symbol: .checkCircle,
                     color: ItmoColor.primary,
-                    text: AppStrings.string("web_login_done"),
+                    text: done.text.resolved,
                     action: AppStrings.string("common_close"),
                     perform: actions.close
                 )
@@ -228,55 +255,77 @@ struct WebLoginContent: View {
             .allowsHitTesting(!checking)
             .accessibilityLabel(Text(verbatim: AppStrings.string("web_login_continue")))
             .accessibilityIdentifier("webLogin.continue")
+            Button(action: actions.openConnections) {
+                Text(verbatim: AppStrings.string("connections_title"))
+                    .font(.itmo(.labelLarge))
+                    .frame(maxWidth: .infinity, minHeight: ItmoMetrics.touchTarget)
+            }
+            .itmoTint()
+            .disabled(checking)
+            .accessibilityIdentifier("webLogin.connections")
         }
     }
 }
 
-/// The browser that asked, `web_login_own_only`, then `web_login_approve` or `common_cancel`.
+/// The device card (kind, own name, browser or version, time), what it gets, an agent's permissions, the
+/// shared-session notice and the verification code, the warning, then the approval and `common_cancel`.
 private struct WebLoginConfirm: View {
     let confirm: WebLoginUiStateConfirm
-    let approve: () -> Void
-    let cancel: () -> Void
+    let actions: WebLoginActions
 
     @ScaledMetric(relativeTo: .title3) private var symbolSize: CGFloat = 24
 
     var body: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.group) {
-            VStack(alignment: .leading, spacing: ItmoSpacing.compact) {
-                HStack(spacing: ItmoSpacing.group) {
-                    AppSymbol.computer.image
-                        .font(.system(size: symbolSize))
-                        .foregroundStyle(ItmoColor.onSurfaceVariant)
-                        .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: ItmoSpacing.related) {
-                        Text(verbatim: confirm.browser.resolved)
-                            .font(.itmo(.titleMedium))
-                            .foregroundStyle(ItmoColor.onSurface)
-                            .accessibilityIdentifier("webLogin.browser")
-                        Text(verbatim: confirm.requestedAt.resolved)
-                            .font(.itmo(.bodyMedium))
-                            .foregroundStyle(ItmoColor.onSurfaceVariant)
+            card
+            Text(verbatim: confirm.access.resolved)
+                .font(.itmo(.bodyMedium))
+                .foregroundStyle(ItmoColor.onSurface)
+            if !confirm.scopes.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(confirm.scopes, id: \.scope) { choice in
+                        Toggle(isOn: Binding(
+                            get: { choice.checked },
+                            set: { actions.scope(choice.scope, $0) }
+                        )) {
+                            Text(verbatim: choice.title.resolved).font(.itmo(.bodyLarge))
+                        }
+                        .disabled(!confirm.scopesEditable || confirm.approving)
+                        .frame(minHeight: ItmoMetrics.touchTarget)
+                        .itmoTint()
+                        .accessibilityIdentifier("webLogin.scope.\(choice.scope.name.lowercased())")
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(ItmoSpacing.cardPadding)
-                .background(
-                    RoundedRectangle(cornerRadius: ItmoShapes.cardContent)
-                        .fill(ItmoColor.surfaceContainerHighest)
-                )
-                .accessibilityElement(children: .combine)
-                Text(verbatim: AppStrings.string("web_login_own_only"))
+            }
+            if confirm.sharedSession {
+                Text(verbatim: AppStrings.string("pair_shared_session"))
                     .font(.itmo(.bodySmall))
                     .foregroundStyle(ItmoColor.onSurfaceVariant)
             }
+            if let verification = confirm.verification {
+                Text(verbatim: verification.resolved)
+                    .font(.itmo(.titleSmall))
+                    .foregroundStyle(ItmoColor.onSecondaryContainer)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(ItmoSpacing.cardPadding)
+                    .background(
+                        RoundedRectangle(cornerRadius: ItmoShapes.cardContent)
+                            .fill(ItmoColor.secondaryContainer)
+                    )
+                    .accessibilityIdentifier("webLogin.verification")
+            }
+            Text(verbatim: confirm.warning.resolved)
+                .font(.itmo(.bodySmall))
+                .foregroundStyle(ItmoColor.onSurfaceVariant)
             VStack(spacing: ItmoSpacing.related) {
                 ItmoProgressButton(
-                    title: AppStrings.string("web_login_approve"),
+                    title: confirm.approve.resolved,
                     isInProgress: confirm.approving,
-                    action: approve
+                    action: actions.approve
                 )
+                .disabled(!confirm.canApprove && !confirm.approving)
                 .accessibilityIdentifier("webLogin.approve")
-                Button(action: cancel) {
+                Button(action: actions.editCode) {
                     Text(verbatim: AppStrings.string("common_cancel"))
                         .font(.itmo(.labelLarge))
                         .frame(maxWidth: .infinity, minHeight: ItmoMetrics.touchTarget)
@@ -286,6 +335,59 @@ private struct WebLoginConfirm: View {
                 .accessibilityIdentifier("webLogin.cancel")
             }
         }
+    }
+
+    private var card: some View {
+        HStack(spacing: ItmoSpacing.group) {
+            (confirm.kind == .webSession ? AppSymbol.computer : AppSymbol.codeBlocks).image
+                .font(.system(size: symbolSize))
+                .foregroundStyle(ItmoColor.onSurfaceVariant)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: ItmoSpacing.related) {
+                Text(verbatim: confirm.title.resolved)
+                    .font(.itmo(.titleMedium))
+                    .foregroundStyle(ItmoColor.onSurface)
+                    .accessibilityIdentifier("webLogin.browser")
+                ForEach(lines, id: \.self) { line in
+                    Text(verbatim: line)
+                        .font(.itmo(.bodyMedium))
+                        .foregroundStyle(ItmoColor.onSurfaceVariant)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(ItmoSpacing.cardPadding)
+        .background(
+            RoundedRectangle(cornerRadius: ItmoShapes.cardContent)
+                .fill(ItmoColor.surfaceContainerHighest)
+        )
+        .accessibilityElement(children: .combine)
+    }
+
+    /// The device's own name, its browser or version, and when it asked.
+    private var lines: [String] {
+        [confirm.name, confirm.client, confirm.requestedAt].compactMap { $0?.resolved }
+    }
+}
+
+/// The screen lock, the hand-off or the upload: a spinner and what happens.
+private struct WebLoginProgress: View {
+    let text: String
+
+    var body: some View {
+        VStack(spacing: ItmoSpacing.group) {
+            ProgressView()
+                .controlSize(.large)
+                .itmoTint()
+            Text(verbatim: text)
+                .font(.itmo(.titleMedium))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, ItmoSpacing.section)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.updatesFrequently)
+        .accessibilityIdentifier("webLogin.progress")
     }
 }
 

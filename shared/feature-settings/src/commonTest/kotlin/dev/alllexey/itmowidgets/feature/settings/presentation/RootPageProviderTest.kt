@@ -36,7 +36,7 @@ class RootPageProviderTest {
 
             assertEquals(SettingsPage.ROOT, fixture.viewModel.uiState.value.page)
             assertEquals(3, fixture.viewModel.uiState.value.sections.size)
-            assertEquals(13, fixture.viewModel.allItems().size)
+            assertEquals(14, fixture.viewModel.allItems().size)
             assertEquals(
                 listOf(SettingRowId.WIDGETS_FOLLOW_THEME),
                 fixture.viewModel.allItems().filterIsInstance<SettingItem.Toggle>().map { it.id }

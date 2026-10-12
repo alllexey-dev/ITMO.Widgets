@@ -151,6 +151,12 @@ object AppRoutes {
         override fun toString(): String = "WebLogin(code=${if (code == null) "null" else "redacted"})"
     }
 
+    /** «Подключённые устройства»: web sessions and agents with access; refused in the demo session. */
+    @Serializable
+    data object Connections : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
     /** A form: it asks before a draft is discarded. */
     @Serializable
     data class ReviewEditor(val args: TeacherReviewArgs) : AppRoute {
@@ -241,6 +247,7 @@ object AppRoutes {
         subclass(FriendSelector::class)
         subclass(SheetScores::class)
         subclass(WebLogin::class)
+        subclass(Connections::class)
         subclass(ReviewEditor::class)
         subclass(SubjectLinks::class)
         subclass(LinkEditor::class)

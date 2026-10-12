@@ -10,7 +10,9 @@ import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileController
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.social.data.push.FriendshipPushHandler
+import dev.alllexey.itmowidgets.feature.sport.data.push.SportAgentBookedPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushHandler
+import dev.alllexey.itmowidgets.feature.weblogin.data.push.DeviceConnectedPushHandler
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -33,5 +35,7 @@ val componentBindingsModule = module {
     singleOf(::FriendshipPushHandler) { named("friendship"); bind<FcmPayloadHandler>() }
     single<FcmPayloadHandler>(named("sport-free")) { SportSignPushHandler(QueueKind.FREE, get(), get()) }
     single<FcmPayloadHandler>(named("sport-auto")) { SportSignPushHandler(QueueKind.AUTO, get(), get()) }
+    singleOf(::SportAgentBookedPushHandler) { named("sport-agent"); bind<FcmPayloadHandler>() }
+    singleOf(::DeviceConnectedPushHandler) { named("device-connected"); bind<FcmPayloadHandler>() }
     single<FcmPayloadDispatcher> { FcmPayloadDispatcher(getAll(), get()) }
 }

@@ -8,6 +8,7 @@ struct PushMessage {
     let recipientIsu: Int?
 
     static let friendship = "FRIENDSHIP_EVENT_PAYLOAD"
+    static let agentBooked = "SPORT_AGENT_BOOKED_PAYLOAD"
 
     init?(userInfo: [AnyHashable: Any]) {
         guard let text = userInfo["data"] as? String,

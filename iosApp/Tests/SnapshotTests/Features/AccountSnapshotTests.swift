@@ -39,18 +39,56 @@ final class AccountSnapshotTests: XCTestCase {
 
     func testWebLoginApproving() async {
         let confirm = await fixtureConfirm()
-        let approving = WebLoginUiStateConfirm(
+        let approving = confirm.doCopy(
             code: confirm.code,
-            preview: confirm.preview,
-            browser: confirm.browser,
+            kind: confirm.kind,
+            title: confirm.title,
+            name: confirm.name,
+            client: confirm.client,
             requestedAt: confirm.requestedAt,
+            access: confirm.access,
+            scopes: confirm.scopes,
+            scopesEditable: confirm.scopesEditable,
+            sharedSession: confirm.sharedSession,
+            verification: confirm.verification,
+            warning: confirm.warning,
+            approve: confirm.approve,
             approving: true
         )
         assertAppearances(of: webLogin(approving), named: "web-login-approving")
     }
 
     func testWebLoginDone() {
-        assertAppearances(of: webLogin(WebLoginUiStateDone.shared), named: "web-login-done")
+        let done = WebLoginUiStateDone(text: UiTextDynamic(value: AppStrings.string("web_login_done")))
+        assertAppearances(of: webLogin(done), named: "web-login-done")
+    }
+
+    // MARK: Device pairing
+
+    func testPairAgentConfirm() async {
+        let confirm = await fixtureConfirm(link: WebLoginIosFixture.shared.PAIR_LINK)
+        assertAppearances(of: webLogin(confirm), named: "pair-agent")
+    }
+
+    func testPairRotating() {
+        assertAppearances(of: webLogin(WebLoginUiStateRotating.shared), named: "pair-rotating")
+    }
+
+    func testPairDone() {
+        let done = WebLoginUiStateDone(text: UiTextDynamic(value: AppStrings.string("pair_done")))
+        assertAppearances(of: webLogin(done), named: "pair-done")
+    }
+
+    // MARK: Connected devices
+
+    func testConnectionsList() async {
+        let state = await fixtureConnections()
+        assertAppearances(of: NavigationStack { ConnectionsList(state: state) }, named: "connections", height: pageHeight)
+    }
+
+    func testConnectionsEmpty() {
+        let state = ConnectionsUiStateContent(rows: [], revoke: nil, revoking: false, message: nil)
+        assertAppearances(of: ConnectionsList(state: state), named: "connections-empty", height: pageHeight)
     }
 
     func testWebLoginError() {
@@ -100,13 +138,11 @@ final class AccountSnapshotTests: XCTestCase {
         WebLoginContent(state: state, code: .constant(code))
     }
 
-    /// The fixture's browser card: Chrome on macOS, requested at 12:04 Moscow time.
-    private func fixtureConfirm() async -> WebLoginUiStateConfirm {
-        guard let time = IosKoin.shared.get(protocol: AcademicTimeProvider.self) as? AcademicTimeProvider else {
-            preconditionFailure("Koin resolved no AcademicTimeProvider")
-        }
-        let model = WebLoginIosFixture.shared.viewModel(time: time)
-        model.onScanned(raw: WebLoginIosFixture.shared.LINK)
+    /// The fixture's card: Chrome on macOS for the sign-in link, the agent «nas» for the pairing link, requested at
+    /// 12:04 Moscow time.
+    private func fixtureConfirm(link: String = WebLoginIosFixture.shared.LINK) async -> WebLoginUiStateConfirm {
+        let model = WebLoginIosFixture.shared.viewModel(time: academicTime())
+        model.onScanned(raw: link)
         let deadline = Date().addingTimeInterval(5)
         while !(model.uiState.value is WebLoginUiStateConfirm), Date() < deadline {
             try? await Task.sleep(for: .milliseconds(10))
@@ -115,5 +151,22 @@ final class AccountSnapshotTests: XCTestCase {
             preconditionFailure("the fixture code was not confirmed")
         }
         return confirm
+    }
+
+    /// The fixture's agent with the shared session and a Chrome session.
+    private func fixtureConnections() async -> any ConnectionsUiState {
+        let model = ConnectionsViewModel(repository: PairingFixtureRepository(), time: academicTime())
+        let deadline = Date().addingTimeInterval(5)
+        while !(model.uiState.value is ConnectionsUiStateContent), Date() < deadline {
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        return model.uiState.value
+    }
+
+    private func academicTime() -> AcademicTimeProvider {
+        guard let time = IosKoin.shared.get(protocol: AcademicTimeProvider.self) as? AcademicTimeProvider else {
+            preconditionFailure("Koin resolved no AcademicTimeProvider")
+        }
+        return time
     }
 }

@@ -35,7 +35,8 @@ class NotificationTapRoutesTest {
 
     @Test
     fun aSportBookingOfOneLessonOpensThatLesson() {
-        for (type in listOf("SPORT_AUTO_SIGN_LESSONS_PAYLOAD", "SPORT_FREE_SIGN_LESSONS_PAYLOAD")) {
+        val types = listOf("SPORT_AUTO_SIGN_LESSONS_PAYLOAD", "SPORT_FREE_SIGN_LESSONS_PAYLOAD", "SPORT_AGENT_BOOKED_PAYLOAD")
+        for (type in types) {
             val data = envelope(type, """{"sportLessons":[{"id":9001,"sectionName":"Synthetic"}]}""")
 
             assertEquals(
@@ -51,6 +52,13 @@ class NotificationTapRoutesTest {
         val data = envelope("SPORT_AUTO_SIGN_LESSONS_PAYLOAD", """{"sportLessons":[{"id":9001},{"id":9002}]}""")
 
         assertEquals(EntryRoute(AppTab.SPORT), NotificationTapRoutes.entryRoute(data))
+    }
+
+    @Test
+    fun aNewConnectionOpensTheConnectedDevices() {
+        val data = envelope("DEVICE_CONNECTED_PAYLOAD", """{"connectionId":"00000000-0000-4000-8000-000000000601"}""")
+
+        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.Connections), NotificationTapRoutes.entryRoute(data))
     }
 
     @Test
@@ -78,6 +86,7 @@ class NotificationTapRoutesTest {
             NotificationDestination.RecordbookSubject(subject),
             NotificationDestination.RecordbookSubject(subjectWithoutJournal),
             NotificationDestination.BarsLogin,
+            NotificationDestination.Connections,
         )
 
         for (destination in destinations) {
@@ -179,6 +188,7 @@ class NotificationTapRoutesTest {
         is NotificationDestination.RecordbookSubject ->
             EntryRoute(AppTab.RECORDBOOK, overlay = AppRoutes.RecordbookSubject(destination.args))
         NotificationDestination.BarsLogin -> EntryRoute(AppTab.RECORDBOOK, activity = ActivityRoute.BARS_LOGIN)
+        NotificationDestination.Connections -> EntryRoute(AppTab.ME, overlay = AppRoutes.Connections)
     }
 
     /** The route of Android's notification intent for [destination] (`AndroidAppNotifier`'s action and extras). */
@@ -191,6 +201,7 @@ class NotificationTapRoutesTest {
         is NotificationDestination.RecordbookSubject ->
             EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_RECORDBOOK_SUBJECT, subject = destination.args)
         NotificationDestination.BarsLogin -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_BARS_LOGIN)
+        NotificationDestination.Connections -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_CONNECTIONS)
     }
 
     private val subject = RecordbookSubjectArgs(11, 1, 3, "2026/2027", 7, "flow", "7")

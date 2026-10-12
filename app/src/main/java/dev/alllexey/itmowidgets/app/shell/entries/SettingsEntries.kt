@@ -165,6 +165,7 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
                     SettingsEvent.ChooseCustomSpoiler -> if (spoiler?.uiState?.value?.busy == false) pickSpoilerImage()
                     SettingsEvent.ResetCustomSpoiler -> spoiler?.resetImage()
                     SettingsEvent.OpenDiagnostics -> navigator.open(AppRoutes.Diagnostics)
+                    SettingsEvent.OpenConnections -> navigator.open(AppRoutes.Connections)
                     // The root gate already switched to the flow; the overlay just has to leave.
                     SettingsEvent.CloseOverlays -> navigator.dismissOverlays()
                     SettingsEvent.OpenBackgroundWorkSettings -> activity?.openBackgroundWorkSettings()

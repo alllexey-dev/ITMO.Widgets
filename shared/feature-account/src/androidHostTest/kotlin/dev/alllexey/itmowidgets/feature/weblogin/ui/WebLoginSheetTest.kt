@@ -20,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -34,6 +35,17 @@ import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.weblogin.domain.AgentScope
+import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlockResult
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingHandoff
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingKind
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingRequest
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingResult
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingSealer
+import dev.alllexey.itmowidgets.feature.weblogin.presentation.FakePairingRepository
+import dev.alllexey.itmowidgets.feature.weblogin.presentation.FakeSession
+import dev.alllexey.itmowidgets.feature.weblogin.presentation.RecordingHpke
+import dev.alllexey.itmowidgets.feature.weblogin.presentation.SignedIn
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
@@ -42,6 +54,8 @@ import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CompletableDeferred
 
@@ -56,8 +70,11 @@ import kotlinx.coroutines.CompletableDeferred
 class WebLoginSheetTest {
 
     private val repository = SyntheticRepository()
-    private val model = WebLoginViewModel(SavedStateHandle(), repository, FixedAcademicTime())
+    private val pairing = FakePairingRepository()
+    private val handoff = PairingHandoff(FakeSession(), PairingSealer(RecordingHpke()), SignedIn, Clock.System)
+    private val model = WebLoginViewModel(SavedStateHandle(), repository, pairing, handoff, FixedAcademicTime())
     private var closed = 0
+    private var connections = 0
 
     @Test
     fun aTypedCodeIsCheckedThenApprovedThenTheSheetCloses() = runComposeUiTest {
@@ -169,7 +186,7 @@ class WebLoginSheetTest {
         tagged(WebLoginSheetTestTags.CODE).performTextInput("ABCD")
         tagged(WebLoginSheetTestTags.SCAN).performClick()
         waitForIdle()
-        assertCodeError("Это не QR для входа на сайт")
+        assertCodeError("Это не QR для подключения")
         assertField("ABCD")
 
         scanned = "https://dev.widgets.alllexey.dev/app/login?code=abcd2345"
@@ -202,7 +219,38 @@ class WebLoginSheetTest {
         repository.gate = null
         gate.complete(Unit)
         waitForIdle()
-        assertEquals(WebLoginUiState.Done, model.uiState.value)
+        assertEquals(WebLoginSamples.done, model.uiState.value)
+    }
+
+    @Test
+    fun aPastedPairingLinkShowsTheAgentAndConnectsWithTheChosenPermissions() = runComposeUiTest {
+        pairing.opens[CODE] = PairingResult.Success(AGENT)
+        setContent { Sheet() }
+
+        tagged(WebLoginSheetTestTags.CODE).performTextInput(PAIR_LINK)
+        tagged(WebLoginSheetTestTags.CONTINUE).performClick()
+        waitForIdle()
+        onNodeWithText("Свой клиент (сервер)", useUnmergedTree = true).assertExists()
+        onNodeWithText("«nas» — название задаёт само устройство", useUnmergedTree = true).assertExists()
+        tagged(WebLoginSheetTestTags.VERIFICATION).assertExists()
+        assertTouchTargets()
+        assertNoTextOverflow()
+
+        tagged(WebLoginSheetTestTags.scope(AgentScope.SCHEDULE_WRITE)).performScrollTo().performClick()
+        tagged(WebLoginSheetTestTags.APPROVE).performScrollTo().performClick()
+        waitForIdle()
+
+        onNodeWithText("Готово — проверьте экран устройства", useUnmergedTree = true).assertExists()
+        assertEquals("approve:${AGENT.challengeId}:[SPORT, FRIENDS_READ]", pairing.calls.last())
+    }
+
+    @Test
+    fun theConnectedDevicesOpenFromTheField() = runComposeUiTest {
+        setContent { Sheet() }
+
+        tagged(WebLoginSheetTestTags.CONNECTIONS).performClick()
+
+        assertEquals(1, connections)
     }
 
     @Test
@@ -233,7 +281,14 @@ class WebLoginSheetTest {
 
     @Composable
     private fun Sheet(onScan: () -> Unit = {}) = Narrow {
-        WebLoginSheetRoute(onScan = onScan, onClose = { closed++ }, Modifier.fillMaxWidth(), viewModel = model)
+        WebLoginSheetRoute(
+            onScan = onScan,
+            onOpenConnections = { connections++ },
+            onClose = { closed++ },
+            unlock = { DeviceUnlockResult.UNLOCKED },
+            modifier = Modifier.fillMaxWidth(),
+            viewModel = model,
+        )
     }
 
     @Composable
@@ -269,6 +324,17 @@ class WebLoginSheetTest {
 
     private companion object {
         const val CODE = WebLoginSamples.CODE
+        const val PAIR_LINK = "https://widgets.alllexey.dev/pair#v1.ABCD2345." +
+            "QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
+        val AGENT = PairingRequest(
+            challengeId = Uuid.parse("0190f1a2-3b4c-7d5e-8f60-718293a4b5c6"),
+            kind = PairingKind.AGENT,
+            name = "nas",
+            version = "0.1.0",
+            userAgent = null,
+            scopes = emptySet(),
+            createdAt = Instant.parse("2026-09-24T09:04:30Z"),
+        )
         const val NARROW_FONT_SCALE = 1.3f
         val NARROW_WIDTH = 320.dp
 
@@ -276,8 +342,9 @@ class WebLoginSheetTest {
         val SHEET_HEIGHT = 802.dp
 
         val States = with(WebLoginSamples) {
-            listOf(input, invalid, notFound, scannerUnavailable, checking, confirm, longAgent, approving,
-                WebLoginUiState.Done, network, expired)
+            listOf(input, invalid, notFound, scannerUnavailable, checking, confirm, longAgent, approving, done,
+                network, expired, agent, agentLongName, agentSession, WebLoginUiState.Unlocking,
+                WebLoginUiState.Rotating, WebLoginUiState.Sending, paired, mismatch)
         }
     }
 }

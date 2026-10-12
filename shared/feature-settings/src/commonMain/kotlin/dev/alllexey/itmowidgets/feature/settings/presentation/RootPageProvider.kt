@@ -27,6 +27,7 @@ class RootPageProvider(
 
     override val rows = setOf(
         SettingRowId.NOTIFICATIONS,
+        SettingRowId.CONNECTIONS,
         SettingRowId.ACCENT_COLOR,
         SettingRowId.ACCENT_CUSTOM,
         SettingRowId.THEME_PALETTE,
@@ -58,6 +59,11 @@ class RootPageProvider(
                     )
                 ),
                 SettingRows.navigation(SettingsPage.PRIVACY),
+                SettingItem.Action(
+                    id = SettingRowId.CONNECTIONS,
+                    title = UiText.Res(SettingsStrings.settings_connections_title),
+                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                ),
                 SettingItem.Action(
                     id = SettingRowId.NOTIFICATIONS,
                     title = UiText.Res(SettingsStrings.settings_notifications_title),
@@ -149,7 +155,11 @@ class RootPageProvider(
     )
 
     override fun onAction(scope: SettingsPageScope, id: SettingRowId) {
-        if (id == SettingRowId.NOTIFICATIONS) scope.send(SettingsEvent.OpenNotificationSettings)
+        when (id) {
+            SettingRowId.NOTIFICATIONS -> scope.send(SettingsEvent.OpenNotificationSettings)
+            SettingRowId.CONNECTIONS -> scope.send(SettingsEvent.OpenConnections)
+            else -> Unit
+        }
     }
 
     override fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) {

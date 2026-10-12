@@ -25,5 +25,5 @@
     <string name="me_telegram">Telegram</string>
     <string name="me_telegram_accessibility">Открыть канал @itmowidgets в Telegram</string>
     <string name="me_group_format">%1$s • %2$d курс • %3$s</string>
-    <string name="me_web_login_title">Вход на сайт</string>
+    <string name="me_web_login_title">Подключить устройство</string>
 </resources>

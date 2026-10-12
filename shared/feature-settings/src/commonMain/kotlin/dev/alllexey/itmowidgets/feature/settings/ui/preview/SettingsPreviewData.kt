@@ -147,6 +147,11 @@ internal object SettingsPreviewData {
                 navigation(SettingsPage.SERVICES, value = res(Res.string.settings_services_enabled)),
                 navigation(SettingsPage.PRIVACY),
                 SettingItem.Action(
+                    id = SettingRowId.CONNECTIONS,
+                    title = UiText.Res(SettingsStrings.settings_connections_title),
+                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                ),
+                SettingItem.Action(
                     id = SettingRowId.NOTIFICATIONS,
                     title = res(Res.string.settings_notifications_title),
                     value = res(Res.string.settings_notifications_allowed),
