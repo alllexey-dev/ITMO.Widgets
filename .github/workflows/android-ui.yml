@@ -1,17 +1,17 @@
 # The instrumented tests on emulators: `verify.sh ui all` in 6 shards on a Pixel-geometry emulator without a cutout,
 # and `verify.sh ui ShellSuite` (the shell, its insets and the tab swipe) in 2 shards on the same emulator with the
-# tall cutout overlay, so the shell is also tested on a cutout. Every PR into `master` that touches what the app is
-# built from, every push to `master`, and on demand.
-# `android-ui` is the aggregate job and the check to require. It fails when the path filter failed, a shard failed,
-# is missing or ran no test, and scripts/ui-report.py fails a shard on any failed run of any test, not only on the
-# last run Gradle keeps. The path filter is a job, never on the trigger, so the check always reports (see ios.yml).
+# tall cutout overlay, so the shell is also tested on a cutout. Nightly on `master`, on demand, and on PRs labelled
+# `full-ci`; never on other PRs, so merging never waits for an emulator. A failed nightly opens or updates an issue.
+# `android-ui` is the aggregate job: it fails when a shard failed, is missing or ran no test, and
+# scripts/ui-report.py fails a shard on any failed run of any test, not only on the last run Gradle keeps.
 name: android-ui
 
 on:
+  schedule:
+    - cron: "13 2 * * *"
   pull_request:
     branches: [master]
-  push:
-    branches: [master]
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
     inputs:
       ref:
@@ -19,9 +19,12 @@ on:
         required: false
         default: ""
 
-# Per ref; only PR runs are cancelled, so every pushed `master` SHA keeps its own result.
+# Per ref; a newer push to a labelled PR cancels its older run. A label event that starts no run gets a group of its
+# own, so it cancels nothing.
 concurrency:
-  group: android-ui-${{ github.ref }}-${{ inputs.ref }}
+  group: >-
+    android-ui-${{ github.ref }}-${{ inputs.ref }}-${{ github.event_name == 'pull_request'
+    && !contains(github.event.pull_request.labels.*.name, 'full-ci') && github.run_id || 'run' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -31,44 +34,8 @@ env:
   CI: "true"
 
 jobs:
-  # PR: the merge commit against its first parent (the base head). Push and manual runs always test.
-  changes:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      run: ${{ steps.paths.outputs.run }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          fetch-depth: 2
-
-      - name: App inputs changed
-        id: paths
-        env:
-          EVENT: ${{ github.event_name }}
-        run: |
-          if [ "$EVENT" != pull_request ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          run=false
-          while IFS= read -r path; do
-            case "$path" in
-              app/* | shared/* | build-logic/* | gradle/* | *.gradle.kts | gradle.properties | gradlew | \
-                scripts/verify.sh | scripts/ui-report.py | scripts/ci-emulator.sh | \
-                .github/workflows/android-ui.yml | .github/actions/*)
-                echo "App input changed: $path"
-                run=true
-                ;;
-            esac
-          done < <(git diff --name-only HEAD^1 HEAD)
-          echo "run=$run" >> "$GITHUB_OUTPUT"
-          [ "$run" = true ] || echo "No app input changed: no instrumented run needed."
-
   ui:
-    needs: changes
-    if: needs.changes.outputs.run == 'true'
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci')
     name: ui ${{ matrix.config }} ${{ matrix.shard }}/${{ matrix.shards }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -163,40 +130,26 @@ jobs:
         with:
           build-cache: ui
 
-  # The check: fails unless the path filter succeeded; skipped shards (no app input changed) pass; otherwise every
-  # shard must have passed, uploaded its report and run at least one test.
+  # Every shard must have passed, uploaded its report and run at least one test.
   android-ui:
-    needs: [changes, ui]
-    if: ${{ !cancelled() }}
+    needs: ui
+    if: ${{ !cancelled() && needs.ui.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Path filter succeeded
-        env:
-          CHANGES: ${{ needs.changes.result }}
-        run: '[ "$CHANGES" = success ] || { echo "::error::the path filter job ended $CHANGES"; exit 1; }'
-
-      - name: Nothing to test
-        if: needs.changes.outputs.run != 'true'
-        run: echo "No app input changed; no instrumented run." | tee -a "$GITHUB_STEP_SUMMARY"
-
       - name: Download the shard reports
-        if: needs.changes.outputs.run == 'true'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: ui-*
           path: shards
 
       - name: Every shard passed
-        if: needs.changes.outputs.run == 'true'
         env:
-          CHANGES: ${{ needs.changes.result }}
           UI: ${{ needs.ui.result }}
           EXPECTED: plain-0 plain-1 plain-2 plain-3 plain-4 plain-5 cutout-0 cutout-1
         run: |
           ok=0
           echo "## android-ui" >> "$GITHUB_STEP_SUMMARY"
-          [ "$CHANGES" = success ] || { echo "::error::the path filter job ended $CHANGES"; ok=1; }
           [ "$UI" = success ] || { echo "::error::the shard jobs ended $UI"; ok=1; }
           for id in $EXPECTED; do
             # The newest attempt's report: a shard that was not rerun keeps its earlier one.
@@ -213,3 +166,22 @@ jobs:
             grep '^ui-report: *FAIL ' "$md" | sed "s/^/::error::$id /" || true
           done
           exit "$ok"
+
+  # A failed nightly opens or updates an issue; the next passing one closes it.
+  nightly-issue:
+    needs: [android-ui]
+    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/actions
+
+      - uses: ./.github/actions/nightly-issue
+        with:
+          failed: ${{ contains(needs.*.result, 'failure') }}

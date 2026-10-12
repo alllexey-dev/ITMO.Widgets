@@ -1,5 +1,5 @@
-# Scheduled iOS jobs on `master`; never a required check. Kept apart from ios.yml so push and PR runs never
-# carry skipped check runs. Same toolchain steps as ios.yml (pins asserted, no fallback); no secrets, no signing.
+# Scheduled iOS jobs on `master`. Same toolchain steps as ios.yml (pins asserted, no fallback); no secrets, no
+# signing. A failed nightly opens or updates an issue.
 name: ios-nightly
 
 on:
@@ -135,3 +135,22 @@ jobs:
             shared/*/build/test-results/
           if-no-files-found: ignore
           retention-days: 14
+
+  # A failed nightly opens or updates an issue; the next passing one closes it.
+  nightly-issue:
+    needs: [ios-nightly]
+    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/actions
+
+      - uses: ./.github/actions/nightly-issue
+        with:
+          failed: ${{ contains(needs.*.result, 'failure') }}

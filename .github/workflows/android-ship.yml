@@ -1,14 +1,14 @@
-# The release checks that need no release key, on every push to `master` and on demand: scripts/ship-check.sh
-# stages 1 version and 3 release (unsigned release builds, check-play-policy.sh), 5 upgrade (v2.2 githubDebug, the
-# 2.2 data, `adb install -r` of the head) and 6 shrunk (both minifiedSmoke builds started on the device), each group
-# on a runner of its own; the device stages run on that job's emulator. Stage 2 is android-ci, stage 4 android-ui.
-# `android-ship` is the aggregate job; it merges the parts into one summary.md and uploads it as the artifact
-# `ship-<sha7>`. A PR that edits this workflow or the scripts it runs runs it once.
+# The release checks that need no release key, nightly on `master`, on demand and on PRs labelled `full-ci`:
+# scripts/ship-check.sh stages 1 version and 3 release (unsigned release builds, check-play-policy.sh), 5 upgrade
+# (v2.2 githubDebug, the 2.2 data, `adb install -r` of the head) and 6 shrunk (both minifiedSmoke builds started on
+# the device), each group on a runner of its own; the device stages run on that job's emulator. Stage 2 is
+# android-ci, stage 4 android-ui. `android-ship` is the aggregate job; it merges the parts into one summary.md and
+# uploads it as the artifact `ship-<sha7>`. A failed nightly opens or updates an issue.
 name: android-ship
 
 on:
-  push:
-    branches: [master]
+  schedule:
+    - cron: "43 2 * * *"
   workflow_dispatch:
     inputs:
       ref:
@@ -17,14 +17,13 @@ on:
         default: ""
   pull_request:
     branches: [master]
-    paths:
-      - .github/workflows/android-ship.yml
-      - .github/actions/**
-      - scripts/ship-check.sh
-      - scripts/ci-emulator.sh
+    types: [opened, synchronize, reopened, labeled]
 
+# As android-ui.yml: a PR run without the label gets a group of its own and cancels nothing.
 concurrency:
-  group: android-ship-${{ github.ref }}-${{ inputs.ref }}
+  group: >-
+    android-ship-${{ github.ref }}-${{ inputs.ref }}-${{ github.event_name == 'pull_request'
+    && !contains(github.event.pull_request.labels.*.name, 'full-ci') && github.run_id || 'run' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -35,6 +34,7 @@ env:
 
 jobs:
   stage:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci')
     name: ship ${{ matrix.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -182,7 +182,7 @@ jobs:
   # missing part or a failed part job fails the check. Uploaded as `ship-<sha7>` with every stage log.
   android-ship:
     needs: stage
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && needs.stage.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -246,3 +246,22 @@ jobs:
           name: ${{ steps.merge.outputs.dir }}
           path: ${{ steps.merge.outputs.dir }}/
           retention-days: 30
+
+  # A failed nightly opens or updates an issue; the next passing one closes it.
+  nightly-issue:
+    needs: [android-ship]
+    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/actions
+
+      - uses: ./.github/actions/nightly-issue
+        with:
+          failed: ${{ contains(needs.*.result, 'failure') }}

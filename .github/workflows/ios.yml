@@ -1,19 +1,24 @@
-# Every PR into and every push to `master`: scripts/ios/test.sh --ci on a GitHub macOS runner.
-# `ios-check` is the check to require; renaming the job renames the check.
-# The path filter is a step inside the job, never on the trigger: a path-filtered required check would never
-# report and would block the merge. Scheduled jobs go to ios-nightly.yml (a skipped job still leaves a check run).
+# scripts/ios/test.sh --ci on a GitHub macOS runner, gated by scripts/ci-plan.sh on a Linux runner:
+# - PR: when something only the iOS build reads changed (iosApp/, scripts/ios/, the iOS source sets, the build
+#   files), or with the label `full-ci`. A commonMain change alone is covered by android-ci's verifyIosKlibs.
+# - push to `master`: also when any shared/ module changed, so a Kotlin API change that breaks Swift shows up there.
+# - manual runs: always. ios-nightly.yml runs the Kotlin/Native tests and the UI tests every night.
 name: ios
 
 on:
   pull_request:
     branches: [master]
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches: [master]
   workflow_dispatch:
 
-# Per ref; only PR runs are cancelled, so every pushed `master` SHA keeps its own result.
+# Per ref; a newer push to a PR cancels its older run, every pushed `master` SHA keeps its own result. Adding any
+# label other than `full-ci` starts a run that does nothing, in a group of its own so it cancels nothing.
 concurrency:
-  group: ios-${{ github.ref }}
+  group: >-
+    ios-${{ github.ref }}-${{ github.event.action == 'labeled' && github.event.label.name != 'full-ci'
+    && github.run_id || 'run' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -26,23 +31,26 @@ env:
   XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
 
 jobs:
-  ios-check:
-    # The image carrying the Xcode pinned in scripts/ios/env.sh (27.0); arm64, 3 vCPU, 7 GB.
-    runs-on: xcode-27
-    timeout-minutes: 90
+  # PR: the merge commit against its first parent (the base head). Push: the pushed range; a new branch or a lost
+  # `before` builds.
+  plan:
+    if: github.event.action != 'labeled' || github.event.label.name == 'full-ci'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.plan.outputs.run }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 2
 
-      # Ends the job green when nothing the iOS build reads changed. PR: the merge commit against its first
-      # parent (the base head). Push: the pushed range. A new branch, a lost `before` or a manual run builds.
-      - name: iOS paths changed
-        id: paths
+      - name: scripts/ci-plan.sh
+        id: plan
         env:
           EVENT: ${{ github.event_name }}
           BEFORE: ${{ github.event.before }}
+          LABELLED: ${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}
         run: |
           base=""
           case "$EVENT" in
@@ -54,28 +62,33 @@ jobs:
               fi
               ;;
           esac
-          if [ -z "$base" ]; then
+          if [ -z "$base" ] || [ "$LABELLED" = true ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "No diff base for '$EVENT': building."
+            echo "Manual run, full-ci label or no diff base: building."
             exit 0
           fi
+          plan=$(git diff --name-only "$base" HEAD | scripts/ci-plan.sh)
+          printf '%s\n' "$plan" | grep -E '^(ios|shared)='
           run=false
-          while IFS= read -r path; do
-            case "$path" in
-              iosApp/* | shared/* | scripts/ios/* | gradle/* | build-logic/* | *.gradle.kts | \
-                gradle.properties | app/src/main/assets/* | .github/workflows/ios*.yml)
-                echo "iOS input changed: $path"
-                run=true
-                ;;
-            esac
-          done < <(git diff --name-only "$base" HEAD)
+          printf '%s\n' "$plan" | grep -qx ios=true && run=true
+          [ "$EVENT" != push ] || ! printf '%s\n' "$plan" | grep -qx shared=true || run=true
           echo "run=$run" >> "$GITHUB_OUTPUT"
           [ "$run" = true ] || echo "No iOS input changed since ${base:0:7}: nothing to build."
+
+  ios-check:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
+    # The image carrying the Xcode pinned in scripts/ios/env.sh (27.0); arm64, 3 vCPU, 7 GB.
+    runs-on: xcode-27
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # CI tests exactly the Xcode pinned in scripts/ios/env.sh: if the image drops it, the job fails until the pin
       # moves (locally env.sh only warns about another version).
       - name: Select the pinned Xcode
-        if: steps.paths.outputs.run == 'true'
         run: |
           version=$(sed -n 's/^: "\${ITMO_XCODE_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
           app="/Applications/Xcode_$version.app"
@@ -88,7 +101,6 @@ jobs:
           echo "DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
 
       - name: Install XcodeGen
-        if: steps.paths.outputs.run == 'true'
         run: |
           pinned=$(sed -n 's/^: "\${ITMO_XCODEGEN_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
           if [ "$pinned" != "$XCODEGEN_VERSION" ]; then
@@ -104,7 +116,6 @@ jobs:
 
       # The toolchain the job runs on, before the long steps; a pin mismatch fails here.
       - name: Toolchain pins
-        if: steps.paths.outputs.run == 'true'
         run: |
           source scripts/ios/env.sh 2> "$RUNNER_TEMP/env.err"
           cat "$RUNNER_TEMP/env.err"
@@ -116,21 +127,18 @@ jobs:
       # The JDK gradle/gradle-daemon-jvm.properties asks for (JetBrains 21), installed up front so the daemon
       # never auto-provisions it from api.foojay.io inside xcodebuild.
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        if: steps.paths.outputs.run == 'true'
         with:
           distribution: jetbrains
           java-version: 21
 
       # Basic (MIT) cache provider; only `master` writes the cache, everything else reads it.
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-        if: steps.paths.outputs.run == 'true'
         with:
           cache-provider: basic
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
 
       # Gradle uses only the JDK above: a criteria mismatch fails loudly instead of downloading a toolchain.
       - name: Gradle toolchain without auto-download
-        if: steps.paths.outputs.run == 'true'
         run: |
           mkdir -p "$GRADLE_USER_HOME"
           {
@@ -142,12 +150,10 @@ jobs:
       # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version and runner architecture; only `master` writes.
       - name: Kotlin/Native version
         id: kotlin-native
-        if: steps.paths.outputs.run == 'true'
         run: echo "version=$(sed -n 's/^kotlin = "\(.*\)"$/\1/p' gradle/libs.versions.toml)" >> "$GITHUB_OUTPUT"
 
       - name: Restore ~/.konan
         id: konan-cache
-        if: steps.paths.outputs.run == 'true'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.konan
@@ -157,7 +163,6 @@ jobs:
       # them) before xcodebuild, with retries: on a Gradle cache miss a plugin portal hiccup costs a retry, not
       # the job. The daemon it starts is reused by the framework build inside xcodebuild.
       - name: Resolve Gradle plugins
-        if: steps.paths.outputs.run == 'true'
         run: |
           for attempt in 1 2 3; do
             ./gradlew --quiet help && exit 0
@@ -169,7 +174,6 @@ jobs:
       # The runner is below the local K/N estimate, so Gradle runs one worker (no parallel K/N) and a sampler
       # records the peak of used memory (active + wired + compressed) every 5 s. No secrets, no signing.
       - name: test.sh --ci
-        if: steps.paths.outputs.run == 'true'
         env:
           CI: "true"
           TEST_RUNNER_SNAPSHOT_ARTIFACTS: ${{ github.workspace }}/iosApp/build/snapshot-artifacts
@@ -201,7 +205,7 @@ jobs:
 
       - name: Save ~/.konan
         if: >-
-          steps.paths.outputs.run == 'true' && github.ref == 'refs/heads/master' &&
+          github.ref == 'refs/heads/master' &&
           steps.konan-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -209,7 +213,7 @@ jobs:
           key: ${{ steps.konan-cache.outputs.cache-primary-key }}
 
       - name: Upload the result bundle and snapshot diffs
-        if: failure() && steps.paths.outputs.run == 'true'
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ios-check-results
