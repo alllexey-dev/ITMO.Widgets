@@ -7,19 +7,15 @@ import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreview
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
-/**
- * One capture: a preview in one appearance, its baseline file and its window; with a [variant], the M3E candidate it
- * renders in instead of being compared.
- */
+/** One capture: a preview in one appearance, its baseline file and its window. */
 class PreviewCase(
     val baseName: String,
     val appearance: PreviewAppearance,
     val preview: ComposablePreview<AndroidPreviewInfo>,
     val size: CaptureSize,
-    val variant: String? = null,
 ) {
-    /** The test name: the baseline file name without the extension, then `@<variant>` for a candidate render. */
-    val name: String get() = "${baseName}_${appearance.name}" + variant?.let { "@$it" }.orEmpty()
+    /** The test name: the baseline file name without the extension. */
+    val name: String get() = "${baseName}_${appearance.name}"
 
     val fileName: String get() = BaselineDirectory.fileName(baseName, appearance)
 
@@ -53,22 +49,12 @@ class PreviewSuite private constructor(testClass: Class<*>) {
         }
         .toSortedMap()
 
-    /**
-     * Every preview in its appearances ([BaselineDirectory.appearances]), in a fixed order; with [ShotsRun.variants],
-     * every preview in light and dark once per candidate instead.
-     */
+    /** Every preview in its appearances ([BaselineDirectory.appearances]), in a fixed order. */
     val cases: List<PreviewCase> = previews.flatMap { (base, preview) ->
         val window = size.forPreview(preview.previewInfo)
-        val variants = ShotsRun.variants
-        if (variants.isEmpty()) {
-            val full = settings?.allAppearances == true || ShotsRun.fullMatrix
-            val ios = settings?.iosAppearances == true || ShotsRun.iosMatrix
-            directory.appearances(base, full, ios).map { PreviewCase(base, it, preview, window) }
-        } else {
-            variants.flatMap { variant ->
-                PreviewAppearance.Default.map { PreviewCase(base, it, preview, window, variant) }
-            }
-        }
+        val full = settings?.allAppearances == true || ShotsRun.fullMatrix
+        val ios = settings?.iosAppearances == true || ShotsRun.iosMatrix
+        directory.appearances(base, full, ios).map { PreviewCase(base, it, preview, window) }
     }
 
     init {
