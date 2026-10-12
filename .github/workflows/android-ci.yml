@@ -1,19 +1,27 @@
-# Every PR into and every push to `master`: the root verifyQuick and verifyFull tasks split into parallel jobs,
-# the screenshot tests and the iOS klibs. `verify-quick` is the aggregate job and the required check; it passes only
-# when every part passed. Only always-running jobs live here: scheduled and advisory jobs go to android-nightly.yml,
-# because a skipped job still leaves a `skipped` check run on the SHA.
+# Every PR into and every push to `master`. scripts/ci-plan.sh decides from the changed paths what runs:
+# - PR: the githubDebug unit tests, Konsist and the APK, the shared host tests, the screenshot tests of the changed
+#   modules (all of them when designsystem, core or the build changed), the docs check and the iOS klibs. A docs-only
+#   or Swift-only PR runs only the docs check.
+# - push to `master` and PRs labelled `full-ci`, when an Android input changed, and every manual run: verifyFull (both
+#   flavours, both lints) and every screenshot module; `master` runs also write the build caches PRs read.
+# The emulator, release and iOS suites are in android-ui.yml, android-ship.yml and ios.yml; nothing here is a
+# required check.
 name: android-ci
 
 on:
   pull_request:
     branches: [master]
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches: [master]
   workflow_dispatch:
 
-# Per ref; only PR runs are cancelled, so every pushed `master` SHA keeps its own result.
+# Per ref; a newer push to a PR cancels its older run, every pushed `master` SHA keeps its own result. Adding any
+# label other than `full-ci` starts a run that does nothing, in a group of its own so it cancels nothing.
 concurrency:
-  group: android-ci-${{ github.ref }}
+  group: >-
+    android-ci-${{ github.ref }}-${{ github.event.action == 'labeled' && github.event.label.name != 'full-ci'
+    && github.run_id || 'run' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -23,22 +31,45 @@ env:
   CI: "true"
 
 jobs:
-  # The parts of the root verifyQuick (build.gradle.kts) on runners of their own, plus lintPlayDebug, which makes
-  # the union verifyFull. The app's unit tests and its APKs share one runner (they compile
-  # the same classes). The matrix name is also the job's build cache line. Fewer, longer jobs keep a PR under the
-  # 20 concurrent jobs of the free plan together with android-ui.
+  # PR: the merge commit against its first parent (the base head).
+  plan:
+    if: github.event.action != 'labeled' || github.event.label.name == 'full-ci'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      android: ${{ steps.plan.outputs.android }}
+      gradle: ${{ steps.plan.outputs.gradle }}
+      shots: ${{ steps.plan.outputs.shots }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      - name: scripts/ci-plan.sh
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          LABELLED: ${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}
+        run: |
+          set -o pipefail
+          flags=""
+          [ "$EVENT" != push ] && [ "$LABELLED" != true ] || flags=--full
+          [ "$EVENT" != workflow_dispatch ] || flags=--all
+          git diff --name-only HEAD^1 HEAD | scripts/ci-plan.sh $flags | tee -a "$GITHUB_OUTPUT"
+
+  # The app's unit tests and its APK share one runner (they compile the same classes). The matrix name is also the
+  # job's build cache line.
   gradle:
+    needs: plan
+    if: needs.plan.outputs.android == 'true'
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { name: app, tasks: verifyQuickUnitApp verifyQuickAssemble, home: "true" }
-          - { name: unit-shared, tasks: verifyQuickUnitShared, home: "false" }
-          - { name: lint-github, tasks: verifyQuickLint, home: "false" }
-          - { name: lint-play, tasks: ":app:lintPlayDebug", home: "false" }
+        include: ${{ fromJSON(needs.plan.outputs.gradle) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -71,16 +102,18 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # Roborazzi on the JVM (ADR 0022): every module's baselines, compared, never recorded here, in three shards of
-  # `verify.sh shots all` (every third module of its list each).
+  # Roborazzi on the JVM (ADR 0022): baselines compared, never recorded here. The plan gives either one job with the
+  # changed modules or three shards of `verify.sh shots all` (every third module of its list each).
   shots:
-    name: shots ${{ matrix.shard }}/3
+    needs: plan
+    if: needs.plan.outputs.shots != '[]' && needs.plan.outputs.shots != ''
+    name: shots ${{ matrix.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2]
+        include: ${{ fromJSON(needs.plan.outputs.shots) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -88,23 +121,31 @@ jobs:
 
       - uses: ./.github/actions/android-setup
         with:
-          build-cache: shots-${{ matrix.shard }}
+          build-cache: ${{ matrix.cache }}
           tasks: screenshotsVerify
 
-      - name: verify.sh shots all --shard ${{ matrix.shard }}/3
+      - name: verify.sh shots ${{ matrix.args }}
         id: shots
-        run: scripts/verify.sh shots all --shard ${{ matrix.shard }}/3
+        env:
+          ARGS: ${{ matrix.args }}
+        run: |
+          # shellcheck disable=SC2086 # one word per argument
+          set -- $ARGS
+          [ "$1" != all ] || exec scripts/verify.sh shots "$@"
+          rc=0
+          for module; do scripts/verify.sh shots "$module" || rc=1; done
+          exit "$rc"
 
       - uses: ./.github/actions/build-cache-save
         with:
-          build-cache: shots-${{ matrix.shard }}
+          build-cache: ${{ matrix.cache }}
 
       # Only a failed comparison uploads: <name>_compare.png (reference, diff, new), <name>_actual.png, the report.
       - name: Upload screenshot diffs
         if: failure() && steps.shots.outcome == 'failure'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: screenshot-diffs-${{ matrix.shard }}
+          name: screenshot-diffs-${{ strategy.job-index }}
           path: |
             app/build/outputs/roborazzi/
             app/build/reports/roborazzi/
@@ -115,8 +156,10 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # The Gradle-free checks (docs links, the ui-report self-test), then the iOS klibs.
+  # The Gradle-free checks (docs links, the ui-report and ci-plan self-tests) on every run, then the iOS klibs when an
+  # Android input changed (a commonMain change that breaks the iOS compile fails here, without a Mac).
   checks-klibs:
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -128,16 +171,19 @@ jobs:
         run: scripts/verify.sh checks
 
       - uses: ./.github/actions/android-setup
+        if: needs.plan.outputs.android == 'true'
         with:
           tasks: verifyIosKlibs
 
       # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version; only `master` writes the cache.
       - name: Kotlin/Native version
         id: kotlin-native
+        if: needs.plan.outputs.android == 'true'
         run: echo "version=$(sed -n 's/^kotlin = "\(.*\)"$/\1/p' gradle/libs.versions.toml)" >> "$GITHUB_OUTPUT"
 
       - name: Restore ~/.konan
         id: konan-cache
+        if: needs.plan.outputs.android == 'true'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.konan
@@ -145,25 +191,14 @@ jobs:
 
       # iOS klibs compile on Linux x86_64 without Xcode; never link* or *Test on Apple targets here.
       - name: ./gradlew verifyIosKlibs
+        if: needs.plan.outputs.android == 'true'
         run: ./gradlew verifyIosKlibs
 
       - name: Save ~/.konan
-        if: github.ref == 'refs/heads/master' && steps.konan-cache.outputs.cache-hit != 'true'
+        if: >-
+          needs.plan.outputs.android == 'true' && github.ref == 'refs/heads/master' &&
+          steps.konan-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.konan
           key: ${{ steps.konan-cache.outputs.cache-primary-key }}
-
-  # The required check: green only when every part above is green; a failed, skipped or cancelled part fails it.
-  verify-quick:
-    needs: [checks-klibs, gradle, shots]
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Every part passed
-        env:
-          RESULTS: ${{ toJSON(needs) }}
-        run: |
-          printf '%s' "$RESULTS" | jq -r 'to_entries[] | "- \(.key): \(.value.result)"' | tee -a "$GITHUB_STEP_SUMMARY"
-          printf '%s' "$RESULTS" | jq -e 'all(.[]; .result == "success")' > /dev/null

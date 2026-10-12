@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify.sh checks                         the Gradle-free checks: docs links, ui-report self-test
+# verify.sh checks                         the Gradle-free checks: docs links, ui-report and ci-plan self-tests
 # verify.sh shots <module>|app|all [--record | --gallery <dir>] [--shard <i>/<n>] [-P<name>=<value>...]
 #                                          :shared:<module>, :app or all of them: screenshotsVerify (screenshotsRecord)
 # verify.sh ui <Class>[,<Class>...]|all [--shard <i>/<n>]   :app:connectedGithubDebugAndroidTest on ANDROID_SERIAL
@@ -91,6 +91,8 @@ run_checks() {
   note "scripts/test-ui-report.sh"
   report=$("$root/scripts/test-ui-report.sh" 2>&1) || { printf '%s\n' "$report" >&2; return 1; }
   printf '%s\n' "$report" | tail -n 1 >&2
+  note "scripts/ci-plan.sh --self-test"
+  report=$("$root/scripts/ci-plan.sh" --self-test 2>&1) || { printf '%s\n' "$report" >&2; return 1; }
 }
 
 # ---- shots -----------------------------------------------------------------------------------------------

@@ -32,7 +32,9 @@ only when the steps it depends on are verified.
 2. CI on the release candidate is green: `android-ci`, `android-ui`, `ios` and
    `android-ship` (version scheme, unsigned release builds and the Play policy
    check, the 2.2 -> head upgrade on an emulator, the shrunk builds started on
-   an emulator). Locally:
+   an emulator). `android-ui` and `android-ship` run nightly; when the last
+   nightly is older than the candidate, start them with
+   `gh workflow run <name>.yml --ref master`. Locally:
 
    ```bash
    git status --short --branch

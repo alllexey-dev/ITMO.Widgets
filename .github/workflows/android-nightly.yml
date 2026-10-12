@@ -1,15 +1,11 @@
-# Scheduled and advisory jobs; never a required check. Kept apart from android-ci.yml so push and PR runs
-# never carry skipped check runs. A PR that edits this file or the platform list runs every job here once.
+# Scheduled and advisory jobs on `master`. To try a change to this file or the platform list before merging, run it
+# on the branch: gh workflow run android-nightly.yml --ref <branch>. A failed platform run opens or updates an issue.
 name: android-nightly
 
 on:
   schedule:
     - cron: "23 1 * * *"
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/android-nightly.yml
-      - app/src/androidTest/platform-tests.txt
 
 concurrency:
   group: android-nightly-${{ github.ref }}
@@ -107,3 +103,22 @@ jobs:
             app/build/outputs/androidTest-results/managedDevice/
           if-no-files-found: ignore
           retention-days: 14
+
+  # A failed nightly opens or updates an issue; the next passing one closes it.
+  nightly-issue:
+    needs: [platform-tests]
+    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/actions
+
+      - uses: ./.github/actions/nightly-issue
+        with:
+          failed: ${{ contains(needs.*.result, 'failure') }}

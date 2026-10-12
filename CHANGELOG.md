@@ -142,11 +142,13 @@ new iOS app.
   MyItmoApi comes from Maven Central (`MYITMOAPI_DIR` builds against a local
   checkout). The QR encoder is a Kotlin port, Google Sheets parse
   with Ksoup, avatars load with Coil 3, OkHttp is 5.5.
-- `scripts/verify.sh` is the one build entry point. CI runs the checks, both
-  lints, Roborazzi screenshot baselines (four Android appearances, plus iOS
-  ones for the design system) and every instrumented test on GitHub's
-  emulators for each PR; the Konsist architecture rules cover the app and
-  every shared module.
+- `scripts/verify.sh` is the one build entry point. A PR runs the unit and
+  host tests, Konsist, the debug APK and the Roborazzi screenshot baselines of
+  the modules it changes (four Android appearances, plus iOS ones for the
+  design system) in about 10 minutes; both lints and every screenshot run on
+  `master`, the instrumented tests on GitHub's emulators and the release checks
+  nightly, and everything on a PR labelled `full-ci`. The Konsist architecture
+  rules cover the app and every shared module.
 - Developer documentation: `docs/getting-started.md`, `docs/feature-flow.md`,
   `docs/testing.md`, `docs/troubleshooting.md` and `CONTRIBUTING.md`; the
   architecture and feature docs describe the Compose, Koin and Navigation 3
