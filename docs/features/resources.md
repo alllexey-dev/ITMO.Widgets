@@ -50,8 +50,10 @@ names of two different years never share links. Backend records flows from the
 schedule the app uploads and offers every flow the viewer has now as
 `SubjectLinksSnapshot.audiences` (`LinkAudience(flowId, label, typeId, depth)`,
 sorted by depth, then name); `SubjectLink.flowId` and `audienceLabel` name the
-flow of a `FLOW` link. `FLOW` and `ALL` links wait for a moderator while
-`premoderation` is true.
+flow of a `FLOW` link. While `premoderation` is true both wait for review: an
+`ALL` link for a moderator; a `FLOW` link is approved by Backend's ISU check
+when ISU confirms the author is in the flow and the flow has at most 50 members
+(configurable on Backend), otherwise a moderator decides.
 
 Other students always see published content. The owner additionally sees
 `на проверке`, `отклонена` or `скрыта`; the actions sheet shows the moderator's
