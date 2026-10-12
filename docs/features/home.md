@@ -14,9 +14,10 @@ two FABs (QR pass, `My ITMO`).
   to every source; only the owner of that kind acts.
 - Each feature registers its source in its `data` package as a qualified Koin
   `single<HomeCardSource>`, and its card in `ui/home` as a qualified
-  `single<HomeCardRenderer>` (`kinds` + `@Composable Content`). Every kind has
-  exactly one renderer (`HomeRenderersGraphTest`); an unclaimed card is left
-  out. Nothing in `feature/home` imports another feature.
+  `single<HomeCardRenderer>` (`kinds` + `@Composable Content`; a Compose
+  interface, so it sits in `:shared:designsystem` under `core/home`). Every
+  kind has exactly one renderer (`HomeRenderersGraphTest`); an unclaimed card
+  is left out. Nothing in `feature/home` imports another feature.
 - `HomeViewModel` (`:shared:feature-home`, `homeModule`, sources via
   `getAll()`) flattens the flows, drops kinds hidden in settings
   (`home_hidden_cards`) and sorts by `HomeCardKind` declaration order.

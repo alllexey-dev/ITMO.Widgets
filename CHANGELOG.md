@@ -123,7 +123,7 @@ new iOS app.
 
 ### Architecture and build
 
-- 15 shared Kotlin Multiplatform modules with iOS targets hold each feature's
+- 16 shared Kotlin Multiplatform modules with iOS targets hold each feature's
   domain, data, view models and screens; `:shared:designsystem` is the one
   source of the look and exports its tokens for iOS and the web app.
 - The data layer runs on MyItmoApi 2.x and Core 2.0 over Ktor; Retrofit,
@@ -135,6 +135,8 @@ new iOS app.
   distribution), and the device registers again once after an update. Every
   Backend call checks the services opt-in and the demo session in one place.
 - Koin is the only dependency-injection graph; Hilt, Dagger and KSP are gone.
+- `UiText` carries generated string keys and `:shared:core` builds without
+  Compose; `:shared:compose-strings` resolves the keys for Compose.
 - Files and settings stay compatible with 2.2 (caches, change history, widget
   snapshot, QR pass, tokens); `UpgradeFrom22Test` and
   `StableIdentifiersTest` guard the upgrade.
