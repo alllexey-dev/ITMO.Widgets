@@ -40,6 +40,8 @@ new iOS app.
 - A newer iOS release from Backend is offered with a link to the App Store
   (inactive until the App Store record exists); a Kotlin crash is saved to
   `Журнал ошибок`.
+- The app icon is Android's launcher icon, with iOS 18 dark and tinted
+  variants.
 
 ### Android screens on Compose Multiplatform
 
