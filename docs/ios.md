@@ -263,8 +263,9 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
 ```
 
 - The app target's Run Script builds `Shared` with `./gradlew :shared:ios:embedAndSignAppleFrameworkForXcode`.
-- `test.sh` runs `xcodebuild build-for-testing`, then `test-without-building`; the simulator boots in the background
-  during the build, since a fresh one (every CI run) takes minutes to boot.
+- `test.sh` links the framework with `./gradlew :shared:ios:linkDebugFrameworkIosSimulatorArm64` while the simulator
+  boots in the background (a fresh one, as in every CI run, takes minutes), then runs `xcodebuild build-for-testing`
+  and `test-without-building`; the Run Script inside xcodebuild finds the link up to date.
 - To open the project in Xcode run `xcodegen generate --spec iosApp/project.yml` first.
 - MyItmoApi comes from Maven Central; `MYITMOAPI_DIR` builds against a local checkout.
 - CI: `.github/workflows/ios.yml` runs `ios-check` (`scripts/ios/test.sh --ci`) on PRs that change iOS inputs and on
