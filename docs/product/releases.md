@@ -24,8 +24,9 @@
 6. **v2.3** (Android) is a parity rewrite onto Kotlin Multiplatform and Compose
    Multiplatform with the Material 3 Expressive look and no new product
    features (decision 0016); a 2.2 install upgrades in place.
-7. **iOS 2.3** is the first iOS client: the same shared content screens in a
-   SwiftUI shell with the Android feature set (decision 0023): minimum iOS
+7. **iOS 2.3** is the first iOS client: a SwiftUI app over the shared Kotlin
+   code with the Android feature set (decision 0023); its screens move from
+   shared Compose screens to native SwiftUI (decision 0031). Minimum iOS
    18, marketing version 2.3.0, bundle ID `dev.alllexey.itmowidgets`. Sport
    auto-sign in a notification service extension, the App Store release,
    in-app account deletion and a Smart App Banner are stretch goals.
@@ -140,7 +141,7 @@ Ideas that need a decision before they become work:
 - English localisation.
 - Blocking users, deferred from the v2.1 social layer.
 - Strict verification of flow audiences for subject links (ISU or zkTLS,
-  [0008](../decisions/0008-community-moderation.md)).
+  [0008](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0008-community-moderation.md)).
 - Student sections of the web version, signed in with an ITMO.ID token kept in
   the browser; Backend does not proxy MyITMO.
 - Release signing in CI.

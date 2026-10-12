@@ -1,54 +1,50 @@
 # 0030 Release lines, version codes and data continuity
 
 **Decision (2026-10-03).**
-- **Lines.** `release/2.2` is cut at tag `v2.2` and `master` becomes 2.3 development (`2.3-SNAPSHOT`). 2.2.x
-  fixes and every Play upload before 2.3 come only from `release/2.2`, through a PR into it, and are ported forward
-  by hand; v2.3 work never touches it.
-- **versionCode** = `major*10000 + minor*100 + patch` from 2.3 on: 2.3.0 = 20300, 2.3.1 = 20301, 2.4.0 = 20400.
-  Development `2.3-SNAPSHOT` = 20290; prerelease `2.3.0-beta.N` = 20290 + N with 1 ≤ N ≤ 9 (beta.1 = 20291,
-  beta.9 = 20299 < 20300). 2.2 keeps 6; 2.2.x continues that counter (7, 8, …) and stays below 100, so every 2.3
-  build installs over every 2.2.x.
-- **Prereleases** only as a GitHub `--prerelease` or a Play internal upload, each on an explicit decision.
-- **Client floor.** `app.minimum` stays 2.1 until 2.2 is in Play production, may rise to 2.2 after it and never
-  goes above 2.2 in v2.3; Backend stays additive while it is ≤ 2.2.
-- **Backend release:** one production release, 1.8.0, at the end of v2.3 and before the release candidate,
-  carrying phases A–E and MyItmoApi 2.0.0; dev gets each phase when it is ready, Spring Boot 4 alone as its own dev
-  batch with a soak; V11 and V12 expand-only, so the rollback to 1.7.0 stays image-only.
-- **Data continuity.** The stable identifiers keep their values (ADR 0016). A changed on-disk format is read
-  dual: the new reader accepts the old format and writes a version marker. A 2.2 data-directory upgrade fixture
-  runs in `scripts/ship-check.sh`; a failed upgrade blocks the merge. While MyItmoApi 1.x and 2.x coexist exactly
-  one class writes `myitmo_tokens.enc` and `bars_tokens.enc`. A spike showed the 2.2 DataStore and file stores read
-  and write back byte-compatibly on the v2.3 pins.
+- **Lines.** `master` is the development line. Each released minor has a
+  maintenance branch `release/<major>.<minor>` cut at its tag (`release/2.2` at
+  `v2.2`). Fixes and Play uploads for that minor come only from its branch,
+  through a PR into it, and are ported forward by hand.
+- **versionCode** = `major*10000 + minor*100 + patch` from 2.3 on: 2.3.0 = 20300,
+  2.3.1 = 20301, 2.4.0 = 20400. A prerelease `2.3.0-beta.N` is 20290 + N with
+  1 <= N <= 9 (beta.1 = 20291, beta.9 = 20299 < 20300). `master` builds
+  `<next>-SNAPSHOT` at the code of the last beta. 2.2.x continues the old counter
+  (6, 7, ...) and stays below 100, so every 2.3 build installs over every 2.2.x.
+- **Prereleases** only as a GitHub `--prerelease` or a Play internal upload, each on
+  an explicit decision.
+- **Client floor.** `app.minimum` rises only after the release it names is in Play
+  production; Backend stays additive while installed clients down to
+  `app.minimum` decode its responses.
+- **Backend releases** keep schema migrations expand-only, so a rollback to the
+  previous Backend release stays image-only.
+- **Data continuity.** Stable identifiers keep their values (ADR 0016). A changed
+  on-disk format is read dual: the new reader accepts the old format and writes a
+  version marker. The upgrade from the previous release's data directory runs in
+  `scripts/ship-check.sh`; a failed upgrade blocks the release. Exactly one class
+  writes `myitmo_tokens.enc` and `bars_tokens.enc`.
 
-**Why.** A maintenance branch lets Play-forced 2.2.x work ship without v2.3 code while `master` stays the one
-development line; a long-lived `v2.3` branch would leave `master` stale for months. The scheme is
-monotonic and readable (20300 reads 2.3.0), leaves 99 patches per minor and keeps the old counter far below it.
-N ≤ 9 twice over: 20290 + 10 is the release's own 20300, and `AppVersionName` compares suffixes as
-strings, so `beta.10` sorts before `beta.9` and the update offer would go backwards. A non-prerelease GitHub release
-becomes `releases/latest` for every `github` user, and any Play upload burns its versionCode. Testers cannot
-downgrade, so a broken upgrade is unrecoverable on the device: hence dual reads, markers and the fixture.
+**Why.** A maintenance branch lets Play-forced fixes ship without development code
+while `master` stays the one development line. The scheme is monotonic and
+readable (20300 reads 2.3.0), leaves 99 patches per minor and keeps the old
+counter far below it. N <= 9 twice over: 20290 + 10 is the release's own 20300, and
+`AppVersionName` compares suffixes as strings, so `beta.10` sorts before `beta.9`
+and the update offer would go backwards. A non-prerelease GitHub release becomes
+`releases/latest` for every `github` user, and any Play upload burns its
+versionCode. Testers cannot downgrade, so a broken upgrade is unrecoverable on the
+device: hence dual reads, markers and the upgrade check.
 
 **Consequence.**
-- `versionName = "2.3-SNAPSHOT"` and `versionCode = 20290` are set together; `AppVersionNameTest` pins
+- `versionName` and `versionCode` are set together; `AppVersionNameTest` pins
   `2.2.9 < 2.3-SNAPSHOT < 2.3.0-beta.1 < 2.3.0-beta.9 < 2.3 < 2.3.1`.
-- `docs/product/releases.md` § Distribution states the lines and the scheme.
-- iOS uses marketing version 2.3.0 and CI build numbers (ADR 0023), independent of versionCode.
-- A PR that changes a stored format ships the reader, the marker and the fixture case together.
-- Once `app.minimum` is 2.2, Backend's `compatCore120Test` can go.
+- `docs/product/releases.md` states the current lines and codes.
+- iOS uses its own marketing version and CI build numbers (ADR 0023), independent
+  of versionCode.
+- A PR that changes a stored format ships the reader, the marker and the upgrade
+  case together.
 
-**Supersedes.** `docs/product/releases.md` § Distribution, versionCode as a running counter ("a release takes the
-next free number").
+**Supersedes.** versionCode as a running counter ("a release takes the next free
+number").
 
-**Revisit when.** A tenth beta is needed (use `-rc` or compare suffixes numerically first); a minor nears patch 99;
-2.2.x nears code 100; 2.2 reaches Play production (raise `app.minimum`); a stored format cannot be read dual (a
-one-time migration then).
-
-**Settled.** 2026-10-03.
-- `master` = 2.3 plus `release/2.2`.
-- This versionCode scheme. It becomes irreversible with the first upload of a 2.3 code.
-- Plan for a 2.2 floor once 2.2 is in Play production; the floor stays 2.1 until it is raised explicitly.
-- One Backend 1.8.0 at the end of v2.3 instead of three releases. If Boot 4 fails the dev soak, 1.8.0
-  ships on Boot 3.5.x without it.
-
-**Evidence.**
-- Data continuity spike: PASS (2.2 DataStore and file stores read on v2.3 pins and write back byte-compatibly; dual read only where the links store moves to format 3, which 2.2 cannot read)
+**Revisit when.** A tenth beta is needed (use `-rc` or compare suffixes numerically
+first); a minor nears patch 99; 2.2.x nears code 100; a stored format cannot be
+read dual (a one-time migration then).

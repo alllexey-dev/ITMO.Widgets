@@ -9,7 +9,7 @@ social block, and copied Reviews text appears as the last section.
 **Source boundary.** Backend neither proxies the profile header/facts nor calls
 My ITMO with the viewer's token. Its own service account still resolves the
 current study groups in `UserData`, as described in
-[Current study groups on read](../../../itmo-widgets-backend/docs/contracts/friendships.md#current-study-groups-on-read).
+[Current study groups on read](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/contracts/friendships.md#current-study-groups-on-read).
 The user's refresh token remains on the device; the access token is sent to
 Backend only for authentication and only with the custom-services opt-in.
 The existing ID-token identity publication remains a separate Backend request.
@@ -25,7 +25,7 @@ page. No author, rating, writing form, eligibility proof or moderation action is
 added by this decision. The response object and section heading leave room for
 those later additions.
 
-**Presentation.** One RecyclerView keeps identity, relationship, sharing,
+**Presentation.** One list keeps identity, relationship, sharing,
 facts and reviews in a fixed order. Initial loading waits for the three parts,
 with a 3-second deadline once either identity is ready. Late reviews append;
 late identity blocks wait for explicit retry instead of moving the page. The

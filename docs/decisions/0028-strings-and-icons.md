@@ -1,16 +1,17 @@
 # 0028 One Russian string catalog generated outward; Material Symbols Rounded with an SF Symbol registry
 
 **Decision (2026-10-03).** Strings have one source, Android-syntax `strings_<owner>.xml` files in Russian, generated outward:
-- **Source.** `app/src/main/res/values/strings_<owner>.xml` after a single split by owning module, then each file
-  moves by `git mv` into its module's `src/commonMain/composeResources/values/` with its port.
+- **Source.** `strings_<owner>.xml` in the owning module's `src/commonMain/composeResources/values/`;
+  `strings_platform.xml` lives in `:shared:core`, Android-only files in `app/src/main/res/values/`.
 - **Outputs.** The CMP plugin generates `Res.string`/`Res.plurals` for Compose and `UiText`. `exportAndroidStrings`
-  writes generated copies into `:app` `res` for `R.string` and XML (`strings_platform.xml` always, common strings
-  while a View uses them, a feature file only during its port). `exportAppleStrings` writes committed
+  writes generated copies into `:app` `res` for `R.string` and XML (`strings_platform.xml` and the files Android
+  system surfaces need). `exportAppleStrings` writes committed
   `iosApp/Shared/Strings/*.xcstrings`: one table per catalog file; `strings_platform.xml` and the iOS-only
   `iosApp/Strings/strings_ios*.xml` go to `Localizable` (APNs resolves `loc-key` only there); `InfoPlist` and
   `AppShortcuts` rows come from `apple-tables.properties`. Generated files say so and are never edited by hand.
 - **Key invariant.** `StringResource.key` == Android resource name == `.xcstrings` key == APNs `loc-key`. A key is
-  unique across all catalog files, so `UiText` can carry a CMP `StringResource` and Swift resolves the same key.
+  unique across all catalog files, so Compose, Android and Swift resolve the same key (ADR 0031 makes `UiText`
+  carry the key instead of a CMP `StringResource`).
 - **Frozen platform keys.** `strings_platform.xml` holds the 81 ids that reach Android system surfaces (52 direct, 29
   through shared text builders); 20 are bound from XML (manifest 5, `res/xml` 7, widget layouts 10) and can only be
   `@string` resources. The list in `scripts/strings-frozen-keys.txt` is never renamed: installed iOS clients resolve
@@ -37,19 +38,10 @@ Rounded is what every tracked rule and Web already use and the Material style cl
 **Consequence.** About 300 lines of build logic with golden tests that the project maintains. Every string PR
 regenerates its own `.xcstrings` table. A new language later is a `values-<lang>/` folder in the same pipeline.
 
-**Supersedes.** `docs/design.md` § Icons, actions and selection, "rounded outline family, 24 dp viewport" (now
-Rounded, 960 viewport at 24 dp), replacing the earlier Outlined choice. Extends the `AGENTS.md` § Hard rules string
-line and `docs/design.md` § Typography and content (where the catalog lives, generated files, the key invariant).
+**Supersedes.** The earlier Outlined icon family on a 24 dp viewport.
 
 **Revisit when.** CMP resources stop working in the KMP library plugin (shared presentation then emits typed
 keys); the export grows costly (fallback moko-resources); a second app language is planned.
 
-**Settled.** 2026-10-03.
-- CMP resources + own export, not moko or typed keys; force Russian; Rounded over Outlined; SF Symbols in SwiftUI
-  and system surfaces, Material in CMP, one registry.
-- `.xcstrings` committed, with `exportAppleStrings --check` in CI. The 13 unreferenced strings are deleted (restore
-  from git if a feature needs one). Web keeps its own labels plus a drift test. One split up front with
-  module-shaped names.
-
-**Evidence.**
-- Resources spike: PASS (CMP `composeResources` work in the KMP library plugin, typed keys not needed; Russian plurals under `en-US` are wrong without the `LocalAppLocale` root and `Locale.setDefault(ru)`)
+**Also.**
+- `.xcstrings` committed, with `exportAppleStrings --check` in CI. Web keeps its own labels plus a drift test.

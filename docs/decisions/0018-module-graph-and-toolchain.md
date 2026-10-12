@@ -1,7 +1,6 @@
-# 0018 Module graph and toolchain for v2.3
+# 0018 Module graph and toolchain
 
-**Decision (2026-10-03).** The repository gets this module tree, declared at once with
-every v2.3 library, so no later change edits `settings.gradle.kts`:
+**Decision (2026-10-03).** The repository has this module tree:
 
 ```text
 build-logic/            conventions: android-app, kmp-library, cmp-ui, testing, strings
@@ -15,43 +14,27 @@ shared/ios/             umbrella framework "Shared" for iosApp/
 konsist/                architecture rules over app/ and shared/
 ```
 
-- Shared modules target `android`, `iosArm64` and `iosSimulatorArm64`.
-  Packages do not change: a move is a `git mv`, so every class name in
-  `StableIdentifiersTest` stays valid.
-- Rules: no `android.*`, `java.*`, `R`, Hilt or `javax.inject` in `commonMain`;
-  features never depend on each other; `ui -> presentation -> domain <- data`
-  inside a feature; time only through `AcademicTimeProvider` or `Clock`.
+- Shared modules target `android`, `iosArm64` and `iosSimulatorArm64`. Class
+  names listed in `StableIdentifiersTest` keep their packages (ADR 0016).
+- Rules: no `android.*`, `java.*` or `R` in `commonMain`; features never depend on
+  each other; `ui -> presentation -> domain <- data` inside a feature; time only
+  through `AcademicTimeProvider` or `Clock`.
 - `app/` keeps what is Android-only: Activities and WebView screens, the
   RemoteViews widgets, workers, FCM, the QS tile and shortcuts, Keystore,
-  calendar sync, the Play code scanner, update actions, debug tools, and Hilt
-  until it leaves (ADR 0019).
-- Toolchain: Kotlin 2.4.20, AGP 9.3.3 with built-in Kotlin (no 9.4.x, which is
-  outside Kotlin 2.4.20's tested KMP range), compileSdk 37, Gradle 9.7.0, KSP
-  instead of kapt, Hilt 2.60.1, JVM 17 bytecode in every module, Android
-  Studio Quail 2 or later.
-- Library pins live in the version catalog and follow their ADRs: CMP 1.12.1
-  (0017, 0021), Koin 4.2.2 (0019), Navigation 3 1.2.x (0020), Ktor 3.6.0 and
-  kotlinx.serialization 1.11.0 (0026), kotlinx-datetime 0.8.0, Roborazzi
-  1.76.0 (0022), SKIE 0.10.15 (0023). Toolchain and catalog bumps are changes
-  of their own; other changes add a library as a one-line catalog change.
+  calendar sync, the Play code scanner, update actions and debug tools.
+- Toolchain: Kotlin 2.4.20, AGP 9.3.x with built-in Kotlin (AGP 9.4.x is outside
+  Kotlin 2.4.20's tested KMP range), compileSdk 37, Gradle 9.7.0, JVM 17 bytecode
+  in every module. Konsist runs with a test-runtime pin of
+  `kotlin-compiler-embeddable`.
+- Library versions live in the version catalog and follow their ADRs. Toolchain
+  and catalog bumps are changes of their own.
 
-**Why.** The iOS client is the second in-repo reuse site that 0001 named as
-its trigger. Kept packages make every move a pure rename.
-AGP 9.3.x is the newest line inside Kotlin 2.4.20's tested KMP range.
+**Why.** The iOS client is a second in-repo consumer of the shared code, which a
+single `:app` module could not serve. Kept packages make every move a pure rename.
 
-**Consequence.** Build files change only in toolchain changes; Konsist rules
-become module- and Compose-aware.
+**Consequence.** Build files change only in toolchain changes; Konsist rules are
+module- and Compose-aware. ADR 0031 moves Compose UI out of the shared modules
+into Android-only code, which changes the `ui` layer of this tree.
 
-**Supersedes.** 0001 Single Gradle module.
-
-**Revisit when.** Kotlin 2.5 ships, or Konsist runs on Kotlin 2.4.20 without
-the test-runtime compiler pin.
-
-**Settled.** AGP 9.3.x; Kotlin 2.4.20 now, 2.5.x after v2.3. Konsist stays,
-with the compiler pin below; no replacement.
-
-**Evidence.**
-- Toolchain spike: PASS (AGP 9.3.3, Gradle 9.7.0, built-in Kotlin 2.4.20, KSP and Hilt 2.60.1 build both flavors; no `legacy-kapt`; AGP pick 9.3.3)
-- Konsist spike: PASS (Konsist 0.17.3 runs on Kotlin 2.4.20 with a test-runtime pin `kotlin-compiler-embeddable:2.4.10`; no replacement)
-- Library compatibility spike: PASS (a 2.4.20-built library with `languageVersion`/`apiVersion` 2.2 and `coreLibrariesVersion` 2.2.0 runs in a Kotlin 2.2.21 consumer)
-- Resources spike: PASS (CMP 1.12.1 resources with the Android-KMP library plugin on AGP 9.3.3; forces compileSdk 37; Konsist covers `commonMain` with the 2.4.10 pin)
+**Revisit when.** Kotlin 2.5 ships, or Konsist runs on Kotlin 2.4.20 without the
+test-runtime compiler pin.

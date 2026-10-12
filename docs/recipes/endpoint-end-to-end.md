@@ -45,7 +45,7 @@ involved). Backend decides privacy and authorization in its services and
 returns viewer-scoped capabilities (`canViewSchedule` and the like), never
 another user's raw settings; the apps never enforce privacy on Backend's
 behalf. A new audience or capability needs its own decision, see
-[ADR 0004](../decisions/0004-privacy-audiences.md).
+[ADR 0004](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0004-privacy-audiences.md).
 
 ### 2. Route, DTO and security test
 

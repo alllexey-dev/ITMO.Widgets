@@ -178,7 +178,7 @@ do not incur an additional delay. Disabling services takes effect immediately.
 - Existing enabled legacy settings become `Друзья`; previously disabled settings
   remain `Никто`. Upgrading must never silently broaden an existing audience.
 - Backend, not Android, enforces the owner audience and friendship requirements
-  (decision [0004](decisions/0004-privacy-audiences.md)). Blocking is not
+  (decision [0004](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0004-privacy-audiences.md)). Blocking is not
   implemented and a rejected request is not a block.
 - Only the owner privacy endpoint returns audience settings. Other user responses
   contain viewer-scoped permissions. Unavailable/unknown settings are disabled

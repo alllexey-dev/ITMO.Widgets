@@ -2,7 +2,7 @@
 
 **Decision (2026-10-02).** The app has a demo session with fictional data for
 the Google Play review. It is entered by five quick taps on the sign-in logo,
-lives as a flag in DataStore and is served by the same Hilt graph as a real
+lives as a flag in DataStore and is served by the same Koin graph as a real
 session: every class that calls My ITMO, BARS, Backend or a public web page
 checks `DemoMode` right before the call and answers with its feature's demo
 data or `AppError.DemoUnavailable`. Details are in
@@ -23,7 +23,7 @@ users meet no unexplained focus stop.
 separate demo flavor or a debug-only switch would not be reviewed as shipped.
 The flag survives process death, so the reviewer is not thrown back to sign-in.
 
-**Why gates in the repositories, not a swapped Hilt graph.** Replacing the
+**Why gates in the repositories, not a swapped graph.** Replacing the
 network clients or the repositories with demo bindings would decide at graph
 creation, while the session changes at runtime, and would need a second
 implementation of every repository to keep in step. A check at the call keeps

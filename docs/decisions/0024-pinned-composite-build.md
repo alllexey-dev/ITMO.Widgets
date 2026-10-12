@@ -10,10 +10,9 @@ the version in `gradle/libs.versions.toml` (`myItmoApiKmp`), and never through M
 - Core is not part of this: Core 2.0 is a module of this repository (ADR 0026).
 
 **Why.** Maven Local is one mutable directory shared by every checkout: a forgotten publish builds stale code, and a
-matching version string proves nothing (0003's own consequence). The Central artifact is reproducible on any machine
+matching version string proves nothing. The Central artifact is reproducible on any machine
 and in CI with no extra checkout. A composite build of a local checkout needs no publish step and shows MyItmoApi
-sources in the IDE, so it stays available for library development. Before 2.0.0 was on Central the app built a
-checkout pinned to a commit; that pin is gone.
+sources in the IDE, so it stays available for library development.
 
 **Consequence.**
 - A MyItmoApi change reaches the app as a release on Maven Central and a version bump in the catalog. Work in
@@ -23,6 +22,6 @@ checkout pinned to a commit; that pin is gone.
   substitution silently does not happen.
 - `docs/product/releases.md` records the MyItmoApi version each Android release builds against.
 
-**Supersedes.** 0003 (snapshot versions through Maven Local).
+**Supersedes.** Snapshot versions of Core and Backend published through Maven Local.
 
 **Revisit when.** MyItmoApi moves into this repository, or a consumer needs unreleased 2.x code in CI.
