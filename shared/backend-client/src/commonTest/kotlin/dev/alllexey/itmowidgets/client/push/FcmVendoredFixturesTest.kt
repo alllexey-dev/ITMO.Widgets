@@ -30,6 +30,12 @@ class FcmVendoredFixturesTest {
             SportAutoSignLessonsPayload.serializer(),
             FcmDecoder::sportAutoSignLessons,
         ),
+        FcmClaim("fcm/DEVICE_CONNECTED_PAYLOAD.json", DeviceConnectedPayload.serializer(), FcmDecoder::deviceConnected),
+        FcmClaim(
+            "fcm/SPORT_AGENT_BOOKED_PAYLOAD.json",
+            SportAgentBookedPayload.serializer(),
+            FcmDecoder::sportAgentBooked,
+        ),
     )
 
     @Test

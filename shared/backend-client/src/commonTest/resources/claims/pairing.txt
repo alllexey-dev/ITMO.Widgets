@@ -1,0 +1,7 @@
+# The pairing fixtures PairingVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
+# Not here: createPairing, pollPairing (/api/pair/**) and createSessionPairing (/api/agent/**) are NotMirrored.
+http/pairing/approvePairing.json
+http/pairing/connections.json
+http/pairing/openPairing.json
+http/pairing/rejectPairing.json
+http/pairing/revokeConnection.json

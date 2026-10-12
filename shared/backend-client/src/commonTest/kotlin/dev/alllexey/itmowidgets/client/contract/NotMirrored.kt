@@ -54,6 +54,18 @@ object NotMirrored {
             fixtures = listOf("http/weblogin/"),
         ),
         NotMirroredRoute(
+            method = null,
+            path = "/api/pair/**",
+            reason = "the target device's side of pairing (create and poll); the apps open and approve",
+            fixtures = listOf("http/pairing/createPairing.json", "http/pairing/pollPairing.json"),
+        ),
+        NotMirroredRoute(
+            method = null,
+            path = "/api/agent/**",
+            reason = "the self-hosted agent's routes and its manual token; no app screen uses them yet",
+            fixtures = listOf("http/agent/", "http/pairing/createSessionPairing.json"),
+        ),
+        NotMirroredRoute(
             method = HttpMethod.Get,
             path = "/api/app/version",
             reason = "the latest Android version as a bare string, kept for 2.0.x; the apps read /api/app/version-info",

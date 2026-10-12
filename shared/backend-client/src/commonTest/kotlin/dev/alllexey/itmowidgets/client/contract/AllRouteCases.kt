@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.client.app.AppRouteCases
 import dev.alllexey.itmowidgets.client.device.DeviceRouteCases
 import dev.alllexey.itmowidgets.client.friends.FriendsRouteCases
 import dev.alllexey.itmowidgets.client.links.SubjectLinksRouteCases
+import dev.alllexey.itmowidgets.client.pairing.PairingRouteCases
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsRouteCases
 import dev.alllexey.itmowidgets.client.schedule.ScheduleRouteCases
 import dev.alllexey.itmowidgets.client.sport.SportRouteCases
@@ -19,5 +20,6 @@ object AllRouteCases {
         ScheduleRouteCases.all +
         SportRouteCases.all +
         DeviceRouteCases.all +
-        AppRouteCases.all
+        AppRouteCases.all +
+        PairingRouteCases.all
 }

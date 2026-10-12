@@ -37,7 +37,8 @@ push decoder needs no client instance.
 | `device` | `device`, `DeviceApi` | `POST /api/device/register-device`, `DELETE /api/device/current` with a JSON body | `B/docs/contracts/notifications.md` |
 | `app` | `app`, `AppApi` | `GET /api/app/version-info` with the optional `platform` query | `B/docs/contracts/app-version.md` |
 | `schedule` | `schedule`, `ScheduleApi` | `POST /api/schedule/lessons/sync`, `GET /api/schedule/lessons/user/{isu}`, `GET /api/schedule/lessons/{pairId}/friends` | `B/docs/contracts/schedule.md`, `B/docs/contracts/privacy.md` |
-| none | `push`, `FcmDecoder` | FCM data messages `FRIENDSHIP_EVENT_PAYLOAD`, `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD` | `B/docs/contracts/notifications.md` |
+| `pairing` | `pairing`, `PairingApi` | `POST /api/users/me/pair/{code}/open`, `POST /api/users/me/pair/{challengeId}/approve` and `reject`, `GET /api/users/me/connections`, `POST /api/users/me/connections/{id}/revoke` | `B/docs/contracts/pairing.md` |
+| none | `push`, `FcmDecoder` | FCM data messages `FRIENDSHIP_EVENT_PAYLOAD`, `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD`, `DEVICE_CONNECTED_PAYLOAD`, `SPORT_AGENT_BOOKED_PAYLOAD` | `B/docs/contracts/notifications.md`, `B/docs/contracts/pairing.md`, `B/docs/contracts/agent.md` |
 
 Wire types that two areas share (`UserProfile`, `UserData`, the vote and report requests) live in `common`; the
 transport (`http`), the `Json` and its serializers (`json`) and `BackendException` (`error`) are shared by every
@@ -77,9 +78,10 @@ serializer in the `json` package (13 Q7 (b)):
 |---|---|---|---|
 | Strict | `StrictEnumSerializer` | fails decoding | `RelationshipState`, `SharingVisibility`, `LinkVisibility`, `FriendshipEvent`, the request-only enums (`ReportReason`) |
 | Most restrictive | `FallbackEnumSerializer` | decodes as `ALL` | `RestrictionCapability` |
-| Display | `UnknownTolerantEnumSerializer` | decodes as `UNKNOWN` | `QueueEntryStatus`, `LinkCategory`, `SubjectLinkStatus`, `TeacherReviewKind`, `TeacherReviewStatus`, `SummaryLevel`, `SummaryConfidence`, `SummaryScaleKind`, `SummaryScaleValue` |
+| Display | `UnknownTolerantEnumSerializer` | decodes as `UNKNOWN` | `QueueEntryStatus`, `LinkCategory`, `SubjectLinkStatus`, `TeacherReviewKind`, `TeacherReviewStatus`, `SummaryLevel`, `SummaryConfidence`, `SummaryScaleKind`, `SummaryScaleValue`, `PairingKind`, `ConnectionKind`, `AgentScope` |
 
-The sport `type` discriminator is strict as well. `UNKNOWN` is decode-only: encoding it fails, and inside a request
+`AgentScope` is the one enum whose wire values are no Kotlin names (`sport`, `friends:read`, `schedule:write`): its
+serializer overrides `wireName`. The sport `type` discriminator is strict as well. `UNKNOWN` is decode-only: encoding it fails, and inside a request
 that is a `BackendException.Contract` before anything is sent, so an app never offers to save a value it could not
 read (a link whose category is `UNKNOWN`). Consumers map `UNKNOWN` explicitly.
 
@@ -221,6 +223,8 @@ These Backend operations have no client function, on purpose; `NotMirrored` hold
 | Every route under `/api/moderation` | CO-02, ADR 0026: the moderation API is not ported. No Kotlin consumer; moderators work in Web, which uses `/api/admin` |
 | Every route under `/api/admin` | Web only: the admin pages |
 | Every route under `/api/web` | Web only: the browser sign-in and its session cookie; the apps approve a sign-in through `/api/users/me/web-login` |
+| Every route under `/api/pair` | The target device's side of pairing (create, poll); the apps open and approve under `/api/users/me/pair` |
+| Every route under `/api/agent` | The self-hosted agent's routes and the manual agent token; no app screen uses them yet |
 | `GET /api/app/version` | The latest Android version as a bare string, kept for 2.0.x; the apps read `/api/app/version-info` |
 | `GET /api/users/me/roles` | Web only: the apps have no role-dependent screen |
 | `POST /api/sport/free-sign/entry/{id}/mark-satisfied` and its auto-sign twin | By entry ID, kept for released clients; the apps mark entries satisfied by lesson |
