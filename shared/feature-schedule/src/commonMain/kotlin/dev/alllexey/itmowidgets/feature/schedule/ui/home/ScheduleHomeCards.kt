@@ -39,7 +39,7 @@ import dev.alllexey.itmowidgets.designsystem.components.cards.FeedCard
 import dev.alllexey.itmowidgets.designsystem.components.cards.FeedRowBadge
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoWavyProgress
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.shared.core.schedule_changes_title
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_changes_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_calendar
 import dev.alllexey.itmowidgets.shared.designsystem.ic_schedule
 import dev.alllexey.itmowidgets.shared.feature.schedule.Res
@@ -48,7 +48,7 @@ import dev.alllexey.itmowidgets.shared.feature.schedule.home_schedule_changes_di
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** The schedule's home cards: today's or tomorrow's lessons and the unread schedule changes, in [timeZone]. */

@@ -12,11 +12,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserSearchUiState
 import dev.alllexey.itmowidgets.feature.social.presentation.primaryAction
 import dev.alllexey.itmowidgets.feature.social.presentation.statusText
 import dev.alllexey.itmowidgets.feature.social.presentation.subtitleText
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.user_search_section_others
-import dev.alllexey.itmowidgets.shared.feature.social.user_search_section_registered
-import dev.alllexey.itmowidgets.shared.feature.social.user_status_not_registered
-import dev.alllexey.itmowidgets.shared.feature.social.user_subtitle_isu
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 
 /**
  * Synthetic people of the search previews: the results for `Соколов`, as `UserSearchViewModel` maps
@@ -31,11 +27,11 @@ internal object UserSearchPreviewData {
     /** Both sections and, while Backend has another page, `Показать ещё`; a next page in flight drops the button. */
     fun results(busyIsu: Int? = null, loadingMore: Boolean = false) = UserSearchUiState.Content(
         items = buildList {
-            add(UserListItem.Header(UiText.Res(Res.string.user_search_section_registered)))
+            add(UserListItem.Header(UiText.Res(SocialStrings.user_search_section_registered)))
             REGISTERED.forEach { (isu, name, relationship) ->
                 add(UserListItem.User(registered(isu, name, relationship, busy = isu == busyIsu)))
             }
-            add(UserListItem.Header(UiText.Res(Res.string.user_search_section_others)))
+            add(UserListItem.Header(UiText.Res(SocialStrings.user_search_section_others)))
             OTHERS.forEach { (isu, name) -> add(UserListItem.User(other(isu, name))) }
             if (!loadingMore) add(UserListItem.LoadMore)
         },
@@ -70,8 +66,8 @@ internal object UserSearchPreviewData {
         isu = isu,
         name = name,
         pictureUrl = null,
-        subtitle = UiText.Res(Res.string.user_subtitle_isu, listOf(isu)),
-        status = UiText.Res(Res.string.user_status_not_registered),
+        subtitle = UiText.Res(SocialStrings.user_subtitle_isu, listOf(isu)),
+        status = UiText.Res(SocialStrings.user_status_not_registered),
         primary = UserAction.INVITE,
     )
 }

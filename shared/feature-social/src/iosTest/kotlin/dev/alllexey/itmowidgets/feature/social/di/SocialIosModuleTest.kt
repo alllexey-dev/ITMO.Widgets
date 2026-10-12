@@ -26,6 +26,8 @@ import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
+import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
@@ -129,6 +131,8 @@ class SocialIosModuleTest {
         }
         single<CustomServicesRepository> { FakeCustomServicesRepository(enabled = true) }
         single<TeacherReviewsRepository> { FakeTeacherReviewsRepository() }
+        // The app binds it in iosBackgroundModule, which needs the system notification centre.
+        single { UiTextResolver { it.resolve() } }
     }
 
     /** A counting engine, directories and the App Group under the test's temporary directory, no main queue. */

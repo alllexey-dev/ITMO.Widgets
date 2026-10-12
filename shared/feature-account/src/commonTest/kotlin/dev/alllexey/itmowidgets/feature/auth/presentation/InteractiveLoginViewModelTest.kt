@@ -5,9 +5,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_invalid_credentials
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_network
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -100,7 +98,7 @@ class InteractiveLoginViewModelTest {
 
         val state = viewModel.uiState.value
         assertFalse(state.completingLogin)
-        assertEquals(UiText.Res(Res.string.auth_error_invalid_credentials), state.error)
+        assertEquals(UiText.Res(AccountStrings.auth_error_invalid_credentials), state.error)
         assertTrue(state.showsError)
         assertEquals(emptyList<InteractiveLoginEvent>(), events)
     }
@@ -114,7 +112,7 @@ class InteractiveLoginViewModelTest {
         session.answer(AppResult.Failure(AppError.Network))
         runCurrent()
 
-        assertEquals(UiText.Res(Res.string.auth_error_network), viewModel.uiState.value.error)
+        assertEquals(UiText.Res(AccountStrings.auth_error_network), viewModel.uiState.value.error)
     }
 
     @Test

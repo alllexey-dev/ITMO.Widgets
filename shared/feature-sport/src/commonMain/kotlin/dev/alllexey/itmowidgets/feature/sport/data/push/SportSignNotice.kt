@@ -5,10 +5,7 @@ import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.NotificationDestination
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.notification_sport_failure
-import dev.alllexey.itmowidgets.shared.core.notification_sport_lesson
-import dev.alllexey.itmowidgets.shared.core.notification_sport_success
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
@@ -29,9 +26,9 @@ data class SportSignNotice(
 fun SportSignNotice.toAppNotification(): AppNotification = AppNotification(
     channel = AppNotificationChannels.SPORT,
     id = lessonId.hashCode(),
-    title = UiText.Res(if (booked) Res.string.notification_sport_success else Res.string.notification_sport_failure),
+    title = UiText.Res(if (booked) CoreStrings.notification_sport_success else CoreStrings.notification_sport_failure),
     text = UiText.Res(
-        Res.string.notification_sport_lesson,
+        CoreStrings.notification_sport_lesson,
         listOf(sectionName, start.toLocalDateTime(MOSCOW).format(DateTexts.DAY_SHORT_MONTH_TIME))
     ),
     destination = NotificationDestination.Sport

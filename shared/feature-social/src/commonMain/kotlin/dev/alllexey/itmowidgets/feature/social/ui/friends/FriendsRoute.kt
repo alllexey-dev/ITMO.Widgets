@@ -13,7 +13,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.shared.feature.social.Res
@@ -46,7 +47,7 @@ fun FriendsRoute(
                     // A snackbar waits until it is gone; the next event (a remove) must not wait behind it.
                     is FriendsEvent.ActionFailed -> launch {
                         snackbars.showSnackbar(
-                            message = getString(Res.string.friends_action_failed, getString(event.error.textResource())),
+                            message = getString(Res.string.friends_action_failed, event.error.toUiText().resolve()),
                             duration = SnackbarDuration.Long,
                         )
                     }

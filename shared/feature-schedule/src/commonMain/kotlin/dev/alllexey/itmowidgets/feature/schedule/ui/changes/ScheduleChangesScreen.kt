@@ -43,10 +43,10 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.RelativeDa
 import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleChangeDay
 import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleChangeRow
 import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleChangesUiState
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.home_schedule_today
-import dev.alllexey.itmowidgets.shared.core.schedule_changes_title
-import dev.alllexey.itmowidgets.shared.core.schedule_unknown_subject
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.home_schedule_today
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_changes_title
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_unknown_subject
 import dev.alllexey.itmowidgets.shared.designsystem.ic_history
 import dev.alllexey.itmowidgets.shared.feature.schedule.Res
 import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_change_new
@@ -56,7 +56,7 @@ import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_changes_yesterd
 import kotlinx.datetime.format
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [ScheduleChangesScreen]. */
@@ -153,7 +153,7 @@ private fun ChangeRow(row: ScheduleChangeRow) {
     val summary = change.listSummary().asString()
     val lines = change.listLines().map { it.asString() }
     val meta = listOfNotNull(
-        stringResource(lessonTypeName(change.typeId)),
+        lessonTypeName(change.typeId).asString(),
         change.flowName?.trim()?.takeIf(String::isNotEmpty),
     ).joinToString(" · ")
     val newLabel = if (row.isNew) stringResource(Res.string.schedule_change_new) else null

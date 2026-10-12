@@ -28,7 +28,7 @@ import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
-import dev.alllexey.itmowidgets.shared.core.common_close
+import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_current_period
@@ -37,7 +37,7 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_period_titl
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_period_value
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** One study period in the picker; [programName] is said only when the student has several programs. */

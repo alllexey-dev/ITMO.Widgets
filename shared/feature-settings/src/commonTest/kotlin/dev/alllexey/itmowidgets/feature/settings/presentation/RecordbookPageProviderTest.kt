@@ -2,12 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_bars_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_myitmo_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_notifications_off
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_sheets_title
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -43,7 +38,7 @@ class RecordbookPageProviderTest {
             assertEquals(null, section.title)
             assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS), section.items.map { it.id })
             val myItmo = fixture.viewModel.toggle(SettingRowId.MYITMO_MARKS)
-            assertEquals(UiText.Res(Res.string.settings_marks_myitmo_title), myItmo.title)
+            assertEquals(UiText.Res(SettingsStrings.settings_marks_myitmo_title), myItmo.title)
             assertFalse(myItmo.checked)
 
             for (bars in listOf(false, true)) {
@@ -54,7 +49,7 @@ class RecordbookPageProviderTest {
                     fixture.viewModel.uiState.value.sections.single().items.map { it.id }
                 )
                 val toggle = fixture.viewModel.toggle(SettingRowId.BARS_MARKS)
-                assertEquals(UiText.Res(Res.string.settings_marks_bars_title), toggle.title)
+                assertEquals(UiText.Res(SettingsStrings.settings_marks_bars_title), toggle.title)
                 assertEquals(bars, toggle.checked)
             }
         }
@@ -68,7 +63,7 @@ class RecordbookPageProviderTest {
 
             assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS), keys())
             val sheets = fixture.viewModel.toggle(SettingRowId.SHEET_MARKS)
-            assertEquals(UiText.Res(Res.string.settings_marks_sheets_title), sheets.title)
+            assertEquals(UiText.Res(SettingsStrings.settings_marks_sheets_title), sheets.title)
             assertFalse(sheets.checked)
 
             fixture.repository.barsMarks.value = true
@@ -127,15 +122,15 @@ class RecordbookPageProviderTest {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK)
             advanceUntilIdle()
             val footer = { fixture.viewModel.uiState.value.sections.single().footer }
-            assertEquals(UiText.Res(Res.string.settings_marks_footer), footer())
+            assertEquals(UiText.Res(SettingsStrings.settings_marks_footer), footer())
 
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
             advanceUntilIdle()
-            assertEquals(UiText.Res(Res.string.settings_marks_notifications_off), footer())
+            assertEquals(UiText.Res(SettingsStrings.settings_marks_notifications_off), footer())
 
             fixture.viewModel.onNotificationPermissionChanged(granted = true)
             advanceUntilIdle()
-            assertEquals(UiText.Res(Res.string.settings_marks_footer), footer())
+            assertEquals(UiText.Res(SettingsStrings.settings_marks_footer), footer())
         }
 
     @Test

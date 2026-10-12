@@ -5,9 +5,7 @@ import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.home_pending_predicted
-import dev.alllexey.itmowidgets.shared.core.home_pending_waiting
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -27,7 +25,7 @@ class SportHomeCardFormatterTest {
         assertEquals(3, card.queue.size)
         assertEquals(2, card.more)
         assertEquals("пн, 7 сент. \u00B7 16:00\u201317:30", card.queue.first().subtitle)
-        assertEquals(UiText.Res(Res.string.home_pending_waiting), card.queue.first().badge)
+        assertEquals(UiText.Res(CoreStrings.home_pending_waiting), card.queue.first().badge)
         assertEquals(queue.first().toDetailsArgs(moscow), card.queue.first().args)
 
         val noScore = formatter.format(HomeCard.Sport(null, queue.take(1)))
@@ -39,7 +37,7 @@ class SportHomeCardFormatterTest {
     fun aPredictedEntryIsMarkedAsAPrediction() {
         val card = formatter.format(HomeCard.Sport(null, listOf(booking(id = 1).copy(isPrediction = true))))
 
-        assertEquals(UiText.Res(Res.string.home_pending_predicted), card.queue.single().badge)
+        assertEquals(UiText.Res(CoreStrings.home_pending_predicted), card.queue.single().badge)
     }
 
     private fun booking(id: Long) = PendingSportBooking(

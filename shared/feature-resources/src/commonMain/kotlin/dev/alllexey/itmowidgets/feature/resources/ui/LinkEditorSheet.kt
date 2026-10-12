@@ -62,8 +62,8 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkFieldError
-import dev.alllexey.itmowidgets.shared.core.links_visibility_all
-import dev.alllexey.itmowidgets.shared.core.links_visibility_private
+import dev.alllexey.itmowidgets.shared.compose.strings.links_visibility_all
+import dev.alllexey.itmowidgets.shared.compose.strings.links_visibility_private
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.feature.resources.Res
@@ -81,7 +81,7 @@ import dev.alllexey.itmowidgets.shared.feature.resources.links_visibility_flow_r
 import dev.alllexey.itmowidgets.shared.feature.resources.links_who_sees
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What the link editor asks of its view model; closing, the clipboard and the snackbar stay with the host. */
@@ -387,7 +387,7 @@ private fun AudienceRows(state: LinkEditorUiState, onSelect: (LinkAudienceOption
 @Composable
 private fun audienceTexts(option: LinkAudienceOption, premoderation: Boolean): Pair<String, String?> = when (option) {
     LinkAudienceOption.Private -> stringResource(CoreRes.string.links_visibility_private) to null
-    is LinkAudienceOption.Flow -> option.audience.label to stringResource(lessonTypeName(option.audience.typeId)).let {
+    is LinkAudienceOption.Flow -> option.audience.label to lessonTypeName(option.audience.typeId).asString().let {
         if (premoderation) stringResource(Res.string.links_visibility_flow_review, it) else it
     }
     LinkAudienceOption.All -> stringResource(CoreRes.string.links_visibility_all) to

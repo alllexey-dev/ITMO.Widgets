@@ -41,14 +41,14 @@ import dev.alllexey.itmowidgets.designsystem.icons.drawable
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.ui.preview.RecordbookPreviewSamples
-import dev.alllexey.itmowidgets.shared.core.links_actions
-import dev.alllexey.itmowidgets.shared.core.links_add
-import dev.alllexey.itmowidgets.shared.core.links_chats
-import dev.alllexey.itmowidgets.shared.core.links_mine
-import dev.alllexey.itmowidgets.shared.core.links_score
-import dev.alllexey.itmowidgets.shared.core.links_title
-import dev.alllexey.itmowidgets.shared.core.links_vote_down
-import dev.alllexey.itmowidgets.shared.core.links_vote_up
+import dev.alllexey.itmowidgets.shared.compose.strings.links_actions
+import dev.alllexey.itmowidgets.shared.compose.strings.links_add
+import dev.alllexey.itmowidgets.shared.compose.strings.links_chats
+import dev.alllexey.itmowidgets.shared.compose.strings.links_mine
+import dev.alllexey.itmowidgets.shared.compose.strings.links_score
+import dev.alllexey.itmowidgets.shared.compose.strings.links_title
+import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_down
+import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_up
 import dev.alllexey.itmowidgets.shared.designsystem.ic_add
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
@@ -57,7 +57,7 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_link_lms
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Instant
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**

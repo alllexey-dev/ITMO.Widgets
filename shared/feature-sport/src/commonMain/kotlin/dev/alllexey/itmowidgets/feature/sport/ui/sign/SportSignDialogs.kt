@@ -28,8 +28,8 @@ import dev.alllexey.itmowidgets.designsystem.components.dialogs.InfoDialogSurfac
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignCommand
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignEvent
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.common_got_it
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.common_got_it
 import dev.alllexey.itmowidgets.shared.feature.sport.Res
 import dev.alllexey.itmowidgets.shared.feature.sport.common_ok
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_title
@@ -38,7 +38,7 @@ import dev.alllexey.itmowidgets.shared.feature.sport.sport_free_sign_switch
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_link_unavailable_text
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_link_unavailable_title
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /** A dialog of the `Запись` screen, opened by a [SportSignEvent]. */
 sealed interface SportSignDialog {

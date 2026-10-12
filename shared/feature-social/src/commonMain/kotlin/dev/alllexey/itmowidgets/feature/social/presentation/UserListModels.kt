@@ -3,14 +3,8 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.friend_picker_user_subtitle
-import dev.alllexey.itmowidgets.shared.feature.social.user_status_friends
-import dev.alllexey.itmowidgets.shared.feature.social.user_status_incoming
-import dev.alllexey.itmowidgets.shared.feature.social.user_status_outgoing
-import dev.alllexey.itmowidgets.shared.feature.social.user_subtitle_isu
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 
 enum class UserAction { ADD, ACCEPT, REJECT, CANCEL, REMOVE, INVITE }
 
@@ -38,24 +32,25 @@ sealed interface UserListItem {
 
 /** Backend sends an empty name until the owner's identity is published; a screen never shows it raw. */
 fun userDisplayName(name: String, isu: Int): UiText =
-    name.trim().takeIf { it.isNotEmpty() }?.let(UiText::Dynamic) ?: UiText.Res(CoreRes.string.user_name_placeholder, listOf(isu))
+    name.trim().takeIf { it.isNotEmpty() }?.let(UiText::Dynamic)
+        ?: UiText.Res(CoreStrings.user_name_placeholder, listOf(isu))
 
 fun UserSummary.displayName(): UiText = userDisplayName(name, isu)
 
 fun UserSummary.subtitleText(): UiText {
-    if (groups.isEmpty()) return UiText.Res(Res.string.user_subtitle_isu, listOf(isu))
+    if (groups.isEmpty()) return UiText.Res(SocialStrings.user_subtitle_isu, listOf(isu))
     val groupsText = if (groups.size <= 2) {
         groups.joinToString(" • ") { it.name }
     } else {
         "${groups.first().name} +${groups.size - 1}"
     }
-    return UiText.Res(Res.string.friend_picker_user_subtitle, listOf(isu, groupsText))
+    return UiText.Res(SocialStrings.friend_picker_user_subtitle, listOf(isu, groupsText))
 }
 
 fun RelationshipState.statusText(): UiText? = when (this) {
-    RelationshipState.OUTGOING -> UiText.Res(Res.string.user_status_outgoing)
-    RelationshipState.INCOMING -> UiText.Res(Res.string.user_status_incoming)
-    RelationshipState.FRIENDS -> UiText.Res(Res.string.user_status_friends)
+    RelationshipState.OUTGOING -> UiText.Res(SocialStrings.user_status_outgoing)
+    RelationshipState.INCOMING -> UiText.Res(SocialStrings.user_status_incoming)
+    RelationshipState.FRIENDS -> UiText.Res(SocialStrings.user_status_friends)
     RelationshipState.NONE, RelationshipState.BLOCKED -> null
 }
 

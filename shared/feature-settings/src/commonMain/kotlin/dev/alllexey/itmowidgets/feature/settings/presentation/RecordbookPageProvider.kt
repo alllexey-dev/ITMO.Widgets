@@ -2,12 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_bars_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_myitmo_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_notifications_off
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_sheets_title
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 
 /** The mark checks of My ITMO, BARS and Google Sheets. */
 class RecordbookPageProvider(
@@ -26,20 +21,20 @@ class RecordbookPageProvider(
                 items = listOfNotNull(
                     SettingItem.Toggle(
                         id = SettingRowId.MYITMO_MARKS,
-                        title = UiText.Res(Res.string.settings_marks_myitmo_title),
+                        title = UiText.Res(SettingsStrings.settings_marks_myitmo_title),
                         checked = local.myItmoMarksEnabled
                     ),
                     // BARS appears with the account's first BARS answer; before it there is nothing to check.
                     local.barsMarksEnabled?.let { enabled ->
                         SettingItem.Toggle(
                             id = SettingRowId.BARS_MARKS,
-                            title = UiText.Res(Res.string.settings_marks_bars_title),
+                            title = UiText.Res(SettingsStrings.settings_marks_bars_title),
                             checked = enabled
                         )
                     },
                     SettingItem.Toggle(
                         id = SettingRowId.SHEET_MARKS,
-                        title = UiText.Res(Res.string.settings_marks_sheets_title),
+                        title = UiText.Res(SettingsStrings.settings_marks_sheets_title),
                         checked = local.sheetMarksEnabled
                     ),
                     SettingRows.backgroundWork().takeIf {
@@ -48,8 +43,8 @@ class RecordbookPageProvider(
                     }
                 ),
                 footer = UiText.Res(
-                    if (state.notificationsGranted == false) Res.string.settings_marks_notifications_off
-                    else Res.string.settings_marks_footer
+                    if (state.notificationsGranted == false) SettingsStrings.settings_marks_notifications_off
+                    else SettingsStrings.settings_marks_footer
                 )
             )
         )

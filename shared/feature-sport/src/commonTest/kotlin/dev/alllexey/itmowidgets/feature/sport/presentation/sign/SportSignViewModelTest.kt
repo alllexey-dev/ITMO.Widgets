@@ -17,9 +17,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepo
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSignPreferences
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.emptyCatalog
-import dev.alllexey.itmowidgets.shared.feature.sport.Res
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_limit_reached
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_sign_success
+import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -190,7 +188,7 @@ class SportSignViewModelTest {
             actions.gate.complete(Unit)
             advanceUntilIdle()
             assertEquals(emptySet<Long>(), (viewModel.uiState.value as SportSignUiState.Content).busyLessonIds)
-            val toast = SportSignEvent.ShowToast(UiText.Res(Res.string.sport_sign_success))
+            val toast = SportSignEvent.ShowToast(UiText.Res(SportStrings.sport_sign_success))
             assertEquals(toast, viewModel.events.first())
             assertEquals(toast, viewModel.events.first())
         }
@@ -355,7 +353,7 @@ class SportSignViewModelTest {
         viewModel.handleAutoSignClick(lessonOn(7, day = 9).predicted())
         advanceUntilIdle()
 
-        val expected = UiText.Res(Res.string.sport_auto_sign_limit_reached, listOf(legacy))
+        val expected = UiText.Res(SportStrings.sport_auto_sign_limit_reached, listOf(legacy))
         assertEquals(SportSignEvent.ShowInfoDialog(message = expected), viewModel.events.first())
     }
 

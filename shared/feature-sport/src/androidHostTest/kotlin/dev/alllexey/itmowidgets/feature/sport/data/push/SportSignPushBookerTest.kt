@@ -14,10 +14,7 @@ import dev.alllexey.itmowidgets.feature.sport.data.Core2Harness
 import dev.alllexey.itmowidgets.feature.sport.data.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.notification_sport_failure
-import dev.alllexey.itmowidgets.shared.core.notification_sport_lesson
-import dev.alllexey.itmowidgets.shared.core.notification_sport_success
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import dev.alllexey.itmowidgets.testkit.respondJson
 import java.io.IOException
@@ -43,10 +40,10 @@ class SportSignPushBookerTest {
             assertEquals(listOf("/api/sport/${if (auto) "auto" else "free"}-sign/lesson/42/mark-satisfied"), fixture.queue)
             assertEquals(1, fixture.notifications.size)
             val notification = fixture.notifications.single()
-            assertEquals(UiText.Res(Res.string.notification_sport_success), notification.title)
+            assertEquals(UiText.Res(CoreStrings.notification_sport_success), notification.title)
             assertEquals(NotificationDestination.Sport, notification.destination)
             assertEquals(AppNotificationChannels.SPORT, notification.channel)
-            assertEquals(UiText.Res(Res.string.notification_sport_lesson, listOf("Секция", "21 сент., 12:00")), notification.text)
+            assertEquals(UiText.Res(CoreStrings.notification_sport_lesson, listOf("Секция", "21 сент., 12:00")), notification.text)
             assertEquals(42L.hashCode(), notification.id)
             assertEquals(1, fixture.bookingsRefresh)
             assertEquals(1, fixture.pendingRefresh)
@@ -68,7 +65,7 @@ class SportSignPushBookerTest {
             fixture.response = errorJson("Synthetic booking rule rejection")
             fixture.run()
             assertEquals(listOf("/api/sport/${if (auto) "auto" else "free"}-sign/lesson/42/cancel"), fixture.queue)
-            assertEquals(UiText.Res(Res.string.notification_sport_failure), fixture.notifications.single().title)
+            assertEquals(UiText.Res(CoreStrings.notification_sport_failure), fixture.notifications.single().title)
         }
         // Preserve the legacy signature's context-length condition, not a generic substring test.
         val shortContext = Fixture(false)

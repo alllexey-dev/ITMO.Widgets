@@ -50,10 +50,10 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel
-import dev.alllexey.itmowidgets.shared.core.common_cancel
-import dev.alllexey.itmowidgets.shared.core.links_score
-import dev.alllexey.itmowidgets.shared.core.links_vote_down
-import dev.alllexey.itmowidgets.shared.core.links_vote_up
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.links_score
+import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_down
+import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_up
 import dev.alllexey.itmowidgets.shared.designsystem.ic_content_copy
 import dev.alllexey.itmowidgets.shared.designsystem.ic_delete
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit
@@ -78,7 +78,7 @@ import dev.alllexey.itmowidgets.shared.feature.resources.sheet_scores_action
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** The rows of the link actions sheet, in display order. */

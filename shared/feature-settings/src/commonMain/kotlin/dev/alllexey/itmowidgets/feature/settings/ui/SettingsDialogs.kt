@@ -24,7 +24,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.accentSwatch
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
-import dev.alllexey.itmowidgets.shared.core.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_add
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_done
@@ -48,7 +48,7 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_pr
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_saturation
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** A dialog of a settings page. Each one is saved by [SettingsDialogState], so it comes back after recreation. */

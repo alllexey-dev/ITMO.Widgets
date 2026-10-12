@@ -5,9 +5,7 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.weblogin.domain.WebLoginCode
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_not_found
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_requested_at
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -43,7 +41,7 @@ class WebLoginIosModuleTest {
         runCurrent()
 
         val confirm = assertIs<WebLoginUiState.Confirm>(model.uiState.value)
-        assertEquals(UiText.Res(Res.string.web_login_requested_at, listOf("12:04")), confirm.requestedAt)
+        assertEquals(UiText.Res(AccountStrings.web_login_requested_at, listOf("12:04")), confirm.requestedAt)
         model.approve()
         runCurrent()
         assertEquals(WebLoginUiState.Done, model.uiState.value)
@@ -58,7 +56,7 @@ class WebLoginIosModuleTest {
         runCurrent()
 
         assertEquals(
-            WebLoginUiState.Input("ABCD2346", UiText.Res(Res.string.web_login_not_found)),
+            WebLoginUiState.Input("ABCD2346", UiText.Res(AccountStrings.web_login_not_found)),
             model.uiState.value,
         )
     }

@@ -6,9 +6,9 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.designsystem.locale.AppLocale
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.allPluralStringResources
-import dev.alllexey.itmowidgets.shared.core.allStringResources
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.allPluralStringResources
+import dev.alllexey.itmowidgets.shared.compose.strings.allStringResources
 import platform.UIKit.UIViewController
 
 /**
@@ -20,13 +20,13 @@ object IosStrings {
     /** The first call of `App.init`, before any composition or suspend resolver ([AppLocale]). */
     fun installAppLocale() = AppLocale.install()
 
-    /** A `:shared:core` string as [UiText], or null for a key it does not have. */
+    /** A catalog string as [UiText], or null for a key the catalog does not have. */
     fun coreString(key: String, arguments: List<Any>): UiText? =
-        Res.allStringResources[key]?.let { UiText.Res(it, arguments) }
+        UiText.Res(key, arguments).takeIf { key in Res.allStringResources }
 
-    /** A `:shared:core` plural for [count], which is also its argument 1, or null for a key it does not have. */
+    /** A catalog plural for [count], which is also its argument 1, or null for a key the catalog does not have. */
     fun corePlural(key: String, count: Int): UiText? =
-        Res.allPluralStringResources[key]?.let { UiText.Plural(it, count, listOf(count)) }
+        UiText.Plural(key, count, listOf(count)).takeIf { key in Res.allPluralStringResources }
 
     /** [text] as CMP resolves it outside composition. */
     suspend fun resolve(text: UiText): String = text.resolve()

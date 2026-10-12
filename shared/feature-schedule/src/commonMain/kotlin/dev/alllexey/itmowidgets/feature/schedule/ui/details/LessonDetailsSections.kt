@@ -34,7 +34,7 @@ import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.detailLines
 import dev.alllexey.itmowidgets.core.text.roomShortTitle
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.text.userDisplayName
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
@@ -61,16 +61,16 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_retry
-import dev.alllexey.itmowidgets.shared.core.schedule_lesson_details_flow
-import dev.alllexey.itmowidgets.shared.core.schedule_unknown_subject
-import dev.alllexey.itmowidgets.shared.core.sport_detail_fact_description
-import dev.alllexey.itmowidgets.shared.core.sport_details_location
-import dev.alllexey.itmowidgets.shared.core.sport_details_teacher
-import dev.alllexey.itmowidgets.shared.core.sport_duration
-import dev.alllexey.itmowidgets.shared.core.sport_open_map
-import dev.alllexey.itmowidgets.shared.core.teacher_open_profile
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_lesson_details_flow
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_unknown_subject
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_detail_fact_description
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_details_location
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_details_teacher
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_duration
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_open_map
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_open_profile
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_videocam
 
@@ -87,7 +87,7 @@ internal fun LessonDetailsHeader(state: LessonDetailsSheetState, actions: Lesson
     val end = LocalTime.parse(lesson.end)
     val minutes = (end.toSecondOfDay() - start.toSecondOfDay()) / SECONDS_PER_MINUTE
     val teacherIsu = UserScreenArgs.profileIsu(lesson.teacherIsu)
-    val kind = listOf(stringResource(lessonTypeName(lesson.typeId)), lesson.format)
+    val kind = listOf(lessonTypeName(lesson.typeId).asString(), lesson.format)
         .filter(String::isNotBlank)
         .joinToString(SEPARATOR)
     val room = lesson.room?.let { roomShortTitle(it).asString() }
@@ -241,7 +241,7 @@ internal fun LessonFriendsSection(state: LessonFriendsState, actions: LessonDeta
                     .testTag(LessonDetailsTestTags.FRIENDS_PROGRESS),
             )
             is LessonFriendsState.Error -> {
-                FriendsMessage(stringResource(state.error.textResource()))
+                FriendsMessage(state.error.toUiText().asString())
                 ProgressButton(
                     stringResource(CoreRes.string.common_retry),
                     onClick = actions.onRetryFriends,

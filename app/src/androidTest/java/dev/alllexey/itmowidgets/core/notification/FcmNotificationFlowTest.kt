@@ -23,12 +23,7 @@ import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.notification_channel_friends
-import dev.alllexey.itmowidgets.shared.core.notification_friend_accepted
-import dev.alllexey.itmowidgets.shared.core.notification_friend_request
-import dev.alllexey.itmowidgets.shared.core.notification_sport_lesson
-import dev.alllexey.itmowidgets.shared.core.notification_sport_success
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestSession
@@ -80,14 +75,14 @@ class FcmNotificationFlowTest {
 
                 val notifier = TestGraph.get<AppNotifier>()
                 notifier.show(AppNotification(AppNotificationChannels.SPORT, 42,
-                    UiText.Res(Res.string.notification_sport_success),
-                    UiText.Res(Res.string.notification_sport_lesson, listOf("Секция плавания", "21 сент., 12:00")),
+                    UiText.Res(CoreStrings.notification_sport_success),
+                    UiText.Res(CoreStrings.notification_sport_lesson, listOf("Секция плавания", "21 сент., 12:00")),
                     NotificationDestination.Sport))
                 val names = listOf("Александра Константиновна Длиннофамильская", "Иван Иванов")
                 names.forEachIndexed { index, name ->
                     notifier.show(AppNotification(AppNotificationChannels.FRIENDS, 100001 + index,
-                        UiText.Res(Res.string.notification_channel_friends),
-                        UiText.Res(if (index == 0) Res.string.notification_friend_request else Res.string.notification_friend_accepted,
+                        UiText.Res(CoreStrings.notification_channel_friends),
+                        UiText.Res(if (index == 0) CoreStrings.notification_friend_request else CoreStrings.notification_friend_accepted,
                             listOf(name)), NotificationDestination.UserProfile(100001 + index)))
                 }
                 eventually {

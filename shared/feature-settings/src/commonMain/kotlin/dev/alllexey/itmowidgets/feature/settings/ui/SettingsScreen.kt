@@ -41,8 +41,8 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.settings_back
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_back
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_loading
 import org.jetbrains.compose.resources.painterResource

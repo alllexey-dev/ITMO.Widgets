@@ -48,6 +48,6 @@ class CmpUiConventionPlugin : Plugin<Project> {
     }
 
     private companion object {
-        val PUBLIC_RES_MODULES = setOf(":shared:core", ":shared:designsystem")
+        val PUBLIC_RES_MODULES = setOf(":shared:compose-strings", ":shared:designsystem")
     }
 }

@@ -3,15 +3,15 @@ package dev.alllexey.itmowidgets.feature.schedule.data.changes
 import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.widget_preview_subject_math
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.plus
-import org.jetbrains.compose.resources.getString
 
 /**
  * A synthetic change for the Debug trigger of the background refresh (`-itmoRunRefresh`): a lesson cancelled
@@ -19,13 +19,13 @@ import org.jetbrains.compose.resources.getString
  */
 object ScheduleChangeFixture {
 
-    suspend fun digest(today: LocalDate, detectedAt: Instant): ScheduleChangeDigest {
+    suspend fun digest(today: LocalDate, detectedAt: Instant, texts: UiTextResolver): ScheduleChangeDigest {
         val change = ScheduleChange(
             id = "fixture-cancelled",
             detectedAt = detectedAt,
             kind = ScheduleChangeKind.CANCELLED,
             fields = emptySet(),
-            subjectName = getString(Res.string.widget_preview_subject_math),
+            subjectName = texts.resolve(UiText.Res(CoreStrings.widget_preview_subject_math)),
             typeId = 0,
             flowName = null,
             before = LessonSlot(

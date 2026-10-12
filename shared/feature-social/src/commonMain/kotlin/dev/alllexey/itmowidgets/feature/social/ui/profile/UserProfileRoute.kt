@@ -16,15 +16,16 @@ import androidx.lifecycle.repeatOnLifecycle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import dev.alllexey.itmowidgets.feature.social.ui.reviews.TeacherReviewActions
-import dev.alllexey.itmowidgets.shared.core.common_cancel
-import dev.alllexey.itmowidgets.shared.core.common_partial_load_error
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.common_partial_load_error
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.feature.social.Res
 import dev.alllexey.itmowidgets.shared.feature.social.friends_action_failed
 import dev.alllexey.itmowidgets.shared.feature.social.friends_remove_confirm_message
@@ -36,7 +37,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /**
  * Where the person profile leaves to; every exit is the host's (share, clipboard, navigation, links). The exits that
@@ -85,7 +86,7 @@ fun UserProfileRoute(
                     // A snackbar waits until it is gone; a confirmation must not wait behind it.
                     is UserProfileEvent.ActionFailed -> launch {
                         snackbars.showSnackbar(
-                            message = getString(Res.string.friends_action_failed, getString(event.error.textResource())),
+                            message = getString(Res.string.friends_action_failed, event.error.toUiText().resolve()),
                             duration = SnackbarDuration.Long,
                         )
                     }

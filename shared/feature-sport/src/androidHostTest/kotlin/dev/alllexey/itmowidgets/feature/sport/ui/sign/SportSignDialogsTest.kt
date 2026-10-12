@@ -20,12 +20,7 @@ import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignCommand
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignEvent
-import dev.alllexey.itmowidgets.shared.feature.sport.Res
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_existing_entry
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_free_description
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_auto_sign_title
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_community_services_disabled
-import dev.alllexey.itmowidgets.shared.feature.sport.sport_sign_success
+import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
@@ -110,7 +105,7 @@ class SportSignDialogsTest {
 
         state.show(
             SportSignEvent.ShowAutoSignDeleteDialog(
-                message = UiText.Res(Res.string.sport_auto_sign_existing_entry, listOf(2, 5)),
+                message = UiText.Res(SportStrings.sport_auto_sign_existing_entry, listOf(2, 5)),
                 command = LeaveQueue,
             ),
         )
@@ -138,7 +133,7 @@ class SportSignDialogsTest {
         waitForIdle()
         assertNull(state.dialog)
 
-        state.show(SportSignEvent.ShowInfoDialog(message = UiText.Res(Res.string.sport_community_services_disabled)))
+        state.show(SportSignEvent.ShowInfoDialog(message = UiText.Res(SportStrings.sport_community_services_disabled)))
         waitForIdle()
         button("Хорошо").performClick()
         waitForIdle()
@@ -179,7 +174,7 @@ class SportSignDialogsTest {
         val snackbars = SnackbarHostState()
         setContent {
             LaunchedEffect(Unit) {
-                snackbars.showSportSignMessage(SportSignEvent.ShowToast(UiText.Res(Res.string.sport_sign_success)))
+                snackbars.showSportSignMessage(SportSignEvent.ShowToast(UiText.Res(SportStrings.sport_sign_success)))
             }
         }
         val message = awaitResource("a snackbar is shown") { snackbars.currentSnackbarData?.visuals?.message }
@@ -203,8 +198,8 @@ class SportSignDialogsTest {
 
     private fun confirmEvent(showForceSign: Boolean, command: SportSignCommand = FreeSign) =
         SportSignEvent.ShowAutoSignConfirmDialog(
-            title = UiText.Res(Res.string.sport_auto_sign_title),
-            message = UiText.Res(Res.string.sport_auto_sign_free_description),
+            title = UiText.Res(SportStrings.sport_auto_sign_title),
+            message = UiText.Res(SportStrings.sport_auto_sign_free_description),
             showForceSignButton = showForceSign,
             command = command,
         )

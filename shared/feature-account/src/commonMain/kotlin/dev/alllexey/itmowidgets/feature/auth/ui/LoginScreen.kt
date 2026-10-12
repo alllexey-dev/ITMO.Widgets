@@ -24,12 +24,12 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginUiState
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.auth_signing_in
-import dev.alllexey.itmowidgets.shared.core.auth_web_error
-import dev.alllexey.itmowidgets.shared.core.auth_web_title
-import dev.alllexey.itmowidgets.shared.core.common_close
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_signing_in
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_web_error
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_web_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_close
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import org.jetbrains.compose.resources.painterResource

@@ -9,8 +9,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -145,7 +144,7 @@ class UserFriendsViewModelTest {
         val vm = create(repository)
         advanceUntilIdle()
         val row = ((vm.uiState.value as UserFriendsUiState.Content).items.single() as UserListItem.User).row
-        assertEquals(UiText.Res(Res.string.user_name_placeholder, listOf(12)), row.displayName)
+        assertEquals(UiText.Res(CoreStrings.user_name_placeholder, listOf(12)), row.displayName)
         assertEquals(UiText.Dynamic("Пользователь 12"), profile(12).user.displayName())
     }
 

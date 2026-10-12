@@ -12,9 +12,7 @@ import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.friends_section_incoming
-import dev.alllexey.itmowidgets.shared.feature.social.friends_section_outgoing
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -100,13 +98,13 @@ class FriendsViewModel(
             }
             FriendsTab.REQUESTS -> buildList<UserListItem> {
                 if (requestList.incoming.isNotEmpty()) {
-                    add(UserListItem.Header(UiText.Res(Res.string.friends_section_incoming)))
+                    add(UserListItem.Header(UiText.Res(SocialStrings.friends_section_incoming)))
                     requestList.incoming.forEach {
                         add(UserListItem.User(it.toRow(busy, primary = UserAction.ACCEPT, secondary = UserAction.REJECT)))
                     }
                 }
                 if (requestList.outgoing.isNotEmpty()) {
-                    add(UserListItem.Header(UiText.Res(Res.string.friends_section_outgoing)))
+                    add(UserListItem.Header(UiText.Res(SocialStrings.friends_section_outgoing)))
                     requestList.outgoing.forEach {
                         add(UserListItem.User(it.toRow(busy, primary = null, secondary = UserAction.CANCEL)))
                     }

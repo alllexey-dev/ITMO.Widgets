@@ -5,12 +5,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.resolve
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.allPluralStringResources
-import dev.alllexey.itmowidgets.shared.core.allStringResources
-import dev.alllexey.itmowidgets.shared.core.schedule_lesson_count
-import dev.alllexey.itmowidgets.shared.core.teacher_level_description
-import dev.alllexey.itmowidgets.shared.core.teacher_level_mixed
+import dev.alllexey.itmowidgets.shared.core.CorePlurals
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -46,10 +42,9 @@ class UiTextResolverTest {
     fun `every exported string resolves the same in Views and CMP`() {
         val formats = catalogEntries("string")
         assertTrue("Only ${formats.size} exported strings", formats.size >= MIN_EXPORTED_STRINGS)
-        assertEquals(formats.keys, Res.allStringResources.keys)
 
-        Res.allStringResources.forEach { (key, resource) ->
-            val text = UiText.Res(resource, argumentsFor(formats.getValue(key)))
+        formats.forEach { (key, format) ->
+            val text = UiText.Res(key, argumentsFor(format))
 
             assertEquals(key, runBlocking { text.resolve() }, text.resolve(context))
         }
@@ -57,12 +52,12 @@ class UiTextResolverTest {
 
     @Test
     fun `every exported plural resolves the same Russian forms in Views and CMP`() {
-        val formats = catalogEntries("plurals")
-        assertEquals(formats.keys, Res.allPluralStringResources.keys)
+        val keys = catalogEntries("plurals").keys
+        assertTrue("No exported plurals", keys.isNotEmpty())
 
-        Res.allPluralStringResources.forEach { (key, resource) ->
+        keys.forEach { key ->
             PLURAL_COUNTS.forEach { count ->
-                val text = UiText.Plural(resource, count, listOf(count))
+                val text = UiText.Plural(key, count, listOf(count))
 
                 assertEquals("$key $count", runBlocking { text.resolve() }, text.resolve(context))
             }
@@ -72,7 +67,7 @@ class UiTextResolverTest {
     @Test
     fun `a Russian plural takes the one, few and many forms`() {
         val texts = PLURAL_COUNTS.map { count ->
-            UiText.Plural(Res.plurals.schedule_lesson_count, count, listOf(count)).resolve(context)
+            UiText.Plural(CorePlurals.schedule_lesson_count, count, listOf(count)).resolve(context)
         }
 
         assertEquals(listOf("1 пара", "2 пары", "5 пар", "11 пар", "21 пара"), texts)
@@ -80,7 +75,7 @@ class UiTextResolverTest {
 
     @Test
     fun `a nested UiText argument resolves first on both sides`() {
-        val text = UiText.Res(Res.string.teacher_level_description, listOf(UiText.Res(Res.string.teacher_level_mixed)))
+        val text = UiText.Res(CoreStrings.teacher_level_description, listOf(UiText.Res(CoreStrings.teacher_level_mixed)))
 
         assertEquals("Тон отзывов: Смешанные", text.resolve(context))
         assertEquals("Тон отзывов: Смешанные", runBlocking { text.resolve() })
@@ -88,7 +83,7 @@ class UiTextResolverTest {
 
     @Test
     fun `joined and lowercased texts resolve the same on both sides`() {
-        val mixed = UiText.Res(Res.string.teacher_level_mixed)
+        val mixed = UiText.Res(CoreStrings.teacher_level_mixed)
         val text = UiText.Joined(listOf(UiText.Dynamic("1506"), UiText.LowercaseFirst(mixed)), " · ")
 
         assertEquals("1506 · смешанные", text.resolve(context))

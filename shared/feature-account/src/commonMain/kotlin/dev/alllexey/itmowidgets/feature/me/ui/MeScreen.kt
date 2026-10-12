@@ -52,12 +52,12 @@ import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_cancel
-import dev.alllexey.itmowidgets.shared.core.debug_tools_title
-import dev.alllexey.itmowidgets.shared.core.me_group_app
-import dev.alllexey.itmowidgets.shared.core.settings_title
-import dev.alllexey.itmowidgets.shared.core.share_action
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.debug_tools_title
+import dev.alllexey.itmowidgets.shared.compose.strings.me_group_app
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_title
+import dev.alllexey.itmowidgets.shared.compose.strings.share_action
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_github
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_telegram

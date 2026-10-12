@@ -3,19 +3,7 @@ package dev.alllexey.itmowidgets.core.resources
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.url.StrictUri
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.links_category_chat
-import dev.alllexey.itmowidgets.shared.core.links_category_exam
-import dev.alllexey.itmowidgets.shared.core.links_category_materials
-import dev.alllexey.itmowidgets.shared.core.links_category_notes
-import dev.alllexey.itmowidgets.shared.core.links_category_other
-import dev.alllexey.itmowidgets.shared.core.links_category_queue
-import dev.alllexey.itmowidgets.shared.core.links_category_recordings
-import dev.alllexey.itmowidgets.shared.core.links_category_scores
-import dev.alllexey.itmowidgets.shared.core.links_category_tasks
-import dev.alllexey.itmowidgets.shared.core.links_visibility_all
-import dev.alllexey.itmowidgets.shared.core.links_visibility_flow_unnamed
-import dev.alllexey.itmowidgets.shared.core.links_visibility_private
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 
 /** The site without `www.`, or the raw text, untrimmed, when it is not a URI with a server host. */
 fun SubjectLink.host(): String = serverHost(url) ?: url
@@ -24,15 +12,15 @@ fun SubjectLink.displayTitle(): String = title ?: host()
 
 fun LinkCategory.title(): UiText = UiText.Res(
     when (this) {
-        LinkCategory.SCORES -> Res.string.links_category_scores
-        LinkCategory.QUEUE -> Res.string.links_category_queue
-        LinkCategory.MATERIALS -> Res.string.links_category_materials
-        LinkCategory.TASKS -> Res.string.links_category_tasks
-        LinkCategory.RECORDINGS -> Res.string.links_category_recordings
-        LinkCategory.NOTES -> Res.string.links_category_notes
-        LinkCategory.EXAM -> Res.string.links_category_exam
-        LinkCategory.CHAT -> Res.string.links_category_chat
-        LinkCategory.OTHER -> Res.string.links_category_other
+        LinkCategory.SCORES -> CoreStrings.links_category_scores
+        LinkCategory.QUEUE -> CoreStrings.links_category_queue
+        LinkCategory.MATERIALS -> CoreStrings.links_category_materials
+        LinkCategory.TASKS -> CoreStrings.links_category_tasks
+        LinkCategory.RECORDINGS -> CoreStrings.links_category_recordings
+        LinkCategory.NOTES -> CoreStrings.links_category_notes
+        LinkCategory.EXAM -> CoreStrings.links_category_exam
+        LinkCategory.CHAT -> CoreStrings.links_category_chat
+        LinkCategory.OTHER -> CoreStrings.links_category_other
     }
 )
 
@@ -61,9 +49,9 @@ fun linkIcon(category: LinkCategory, url: String): AppIcon {
 
 /** A FLOW link is named by its schedule flow ([audienceLabel], e.g. «ФИЗ ПИИКТ 3.2.1»). */
 fun LinkVisibility.label(audienceLabel: String? = null): UiText = when (this) {
-    LinkVisibility.PRIVATE -> UiText.Res(Res.string.links_visibility_private)
-    LinkVisibility.FLOW -> audienceLabel?.let(UiText::Dynamic) ?: UiText.Res(Res.string.links_visibility_flow_unnamed)
-    LinkVisibility.ALL -> UiText.Res(Res.string.links_visibility_all)
+    LinkVisibility.PRIVATE -> UiText.Res(CoreStrings.links_visibility_private)
+    LinkVisibility.FLOW -> audienceLabel?.let(UiText::Dynamic) ?: UiText.Res(CoreStrings.links_visibility_flow_unnamed)
+    LinkVisibility.ALL -> UiText.Res(CoreStrings.links_visibility_all)
 }
 
 /** Lower-cased without a locale, as the JVM `URI` host was read before. */

@@ -3,12 +3,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_friends_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_marks_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_changes_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_sport_title
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 
 /** One switch per home feed card. */
 class HomePageProvider(
@@ -45,27 +40,27 @@ class HomePageProvider(
             HomeCardRow(
                 SettingRowId.HOME_CARD_SCHEDULE,
                 HomeCardKind.SCHEDULE,
-                UiText.Res(Res.string.settings_home_card_schedule_title)
+                UiText.Res(SettingsStrings.settings_home_card_schedule_title)
             ),
             HomeCardRow(
                 SettingRowId.HOME_CARD_SCHEDULE_CHANGES,
                 HomeCardKind.SCHEDULE_CHANGES,
-                UiText.Res(Res.string.settings_home_card_schedule_changes_title)
+                UiText.Res(SettingsStrings.settings_home_card_schedule_changes_title)
             ),
             HomeCardRow(
                 SettingRowId.HOME_CARD_MARKS,
                 HomeCardKind.MARKS,
-                UiText.Res(Res.string.settings_home_card_marks_title)
+                UiText.Res(SettingsStrings.settings_home_card_marks_title)
             ),
             HomeCardRow(
                 SettingRowId.HOME_CARD_SPORT,
                 HomeCardKind.SPORT,
-                UiText.Res(Res.string.settings_home_card_sport_title)
+                UiText.Res(SettingsStrings.settings_home_card_sport_title)
             ),
             HomeCardRow(
                 SettingRowId.HOME_CARD_FRIENDS,
                 HomeCardKind.FRIEND_REQUESTS,
-                UiText.Res(Res.string.settings_home_card_friends_title)
+                UiText.Res(SettingsStrings.settings_home_card_friends_title)
             )
         )
     }

@@ -3,19 +3,7 @@ package dev.alllexey.itmowidgets.core.resources
 import dev.alllexey.itmowidgets.core.testing.subjectLink
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.links_category_chat
-import dev.alllexey.itmowidgets.shared.core.links_category_exam
-import dev.alllexey.itmowidgets.shared.core.links_category_materials
-import dev.alllexey.itmowidgets.shared.core.links_category_notes
-import dev.alllexey.itmowidgets.shared.core.links_category_other
-import dev.alllexey.itmowidgets.shared.core.links_category_queue
-import dev.alllexey.itmowidgets.shared.core.links_category_recordings
-import dev.alllexey.itmowidgets.shared.core.links_category_scores
-import dev.alllexey.itmowidgets.shared.core.links_category_tasks
-import dev.alllexey.itmowidgets.shared.core.links_visibility_all
-import dev.alllexey.itmowidgets.shared.core.links_visibility_flow_unnamed
-import dev.alllexey.itmowidgets.shared.core.links_visibility_private
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -24,15 +12,15 @@ class SubjectLinkTextsTest {
     @Test
     fun everyCategoryHasItsTitle() {
         val titles = mapOf(
-            LinkCategory.SCORES to Res.string.links_category_scores,
-            LinkCategory.QUEUE to Res.string.links_category_queue,
-            LinkCategory.MATERIALS to Res.string.links_category_materials,
-            LinkCategory.TASKS to Res.string.links_category_tasks,
-            LinkCategory.RECORDINGS to Res.string.links_category_recordings,
-            LinkCategory.NOTES to Res.string.links_category_notes,
-            LinkCategory.EXAM to Res.string.links_category_exam,
-            LinkCategory.CHAT to Res.string.links_category_chat,
-            LinkCategory.OTHER to Res.string.links_category_other,
+            LinkCategory.SCORES to CoreStrings.links_category_scores,
+            LinkCategory.QUEUE to CoreStrings.links_category_queue,
+            LinkCategory.MATERIALS to CoreStrings.links_category_materials,
+            LinkCategory.TASKS to CoreStrings.links_category_tasks,
+            LinkCategory.RECORDINGS to CoreStrings.links_category_recordings,
+            LinkCategory.NOTES to CoreStrings.links_category_notes,
+            LinkCategory.EXAM to CoreStrings.links_category_exam,
+            LinkCategory.CHAT to CoreStrings.links_category_chat,
+            LinkCategory.OTHER to CoreStrings.links_category_other,
         )
 
         assertEquals(LinkCategory.entries.toSet(), titles.keys)
@@ -124,10 +112,10 @@ class SubjectLinkTextsTest {
 
     @Test
     fun aFlowLinkIsNamedByItsFlow() {
-        assertEquals(UiText.Res(Res.string.links_visibility_private), LinkVisibility.PRIVATE.label("ФИЗ ПИИКТ 3.2.1"))
+        assertEquals(UiText.Res(CoreStrings.links_visibility_private), LinkVisibility.PRIVATE.label("ФИЗ ПИИКТ 3.2.1"))
         assertEquals(UiText.Dynamic("ФИЗ ПИИКТ 3.2.1"), LinkVisibility.FLOW.label("ФИЗ ПИИКТ 3.2.1"))
-        assertEquals(UiText.Res(Res.string.links_visibility_flow_unnamed), LinkVisibility.FLOW.label())
-        assertEquals(UiText.Res(Res.string.links_visibility_all), LinkVisibility.ALL.label("ФИЗ ПИИКТ 3.2.1"))
+        assertEquals(UiText.Res(CoreStrings.links_visibility_flow_unnamed), LinkVisibility.FLOW.label())
+        assertEquals(UiText.Res(CoreStrings.links_visibility_all), LinkVisibility.ALL.label("ФИЗ ПИИКТ 3.2.1"))
     }
 
     private fun link(url: String, title: String? = null) = subjectLink("link").copy(url = url, title = title)

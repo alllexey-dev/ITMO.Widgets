@@ -6,11 +6,7 @@ import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.browserText
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_code_invalid
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_not_found
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_requested_at
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_scanner_unavailable
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -34,20 +30,20 @@ internal object WebLoginSamples {
     )
 
     val input = WebLoginUiState.Input()
-    val invalid = WebLoginUiState.Input("ABC", UiText.Res(Res.string.web_login_code_invalid))
-    val notFound = WebLoginUiState.Input("ZZZZ2345", UiText.Res(Res.string.web_login_not_found))
-    val scannerUnavailable = WebLoginUiState.Input("", UiText.Res(Res.string.web_login_scanner_unavailable))
+    val invalid = WebLoginUiState.Input("ABC", UiText.Res(AccountStrings.web_login_code_invalid))
+    val notFound = WebLoginUiState.Input("ZZZZ2345", UiText.Res(AccountStrings.web_login_not_found))
+    val scannerUnavailable = WebLoginUiState.Input("", UiText.Res(AccountStrings.web_login_scanner_unavailable))
     val checking = WebLoginUiState.Checking(CODE)
     val confirm = confirm(preview)
     val longAgent = confirm(longAgentPreview)
     val approving = confirm.copy(approving = true)
     val network = WebLoginUiState.Error(AppError.Network.toUiText(), CODE)
-    val expired = WebLoginUiState.Error(UiText.Res(Res.string.web_login_not_found), "")
+    val expired = WebLoginUiState.Error(UiText.Res(AccountStrings.web_login_not_found), "")
 
     private fun confirm(preview: WebLoginPreview) = WebLoginUiState.Confirm(
         code = CODE,
         preview = preview,
         browser = browserText(preview.userAgent),
-        requestedAt = UiText.Res(Res.string.web_login_requested_at, listOf("12:04")),
+        requestedAt = UiText.Res(AccountStrings.web_login_requested_at, listOf("12:04")),
     )
 }

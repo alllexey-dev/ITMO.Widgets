@@ -13,8 +13,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthUiState
 import dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginUiState
 import dev.alllexey.itmowidgets.feature.auth.presentation.LoginPage
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.auth_error_invalid_credentials
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
@@ -50,7 +49,7 @@ internal class AuthScreenSigningInPreview {
 internal class AuthScreenErrorPreview {
     @Preview(name = "error")
     @Composable
-    fun AuthScreen() = AuthPreview(SignedOut.copy(error = UiText.Res(Res.string.auth_error_invalid_credentials)))
+    fun AuthScreen() = AuthPreview(SignedOut.copy(error = UiText.Res(AccountStrings.auth_error_invalid_credentials)))
 }
 
 /** The dialog alone on the screen's background, mirroring the dialog window. */

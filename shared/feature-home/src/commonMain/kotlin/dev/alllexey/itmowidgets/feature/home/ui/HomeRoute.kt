@@ -17,9 +17,9 @@ import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeEvent
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.common_partial_load_error
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.common_partial_load_error
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.getKoin
 import org.koin.compose.viewmodel.koinViewModel

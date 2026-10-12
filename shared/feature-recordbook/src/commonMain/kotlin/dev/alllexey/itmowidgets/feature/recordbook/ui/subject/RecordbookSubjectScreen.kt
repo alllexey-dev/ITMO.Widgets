@@ -47,7 +47,9 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarBack
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialog
 import dev.alllexey.itmowidgets.designsystem.components.groups.SectionHeading
@@ -66,8 +68,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookErrorSnackbars
 import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.preview.RecordbookSubjectPreviewSamples
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_back
@@ -78,11 +80,10 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_semester
 import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_subtitle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [RecordbookSubjectScreen]. */
@@ -202,7 +203,7 @@ internal fun RecordbookSubjectEventSnackbars(events: Flow<RecordbookSubjectEvent
                 when (event) {
                     is RecordbookSubjectEvent.VoteFailed -> {
                         // The failure replaces whatever snackbar is shown.
-                        val message = getString(event.error.textResource())
+                        val message = event.error.toUiText().resolve()
                         snackbars.currentSnackbarData?.dismiss()
                         launch { snackbars.showSnackbar(message, duration = SnackbarDuration.Short) }
                     }
@@ -251,7 +252,7 @@ fun RecordbookSubjectScreen(
                         title = stringResource(CoreRes.string.common_load_error_title),
                         modifier = Modifier.fillMaxSize().testTag(RecordbookSubjectTestTags.STATE),
                         icon = painterResource(KitRes.drawable.ic_error),
-                        description = stringResource(state.error.textResource()),
+                        description = state.error.toUiText().asString(),
                         action = ContentStateAction(
                             stringResource(CoreRes.string.common_retry),
                             actions.onRetry,

@@ -99,7 +99,7 @@ class SharedTextsRussianTest {
 
     @Test
     fun `lesson type names`() {
-        val names = listOf(-1, 1, 2, 3, 4, 5, 6, 10, 11).map { UiText.Res(lessonTypeName(it)).text() }
+        val names = listOf(-1, 1, 2, 3, 4, 5, 6, 10, 11).map { lessonTypeName(it).text() }
 
         assertEquals(
             listOf("Нет пар", "Лекция", "Лабораторная", "Практика", "Пара", "Экзамен", "Зачёт", "Консультация", "Спорт"),

@@ -11,9 +11,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserAction
 import dev.alllexey.itmowidgets.feature.social.presentation.UserListItem
 import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
 import dev.alllexey.itmowidgets.feature.social.presentation.subtitleText
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.friends_section_incoming
-import dev.alllexey.itmowidgets.shared.feature.social.friends_section_outgoing
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 
 /** Synthetic people of the friends previews: friends and requests, as `FriendsViewModel` maps them. */
 internal object FriendsPreviewData {
@@ -30,11 +28,11 @@ internal object FriendsPreviewData {
     fun requests(busyIsu: Int? = null) = FriendsUiState.Content(
         tab = FriendsTab.REQUESTS,
         items = buildList {
-            add(UserListItem.Header(UiText.Res(Res.string.friends_section_incoming)))
+            add(UserListItem.Header(UiText.Res(SocialStrings.friends_section_incoming)))
             INCOMING.forEach {
                 add(UserListItem.User(it.row(UserAction.ACCEPT, UserAction.REJECT, busyIsu)))
             }
-            add(UserListItem.Header(UiText.Res(Res.string.friends_section_outgoing)))
+            add(UserListItem.Header(UiText.Res(SocialStrings.friends_section_outgoing)))
             OUTGOING.forEach { add(UserListItem.User(it.row(secondary = UserAction.CANCEL, busyIsu = busyIsu))) }
         },
         incomingCount = INCOMING.size,

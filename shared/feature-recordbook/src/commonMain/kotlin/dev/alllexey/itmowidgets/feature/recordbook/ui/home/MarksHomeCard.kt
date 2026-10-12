@@ -11,14 +11,14 @@ import dev.alllexey.itmowidgets.core.home.HomeCardTestTags
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.markSubjectList
 import dev.alllexey.itmowidgets.designsystem.components.cards.ClosableFeedCard
-import dev.alllexey.itmowidgets.shared.core.marks_new_title
+import dev.alllexey.itmowidgets.shared.compose.strings.marks_new_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
 import dev.alllexey.itmowidgets.shared.feature.recordbook.home_marks_description
 import dev.alllexey.itmowidgets.shared.feature.recordbook.home_marks_dismiss
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**

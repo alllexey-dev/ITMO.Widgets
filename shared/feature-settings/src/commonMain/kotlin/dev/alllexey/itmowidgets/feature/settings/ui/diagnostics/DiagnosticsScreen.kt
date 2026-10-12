@@ -40,8 +40,8 @@ import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsUiState
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
 import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_clear
@@ -56,7 +56,7 @@ import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_level_warnin
 import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What the journal asks its host: leave, put the journal on the clipboard, clear it once the user confirmed. */

@@ -42,8 +42,8 @@ import dev.alllexey.itmowidgets.shared.feature.sport.sport_filter_search_hint
 import dev.alllexey.itmowidgets.shared.feature.sport.sport_filter_select_type
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_search
 

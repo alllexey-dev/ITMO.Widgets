@@ -26,8 +26,8 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDaySummary
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDayUi
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleRowUi
-import dev.alllexey.itmowidgets.shared.core.schedule_lesson_count
-import dev.alllexey.itmowidgets.shared.core.schedule_no_lessons
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_lesson_count
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_no_lessons
 import dev.alllexey.itmowidgets.shared.feature.schedule.Res
 import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_auto_sign_label
 import kotlinx.datetime.LocalDate
@@ -35,7 +35,7 @@ import kotlinx.datetime.format
 import kotlinx.datetime.isoDayNumber
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /** Test tags of the schedule list; a host finds a day by its date and a row by its lesson or queue. */
 object ScheduleListTestTags {

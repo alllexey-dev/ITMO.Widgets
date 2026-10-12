@@ -34,13 +34,13 @@ import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupIte
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacher
-import dev.alllexey.itmowidgets.shared.core.teacher_open_profile
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_open_profile
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
 import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_teachers_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
@@ -81,7 +81,7 @@ fun SubjectTeacherRow(item: SubjectHubItem.Teacher, onOpenProfile: (Int) -> Unit
             )
             if (teacher.roles.isNotEmpty()) {
                 Text(
-                    teacher.roles.map { stringResource(lessonTypeName(it)) }.joinToString(LIST_SEPARATOR),
+                    teacher.roles.map { lessonTypeName(it).asString() }.joinToString(LIST_SEPARATOR),
                     Modifier.padding(top = RolesGap),
                     color = colors.onSurfaceVariant,
                     style = ItmoTheme.typography.bodyMedium,

@@ -6,9 +6,7 @@ import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.home_pending_predicted
-import dev.alllexey.itmowidgets.shared.core.home_pending_waiting
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
@@ -44,7 +42,7 @@ class SportHomeCardFormatter(private val timeZone: TimeZone) {
             subtitle = start.date.format(DateTexts.SHORT_WEEKDAY_DAY_SHORT_MONTH) + SEPARATOR +
                 start.time.format(DateTexts.TIME) + RANGE_DASH + time(booking.end),
             badge = UiText.Res(
-                if (booking.isPrediction) Res.string.home_pending_predicted else Res.string.home_pending_waiting,
+                if (booking.isPrediction) CoreStrings.home_pending_predicted else CoreStrings.home_pending_waiting,
             ),
             args = booking.toDetailsArgs(timeZone),
         )

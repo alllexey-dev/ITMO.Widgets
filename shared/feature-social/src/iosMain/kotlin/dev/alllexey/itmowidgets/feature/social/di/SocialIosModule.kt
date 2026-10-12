@@ -12,9 +12,9 @@ import org.koin.dsl.module
  * profile reads are `reviewsModule`'s; [SocialShares] sends the profile links and the invitation with
  * [inviteUrl]. The rest (the Backend gate, the users API, MyItmoApi, the application
  * scope, the share links, `DemoMode`, the current user, the services opt-in) comes from the core, account and
- * settings modules.
+ * settings modules; the text resolver from `iosBackgroundModule`.
  */
 fun socialIosModule(inviteUrl: String): Module = module {
     single<FriendsApi> { get<BackendClient>().friends }
-    single { SocialShares(get(), get(), inviteUrl) }
+    single { SocialShares(get(), get(), inviteUrl, get()) }
 }

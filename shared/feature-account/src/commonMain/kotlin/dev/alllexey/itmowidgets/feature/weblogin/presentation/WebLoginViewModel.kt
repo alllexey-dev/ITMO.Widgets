@@ -16,30 +16,7 @@ import dev.alllexey.itmowidgets.feature.weblogin.domain.Browser
 import dev.alllexey.itmowidgets.feature.weblogin.domain.Platform
 import dev.alllexey.itmowidgets.feature.weblogin.domain.WebLoginCode
 import dev.alllexey.itmowidgets.feature.weblogin.domain.describeUserAgent
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_chrome
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_edge
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_firefox
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_on_platform
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_opera
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_safari
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_samsung
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_unknown
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_yandex
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_code_invalid
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_not_found
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_pair_unavailable
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_android
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_chrome_os
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_ios
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_ipados
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_linux
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_macos
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_windows
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_qr_unknown
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_requested_at
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_scanner_unavailable
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_services_disabled
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -70,7 +47,7 @@ class WebLoginViewModel(
         if (refusedPairLink(raw, current)) return
         val code = WebLoginCode.parse(raw)
         if (code == null) {
-            _uiState.value = current.copy(error = UiText.Res(Res.string.web_login_qr_unknown))
+            _uiState.value = current.copy(error = UiText.Res(AccountStrings.web_login_qr_unknown))
             return
         }
         check(code)
@@ -79,7 +56,7 @@ class WebLoginViewModel(
     /** The Play services scanner could not start, for example while its module is still downloading. */
     fun onScannerUnavailable() {
         val current = _uiState.value as? WebLoginUiState.Input ?: return
-        _uiState.value = current.copy(error = UiText.Res(Res.string.web_login_scanner_unavailable))
+        _uiState.value = current.copy(error = UiText.Res(AccountStrings.web_login_scanner_unavailable))
     }
 
     fun submit() {
@@ -87,7 +64,7 @@ class WebLoginViewModel(
         if (refusedPairLink(current.code, current)) return
         val code = WebLoginCode.parse(current.code)
         if (code == null) {
-            _uiState.value = current.copy(error = UiText.Res(Res.string.web_login_code_invalid))
+            _uiState.value = current.copy(error = UiText.Res(AccountStrings.web_login_code_invalid))
             return
         }
         check(code)
@@ -126,7 +103,7 @@ class WebLoginViewModel(
     /** A device's pairing link (scanned, pasted or from an App Link) is recognised, but pairing is not offered yet. */
     private fun refusedPairLink(raw: String, current: WebLoginUiState.Input): Boolean {
         if (PairLink.parse(raw) == null) return false
-        _uiState.value = current.copy(error = UiText.Res(Res.string.web_login_pair_unavailable))
+        _uiState.value = current.copy(error = UiText.Res(AccountStrings.web_login_pair_unavailable))
         return true
     }
 
@@ -143,7 +120,7 @@ class WebLoginViewModel(
                 is AppResult.Success -> confirm(code, result.value)
                 // A mistyped code is fixed in place rather than on a separate error screen.
                 is AppResult.Failure -> if (result.error == AppError.NotFound) {
-                    WebLoginUiState.Input(code, UiText.Res(Res.string.web_login_not_found))
+                    WebLoginUiState.Input(code, UiText.Res(AccountStrings.web_login_not_found))
                 } else failure(result.error, code)
             }
         }
@@ -153,13 +130,14 @@ class WebLoginViewModel(
         // The academic zone like every time the app shows; a debug date override does not move a real request.
         val requestedAt = preview.createdAt.toLocalDateTime(time.timeZone).time.format(DateTexts.TIME)
         return WebLoginUiState.Confirm(code, preview, browserText(preview.userAgent),
-            UiText.Res(Res.string.web_login_requested_at, listOf(requestedAt)))
+            UiText.Res(AccountStrings.web_login_requested_at, listOf(requestedAt)))
     }
 
     /** A used or expired sign-in cannot be retried with the same code. */
     private fun failure(error: AppError, code: String): WebLoginUiState.Error = when (error) {
-        AppError.NotFound -> WebLoginUiState.Error(UiText.Res(Res.string.web_login_not_found), "")
-        AppError.CustomServicesDisabled -> WebLoginUiState.Error(UiText.Res(Res.string.web_login_services_disabled), "")
+        AppError.NotFound -> WebLoginUiState.Error(UiText.Res(AccountStrings.web_login_not_found), "")
+        AppError.CustomServicesDisabled ->
+            WebLoginUiState.Error(UiText.Res(AccountStrings.web_login_services_disabled), "")
         else -> WebLoginUiState.Error(error.toUiText(), code)
     }
 
@@ -171,31 +149,31 @@ class WebLoginViewModel(
 /** «Chrome на macOS», «Chrome», «Браузер на Android» or just «Браузер». */
 internal fun browserText(userAgent: String?): UiText {
     val description = describeUserAgent(userAgent)
-    val browser = description.browser?.text() ?: UiText.Res(Res.string.web_login_browser_unknown)
+    val browser = description.browser?.text() ?: UiText.Res(AccountStrings.web_login_browser_unknown)
     val platform = description.platform ?: return browser
-    return UiText.Res(Res.string.web_login_browser_on_platform, listOf(browser, platform.text()))
+    return UiText.Res(AccountStrings.web_login_browser_on_platform, listOf(browser, platform.text()))
 }
 
 private fun Browser.text(): UiText = UiText.Res(
     when (this) {
-        Browser.YANDEX -> Res.string.web_login_browser_yandex
-        Browser.EDGE -> Res.string.web_login_browser_edge
-        Browser.OPERA -> Res.string.web_login_browser_opera
-        Browser.SAMSUNG -> Res.string.web_login_browser_samsung
-        Browser.FIREFOX -> Res.string.web_login_browser_firefox
-        Browser.CHROME -> Res.string.web_login_browser_chrome
-        Browser.SAFARI -> Res.string.web_login_browser_safari
+        Browser.YANDEX -> AccountStrings.web_login_browser_yandex
+        Browser.EDGE -> AccountStrings.web_login_browser_edge
+        Browser.OPERA -> AccountStrings.web_login_browser_opera
+        Browser.SAMSUNG -> AccountStrings.web_login_browser_samsung
+        Browser.FIREFOX -> AccountStrings.web_login_browser_firefox
+        Browser.CHROME -> AccountStrings.web_login_browser_chrome
+        Browser.SAFARI -> AccountStrings.web_login_browser_safari
     }
 )
 
 private fun Platform.text(): UiText = UiText.Res(
     when (this) {
-        Platform.WINDOWS -> Res.string.web_login_platform_windows
-        Platform.MACOS -> Res.string.web_login_platform_macos
-        Platform.LINUX -> Res.string.web_login_platform_linux
-        Platform.CHROME_OS -> Res.string.web_login_platform_chrome_os
-        Platform.ANDROID -> Res.string.web_login_platform_android
-        Platform.IOS -> Res.string.web_login_platform_ios
-        Platform.IPADOS -> Res.string.web_login_platform_ipados
+        Platform.WINDOWS -> AccountStrings.web_login_platform_windows
+        Platform.MACOS -> AccountStrings.web_login_platform_macos
+        Platform.LINUX -> AccountStrings.web_login_platform_linux
+        Platform.CHROME_OS -> AccountStrings.web_login_platform_chrome_os
+        Platform.ANDROID -> AccountStrings.web_login_platform_android
+        Platform.IOS -> AccountStrings.web_login_platform_ios
+        Platform.IPADOS -> AccountStrings.web_login_platform_ipados
     }
 )

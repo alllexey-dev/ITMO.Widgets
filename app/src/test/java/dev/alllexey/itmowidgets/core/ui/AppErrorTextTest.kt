@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.textKey
 import dev.alllexey.itmowidgets.core.text.toUiText
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -32,19 +32,19 @@ class AppErrorTextTest {
 
     @Test
     fun `every error has its own message`() {
-        assertEquals(errors.size, errors.map { it.textResource().key }.distinct().size)
+        assertEquals(errors.size, errors.map { it.textKey() }.distinct().size)
     }
 
     @Test
     fun `the Views id and the common text of an error name the same key`() {
         errors.forEach { error ->
-            assertEquals(error.textResource().key, context.resources.getResourceEntryName(error.messageRes()))
+            assertEquals(error.textKey(), context.resources.getResourceEntryName(error.messageRes()))
         }
     }
 
     @Test
     fun `an error resolves to its released text`() {
         assertEquals("Нет связи. Проверьте интернет.", AppError.Network.toUiText().resolve(context))
-        assertEquals(UiText.Res(AppError.Restricted.textResource()), AppError.Restricted.toUiText())
+        assertEquals(UiText.Res(AppError.Restricted.textKey()), AppError.Restricted.toUiText())
     }
 }

@@ -50,10 +50,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.feature.settings.ui.preview.SettingsPreviewData
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_all
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_friends
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_nobody
+import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import org.junit.Assert.assertEquals
@@ -364,8 +361,11 @@ class SettingsScreenTest {
             .filterIsInstance<SettingItem.Choice>().first { it.id == SettingRowId.SCHEDULE_SHARING }.options
         assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), options.map(ChoiceOption::key))
         assertEquals(
-            listOf(Res.string.settings_privacy_all, Res.string.settings_privacy_friends, Res.string.settings_privacy_nobody)
-                .map { UiText.Res(it) },
+            listOf(
+                SettingsStrings.settings_privacy_all,
+                SettingsStrings.settings_privacy_friends,
+                SettingsStrings.settings_privacy_nobody
+            ).map { UiText.Res(it) },
             options.map(ChoiceOption::label),
         )
         compose.onNodeWithTag(SettingRowId.SCHEDULE_SHARING.key).performClick()

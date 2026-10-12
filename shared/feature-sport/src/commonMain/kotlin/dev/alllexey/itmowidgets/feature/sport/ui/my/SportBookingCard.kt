@@ -58,9 +58,9 @@ import kotlinx.datetime.format
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.sport_cancel_booking_action
-import dev.alllexey.itmowidgets.shared.core.sport_open_map
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_cancel_booking_action
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_open_map
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
@@ -185,7 +185,7 @@ fun sportBookingStatusText(booking: SportBooking): UiText {
     return if (entry != null && (status == SportRegistrationStatus.WAITING || status == SportRegistrationStatus.NOTIFIED)) {
         sportQueuePositionText(entry.position, entry.total)
     } else {
-        UiText.Res(status.labelResource())
+        UiText.Res(status.labelResource().key)
     }
 }
 

@@ -139,7 +139,7 @@ class SportGoldenHarness(
 
         /** The notification by its string keys' meaning, as recorded through the 1.x path. */
         fun renderNotification(notification: AppNotification): String {
-            val title = when ((notification.title as UiText.Res).resource.key) {
+            val title = when ((notification.title as UiText.Res).key) {
                 "notification_sport_success" -> "success"
                 "notification_sport_failure" -> "failure"
                 else -> "other"

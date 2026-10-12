@@ -28,7 +28,7 @@ import dev.alllexey.itmowidgets.designsystem.components.cards.FeedCard
 import dev.alllexey.itmowidgets.designsystem.components.cards.FeedCardHeader
 import dev.alllexey.itmowidgets.designsystem.components.cards.FeedRowBadge
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.shared.core.sport_score_remaining_status
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_score_remaining_status
 import dev.alllexey.itmowidgets.shared.designsystem.ic_exercise
 import dev.alllexey.itmowidgets.shared.feature.sport.Res
 import dev.alllexey.itmowidgets.shared.feature.sport.home_sport_more
@@ -38,7 +38,7 @@ import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** The sport home card: the score out of 100 and the first own queue entries, in [timeZone]. */

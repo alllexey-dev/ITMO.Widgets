@@ -30,6 +30,7 @@ include(":app")
 // The module graph of ADR 0018.
 include(
     ":shared:core",
+    ":shared:compose-strings",
     ":shared:designsystem",
     ":shared:testing",
     ":shared:backend-client",

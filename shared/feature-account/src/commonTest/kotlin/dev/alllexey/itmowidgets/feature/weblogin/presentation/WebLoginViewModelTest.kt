@@ -8,18 +8,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_chrome
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_on_platform
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_unknown
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_code_invalid
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_not_found
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_pair_unavailable
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_macos
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_qr_unknown
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_requested_at
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_scanner_unavailable
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_services_disabled
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -60,10 +49,10 @@ class WebLoginViewModelTest {
 
         val confirm = vm.uiState.value as WebLoginUiState.Confirm
         assertEquals(challenge, confirm.preview.challengeId)
-        assertEquals(UiText.Res(Res.string.web_login_browser_on_platform, listOf(
-            UiText.Res(Res.string.web_login_browser_chrome), UiText.Res(Res.string.web_login_platform_macos))), confirm.browser)
+        assertEquals(UiText.Res(AccountStrings.web_login_browser_on_platform, listOf(
+            UiText.Res(AccountStrings.web_login_browser_chrome), UiText.Res(AccountStrings.web_login_platform_macos))), confirm.browser)
         // Moscow time, as the rest of the app shows it.
-        assertEquals(UiText.Res(Res.string.web_login_requested_at, listOf("12:04")), confirm.requestedAt)
+        assertEquals(UiText.Res(AccountStrings.web_login_requested_at, listOf("12:04")), confirm.requestedAt)
 
         vm.approve()
         assertTrue((vm.uiState.value as WebLoginUiState.Confirm).approving)
@@ -80,7 +69,7 @@ class WebLoginViewModelTest {
 
         vm.onCodeChanged("abcd-234")
         vm.submit()
-        assertEquals(WebLoginUiState.Input("abcd-234", UiText.Res(Res.string.web_login_code_invalid)), vm.uiState.value)
+        assertEquals(WebLoginUiState.Input("abcd-234", UiText.Res(AccountStrings.web_login_code_invalid)), vm.uiState.value)
 
         vm.onCodeChanged("abcd-2345")
         assertEquals(WebLoginUiState.Input("abcd-2345"), vm.uiState.value)
@@ -97,7 +86,7 @@ class WebLoginViewModelTest {
 
         vm.onScanned("https://t.me/itmowidgets")
 
-        assertEquals(WebLoginUiState.Input("ABCD", UiText.Res(Res.string.web_login_qr_unknown)), vm.uiState.value)
+        assertEquals(WebLoginUiState.Input("ABCD", UiText.Res(AccountStrings.web_login_qr_unknown)), vm.uiState.value)
         assertTrue(repository.calls.isEmpty())
     }
 
@@ -109,7 +98,7 @@ class WebLoginViewModelTest {
 
         vm.onScanned(link)
 
-        val refused = UiText.Res(Res.string.web_login_pair_unavailable)
+        val refused = UiText.Res(AccountStrings.web_login_pair_unavailable)
         assertEquals(WebLoginUiState.Input("ABCD", refused), vm.uiState.value)
         vm.onCodeChanged(link)
         vm.submit()
@@ -123,7 +112,7 @@ class WebLoginViewModelTest {
 
         vm.onScannerUnavailable()
 
-        assertEquals(WebLoginUiState.Input("ABCD", UiText.Res(Res.string.web_login_scanner_unavailable)), vm.uiState.value)
+        assertEquals(WebLoginUiState.Input("ABCD", UiText.Res(AccountStrings.web_login_scanner_unavailable)), vm.uiState.value)
     }
 
     @Test fun anUnknownCodeStaysInTheFieldToBeFixed() = runTest(main.dispatcher) {
@@ -133,7 +122,7 @@ class WebLoginViewModelTest {
         vm.submit()
         runCurrent()
 
-        assertEquals(WebLoginUiState.Input("ABCD2345", UiText.Res(Res.string.web_login_not_found)), vm.uiState.value)
+        assertEquals(WebLoginUiState.Input("ABCD2345", UiText.Res(AccountStrings.web_login_not_found)), vm.uiState.value)
     }
 
     @Test fun aSignInThatExpiredBeforeApprovalCannotBeRetried() = runTest(main.dispatcher) {
@@ -145,7 +134,7 @@ class WebLoginViewModelTest {
 
         vm.approve()
         runCurrent()
-        assertEquals(WebLoginUiState.Error(UiText.Res(Res.string.web_login_not_found), ""), vm.uiState.value)
+        assertEquals(WebLoginUiState.Error(UiText.Res(AccountStrings.web_login_not_found), ""), vm.uiState.value)
 
         vm.retry()
         assertEquals(WebLoginUiState.Input(""), vm.uiState.value)
@@ -158,7 +147,7 @@ class WebLoginViewModelTest {
         vm.onScanned("ABCD2345")
         runCurrent()
 
-        assertEquals(WebLoginUiState.Error(UiText.Res(Res.string.web_login_services_disabled), ""), vm.uiState.value)
+        assertEquals(WebLoginUiState.Error(UiText.Res(AccountStrings.web_login_services_disabled), ""), vm.uiState.value)
     }
 
     @Test fun aNetworkErrorChecksTheSameCodeAgainOnRetry() = runTest(main.dispatcher) {
@@ -173,7 +162,7 @@ class WebLoginViewModelTest {
         runCurrent()
 
         val confirm = vm.uiState.value as WebLoginUiState.Confirm
-        assertEquals(UiText.Res(Res.string.web_login_browser_unknown), confirm.browser)
+        assertEquals(UiText.Res(AccountStrings.web_login_browser_unknown), confirm.browser)
         assertEquals(listOf("preview:ABCD2345", "preview:ABCD2345"), repository.calls)
     }
 

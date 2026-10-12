@@ -11,12 +11,12 @@ import androidx.compose.ui.platform.testTag
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarBack
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.user_profile_schedule_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.user_profile_schedule_title
 import dev.alllexey.itmowidgets.shared.feature.schedule.Res
 import dev.alllexey.itmowidgets.shared.feature.schedule.user_schedule_title
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /** Test tags of [UserScheduleScreen]. */
 object UserScheduleTestTags {

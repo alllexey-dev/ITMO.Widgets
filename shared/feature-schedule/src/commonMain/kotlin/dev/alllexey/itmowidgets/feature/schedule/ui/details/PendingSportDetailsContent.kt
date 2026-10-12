@@ -37,20 +37,20 @@ import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_open_sport
 import kotlinx.datetime.format
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.core.common_close
-import dev.alllexey.itmowidgets.shared.core.sport_booking_conditions
-import dev.alllexey.itmowidgets.shared.core.sport_details_location
-import dev.alllexey.itmowidgets.shared.core.sport_details_teacher
-import dev.alllexey.itmowidgets.shared.core.sport_details_title
-import dev.alllexey.itmowidgets.shared.core.sport_duration
-import dev.alllexey.itmowidgets.shared.core.sport_open_map
-import dev.alllexey.itmowidgets.shared.core.sport_prediction_hint
-import dev.alllexey.itmowidgets.shared.core.sport_prediction_waiting
-import dev.alllexey.itmowidgets.shared.core.sport_queue_free_hint
-import dev.alllexey.itmowidgets.shared.core.sport_queue_future_hint
-import dev.alllexey.itmowidgets.shared.core.sport_registration_waiting
-import dev.alllexey.itmowidgets.shared.core.teacher_open_profile
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.common_close
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_booking_conditions
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_details_location
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_details_teacher
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_details_title
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_duration
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_open_map
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_prediction_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_prediction_waiting
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_queue_free_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_queue_future_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.sport_registration_waiting
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_open_profile
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_schedule
 

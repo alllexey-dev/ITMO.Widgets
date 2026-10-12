@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.core.text
 
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -14,7 +13,7 @@ class UserNamesTest {
 
     @Test
     fun anEmptyNameFallsBackToTheIsu() {
-        assertEquals(UiText.Res(Res.string.user_name_placeholder, listOf(123456)), userDisplayName(" ", 123456))
+        assertEquals(UiText.Res(CoreStrings.user_name_placeholder, listOf(123456)), userDisplayName(" ", 123456))
     }
 
     @Test

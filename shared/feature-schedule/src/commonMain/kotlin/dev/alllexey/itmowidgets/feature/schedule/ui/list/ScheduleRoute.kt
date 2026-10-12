@@ -23,15 +23,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleEvent
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleUiState
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.SelectedUser
-import dev.alllexey.itmowidgets.shared.core.Res
-import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -114,7 +115,7 @@ fun ScheduleRoute(
                 when (event) {
                     is ScheduleEvent.ShowError -> {
                         val result = snackbars.showSnackbar(
-                            message = getString(event.error.textResource()),
+                            message = event.error.toUiText().resolve(),
                             actionLabel = getString(Res.string.common_retry),
                             duration = SnackbarDuration.Long,
                         )

@@ -21,7 +21,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
-import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
@@ -38,10 +39,10 @@ import dev.alllexey.itmowidgets.feature.social.ui.reviews.OwnTeacherReviewRow
 import dev.alllexey.itmowidgets.feature.social.ui.reviews.TeacherReviewActions
 import dev.alllexey.itmowidgets.feature.social.ui.reviews.TeacherReviewRow
 import dev.alllexey.itmowidgets.feature.social.ui.reviews.TeacherSummaryCard
-import dev.alllexey.itmowidgets.shared.core.common_back
-import dev.alllexey.itmowidgets.shared.core.common_load_error_title
-import dev.alllexey.itmowidgets.shared.core.common_retry
-import dev.alllexey.itmowidgets.shared.core.share_action
+import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.share_action
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
@@ -51,7 +52,7 @@ import dev.alllexey.itmowidgets.shared.feature.social.user_profile_not_found_tit
 import dev.alllexey.itmowidgets.shared.feature.social.user_profile_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
@@ -170,7 +171,7 @@ private fun ProfileError(error: AppError, onRetry: () -> Unit) {
         ),
         modifier = Modifier.fillMaxSize().testTag(UserProfileTestTags.STATE),
         icon = painterResource(if (notFound) KitRes.drawable.ic_person else KitRes.drawable.ic_error),
-        description = if (notFound) null else stringResource(error.textResource()),
+        description = if (notFound) null else error.toUiText().asString(),
         action = if (notFound) null else ContentStateAction(stringResource(CoreRes.string.common_retry), onRetry),
     )
 }

@@ -46,7 +46,7 @@ final class SettingsTests: XCTestCase {
         for await state in model.viewModel.uiState where state.loaded {
             let row = state.sections.flatMap(\.items).compactMap { $0 as? SettingItemAction }
                 .first { $0.id == .notifications }
-            guard let value = row?.value, (value as? UiTextRes)?.resource.key == "settings_notifications_allowed" else {
+            guard let value = row?.value, (value as? UiTextRes)?.key == "settings_notifications_allowed" else {
                 continue
             }
             XCTAssertEqual(copy.text(value), AppStrings.string("ios_settings_notifications_allowed"))
