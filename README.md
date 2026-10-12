@@ -140,25 +140,12 @@
 
 ## Разработчикам
 
-Нужен JDK 17+ (на macOS удобнее 21); демон Gradle сам скачивает JetBrains JDK 21 из `gradle/gradle-daemon-jvm.properties`.
+Приложение на Kotlin Multiplatform: общие модули `shared/` с экранами на Compose Multiplatform, Android-приложение в `app/` и iOS-оболочка на SwiftUI в `iosApp/`. Как собрать и запустить - в [docs/getting-started.md](docs/getting-started.md), устройство кода - в [docs/architecture.md](docs/architecture.md), правила для PR - в [CONTRIBUTING.md](CONTRIBUTING.md), вся документация - в [docs/README.md](docs/README.md).
 
 ```bash
-./gradlew verifyQuick                         # тесты всех модулей, Konsist, lintGithubDebug, debug-сборки github и play
-./gradlew verifyFull                          # verifyQuick и lintPlayDebug
-./gradlew verifyIosKlibs                      # klibs iosSimulatorArm64 всех shared-модулей, без Xcode
-scripts/verify.sh shots <module>|app|all      # скриншот-тесты Roborazzi на JVM; --record перезаписывает эталоны
-scripts/verify.sh ui <Class>[,<Class>...]|all # инструментальные тесты :app на эмуляторе (ANDROID_SERIAL)
-scripts/verify.sh checks                      # проверка ссылок в документации
-scripts/ship-check.sh --no-device             # проверки перед релизом (версия, release-сборки, политика Play)
-scripts/ios/test.sh                           # iOS-приложение: сборка и тесты (Mac с Xcode)
+./gradlew verifyQuick      # тесты всех модулей, Konsist, lint, debug-сборки (JDK 21)
+scripts/ios/test.sh        # сборка и тесты iOS (Mac с Xcode)
 ```
-
-- **CI.** [android-ci](.github/workflows/android-ci.yml) на каждом PR и push в `master` гоняет тесты, линты, скриншоты и iOS klibs, [android-ui](.github/workflows/android-ui.yml) — инструментальные тесты на эмуляторе, [ios](.github/workflows/ios.yml) — сборку и тесты iOS. Ночной [android-nightly](.github/workflows/android-nightly.yml) гоняет платформенные тесты на Gradle Managed Device.
-- **MyItmoApi** берётся из Maven Central. Чтобы собрать приложение с локальными правками библиотеки, склонируйте [my-itmo-api](https://github.com/alllexey-dev/my-itmo-api) и задайте путь: `MYITMOAPI_DIR=<checkout> ./gradlew verifyQuick`. `~/.m2` и `publishToMavenLocal` не нужны.
-- **Скриншоты.** `scripts/verify.sh shots <module>` сравнивает экраны с эталонами в `screenshots/` модуля, `shots all` проверяет все модули, как CI. После намеренного изменения эталоны перезаписывает `--record`; подробности в [docs/design.md](docs/design.md#running-the-visual-tests).
-- **Инструментальные тесты** запускаются только на эмуляторе (они стирают данные приложения): `ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui <Class>`. Список платформенных тестов для `ui @platform` лежит в `app/src/androidTest/platform-tests.txt`.
-
-Debug-сборка ходит на dev-сервер, release — на боевой. Сборка `github` выходит APK на GitHub, `play` — AAB для Google Play. Описание архитектуры, настроек и каждой фичи — в [docs/README.md](docs/README.md), правила для контрибьюторов — в [AGENTS.md](AGENTS.md), история изменений — в [CHANGELOG.md](CHANGELOG.md).
 
 ## Обратная связь
 

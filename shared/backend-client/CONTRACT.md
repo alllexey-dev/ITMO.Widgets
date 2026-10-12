@@ -18,8 +18,8 @@ Backend owns every wire DTO. The client mirrors it and never invents a field, ro
 - The client never enforces privacy and never checks `DemoMode` or the custom-services opt-in: its holders in the
   apps do.
 
-The whole change, from the privacy boundary to a screen, is the
-[endpoint end to end](../../docs/recipes/endpoint-end-to-end.md) recipe.
+The whole change, from the privacy boundary to a screen, is in
+[Adding a Backend call](../../docs/feature-flow.md#adding-a-backend-call).
 
 ## Areas
 
