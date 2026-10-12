@@ -21,9 +21,9 @@
    home feed. It is the first release built for Google Play as well: the demo
    session for the review, account deletion on request and the two
    distribution variants. GitHub ships it first; Play follows its closed test.
-6. **v2.3** (Android) is a parity rewrite onto Kotlin Multiplatform and Compose
+6. **v2.3** (Android) moves the app onto Kotlin Multiplatform and Compose
    Multiplatform with the Material 3 Expressive look and no new product
-   features (decision 0016); a 2.2 install upgrades in place.
+   features; a 2.2 install upgrades in place.
 7. **iOS 2.3** is the first iOS client: a SwiftUI app over the shared Kotlin
    code with the Android feature set (decision 0023); its screens move from
    shared Compose screens to native SwiftUI (decision 0031). Minimum iOS
