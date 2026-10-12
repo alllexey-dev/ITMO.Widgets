@@ -38,7 +38,7 @@ import platform.UIKit.UIViewController
 /**
  * A hosted recordbook page and the channel the Swift host answers it through: the period picker's choice
  * ([RecordbookIosRequest.SelectPeriod], the tab root only) and a completed BARS sign-in
- * ([RecordbookIosRequest.BarsSignedIn]), as Android's Fragment results. Requests sent before the first frame wait in
+ * ([RecordbookIosRequest.BarsSignedIn]). Requests sent before the first frame wait in
  * an unlimited buffer.
  */
 class RecordbookPage internal constructor(
@@ -54,7 +54,7 @@ class RecordbookPage internal constructor(
 }
 
 /**
- * The recordbook tab's root (`AppRoutes.TabRoot(RECORDBOOK)`), L12's `RecordbookRoute` as Android's
+ * The recordbook tab's root (`AppRoutes.TabRoot(RECORDBOOK)`), `RecordbookRoute` as Android's
  * `RecordbookTabRoot` hosts it. The period button asks Swift for the picker ([pickPeriod], `AppRoutes.RecordbookPeriod`
  * of the shown programs with the shown period checked), whose answer comes back through [RecordbookPage.send]; a
  * subject opens its page through [open] only with valid arguments; the BARS sign-in is the Swift sheet ([barsLogin]).
@@ -86,7 +86,7 @@ fun recordbookRootPage(
  * The subject page (`AppRoutes.RecordbookSubject`), as Android's `RecordbookSubjectEntry` hosts it: the sheet and LMS
  * links open in the system ([linkFailed] when nothing takes them, `link_open_failed`), `Мои баллы` and a teacher's
  * profile open through [open], the BARS sign-in is the Swift sheet ([barsLogin]). The links section shows while iOS
- * offers subject links (`PlatformCapabilities.reviews`, on since IO-09f): `Все ссылки`, the editor and a link's actions
+ * offers subject links (`PlatformCapabilities.reviews`): `Все ссылки`, the editor and a link's actions
  * (a long press) open through [open] as SwiftUI sheets.
  */
 fun recordbookSubjectPage(
@@ -189,7 +189,7 @@ private fun subjectArgs(selection: RecordbookSelection, subject: RecordbookSubje
     barsIdentifier = subject.barsJournal?.identifier,
 )
 
-/** The routes draw their own top bar and no insets (DS-03), so the host pads the safe area on every side. */
+/** The routes draw their own top bar and no insets, so the host pads the safe area on every side. */
 @Composable
 private fun RecordbookPadded(content: @Composable () -> Unit) {
     Box(

@@ -19,7 +19,7 @@ import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/** The titled shell of a user's schedule, as v2.2's user schedule screen drew it with `fragment_user_schedule.xml`. */
+/** The titled shell of a user's schedule. */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
 class UserScheduleScreenTest {

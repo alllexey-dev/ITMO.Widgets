@@ -53,7 +53,7 @@ class ReportReviewActions(
 )
 
 /**
- * The report dialog the Fragment host calls: keeps the picked reason and the comment across recreation and sends them
+ * The report dialog the host shows: keeps the picked reason and the comment across recreation and sends them
  * with [onSend] (`ReportReviewViewModel.send`). [sending] and [error] come from the host; a failure keeps the dialog,
  * which closes only when the host stops showing it after the report was accepted.
  */
@@ -79,7 +79,7 @@ fun ReportReviewForm(
 }
 
 /**
- * `Жалоба на отзыв` (`dialog_report_review.xml`) on the kit's [ReportDialog]: the four [ReviewReportReason]s and an
+ * `Жалоба на отзыв` on the kit's [ReportDialog]: the four [ReviewReportReason]s and an
  * optional comment of up to 500 characters; `Отправить` is enabled once a reason is picked. Back and a tap outside
  * close it only while nothing is being sent.
  */
@@ -136,7 +136,7 @@ private fun ReviewReportReason.label(): StringResource = when (this) {
 }
 
 /*
- * Previews. LX-1c recorded the XML references as `ReportReviewDialog_<state>`, so each state is a function called
+ * Previews. The references are named `ReportReviewDialog_<state>`, so each state is a function called
  * `ReportReviewDialog` in a holder class of its own: the dialog's surface on the margin its window keeps.
  */
 

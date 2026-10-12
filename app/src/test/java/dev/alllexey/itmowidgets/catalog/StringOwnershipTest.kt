@@ -9,7 +9,7 @@ import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
- * The string catalog is split by owner, not by prefix (ADR 0028): `strings_<unit>.xml` per v2.3 module,
+ * The string catalog is split by owner, not by prefix: `strings_<unit>.xml` per module,
  * `strings_common.xml` for ids of two or more units or of `core/`, `strings_platform.xml` for every id a system
  * surface reaches. `scripts/strings-owners.py --where <id|path>` names the file for a new string. Frozen keys,
  * placeholders, plural forms and cross-module uniqueness are `checkStringCatalog`'s (build-logic/strings).
@@ -23,7 +23,7 @@ class StringOwnershipTest {
     private val resources = File(sources, "main/res")
     private val sharedModules = File(module.parentFile, "shared").listFiles { file -> file.isDirectory }.orEmpty()
         .sortedBy { it.name }
-    // A file moved to a shared module's composeResources keeps its name and owner (TC-16a androidExport).
+    // A file moved to a shared module's composeResources keeps its name and owner.
     private val catalog by lazy {
         val moved = sharedModules.map { File(it, "src/commonMain/composeResources/values") }
         (listOf(File(resources, "values")) + moved)
@@ -39,7 +39,7 @@ class StringOwnershipTest {
         PRODUCTION_SETS.flatMap { set -> File(sources, "$set/java").walkTopDown().filter { it.extension == "kt" } }
             .map { it to it.readText() }
     }
-    // Kotlin of the shared modules reads its strings through the module's generated Res (KM-09b).
+    // Kotlin of the shared modules reads its strings through the module's generated Res.
     private val sharedKotlinUsers by lazy {
         sharedModules.flatMap { shared ->
             File(shared, "src").listFiles { set -> set.name.endsWith("Main") }.orEmpty()
@@ -221,7 +221,7 @@ class StringOwnershipTest {
             "app", "common", "platform", "debug", "qr", "home", "schedule", "sport", "recordbook", "social",
             "settings", "resources", "reviews", "auth", "onboarding", "me", "weblogin", "web", "update"
         )
-        // The v2.3 modules; src/debug previews and the test source sets may show any module's screens.
+        // Only production source sets: src/debug previews and the test source sets may show any module's screens.
         val PRODUCTION_SETS = listOf("main", "github", "play")
         val ACCOUNT_FILES = setOf("auth", "onboarding", "me", "weblogin", "web", "update")
         val FEATURE_UNITS = CATALOG_FILES.associateWith { it } + mapOf("friendselector" to "social")

@@ -4,7 +4,7 @@ import Shared
 import WebKit
 import XCTest
 
-/// The BARS session on iOS (L18 IO-09d1) inside the app's entitlements and its started graph: WebKit's ITMO.ID
+/// The BARS session on iOS inside the app's entitlements and its started graph: WebKit's ITMO.ID
 /// cookies copied to the Keychain and replayed as the `Cookie` header of the authorization URL, a callback with
 /// another `state` rejected, one `BarsClient` in the graph, and sign-out emptying the BARS item and the cookie copy.
 /// Every value is synthetic; no test reaches the network.

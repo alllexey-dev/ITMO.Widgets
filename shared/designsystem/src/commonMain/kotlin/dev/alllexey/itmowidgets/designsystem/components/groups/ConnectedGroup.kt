@@ -26,7 +26,7 @@ enum class GroupSurface {
 }
 
 /**
- * One row of a connected group (port of `core/ui/ConnectedGroup.kt`): the rows of a section share one surface, stand
+ * One row of a connected group: the rows of a section share one surface, stand
  * 2 dp apart and round 20 dp outside and 4 dp between rows. The row is clipped to that shape, so a `clickable` added
  * after this modifier ripples in it, and an informational row uses the same call.
  *

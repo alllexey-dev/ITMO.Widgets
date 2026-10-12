@@ -3,7 +3,7 @@ import SwiftUI
 
 extension Routes {
     /// The me root (`MeTabScreen`); friends, search, a profile and a user's friends are the social Compose routes
-    /// pushed on the selected tab's stack (IO-09e). A user's schedule and sport are the schedule's and sport's keys.
+    /// pushed on the selected tab's stack. A user's schedule and sport are the schedule's and sport's keys.
     static func social(_ route: any AppRoute) -> RouteTarget {
         switch route {
         case is AppRoutes.Friends:

@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// One settings page as the shared page model describes it (`SettingsUiState`, L14 LT-3b): one SwiftUI row per
+/// One settings page as the shared page model describes it (`SettingsUiState`): one SwiftUI row per
 /// `SettingItem` subtype in the sections the page provider built. Stateless, so snapshot tests render it from fixture
 /// states; `SettingsScreen` owns the ViewModel and passes its state and actions in.
 struct SettingsForm: View {

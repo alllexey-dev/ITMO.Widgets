@@ -15,8 +15,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPeriodOption
 import dev.alllexey.itmowidgets.feature.recordbook.ui.recordbookPeriodOptions
 
 /**
- * Synthetic spring 2025/2026 recordbooks for the previews and host tests, the same scenes the XML references of
- * LR-1c showed: the middle of the semester with BARS on and the session.
+ * Synthetic spring 2025/2026 recordbooks for the previews and host tests: the middle of the semester with BARS on and
+ * the session.
  */
 internal object RecordbookPreviewSamples {
 
@@ -41,8 +41,8 @@ internal object RecordbookPreviewSamples {
     )
     val selection = RecordbookSelection(program, program.periods.first())
     /**
-     * 68 points, 32 short: LR-1c's scene had 64 and 36, but the screenshot harness resolves Compose plurals in the
-     * JVM's locale, where 36 took the `other` form; 32 reads the same in `few` and `other`.
+     * 68 points, 32 short: the screenshot harness resolves Compose plurals in the JVM's locale, so the count is one
+     * that reads the same in `few` and `other`.
      */
     val sport = RecordbookSportState.Content("Весна 2025/2026", SportScoreSummary(52, 16), endsAt = null, current = true)
 

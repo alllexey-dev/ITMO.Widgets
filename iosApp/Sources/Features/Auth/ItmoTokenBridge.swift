@@ -1,7 +1,7 @@
 import Foundation
 import WebKit
 
-/// SP-21 path (a): Android's `token_refresh_interceptor.js`, bundled by path from `app/src/main/assets`
+/// Android's `token_refresh_interceptor.js`, bundled by path from `app/src/main/assets`
 /// (`project.yml`), reports the ITMO.ID token response through `window.ItmoAuthBridge.postTokens`, which a script
 /// message handler takes here, as `LoginActivity.ItmoAuthBridge.postTokens` does on Android.
 enum ItmoTokenBridge {

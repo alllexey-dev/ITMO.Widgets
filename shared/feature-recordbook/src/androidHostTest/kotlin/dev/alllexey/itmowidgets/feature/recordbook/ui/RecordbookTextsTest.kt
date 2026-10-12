@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * `formatRecordbookNumber` without `java.text` (LR-3) writes what the View's Russian `NumberFormat` wrote: HALF_EVEN on
+ * `formatRecordbookNumber` without `java.text` writes what Russian `NumberFormat` writes: HALF_EVEN on
  * the double's exact value, a comma, at most one fraction digit and thousands grouped with a no-break space.
  */
 class RecordbookTextsTest {

@@ -15,7 +15,7 @@ import kotlin.uuid.Uuid
  * reporting `REPORT`; a restricted action is 403 `restricted` ([BackendException.Forbidden.code]), distinct from 403
  * `permission_denied` on another owner's link. A daily submission or report limit is 409.
  *
- * Not mirrored: the moderation routes under `/api/moderation` (moderators only, CO-02) and the moderation-only types
+ * Not mirrored: the moderation routes under `/api/moderation` (moderators only) and the moderation-only types
  * `SubjectLinkRevision` and `LinkRevisionStatus`.
  */
 interface SubjectLinksApi {

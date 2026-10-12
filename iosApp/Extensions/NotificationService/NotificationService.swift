@@ -1,6 +1,6 @@
 import UserNotifications
 
-/// The notification service extension (Swift micro-client, no Kotlin; ADR 0023, SP-16a). `PushHandler` decides what
+/// The notification service extension (Swift micro-client, no Kotlin). `PushHandler` decides what
 /// each push shows; when iOS ends the extension's time first, Backend's own alert is delivered, and Backend's next
 /// attempt retries the booking.
 final class NotificationService: UNNotificationServiceExtension {

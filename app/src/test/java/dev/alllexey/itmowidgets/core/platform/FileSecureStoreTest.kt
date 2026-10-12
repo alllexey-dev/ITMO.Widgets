@@ -107,7 +107,7 @@ class FileSecureStoreTest {
         const val MY_ITMO = "myitmo_tokens.enc"
         const val BARS = "bars_tokens.enc"
 
-        /** G-04's capture of 2.2, read in place; `UpgradeFrom22Test` pins its SHA-256. */
+        /** The device capture of 2.2, read in place; `UpgradeFrom22Test` pins its SHA-256. */
         val CAPTURED_22: File = listOf(File("."), File("app"))
             .map { File(it, "src/androidTest/assets/upgrade-2.2/plaintext") }
             .first { it.isDirectory }

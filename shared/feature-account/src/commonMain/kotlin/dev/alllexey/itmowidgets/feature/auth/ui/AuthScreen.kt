@@ -316,7 +316,7 @@ private fun RefreshTokenField(token: String, missing: Boolean, onValueChange: (S
     )
 }
 
-/** Tags named after the View ids of `fragment_auth.xml`, for host and instrumented tests. */
+/** Tags for host and instrumented tests. */
 object AuthTestTags {
     const val PROGRESS = "auth_progress"
     const val CONTENT = "auth_content"

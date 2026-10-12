@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkFieldError
 
 /**
- * Synthetic editor states for the previews and host tests, built on [SubjectLinksSamples]: the states of the LX-1c
+ * Synthetic editor states for the previews and host tests, built on [SubjectLinksSamples]: the states of the
  * references (a new link with its category guessed from the site and three nested flows, the own `own-scores` link,
  * no connection, an address that is not https) plus a title over the limit and a save in progress.
  */

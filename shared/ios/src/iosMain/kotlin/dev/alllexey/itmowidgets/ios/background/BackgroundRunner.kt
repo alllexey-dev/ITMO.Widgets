@@ -65,7 +65,7 @@ data class RefreshReport(val steps: List<StepRun>) {
 }
 
 /**
- * The background refresh of the iOS app (IO-14): [steps] in their order within [deadline], then [settle] (the
+ * The background refresh of the iOS app: [steps] in their order within [deadline], then [settle] (the
  * notifications reach the system), then [reschedule] (the next app refresh task), also when the run was cut or
  * cancelled. The app refresh task (`iosApp/Sources/Background/`), the app's launch, every return to the foreground
  * and `CheckScheduler.runOnce` run the same [run]; runs never overlap, a second one waits for the first.
@@ -163,7 +163,7 @@ class BackgroundRunner(
 }
 
 /**
- * The app's one [BackgroundRunner] (IO-14), built from the started graph by [start]: the [RefreshStep]s the feature
+ * The app's one [BackgroundRunner], built from the started graph by [start]: the [RefreshStep]s the feature
  * modules bind under their keys, in [RefreshStepKeys.ORDER]; `AppRefreshScheduler` for the next wake; the notifier's
  * posts to settle. It runs at once (the launch), on every return to the foreground and on `runOnce`; the app refresh
  * task calls [run] (`iosApp/Sources/Background/`). Koin modules live in `core.di` and the features' `di` packages, so

@@ -16,7 +16,7 @@ class WebLoginModuleTest {
     /** Core 2.0's users area, the gate, the demo switch, the dispatchers and the academic time are core bindings. */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theWebLoginModulesResolveWithTheBridgedTypes() {
+    fun theWebLoginModulesResolveWithThePlatformTypes() {
         module { includes(webLoginDataModule, webLoginModule) }.verify(
             extraTypes = listOf(
                 UsersApi::class,

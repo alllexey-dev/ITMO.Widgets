@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 /**
- * Synthetic Backend answers for users and friends, shaped like CO-09a's vendored `http/users/` and
+ * Synthetic Backend answers for users and friends, shaped like the vendored `http/users/` and
  * `http/friends/` answers at Backend commit ad8fa2dc3681dd57b6e8b797ace2f97322742555 (`BACKEND_COMMIT` of
  * `shared/backend-client/src/commonTest/resources/contract/`). Kept as constants, not JVM resources, so they move to
  * `commonTest` unchanged. No value here is a real person or ISU number.

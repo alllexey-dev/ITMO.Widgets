@@ -48,8 +48,8 @@ import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
- * Another viewer's or a copied review as a row of the others' connected group (port of `ReviewViews.kt` and
- * `item_teacher_review.xml`). The top line is the caption (subject, date) in at most two lines with the more button for reporting;
+ * Another viewer's or a copied review as a row of the others' connected group. The top line is the caption
+ * (subject, date) in at most two lines with the more button for reporting;
  * the text is never truncated; the footer names who wrote it (a named author or the source, both links, otherwise
  * `Анонимный отзыв`) with the verification under it and the vote pill centred beside them.
  *

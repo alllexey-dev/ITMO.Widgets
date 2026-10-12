@@ -102,7 +102,7 @@ class ReportReviewDialogTest {
         assertTrue(reviews.actions.isEmpty())
     }
 
-    /** As the Fragment host: the view model's sending flag, its failure until the next send, its done event. */
+    /** As the app's host: the view model's sending flag, its failure until the next send, its done event. */
     @Composable
     private fun Report(model: ReportReviewViewModel) {
         var failure by remember { mutableStateOf<AppError?>(null) }

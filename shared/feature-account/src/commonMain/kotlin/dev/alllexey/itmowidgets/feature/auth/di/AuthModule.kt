@@ -15,10 +15,9 @@ import org.koin.dsl.module
 
 /**
  * The session and the demo switch, one single each: every screen, widget and worker reads the session state, and a
- * second instance would split sign-out. Hilt-built code reads the same instances through the app's
- * `AccountAuthBridge`. The token store, the MyItmoApi client, the Backend syncs, the lifecycle effects and the demo
- * flag come from the platform; the cleaner list from `SessionDataCleaners`. A separate module from [authModule], so
- * a debug fixture that reloads the screens never builds a second session.
+ * second instance would split sign-out. The token store, the MyItmoApi client, the Backend syncs, the lifecycle
+ * effects and the demo flag come from the platform; the cleaner list from `SessionDataCleaners`. A separate module
+ * from [authModule], so a debug fixture that reloads the screens never builds a second session.
  */
 val authDataModule = module {
     singleOf(::DataStoreDemoMode) { bind<DemoMode>() }

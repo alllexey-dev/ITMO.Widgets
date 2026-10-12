@@ -21,7 +21,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.feature.settings.ui.preview.SettingsPreviewData
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LT-3a recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `SettingsScreen_<page>[-<state>]`, so each state is a function called `SettingsScreen` in a holder class of its
  * own; the scanner instantiates each holder by reflection.
  */

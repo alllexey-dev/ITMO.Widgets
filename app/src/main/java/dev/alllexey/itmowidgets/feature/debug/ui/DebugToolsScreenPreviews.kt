@@ -7,7 +7,7 @@ import dev.alllexey.itmowidgets.feature.debug.presentation.DebugToolsUiState
 import kotlinx.datetime.LocalDate
 
 /*
- * The baselines keep LA-1c's reference names, `DebugToolsScreen_<state>`: a baseline is named after its preview
+ * The baselines keep their reference names, `DebugToolsScreen_<state>`: a baseline is named after its preview
  * function, so each of the three previews is a private `DebugToolsScreen()` in a file of its own
  * (the dialogs are in `DebugToolsRefreshTokenDialogPreview.kt` and `DebugToolsSportScoreDialogPreview.kt`).
  */

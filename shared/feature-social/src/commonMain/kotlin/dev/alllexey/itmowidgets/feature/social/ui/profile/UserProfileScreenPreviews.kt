@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.ui.profile.preview.UserProfilePreviewData
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LC-1c recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `UserProfileScreen_<state>`. Each state therefore is a function called `UserProfileScreen` in a holder class of its
  * own; the scanner instantiates each holder by reflection.
  */
@@ -19,7 +19,7 @@ private fun UserProfilePreview(state: UserProfileUiState) = ItmoPreview {
     UserProfileScreen(state, UserProfileActions())
 }
 
-/** Tall enough for the AI summary and every review under the facts, as LC-1c's reference. */
+/** Tall enough for the AI summary and every review under the facts. */
 internal class UserProfileScreenTeacherSummaryPreview {
     @Preview(name = "teacher-summary", heightDp = 1800)
     @Composable

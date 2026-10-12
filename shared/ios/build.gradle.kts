@@ -1,13 +1,13 @@
-// The iOS umbrella: the static framework `Shared` that the Xcode project links, with SKIE's Swift layer (L18 IO-05);
-// linking needs Xcode (T10), compiling the klibs does not. Xcode builds it through the app target's
+// The iOS umbrella: the static framework `Shared` that the Xcode project links, with SKIE's Swift layer;
+// linking needs Xcode, compiling the klibs does not. Xcode builds it through the app target's
 // Run Script (`embedAndSignAppleFrameworkForXcode`, iosApp/project.yml); see docs/ios.md.
-// The Compose plugins copy every module's `composeResources` into the app bundle during that task (L18 IO-20);
+// The Compose plugins copy every module's `composeResources` into the app bundle during that task;
 // without them CMP finds no string on iOS.
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.plugin.compose")
-    // Sealed classes as Swift enums (`onEnum(of:)`), suspend as `async`, Flow as `AsyncSequence` (ADR 0023).
+    // Sealed classes as Swift enums (`onEnum(of:)`), suspend as `async`, Flow as `AsyncSequence`.
     alias(libs.plugins.skie)
 }
 
@@ -16,17 +16,17 @@ kotlin {
         target.binaries.framework {
             baseName = "Shared"
             isStatic = true
-            // Without it K/N warns that it cannot infer a bundle ID (T10).
+            // Without it K/N warns that it cannot infer a bundle ID.
             binaryOption("bundleId", "dev.alllexey.itmowidgets.shared")
-            // Exports are what Swift names without a module prefix: core for UiText, AppIcon (L18 IO-20) and the
-            // ports Swift implements; the IO card of a SwiftUI-owned ViewModel exports its feature module. Every
-            // export grows the header and the link (recipe ios-swiftui-screen).
+            // Exports are what Swift names without a module prefix: core for UiText, AppIcon and the ports Swift
+            // implements; a feature whose ViewModel SwiftUI owns is exported too. Every export grows the header and
+            // the link.
             export(project(":shared:core"))
-            // The sign-in and first-run ViewModels SwiftUI owns (IO-07b).
+            // The sign-in and first-run ViewModels SwiftUI owns.
             export(project(":shared:feature-account"))
-            // IO-08a: SettingsViewModel, DiagnosticsViewModel and the settings page model in Swift.
+            // SettingsViewModel, DiagnosticsViewModel and the settings page model in Swift.
             export(project(":shared:feature-settings"))
-            // IO-09d1: the BARS sign-in sheet's BarsLoginViewModel and the WebKit ports AppPlatform implements.
+            // The BARS sign-in sheet's BarsLoginViewModel and the WebKit ports AppPlatform implements.
             export(project(":shared:feature-recordbook"))
         }
     }
@@ -52,7 +52,7 @@ kotlin {
             // The Swift bridge: the ViewModelStore each SwiftUI screen owns (bridge/ScreenViewModelStore.kt).
             implementation(libs.jetbrains.lifecycle.viewmodel)
         }
-        // The background runner's tests (IO-14): kotlin-test, coroutines-test and FakeClock.
+        // The background runner's tests: kotlin-test, coroutines-test and FakeClock.
         iosTest.dependencies {
             implementation(project(":shared:testing"))
         }
@@ -60,7 +60,7 @@ kotlin {
 }
 
 skie {
-    // The build never reaches Touchlab's analytics endpoint (T10: the upload only timed out).
+    // The build never reaches Touchlab's analytics endpoint (the upload only timed out).
     analytics {
         disableUpload.set(true)
     }

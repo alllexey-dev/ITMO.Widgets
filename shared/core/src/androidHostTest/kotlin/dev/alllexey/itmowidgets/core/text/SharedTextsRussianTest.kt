@@ -16,8 +16,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * The common builders resolve to the Russian text the `Context` versions in `:app` wrote before the port, character
- * for character, so notifications, widgets and Views read the same after it.
+ * The common builders resolve to the Russian text notifications and widgets show, character for character.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)

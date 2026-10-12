@@ -5,8 +5,8 @@ import java.io.File
 
 /**
  * A module's baselines, `<module>/screenshots/`: one `<base>_<appearance>.png` per capture, where `<base>` is
- * `<Preview>` or `<Preview>_<state>` ([PreviewCase.baseName]), and [REFERENCES], the bases `:app` recorded from XML
- * screens under the name of a preview that does not exist yet (`XmlReferenceCapture`).
+ * `<Preview>` or `<Preview>_<state>` ([PreviewCase.baseName]), and [REFERENCES], the bases `:app` records without a
+ * preview (XML references, the shell chrome, the widgets).
  */
 class BaselineDirectory(val dir: File) {
 
@@ -35,7 +35,7 @@ class BaselineDirectory(val dir: File) {
         ?.toSet()
         .orEmpty()
 
-    /** Lists [base] in [REFERENCES]; the file stays sorted, so parallel reference cards merge line by line. */
+    /** Lists [base] in [REFERENCES]; the file stays sorted, so parallel changes merge line by line. */
     fun addReference(base: String) {
         val bases = references() + base
         dir.mkdirs()
@@ -47,14 +47,14 @@ class BaselineDirectory(val dir: File) {
     data class Baseline(val fileName: String, val base: String?, val appearance: PreviewAppearance?)
 
     companion object {
-        /** The index of XML references pending their port, one base per line. */
+        /** The index of the bases no preview renders, one base per line. */
         const val REFERENCES = "references.txt"
 
         private const val PNG = "png"
 
         private const val REFERENCES_HEADER =
-            "# XML references recorded by :app (XmlReferenceCapture) under the name of a future preview.\n" +
-                "# The port that adds the preview re-records the files and deletes its line and the reference test.\n"
+            "# Baselines recorded by :app that no preview renders.\n" +
+                "# A preview that takes over a base re-records the files and deletes its line and the reference test.\n"
 
         fun fileName(base: String, appearance: PreviewAppearance): String = "${base}_${appearance.name}.$PNG"
 

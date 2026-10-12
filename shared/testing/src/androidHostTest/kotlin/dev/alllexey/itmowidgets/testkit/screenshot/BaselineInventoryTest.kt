@@ -64,7 +64,7 @@ class BaselineInventoryTest {
     }
 
     @Test
-    fun `a listed reference without its preview is pending, not stale`() {
+    fun `a listed reference without its preview is a reference, not stale`() {
         touch("Card_light.png", "SportScreen_content_light.png", "SportScreen_content_dark.png")
         directory.addReference("SportScreen_content")
 
@@ -72,10 +72,10 @@ class BaselineInventoryTest {
 
         assertEquals(
             listOf("SportScreen_content_dark.png", "SportScreen_content_light.png"),
-            inventory.pendingReferences,
+            inventory.referenceFiles,
         )
         assertEquals(emptyList(), inventory.problems)
-        assertTrue("reference (pending port): SportScreen_content_light.png" in inventory.report())
+        assertTrue("reference: SportScreen_content_light.png" in inventory.report())
     }
 
     @Test
@@ -89,15 +89,15 @@ class BaselineInventoryTest {
     }
 
     @Test
-    fun `a reference still listed after its port fails`() {
+    fun `a listed reference that also has a preview fails`() {
         touch("SportScreen_content_light.png")
         directory.addReference("SportScreen_content")
 
         val inventory = BaselineInventory(previewBases = setOf("SportScreen_content"), directory)
 
-        assertEquals(listOf("SportScreen_content"), inventory.portedReferences)
-        assertEquals(emptyList(), inventory.pendingReferences)
-        assertTrue(inventory.problems.single().startsWith("reference SportScreen_content still listed after its port"))
+        assertEquals(listOf("SportScreen_content"), inventory.previewedReferences)
+        assertEquals(emptyList(), inventory.referenceFiles)
+        assertTrue(inventory.problems.single().startsWith("reference SportScreen_content also has a preview"))
     }
 
     @Test

@@ -52,7 +52,6 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_error
  * What the `Запись` lesson card and the `Мой спорт` booking card share, in one restrained language
  * (docs/features/sport.md, Cards and details): the outlined card, the title and the time header, fixed-size metadata
  * icons, the kind chip, the friends preview, the small outlined action and the occupancy bar with its tone label.
- * LP-3 and LP-4b reuse these parts.
  */
 
 /** The condition colour of this tone: fixed per theme, never the wallpaper's. */
@@ -278,7 +277,7 @@ fun SportCardAction(
             label = label,
             onClick = onClick,
             // A minimum height replaces Material's 40 dp default; the button still reserves its 48 dp touch target.
-            // While busy the button keeps its tone, as the View did, and reads as disabled; the kit ignores the tap.
+            // While busy the button keeps its tone and reads as disabled; the kit ignores the tap.
             modifier = modifier
                 .heightIn(min = ActionHeight)
                 .semantics { if (busy) disabled() },

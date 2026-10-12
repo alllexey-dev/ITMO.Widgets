@@ -12,7 +12,7 @@ import dev.alllexey.itmowidgets.shared.core.allStringResources
 import platform.UIKit.UIViewController
 
 /**
- * The catalog as Swift reaches it before IO-05's bridge (L18 IO-20): the app locale for Compose Multiplatform and
+ * The catalog as Swift reaches it before the Koin graph starts: the app locale for Compose Multiplatform and
  * the CMP resolvers that `ITMOWidgetsTests/StringsTests` holds against the Swift one (`UiText+Resolve.swift`).
  */
 object IosStrings {

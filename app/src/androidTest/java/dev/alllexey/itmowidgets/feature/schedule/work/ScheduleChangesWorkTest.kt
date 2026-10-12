@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 
 /**
  * The app's real WorkManager and scheduler. A run the test starts takes the app's own path: without a session it is
- * skipped, with the owner's session it is an ordinary check. The test reads no schedule data.
+ * skipped, with a session it is an ordinary check. The test reads no schedule data.
  */
 @RunWith(AndroidJUnit4::class)
 class ScheduleChangesWorkTest {

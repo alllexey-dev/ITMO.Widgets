@@ -50,10 +50,10 @@ fun rememberSportPagerState(initialPage: SportPage = SportPage.MY): PagerState =
     rememberPagerState(initialPage = initialPage.ordinal) { SportPage.entries.size }
 
 /**
- * The sport tab: the secondary tabs `Мой спорт` and `Запись` over a pager whose pages are [page]. A tap on a tab
- * slides to its page; a swipe moves one page and, through `tabSwipeHandover`, keeps its fling inside the pager, so
- * only a new swipe at either end moves the bottom tabs around it. Both pages stay composed, as the View pager kept the
- * neighbour alive, so each keeps its list position and its open dialog while the other is in front.
+ * The sport tab: the secondary tabs `Мой спорт` and `Запись` over a pager whose pages are [page]. A tap on a tab slides
+ * to its page; a swipe moves one page and, through `tabSwipeHandover`, keeps its fling inside the pager, so only a new
+ * swipe at either end moves the bottom tabs around it. Both pages stay composed, so each keeps its list position and
+ * its open dialog while the other is in front.
  *
  * Stateless: [pagerState] is the host's. `SportRoute` puts `SportMyScreen` and `SportSignScreen` in the pages.
  */

@@ -30,9 +30,9 @@ object SheetPolicyKey : NavMetadataKey<SheetPolicy>
 fun bottomSheet(policy: SheetPolicy): Map<String, Any> = metadata { put(SheetPolicyKey, policy) }
 
 /**
- * Navigation 3 1.2 has no first-party sheet scene (SP-14): an entry with [bottomSheet] metadata becomes an
+ * Navigation 3 1.2 has no first-party sheet scene: an entry with [bottomSheet] metadata becomes an
  * [OverlayScene] in a material3 [ModalBottomSheet] above the entries below it, which stay composed. The sheet is the
- * container (the former Fragment sheet's): expanded without a collapsed step, as tall as its content up to
+ * container: expanded without a collapsed step, as tall as its content up to
  * [MAX_HEIGHT_FRACTION] of the window or always that tall ([SheetPolicy.Height.TALL]); the body (a `SheetScaffold`)
  * draws its own handle.
  */
@@ -55,7 +55,7 @@ class BottomSheetSceneStrategy<T : Any> : SceneStrategy<T> {
 /**
  * A [SheetPolicy.Dismissal.FORM] sheet ignores drag, Back and a tap outside: Back reaches the entry's own handler on
  * the sheet window, which asks before discarding. Equality over key, entry, policy and the entries below, because
- * `NavDisplay` keeps the first overlay instance per key (SP-14).
+ * `NavDisplay` keeps the first overlay instance per key.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 private class BottomSheetScene<T : Any>(

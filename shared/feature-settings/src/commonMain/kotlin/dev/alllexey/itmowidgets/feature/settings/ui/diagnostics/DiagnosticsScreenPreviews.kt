@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsUiState
 
 /*
- * Baselines `DiagnosticsScreen_<state>`, the names LT-3a's XML references took: each state is a function called
+ * Baselines `DiagnosticsScreen_<state>`: each state is a function called
  * `DiagnosticsScreen` in a holder class of its own.
  */
 

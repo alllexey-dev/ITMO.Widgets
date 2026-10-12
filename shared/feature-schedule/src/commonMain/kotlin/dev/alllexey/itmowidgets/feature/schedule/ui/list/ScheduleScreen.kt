@@ -87,11 +87,11 @@ object ScheduleScreenTestTags {
 }
 
 /**
- * The schedule list (port of `fragment_schedule.xml`): the selected friend's card above, then the day cards keyed by
- * date under a pull to refresh, placeholder cards on a first load, the empty or error state in the list's place.
- * Two stacked FABs at the bottom end, the owner's M3E decision rather than a FAB menu or a floating toolbar
- * (design.md, Expressive components): back to the top once the reader is past the third day, appearing on the
- * standard motion scheme's springs, and the friends picker while [ScheduleScreenState.canPickFriend]. [listState] belongs to the host, which scrolls it to today; failed refreshes
+ * The schedule list: the selected friend's card above, then the day cards keyed by date under a pull to refresh,
+ * placeholder cards on a first load, the empty or error state in the list's place. Two stacked FABs at the bottom end
+ * rather than a FAB menu or a floating toolbar (design.md, Expressive components): back to the top once the reader is
+ * past the third day, appearing on the standard motion scheme's springs, and the friends picker while
+ * [ScheduleScreenState.canPickFriend]. [listState] belongs to the host, which scrolls it to today; failed refreshes
  * of a shown list go to [snackbarHostState]. Stateless; [ScheduleRoute] wires it to its ViewModel.
  */
 @Composable

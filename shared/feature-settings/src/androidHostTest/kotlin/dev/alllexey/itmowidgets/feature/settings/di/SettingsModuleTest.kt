@@ -38,20 +38,20 @@ import org.koin.test.verify.verify
 @OptIn(KoinExperimentalAPI::class)
 class SettingsModuleTest {
 
-    /** The repositories resolve over the core stores and clients the app's `CoreBridge` forwards. */
+    /** The repositories resolve over the core stores and clients the platform's Koin modules supply. */
     @Test
-    fun theSettingsDataModuleResolvesWithTheBridgedTypes() {
-        settingsDataModule.verify(extraTypes = dataBridgedTypes)
+    fun theSettingsDataModuleResolvesWithThePlatformTypes() {
+        settingsDataModule.verify(extraTypes = dataPlatformTypes)
     }
 
     /**
      * The page providers and the four ViewModels resolve over the settings data; the Android side of settings
-     * comes from the app's `SettingsBridge`, the core contracts from its `CoreBridge`.
+     * comes from the app's `androidSettingsModule`, the core contracts from the platform's Koin modules.
      */
     @Test
-    fun theSettingsModulesResolveWithTheBridgedTypes() {
+    fun theSettingsModulesResolveWithThePlatformTypes() {
         module { includes(settingsDataModule, settingsModule) }.verify(
-            extraTypes = dataBridgedTypes + listOf(
+            extraTypes = dataPlatformTypes + listOf(
                 AppVersion::class,
                 BackgroundWorkAccess::class,
                 QuickSettingsTileAccess::class,
@@ -68,7 +68,7 @@ class SettingsModuleTest {
         )
     }
 
-    private val dataBridgedTypes = listOf(
+    private val dataPlatformTypes = listOf(
         ServicesOptInPreferences::class,
         ScheduleCheckPreferences::class,
         WidgetSettingsPreferences::class,

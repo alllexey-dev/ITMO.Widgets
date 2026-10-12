@@ -107,7 +107,7 @@ class ContractConformanceTest {
 
     @Test
     fun seededShippedPendingFieldFails() {
-        val shipped = PendingBackendField("RegisterDeviceRequest", "platform", "BK-16b")
+        val shipped = PendingBackendField("RegisterDeviceRequest", "platform", "the device platform")
 
         val problems = ContractConformance.modelProblems(spec, WireModels.all, WireModels.enums, listOf(shipped))
 

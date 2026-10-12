@@ -20,9 +20,12 @@ class OnboardingModuleTest {
         onboardingDataModule.verify(extraTypes = listOf(UtilityStorage::class))
     }
 
-    /** The flow reads the flag of [onboardingDataModule]; the session, opt-in and widget settings are bridged. */
+    /**
+     * The flow reads the flag of [onboardingDataModule]; the session, opt-in and widget settings come from the
+     * platform.
+     */
     @Test
-    fun theOnboardingModulesResolveWithTheBridgedTypes() {
+    fun theOnboardingModulesResolveWithThePlatformTypes() {
         module { includes(onboardingDataModule, onboardingModule) }.verify(
             extraTypes = listOf(
                 UtilityStorage::class,

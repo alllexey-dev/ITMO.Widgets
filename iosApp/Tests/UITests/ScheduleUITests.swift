@@ -1,6 +1,6 @@
 import XCTest
 
-/// The schedule on the shared demo session (IO-09b): L10's Compose schedule as the root of the schedule stack (the
+/// The schedule on the shared demo session: the Compose schedule as the root of the schedule stack (the
 /// days from today), the lesson sheet with the friends on the lesson and the place handed to Apple Maps, the friend
 /// picker's round trip back to the schedule, the found changes from the home card, the `today` route, another user's
 /// schedule from a profile, and the schedule and the lesson sheet at the accessibility text size AX1. Compose maps

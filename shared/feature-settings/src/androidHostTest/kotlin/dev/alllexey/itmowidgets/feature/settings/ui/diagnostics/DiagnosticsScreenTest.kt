@@ -31,7 +31,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * `DiagnosticsScreen` against the View journal it replaced: entries in the order the journal hands them (newest
+ * `DiagnosticsScreen`: entries in the order the journal hands them (newest
  * first), copy and clear only with entries, clearing only after the confirmation, a trace that opens on a tap, and
  * text that fits at 320 dp and font scale 1.3. The clipboard and its message are the host's.
  */

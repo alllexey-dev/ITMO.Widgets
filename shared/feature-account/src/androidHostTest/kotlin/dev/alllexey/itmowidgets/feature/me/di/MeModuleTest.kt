@@ -9,10 +9,10 @@ import org.koin.test.verify.verify
 
 class MeModuleTest {
 
-    /** The session, social data and the opt-in are bridged from the app's Hilt graph. */
+    /** The session, social data and the opt-in come from the platform's Koin modules. */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theMeModuleResolvesWithTheBridgedTypes() {
+    fun theMeModuleResolvesWithThePlatformTypes() {
         meModule.verify(
             extraTypes = listOf(SessionRepository::class, SocialRepository::class, CustomServicesRepository::class),
         )

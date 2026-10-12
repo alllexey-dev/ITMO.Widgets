@@ -5,9 +5,9 @@ import org.jetbrains.compose.resources.StringResource
 
 /**
  * Text a ViewModel or a domain rule hands to the UI without a platform context. [Res] and [Plural] carry CMP
- * resources whose `key` is also the Android resource name and the `.xcstrings` key (ADR 0028), so Compose, Views
- * (`core/ui/UiTextResolver.kt`) and Swift resolve the same text. An argument that is itself a [UiText] is resolved
- * first.
+ * resources whose `key` is also the Android resource name and the `.xcstrings` key, so Compose, the Android
+ * resolver (`core/ui/UiTextResolver.kt`) and Swift resolve the same text. An argument that is itself a [UiText] is
+ * resolved first.
  */
 sealed interface UiText {
 
@@ -22,8 +22,8 @@ sealed interface UiText {
         val arguments: List<Any> = emptyList()
     ) : UiText
 
-    /** An Android string id; only the Android resolver reads it. Unported features keep it until their port. */
-    @Deprecated("Android-only resource id; use UiText.Res or UiText.Plural (recipe uitext-migration)")
+    /** An Android string id; only the Android resolver reads it. */
+    @Deprecated("Android-only resource id; use UiText.Res or UiText.Plural")
     data class Resource(
         val resourceId: Int,
         val arguments: List<Any> = emptyList()

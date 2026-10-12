@@ -3,7 +3,7 @@ import Shared
 import SwiftUI
 import XCTest
 
-/// The Swift bridge to the shared ViewModels (L18 IO-05): SKIE's flows and sealed enums, `ObservableViewModel`
+/// The Swift bridge to the shared ViewModels: SKIE's flows and sealed enums, `ObservableViewModel`
 /// (a `StateFlow` update re-renders SwiftUI, dismissal clears the ViewModel) and the Koin graph `App.init` starts.
 /// `BridgeProbeViewModel` is a probe in `shared/ios` on the screen contract; no screen uses it.
 @MainActor

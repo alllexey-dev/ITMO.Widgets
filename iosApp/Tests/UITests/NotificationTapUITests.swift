@@ -1,9 +1,9 @@
 import XCTest
 
-/// A tapped notification routes by its `userInfo` (IO-13a, IO-FIX-NT): the Debug fixture (`-itmoNotificationFixture`)
+/// A tapped notification routes by its `userInfo`: the Debug fixture (`-itmoNotificationFixture`)
 /// posts a local notification in the demo session, shaped like Backend's push or through the app's own notifier, the
 /// test taps its banner and the shell opens what Android opens: the tab the push names, a friendship with the actor's
-/// profile on the me tab (IO-09e), the found schedule changes, the recordbook, the BARS sign-in. The first run answers
+/// profile on the me tab, the found schedule changes, the recordbook, the BARS sign-in. The first run answers
 /// iOS's notification dialog. On a fresh simulator the notification daemon answers its first requests only after a
 /// minute or two, so the dialog and the banner get a long timeout.
 final class NotificationTapUITests: XCTestCase {

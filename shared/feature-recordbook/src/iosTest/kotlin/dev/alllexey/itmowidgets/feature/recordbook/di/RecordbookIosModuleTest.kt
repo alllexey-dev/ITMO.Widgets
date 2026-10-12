@@ -105,8 +105,8 @@ import org.koin.dsl.module
 import platform.UIKit.UIViewController
 
 /**
- * The recordbook graph on its iOS ports, as `IosKoinModules` loads it, with the session's types and the subject page's
- * ports from other features (the schedule's lessons, the sport score, the teacher tones) faked.
+ * The recordbook graph on its iOS bindings, as `IosKoinModules` loads it, with the session's types and the subject
+ * page's ports from other features (the schedule's lessons, the sport score, the teacher tones) faked.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecordbookIosModuleTest {
@@ -305,7 +305,7 @@ class RecordbookIosModuleTest {
             }
         }
         single<SecureStore> { secrets }
-        // The app graph's notifier, refresh task and step log are `iosBackgroundModule`'s (IO-14); this graph posts
+        // The app graph's notifier, refresh task and step log are `iosBackgroundModule`'s; this graph posts
         // and schedules nothing.
         single<AppNotifier> { SilentNotifier }
         single { IosAppNotifier(SilentCenter, get(), get()) }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Debug hosts: one line each, grouped by feature, so a port deletes only its own lines. -->
+    <!-- Debug hosts: one line each, grouped by feature. -->
     <application>
         <!-- settings -->
         <activity android:name=".feature.settings.ui.SettingsPreviewActivity" android:exported="false" />

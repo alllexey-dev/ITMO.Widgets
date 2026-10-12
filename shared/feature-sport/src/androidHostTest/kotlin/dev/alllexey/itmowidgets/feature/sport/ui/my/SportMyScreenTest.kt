@@ -36,8 +36,8 @@ import kotlin.test.assertTrue
 
 /**
  * The `Мой спорт` page: its states, the cancellation flow, the stale-result guard of the details sheet, and the two
- * cases of the View `SportScoreCollapseTest` that only the page has (content after the first load, content emptied
- * under a collapsed card); the card's own collapse is `SportScoreCollapseTest`.
+ * collapse cases that only the page has (content after the first load, content emptied under a collapsed card); the
+ * card's own collapse is `SportScoreCollapseTest`.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -162,7 +162,6 @@ class SportMyScreenTest {
         assertNull(shown.cancelCandidate(signed.lessonId, null, now))
     }
 
-    /** View `listReservesTheCardWhenContentArrivesAfterLoading`. */
     @Test
     fun theListReservesTheCardWhenContentArrivesAfterLoading() = runComposeUiTest {
         setContent { Screen() }
@@ -198,7 +197,6 @@ class SportMyScreenTest {
         assertTrue(details > SMALL_SCROLL, "details $details")
     }
 
-    /** View `emptyContentExpandsCardAndBookingsReturnBelowIt`. */
     @Test
     fun emptyContentExpandsTheCardAndBookingsReturnBelowIt() = runComposeUiTest {
         state = content(bookings(12))

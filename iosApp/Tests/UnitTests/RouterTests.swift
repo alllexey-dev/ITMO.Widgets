@@ -2,7 +2,7 @@
 import Shared
 import XCTest
 
-/// The shell's routing on the shared route model (IO-06c): the shared `RouteQueue` runs an entry route once over its
+/// The shell's routing on the shared route model: the shared `RouteQueue` runs an entry route once over its
 /// tab, `ShellGate` gates it, `RouteURL` turns `itmowidgets://route/<id>` and app links into entry routes, and
 /// `Routes` maps every shared key to an iOS screen, a sheet, a tab, the gate or "not on iOS".
 @MainActor
@@ -275,7 +275,7 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.sheet, .linkUnavailable)
     }
 
-    /// A links sheet that leads on opens the next one in its place (IO-09f), where a plain open is ignored.
+    /// A links sheet that leads on opens the next one in its place, where a plain open is ignored.
     func testReplaceSheetOpensTheNextSheetInThePlaceOfTheShownOne() {
         let router = readyRouter()
         let links = SubjectLinksArgs(subjectId: 5, subjectName: "Subject", periodKey: "2026/2027:1")
@@ -304,7 +304,7 @@ final class RouterTests: XCTestCase {
         XCTAssertNil(router.sheet)
     }
 
-    /// A Compose sheet key (IO-09b): one sheet above the shell, whose answer reaches its opener once, and which a
+    /// A Compose sheet key: one sheet above the shell, whose answer reaches its opener once, and which a
     /// screen it opens replaces.
     func testRouteSheetOpensAboveTheShellAndAnswersItsOpener() {
         let router = readyRouter()
@@ -423,7 +423,7 @@ final class RouterTests: XCTestCase {
 
     func testTabsFollowAndroidOrder() {
         XCTAssertEqual(ShellTab.allCases, [.recordbook, .schedule, .home, .sport, .me])
-        XCTAssertEqual(ShellTab.visible, ShellTab.allCases, "every tab has its screen since IO-09d2")
+        XCTAssertEqual(ShellTab.visible, ShellTab.allCases, "every tab has its screen")
         XCTAssertEqual(ShellTab.launch, .home)
         XCTAssertEqual(ShellTab.allCases.map(\.appTab), [.recordbook, .schedule, .home, .sport, .me])
         XCTAssertEqual(ShellTab.allCases.map { ShellTab($0.appTab) }, ShellTab.allCases)
@@ -476,7 +476,7 @@ final class RouterTests: XCTestCase {
     }
 
     /// One synthetic key of every registered class, in the order of `AppRoutes.registration`, and how iOS shows it
-    /// today. A feature card that maps its keys changes its rows here.
+    /// today. A feature that maps its keys changes its rows here.
     private static var expectedTargets: [(route: any AppRoute, target: TargetKind)] {
         let links = SubjectLinksArgs(subjectId: 5, subjectName: "Subject", periodKey: "2026/2027:1")
         let teacher = TeacherReviewArgs(teacherIsu: 100_002, teacherName: "Teacher")
@@ -530,7 +530,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.LinkActions(args: links, linkId: "link-1"), .composeSheet),
             (AppRoutes.LessonDetails(args: lesson), .composeSheet),
             (AppRoutes.PendingSportDetails(args: pendingSport), .composeSheet),
-            // The reports are Compose dialogs inside the surface that asks for them (IO-09f).
+            // The reports are Compose dialogs inside the surface that asks for them.
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .notOnIOS),
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),
             (AppRoutes.LinkUnavailable.shared, .sheet(.linkUnavailable)),

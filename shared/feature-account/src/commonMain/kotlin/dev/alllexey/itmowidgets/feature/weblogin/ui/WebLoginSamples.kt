@@ -18,7 +18,7 @@ import kotlin.uuid.Uuid
 internal object WebLoginSamples {
     const val CODE = "ABCD2345"
 
-    /** Chrome on macOS, requested at 12:04 Moscow time, as LA-1c's references show it. */
+    /** Chrome on macOS, requested at 12:04 Moscow time. */
     val preview = WebLoginPreview(
         challengeId = Uuid.parse("00000000-0000-0000-0000-000000000042"),
         userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) " +

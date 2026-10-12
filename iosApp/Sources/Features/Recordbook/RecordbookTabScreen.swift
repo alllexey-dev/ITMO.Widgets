@@ -2,9 +2,9 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// The recordbook tab's root: L12's Compose recordbook (`recordbookRootPage`, IO-09d2) in Android's tab order. A
+/// The recordbook tab's root: the Compose recordbook (`recordbookRootPage`) in Android's tab order. A
 /// subject opens its page through the router, the period button the period picker, whose choice comes back through
-/// the router (`open(_:onResult:)`); the BARS sign-in is IO-09d1's `BarsLoginSheet`, after which the list loads
+/// the router (`open(_:onResult:)`); the BARS sign-in is `BarsLoginSheet`, after which the list loads
 /// again, as after `BarsLoginActivity`. The BARS reminder's tap asks the router for the sign-in, which the root shows
 /// as soon as it is on screen.
 struct RecordbookTabScreen: View {
@@ -78,7 +78,7 @@ final class RecordbookHost {
 }
 
 extension View {
-    /// IO-09d1's BARS sign-in over a recordbook page while `host` asks for it.
+    /// The BARS sign-in over a recordbook page while `host` asks for it.
     func recordbookBarsLogin(_ host: RecordbookHost) -> some View {
         sheet(isPresented: Binding(get: { host.showsBarsLogin }, set: { host.showsBarsLogin = $0 })) {
             BarsLoginSheet { host.barsSignedIn() }

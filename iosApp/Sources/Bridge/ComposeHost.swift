@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// A Compose Multiplatform screen in SwiftUI (recipe ios-cmp-host): the `UIViewController` a
+/// A Compose Multiplatform screen in SwiftUI: the `UIViewController` a
 /// `screens/<Feature>Screens.kt` factory builds, made once per view identity and never updated, since the screen's
 /// state lives in its Koin ViewModel.
 ///

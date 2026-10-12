@@ -4,7 +4,7 @@ import SwiftUI
 extension Routes {
     /// The schedule root (`ScheduleScreen`); another user's schedule and the changes are Compose routes pushed on the
     /// selected tab's stack, the lesson sheet, the pending sport sheet and the friend picker Compose sheets above the
-    /// shell (IO-09b).
+    /// shell.
     static func schedule(_ route: any AppRoute) -> RouteTarget {
         switch route {
         case let user as AppRoutes.UserSchedule:

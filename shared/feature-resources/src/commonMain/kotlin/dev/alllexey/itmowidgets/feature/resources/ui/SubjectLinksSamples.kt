@@ -18,7 +18,7 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.linkSections
 import kotlin.time.Instant
 
 /**
- * Synthetic links of one subject period for the previews and host tests, the data of the LX-1c references: every
+ * Synthetic links of one subject period for the previews and host tests, the data of the references: every
  * category, chats, past years, own private, shared, pending and rejected links, three nested flows and another
  * student's Google Sheet.
  */

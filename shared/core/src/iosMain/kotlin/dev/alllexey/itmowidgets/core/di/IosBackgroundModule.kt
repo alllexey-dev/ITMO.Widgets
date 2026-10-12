@@ -16,7 +16,7 @@ import org.koin.dsl.module
 import platform.Foundation.NSUserDefaults
 
 /**
- * The background side of the app process (IO-14), beside [iosCoreModule]: one [IosAppNotifier] over
+ * The background side of the app process, beside [iosCoreModule]: one [IosAppNotifier] over
  * `UNUserNotificationCenter` as the graph's [AppNotifier], the one app refresh task's [AppRefreshScheduler], and the
  * background runner's [RefreshStepLog] in `NSUserDefaults`; the notifier and the log are sign-out cleaners. Kept out
  * of [iosCoreModule] because the system centre and scheduler exist only in the app, not in a test binary.

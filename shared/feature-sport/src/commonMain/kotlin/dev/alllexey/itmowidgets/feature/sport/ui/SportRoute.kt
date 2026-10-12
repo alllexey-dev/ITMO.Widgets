@@ -54,14 +54,14 @@ class SportHostActions(
 )
 
 /**
- * The sport tab with its two ViewModels, obtained from the host's `ViewModelStoreOwner`: a Fragment's, a Nav3 entry's
- * or the SwiftUI host's, so the pages keep their week, filters and data for as long as the host keeps its store.
+ * The sport tab with its two ViewModels, obtained from the host's `ViewModelStoreOwner`: a Nav3 entry's or the SwiftUI
+ * host's, so the pages keep their week, filters and data for as long as the host keeps its store.
  *
- * Each page runs on a lifecycle of its own that stays `STARTED` while the other page is in front, as the View pager
- * kept its neighbour: a page shows its messages and dialogs only while it is the current one, and the page behind
- * keeps them for later. A link from [sharedLessons] selects `Запись` at once and opens the lesson there, even when the
- * filters hide it. [mySheetActions] and [signSheetActions] carry the details sheet's actions back to the page that
- * opened the sheet; each page checks them against what it shows now.
+ * Each page runs on a lifecycle of its own that stays `STARTED` while the other page is in front: a page shows its
+ * messages and dialogs only while it is the current one, and the page behind keeps them for later. A link from
+ * [sharedLessons] selects `Запись` at once and opens the lesson there, even when the filters hide it. [mySheetActions]
+ * and [signSheetActions] carry the details sheet's actions back to the page that opened the sheet; each page checks
+ * them against what it shows now.
  */
 @Composable
 fun SportRoute(
@@ -162,8 +162,7 @@ private fun SportMyPage(
 }
 
 /**
- * Gives [content] a lifecycle that follows the host's but stops at `STARTED` while the page is not [active], the
- * maximum lifecycle a View pager gave the page it was not showing.
+ * Gives [content] a lifecycle that follows the host's but stops at `STARTED` while the page is not [active].
  */
 @Composable
 private fun PageLifecycle(active: Boolean, content: @Composable () -> Unit) {

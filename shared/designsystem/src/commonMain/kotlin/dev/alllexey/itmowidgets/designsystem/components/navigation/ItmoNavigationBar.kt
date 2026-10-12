@@ -70,7 +70,7 @@ fun ItmoNavigationBar(
 /**
  * One tab of [ItmoNavigationBar]: [icon], or [selectedIcon] (the FILL 1 variant) in the pill of the active indicator
  * while [selected], over its label on every tab ([NavigationBarTokens.LabelsOnSelectedOnly] is false; an M3E
- * candidate of the owner's contact sheets may say otherwise); TalkBack reads it as the tab's name either way (the
+ * candidate of the screenshot harness may say otherwise); TalkBack reads it as the tab's name either way (the
  * cell's description). The whole cell is the target.
  */
 @Composable
@@ -136,17 +136,16 @@ fun RowScope.ItmoNavigationBarItem(
 }
 
 /**
- * The bar's values (`Widget.ItmoWidgets.BottomNavigationView` over MDC 1.13's M3 bar), in one place. M3E's token
- * change (M3-02) only put a label on every tab.
+ * The bar's values (MDC 1.13's M3 bar with a label on every tab), in one place.
  */
 object NavigationBarTokens {
-    /** False: M3E labels every destination (owner, item 14 Q3 (a)); 2.2 had `labelVisibilityMode="selected"`. */
+    /** False: M3E labels every destination. */
     const val LabelsOnSelectedOnly: Boolean = false
 
-    /** `android:minHeight` of the app's style. */
+    /** The bar's minimum height. */
     val MinHeight = 64.dp
 
-    /** `itemPaddingTop` and `itemPaddingBottom` of the app's style (`design_spacing_related`). */
+    /** The padding above and below each item. */
     val ItemVerticalPadding = 4.dp
 
     val IndicatorWidth = 64.dp

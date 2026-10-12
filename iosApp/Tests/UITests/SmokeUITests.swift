@@ -1,6 +1,6 @@
 import XCTest
 
-/// Launches the app and checks the first screen (IO-17): the shell on home (IO-06b). Runs with
+/// Launches the app and checks the first screen: the shell on home. Runs with
 /// `scripts/ios/test.sh ui SmokeUITests` and in scripts/ios/screenshots.sh.
 final class SmokeUITests: XCTestCase {
     override func setUp() {

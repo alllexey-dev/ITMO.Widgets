@@ -53,7 +53,7 @@ class ReportLinkActions(
 )
 
 /**
- * The report dialog the Fragment host calls: keeps the picked reason and the comment across recreation and sends them
+ * The report dialog the host shows: keeps the picked reason and the comment across recreation and sends them
  * with [onSend] (`SubjectLinksViewModel.report`). [sending] and [error] come from the host; a failure keeps the dialog,
  * which closes only when the host stops showing it after the report was accepted.
  */
@@ -79,7 +79,7 @@ fun ReportLinkForm(
 }
 
 /**
- * `Жалоба на ссылку` (`dialog_report_link.xml`) on the kit's [ReportDialog]: the four [ResourceReportReason]s and an
+ * `Жалоба на ссылку` on the kit's [ReportDialog]: the four [ResourceReportReason]s and an
  * optional comment of up to 500 characters; `Отправить` is enabled once a reason is picked and nothing is being sent.
  * Back and a tap outside close it only while nothing is being sent.
  */
@@ -136,7 +136,7 @@ private fun ResourceReportReason.label(): StringResource = when (this) {
 }
 
 /*
- * Previews. LX-1c recorded the XML reference as `ReportLinkDialog_reason`, so each state is a function called
+ * Previews. The reference is named `ReportLinkDialog_reason`, so each state is a function called
  * `ReportLinkDialog` in a holder class of its own: the dialog's surface on the margin its window keeps.
  */
 

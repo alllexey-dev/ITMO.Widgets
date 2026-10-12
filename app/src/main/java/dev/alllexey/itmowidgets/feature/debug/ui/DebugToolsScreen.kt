@@ -495,7 +495,7 @@ private fun DebugDialogSurface(
     }
 }
 
-/** The custom-services switch stays in the screen, hidden, as in v2.2. */
+/** The custom-services switch stays in the screen, hidden. */
 private const val CUSTOM_SERVICES_VISIBLE = false
 
 private const val DEFAULT_ATTENDANCE_POINTS = 100

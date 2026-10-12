@@ -12,7 +12,7 @@ import org.robolectric.annotation.Config
 class DebugToolsScreenshotTest : PreviewScreenshotTest()
 
 /**
- * The application of `:app`'s preview captures. The previews need no Hilt graph, and the real application stops at
+ * The application of `:app`'s preview captures. The previews need no Koin graph, and the real application stops at
  * WorkManager under Robolectric. The compose rule launches `ComponentActivity`, which a library module gets from
  * `ui-test-manifest`'s merged manifest; an application's unit tests do not merge it, so it is registered here.
  */

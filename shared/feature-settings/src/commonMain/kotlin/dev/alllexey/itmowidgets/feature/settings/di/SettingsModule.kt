@@ -28,11 +28,10 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
- * The settings data Koin constructs, one single per repository: Hilt-built code (widgets, workers, the other
- * features' screens) reads the same instances through the app's `SettingsBridge`. The preference stores, the Backend
- * gate and client, the device session and the demo switch come from the app's `CoreBridge`, the widget refresher
- * from its `SettingsBridge`. A separate module from [settingsModule], so a debug fixture that reloads the screens
- * never builds a second repository.
+ * The settings data Koin constructs, one single per repository. The preference stores, the Backend gate and client,
+ * the device session and the demo switch come from the platform's Koin modules, the widget refresher from
+ * `androidScheduleModule` (`settingsIosModule` on iOS). A separate module from [settingsModule], so a debug fixture
+ * that reloads the screens never builds a second repository.
  */
 val settingsDataModule = module {
     singleOf(::SettingsRepositoryImpl) { bind<SettingsRepository>() }
@@ -42,12 +41,12 @@ val settingsDataModule = module {
 }
 
 /**
- * The settings screens Koin constructs. The page providers and [SettingsPages] are factories: every
- * [SettingsViewModel] gets its own set, so stacked settings levels never share page state. The repositories come
- * from [settingsDataModule]; `WidgetRefreshRequester`, `AppVersion` and the platform accesses from the app's
- * `SettingsBridge` (`settingsIosModule` on iOS), the core contracts, `PlatformCapabilities` included, from its
- * `CoreBridge` (`iosCoreModule`). The providers that hide a row by capability are built explicitly: their
- * capabilities parameter has a default for hand-built providers, which a constructor reference would make ambiguous.
+ * The settings screens Koin constructs. The page providers and [SettingsPages] are factories: every [SettingsViewModel]
+ * gets its own set, so stacked settings levels never share page state. The repositories come from [settingsDataModule];
+ * `AppVersion` and the platform accesses from `androidSettingsModule` (`settingsIosModule` on iOS), the core contracts,
+ * `PlatformCapabilities` included, from the platform's core bindings (`iosCoreModule` on iOS). The providers that hide
+ * a row by capability are built explicitly: their capabilities parameter has a default for hand-built providers, which
+ * a constructor reference would make ambiguous.
  */
 val settingsModule = module {
     factory { RootPageProvider(get(), get()) }

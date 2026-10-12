@@ -20,7 +20,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.time.Instant
 
-/** Port of Core 1.7.0 `weblogin/WebLoginApiTest`; `myRoles` is not mirrored (0 app call sites, the web reads it). */
+/** The web login routes; `myRoles` is not mirrored (no app call sites, the web reads it). */
 class WebLoginApiTest {
 
     private val preview = WebLoginPreview(
@@ -66,7 +66,7 @@ class WebLoginApiTest {
 
     @Test
     fun rolesAreNotMirrored() = runSuspend {
-        // 1.x "unknown future roles stay plain strings": Core 2.0 has no myRoles; CONTRACT.md lists the route.
+        // The client has no myRoles; CONTRACT.md lists the route as not mirrored.
         val paths = (UsersRouteCases.all + FriendsRouteCases.all).map { it.record().path }
 
         assertFalse("/api/users/me/roles" in paths)

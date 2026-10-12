@@ -7,8 +7,8 @@ import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import org.koin.dsl.koinApplication
 
 /**
- * [iosCoreModule] in a Koin application of its own, outside the global context, as Swift reaches it before IO-05
- * starts the app's graph: the hosted `SessionTests` run the real bindings inside the app's entitlements (Keychain
+ * [iosCoreModule] in a Koin application of its own, outside the global context, as Swift reaches it before the app's
+ * graph starts: the hosted `SessionTests` run the real bindings inside the app's entitlements (Keychain
  * group, App Group). Koin's `get` is reified, so Swift reads through these properties.
  */
 class IosCoreGraph(host: IosCoreHost) {

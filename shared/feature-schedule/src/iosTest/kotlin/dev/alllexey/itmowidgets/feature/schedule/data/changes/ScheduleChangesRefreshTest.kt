@@ -18,7 +18,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
-/** The schedule change step of the iOS runner: LT-1's check, and a night change handed to the system for 06:00. */
+/** The schedule change step of the iOS runner: the shared check, and a night change handed to the system for 06:00. */
 class ScheduleChangesRefreshTest {
 
     private val tokens = FakeSessionTokenStore()

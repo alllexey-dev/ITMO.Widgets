@@ -23,7 +23,7 @@ struct QrPassSnapshot: Equatable {
     static let version = 1
 
     /// The snapshot in `data`, or nil when it is corrupt, not square, or written by a newer version: the reader then
-    /// shows its placeholder (ADR 0027).
+    /// shows its placeholder.
     static func decode(_ data: Data) -> QrPassSnapshot? {
         AppGroupSnapshot.decode(Value.self, from: data, maxVersion: version).flatMap(snapshot)
     }

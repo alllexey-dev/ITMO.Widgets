@@ -44,9 +44,9 @@ struct ShellDestination: Hashable {
 /// A sheet above the shell.
 enum ShellSheet: Hashable, Identifiable {
     case linkUnavailable
-    /// The web sign-in (IO-08b); `code` is a Universal Link's, checked as soon as the sheet opens.
+    /// The web sign-in; `code` is a Universal Link's, checked as soon as the sheet opens.
     case webLogin(code: String?)
-    /// A feature's sheet key whose `RouteTarget` is `.composeSheet` (IO-09b): its Compose content in a SwiftUI sheet.
+    /// A feature's sheet key whose `RouteTarget` is `.composeSheet`: its Compose content in a SwiftUI sheet.
     case route(ShellDestination)
 
     /// Also the sheet's accessibility identifier, `shell.sheet.<id>`, for the shell's own sheets; a route's content
@@ -71,7 +71,7 @@ enum RouteOpening: Equatable {
     case notOnIOS
 }
 
-/// The shell's navigation state and the one way into it, on the shared route model (SH-1a2): every URL, App Intent,
+/// The shell's navigation state and the one way into it, on the shared route model: every URL, App Intent,
 /// link and notification becomes an `EntryRoute` (`EntryRouteParser`, `AppLinks`), every tap opens an `AppRoute`.
 ///
 /// An entry route waits in the shared `RouteQueue` until `ShellGate` reports the tabs and the tab bar is on screen,

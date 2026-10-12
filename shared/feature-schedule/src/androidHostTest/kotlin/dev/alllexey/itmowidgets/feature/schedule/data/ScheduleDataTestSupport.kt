@@ -36,7 +36,7 @@ import okio.Path.Companion.toOkioPath
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 
-// The JVM helpers of the schedule data tests, as `:app`'s tests had them before the data moved here (KM-11a2).
+// The JVM helpers of the schedule data tests.
 
 private val MOSCOW: TimeZone = TimeZone.of("Europe/Moscow")
 

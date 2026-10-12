@@ -181,8 +181,8 @@ private fun EmptyFeed() {
 }
 
 /**
- * Two stacked FABs, `Мой ИТМО` over the QR pass: the owner's M3E decision (design.md, Expressive components) keeps
- * the pass one tap away, so neither a FAB menu nor a floating toolbar replaces them.
+ * Two stacked FABs, `Мой ИТМО` over the QR pass, keep the pass one tap away (design.md, Expressive components), so
+ * neither a FAB menu nor a floating toolbar replaces them.
  */
 @Composable
 private fun QuickActions(actions: HomeActions, modifier: Modifier) {

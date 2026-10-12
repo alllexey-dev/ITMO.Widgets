@@ -13,7 +13,7 @@ import okio.Path
 private const val FORMAT = 1
 
 /**
- * The JSON of the reviews' files (recipe `kotlinx-file-store`): absent nullable keys read as null and nulls are not
+ * The JSON of the reviews' files: absent nullable keys read as null and nulls are not
  * written, as Gson did, and `format` is always written.
  */
 @OptIn(ExperimentalSerializationApi::class)

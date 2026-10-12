@@ -8,7 +8,7 @@ sealed interface ColorSource {
     /** The wallpaper's dynamic colours on Android 12+ (API 31), [Static] below that and on iOS. */
     data object Platform : ColorSource
 
-    /** The app's static scheme: the brand blue `#4984E2`, TonalSpot variant (owner, item 14 Q1). */
+    /** The app's static scheme: the brand blue `#4984E2`, TonalSpot variant. */
     data object Static : ColorSource
 
     /**

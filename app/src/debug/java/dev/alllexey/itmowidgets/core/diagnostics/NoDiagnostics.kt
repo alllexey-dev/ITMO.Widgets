@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.core.diagnostics
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
-/** Debug-host stand-in for screens built without Hilt. */
+/** Debug-host stand-in for screens built outside the Koin graph. */
 object NoDiagnostics : AppDiagnostics {
     override fun warn(tag: String, message: String, error: Throwable?) = Unit
     override fun error(tag: String, message: String, error: Throwable?) = Unit

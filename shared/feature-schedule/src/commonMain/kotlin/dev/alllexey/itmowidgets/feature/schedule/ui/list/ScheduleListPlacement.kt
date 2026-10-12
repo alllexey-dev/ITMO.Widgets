@@ -13,7 +13,7 @@ import kotlinx.datetime.LocalDate
 internal data class ScheduleDayAnchor(val date: LocalDate, val offset: Int)
 
 /**
- * Where [ScheduleRoute] puts its list when content arrives (the port of v2.2's schedule scroll helpers):
+ * Where [ScheduleRoute] puts its list when content arrives:
  *
  * - once per screen, on today with a peek of the day before, unless a saved position came back with the screen;
  * - after a switch to another user's schedule, on the day and offset read before ([anchorOn]); a day without lessons

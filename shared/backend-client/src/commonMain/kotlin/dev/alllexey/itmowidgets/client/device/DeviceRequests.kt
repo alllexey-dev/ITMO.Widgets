@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * One installation's push registration. [fcmToken] keeps the name released clients send (also for an APNs-backed
- * Firebase token on iOS). The three optional fields are new in 2.3 (Backend BK-16b) and omitted when `null`:
+ * Firebase token on iOS). The three optional fields are new in 2.3 and omitted when `null`:
  * absent means [DevicePlatform.ANDROID], alerts allowed and an unknown app version. `alertsAllowed = false` tells
  * Backend that this device shows no alerts, so it does not spend sport attempts on it.
  */

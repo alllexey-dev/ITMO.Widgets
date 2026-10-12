@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 
 /**
  * Copies WebKit's ITMO.ID cookies to the Keychain after a WebView session (the ITMO.ID sign-in, the BARS sign-in, the
- * hidden BARS renewal), so the background can replay them (SP-21). A failure is logged by type only and keeps the
+ * hidden BARS renewal), so the background can replay them. A failure is logged by type only and keeps the
  * previous copy.
  */
 class ItmoIdCookieExport(

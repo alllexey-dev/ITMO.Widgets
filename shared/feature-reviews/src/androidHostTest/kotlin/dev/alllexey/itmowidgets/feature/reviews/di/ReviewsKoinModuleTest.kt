@@ -19,7 +19,7 @@ class ReviewsKoinModuleTest {
     /** The data resolves inside the module; only the platform's core types are bridged, the handle is the host's. */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theReviewsModuleResolvesWithTheBridgedTypes() {
+    fun theReviewsModuleResolvesWithThePlatformTypes() {
         reviewsModule.verify(
             extraTypes = listOf(
                 BackendGate::class,

@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.update.ui.preview
 
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateUiState
 
-/** Synthetic offers: the 2.1 -> 2.2 release of LA-1c's references, plus notes long enough to scroll. */
+/** Synthetic offers: a 2.1 -> 2.2 release, plus notes long enough to scroll. */
 internal object AppUpdatePreviewData {
     const val NOTE = "Виджет расписания обновляется быстрее, зачётка помнит выбранный семестр."
 

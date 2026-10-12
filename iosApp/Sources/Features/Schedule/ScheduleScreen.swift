@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// The schedule tab's root: L10's Compose schedule (`scheduleRootScreen`, IO-09b) with the router behind its lessons,
+/// The schedule tab's root: the Compose schedule (`scheduleRootScreen`) with the router behind its lessons,
 /// its queued sport rows and its friends button. The friend picker answers through the router
 /// (`open(_:onResult:)`); each `today` entry route (the widget, the quick action, the App Shortcut) puts the own
 /// schedule back on today.

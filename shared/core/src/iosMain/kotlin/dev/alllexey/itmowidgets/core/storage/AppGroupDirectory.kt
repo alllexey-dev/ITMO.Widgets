@@ -14,7 +14,7 @@ import platform.Foundation.NSFileManager
  * snapshots (`<name>-v<N>.json`), `session-v1.json` and the [FileCrossProcessLock] files under `locks/`. The files
  * are listed in docs/ios.md, Data sharing.
  *
- * [isShared] is false when no group container resolves (an unsigned build, SP-23): the directory then sits in the
+ * [isShared] is false when no group container resolves (an unsigned build): the directory then sits in the
  * app's own container, so the app keeps working and only the extensions see nothing.
  */
 class AppGroupDirectory internal constructor(

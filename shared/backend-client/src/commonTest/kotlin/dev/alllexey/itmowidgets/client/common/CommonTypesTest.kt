@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
-/** Round trip and strictness of the wire types shared by several areas (07 item 12, SP-02 cases 3, 5, 7). */
+/** Round trip and strictness of the wire types shared by several areas. */
 class CommonTypesTest {
 
     private val capabilities = """{"canViewSchedule":true,"canViewSport":false,"canViewFriends":true}"""
@@ -72,7 +72,7 @@ class CommonTypesTest {
 
     @Test
     fun quotedCapabilityBooleanIsAccepted() {
-        // 07 Q4 (b), SP-02 case 3: Jackson never quotes booleans; kotlinx reads them and the owner accepted that.
+        // Jackson never quotes booleans; kotlinx reads quoted ones, which is accepted.
         val body = """{"canViewSchedule":"true","canViewSport":false,"canViewFriends":false}"""
 
         assertEquals(
@@ -83,7 +83,7 @@ class CommonTypesTest {
 
     @Test
     fun groupFieldsAreRequired() {
-        // SP-02 case 5: a null name fails instead of a latent null in a non-null field.
+        // A null name fails instead of a latent null in a non-null field.
         for (body in listOf(
             """{"name":null,"course":2,"facultyShortName":"ФТФ"}""",
             """{"course":2,"facultyShortName":"ФТФ"}""",

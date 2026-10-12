@@ -17,11 +17,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 /**
- * Port of Core 1.x `resources/SubjectLinkContractTest`, one test per 1.x test with the same name. Not ported: the
- * moderation cases (`automatic decisions require a policy actor without a fictional moderator`, `link moderation
- * target decodes polymorphically under SUBJECT_RESOURCE and rejects unknown targets`) and the moderation types in
- * the other tests, since the moderation API is not mirrored (CO-02); 07 Q4 (b) drops the duplicate-key and
- * quoted-number cases.
+ * The subject link models. Moderation cases and types are left out, since the moderation API is not mirrored;
+ * duplicate keys and quoted numbers are accepted, so there are no rejection cases for them.
  *
  * A malformed answer fails with a [SerializationException] or, for a model `init` invariant, an
  * [IllegalArgumentException]; both are [IllegalArgumentException]s, which the client turns into a contract failure.
@@ -43,7 +40,7 @@ class SubjectLinkContractTest {
 
     @Test
     fun everyPublicLinkAndModerationDtoRoundTrips() {
-        // Moderation DTOs are CO-02's; the restriction and the report body are the ones the app sends and reads.
+        // Moderation DTOs are not mirrored; the restriction and the report body are the ones the app sends and reads.
         for (link in listOf(fixtures.link, fixtures.ownLink, fixtures.previousLink)) {
             assertRoundTrips(SubjectLink.serializer(), link)
         }
@@ -145,8 +142,8 @@ class SubjectLinkContractTest {
     fun strictEnumsRejectUnknownNullNumericAndMalformedValuesWhileFutureRestrictionBlocksAll() {
         assertStrictEnum(LinkVisibilitySerializer, LinkVisibility.entries)
         assertStrictEnum(ReportReasonSerializer, ReportReason.entries)
-        // 2.0 policy (13 Q7 (b)): category and status are display enums, so an unknown name decodes as UNKNOWN
-        // instead of failing the answer; 1.x rejected it. Non-strings still fail and UNKNOWN is never encoded.
+        // Category and status are display enums, so an unknown name decodes as UNKNOWN instead of failing the
+        // answer. Non-strings still fail and UNKNOWN is never encoded.
         assertDisplayEnum(LinkCategorySerializer, LinkCategory.entries, LinkCategory.UNKNOWN)
         assertDisplayEnum(SubjectLinkStatusSerializer, SubjectLinkStatus.entries, SubjectLinkStatus.UNKNOWN)
 
@@ -172,7 +169,7 @@ class SubjectLinkContractTest {
 
     @Test
     fun requiredLinkResponseRestrictionAndPolicyFieldsNeverBecomeJvmDefaults() {
-        // ModerationPolicy is CO-02's. The 1.x quoted-number and duplicate-key cases are dropped (07 Q4 (b)).
+        // ModerationPolicy is not mirrored. Quoted numbers and duplicate keys are accepted, so they have no case here.
         assertRequired(
             SubjectLink.serializer(),
             fixtures.link,
@@ -197,7 +194,7 @@ class SubjectLinkContractTest {
         for (wire in listOf("1.5", "2147483648", "true")) {
             assertDecodeFails(SubjectLink.serializer(), link.with("score", wire), "SubjectLink.score: $wire")
         }
-        // 2.0 policy (07 Q4 (b)): a quoted boolean is accepted; 1.x rejected it.
+        // A quoted boolean is accepted.
         assertEquals(true, decode(SubjectLink.serializer(), link.with("isMine", "\"true\"")).isMine)
         assertEquals(true, decode(SubjectLink.serializer(), link.with("reportedByMe", "\"true\"")).reportedByMe)
         for (vote in listOf("2", "-2")) {
@@ -216,7 +213,7 @@ class SubjectLinkContractTest {
 
     @Test
     fun aFlowIdTravelsExactlyWithFlowVisibility() {
-        // SubjectLinkRevision is CO-02's. A quoted flowId is dropped (07 Q4 (b)).
+        // SubjectLinkRevision is not mirrored. A quoted flowId is accepted, so it has no case here.
         val cases = listOf(
             jsonOf(SubjectLink.serializer(), fixtures.link) to { json: JsonObject ->
                 decode(SubjectLink.serializer(), json).flowId

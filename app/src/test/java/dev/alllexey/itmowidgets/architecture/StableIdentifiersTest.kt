@@ -14,7 +14,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  * the package needs no edit here and a package or value change fails with the identifier in the message.
  *
  * This test is the source of truth for `docs/architecture.md` "Stable identifiers". The list only grows; changing an
- * entry needs an ADR (0016, 0030) and a dual read of the old value.
+ * entry needs a dual read of the old value.
  */
 class StableIdentifiersTest {
 

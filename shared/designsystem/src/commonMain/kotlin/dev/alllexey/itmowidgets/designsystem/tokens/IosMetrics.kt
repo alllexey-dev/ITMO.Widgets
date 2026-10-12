@@ -5,7 +5,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * UIKit's metrics that the iOS variants of the kit draw to and that have no Material slot in [ItmoSpacing] or
- * [ItmoShapes]. Measured once on the pinned simulator (iPhone 17, iOS 27.0, `scripts/ios/env.sh`; DS-IOS-01) from
+ * [ItmoShapes]. Measured once on the pinned simulator (iPhone 17, iOS 27.0, `scripts/ios/env.sh`) from
  * UIKit reference views at the default Dynamic Type size; the source of each value is in its comment. One look for
  * every supported iOS: the pinned runtime's. Values in pt, which are dp here.
  */
@@ -39,7 +39,7 @@ object IosMetrics {
 
     /**
      * The space above a section header's text in an inset-grouped list: the label's y in the header view
-     * (`UIListContentConfiguration.groupedHeader()`, 17 pt semibold in `secondaryLabel`, DS-IOS-03).
+     * (`UIListContentConfiguration.groupedHeader()`, 17 pt semibold in `secondaryLabel`).
      */
     val sectionHeaderTop: Dp = 28.67.dp
 
@@ -87,7 +87,7 @@ object IosMetrics {
     /** A button of an alert, a capsule: the action view's frame and corner radius 24. */
     val alertButtonHeight: Dp = 48.dp
 
-    /** The title's and the message's distance from an alert's sides: the labels' x (DS-IOS-05). */
+    /** The title's and the message's distance from an alert's sides: the labels' x. */
     val alertTextInset: Dp = 30.dp
 
     /** The title's distance from an alert's top: the title label's y. */
@@ -125,7 +125,7 @@ object IosMetrics {
 
     /**
      * A pull-down menu's corners. Not measurable on the simulator, which draws the menu's glass platter without its
-     * shape; the inset group's radius until DS-IOS-04 checks it against a device screenshot.
+     * shape; the inset group's radius until it is checked against a device screenshot.
      */
     val menuRadius: Dp = insetGroupRadius
 
@@ -141,7 +141,7 @@ object IosMetrics {
     /** The gap around the selected segment's capsule: its 27 pt thumb inside the 31 pt control. */
     val segmentedThumbInset: Dp = 2.dp
 
-    /** A switch: `UISwitch`'s frame after `sizeToFit()`, a capsule track (DS-IOS-02). */
+    /** A switch: `UISwitch`'s frame after `sizeToFit()`, a capsule track. */
     val switchWidth: Dp = 63.dp
 
     /** A switch's height: `UISwitch`'s frame; the track's corner radius is half of it. */
@@ -156,7 +156,7 @@ object IosMetrics {
     /** The gap around the thumb: its x when off (2) and its trailing gap when on (63 - 24 - 37). */
     val switchThumbInset: Dp = 2.dp
 
-    /** The spinner of `UIActivityIndicatorView(style: .medium)`: its intrinsic size (DS-IOS-02). */
+    /** The spinner of `UIActivityIndicatorView(style: .medium)`: its intrinsic size. */
     val activityIndicatorMedium: Dp = 20.dp
 
     /** The spinner of `UIActivityIndicatorView(style: .large)`: its intrinsic size. */
@@ -179,7 +179,7 @@ object IosMetrics {
 
     /**
      * The band a `UIRefreshControl` takes above the content while it refreshes: `_refreshControlHeight` and the
-     * `_additionalTopInset` it adds to the scroll view after `beginRefreshing()` (DS-IOS-04).
+     * `_additionalTopInset` it adds to the scroll view after `beginRefreshing()`.
      */
     val refreshControlHeight: Dp = 60.dp
 

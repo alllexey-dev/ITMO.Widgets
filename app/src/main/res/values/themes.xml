@@ -2,7 +2,7 @@
 
     <!--
         API 26-30: the window behind the Compose screens takes the brand static scheme's background
-        (ItmoTheme's ColorSource.Static, M3-02), so the status bar strip shows no seam. values-v31 keeps
+        (ItmoTheme's ColorSource.Static), so the status bar strip shows no seam. values-v31 keeps
         the wallpaper's dynamic background.
     -->
     <style name="Platform.AppTheme" parent="Theme.Material3.DynamicColors.DayNight">

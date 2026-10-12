@@ -50,13 +50,12 @@ val scheduleChangesCardsQualifier: Qualifier = named("schedule-changes")
  * The schedule data. Koin is the only graph for these types: one `ScheduleRepositoryImpl` serves the screens, the
  * home card, the widget, the subject page (`SubjectLessonsGateway`, `ScheduleRefreshGateway`) and sign-out; one
  * `ScheduleChangesRepositoryImpl` the change history, its home card, the background check and sign-out; one
- * `CalendarSyncRepositoryImpl` and one `DefaultCalendarSync` the phone calendar sync. Hilt-built Android code (the
- * workers, the widget entry point, the debug tools) takes them through the app's `ScheduleBridge`; the `.ics` export
- * and the widget snapshot file stay in `:app`.
+ * `CalendarSyncRepositoryImpl` and one `DefaultCalendarSync` the phone calendar sync. The `.ics` export and the widget
+ * snapshot file stay in `:app`.
  *
  * From the platform: Core 2.0's `ScheduleApi`, the `ScheduleChangeNotifier` and `ScheduleChangesScheduler`, the
- * phone's `PhoneCalendars` and the `CalendarSyncScheduler` (the app's `ScheduleBridge` on Android, L18's module on
- * iOS), `AppNotifier`, `MyItmoClient`, `BuildingDirectory` and the other core contracts (`CoreBridge`), `DemoMode`
+ * phone's `PhoneCalendars` and the `CalendarSyncScheduler` (`androidScheduleModule` on Android, the iOS modules on
+ * iOS), `AppNotifier`, `MyItmoClient`, `BuildingDirectory` and the other core contracts, `DemoMode`
  * and the session token store, the services opt-in and the schedule preferences (`settingsDataModule`), the pending
  * sport rows (whichever graph sport owns). The selectors come from [scheduleModule].
  */
@@ -65,7 +64,7 @@ val scheduleDataModule = module {
     single<ScheduleLocalDataSource> { ScheduleLocalDataSourceImpl(get(), get<AppDirectories>(), get()) }
     singleOf(::ScheduleRemoteDataSourceImpl) { bind<ScheduleRemoteDataSource>() }
     // One cache and one access-revision table per process; the cleaner contributions are qualified forwards (an
-    // open set the app merges into Hilt's sign-out set).
+    // open set sign-out collects with getAll).
     singleOf(::ScheduleRepositoryImpl) {
         bind<ScheduleRepository>()
         bind<ScheduleRefreshGateway>()
@@ -82,7 +81,7 @@ val scheduleDataModule = module {
     singleOf(::ScheduleChangesRepositoryImpl) { bind<ScheduleChangesRepository>() }
     single<SessionDataCleaner>(named("schedule-changes")) { get<ScheduleChangesRepositoryImpl>() }
     singleOf(::DefaultScheduleChangeTracking) { bind<ScheduleChangeTracking>() }
-    // One run of the background check (iOS runs it from its own task, L18 IO-14).
+    // One run of the background check (iOS runs it from its own task).
     factoryOf(::ScheduleChangesCheck)
 
     singleOf(::ScheduleHomeCardSource)
@@ -90,13 +89,13 @@ val scheduleDataModule = module {
     singleOf(::ScheduleChangesHomeCardSource)
     single<HomeCardSource>(qualifier = scheduleChangesCardsQualifier) { get<ScheduleChangesHomeCardSource>() }
 
-    // The phone calendar sync (L18 IO-15a): the platform supplies `PhoneCalendars` and `CalendarSyncScheduler`.
+    // The phone calendar sync: the platform supplies `PhoneCalendars` and `CalendarSyncScheduler`.
     factory { CalendarSyncFileStore(get<AppDirectories>()) }
     factoryOf(::MyItmoOwnScheduleSource) { bind<OwnScheduleSource>() }
     singleOf(::CalendarSyncRepositoryImpl) { bind<CalendarSyncRepository>() }
     single<SessionDataCleaner>(named("calendar-sync")) { get<CalendarSyncRepositoryImpl>() }
     singleOf(::DefaultCalendarSync) { bind<CalendarSync>() }
 
-    // Stateless: each widget update (Android) or timeline write (iOS, L18 IO-10b) gets its own.
+    // Stateless: each widget update (Android) or timeline write (iOS) gets its own.
     factoryOf(::ScheduleWidgetDataProvider)
 }

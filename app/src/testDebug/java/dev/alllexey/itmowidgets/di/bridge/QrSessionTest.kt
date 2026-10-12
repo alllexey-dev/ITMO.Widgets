@@ -29,7 +29,7 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
 @LazyApplication(LazyLoad.ON)
-class SessionCleanersBridgeTest {
+class QrSessionTest {
 
     @get:Rule
     val stopKoin = StopKoinRule()

@@ -5,7 +5,7 @@ import platform.Foundation.NSBundle
 
 /**
  * The Backend origin of this build, `BackendBaseURL` in the app's Info.plist, which Xcode expands from
- * `BACKEND_BASE_URL` in `Base.xcconfig`: dev in every configuration until Backend 1.8.0 is in production (gate R).
+ * `BACKEND_BASE_URL` in `Base.xcconfig`: currently dev in every configuration.
  */
 object BackendOrigin {
 

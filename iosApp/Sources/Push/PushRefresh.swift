@@ -1,8 +1,8 @@
 import Shared
 
-/// Runs the shared `PushForegroundRefresh` (IO-13a) on every return to the foreground: the notification settings
+/// Runs the shared `PushForegroundRefresh` on every return to the foreground: the notification settings
 /// for the extensions' session snapshot, then the push registration, which reaches Backend only when the token,
-/// the account or the alerts answer changed. Nothing is sent without a push token (IO-13b), in the demo or without
+/// the account or the alerts answer changed. Nothing is sent without a push token, in the demo or without
 /// the opt-in.
 enum PushRefresh {
     @MainActor

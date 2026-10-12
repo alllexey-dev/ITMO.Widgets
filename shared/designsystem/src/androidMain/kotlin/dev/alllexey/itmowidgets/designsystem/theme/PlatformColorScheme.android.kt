@@ -39,8 +39,8 @@ fun wallpaperPalette(context: Context): WallpaperPalette? {
 
 /**
  * MDC 1.13's `Theme.Material3.DynamicColors` leaves `colorOutlineVariant` and the error roles at the baseline values,
- * and on API 35 its baseline light `colorOnErrorContainer` is error tone 30. The View screens and widgets show exactly
- * that, so the Compose scheme takes the same values and a Compose screen next to a View one shows no seam.
+ * and on API 35 its baseline light `colorOnErrorContainer` is error tone 30. The widgets show exactly that, so the
+ * Compose scheme takes the same values and the app's screens match its widgets.
  */
 internal fun ColorScheme.withViewThemeRoles(dark: Boolean, sdk: Int): ColorScheme {
     val baseline = baselineColorScheme(dark)

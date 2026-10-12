@@ -142,7 +142,7 @@ private fun SettingsSelectionPreview() = ItmoPreview {
 }
 
 /**
- * The section of IO-06a's SwiftUI `Form` reference (`DesignSystemSnapshotTests.testFormToggleAndValueRows`) at its
+ * The section of the SwiftUI `Form` reference (`DesignSystemSnapshotTests.testFormToggleAndValueRows`) at its
  * 320 pt width, without the row symbols the settings rows do not draw: the iOS baselines sit beside that snapshot.
  */
 @Preview(widthDp = 320)

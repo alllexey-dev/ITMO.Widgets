@@ -3,13 +3,13 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// One settings page (IO-08a, recipe ios-swiftui-screen): the page's `SettingsViewModel` (LT-3b) rendered by
-/// `SettingsForm` under the stack's navigation bar. Android's Compose pages (LT-4x) are not used on iOS.
+/// One settings page: the page's `SettingsViewModel` rendered by `SettingsForm` under the stack's navigation
+/// bar. Android's Compose pages are not used on iOS.
 ///
 /// The screen feeds the ViewModel what only iOS knows, on appear and on every return to the app: the notification
 /// permission and Background App Refresh. It answers the page's events with system pages, the router and a short
 /// message at the bottom; the calendar switch asks for calendar access (`CalendarAccess`) and the `.ics` row opens
-/// `IcsExportSheet` (IO-15b). The events of rows iOS does not list (the tile, the custom spoiler) never come.
+/// `IcsExportSheet`. The events of rows iOS does not list (the tile, the custom spoiler) never come.
 struct SettingsScreen: View {
     @State private var model: ObservableViewModel<SettingsViewModel, SettingsUiState>
     @State private var system = SettingsSystemState()

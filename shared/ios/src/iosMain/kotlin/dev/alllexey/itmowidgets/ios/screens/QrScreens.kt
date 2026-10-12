@@ -12,9 +12,9 @@ import dev.alllexey.itmowidgets.feature.qr.ui.QrPassRoute
 import platform.UIKit.UIViewController
 
 /**
- * The QR pass above home (`AppRoutes.QrPass`), LH-3's route as Android hosts it. The Swift host fills the screen and
+ * The QR pass above home (`AppRoutes.QrPass`), its route as Android hosts it. The Swift host fills the screen and
  * ignores the safe area, so the surface runs under the status bar and behind the tab bar while the content keeps
- * clear of both: the route draws its own top bar and no insets (DS-03), the host pads them here. [onBack] pops the
+ * clear of both: the route draws its own top bar and no insets, the host pads them here. [onBack] pops the
  * Swift stack; brightness is the Swift host's.
  */
 fun qrPassViewController(onBack: () -> Unit): UIViewController = screenController {

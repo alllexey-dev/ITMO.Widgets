@@ -42,7 +42,7 @@ import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewMo
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetKind
 import kotlinx.coroutines.CoroutineScope
 
-/** The flow's root, tagged like the root id of the former View flow, so routing tests keep their lookup. */
+/** The flow's root tag, which the routing tests look up. */
 @VisibleForTesting
 const val ONBOARDING_ROOT_TEST_TAG = "onboarding_root"
 
@@ -142,7 +142,7 @@ fun Context.openOnboardingLink(url: String, onFailed: () -> Unit) {
 }
 
 /**
- * The real widget previews of one host (recipe platform-view-slot): one preview per composed page, built in the
+ * The real widget previews of one host: one preview per composed page, built in the
  * factory, bound to every appearance change, re-read when a new spoiler image is stored, closed on release.
  */
 class OnboardingWidgetPreviews(private val factory: WidgetPreviewFactory) {

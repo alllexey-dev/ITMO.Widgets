@@ -1,7 +1,7 @@
 import Shared
 import SwiftUI
 
-/// Android's `AppUpdateFragment` over the shared `AppUpdateViewModel` (IO-08b): what the check found,
+/// Android's `AppUpdateScreen` over the shared `AppUpdateViewModel`: what the check found,
 /// `app_update_action` (the App Store page), `app_update_later` and, for a build Backend still serves,
 /// `app_update_skip`. It renders the offer it is opened with and never repeats the request.
 struct AppUpdateScreen: View {

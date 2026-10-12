@@ -35,7 +35,7 @@ import platform.UIKit.UIViewController
 
 /**
  * The QR route's graph as the iOS app starts it (`IosKoinModules`): the core module, [qrModule] and [qrIosModule],
- * with the account types (KM-11h1) and the simulator test binary's device stood in.
+ * with the account types and the simulator test binary's device stood in.
  */
 class QrIosModuleTest {
 

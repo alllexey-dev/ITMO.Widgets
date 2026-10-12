@@ -11,7 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/** `DELETE /api/users/me` ([UsersApi.deleteMe]) against BK-18's answers. */
+/** `DELETE /api/users/me` ([UsersApi.deleteMe]) against Backend's answers. */
 class AccountDeletionTest {
 
     @Test

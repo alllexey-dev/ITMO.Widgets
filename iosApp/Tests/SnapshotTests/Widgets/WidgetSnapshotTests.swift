@@ -3,9 +3,9 @@ import WidgetKit
 import XCTest
 @testable import ITMOWidgets
 
-/// The widget entry views at their family size: the QR widget (IO-10a) in all four appearances with Android's default
-/// options, without dynamic colours and on a tinted home screen (IO-FIX-QRW), the lesson and the day widget (IO-10b)
-/// light and dark, AX1 where a family has the least room, and all three in the app's theme (DS-ACC3, the teal preset).
+/// The widget entry views at their family size: the QR widget in all four appearances with Android's default
+/// options, without dynamic colours and on a tinted home screen, the lesson and the day widget
+/// light and dark, AX1 where a family has the least room, and all three in the app's theme (the teal preset).
 /// WidgetKit's container background is ignored outside a widget, so each entry view paints its own tile; the home
 /// screen clips the corners.
 final class WidgetSnapshotTests: XCTestCase {
@@ -212,7 +212,7 @@ final class WidgetSnapshotTests: XCTestCase {
         }
     }
 
-    /// Entry `index` of LS-3's reference timeline (`shared/feature-schedule/fixtures`), read from the source tree in
+    /// Entry `index` of the shared reference timeline (`shared/feature-schedule/fixtures`), read from the source tree in
     /// the App Group envelope as the references are: 0 the first lesson now, 2 a break, 5 a pending sport row next,
     /// 6 tomorrow after today, 9 nothing today or tomorrow.
     private func fixture(at index: Int) throws -> LessonWidgetSnapshot {

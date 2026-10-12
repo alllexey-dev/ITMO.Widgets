@@ -72,7 +72,7 @@ class IcsExportActions(
     val onRetry: () -> Unit = {},
 )
 
-/** Tags named after the View ids of the old `sheet_ics_export.xml`, for host and instrumented tests. */
+/** Tags for host and instrumented tests. */
 object IcsExportTestTags {
     /** The one area every state takes. */
     const val AREA = "content"
@@ -140,7 +140,7 @@ private fun IcsExportUiState.layer(): Layer = when (this) {
 
 /**
  * Measures every layer and places only [shown]: the area is as tall as the tallest layer (at a large font scale that
- * is the list of ranges rather than the minimum height), as the View sheet kept its hidden states invisible. The
+ * is the list of ranges rather than the minimum height). The
  * hidden layers are neither drawn nor touchable and say nothing to TalkBack.
  */
 @Composable

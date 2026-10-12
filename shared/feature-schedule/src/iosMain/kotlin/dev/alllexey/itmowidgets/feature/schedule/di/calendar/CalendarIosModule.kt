@@ -19,7 +19,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
- * The calendar on iOS (IO-15b), the ports `scheduleDataModule`'s sync and the settings' `.ics` sheet take from the
+ * The calendar on iOS, the ports `scheduleDataModule`'s sync and the settings' `.ics` sheet take from the
  * platform: the phone's calendars over EventKit, the app refresh task as the sync's scheduler and its runner step
  * under [RefreshStepKeys.CALENDAR_SYNC] with Android's two hours, and the `.ics` file in the temporary directory.
  * The background module gives the refresh task and its step log.

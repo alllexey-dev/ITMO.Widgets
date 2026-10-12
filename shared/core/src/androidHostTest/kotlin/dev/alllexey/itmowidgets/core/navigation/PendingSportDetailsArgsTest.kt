@@ -12,7 +12,7 @@ import org.junit.Test
 /** The sheet parses `start` and `end` back with `OffsetDateTime.parse`, so their text is pinned. */
 class PendingSportDetailsArgsTest {
 
-    @Test fun `times keep the academic offset as written in 2_2`() {
+    @Test fun `times keep the academic offset in OffsetDateTime text`() {
         val booking = booking(
             start = Instant.parse("2026-10-06T10:00:00+03:00"),
             end = Instant.parse("2026-10-06T11:30:15+03:00"),

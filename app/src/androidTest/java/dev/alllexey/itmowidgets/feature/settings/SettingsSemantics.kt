@@ -22,7 +22,7 @@ object SettingsSemantics {
 
     private val rowKeys = SettingRowId.entries.associateBy { it.key }
 
-    /** Every node of [root]'s unmerged tree, breadth first; [root] is the Fragment's `ComposeView`. */
+    /** Every node of [root]'s unmerged tree, breadth first; [root] is the page's `ComposeView`. */
     fun nodes(root: View): Sequence<SemanticsNode> {
         val owner = ((root as ViewGroup).getChildAt(0) as ViewRootForTest).semanticsOwner
         return generateSequence(listOf(owner.unmergedRootSemanticsNode)) { level ->

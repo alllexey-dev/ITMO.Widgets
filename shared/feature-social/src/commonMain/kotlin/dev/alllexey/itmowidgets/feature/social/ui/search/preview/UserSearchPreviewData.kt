@@ -19,7 +19,7 @@ import dev.alllexey.itmowidgets.shared.feature.social.user_status_not_registered
 import dev.alllexey.itmowidgets.shared.feature.social.user_subtitle_isu
 
 /**
- * Synthetic people of the search previews: LC-1c's reference results for `Соколов`, as `UserSearchViewModel` maps
+ * Synthetic people of the search previews: the results for `Соколов`, as `UserSearchViewModel` maps
  * them. Registered people carry their relationship action, the others an invite.
  */
 internal object UserSearchPreviewData {

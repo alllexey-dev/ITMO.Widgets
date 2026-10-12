@@ -14,9 +14,9 @@ val keystoreProperties = Properties().apply {
     if (file.exists()) file.inputStream().use(::load)
 }
 
-// Android Test Orchestrator with clearPackageData (TC-14) for the platform list only: `scripts/verify.sh ui @platform`
-// and the nightly managed-device job pass -Pitmo.orchestrator=true. The View suites share TestSession and the real
-// Koin graph across tests, so they keep the plain runner until their ports delete them.
+// Android Test Orchestrator with clearPackageData for the platform list only: `scripts/verify.sh ui @platform`
+// and the nightly managed-device job pass -Pitmo.orchestrator=true. The other suites share TestSession and the real
+// Koin graph across tests, so they keep the plain runner.
 val orchestrated = providers.gradleProperty("itmo.orchestrator").map(String::toBoolean).getOrElse(false)
 
 android {
@@ -28,7 +28,7 @@ android {
         versionName = "2.3-SNAPSHOT"
         resValue("string", "app_version", versionName!!)
 
-        // The real ITMO and Backend hosts fail at once in instrumented tests, never hang them (SH-FIX-DL).
+        // The real ITMO and Backend hosts fail at once in instrumented tests, never hang them.
         testInstrumentationRunner = "dev.alllexey.itmowidgets.testing.OfflineHostsTestRunner"
         // ActivityScenario.launchActivityForResult waits the full lifecycle timeout (45 s) on
         // close; observed transitions on the emulator stay under 2 s.
@@ -144,7 +144,7 @@ dependencies {
     implementation(project(":shared:feature-account"))
     // @Preview of the Compose screens that stay in :app (debug tools); DebugToolsScreenshotTest renders them.
     implementation(libs.compose.ui.tooling.preview)
-    // The Navigation 3 shell (ADR 0020, L17 SH-1b1): NavDisplay and scenes, and a ViewModel store per entry.
+    // The Navigation 3 shell: NavDisplay and scenes, and a ViewModel store per entry.
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     testImplementation(project(":shared:testing"))
@@ -153,10 +153,10 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     implementation(libs.android.image.cropper)
     implementation(libs.my.itmo.api.kmp)
-    // The BARS engine of di/RecordbookModule (KM-10b2): OkHttp with the BARS timeouts, apart from MyITMO's engine.
+    // The BARS engine of di/RecordbookModule: OkHttp with the BARS timeouts, apart from MyITMO's engine.
     implementation(libs.ktor.client.okhttp)
     implementation(libs.androidx.datastore.preferences)
-    // Storage foundation (KM-04): okio files, DataStore by okio path, the common lock of AtomicTextFile.
+    // Storage foundation: okio files, DataStore by okio path, the common lock of AtomicTextFile.
     implementation(libs.androidx.datastore.preferences.core)
     implementation(libs.okio)
     implementation(libs.kotlinx.atomicfu)
@@ -177,19 +177,19 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.ksoup)
     implementation(libs.kotlinx.datetime)
-    // kotlinx JSON of the core stores, auth and the FCM envelope (KM-05d).
+    // kotlinx JSON of the core stores, auth and the FCM envelope.
     implementation(libs.kotlinx.serialization.json)
-    // Koin, the app's one graph (ADR 0019), starts in di/KoinStarter.
+    // Koin, the app's one graph, starts in di/KoinStarter.
     implementation(libs.koin.android)
     "playImplementation"(libs.play.app.update.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.okhttp.mockwebserver)
-    // The store tests prove 2.2 (Gson) reads what kotlinx writes; Gson is on no runtime classpath (KM-10i).
+    // The store tests prove 2.2 (Gson) reads what kotlinx writes; Gson is on no runtime classpath.
     testImplementation(libs.gson)
     testImplementation(libs.koin.test)
-    // TestListenableWorkerBuilder: the worker tests build each worker as WorkManager does, on a Koin test graph (KM-12a).
+    // TestListenableWorkerBuilder: the worker tests build each worker as WorkManager does, on a Koin test graph.
     testImplementation(libs.androidx.work.testing)
     // KoinContext for Robolectric Compose tests: Koin Compose caches the first graph per JVM, and StopKoinRule restarts it.
     testImplementation(libs.koin.compose.viewmodel)

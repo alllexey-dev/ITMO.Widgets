@@ -20,7 +20,7 @@ interface MorningScheduleChangeNotifier : ScheduleChangeNotifier {
 }
 
 /**
- * The iOS [ScheduleChangeNotifier] (IO-14), Android's `AndroidScheduleChangeNotifier` over [IosAppNotifier]:
+ * The iOS [ScheduleChangeNotifier], Android's `AndroidScheduleChangeNotifier` over [IosAppNotifier]:
  * "Расписание изменилось: 3 пары" with the nearest change's headline, by catalog key; only today and tomorrow make a
  * sound. One digest at a time: a newer one replaces the shown or the scheduled one.
  */

@@ -84,11 +84,11 @@ object SheetScoresSheetTestTags {
 }
 
 /**
- * The scores sheet (`sheet_scores_title`, ex `sheet_scores_setup.xml`): the title over [subjectName], then one bounded area where loading, a
+ * The scores sheet (`sheet_scores_title`): the title over [subjectName], then one bounded area where loading, a
  * failure and the choices take turns without moving the sheet: the own row among several, the tab to look in, a row of
  * that tab, the total among the own row's cells by tab. A long list of people gets a search by name whose text
  * survives the state changes and recreation; it is the only state the sheet keeps. Cell values show as the sheet has
- * them (ADR 0014). The host owns the container, [SheetScoresUiState.Done] (it closes the sheet) and the save failure.
+ * them. The host owns the container, [SheetScoresUiState.Done] (it closes the sheet) and the save failure.
  */
 @Composable
 fun SheetScoresSheet(
@@ -288,7 +288,7 @@ private fun ColumnScope.OptionList(options: List<SheetOption>) {
     }
 }
 
-/** `item_subject_link_section.xml` without its icon: the tab's name over its cells. */
+/** The tab's name over its cells. */
 @Composable
 private fun SectionTitle(title: String) {
     Text(
@@ -304,7 +304,7 @@ private fun SectionTitle(title: String) {
 }
 
 /**
- * `item_sheet_scores_option.xml`: the whole row is the 48 dp target, read once as a selectable option with its title,
+ * One option: the whole row is the 48 dp target, read once as a selectable option with its title,
  * caption and value; the check in `primary` marks the current choice.
  */
 @Composable

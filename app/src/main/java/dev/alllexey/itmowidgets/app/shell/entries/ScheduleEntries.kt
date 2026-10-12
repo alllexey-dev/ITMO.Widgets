@@ -109,7 +109,7 @@ internal fun ScheduleTabRoot(navigator: Nav3AppNavigator) {
     )
 }
 
-/** As v2.2's schedule tab read the picker's result: no user for the own schedule, the picture URL as delivered. */
+/** The picker's result as the schedule tab reads it: no user for the own schedule, the picture URL as delivered. */
 private fun FriendSelection.toSelectedUser(): SelectedUser? =
     if (useMySchedule) null else SelectedUser(isu = isu, name = name, avatar = pictureUrl)
 
@@ -182,7 +182,7 @@ private fun PendingSportDetailsEntry(
     PendingSportDetailsContent(PendingSportDetailsSheetState(booking, zone), actions, SheetSurface)
 }
 
-/** Both sheets fill the shell's sheet on the lowest container, as `ItmoBottomSheetFragment` tints them. */
+/** Both sheets fill the shell's sheet on the lowest container. */
 private val SheetSurface: Modifier
     @Composable get() = Modifier.fillMaxSize().background(ItmoTheme.colorScheme.surfaceContainerLowest)
 

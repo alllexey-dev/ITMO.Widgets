@@ -31,9 +31,8 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 /**
- * Port of Core 1.7.0 `PrivacyApiContractTest` (07 CORE-K1, item 12, Verification #21). 1.x Gson rejected duplicate
- * keys and quoted booleans; Core 2.0 accepts both by the owner's 07 Q4 (b), so those cases now assert the accepted
- * behaviour. The 1.x sport-bookings case belongs to the sport area (CO-04).
+ * The privacy routes and models. Duplicate keys and quoted booleans are accepted, so those cases assert the accepted
+ * behaviour. The sport bookings case is in the sport area.
  */
 class PrivacyApiContractTest {
 
@@ -205,7 +204,7 @@ class PrivacyApiContractTest {
                 assertFailsWith<SerializationException>(text) { userData(userJson(text)) }
             }
             for ((quoted, expected) in listOf("\"true\"" to true, "\"false\"" to false)) {
-                // 07 Q4 (b): Jackson never quotes booleans; kotlinx reads quoted ones and the owner accepted that.
+                // Jackson never quotes booleans; kotlinx reads quoted ones, which is accepted.
                 val text = """{"$field":$quoted,$others}"""
                 val decoded = capabilities(text)
                 val flags = listOf(decoded.canViewSchedule, decoded.canViewSport, decoded.canViewFriends)
@@ -238,7 +237,7 @@ class PrivacyApiContractTest {
 
     @Test
     fun duplicatePermissionFieldsKeepTheLastValue() {
-        // 1.x rejected duplicates; 07 Q4 (b) accepts them with the last value winning, as Jackson writes none.
+        // Duplicates are accepted with the last value winning, as Jackson writes none.
         val text = """{"canViewSchedule":false,"canViewSport":false,"canViewFriends":false,"canViewSchedule":true}"""
 
         assertEquals(
@@ -277,7 +276,7 @@ class PrivacyApiContractTest {
 
     @Test
     fun clientHasNoLegacyPrivacyRouteAndBothPrivacyCallsUseTheAudienceRoute() = runSuspend {
-        // The 1.x reflection check on Retrofit annotations, now over the recorded requests of every case.
+        // The route of every case, checked over its recorded request.
         val requests = (UsersRouteCases.all + FriendsRouteCases.all).map { it.record() }
 
         assertFalse(requests.any { it.path == "/api/users/me/settings" })
@@ -380,7 +379,7 @@ class PrivacyApiContractTest {
                 capabilities("""{"canViewSchedule":true,"canViewSport":true$field}""")
             }
         }
-        // 07 Q4 (b): a duplicate keeps the last value instead of failing.
+        // A duplicate keeps the last value instead of failing.
         val duplicate = """{"scheduleVisibility":"ALL","sportVisibility":"ALL",""" +
             """"friendsVisibility":"ALL","friendsVisibility":"NOBODY"}"""
         assertEquals(SharingVisibility.NOBODY, settings(duplicate).friendsVisibility)

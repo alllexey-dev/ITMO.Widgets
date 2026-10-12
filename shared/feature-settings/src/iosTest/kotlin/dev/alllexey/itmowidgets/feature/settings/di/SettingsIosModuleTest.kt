@@ -69,7 +69,7 @@ class SettingsIosModuleTest {
     fun everyDefinitionResolvesAndEveryPageGetsItsOwnViewModel() {
         val koin = graph()
         val definitions = koin.instanceRegistry.instances.values.map { it.beanDefinition }.distinct()
-            // The ViewModels take their page or a port of a later card; they are resolved below.
+            // The ViewModels take their page or a port bound elsewhere; they are resolved below.
             .filterNot { it.primaryType.simpleName.orEmpty().endsWith("ViewModel") }
 
         definitions.forEach { definition -> koin.get<Any>(definition.primaryType, definition.qualifier) }

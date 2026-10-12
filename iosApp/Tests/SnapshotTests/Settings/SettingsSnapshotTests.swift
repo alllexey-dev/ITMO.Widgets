@@ -4,7 +4,7 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// Settings pages in all four appearances (IO-08a): the root and the deep pages exactly as the shared page providers
+/// Settings pages in all four appearances: the root and the deep pages exactly as the shared page providers
 /// build them on iOS (the app's graph, iOS capabilities, fixed page states), and a page of every row type with long
 /// values. The form scrolls, so each appearance gets a height that holds the whole page.
 final class SettingsSnapshotTests: XCTestCase {
@@ -21,7 +21,7 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(state, named: "schedule", height: 920, ax1Height: 1400)
     }
 
-    /// The calendar group (IO-15b) under the schedule rows, with the reason the sync turned itself off.
+    /// The calendar group under the schedule rows, with the reason the sync turned itself off.
     func testScheduleWithTheCalendarDeleted() {
         let state = SettingsFixtures.page(
             .schedule,
@@ -33,7 +33,7 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(state, named: "schedule-calendar", height: 760, ax1Height: 1150)
     }
 
-    /// The mark checks (IO-09d3) after the account's first BARS answer: the three switches and the footer.
+    /// The mark checks after the account's first BARS answer: the three switches and the footer.
     func testRecordbook() {
         let state = SettingsFixtures.page(
             .recordbook,

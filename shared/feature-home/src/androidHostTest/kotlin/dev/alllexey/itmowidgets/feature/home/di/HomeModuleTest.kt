@@ -13,12 +13,12 @@ import org.koin.test.verify.verify
 class HomeModuleTest {
 
     /**
-     * The other features' sources, the layout store, the opt-in and the wall clock are bridged from the app's Hilt
-     * graph, the device status comes from the platform; the stores and the hint source resolve inside the module.
+     * The other features' sources, the layout store, the opt-in and the wall clock come from the platform's Koin
+     * modules, as does the device status; the stores and the hint source resolve inside the module.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theHomeModuleResolvesWithTheBridgedTypes() {
+    fun theHomeModuleResolvesWithThePlatformTypes() {
         homeModule.verify(
             extraTypes = listOf(
                 HomeCardSource::class,

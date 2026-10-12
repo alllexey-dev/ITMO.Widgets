@@ -15,9 +15,9 @@ import org.junit.Test
 import java.io.File
 
 /**
- * The shared and custom icons of `docs/design/icons.tsv` are Android vector drawables in `composeResources`
- * (ADR 0028): CMP's own vector parser reads every one of them, the house format and the hand-drawn `custom` files
- * alike, and `Res.drawable` has an accessor per file.
+ * The shared and custom icons of `docs/design/icons.tsv` are Android vector drawables in `composeResources`:
+ * CMP's own vector parser reads every one of them, the house format and the hand-drawn `custom` files alike, and
+ * `Res.drawable` has an accessor per file.
  */
 class IconResourcesTest {
 

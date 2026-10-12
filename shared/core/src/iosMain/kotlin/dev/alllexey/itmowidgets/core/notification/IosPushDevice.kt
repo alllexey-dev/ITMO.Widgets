@@ -15,7 +15,7 @@ import platform.UserNotifications.UNUserNotificationCenter
 
 /**
  * The iOS [PushDevice] of the app process. The push token comes from Swift ([updateToken]) once the app registers
- * with APNs and FCM (IO-13b); until then it is `null`, so nothing is registered. Each [alertsAllowed] reads the
+ * with APNs and FCM; until then it is `null`, so nothing is registered. Each [alertsAllowed] reads the
  * notification settings and publishes the answer ([observeAlertsAllowed]) for the extensions' session snapshot.
  *
  * [readAlertsAllowed] is the system's answer; tests pass their own, since a test binary has no notification center.

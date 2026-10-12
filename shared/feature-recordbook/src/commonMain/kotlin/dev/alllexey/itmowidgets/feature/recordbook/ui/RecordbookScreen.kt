@@ -306,7 +306,7 @@ private fun PeriodButton(selection: RecordbookSelection?, onClick: () -> Unit) {
             .testTag(RecordbookTestTags.PERIOD),
         enabled = selection != null,
         contentPadding = PaddingValues(ItmoTheme.spacing.compact),
-        // The View's text and icon colours had no disabled state: the button only waits for the periods.
+        // The text and icon colours have no disabled state: the button only waits for the periods.
         colors = ButtonDefaults.textButtonColors(contentColor = color, disabledContentColor = color),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

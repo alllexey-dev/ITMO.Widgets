@@ -37,11 +37,10 @@ import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /**
- * The Navigation 3 shell (ADR 0020): the [surface] the session allows and, on the tabs, the [navigator]'s
+ * The Navigation 3 shell: the [surface] the session allows and, on the tabs, the [navigator]'s
  * `ShellBackStack` in one `NavDisplay`. Sheets and dialogs are overlay scenes above everything; the tab root and the
  * overlay screens are the shell's own layers ([ShellLayers]). Everything sits in [ItmoTheme] inside the host-level
- * composition locals every Fragment-hosted screen gets ([ItmoComposeHost]), plus the Navigation 3 result bus and the
- * activity's [AndroidPlatformActions], so a screen behaves here as in its Fragment host.
+ * composition locals ([ItmoComposeHost]), plus the Navigation 3 result bus and the activity's [AndroidPlatformActions].
  */
 @Composable
 fun AppShell(
@@ -63,7 +62,7 @@ fun AppShell(
  * [LocalPlatformActions] itself, so no host can leave the entries' links and system pages on a no-op. Each tab and the
  * contextual stack (overlays, sheets, dialogs) has its own decorator set, computed on every composition: a hidden
  * tab's root stays in its own stack, so its decorators never see a pop and its saveable state and ViewModels
- * survive the switch (SP-14's multiple back stacks).
+ * survive the switch.
  */
 @Composable
 internal fun ShellContent(

@@ -8,9 +8,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
 
 /**
- * Synthetic sheets of the scores sheet's previews and host tests: no real sheet, person or ISU. The first states are
- * the ones the XML references of LR-1c showed (two rows of the own name, the connected tab's cells); the others add a
- * long roster, several tabs and many cells.
+ * Synthetic sheets of the scores sheet's previews and host tests: no real sheet, person or ISU. The first states show
+ * two rows of the own name and the connected tab's cells; the others add a long roster, several tabs and many cells.
  */
 object SheetScoresPreviewSamples {
     const val SUBJECT = "Математический анализ (продвинутый уровень)"

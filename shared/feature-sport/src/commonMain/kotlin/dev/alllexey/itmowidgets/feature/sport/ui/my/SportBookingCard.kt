@@ -168,7 +168,7 @@ fun SportBookingCard(
                     booking,
                     actions,
                     readOnly,
-                    // The View put the button 8 dp inside the card's corner, half the card padding.
+                    // The button sits 8 dp inside the card's corner, half the card padding.
                     Modifier
                         .align(Alignment.TopEnd)
                         .offset(x = ItmoTheme.spacing.compact, y = -ItmoTheme.spacing.compact),

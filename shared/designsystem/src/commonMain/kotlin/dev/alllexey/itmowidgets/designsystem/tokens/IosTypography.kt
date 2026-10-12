@@ -5,7 +5,7 @@ import androidx.compose.material3.Typography
 /**
  * Apple's text styles at the default Dynamic Type size (Large), on the system font: SF Pro on iOS through CMP's
  * default family. Size and line height in pt are Apple's (HIG, Typography). [tracking] and [semiboldTracking] are sp
- * per glyph, measured on the pinned simulator runtime (iOS 27.0, DS-IOS-01): UIKit's width of a Latin and a Cyrillic
+ * per glyph, measured on the pinned simulator runtime (iOS 27.0): UIKit's width of a Latin and a Cyrillic
  * line minus CMP 1.12.1's width of the same line, divided by its glyphs. CMP draws SF at one optical size (its width
  * per em does not change with the size), so up to 17 pt the value equals SF's tracking table and from 20 pt it also
  * takes in the narrower SF Display glyphs: lines measure and wrap as in UIKit.

@@ -6,7 +6,7 @@ import com.materialkolor.blend.Blend
 
 /**
  * `ColorUtils.blendARGB`: a per-channel sRGB mix truncated to whole channels. Compose's `lerp` mixes in Oklab and
- * gives other values, so the View screens' containers would not match.
+ * gives other values.
  */
 internal fun blendArgb(from: Color, to: Color, ratio: Float): Color {
     val start = from.toArgb()

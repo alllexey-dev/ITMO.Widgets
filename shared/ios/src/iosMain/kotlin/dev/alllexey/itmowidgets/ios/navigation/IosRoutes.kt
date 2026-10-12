@@ -38,7 +38,7 @@ enum class RouteFeature {
 }
 
 /**
- * The shared route model as the iOS shell reads it (SH-1a2): which feature maps each key, and the entry routes of
+ * The shared route model as the iOS shell reads it: which feature maps each key, and the entry routes of
  * plain values Swift has (an `AppEntryIntents` action, a link), since Swift cannot use Kotlin default arguments.
  */
 object IosRoutes {
@@ -70,7 +70,7 @@ object IosRoutes {
         AppTab.SCHEDULE -> RouteFeature.SCHEDULE
         AppTab.HOME -> RouteFeature.HOME
         AppTab.SPORT -> RouteFeature.SPORT
-        // The me tab is the social card's (IO-09e).
+        // The me tab belongs to the social feature.
         AppTab.ME -> RouteFeature.SOCIAL
     }
 

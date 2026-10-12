@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
 /**
- * Synthetic Backend answers for teacher reviews and summary levels, shaped like CO-06's vendored `http/reviews/`
+ * Synthetic Backend answers for teacher reviews and summary levels, shaped like the vendored `http/reviews/`
  * answers at Backend commit ad8fa2dc3681dd57b6e8b797ace2f97322742555 (`BACKEND_COMMIT` of
  * `shared/backend-client/src/commonTest/resources/contract/`). Kept as constants, not JVM resources, so they move to
  * `commonTest` unchanged. No value here is a real person or ISU number.

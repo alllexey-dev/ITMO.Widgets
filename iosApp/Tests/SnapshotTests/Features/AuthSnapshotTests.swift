@@ -4,7 +4,7 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// The sign-in screen (IO-07b) in all four appearances, as Android's `AuthScreen` references: first launch, an expired
+/// The sign-in screen in all four appearances, as Android's `AuthScreen` references: first launch, an expired
 /// session with a failed sign-in, the refresh-token sign-in running, and the session still loading. `AuthContent` is
 /// rendered directly, without the ViewModel.
 @MainActor

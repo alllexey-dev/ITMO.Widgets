@@ -43,7 +43,7 @@ object UserListTestTags {
 }
 
 /**
- * A social people list (port of `UserListAdapter`): section headers, one [UserRow] per person with the actions the
+ * A social people list: section headers, one [UserRow] per person with the actions the
  * viewer can take now, and a load-more button. The friends, requests, search and another user's friends screens all
  * render their [UserListItem]s through it; a row that is [UserRowUi.busy] keeps its buttons inert.
  */

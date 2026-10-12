@@ -1,4 +1,4 @@
-// The Compose kit: theme, tokens and components with their previews and goldens (recipe kmp-module-build-file).
+// The Compose kit: theme, tokens and components with their previews and goldens.
 plugins {
     id("itmowidgets.cmp.ui")
     id("itmowidgets.testing")
@@ -7,11 +7,11 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            // AppIconResources (L05 KM-09b) and LocalPlatformActions (L18 IO-03b) live in core.
+            // AppIcon, PlatformActions and the theme settings live in core.
             implementation(project(":shared:core"))
             // ItmoTheme hands MaterialTheme to every module that renders the kit.
             api(libs.compose.material3)
-            // Seed -> scheme and harmonize in commonMain (SP-06 way (b)); moves with every material3 bump.
+            // Seed -> scheme and harmonize in commonMain; moves with every material3 bump.
             implementation(libs.material.kolor)
             // Avatar loads through the host's ImageLoader (LocalAvatarImageLoader); no network fetcher here.
             api(libs.coil.compose)
@@ -20,22 +20,20 @@ kotlin {
         }
         androidMain.dependencies {
             // JetBrains 1.12.0-alpha03 only `requires` this mapping; a newer Jetpack material3 anywhere on the app
-            // classpath would replace it at runtime and break the kit's bytecode (SP-04, ADR 0021).
+            // classpath would replace it at runtime and break the kit's bytecode.
             val jetpackMaterial3 = libs.androidx.compose.material3.get()
             implementation(jetpackMaterial3.module.toString()) {
                 version { strictly(jetpackMaterial3.versionConstraint.requiredVersion) }
             }
-            // Fragment.itmoComposeView (host/); the app's own Fragment version, nothing newer.
             implementation(libs.androidx.fragment.ktx)
-            // ItmoBottomSheetFragment (host/) extends the MDC sheet shell (SP-05a/b); compile-only, so the kit draws
-            // nothing with MDC and :app's own MDC is the one at runtime.
+            // Compile-only, so the kit draws nothing with MDC and :app's own MDC is the one at runtime.
             compileOnly(libs.material)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
         }
         getByName("androidHostTest").dependencies {
-            // The View theme the parity tests compare against; never on a main classpath of this module.
+            // The View theme the theme tests compare against; never on a main classpath of this module.
             implementation(libs.material)
         }
     }
@@ -64,7 +62,7 @@ gradle.taskGraph.whenReady {
 }
 
 // Shared icons stay Android drawables of :app for its layouts and R.drawable.ic_*; whoever removes the last such
-// user in app/ removes this line (L05 KM-09a).
+// user in app/ removes this line.
 itmowidgetsStrings {
     androidExportDrawables()
 }

@@ -46,7 +46,7 @@ class AppGroupDirectoryTest {
     @Test
     fun fallsBackToTheAppContainerWithoutAGroupContainerAndLogsOnce() {
         val log = RecordingAppLog()
-        // The Kotlin/Native test binary has no App Group entitlement, as an unsigned build (SP-23): nothing resolves.
+        // The Kotlin/Native test binary has no App Group entitlement, as an unsigned build: nothing resolves.
         val identifiers = BundleIdentifiers("group.example.unresolved", null)
 
         val first = AppGroupDirectory.resolve(identifiers, appDirectories, log)

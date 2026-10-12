@@ -78,7 +78,7 @@ class SubjectSheetActions(
     val onConnect: (List<SheetLinkOption>) -> Unit = {},
 )
 
-/** Test tags of the sheet total for host tests and the screen port. */
+/** Test tags of the sheet total for host tests. */
 object SubjectSheetTotalTestTags {
     const val ROW = "subject_sheet_total"
     const val MENU = "subject_sheet_total_menu"
@@ -86,9 +86,8 @@ object SubjectSheetTotalTestTags {
 }
 
 /**
- * The bottom of the result card, for [SubjectHero]'s `sheet` slot (2.2's `item_subject_hero.xml`'s `sheet_divider`,
- * `sheet` and `sheet_hint`): a connected total under a hairline, or «Мои баллы из таблицы» that offers the subject's
- * sheet links.
+ * The bottom of the result card, for [SubjectHero]'s `sheet` slot: a connected total under a hairline, or «Мои баллы из
+ * таблицы» that offers the subject's sheet links.
  */
 @Composable
 fun SubjectSheetTotal(state: SubjectSheetState, actions: SubjectSheetActions) {
@@ -115,10 +114,10 @@ fun SubjectSheetTotal(state: SubjectSheetState, actions: SubjectSheetActions) {
 }
 
 /**
- * The connected total (2.2's `item_subject_sheet_score.xml`): the value, «путь, лист «Лист»» and when it was read, or
- * why the last reading failed in the error colour (offline only says so and keeps its quiet colour). The row opens the
- * tab; `⋮` opens, changes the total or disconnects. The status runs under the menu, so it never wraps on a narrow
- * screen, and the menu's 48 dp target reaches into the card's padding so its glyph lines up with the content edge.
+ * The connected total: the value, «путь, лист «Лист»» and when it was read, or why the last reading failed in the error
+ * colour (offline only says so and keeps its quiet colour). The row opens the tab; `⋮` opens, changes the total or
+ * disconnects. The status runs under the menu, so it never wraps on a narrow screen, and the menu's 48 dp target
+ * reaches into the card's padding so its glyph lines up with the content edge.
  */
 @Composable
 private fun ConnectedTotal(state: SubjectSheetState.Connected, actions: SubjectSheetActions) {
@@ -226,7 +225,7 @@ private fun SubjectSheetState.Connected.updatedText(): String? = updatedAt?.let 
 }
 
 /**
- * Lets the content reach [start], [end] and [bottom] into the parent's padding, as the XML's negative margins did:
+ * Lets the content reach [start], [end] and [bottom] into the parent's padding:
  * it is measured that much wider and reports itself that much smaller.
  */
 private fun Modifier.bleed(start: Dp = 0.dp, end: Dp = 0.dp, bottom: Dp = 0.dp): Modifier = layout { measurable, c ->

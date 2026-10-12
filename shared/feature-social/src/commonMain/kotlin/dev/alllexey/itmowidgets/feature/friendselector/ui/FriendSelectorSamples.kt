@@ -9,8 +9,8 @@ import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelect
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorUiState
 
 /**
- * Synthetic people for the picker's previews and host tests: the names of the debug `FriendSelectorFixture` and of
- * LC-1c's XML references, long so rows wrap and chips ellipsize.
+ * Synthetic people for the picker's previews and host tests: the names of the debug `FriendSelectorFixture`, long so
+ * rows wrap and chips ellipsize.
  */
 internal object FriendSelectorSamples {
 

@@ -22,7 +22,7 @@ data class PendingSportDetailsArgs(
     val teacherIsu: Int? = null
 )
 
-/** [zone] is the academic zone; the times are written at its offset, as 2.2 wrote them. */
+/** [zone] is the academic zone; the times are written at its offset. */
 fun PendingSportBooking.toDetailsArgs(zone: TimeZone) = PendingSportDetailsArgs(
     lessonId = lessonId,
     sectionName = sectionName,

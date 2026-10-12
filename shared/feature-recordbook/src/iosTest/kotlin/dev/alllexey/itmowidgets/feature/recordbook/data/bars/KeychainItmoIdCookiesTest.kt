@@ -23,7 +23,7 @@ import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 
-/** The Keychain copy of the ITMO.ID cookies and the replay over it (SP-21); every cookie is synthetic. */
+/** The Keychain copy of the ITMO.ID cookies and the replay over it; every cookie is synthetic. */
 class KeychainItmoIdCookiesTest {
 
     private val secrets = InMemorySecureStore()

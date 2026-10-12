@@ -39,7 +39,7 @@ import org.jetbrains.compose.resources.stringResource
  * The ITMO.ID sign-in page: the top bar (close and `auth_web_title`) over the platform [browser], where the user types
  * the credentials on ITMO.ID's own pages. [browser] is composed in every state, so the host's view keeps its page; a
  * failed page or sign-in ([InteractiveLoginUiState.showsError]) covers it with the error and «Повторить», and the host
- * hides the view itself (recipe platform-view-slot). While the tokens are handed over a spinner sits over the page.
+ * hides the view itself. While the tokens are handed over a spinner sits over the page.
  * The page's own loading spinner is the host's pull-to-refresh, inside [browser].
  */
 @Composable
@@ -123,7 +123,7 @@ private fun LoginError(state: InteractiveLoginUiState, onRetry: () -> Unit) {
     }
 }
 
-/** Tags named after the View ids of `activity_login.xml`, for host and instrumented tests. */
+/** Tags for host and instrumented tests. */
 object LoginTestTags {
     const val CLOSE = "login_close"
     const val ERROR_CONTAINER = "login_error_container"

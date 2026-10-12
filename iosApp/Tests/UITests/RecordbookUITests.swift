@@ -1,9 +1,9 @@
 import XCTest
 
-/// The recordbook on the shared demo session (IO-09d2): L12's Compose list as the first tab's root, the period picker
+/// The recordbook on the shared demo session: the Compose list as the first tab's root, the period picker
 /// and `Мои баллы` in SwiftUI sheets hosting the shared sheet content, the subject page pushed on the recordbook stack
-/// with its control points, the demo's own total from the stream's sheet and its links and chats (IO-09f,
-/// `ReviewsLinksUITests` covers the links sheets), the demo's refusal of BARS, and the list at the accessibility text size AX1. Compose maps
+/// with its control points, the demo's own total from the stream's sheet and its links and chats
+/// (`ReviewsLinksUITests` covers the links sheets), the demo's refusal of BARS, and the list at the accessibility text size AX1. Compose maps
 /// `testTag` to the accessibility identifier (`RecordbookTestTags`, `RecordbookPeriodSheetTestTags`,
 /// `RecordbookSubjectTestTags`, `SubjectSheetTotalTestTags`); the texts are Russian on an English iPhone. The ids
 /// are the demo set's (`DemoRecordbook`, `DemoStudy`).
@@ -87,7 +87,7 @@ final class RecordbookUITests: XCTestCase {
         let total = element(app, "subject_sheet_total")
         XCTAssertTrue(total.waitForExistence(timeout: stepTimeout), "the demo's own total from the stream's sheet")
         XCTAssertTrue(labelled(app, Self.controlsTitle).waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(labelled(app, Self.linksTitle).exists, "the subject links (IO-09f)")
+        XCTAssertTrue(labelled(app, Self.linksTitle).exists, "the subject links")
         XCTAssertTrue(labelled(app, Self.chatsTitle).exists)
         attachScreenshot(named: "subject")
 

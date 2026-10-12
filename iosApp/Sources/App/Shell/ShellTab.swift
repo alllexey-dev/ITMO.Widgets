@@ -16,7 +16,7 @@ enum ShellTab: String, CaseIterable, Identifiable, Hashable {
 
     var id: String { rawValue }
 
-    /// Whether iOS offers the tab: the recordbook follows `PlatformCapabilities.recordbook` (on since IO-09d2), so a
+    /// Whether iOS offers the tab: the recordbook follows `PlatformCapabilities.recordbook`, so a
     /// tab without its screen never shows as a placeholder (App Review 2.1).
     var isAvailable: Bool { self != .recordbook || IosPlatformCapabilitiesKt.IosPlatformCapabilities.recordbook }
 

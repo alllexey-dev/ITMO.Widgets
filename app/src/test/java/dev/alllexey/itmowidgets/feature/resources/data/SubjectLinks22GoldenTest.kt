@@ -15,7 +15,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 /**
- * The files 2.2 and the SP-08 builds wrote, from `src/test/resources/stores/`, read by the store that moved to
+ * The files 2.2 wrote on a device and on the host JVM, from `src/test/resources/stores/`, read by the store in
  * `:shared:feature-resources`; the store's own rules are `SubjectLinksFileStoreTest` there.
  */
 class SubjectLinks22GoldenTest {

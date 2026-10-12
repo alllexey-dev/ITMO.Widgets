@@ -1,6 +1,6 @@
 import XCTest
 
-/// The subject links and the teacher reviews on the shared demo session (IO-09f): L15's Compose sheets in SwiftUI
+/// The subject links and the teacher reviews on the shared demo session: the Compose sheets in SwiftUI
 /// sheets above the shell (all links, the link editor, a link's actions) with the report dialogs as Compose dialogs
 /// over what asked for them, and the review editor, a form sheet a drag does not close. The demo shows
 /// `DemoSubjectLinks` and `DemoReviews` and refuses every change (`error_demo_unavailable`) without a request. Compose

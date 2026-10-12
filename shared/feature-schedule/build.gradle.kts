@@ -1,4 +1,4 @@
-// A feature module: Compose UI, Res strings, host and screenshot tests (recipe kmp-module-build-file).
+// A feature module: Compose UI, Res strings, host and screenshot tests.
 // Features read core and designsystem, never another feature.
 plugins {
     id("itmowidgets.cmp.ui")
@@ -10,12 +10,12 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
-            // The three schedule ViewModels are KMP ViewModels that :app obtains through Koin (L10 LS-2a, recipe
-            // koin-module); kotlinx.serialization for the widget snapshot comes with itmowidgets.kmp.library.
+            // The three schedule ViewModels are KMP ViewModels that :app obtains through Koin; kotlinx.serialization
+            // for the widget snapshot comes with itmowidgets.kmp.library.
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
-            // ScheduleChangesRoute (L10 LS-4): koinViewModel() and LifecycleStartEffect; IO-09b hosts the same route on iOS.
+            // ScheduleChangesRoute: koinViewModel() and LifecycleStartEffect; iOS hosts the same route.
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.jetbrains.lifecycle.runtime.compose)
         }

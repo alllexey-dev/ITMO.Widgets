@@ -3,10 +3,10 @@ import Observation
 import Shared
 import SwiftUI
 
-/// The iOS update offer (IO-08b), Android's `ShellHost` update check: once per process, on the tabs of a real
+/// The iOS update offer, Android's `ShellHost` update check: once per process, on the tabs of a real
 /// session, the shared `AppUpdateGateViewModel` asks Backend for the iOS release (`updateIosModule`); a newer one opens
 /// `AppUpdateScreen` above the shell. The only channel is the App Store page of `APP_STORE_ID` (`AppStoreID` in the
-/// app's Info.plist): while the ID is empty (until T13) there is no page, and the offer never checks or shows.
+/// app's Info.plist): while the ID is empty there is no page, and the offer never checks or shows.
 @MainActor
 @Observable
 final class AppUpdateOffer {

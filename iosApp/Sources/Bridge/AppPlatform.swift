@@ -3,8 +3,8 @@ import UIKit
 import WebKit
 import WidgetKit
 
-/// The app's `IosPlatform` (L18 IO-05): what the Kotlin graph needs from UIKit, WidgetKit and WebKit, the BARS
-/// session's cookies and hidden view included (IO-09d1). `App.init` passes it to `startKoinIos`; Kotlin calls it on
+/// The app's `IosPlatform`: what the Kotlin graph needs from UIKit, WidgetKit and WebKit, the BARS
+/// session's cookies and hidden view included. `App.init` passes it to `startKoinIos`; Kotlin calls it on
 /// the main thread.
 final class AppPlatform: NSObject, IosPlatform {
     func reload(kind: String) {

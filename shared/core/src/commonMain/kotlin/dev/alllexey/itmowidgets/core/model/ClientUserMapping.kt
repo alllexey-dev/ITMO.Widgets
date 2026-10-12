@@ -3,8 +3,7 @@ package dev.alllexey.itmowidgets.core.model
 import dev.alllexey.itmowidgets.client.common.UserData
 
 /**
- * Core 2.0's Backend identity to the app's viewer-scoped summary; shared by every feature that lists people. The
- * Core 1.x overload in `app/` maps the same way and goes with that client in KM-10i.
+ * Core 2.0's Backend identity to the app's viewer-scoped summary; shared by every feature that lists people.
  */
 fun UserData.toUserSummary(): UserSummary = UserSummary(
     isu = isu,

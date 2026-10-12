@@ -75,14 +75,13 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 /**
- * The core bindings of the iOS app process, what `:app`'s Hilt modules and `CoreBridge` give Android: storage, the
+ * The core bindings of the iOS app process, what `:app`'s Koin modules give Android: storage, the
  * session, both network clients over one Darwin engine and Core 2.0's users API, time, dispatchers, the application
  * scope, logs with the crash journal, the Backend gate, platform actions and capabilities, the share links and the
- * session cleaners. Koin is the only graph
- * on iOS, so each type is defined here once.
+ * session cleaners. Each type is defined here once.
  *
- * Not here (one graph per binding): `DemoMode` and `SessionRepository` come from the account module (KM-11h1, loaded
- * by IO-21); ports still in `:app` (`AppNotifier`, `FcmTokenSync`) are bound by the card that needs them.
+ * Not here (one graph per binding): `DemoMode` and `SessionRepository` come from `authDataModule`, `FcmTokenSync`
+ * from `accountIosModule`, `AppNotifier` from [iosBackgroundModule].
  *
  * [backendOrigin] is the build's Backend, from the app's Info.plist ([BackendOrigin]), and the site the share links
  * name, as Android's `WIDGETS_BASE_URL` is both; [appVersion] its marketing version ([AppBundleVersion]);
@@ -159,7 +158,7 @@ fun iosCoreModule(
     }
     single<UsersApi> { get<BackendClient>().users }
 
-    // An open set: each contribution is qualified (recipe koin-module).
+    // An open set: each contribution is qualified.
     single<SessionDataCleaner>(named("keychain")) { KeychainSessionDataCleaner(get(), get()) }
     single<SessionDataCleaner>(named("app-group")) { AppGroupSessionDataCleaner(get(), get()) }
     single<SessionDataCleaner>(named("website-data")) { WebsiteDataSessionDataCleaner(host, get()) }

@@ -48,7 +48,7 @@ enum class BarsWebStep {
     STOP,
 }
 
-/** Android's `BarsWebSilentLogin.handle` over [BarsLogin]'s strict checks (ADR 0012). */
+/** Android's `BarsWebSilentLogin.handle` over [BarsLogin]'s strict checks. */
 class BarsWebNavigation internal constructor(private val login: BarsLogin) {
 
     fun step(url: String): BarsWebStep = when {

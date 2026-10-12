@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonElement
  * service and the iOS notification service extension use it alone. Semantics are in Backend's `notifications.md`
  * contract.
  *
- * Date-times accept both writers: Backend 1.7.0 (production until gate R) writes FCM with Gson as
+ * Date-times accept both writers: Backend 1.7.0 writes FCM with Gson as
  * `OffsetDateTime.toString()`, which drops `:00` seconds, and newer Backends write it with Jackson.
  *
  * Every failure is [BackendException.Contract]. Its message is fixed, but its cause comes from kotlinx and may

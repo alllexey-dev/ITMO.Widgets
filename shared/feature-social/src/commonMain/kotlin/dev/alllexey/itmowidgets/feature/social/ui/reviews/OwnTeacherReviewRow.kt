@@ -31,11 +31,10 @@ import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_verified_mi
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The viewer's own review, a group of its own above the others (port of `ReviewViews.kt` and
- * `item_own_teacher_review.xml`): `мой`, a status pill while it is not public (`На проверке` in tertiary, `Отклонён`
- * or `Скрыт` in error), the more button with `Изменить` and `Удалить`, the subject and how others see it, a rejection reason, the
- * full text and, once published, the verification and the read-only score. While [busy] (a deletion in flight) the more button
- * ignores taps.
+ * The viewer's own review, a group of its own above the others: `мой`, a status pill while it is not public
+ * (`На проверке` in tertiary, `Отклонён` or `Скрыт` in error), the more button with `Изменить` and `Удалить`, the
+ * subject and how others see it, a rejection reason, the full text and, once published, the verification and the
+ * read-only score. While [busy] (a deletion in flight) the more button ignores taps.
  */
 @Composable
 fun OwnTeacherReviewRow(

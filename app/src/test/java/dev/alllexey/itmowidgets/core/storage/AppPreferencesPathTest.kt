@@ -52,7 +52,7 @@ class AppPreferencesPathTest {
         CAPTURED_22.copyTo(File(folder.root, "$name/app_preferences.preferences_pb"))
 
     private companion object {
-        /** G-04's capture of 2.2, read in place; `UpgradeFrom22Test` pins its SHA-256. */
+        /** The device capture of 2.2, read in place; `UpgradeFrom22Test` pins its SHA-256. */
         val CAPTURED_22: File = listOf(File("."), File("app"))
             .map { File(it, "src/androidTest/assets/upgrade-2.2/files/datastore/app_preferences.preferences_pb") }
             .first { it.isFile }

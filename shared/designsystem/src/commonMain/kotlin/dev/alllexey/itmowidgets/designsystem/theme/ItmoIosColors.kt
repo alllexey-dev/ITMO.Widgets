@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * UIKit's dynamic system colours that the iOS variants of the kit draw with, beside the extended colours: resolved
- * on the pinned simulator (iOS 27.0, DS-IOS-01) with `resolvedColor(with:)` for the light and the dark trait, as
+ * on the pinned simulator (iOS 27.0) with `resolvedColor(with:)` for the light and the dark trait, as
  * `#AARRGGBB`. Separators, secondary labels and fills keep UIKit's alpha. The accent stays `colorScheme.primary`.
  */
 @Immutable
@@ -27,22 +27,21 @@ data class ItmoIosColors(
     val systemGreen: Color,
     /** `systemRed`: destructive actions. */
     val systemRed: Color,
-    /** `tertiarySystemFill`: the track of a segmented control (DS-IOS-02, read off its render). */
+    /** `tertiarySystemFill`: the track of a segmented control (read off its render). */
     val tertiarySystemFill: Color,
-    /** The selected segment's thumb of a segmented control: read off its render (DS-IOS-02). */
+    /** The selected segment's thumb of a segmented control: read off its render. */
     val segmentedThumb: Color,
-    /** `systemGroupedBackground` at the elevated level: behind the inset groups of a sheet (DS-IOS-03). */
+    /** `systemGroupedBackground` at the elevated level: behind the inset groups of a sheet. */
     val groupedSheetBackground: Color,
-    /** `secondarySystemGroupedBackground` at the elevated level: a cell of an inset group in a sheet (DS-IOS-03). */
+    /** `secondarySystemGroupedBackground` at the elevated level: a cell of an inset group in a sheet. */
     val groupedSheetCell: Color,
-    /** A pressed cell: `UIBackgroundConfiguration.listCell()` highlighted, `systemGray4` at both levels (DS-IOS-03). */
+    /** A pressed cell: `UIBackgroundConfiguration.listCell()` highlighted, `systemGray4` at both levels. */
     val cellHighlight: Color,
-    /** `label`: an alert's title and its buttons' labels (DS-IOS-05). */
+    /** `label`: an alert's title and its buttons' labels. */
     val label: Color,
     /**
      * The opaque stand-in for the glass of alerts and menus, which the kit does not draw: `systemBackground` in light
-     * and the elevated `secondarySystemBackground` in dark. Not measured: the glass has no colour of its own
-     * (DS-IOS-05).
+     * and the elevated `secondarySystemBackground` in dark. Not measured: the glass has no colour of its own.
      */
     val overlay: Color,
 ) {

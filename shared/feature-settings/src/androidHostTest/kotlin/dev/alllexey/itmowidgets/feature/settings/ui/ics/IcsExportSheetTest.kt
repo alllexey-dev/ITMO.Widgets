@@ -35,7 +35,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * The cases of the View sheet on `IcsExportSheetContent` at 320 dp and font scale 1.3: every state in one area of the
+ * The cases of `IcsExportSheetContent` at 320 dp and font scale 1.3: every state in one area of the
  * same height, at least 288 dp; the ranges send their kind; the file is sent or opened, the open action only when an
  * app opens `.ics`; an empty range offers another and a failure retries; the hidden states are not there to tap.
  * Choosing the dates, sharing and opening are the host's intents and stay in `SettingsNavigationTest`.

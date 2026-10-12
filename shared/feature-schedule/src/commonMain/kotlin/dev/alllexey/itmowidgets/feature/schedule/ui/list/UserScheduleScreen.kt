@@ -24,9 +24,8 @@ object UserScheduleTestTags {
 }
 
 /**
- * Another user's schedule as a contextual screen (port of `fragment_user_schedule.xml`): the top bar with back and
- * `Расписание: <first name>` (`Расписание` without a [name]), then [content], the schedule itself
- * ([ScheduleRoute] of that user in the app). Stateless.
+ * Another user's schedule as a contextual screen: the top bar with back and `Расписание: <first name>` (`Расписание`
+ * without a [name]), then [content], the schedule itself ([ScheduleRoute] of that user in the app). Stateless.
  */
 @Composable
 fun UserScheduleScreen(

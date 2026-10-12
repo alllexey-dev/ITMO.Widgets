@@ -62,7 +62,7 @@ import org.robolectric.annotation.Config
 
 /**
  * `SportRoute` on real ViewModels over fake repositories, obtained through Koin from a `ViewModelStoreOwner` the test
- * keeps, as a Fragment's store or a Nav3 entry's: shared links, page lifecycles, the details sheet's results and a
+ * keeps, as a Nav3 entry's: shared links, page lifecycles, the details sheet's results and a
  * bottom-tab round trip.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -112,7 +112,7 @@ class SportRouteTest {
         }
     }
 
-    /** The store a Fragment or a Nav3 entry keeps on the saved back stack while its tab is away. */
+    /** The store a Nav3 entry keeps on the saved back stack while its tab is away. */
     private val store = object : ViewModelStoreOwner {
         override val viewModelStore = ViewModelStore()
     }

@@ -59,8 +59,8 @@ import org.koin.dsl.module
 
 /**
  * The Ktor engine of BARS and its ITMO.ID login, which the platform supplies: on Android the app's OkHttp engine with
- * the BARS timeouts and no cookie jar, cache or redirects (ADR 0012). It is never the MyITMO engine, so no cookie or
- * connection state is shared with MyITMO.
+ * the BARS timeouts and no cookie jar, cache or redirects. It is never the MyITMO engine, so no cookie or connection
+ * state is shared with MyITMO.
  */
 val barsEngineQualifier: Qualifier = named("bars")
 
@@ -70,18 +70,17 @@ val marksCardsQualifier: Qualifier = named("marks")
 /**
  * The recordbook: the screens (four ViewModels, the subject page's loaders, two resolvers) and all of its data:
  * MyITMO and BARS, mark tracking, the public sheets and the subject bindings. Koin is the only graph for the data
- * below; the app's `RecordbookBridge` hands what Hilt-built code still takes (the marks check of `MarksWorker`, the
- * switches of [MarkTracking] and its background check) to Hilt.
+ * below.
  *
- * From the platform: the BARS engine ([barsEngineQualifier]), the ITMO.ID sign-in of the `bars` client over it
- * (`BarsLogin`), the WebView silent login (`BarsSilentLogin`), the ITMO.ID cookies (`ItmoIdCookies`), the marks
- * worker's scheduler (`MarksScheduler`) and its notifications (`MarksNotifier`). From the app's other bridges: the core
- * contracts (`MyItmoClient`, the `app_preferences` DataStore, `AppDirectories`, `MarkSourcePreferences`,
- * `SecureStore`, `SessionTokenStore`, `CurrentUserProvider`, `AppNotifier`, time, `DemoMode`, `AppDispatchers`),
- * subject links and teacher levels.
+ * From the platform (`androidRecordbookModule` on Android, `recordbookIosModule` on iOS): the BARS engine
+ * ([barsEngineQualifier]), the ITMO.ID sign-in of the `bars` client over it (`BarsLogin`), the WebView silent login
+ * (`BarsSilentLogin`), the ITMO.ID cookies (`ItmoIdCookies`), the marks worker's scheduler (`MarksScheduler`) and its
+ * notifications (`MarksNotifier`). From the platform's other Koin modules: the core contracts (`MyItmoClient`, the
+ * `app_preferences` DataStore, `AppDirectories`, `MarkSourcePreferences`, `SecureStore`, `SessionTokenStore`,
+ * `CurrentUserProvider`, `AppNotifier`, time, `DemoMode`, `AppDispatchers`), subject links and teacher levels.
  */
 val recordbookModule = module {
-    // Stateless helpers: every ViewModel gets its own, as with Hilt's unscoped constructors before.
+    // Stateless helpers: every ViewModel gets its own.
     factoryOf(::SubjectContextResolver)
     factoryOf(::RecordbookSportResolver)
     // A loader keeps per-page state (the binding version, the stable link order), so each subject page owns one.
@@ -96,7 +95,7 @@ val recordbookModule = module {
     single<HomeCardRenderer>(named("recordbook")) { MarksHomeCardRenderer }
 
     // MyITMO: one memory cache for the screens, the marks check and sign-out. Cleaner contributions are qualified
-    // (an open set the app merges into Hilt's sign-out set).
+    // (an open set that sign-out reads).
     singleOf(::RecordbookRepositoryImpl) { bind<RecordbookRepository>() }
     single<SessionDataCleaner>(named("recordbook")) { get<RecordbookRepositoryImpl>() }
 
@@ -132,9 +131,9 @@ val recordbookModule = module {
     singleOf<MarksFileStore, AppDirectories>(::MarksFileStore)
     singleOf(::MarkTrackingRepositoryImpl) { bind<MarkTrackingRepository>() }
     single<SessionDataCleaner>(named("recordbook-marks")) { get<MarkTrackingRepositoryImpl>() }
-    // The switches; the app hands this one instance to Hilt's set of background checks.
+    // The switches; the app also binds this one instance as a background check.
     singleOf(::DefaultMarkTracking) { bind<MarkTracking>() }
-    // One background run; stateless, as with Hilt's unscoped constructor before.
+    // One background run; stateless.
     factoryOf(::MarksCheck)
     // The marks card: one source under its own qualifier in the open set the feed reads.
     singleOf(::MarksHomeCardSource)

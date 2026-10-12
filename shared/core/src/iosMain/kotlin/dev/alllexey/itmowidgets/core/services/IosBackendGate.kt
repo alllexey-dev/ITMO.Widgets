@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
- * The iOS [BackendGate], answering as Android's `DefaultBackendGate` (still in `:app`, Hilt-constructed): the demo
+ * The iOS [BackendGate], answering as Android's `DefaultBackendGate` in `:app`: the demo
  * session shows as connected and never calls Backend.
  */
 class IosBackendGate(

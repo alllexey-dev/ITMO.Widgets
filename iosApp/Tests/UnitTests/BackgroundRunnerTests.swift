@@ -2,7 +2,7 @@
 import Shared
 import XCTest
 
-/// The app refresh task on the app's graph (IO-14, the mark check IO-09d3). The system's scheduler cannot be forced
+/// The app refresh task on the app's graph, the mark check included. The system's scheduler cannot be forced
 /// from a test, so these run the entry point the task runs and the Debug trigger's fixture posts; the runner's rules
 /// (order, deadline, period, retries) are `BackgroundRunnerTest` in `shared/ios`, the mark step's `MarksRefreshTest`.
 final class BackgroundRunnerTests: XCTestCase {

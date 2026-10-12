@@ -25,8 +25,8 @@ import org.junit.runner.RunWith
 
 /**
  * A 2.2 installation upgraded to head keeps its data: head stores read the data directory captured at tag `v2.2`
- * (`assets/upgrade-2.2`, see its README). One test per store; a lane that moves or reformats a store edits only its
- * checker in `stores/` (recipe `upgrade-fixture`), never the assets.
+ * (`assets/upgrade-2.2`, see its README). One test per store; a change that moves or reformats a store edits only its
+ * checker in `stores/`, never the assets.
  */
 @RunWith(AndroidJUnit4::class)
 class UpgradeFrom22Test {

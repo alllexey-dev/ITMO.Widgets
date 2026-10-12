@@ -22,7 +22,7 @@ import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The schedule's workers read their dependencies from Koin (KM-12a), built as WorkManager builds them. */
+/** The schedule's workers read their dependencies from Koin, built as WorkManager builds them. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)
 class ScheduleWorkersKoinTest {

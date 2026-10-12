@@ -1,7 +1,7 @@
 import Shared
 import SwiftUI
 
-/// How iOS shows one key of the shared route model (`AppRoutes`, SH-1a2).
+/// How iOS shows one key of the shared route model (`AppRoutes`).
 enum RouteTarget {
     /// A tab root: opening it selects the tab.
     case tab(ShellTab)
@@ -17,7 +17,7 @@ enum RouteTarget {
     /// A Compose sheet's content from its `screens/<Feature>Screens.kt` factory in a SwiftUI sheet above the shell
     /// (`ShellSheet.route`); the content draws its own title and close button, the SwiftUI view sets the detents.
     case composeSheet(@MainActor () -> AnyView)
-    /// No iOS screen: a feature whose IO card has not mapped it yet, or never (the debug tools). Such a route has
+    /// No iOS screen: a key iOS does not map, such as the debug tools. Such a route has
     /// no entry point on iOS (App Review 2.1) and opening it does nothing.
     case notOnIOS
 
@@ -32,7 +32,7 @@ enum RouteTarget {
 }
 
 /// The map from shared keys to iOS screens. The one exhaustive switch over `RouteFeature` delegates each key to its
-/// feature's `Routes+<Feature>.swift`; a feature card changes only its own file. A key no feature claims fails
+/// feature's `Routes+<Feature>.swift`; a feature changes only its own file. A key no feature claims fails
 /// `RouterTests.testEveryRegisteredRouteHasAFeature`, a new feature breaks the build until it has a file.
 enum Routes {
     static func target(for route: any AppRoute) -> RouteTarget {

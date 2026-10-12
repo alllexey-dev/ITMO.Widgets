@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.core.platform
 
 /**
  * Which features the platform offers, so shared screens hide an entry point instead of showing a placeholder.
- * Android offers all of them, so it shows exactly what 2.2 showed; iOS turns each one on with the card that ships it.
+ * Android offers all of them; `IosPlatformCapabilities` lists what iOS offers.
  */
 data class PlatformCapabilities(
     /** The QR quick settings tile and its settings row. */

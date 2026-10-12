@@ -6,10 +6,10 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 /**
- * The iOS port of [reviewsModule], what `:app`'s `CoreBridge` gives Android: Core 2.0's reviews area from the one
+ * The iOS bindings of [reviewsModule]: Core 2.0's reviews area from the one
  * `BackendClient`. Load it with that module; the teacher's lessons for the editor's subjects come from
  * `scheduleDataModule`, the rest (the Backend gate, the directories, the clocks, the application scope, `DemoMode`, the
- * dispatchers) from the core module (IO-09f).
+ * dispatchers) from the core module.
  */
 val reviewsIosModule: Module = module {
     single<TeacherReviewsApi> { get<BackendClient>().reviews }

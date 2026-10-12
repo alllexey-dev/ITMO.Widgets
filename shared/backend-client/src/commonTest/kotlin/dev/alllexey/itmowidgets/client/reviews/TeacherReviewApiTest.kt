@@ -22,9 +22,8 @@ import kotlin.test.assertNull
 import kotlin.test.fail
 
 /**
- * Port of Core 1.x `reviews/TeacherReviewApiTest`, one test per 1.x test with the same name. MockWebServer calls
- * become [dev.alllexey.itmowidgets.client.support.MockBackend]; `ApiResponse` checks become the unwrapped value, and a
- * malformed answer is a [BackendException.Contract] instead of a Gson `JsonParseException`.
+ * The teacher review routes over [dev.alllexey.itmowidgets.client.support.MockBackend]: each check reads the unwrapped
+ * value, and a malformed answer is a [BackendException.Contract].
  */
 class TeacherReviewApiTest {
 
@@ -100,8 +99,8 @@ class TeacherReviewApiTest {
 
     @Test
     fun aSummaryLevelWithAnUnknownToneIsRejected() = runSuspend {
-        // 2.0 policy (13 Q7 (b)): SummaryLevel is a display enum, so an unknown tone decodes as UNKNOWN instead of
-        // failing the list; 1.x rejected it. A tone that is not a string is still rejected.
+        // SummaryLevel is a display enum, so an unknown tone decodes as UNKNOWN instead of failing the list. A tone
+        // that is not a string is still rejected.
         val unknown = answering("""[{"teacherIsu":123456,"level":"NEUTRAL"}]""")
         assertEquals(
             listOf(TeacherSummaryLevel(123456, SummaryLevel.UNKNOWN)),

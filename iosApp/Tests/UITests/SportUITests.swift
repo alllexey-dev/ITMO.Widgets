@@ -1,6 +1,6 @@
 import XCTest
 
-/// The sport tab and another user's sport on the shared demo session (IO-09c): LP-6's Compose `Мой спорт` and
+/// The sport tab and another user's sport on the shared demo session: the Compose `Мой спорт` and
 /// `Запись` as the root of the sport stack, a booking's details in a SwiftUI sheet hosting the shared sheet content
 /// with its share action on the system share sheet, the section filter dialog and the week strip's arrows, the demo's
 /// refusal of a booking, another user's sport from a profile, and `Мой спорт` at the accessibility text size AX1.

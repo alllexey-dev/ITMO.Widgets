@@ -1,6 +1,6 @@
 import XCTest
 
-/// The web sign-in sheet on the fixture (IO-08b, `-itmoWebLoginFixture`): the simulator has no camera, so the scan
+/// The web sign-in sheet on the fixture (`-itmoWebLoginFixture`): the simulator has no camera, so the scan
 /// button hands over the fixture's QR link and the field takes the fixture code; the fixture answers without Backend.
 /// The sheet opens by itself on the tabs of a signed-in fixture session.
 final class WebLoginUITests: XCTestCase {

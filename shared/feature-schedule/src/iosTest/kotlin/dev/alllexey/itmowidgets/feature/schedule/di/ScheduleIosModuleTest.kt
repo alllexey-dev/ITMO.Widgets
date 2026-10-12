@@ -172,7 +172,7 @@ class ScheduleIosModuleTest {
         single<AppNotifier> { RecordingAppNotifier() }
         single<ScheduleChangeNotifier> { SilentNotifier }
         single<ScheduleChangesScheduler> { IdleScheduler }
-        // `sportModule` (IO-09c) and `reviewsModule` (IO-09f) in the app, features this module cannot read.
+        // `sportModule` and `reviewsModule` in the app, features this module cannot read.
         single<PendingSportBookingsRepository> { NoPendingSport }
         single<TeacherLevelsRepository> { FakeTeacherLevelsRepository() }
         single { AppRefreshScheduler({ _, _ -> }, get(), get()) }

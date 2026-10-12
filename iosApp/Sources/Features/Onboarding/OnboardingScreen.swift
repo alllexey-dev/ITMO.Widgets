@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// The first-run flow over the shared `OnboardingViewModel` (IO-07b, `docs/features/onboarding.md`): Android's steps
+/// The first-run flow over the shared `OnboardingViewModel` (`docs/features/onboarding.md`): Android's steps
 /// in SwiftUI. A widget step explains how to add the widget (iOS lets no app place one) beside its appearance rows;
 /// the services step is the shared opt-in; the notifications step asks iOS (`requestAuthorization`). Every choice is
 /// stored as it is made; `finished` runs once the flow ends, after the stored flag is written.
@@ -81,7 +81,7 @@ struct OnboardingScreen: View {
         }
     }
 
-    /// The system dialog; its answer is the status row's, and IO-13a's `alertsAllowed`.
+    /// The system dialog; its answer is the status row's, and the push registration's `alertsAllowed`.
     private func requestNotificationPermission() async {
         let center = UNUserNotificationCenter.current()
         let granted = (try? await center.requestAuthorization(options: [.alert, .badge, .sound])) ?? false

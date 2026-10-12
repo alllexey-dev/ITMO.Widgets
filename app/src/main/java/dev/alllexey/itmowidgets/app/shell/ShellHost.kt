@@ -96,7 +96,7 @@ import org.koin.androidx.viewmodel.ext.android.getViewModel
  * - edge to edge; the manifest entry's `adjustResize` makes `WindowInsets.ime` also work on API 26-29.
  *
  * Dependencies come from Koin. [updateRoute] is the key of the
- * update screen (L16's `AppUpdateArgs`, SH-1b8); without it the shell checks for nothing. [featureRoutes] are the
+ * update screen (`AppUpdateArgs`); without it the shell checks for nothing. [featureRoutes] are the
  * feature modules' key registrations, for saving the back stack and the pending route.
  */
 class ShellHost(
@@ -268,7 +268,7 @@ class ShellHost(
 /** The shell's surface and back stack at one moment. */
 internal data class ShellSnapshot(val surface: ShellSurface, val backStack: ShellBackStack)
 
-/** The shell's own entries: the alert of a malformed app link (route map section 7, L1). */
+/** The shell's own entries: the alert of a malformed app link. */
 fun EntryRegistry.Builder.shellHostEntries() {
     entry<AppRoutes.LinkUnavailable> { key, navigator -> LinkUnavailableAlert(onDismiss = { navigator.close(key) }) }
 }

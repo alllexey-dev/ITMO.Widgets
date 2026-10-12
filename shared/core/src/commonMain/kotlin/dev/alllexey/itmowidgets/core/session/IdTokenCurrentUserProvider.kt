@@ -57,7 +57,7 @@ class IdTokenCurrentUserProvider(
         const val TOKEN_SEPARATOR = '.'
         const val PAYLOAD_INDEX = 1
 
-        /** JWT segments are unpadded; padding stays accepted, as the 2.2 JDK URL decoder did. */
+        /** JWT segments are unpadded; padding stays accepted, as the JDK URL decoder does. */
         val PAYLOAD_BASE64 = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL)
 
         /** The token carries many more claims than these three. */

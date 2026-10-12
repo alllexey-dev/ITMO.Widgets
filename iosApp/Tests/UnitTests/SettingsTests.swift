@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 @testable import ITMOWidgets
 
-/// The settings wiring in the app's graph (IO-08a): the routes are SwiftUI screens, every page resolves its own
+/// The settings wiring in the app's graph: the routes are SwiftUI screens, every page resolves its own
 /// `SettingsViewModel` from its route's page name and loads, and the iOS copy replaces the shared texts that name
 /// Android.
 @MainActor

@@ -24,9 +24,9 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 /**
- * The iOS ports of [authDataModule], what `:app`'s `CoreBridge` and `AccountAuthBridge` give Android: the demo flag
+ * The iOS ports of [authDataModule], what the platform's Koin modules give Android: the demo flag
  * store, the current user, every cleaner of the graph, the session effects and syncs (`IosSessionPorts.kt`) and the
- * push registration (IO-13a): Swift feeds [IosPushDevice] the token (IO-13b) and runs [PushForegroundRefresh] on
+ * push registration: Swift feeds [IosPushDevice] the token and runs [PushForegroundRefresh] on
  * every return to the foreground. The core types (token store, MyItmoApi client, clock, dispatchers, diagnostics, the App Group writers)
  * come from `iosCoreModule`. Load it with [authDataModule].
  */

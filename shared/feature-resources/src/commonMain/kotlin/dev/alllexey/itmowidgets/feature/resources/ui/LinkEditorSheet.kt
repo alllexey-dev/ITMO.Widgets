@@ -335,7 +335,7 @@ private fun CategoryChips(selected: LinkCategory?, url: String, onSelect: (LinkC
                         modifier = Modifier.size(FilterChipDefaults.IconSize),
                     )
                 },
-                // The XML chips tinted their symbol onSurfaceVariant whether checked or not.
+                // The chips tint their symbol onSurfaceVariant whether checked or not.
                 colors = FilterChipDefaults.filterChipColors(
                     iconColor = ItmoTheme.colorScheme.onSurfaceVariant,
                     selectedLeadingIconColor = ItmoTheme.colorScheme.onSurfaceVariant,

@@ -59,7 +59,7 @@ class IosCoreModuleTest {
     private val demo = FakeDemoMode()
     private val requests = mutableListOf<String>()
 
-    /** What the account module (KM-11h1) adds to the graph: the only types the core module does not define. */
+    /** What the account module adds to the graph: the only types the core module does not define. */
     private val accountTypes = module {
         single<DemoMode> { demo }
         single<SessionRepository> { FakeSessionRepository(SessionState.SignedOut) }

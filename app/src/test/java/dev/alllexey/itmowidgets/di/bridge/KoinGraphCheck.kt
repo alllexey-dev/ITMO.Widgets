@@ -19,7 +19,7 @@ import org.koin.test.verify.injectedParameters
 import org.koin.test.verify.verify
 
 /**
- * The graph check every Koin module goes through (ADR 0019), on the plain JVM.
+ * The graph check every Koin module goes through, on the plain JVM.
  *
  * - `verify()` fails on a missing binding or a cycle: it reads the constructor of each definition's type.
  * - Loading every module with `allowOverride(false)` fails on a type defined in two modules.

@@ -7,8 +7,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
-// App-only bridges for call sites still on java.time (recipe kotlinx-time-migration). A lane deletes the calls when
-// it ports its feature; the file goes when the last one is gone.
+// App-only adapters for call sites still on java.time; the file goes when the last one moves to kotlinx-datetime.
 
 /** [AcademicTimeProvider.today] as a `java.time.LocalDate`. */
 fun AcademicTimeProvider.javaToday(): LocalDate = today().toJavaLocalDate()

@@ -3,7 +3,7 @@ import Shared
 import WebKit
 import XCTest
 
-/// The iOS session (L18 IO-04b) through the real core graph inside the app's entitlements, which a Kotlin/Native
+/// The iOS session through the real core graph inside the app's entitlements, which a Kotlin/Native
 /// test binary lacks: one Keychain item read by MyItmoApi and by the session, and the sign-out cleaners emptying
 /// the Keychain, the App Group container and WebKit. Every value is synthetic.
 @MainActor
@@ -128,7 +128,7 @@ final class SessionTests: XCTestCase {
     }
 }
 
-/// The part of IO-05's `IosPlatform` the core graph calls; WebKit's removal here is the real one.
+/// The part of `IosPlatform` the core graph calls; WebKit's removal here is the real one.
 private final class WebKitHost: NSObject, IosCoreHost {
     private(set) var websiteDataClears = 0
 

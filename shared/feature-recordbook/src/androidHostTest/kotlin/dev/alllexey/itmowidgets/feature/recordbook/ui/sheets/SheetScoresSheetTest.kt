@@ -141,7 +141,7 @@ class SheetScoresSheetTest {
         onNodeWithText("Тёмкин Пётр Алексеевич").assertExists()
         onAllNodesWithText(SheetScoresPreviewSamples.LONG_NAME).assertCountEquals(0)
 
-        // The query survives a reading in between, as the View's field kept its text.
+        // The query survives a reading in between.
         state = SheetScoresUiState.Loading
         waitForIdle()
         state = SheetScoresPreviewSamples.pickTabRow

@@ -54,8 +54,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.RecordbookSubjectR
 import org.koin.core.parameter.parametersOf
 
 /**
- * The recordbook's keys: the subject page, the period picker and `Мои баллы`. The subject page and the sheet read the
- * arguments their Fragment hosts read; the period picker answers the tab root with a [RecordbookPeriodChoice].
+ * The recordbook's keys: the subject page, the period picker and `Мои баллы`. The subject page and the sheet read
+ * their arguments from the key; the period picker answers the tab root with a [RecordbookPeriodChoice].
  */
 internal fun EntryRegistry.Builder.recordbookEntries() {
     entry<AppRoutes.RecordbookSubject>(args = { it.args.toBundle() }) { key, navigator ->
@@ -72,7 +72,7 @@ internal fun EntryRegistry.Builder.recordbookEntries() {
 /**
  * The recordbook tab's root: `RecordbookRoute` with the tab's ViewModel. It opens the period picker and takes the
  * picked period back once, opens a subject only with [RecordbookSubjectArgs.validOrNull] arguments and refreshes after
- * a completed BARS sign-in, as v2.2's recordbook tab did.
+ * a completed BARS sign-in.
  */
 @Composable
 internal fun RecordbookTabRoot(navigator: Nav3AppNavigator) {
@@ -132,7 +132,7 @@ private fun subjectArgs(selection: RecordbookSelection, subject: RecordbookSubje
     barsIdentifier = subject.barsJournal?.identifier,
 )
 
-/** The period picker: a pick answers the tab root and closes the sheet, as v2.2's period sheet did. */
+/** The period picker: a pick answers the tab root and closes the sheet. */
 @Composable
 private fun RecordbookPeriodEntry(key: AppRoutes.RecordbookPeriod, onClose: () -> Unit) {
     val results = LocalResultEventBus.current
@@ -182,8 +182,7 @@ private fun RecordbookSubjectEntry(key: AppRoutes.RecordbookSubject, navigator: 
 }
 
 /**
- * `Мои баллы`: the sheet closes itself once the ViewModel is done and shows a failed save in a snackbar, as
- * v2.2's sheet did.
+ * `Мои баллы`: the sheet closes itself once the ViewModel is done and shows a failed save in a snackbar.
  */
 @Composable
 private fun SheetScoresEntry(onClose: () -> Unit) {

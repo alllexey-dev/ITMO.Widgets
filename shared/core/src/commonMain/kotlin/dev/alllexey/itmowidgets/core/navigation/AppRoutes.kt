@@ -8,7 +8,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 
 /**
- * The keys whose fields are core types (route map SH-0, sections 3-7). Feature-typed keys live in their feature's
+ * The keys whose fields are core types. Feature-typed keys live in their feature's
  * `navigation` package and join through [appRouteSerializersModule]. A key's fields are the arguments its screen reads
  * today under the names of the `*Args` holders.
  */

@@ -15,7 +15,7 @@ import okio.IOException
 import okio.Path
 
 /**
- * Asks WidgetKit to reload the timelines of one widget kind. Swift implements it (IO-05's `IosPlatform`):
+ * Asks WidgetKit to reload the timelines of one widget kind. Swift implements it (the app's `IosPlatform`):
  * WidgetKit has no Objective-C API that Kotlin could call.
  */
 fun interface WidgetReloader {

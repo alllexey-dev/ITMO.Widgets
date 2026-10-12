@@ -32,7 +32,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 
 /**
- * The marks step of the iOS runner: KM-11b2's check with the BARS renewal's two endings (an ended session asks for
+ * The marks step of the iOS runner: the check with the BARS renewal's two endings (an ended session asks for
  * the sign-in once, a failure is retried silently), and night marks handed to the system for 06:00.
  */
 class MarksRefreshTest {

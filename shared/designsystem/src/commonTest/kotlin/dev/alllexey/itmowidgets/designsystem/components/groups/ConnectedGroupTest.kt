@@ -35,7 +35,7 @@ class ConnectedGroupTest {
     @Test
     fun rowsAfterTheFirstStandTheGroupGapApart() = runComposeUiTest {
         setContent {
-            // Material's 2 dp gap; under the iOS style the rows of a group touch (DS-IOS-03).
+            // Material's 2 dp gap; under the iOS style the rows of a group touch.
             ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
                 Column {
                     GroupPosition.entries.forEach { position ->

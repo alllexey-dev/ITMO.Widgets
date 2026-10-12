@@ -1,7 +1,7 @@
 import EventKit
 import SwiftUI
 
-/// The calendar access the sync needs (IO-15b): full access to events, since write-only access can neither create the
+/// The calendar access the sync needs: full access to events, since write-only access can neither create the
 /// app's calendar nor read its events back. The Kotlin side (`SystemEventStore`) only reads the status; asking is the
 /// app's, here, with `NSCalendarsFullAccessUsageDescription` as the system prompt's text.
 struct CalendarAccess {

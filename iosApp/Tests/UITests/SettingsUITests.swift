@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings and the error journal on the shared demo session (IO-08a): opened from the me tab, a sub-page pushed by
+/// Settings and the error journal on the shared demo session: opened from the me tab, a sub-page pushed by
 /// its row, a switch that keeps its value across a relaunch, and the journal from the maintenance page. The rows carry
 /// `settings.row.<SettingRowId.key>`, a page's form `settings.page.<page>`; texts are Russian on an English iPhone.
 final class SettingsUITests: XCTestCase {
@@ -18,7 +18,7 @@ final class SettingsUITests: XCTestCase {
 
         XCTAssertTrue(element(app, "settings.row.page_services").exists)
         XCTAssertTrue(element(app, "settings.row.notifications").exists)
-        XCTAssertTrue(element(app, "settings.row.page_recordbook").exists, "mark tracking is on iOS since IO-09d3")
+        XCTAssertTrue(element(app, "settings.row.page_recordbook").exists, "mark tracking is on iOS")
         XCTAssertTrue(app.navigationBars.firstMatch.exists, "a SwiftUI screen uses the stack's navigation bar")
         attachScreenshot(named: "root")
     }
@@ -45,7 +45,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(waitForValue(of: relaunched, on: before))
     }
 
-    /// The calendar group (IO-15b): the switch and the `.ics` row; the demo's own schedule is synthetic, so the sheet
+    /// The calendar group: the switch and the `.ics` row; the demo's own schedule is synthetic, so the sheet
     /// writes a file without a request. The switch is not flipped: it would show the system's calendar prompt.
     func testTheSchedulePageOffersTheCalendarAndTheIcsFile() {
         let app = XCUIApplication.itmo(session: .demo)
@@ -68,7 +68,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(element(app, "settings.page.schedule").waitForExistence(timeout: stepTimeout))
     }
 
-    /// The mark checks (IO-09d3): My ITMO and the sheets; BARS joins with the account's first BARS answer.
+    /// The mark checks: My ITMO and the sheets; BARS joins with the account's first BARS answer.
     func testTheRecordbookPageListsTheMarkChecks() {
         let app = XCUIApplication.itmo(session: .demo)
         app.launch()
@@ -126,7 +126,7 @@ final class SettingsUITests: XCTestCase {
     private func openSettings(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
         app.selectTab("me")
-        // The settings row of the Compose Me tab (`MeTestTags.SETTINGS_ROW`, IO-09e).
+        // The settings row of the Compose Me tab (`MeTestTags.SETTINGS_ROW`).
         let entry = element(app, "settings_row")
         XCTAssertTrue(entry.waitForExistence(timeout: stepTimeout))
         entry.tap()

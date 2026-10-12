@@ -52,9 +52,8 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_search
 data class SportSectionOption(val name: SectionName, val label: String)
 
 /**
- * The picker's rows in today's order (v2.2's searchable section dialog): the selected sections
- * first, then those in [used] (signed or queued), then by label. Labels go through [SectionName.shorten], and the
- * used check goes back through [SectionName.deshorten], as the View dialog compared its labels.
+ * The picker's rows in today's order: the selected sections first, then those in [used] (signed or queued), then by
+ * label. Labels go through [SectionName.shorten], and the used check goes back through [SectionName.deshorten].
  */
 fun sportSectionOptions(
     available: List<SectionName>,
@@ -70,7 +69,7 @@ fun sportSectionOptions(
 
 /**
  * The rows whose label contains [query], case-insensitively and independent of the device locale (`lowercase()` is
- * the invariant one, CL-09); a blank query keeps every row.
+ * the invariant one); a blank query keeps every row.
  */
 fun List<SportSectionOption>.matching(query: String): List<SportSectionOption> {
     val needle = query.lowercase()
@@ -79,8 +78,8 @@ fun List<SportSectionOption>.matching(query: String): List<SportSectionOption> {
 }
 
 /**
- * The confirmed selection: the checked rows' labels mapped back through [SectionName.deshorten], as the View dialog
- * returned them. Two sections with one short label resolve to the same full name.
+ * The confirmed selection: the checked rows' labels mapped back through [SectionName.deshorten]. Two sections with one
+ * short label resolve to the same full name.
  */
 fun List<SportSectionOption>.confirmedSelection(checked: Set<SectionName>): Set<SectionName> =
     filter { it.name in checked }.mapTo(LinkedHashSet()) { SectionName.deshorten(it.label) }
@@ -96,8 +95,8 @@ object SportSectionPickerTestTags {
  * The section multi-select with search in a dialog window: [onConfirm] gets the selection once on `Готово`;
  * [onDismiss] gets `Отмена`, back and a tap outside. The search text and the checks survive recreation.
  *
- * The window spans the screen and the surface keeps `MaterialAlertDialogBuilder`'s insets (24 dp at the sides,
- * 80 dp above and below), so the dialog is as wide as the View one on a phone. The platform default width is off:
+ * The window spans the screen and the surface keeps `MaterialAlertDialogBuilder`'s insets (24 dp at the sides, 80 dp
+ * above and below), so the dialog is as wide as a Material alert dialog on a phone. The platform default width is off:
  * besides the insets, a text field in a default-width window keeps Robolectric's layout from settling.
  */
 @Composable
@@ -212,7 +211,7 @@ private fun SectionRow(label: String, checked: Boolean, onCheckedChange: (Boolea
     }
 }
 
-/** Material's alert dialog width range, as `MaterialAlertDialogBuilder` sized the View dialog. */
+/** Material's alert dialog width range, as `MaterialAlertDialogBuilder` sizes it. */
 private val DialogMinWidth = 280.dp
 private val DialogMaxWidth = 560.dp
 

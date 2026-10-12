@@ -25,10 +25,9 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.designsystem.tokens.IosMetrics
 
 /**
- * A link in a connected group (port of `item_subject_link.xml` and `core/ui/SubjectLinkRow.kt`): an optional
- * decorative category [icon], the [title] in `bodyLarge` that wraps with hyphens,
- * an optional [caption] on a second line, then the [ownBadge] (`моя`) of the viewer's own link or the [votes] of
- * another student's, usually a [VotePill]. Own and others' links share the style; only the badge tells them apart.
+ * A link in a connected group: an optional decorative category [icon], the [title] in `bodyLarge` that wraps with
+ * hyphens, an optional [caption] on a second line, then the [ownBadge] (`моя`) of the viewer's own link or the [votes]
+ * of another student's, usually a [VotePill]. Own and others' links share the style; only the badge tells them apart.
  *
  * The whole row opens the link; [onLongClick] opens its actions, named for TalkBack by [longClickLabel]. TalkBack
  * reads the row once: title, caption, badge and score, with the pill's votes as custom actions. Pass

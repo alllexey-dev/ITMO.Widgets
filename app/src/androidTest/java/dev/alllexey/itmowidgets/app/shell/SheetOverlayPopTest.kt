@@ -44,8 +44,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * A profile opened from the lesson sheet on the real `MainActivity` in the demo session (SH-1c-FIX4): the sheet
- * dismisses as in 2.2, the profile slides in from the end, and Back slides it out to the end over the schedule, which
+ * A profile opened from the lesson sheet on the real `MainActivity` in the demo session: the sheet
+ * dismisses, the profile slides in from the end, and Back slides it out to the end over the schedule, which
  * shows again without the sheet. Every frame the emulator draws keeps the window's height and end, so the overlay layer
  * never shrinks the profile towards the centre; a predictive Back held at half way shows the horizontal move on a
  * frame that does not depend on timing. How many frames a real slide gets depends on the emulator's load, so the
@@ -88,7 +88,7 @@ class SheetOverlayPopTest {
         eventually {
             val shown = ShellProbe.current()
             assertEquals(listOf<AppRoute>(profile), shown.overlays)
-            assertNull("the sheet dismisses as in 2.2", shown.floating)
+            assertNull("the sheet dismisses", shown.floating)
         }
         TestUi.settle(SETTLE_MILLIS)
         val layer = checkNotNull(push.layer) { "no overlay layer" }
@@ -112,7 +112,7 @@ class SheetOverlayPopTest {
             val shown = ShellProbe.current()
             assertEquals(AppTab.SCHEDULE, shown.tab)
             assertEquals(emptyList<AppRoute>(), shown.overlays)
-            assertNull("the lesson sheet does not come back (2.2)", shown.floating)
+            assertNull("the lesson sheet does not come back", shown.floating)
         }
         Log.i(TAG, "push ${push.frames} in $layer")
         Log.i(TAG, "pop ${pop.frames} in ${pop.layer}")

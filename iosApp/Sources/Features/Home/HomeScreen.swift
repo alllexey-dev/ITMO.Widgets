@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// The home tab's root: LH-2's Compose feed (`homeViewController`, IO-09a) with the router behind its cards and
+/// The home tab's root: the Compose feed (`homeViewController`) with the router behind its cards and
 /// buttons. What only iOS does stays here: the widget hint opens `WidgetHowToSheet` (iOS lets no app place a widget),
 /// the notification hint asks iOS once and then opens the app's notification settings, and a key the demo refuses
 /// says `error_demo_unavailable`, as Android's shell does. The feed re-checks its hints whenever the app becomes

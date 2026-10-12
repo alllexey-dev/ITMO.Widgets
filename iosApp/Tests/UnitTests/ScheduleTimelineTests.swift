@@ -2,7 +2,7 @@
 import WidgetKit
 import XCTest
 
-/// The schedule widgets' timeline (IO-10b): Swift decodes LS-3's reference fixture as the shared writer leaves it in
+/// The schedule widgets' timeline: Swift decodes the shared reference fixture as the shared writer leaves it in
 /// the App Group (the fixture in the `{"version", "value"}` envelope, `ScheduleTimelineWriterTest`), picks for every
 /// sampled instant the entry Kotlin's `ScheduleWidgetTimeline.entryAt` picks, and WidgetKit's entries switch exactly
 /// at the timeline's `validFrom` instants.
@@ -123,7 +123,7 @@ final class ScheduleTimelineTests: XCTestCase {
 
     func testEveryEntryCarriesTheTimelinesPalette() throws {
         let fixture = try fixtureText()
-        XCTAssertNil(try self.fixture().palette, "LS-3's fixture has none: the brand scheme")
+        XCTAssertNil(try self.fixture().palette, "the reference fixture has none: the brand scheme")
 
         let roles = #"{"surface": 16055288, "surfaceContainer": 15331309, "onSurface": 1449244, "onSurfaceVariant": 4147527, "outlineVariant": 12503494, "primary": 27232}"#
         let themed = fixture.replacingOccurrences(
@@ -162,7 +162,7 @@ final class ScheduleTimelineTests: XCTestCase {
 
     // MARK: Fixture
 
-    /// LS-3's fixture (a test resource by path, project.yml) inside the App Group envelope, as the writer stores it.
+    /// The reference fixture (a test resource by path, project.yml) inside the App Group envelope, as the writer stores it.
     private func fixture() throws -> LessonTimeline {
         try XCTUnwrap(LessonTimeline.decode(envelope(try fixtureText())))
     }
@@ -189,7 +189,7 @@ final class ScheduleTimelineTests: XCTestCase {
     }
 }
 
-/// The texts and the rows the schedule widgets build from a snapshot (IO-10b), as Android's renderers build them.
+/// The texts and the rows the schedule widgets build from a snapshot, as Android's renderers build them.
 final class LessonWidgetLayoutTests: XCTestCase {
     func testTeacherNamesShortenToTheSurnameAndInitials() {
         XCTAssertEqual(LessonWidgetText.compactTeacherName("Иванов Иван Иванович"), "Иванов И. И.")

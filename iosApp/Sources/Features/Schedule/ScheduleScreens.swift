@@ -1,8 +1,8 @@
 import Shared
 import SwiftUI
 
-/// Another user's schedule (`AppRoutes.UserSchedule`, from a profile): L10's Compose route
-/// (`userScheduleViewController`, IO-09b); every lesson opens the lesson sheet.
+/// Another user's schedule (`AppRoutes.UserSchedule`, from a profile): the Compose route
+/// (`userScheduleViewController`); every lesson opens the lesson sheet.
 struct UserScheduleScreen: View {
     let isu: Int32
     let name: String
@@ -25,8 +25,8 @@ struct UserScheduleScreen: View {
     }
 }
 
-/// The found schedule changes (`AppRoutes.ScheduleChanges`, from the home card or a change notification): L10's
-/// Compose route (`scheduleChangesViewController`, IO-09b), which marks the shown changes read.
+/// The found schedule changes (`AppRoutes.ScheduleChanges`, from the home card or a change notification): the
+/// Compose route (`scheduleChangesViewController`), which marks the shown changes read.
 struct ScheduleChangesScreen: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -40,7 +40,7 @@ struct ScheduleChangesScreen: View {
 }
 
 /// One lesson occurrence (`AppRoutes.LessonDetails`, from the schedule, home or a widget): the Compose sheet content
-/// (`lessonDetailsViewController`, IO-09b) in a full-height sheet, as Android's 90 % sheet. The place opens in Apple
+/// (`lessonDetailsViewController`) in a full-height sheet, as Android's 90 % sheet. The place opens in Apple
 /// Maps, the meeting link in Safari; a profile opens in the sheet's place.
 struct LessonDetailsSheet: View {
     let lesson: LessonDetailsArgs
@@ -66,7 +66,7 @@ struct LessonDetailsSheet: View {
 }
 
 /// A queued or predicted sport booking of the schedule (`AppRoutes.PendingSportDetails`): the Compose sheet content
-/// (`pendingSportDetailsViewController`, IO-09b); its sport button closes it and selects the sport tab.
+/// (`pendingSportDetailsViewController`); its sport button closes it and selects the sport tab.
 struct PendingSportDetailsSheet: View {
     let booking: PendingSportDetailsArgs
     @Environment(\.dismiss) private var dismiss
@@ -89,8 +89,8 @@ struct PendingSportDetailsSheet: View {
     }
 }
 
-/// The schedule's friend picker (`AppRoutes.FriendSelector`): L13's Compose sheet content
-/// (`friendSelectorViewController`, IO-09b). The choice goes back to the schedule root through the router before the
+/// The schedule's friend picker (`AppRoutes.FriendSelector`): the Compose sheet content
+/// (`friendSelectorViewController`). The choice goes back to the schedule root through the router before the
 /// sheet closes; a profile opens in the sheet's place.
 struct FriendSelectorSheet: View {
     let picker: AppRoutes.FriendSelector

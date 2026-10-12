@@ -12,7 +12,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The moved `strings_schedule.xml` resolves from the module's `Res` with its positional arguments (LS-2b). */
+/** `strings_schedule.xml` resolves from the module's `Res` with its positional arguments. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class, qualifiers = "ru")
 class ScheduleStringsTest {

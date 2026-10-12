@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.feature.onboarding.ui.preview.OnboardingPreviewS
 import dev.alllexey.itmowidgets.feature.onboarding.ui.preview.OnboardingWidgetPreviewSample
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LA-1c recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `OnboardingScreen_<state>`. Each state therefore is a function called `OnboardingScreen` in a holder class of its
  * own; the scanner instantiates each holder by reflection.
  */

@@ -34,7 +34,7 @@ class BarsClient internal constructor(
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
 ) {
-    /** The library client over the platform's BARS [engine] (no cookie jar, cache or redirects, ADR 0012). */
+    /** The library client over the platform's BARS [engine] (no cookie jar, cache or redirects). */
     constructor(
         engine: HttpClientEngine,
         renewal: BarsRenewal,

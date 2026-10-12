@@ -38,13 +38,13 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * Sign-out on the real graph after KM-11a2 and IO-15a: `SessionDataCleaners` holds the five schedule cleaners once
+ * Sign-out on the real graph: `SessionDataCleaners` holds the five schedule cleaners once
  * each, and running it forgets every schedule store.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
 @LazyApplication(LazyLoad.ON)
-class ScheduleSessionBridgeTest {
+class ScheduleSessionTest {
 
     @get:Rule
     val stopKoin = StopKoinRule()

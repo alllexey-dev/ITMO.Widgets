@@ -4,7 +4,7 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// The first-run flow (IO-07b) in all four appearances, one reference per step state Android's `OnboardingScreen`
+/// The first-run flow in all four appearances, one reference per step state Android's `OnboardingScreen`
 /// references cover: a schedule widget and the QR widget with their how-to and rows, rows waiting for the stored
 /// appearance, the opt-in on and running, and the notification step before and after the question.
 /// `OnboardingContent` is rendered directly, without the ViewModel.

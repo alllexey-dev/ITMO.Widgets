@@ -58,7 +58,7 @@ import org.junit.Test
 import org.robolectric.annotation.Config
 
 /**
- * `ScheduleRoute` over a real `ScheduleViewModel` and fakes, the cases of the deleted `ScheduleFragmentLifecycleTest`:
+ * `ScheduleRoute` over a real `ScheduleViewModel` and fakes:
  * the position survives recreation and late data; a refresh, a failure with its snackbar retry and pending-only
  * updates keep the day and the offset in every frame; a friend switch keeps the day, pages toward it or falls back
  * to today; the `Сегодня` request scrolls once, also from a friend; rows and the picker reach the host.

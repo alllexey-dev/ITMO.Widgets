@@ -68,8 +68,7 @@ data class SettingsActions(
 )
 
 /**
- * Tags named after the View ids of `fragment_settings.xml`, for host and instrumented tests. Every row is tagged
- * with its `SettingRowId.key`.
+ * Tags for host and instrumented tests. Every row is tagged with its `SettingRowId.key`.
  */
 object SettingsTestTags {
     const val BACK = "back_button"

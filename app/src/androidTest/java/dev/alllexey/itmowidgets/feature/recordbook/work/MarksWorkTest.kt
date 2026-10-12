@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 
 /**
  * The app's real WorkManager and scheduler of the mark check. A run the test starts takes the app's own path: without
- * a session it is skipped, with the owner's session it is an ordinary check. The test reads no marks.
+ * a session it is skipped, with one it is an ordinary check. The test reads no marks.
  */
 @RunWith(AndroidJUnit4::class)
 class MarksWorkTest {

@@ -7,9 +7,9 @@ import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 import dev.alllexey.itmowidgets.feature.me.ui.preview.MePreviewData
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LA-1c recorded the XML references as
- * `MeScreen_<state>` from a debug build, so the developer tools row shows. Each state therefore is a function called
- * `MeScreen` in a holder class of its own; the scanner instantiates each holder by reflection.
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named `MeScreen_<state>` and
+ * show a debug build, so the developer tools row shows. Each state therefore is a function called `MeScreen` in a
+ * holder class of its own; the scanner instantiates each holder by reflection.
  */
 
 @Composable

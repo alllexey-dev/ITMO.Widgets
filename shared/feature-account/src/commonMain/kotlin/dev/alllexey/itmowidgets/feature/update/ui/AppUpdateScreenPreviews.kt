@@ -7,7 +7,7 @@ import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateUiState
 import dev.alllexey.itmowidgets.feature.update.ui.preview.AppUpdatePreviewData
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LA-1c recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `AppUpdateScreen_<state>`. Each state therefore is a function called `AppUpdateScreen` in a holder class of its
  * own; the scanner instantiates each holder by reflection.
  */

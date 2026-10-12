@@ -215,7 +215,7 @@ private fun Bookings(
     }
 }
 
-/** While [shown], a long snackbar with a retry; it goes away when the failure does, as the View's did. */
+/** While [shown], a long snackbar with a retry; it goes away when the failure does. */
 @Composable
 private fun PartialFailureSnackbar(shown: Boolean, snackbarHostState: SnackbarHostState, onRetry: () -> Unit) {
     val message = stringResource(CoreRes.string.common_partial_load_error)
@@ -228,7 +228,7 @@ private fun PartialFailureSnackbar(shown: Boolean, snackbarHostState: SnackbarHo
     }
 }
 
-/** The View page's skeleton: four 120 dp cards. */
+/** The page's skeleton: four 120 dp cards. */
 private const val SKELETON_ROWS = 4
 private val SkeletonRowHeight = 120.dp
 

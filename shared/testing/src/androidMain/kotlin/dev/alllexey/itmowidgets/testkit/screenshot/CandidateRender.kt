@@ -14,10 +14,10 @@ import javax.imageio.ImageIO
 import kotlin.math.max
 
 /**
- * The candidate render of M3-02a ([ShotsRun.variants]): each capture is recorded into
+ * The candidate render ([ShotsRun.variants]): each capture is recorded into
  * `<out>/captures/<variant>/<module>/` instead of being compared, and the module's `baselines` test lays them out as
  * one contact sheet per variant and appearance, `<out>/<module>_<variant>_<appearance>.png`, every preview scaled to
- * dp size under its name. M3-02 deletes it with the candidates.
+ * dp size under its name.
  */
 internal class CandidateRender(private val module: String, private val out: File = ShotsRun.variantOut) {
 

@@ -1,7 +1,7 @@
 import Shared
 import SwiftUI
 
-/// Android's `WebLoginBottomSheet` over the shared `WebLoginViewModel` (IO-08b): approves a browser's sign-in to the
+/// Android's `WebLoginSheetContent` over the shared `WebLoginViewModel`: approves a browser's sign-in to the
 /// web version with a scanned QR (`WebLoginScanner`, VisionKit) or the code typed from the screen, shows which browser
 /// asked, then signs it in with `web_login_approve`. The router opens it as a shell sheet (`ShellSheet.webLogin`);
 /// a Universal Link's `code` is checked at once, as a scan.

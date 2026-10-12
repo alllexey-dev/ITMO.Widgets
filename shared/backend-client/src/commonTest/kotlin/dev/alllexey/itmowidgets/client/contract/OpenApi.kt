@@ -13,7 +13,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * The parts of Backend's OpenAPI snapshot (`contract/openapi.json`, springdoc with BK-13's customiser) that the
+ * The parts of Backend's OpenAPI snapshot (`contract/openapi.json`, springdoc with Backend's customiser) that the
  * conformance test reads: operations with their query parameters, and component schemas with their properties,
  * `required` lists, enums and sealed `oneOf` shapes.
  */

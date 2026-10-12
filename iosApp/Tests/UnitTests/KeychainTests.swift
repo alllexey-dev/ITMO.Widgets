@@ -2,7 +2,7 @@ import Security
 import Shared
 import XCTest
 
-/// The Kotlin Keychain `SecureStore` (L18 IO-04a) inside the app's entitlements: a Kotlin/Native test binary has
+/// The Kotlin Keychain `SecureStore` inside the app's entitlements: a Kotlin/Native test binary has
 /// none (errSecMissingEntitlement), so these checks run hosted in the app.
 final class KeychainTests: XCTestCase {
     private let service = "dev.alllexey.itmowidgets"

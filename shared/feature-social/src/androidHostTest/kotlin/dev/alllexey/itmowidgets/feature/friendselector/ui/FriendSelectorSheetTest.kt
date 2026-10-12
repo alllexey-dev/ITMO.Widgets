@@ -75,7 +75,7 @@ import kotlin.test.assertTrue
  * The picker sheet on the JVM. It replaces the instrumented `RecentFriendsStabilityTest` (the chip order across a
  * refresh, a choice and recreation, Apply recorded once) and the picker cases of `SelectionRowsTest` (row and chip
  * semantics, closed schedules, long names at 320 dp and font scale 1.3). Its looks live in the
- * `FriendSelectorSheetContent_*` goldens; dismissing before the profile and the Fragment result stay in the host.
+ * `FriendSelectorSheetContent_*` goldens; dismissing before the profile and the result stay in the host.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)

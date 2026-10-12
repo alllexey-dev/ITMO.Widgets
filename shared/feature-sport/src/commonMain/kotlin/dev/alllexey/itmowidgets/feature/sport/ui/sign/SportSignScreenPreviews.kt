@@ -17,7 +17,7 @@ import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LP-1d recorded the XML reference as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baseline is named
  * `SportSignScreen_content`. Each state therefore is a function called `SportSignScreen` in a holder class of its
  * own; the scanner instantiates each holder by reflection.
  */

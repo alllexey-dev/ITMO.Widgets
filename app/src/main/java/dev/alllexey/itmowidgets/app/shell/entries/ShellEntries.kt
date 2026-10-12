@@ -8,9 +8,9 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 
 /**
- * Every key the Compose shell can show. Each registration card (SH-1b3...SH-1b8) adds one `<Tab>Entries.kt` beside
- * this file with an `EntryRegistry.Builder.<tab>Entries()` extension and one call to it here (recipe `nav3-entry`),
- * and its tab's branch of the one [AppRoutes.TabRoot] registration; a key without a registration shows the shell's
+ * Every key the Compose shell can show. Each tab's keys live in a `<Tab>Entries.kt` beside this file as an
+ * `EntryRegistry.Builder.<tab>Entries()` extension with one call to it here, plus its tab's branch of the one
+ * [AppRoutes.TabRoot] registration; a key without a registration shows the shell's
  * placeholder.
  * [debugTools] registers the debug tools; only a debug build does, and a release build's registry has no such key.
  */

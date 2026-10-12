@@ -16,12 +16,12 @@ import org.koin.test.verify.verify
 class QrModuleTest {
 
     /**
-     * The data and the screen resolve inside the module; only the core types the app's `CoreBridge` forwards from
-     * Hilt are given.
+     * The data and the screen resolve inside the module; only the core types of the platform's Koin modules are
+     * given.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theQrModuleResolvesWithTheBridgedCoreTypes() {
+    fun theQrModuleResolvesWithThePlatformCoreTypes() {
         qrModule.verify(
             extraTypes = listOf(
                 MyItmoClient::class,

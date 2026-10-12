@@ -110,7 +110,7 @@ object ReviewEditorSheetTestTags {
 }
 
 /**
- * The review editor the Fragment host calls with the view model's [form]. The two fields start from the form, so text
+ * The review editor the host shows with the view model's [form]. The two fields start from the form, so text
  * restored from the view model's `SavedStateHandle` after recreation or process death comes back with the cursor at
  * its end; from then on every edit goes to the view model, which never changes a field on its own, so the fields are
  * not saved a second time here. A suggestion chip fills the subject (or clears it when it is the picked one) and puts
@@ -167,7 +167,7 @@ fun ReviewEditorSheet(
 }
 
 /**
- * The body of the review editor (`sheet_review_editor.xml`): the title over the teacher's short name with the close
+ * The body of the review editor: the title over the teacher's short name with the close
  * button, the optional subject (up to three lines) with the suggestion chips under it, the text with its counter to
  * [TeacherReviewLimits.MAX_TEXT] and the minimum as a hint that turns into the error on send, `Анонимно` with its
  * warning when off, and `Отправить` or `Сохранить` pinned under the scrolling form, so the keyboard never hides it.
@@ -353,14 +353,13 @@ private fun fieldErrorText(error: ReviewFieldError): String = when (error) {
 
 private fun endCursor(text: String) = TextFieldValue(text, TextRange(text.length))
 
-/** `item_review_subject_chip.xml`'s `maxWidth`. */
 private val ChipMaxWidth = 280.dp
 
 private const val MAX_SUBJECT_LINES = 3
 private const val MIN_TEXT_LINES = 5
 
 /*
- * Previews. The harness names a baseline `<function>_<@Preview name>`, and LX-1c recorded the XML references as
+ * Previews. The harness names a baseline `<function>_<@Preview name>`, and the references are named
  * `ReviewEditorSheetContent_<state>`, so each state is a function called `ReviewEditorSheetContent` in a holder class
  * of its own. The sheet wraps its content on `surfaceContainerLow`, as the shell's sheet opens it.
  */

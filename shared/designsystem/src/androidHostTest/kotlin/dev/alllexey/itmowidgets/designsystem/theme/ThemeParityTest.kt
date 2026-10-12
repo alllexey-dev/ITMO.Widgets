@@ -24,12 +24,11 @@ import androidx.appcompat.R as AppCompatR
 import com.google.android.material.R as MaterialR
 
 /**
- * The Compose scheme of [ItmoTheme] equals, ARGB for ARGB, the MDC View theme the app's screens use, for every colour
- * role they read today: the 19 `?color*` attrs in `res` and every `R.attr.color*` read in Kotlin.
+ * The Compose scheme of [ItmoTheme] equals, ARGB for ARGB, the MDC View theme, for every colour role in [Role].
  * `colorControlHighlight` (the View ripple, black 12 % / white 20 %) has no scheme role; Compose ripples derive
- * from the content colour. The static scheme is the one divergence (owner, item 14 Q1): the brand blue's TonalSpot
- * scheme, checked against MDC's own `SchemeTonalSpot`, while the View screens and widgets keep the M3 baseline on
- * API 26-30, which [baselineColorScheme] still equals.
+ * from the content colour. The static scheme is the one divergence: the brand blue's TonalSpot scheme, checked
+ * against MDC's own `SchemeTonalSpot`, while the View theme keeps the M3 baseline on API 26-30, which
+ * [baselineColorScheme] still equals.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -181,7 +180,7 @@ class ThemeParityTest {
 
     private fun viewTheme(style: Int): Context = ContextThemeWrapper(ApplicationProvider.getApplicationContext(), style)
 
-    /** What a debug host gets from `setContentBasedSource`; Robolectric only supports the wrapping path (SP-06). */
+    /** What a debug host gets from `setContentBasedSource`; Robolectric only supports the wrapping path. */
     private fun seededViewTheme(): Context = DynamicColors.wrapContextIfAvailable(
         viewTheme(MaterialR.style.Theme_Material3_DynamicColors_DayNight),
         DynamicColorsOptions.Builder().setContentBasedSource(SEED).build(),

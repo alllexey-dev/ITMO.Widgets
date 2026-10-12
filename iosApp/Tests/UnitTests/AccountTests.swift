@@ -2,7 +2,7 @@
 import Shared
 import XCTest
 
-/// The web sign-in, My ITMO web and the update offer on the app's graph (IO-08b): the ViewModels resolve with their
+/// The web sign-in, My ITMO web and the update offer on the app's graph: the ViewModels resolve with their
 /// Koin parameters, My ITMO keeps only official pages inside, and the offer never checks without an App Store ID.
 @MainActor
 final class AccountTests: XCTestCase {

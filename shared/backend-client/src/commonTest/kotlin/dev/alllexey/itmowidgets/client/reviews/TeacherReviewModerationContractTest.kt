@@ -10,9 +10,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 /**
- * Port of the review report reason case of Core 1.x `reviews/TeacherReviewModerationContractTest`. The other cases
- * (`TEACHER_REVIEW` case targets, `moderationCases`) and the `ModerationReport` part of this one belong to the
- * moderation API, which is not mirrored (CO-02).
+ * The review report reasons. Case targets, `moderationCases` and `ModerationReport` belong to the moderation API,
+ * which is not mirrored.
  */
 class TeacherReviewModerationContractTest {
 

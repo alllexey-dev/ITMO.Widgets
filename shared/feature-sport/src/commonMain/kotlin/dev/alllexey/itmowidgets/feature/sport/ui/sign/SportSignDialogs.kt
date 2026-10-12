@@ -74,7 +74,7 @@ sealed interface SportSignDialog {
 
 /**
  * The dialog on the `Запись` screen, one at a time: a newer event replaces it, as the screen answers the latest tap.
- * It lives in composition like the View dialogs it replaces, so recreation closes it and never re-runs a command.
+ * It lives in composition, so recreation closes it and never re-runs a command.
  */
 @Stable
 class SportSignDialogState {
@@ -128,7 +128,7 @@ fun SportSignDialogs(state: SportSignDialogState, onExecute: (command: SportSign
 
 /**
  * A success message of the screen ([SportSignEvent.ShowToast]) as a snackbar of the screen's host: commonMain has no
- * `Toast` (report 02 A2-CO10). The text and the short duration stay.
+ * `Toast`. The text and the short duration stay.
  */
 suspend fun SnackbarHostState.showSportSignMessage(event: SportSignEvent.ShowToast) {
     showSnackbar(event.message.resolve())

@@ -3,9 +3,9 @@ import Shared
 import SwiftUI
 import WebKit
 
-/// The BARS sign-in (IO-09d1), Android's `BarsLoginActivity` as a sheet over the shared `BarsLoginViewModel`: the
+/// The BARS sign-in, Android's `BarsLoginActivity` as a sheet over the shared `BarsLoginViewModel`: the
 /// official BARS authorization page in a `WKWebView` on `WKWebsiteDataStore.default()`, where ITMO.ID's SSO session
-/// usually signs in at once. Only the exact HTTPS callback is consumed (ADR 0012); its `state` is checked in Kotlin.
+/// usually signs in at once. Only the exact HTTPS callback is consumed; its `state` is checked in Kotlin.
 /// A failed page or sign-in shows an error with a retry, which also clears WebKit's cookies so another ITMO.ID account
 /// can sign in, as on Android. Leaving the sheet copies the ITMO.ID cookies to the Keychain (`ItmoIdCookieExport`).
 /// `onSignedIn` runs once the session is stored; the caller dismisses the sheet.

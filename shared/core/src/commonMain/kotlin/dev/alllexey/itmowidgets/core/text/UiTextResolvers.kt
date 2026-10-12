@@ -8,7 +8,7 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * The text outside composition: SwiftUI hosts through the shared ViewModels, workers, suspend code. Plural forms
- * follow the process default locale (SP-13a), which the app keeps Russian.
+ * follow the process default locale, which the app keeps Russian.
  */
 @Suppress("DEPRECATION")
 suspend fun UiText.resolve(): String = when (this) {

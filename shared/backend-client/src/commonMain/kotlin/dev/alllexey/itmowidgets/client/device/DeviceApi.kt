@@ -23,8 +23,8 @@ interface DeviceApi {
 
     /**
      * `DELETE /api/device/current` with a JSON body (the token never goes into the URL): removes the token only
-     * when it belongs to the authenticated user and otherwise changes nothing. SP-15a showed that Ktor's Darwin
-     * engine sends the body as OkHttp does.
+     * when it belongs to the authenticated user and otherwise changes nothing. Ktor's Darwin engine sends the
+     * body as OkHttp does.
      */
     @Throws(BackendException::class, CancellationException::class)
     suspend fun unregisterCurrent(request: UnregisterDeviceRequest)

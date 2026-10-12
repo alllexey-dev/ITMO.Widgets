@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 import kotlin.time.Instant
 
-/** The sport wire models (07 CORE-K2, item 12 "Polymorphism"; 13 "More closed sets on the wire") on BK-03's data. */
+/** The sport wire models, their polymorphism and closed sets, on Backend's synthetic data. */
 class SportModelsTest {
 
     private val entries = ListSerializer(SportQueueEntry.serializer())

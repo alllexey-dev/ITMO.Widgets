@@ -24,15 +24,14 @@ import dev.alllexey.itmowidgets.designsystem.theme.seededColorScheme
 import dev.alllexey.itmowidgets.designsystem.theme.staticColorScheme
 
 /*
- * The M3E value candidates of the owner's item 14 (M3-02a): each named [M3eValues] set is one combination of answers,
- * rendered into contact sheets by the screenshot harness (`-Pshots.variant=<name>`). The owner took `recommended`
- * (2026-10-09) and M3-02 made it the default tokens, so a sheet of it equals the baselines; `parity` keeps the 2.2
- * look and the other sets the rejected answers, for side-by-side checks until the harness drops variants. Nothing
+ * The M3E value candidates: each named [M3eValues] set is one combination of choices, rendered into contact sheets by
+ * the screenshot harness (`-Pshots.variant=<name>`). `recommended` is the default tokens, so a sheet of it equals the
+ * baselines; `parity` keeps the pre-M3E look and the other sets the alternatives, for side-by-side checks. Nothing
  * reads them unless the harness selects one.
  */
 
-/** Selecting an M3E candidate: only the screenshot harness does, for the owner's contact sheets. */
-@RequiresOptIn(message = "M3E candidates render only in the owner's contact sheets (M3-02a); screens never pick one.")
+/** Selecting an M3E candidate: only the screenshot harness does, for its contact sheets. */
+@RequiresOptIn(message = "M3E candidates render only in the screenshot harness; screens never pick one.")
 @Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
 annotation class M3eCandidateApi
@@ -52,10 +51,10 @@ internal enum class M3eColors {
     /** What [ItmoTheme][dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme] gives: dynamic on Android 12+. */
     Platform,
 
-    /** [Platform] with the M3 baseline `#6750A4` in place of the brand static scheme: the 2.2 look. */
+    /** [Platform] with the M3 baseline `#6750A4` in place of the brand static scheme: the pre-M3E look. */
     PlatformOverBaseline,
 
-    /** The M3 baseline `#6750A4` static scheme, 2.2's look on API 26-30 and iOS. */
+    /** The M3 baseline `#6750A4` static scheme, the pre-M3E look on API 26-30 and iOS. */
     BaselineStatic,
 
     /** Static schemes from [BRAND_SEED], Content variant (primary stays close to the seed). */
@@ -67,7 +66,7 @@ internal enum class M3eColors {
 
 /** How much of M3E the kit shows. */
 internal enum class M3eIntensity {
-    /** The expressive switch off: 2.2's components. */
+    /** The expressive switch off: the standard components. */
     Parity,
 
     /** The switch on, components on the standard motion scheme, expressive motion only for heroes. */
@@ -77,7 +76,7 @@ internal enum class M3eIntensity {
     ExpressiveMotion,
 }
 
-/** One answer set of item 14: colours below Android 12 and on iOS, the summary radius, tab labels, intensity. */
+/** One candidate: colours below Android 12 and on iOS, the summary radius, tab labels, intensity. */
 @Immutable
 internal data class M3eValues(
     val colors: M3eColors,
@@ -87,7 +86,7 @@ internal data class M3eValues(
 )
 
 internal object M3eCandidateSets {
-    /** 2.2's values: the M3 baseline below Android 12, the 24 dp summary, the selected label only, the switch off. */
+    /** Pre-M3E: the M3 baseline below Android 12, the 24 dp summary, the selected label only, the switch off. */
     val Parity = M3eValues(
         colors = M3eColors.PlatformOverBaseline,
         cardSummary = 24.dp,
@@ -95,10 +94,7 @@ internal object M3eCandidateSets {
         intensity = M3eIntensity.Parity,
     )
 
-    /**
-     * The packet's recommendation as API 26-30 and iOS see it, the owner's answer and the default tokens since M3-02;
-     * each other set changes one answer of it.
-     */
+    /** The default tokens as API 26-30 and iOS see them; each other set changes one value of it. */
     val Recommended = M3eValues(
         colors = M3eColors.BrandTonalSpot,
         cardSummary = ShapeTokens.ExtraLarge,
@@ -170,11 +166,11 @@ internal fun ProvideM3eCandidate(dark: Boolean, content: @Composable () -> Unit)
     }
 }
 
-/** Whether a navigation bar shows the label on the selected tab only: [parity] unless a candidate decides. */
+/** Whether a navigation bar shows the label on the selected tab only: [tokenValue] unless a candidate decides. */
 @Composable
 @ReadOnlyComposable
-internal fun navigationLabelsOnSelectedOnly(parity: Boolean): Boolean =
-    LocalM3eValues.current?.let { !it.navigationLabelsOnAll } ?: parity
+internal fun navigationLabelsOnSelectedOnly(tokenValue: Boolean): Boolean =
+    LocalM3eValues.current?.let { !it.navigationLabelsOnAll } ?: tokenValue
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val ExpressiveMotion = MotionScheme.expressive()

@@ -45,7 +45,7 @@ class SettingsRowTest {
     @Test
     fun compactRowsAreOneTouchTargetHigh() = runComposeUiTest {
         setContent {
-            // Material's 48 dp rows; the iOS rows and switch come with DS-IOS-02 and DS-IOS-03.
+            // Material's 48 dp rows; the iOS rows and switch have their own metrics.
             ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
                 SettingsGroup {
                     row { SettingsNavigationRow(NAVIGATION, onClick = {}) }

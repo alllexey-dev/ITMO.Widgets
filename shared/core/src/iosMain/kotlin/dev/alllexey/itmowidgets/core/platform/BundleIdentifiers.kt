@@ -7,7 +7,7 @@ import platform.Foundation.NSBundle
  * expands from `Base.xcconfig` (docs/ios.md, Identifiers). An extension's `Bundle.main` is the extension, so each
  * process reads its own; no ID is ever a literal in code.
  *
- * AltStore re-signs a sideloaded build into renamed groups and lists them under `ALTAppGroups` (SP-23); they are
+ * AltStore re-signs a sideloaded build into renamed groups and lists them under `ALTAppGroups`; they are
  * tried after the built group.
  */
 class BundleIdentifiers(

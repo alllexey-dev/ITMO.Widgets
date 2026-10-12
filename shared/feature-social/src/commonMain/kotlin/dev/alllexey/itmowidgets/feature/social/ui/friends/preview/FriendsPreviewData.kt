@@ -15,7 +15,7 @@ import dev.alllexey.itmowidgets.shared.feature.social.Res
 import dev.alllexey.itmowidgets.shared.feature.social.friends_section_incoming
 import dev.alllexey.itmowidgets.shared.feature.social.friends_section_outgoing
 
-/** Synthetic people of the friends previews: LC-1c's reference friends and requests, as `FriendsViewModel` maps them. */
+/** Synthetic people of the friends previews: friends and requests, as `FriendsViewModel` maps them. */
 internal object FriendsPreviewData {
 
     /** The friends tab with one incoming request behind the badge. */

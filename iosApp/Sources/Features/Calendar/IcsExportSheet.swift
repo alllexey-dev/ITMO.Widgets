@@ -3,7 +3,7 @@ import Shared
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// `settings_ics_export_title` (IO-15b): Android's `IcsExportBottomSheet` over the shared `IcsExportViewModel`. A range is
+/// `settings_ics_export_title`: Android's `IcsExportSheetContent` over the shared `IcsExportViewModel`. A range is
 /// chosen, `IosIcsFileExport` writes the file into the app's temporary directory, and `ShareLink` hands it on as
 /// `text/calendar`; the share sheet holds Calendar, Files and the messengers, so iOS needs no separate `ics_open`
 /// button. The settings calendar group opens it (`SettingsEvent.OpenIcsExport`).

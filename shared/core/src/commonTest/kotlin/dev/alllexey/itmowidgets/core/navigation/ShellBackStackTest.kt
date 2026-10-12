@@ -8,7 +8,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-/** The navigation parity scenarios on the model (tabs, overlays, Back), then the sheet, request and entry rules. */
+/** The navigation scenarios on the model (tabs, overlays, Back), then the sheet, request and entry rules. */
 class ShellBackStackTest {
     private val json = Json { serializersModule = appRouteSerializersModule() }
 

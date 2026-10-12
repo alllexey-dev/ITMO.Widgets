@@ -307,7 +307,7 @@ private class CodeFieldValue(code: String) {
     private fun String.atEnd() = TextFieldValue(this, TextRange(length))
 }
 
-/** Tags named after the View ids of `sheet_web_login.xml`, for host tests. */
+/** Tags for host tests. */
 object WebLoginSheetTestTags {
     const val SCAN = "web_login_scan_button"
     const val CODE = "web_login_code"

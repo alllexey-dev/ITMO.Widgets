@@ -18,7 +18,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
- * The Android-only bindings the workers, the widgets, the tile and the FCM service read (L17 KM-12a).
+ * The Android-only bindings the workers, the widgets, the tile and the FCM service read.
  */
 val componentBindingsModule = module {
     singleOf(::AndroidAppLog) { bind<AppLog>() }

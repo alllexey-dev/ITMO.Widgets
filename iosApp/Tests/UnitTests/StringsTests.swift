@@ -3,7 +3,7 @@ import Shared
 import UIKit
 import XCTest
 
-/// The catalog on iOS (L18 IO-20, ADR 0028): Russian text and Russian plural rules on an English simulator from the
+/// The catalog on iOS: Russian text and Russian plural rules on an English simulator from the
 /// string tables (SwiftUI, extensions) and from Compose Multiplatform, and every icon of the registry.
 ///
 /// The app process runs `IosStrings.installAppLocale()` in `App.init`; checks of the native path put English back

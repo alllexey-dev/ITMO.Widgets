@@ -60,7 +60,7 @@ class Core2Harness(
             idToken = "stored.id.token"
         )
 
-        /** A golden fixture of Backend's contract, vendored by L19 into `:shared:backend-client`. */
+        /** A golden fixture of Backend's contract, vendored into `:shared:backend-client`. */
         fun contractFixture(path: String): String =
             File("../shared/backend-client/src/commonTest/resources/contract/$path").readText()
 

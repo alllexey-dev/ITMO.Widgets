@@ -13,7 +13,7 @@ import org.koin.dsl.module
 
 /**
  * The update offer and its screen. The platform supplies the installed version and its `DevicePlatform` (Android
- * through the app's `AccountUpdateBridge`, iOS in its Koin start), Core 2.0's app area, the stored reminder and the
+ * in `androidUpdateModule`, iOS in `updateIosModule`), Core 2.0's app area, the stored reminder and the
  * wall clock that spaces the offers.
  */
 val updateModule = module {

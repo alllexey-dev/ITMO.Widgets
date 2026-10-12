@@ -16,8 +16,8 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTi
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportShareTarget
 
 /**
- * What only an Android host does for the sport screens, shared by the Fragment hosts and the Navigation 3 entries
- * until SH-1d2 deletes the Fragments: the `geo:` map, the debug template-lesson notice and the share sheet of a lesson.
+ * What only an Android host does for the sport screens: the `geo:` map, the debug template-lesson notice and the
+ * share sheet of a lesson.
  */
 
 /** The map app at [address]'s building; false when no app handles `geo:`. */

@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.core.navigation
 import kotlinx.serialization.Serializable
 
 /**
- * The shell's navigation state and its reducer (v2.2 parity, `docs/architecture.md` section Navigation). Immutable:
+ * The shell's navigation state and its reducer (`docs/architecture.md` section Navigation). Immutable:
  * every command returns the next state, which the host keeps in saved state, so the tab, the overlays, the sheets and
  * the tab requests survive recreation and process death.
  *

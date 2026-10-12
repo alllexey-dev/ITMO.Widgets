@@ -16,7 +16,7 @@ data class ScheduleWidgetPreferences(
 )
 
 /*
- * The snapshot below is persisted in `widgets/schedule_snapshot.json` and read by WidgetKit (LS-3): every serial
+ * The snapshot below is persisted in `widgets/schedule_snapshot.json` and read by WidgetKit: every serial
  * name is the key 2.2's Gson wrote, so renaming a property or an enum entry never changes the JSON. `LessonStyle` and
  * `WidgetTextSize` are written by their entry names.
  */

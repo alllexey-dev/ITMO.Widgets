@@ -10,7 +10,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlin.enums.EnumEntries
 
 /**
- * The enum policy of the client (13 Q7 (b), table in `CONTRACT.md`). Every wire enum names its policy through one of
+ * The enum policy of the client (table in `CONTRACT.md`). Every wire enum names its policy through one of
  * the subclasses below; the wire value is the constant's name. All three accept only a JSON string: `null`, a number
  * or an object fails. The unknown value itself is never put into the exception message.
  */

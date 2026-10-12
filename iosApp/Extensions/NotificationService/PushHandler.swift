@@ -1,7 +1,7 @@
 import Foundation
 import UserNotifications
 
-/// What the notification service makes of one push (IO-12a, docs/ios.md, Notifications). Backend's alert is the
+/// What the notification service makes of one push (docs/ios.md, Notifications). Backend's alert is the
 /// fallback; this decides whether to show it, retitle it with the booking's outcome or drop it.
 ///
 /// - Signed out, the demo or a push for another ISU (`recipient_isu` against session-v1.json): dropped; a sport
@@ -28,7 +28,7 @@ struct PushHandler {
         return booking.retryLater ? content : Self.dropped
     }
 
-    /// Empty content: the system shows nothing once the extension holds `usernotifications.filtering` (after T13);
+    /// Empty content: the system shows nothing once the extension holds `usernotifications.filtering`;
     /// until then the push is not hidden (docs/ios.md, Degradations).
     static let dropped = UNNotificationContent()
 

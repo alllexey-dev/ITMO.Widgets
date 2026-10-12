@@ -24,8 +24,7 @@ import kotlin.time.Instant
 /**
  * Russian date and time texts, equal character for character to `DateTimeFormatter.ofPattern(pattern,
  * Locale.forLanguageTag("ru"))` for every pattern the app uses (`DateTextsParityTest`). Each format names its
- * java.time pattern; a port replaces `ofPattern(...)` with the format of the same pattern (recipe
- * kotlinx-time-migration).
+ * java.time pattern.
  */
 object DateTexts {
 
@@ -126,7 +125,7 @@ object DateTexts {
     }
 
     // ofLocalized* under Locale "ru". java.time puts U+202F before "г." from CLDR 42 on and a plain space before it;
-    // these pin "ru" with a plain space whatever the device locale (SP-07 finding 2).
+    // these pin "ru" with a plain space whatever the device locale.
 
     /** `ofLocalizedDate(FormatStyle.FULL)`: "вторник, 1 сентября 2026 г.". */
     val LOCALIZED_FULL_DATE: DateTimeFormat<LocalDate> = LocalDate.Format {

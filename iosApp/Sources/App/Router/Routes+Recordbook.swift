@@ -3,7 +3,7 @@ import SwiftUI
 
 extension Routes {
     /// The recordbook root (`RecordbookTabScreen`); the subject page is a Compose route pushed on the selected tab's
-    /// stack, the period picker and the scores sheet Compose sheets above the shell (IO-09d2).
+    /// stack, the period picker and the scores sheet Compose sheets above the shell.
     static func recordbook(_ route: any AppRoute) -> RouteTarget {
         switch route {
         case let subject as AppRoutes.RecordbookSubject:

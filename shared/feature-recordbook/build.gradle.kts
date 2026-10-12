@@ -1,4 +1,4 @@
-// A feature module: Compose UI, Res strings, host and screenshot tests (recipe kmp-module-build-file).
+// A feature module: Compose UI, Res strings, host and screenshot tests.
 // Features read core and designsystem, never another feature.
 plugins {
     id("itmowidgets.cmp.ui")
@@ -10,18 +10,18 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
-            // The recordbook ViewModels are KMP ViewModels that :app obtains through Koin (L12 LR-2a, recipe koin-module).
+            // The recordbook ViewModels are KMP ViewModels that :app obtains through Koin.
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
-            // The screens' routes (L12 LR-3 on): koinViewModel() and lifecycle-aware collection; the iOS shell hosts
+            // The screens' routes: koinViewModel() and lifecycle-aware collection; the iOS shell hosts
             // the same routes.
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.jetbrains.lifecycle.runtime.compose)
-            // SheetHtmlGrid parses the HTML view of a public sheet (L04 TC-11b, moved here by L12 KM-11b2).
+            // SheetHtmlGrid parses the HTML view of a public sheet.
             implementation(libs.ksoup)
         }
-        // The public sheets' engine; MyITMO's and BARS's come from the app (L12 KM-11b2).
+        // The public sheets' engine; MyITMO's and BARS's come from the app.
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
         }

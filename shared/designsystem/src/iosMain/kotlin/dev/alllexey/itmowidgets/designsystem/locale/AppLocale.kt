@@ -4,7 +4,7 @@ import platform.Foundation.NSArgumentDomain
 import platform.Foundation.NSUserDefaults
 
 /**
- * The iOS side of the Russian app locale (L05 AA-13 is the Android side; report 95 "Plural rules and app language").
+ * The iOS side of the Russian app locale (:app's `AppLocale` is the Android side).
  *
  * Compose Multiplatform picks plural rules from `NSLocale.preferredLanguages`: the composable resolvers through
  * Compose's `Locale.current`, `getString`/`getPluralString` through the system resource environment. On an English

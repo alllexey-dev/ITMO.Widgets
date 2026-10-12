@@ -20,7 +20,7 @@ import org.koin.dsl.module
  * types: one repository each serves the screens, the recordbook, the schedule, the profiles and the session cleaners.
  * The core types (`BackendGate`, Core 2.0's `TeacherReviewsApi`, `AppDirectories`, the wall `Clock`, the academic
  * time, the application `CoroutineScope`, `DemoMode`, `AppDispatchers`, `TeacherLessonsGateway`) come from the
- * platform (`CoreBridge` on Android); the `SavedStateHandle` carries the host's `TeacherReviewArgs`.
+ * platform's Koin modules; the `SavedStateHandle` carries the host's `TeacherReviewArgs`.
  */
 val reviewsModule = module {
     // Two constructors (the internal one is the tests' seam), so the public one's types are named.

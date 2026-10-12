@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data.remote
 
 /**
  * Synthetic answers shaped like MyItmoApi's `fixtures/schedule/personal.json` at the pin and Backend's
- * `contract/http/schedule/userLessons.json` (vendored by L19 into `:shared:backend-client`). Every value is invented.
+ * `contract/http/schedule/userLessons.json` (vendored into `:shared:backend-client`). Every value is invented.
  */
 internal object ScheduleRemoteFixtures {
 

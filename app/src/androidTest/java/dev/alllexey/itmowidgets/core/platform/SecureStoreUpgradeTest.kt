@@ -17,7 +17,7 @@ import org.junit.Test
 
 /**
  * The token files 2.2 sealed with the Keystore read through [FileSecureStore] as they are, and what it writes back by
- * the same name is what the 2.2 reader `MyItmoStorage` and the BARS session store (on it since L12 KM-11b1) read.
+ * the same name is what the 2.2 reader `MyItmoStorage` and the BARS session store read.
  */
 class SecureStoreUpgradeTest {
 

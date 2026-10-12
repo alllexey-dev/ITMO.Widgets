@@ -33,10 +33,11 @@ import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 import kotlin.math.floor
 
 /**
- * The app's indeterminate expressive loading indicator: Material's `LoadingIndicator` layout (a [containerColor]
- * circle of `LoadingIndicatorDefaults.ContainerWidth`, the shape at `IndicatorSize`, fitted as Material fits it) with
- * its own motion ([ItmoLoadingMotion]). The shape morphs through [polygons] and turns about its own centre
- * ([LoadingMorphs.centre]), never about the morph's changing bounds. Under reduced motion it rests on the first shape. TalkBack and VoiceOver read an indeterminate progress, as Material's.
+ * The app's indeterminate expressive loading indicator: Material's `LoadingIndicator` layout (a [containerColor] circle
+ * of `LoadingIndicatorDefaults.ContainerWidth`, the shape at `IndicatorSize`, fitted as Material fits it) with its own
+ * motion ([ItmoLoadingMotion]). The shape morphs through [polygons] and turns about its own centre
+ * ([LoadingMorphs.centre]), never about the morph's changing bounds. Under reduced motion it rests on the first shape.
+ * TalkBack and VoiceOver read an indeterminate progress, as Material's.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -106,7 +107,7 @@ internal object ItmoLoadingMotion {
     const val STEP_MILLIS = 650
 
     /**
-     * The turn per shape: the owner's 20 % slower take on the web indicator's 140 degrees (Material's quarter turn plus
+     * The turn per shape: a 20 % slower take on the web indicator's 140 degrees (Material's quarter turn plus
      * its global rotation's share of a step); 112.5 keeps the angle repeating after a whole number of steps.
      */
     const val STEP_DEGREES = 112.5f

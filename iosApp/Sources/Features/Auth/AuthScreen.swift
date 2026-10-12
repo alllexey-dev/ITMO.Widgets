@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// Android's `AuthFragment` over the shared `AuthViewModel` (IO-07b): the logo, the app name, what the app does, the
+/// Android's `AuthScreen` over the shared `AuthViewModel`: the logo, the app name, what the app does, the
 /// ITMO.ID sign-in (`ItmoSignInScreen` above it) and the refresh-token sign-in, with the notices under them. Five taps
 /// on the logo open the demo session (`DemoEntryTaps`); the logo stays decorative for VoiceOver, as on Android.
 struct AuthScreen: View {

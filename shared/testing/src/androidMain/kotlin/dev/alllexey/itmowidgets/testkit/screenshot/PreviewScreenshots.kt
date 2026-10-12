@@ -7,12 +7,12 @@ package dev.alllexey.itmowidgets.testkit.screenshot
  * - [packageTree]: where the previews live, when the subclass sits elsewhere.
  * - [allAppearances]: always all four Material appearances (the kit), not only with `-Pshots.appearance=full`.
  * - [iosAppearances]: always the three iOS appearances, not only with `-Pshots.appearance=ios` or a recorded baseline
- *   (the kit, once every part has its iOS variant: DS-IOS-06).
+ *   (the kit).
  * - [widthDp], [heightDp], [density]: the capture window ([CaptureSize]); a preview's own `widthDp`/`heightDp`
  *   override them.
  * - [accessibilityChecks]: ATF (Roborazzi accessibility check, error level) on every capture.
  * - [narrowTouchTargetExemptions]: base-name prefixes of previews whose narrow captures (320 dp) run ATF without its
- *   48 dp `TouchTargetSizeCheck`; every other check stays. Only for an owner-accepted exemption listed in
+ *   48 dp `TouchTargetSizeCheck`; every other check stays. Only for an accepted exemption listed in
  *   `docs/design.md`; a prefix that matches no preview fails the run.
  */
 @Target(AnnotationTarget.CLASS)

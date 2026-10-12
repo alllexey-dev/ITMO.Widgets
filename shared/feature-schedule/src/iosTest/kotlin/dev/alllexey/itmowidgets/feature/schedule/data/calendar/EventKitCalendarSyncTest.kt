@@ -43,8 +43,8 @@ import okio.fakefilesystem.FakeFileSystem
 
 /**
  * The shared calendar sync (`CalendarSyncRepositoryImpl`, `DefaultCalendarSync`) on iOS's [EventKitPhoneCalendars]
- * over a fake event store, with the sync file and the EventKit id file on okio's fake file system: what IO-15b adds
- * between the sync and EventKit.
+ * over a fake event store, with the sync file and the EventKit id file on okio's fake file system: what lies between
+ * the sync and EventKit.
  */
 class EventKitCalendarSyncTest {
 

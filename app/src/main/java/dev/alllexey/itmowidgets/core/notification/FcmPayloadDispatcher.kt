@@ -8,7 +8,7 @@ import kotlinx.coroutines.CancellationException
 /**
  * Routes Backend's data message to the handler of its `type` through Core 2.0's envelope. An unknown type is
  * recorded and dropped; a message that is not an envelope (not JSON, a JSON `null`, no `type`, a `payload` that is
- * not an object) is dropped with the fact recorded, as 2.2 dropped it.
+ * not an object) is dropped with the fact recorded.
  */
 class FcmPayloadDispatcher(
     handlers: List<FcmPayloadHandler>,

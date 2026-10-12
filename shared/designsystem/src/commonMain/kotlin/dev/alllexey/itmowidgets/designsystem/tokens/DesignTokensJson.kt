@@ -16,7 +16,7 @@ import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
 /**
- * `tokens/itmo-tokens.json`, the one token source of iOS (L18 `gen-tokens.py`) and Web (L22 `sync-tokens.sh`):
+ * `tokens/itmo-tokens.json`, the one token source of iOS (`scripts/ios/gen-tokens.py`) and Web:
  * the static schemes by M3 role, the extended colours, shapes, spacing, type and motion. Colours are opaque
  * `#RRGGBB`, sizes dp or sp, durations ms. A breaking change to the shape bumps [SCHEMA_VERSION].
  */

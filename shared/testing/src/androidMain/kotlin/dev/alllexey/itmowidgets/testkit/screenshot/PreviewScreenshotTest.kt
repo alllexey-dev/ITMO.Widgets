@@ -38,7 +38,7 @@ import org.robolectric.RuntimeEnvironment
  * stops the clock after two frames, so animations are frozen at a fixed time, and runs the ATF checks. An iOS
  * appearance checks touch targets against Apple's 44 pt instead of ATF's 48 dp ([assertTouchTargets] with the style).
  *
- * With `-Pshots.variant` ([ShotsRun.variants], M3-02a) the cases render the named M3E candidates into contact
+ * With `-Pshots.variant` ([ShotsRun.variants]) the cases render the named M3E candidates into contact
  * sheets ([CandidateRender]) instead: no comparison, no ATF checks, no inventory.
  */
 @RunWith(PreviewScreenshotRunner::class)

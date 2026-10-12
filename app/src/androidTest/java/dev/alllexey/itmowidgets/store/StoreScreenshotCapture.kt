@@ -328,7 +328,7 @@ class StoreScreenshotCapture {
         const val LESSON_SCROLL_SHARE = 0.6f
         const val TEST_WORDING = "Тест"
 
-        /** The test tag of DS-03a's `ContentState`, as `DemoModeFlowTest` reads it. */
+        /** The test tag of the design system's `ContentState`, as `DemoModeFlowTest` reads it. */
         const val CONTENT_STATE_TAG = "ContentState"
     }
 }

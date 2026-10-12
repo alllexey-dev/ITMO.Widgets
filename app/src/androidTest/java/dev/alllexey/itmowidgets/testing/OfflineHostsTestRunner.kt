@@ -10,7 +10,7 @@ import java.net.SocketAddress
 import java.net.URI
 
 /**
- * The instrumentation runner of `:app` (SH-FIX-DL): AndroidJUnitRunner with the real ITMO and Backend hosts
+ * The instrumentation runner of `:app`: AndroidJUnitRunner with the real ITMO and Backend hosts
  * unreachable. A signed-in UI test seeds a fake session, and a screen loading from a slow or hung my.itmo.ru animates
  * its progress for as long as the request waits, so the main thread never idles and the test fails on an unrelated
  * outage. [OfflineHosts] makes those requests fail at once; the screens show their error state and go idle.

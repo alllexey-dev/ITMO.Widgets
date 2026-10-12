@@ -52,10 +52,9 @@ class VoteLabels(
 )
 
 /**
- * The compact vote pill (up arrow, score, down arrow) of others' links and reviews (port of
- * `view_link_vote_pill.xml` and `core/ui/SubjectLinkRow.kt`'s `bindVotes`): a 32 dp pill inside the 48 dp row of the
- * arrow targets. The score turns `primary` once the viewer voted ([myVote]) and `error` below zero; the arrow of the
- * own vote is `primary`.
+ * The compact vote pill (up arrow, score, down arrow) of others' links and reviews: a 32 dp pill inside the 48 dp row
+ * of the arrow targets. The score turns `primary` once the viewer voted ([myVote]) and `error` below zero; the arrow of
+ * the own vote is `primary`.
  *
  * Without [onVote] the pill shows the score alone. Tapping the arrow of the current vote takes it back upstream, so
  * [onVote] only reports which arrow was tapped. A disabled pill (a vote in flight) keeps its look and ignores taps.

@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
-/** The details sheet's cases at state level; the View test of the sheet keeps only what needs a window. */
+/** The details sheet's cases at state level; `SportDetailsSheetTest` keeps only what needs a window. */
 class SportDetailsPresenterTest {
 
     /** The preview's clock: the day before the fixture lesson, at noon in Moscow. */

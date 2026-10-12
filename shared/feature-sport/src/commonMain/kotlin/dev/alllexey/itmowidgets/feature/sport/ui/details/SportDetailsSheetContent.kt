@@ -59,7 +59,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_share
 
 /**
- * The sport details sheet of [item] at [AcademicTimeProvider.now]: the host-facing entry the Fragment host and the
+ * The sport details sheet of [item] at [AcademicTimeProvider.now]: the host-facing entry the Android shell and the
  * SwiftUI host call. The offer is evaluated again on tap: when it changed while the sheet was open (the lesson
  * started, the free queue closed), the sheet shows the new offer and conditions and sends nothing. Otherwise the
  * action goes to [SportDetailsActions.onAction] once per [submission]. [actionsEnabled] is false where the sheet is
@@ -166,10 +166,9 @@ private fun Header(state: SportDetailsSheetState, actions: SportDetailsActions) 
 }
 
 /**
- * The toolbar's share action over the scaffold's header, flush with the end of its 56 dp bar under the handle, as
- * the toolbar's action menu sat. The kit's
- * scaffold has no slot for bar actions yet (hand-in to L08); until it has, the action sits over the header, which a
- * short fixed title leaves free.
+ * The toolbar's share action over the scaffold's header, flush with the end of its 56 dp bar under the handle. The
+ * kit's scaffold has no slot for bar actions yet; until it has, the action sits over the header, which a short fixed
+ * title leaves free.
  */
 @Composable
 private fun ShareAction(target: SportShareTarget, onShare: (SportShareTarget) -> Unit, modifier: Modifier) {

@@ -32,7 +32,7 @@ import org.junit.Test
 
 /**
  * MockEngine through the real MyItmoApi 2.x and Core 2.0 clients. The expected days are what the MyItmoApi 1.x and
- * Core 1.x path produced from the same fixtures, captured before KM-10e.
+ * Core 1.x path produced from the same fixtures.
  */
 class ScheduleRemoteDataSourceImplTest {
 

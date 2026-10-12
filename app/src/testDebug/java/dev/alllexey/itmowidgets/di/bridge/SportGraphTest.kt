@@ -33,12 +33,12 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 /**
  * Koin builds the sport data once (`sportModule`): sign-out clears the instances the screens read, the home feed gets
  * those instances too, and the app-only debug inputs come from `androidSportModule`. Read through the cleaner list
- * sign-out iterates, as `SessionCleanersBridgeTest` does; nothing is refreshed or cleared.
+ * sign-out iterates, as `QrSessionTest` does; nothing is refreshed or cleared.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
 @LazyApplication(LazyLoad.ON)
-class SportBridgeTest {
+class SportGraphTest {
 
     @get:Rule
     val stopKoin = StopKoinRule()

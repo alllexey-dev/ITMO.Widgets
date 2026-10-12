@@ -8,8 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Port of Core 1.7.0 `DeviceApiContractTest`. The Retrofit reflection check (`@HTTP(method = "DELETE", hasBody =
- * true)` with one `@Body`) becomes an assertion over the request the route case records.
+ * The device routes; the `DELETE` with a JSON body is asserted over the request the route case records.
  */
 class DeviceApiContractTest {
 

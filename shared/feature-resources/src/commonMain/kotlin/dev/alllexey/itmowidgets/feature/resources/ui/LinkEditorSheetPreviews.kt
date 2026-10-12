@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LX-1c recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the references are named
  * `LinkEditorSheetContent_<state>`. Each state therefore is a function called `LinkEditorSheetContent` in a holder
  * class of its own. The editor wraps its content on the sheet's colour, as the shell's sheet opens it.
  */

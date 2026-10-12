@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserSearchUiState
 import dev.alllexey.itmowidgets.feature.social.ui.search.preview.UserSearchPreviewData
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and LC-1c recorded the XML references as
+ * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `UserSearchScreen_<state>`. Each state therefore is a function called `UserSearchScreen` in a holder class of its
  * own; the scanner instantiates each holder by reflection.
  */

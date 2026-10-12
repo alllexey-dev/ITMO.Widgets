@@ -47,7 +47,7 @@ class UserRowAction(
 )
 
 /**
- * A person in a list (port of `item_user_row.xml`, home and social): a 48 dp [Avatar], the [name] in `titleMedium`
+ * A person in a list (home and social): a 48 dp [Avatar], the [name] in `titleMedium`
  * that wraps, a one-line [subtitle] and an optional [status] in `bodySmall`, then the row's actions: a text button
  * for [secondaryAction] and a tonal one for [primaryAction], both inert while [busy]. With [onClick] the whole row
  * opens the person; a row that opens and has no actions ends in a chevron. TalkBack reads the row once.

@@ -3,7 +3,7 @@ import Shared
 import UIKit
 import XCTest
 
-/// The push plumbing of the app process before the Apple account (IO-13a): the graph binds one shared push
+/// The push plumbing of the app process: the graph binds one shared push
 /// registration (`PushDeviceRegistration`, whose Backend cases run on a MockEngine in `PushDeviceRegistrationTest`),
 /// the device has no token yet so nothing is registered, and a tapped notification reaches the shared route queue: a
 /// push by its payload type, a local notification (`IosAppNotifier`) by the destination in its `userInfo`. Every ISU,
@@ -36,7 +36,7 @@ final class DeviceRegistrationTests: XCTestCase {
         )
 
         let token = try await device.token()
-        XCTAssertNil(token, "no APNs or FCM registration before IO-13b")
+        XCTAssertNil(token, "the app does not register with APNs or FCM yet")
         let registration = try await registrations.get()
         XCTAssertNil(registration)
     }

@@ -345,7 +345,7 @@ class SportSignViewModelTest {
 
     @Test
     fun theAutoSignLimitDateReadsAsARussianDeviceShowedIt() = runTest(main.dispatcher) {
-        // What java.time wrote on a "ru" device before the port (`SportAutoSignLegacyDateTest` pins it on the JVM).
+        // What java.time writes on a "ru" device (`SportAutoSignLegacyDateTest` pins it on the JVM).
         val legacy = "12 сент. 2026 г., 09:00:00"
         data.limits = SportAutoSignLimits(limit = 2, available = 0, nextAvailableAt = Instant.parse("2026-09-12T09:00:00+03:00"))
         emitCatalog()

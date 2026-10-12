@@ -44,7 +44,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The system pages the Compose shell's entries open through `LocalPlatformActions` (SH-FIX-PA), on the real
+ * The system pages the Compose shell's entries open through `LocalPlatformActions`, on the real
  * `MainActivity` in the demo session: the privacy policy row starts the browser on the site's page, and the locked
  * calendar dialog's «Открыть настройки» starts the app's system settings page. An [Instrumentation.ActivityMonitor]
  * answers both starts, so no browser or settings app opens; the permission request passes through.

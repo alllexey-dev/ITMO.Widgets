@@ -17,10 +17,10 @@ import org.koin.test.verify.verify
 
 class SocialModuleTest {
 
-    /** The data resolves inside the module; only the platform's core types and the teacher reviews are bridged. */
+    /** The data resolves inside the module; only the platform's core types and the teacher reviews are external. */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theSocialModuleResolvesWithTheBridgedTypes() {
+    fun theSocialModuleResolvesWithThePlatformTypes() {
         socialModule.verify(
             extraTypes = listOf(
                 BackendGate::class,
