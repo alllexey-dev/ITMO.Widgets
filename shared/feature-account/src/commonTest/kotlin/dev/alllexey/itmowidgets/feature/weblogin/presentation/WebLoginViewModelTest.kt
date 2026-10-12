@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_on_plat
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_browser_unknown
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_code_invalid
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_not_found
+import dev.alllexey.itmowidgets.shared.feature.account.web_login_pair_unavailable
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_platform_macos
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_qr_unknown
 import dev.alllexey.itmowidgets.shared.feature.account.web_login_requested_at
@@ -97,6 +98,22 @@ class WebLoginViewModelTest {
         vm.onScanned("https://t.me/itmowidgets")
 
         assertEquals(WebLoginUiState.Input("ABCD", UiText.Res(Res.string.web_login_qr_unknown)), vm.uiState.value)
+        assertTrue(repository.calls.isEmpty())
+    }
+
+    @Test fun aScannedOrPastedPairingLinkIsRecognisedButNotSentAnywhere() = runTest(main.dispatcher) {
+        val link = "https://widgets.alllexey.dev/pair#v1.ABCD2345." +
+            "QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
+        val vm = model()
+        vm.onCodeChanged("ABCD")
+
+        vm.onScanned(link)
+
+        val refused = UiText.Res(Res.string.web_login_pair_unavailable)
+        assertEquals(WebLoginUiState.Input("ABCD", refused), vm.uiState.value)
+        vm.onCodeChanged(link)
+        vm.submit()
+        assertEquals(WebLoginUiState.Input(link, refused), vm.uiState.value)
         assertTrue(repository.calls.isEmpty())
     }
 

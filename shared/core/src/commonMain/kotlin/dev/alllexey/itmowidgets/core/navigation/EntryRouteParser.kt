@@ -44,6 +44,8 @@ object EntryRouteParser {
         is AppLink.SportLesson -> EntryRoute(AppTab.SPORT, request = TabRequest.SportLesson(link.lessonId))
         is AppLink.PredictedSportLesson ->
             EntryRoute(AppTab.SPORT, request = TabRequest.SportLesson(link.prototypeLessonId, predicted = true))
+        // The web sign-in sheet reads the link as a scan; it becomes «Подключить устройство».
+        is AppLink.Pair -> EntryRoute(AppTab.ME, overlay = AppRoutes.WebLogin(code = link.link.toUrl()))
         AppLink.Malformed -> EntryRoute(AppTab.HOME, alert = AppRoutes.LinkUnavailable)
         null -> null
     }

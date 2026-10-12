@@ -9,15 +9,22 @@ Product behaviour: [Как это работает: друзья](../how-it-work
 | `https://<host>/u/{isu}` | the person profile |
 | `https://<host>/sport/{lessonId}` | a catalog lesson |
 | `https://<host>/sport/p/{prototypeLessonId}` | a predicted lesson, named by the catalog lesson it repeats |
+| `https://<host>/pair#v1.<code>.<key>.<secret>` | the web sign-in sheet with a device pairing link ([web sign-in](web-login.md#device-pairing)) |
 
 - `<host>` is `widgets.alllexey.dev` or `dev.widgets.alllexey.dev`.
 - `core/navigation/AppLinks.parse` (`core/url/StrictUri`): `https` only, ISU
   `[1-9][0-9]{0,9}` within `Int`, lesson id `[1-9][0-9]{0,18}` within `Long`, one
   trailing `/`, query and fragment ignored. Anything else under `/u/` and
   `/sport/` is `AppLink.Malformed`; another scheme, host or path is no app link.
+- `/pair` is read by `core/weblogin/PairLink.parse`: path exactly `/pair`, no
+  query, user info or port, fragment `v1.<code>.<key>.<secret>` with an
+  8-character web-login code, a 32-byte key and a 16-byte secret in base64url
+  without padding. A damaged one is `AppLink.Malformed`. The fragment holds the
+  device's key, so `PairLink` and the route never print it.
 - The manifest gives `MainActivity` one `autoVerify` `VIEW` filter with both
-  hosts and the prefixes `/u/` and `/sport/` in every build, so a damaged link
-  still reaches the app and explains itself. `launchMode` is unchanged.
+  hosts, the prefixes `/u/` and `/sport/` and the path `/pair` in every build,
+  so a damaged link still reaches the app and explains itself. `launchMode` is
+  unchanged.
 
 ## Routes
 
@@ -30,6 +37,7 @@ sign-in and first run are done, runs it once and never repeats it from Recents
 |---|---|---|
 | `/u/{isu}` | profile tab | `UserProfile` |
 | `/sport/{id}`, `/sport/p/{id}` | sport, page `Запись` | the lesson card or "lesson unavailable" |
+| `/pair#...` | profile tab | `WebLogin(code = link)`, read as a scan |
 | malformed | home | `LinkUnavailable` |
 
 - The profile is the ordinary `UserProfile`; the app never enforces privacy.

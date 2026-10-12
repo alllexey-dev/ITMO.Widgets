@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.navigation
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppLinksTest {
@@ -34,6 +35,17 @@ class AppLinksTest {
         ).forEach { path ->
             assertEquals(path, AppLink.Malformed, AppLinks.parse("https://dev.widgets.alllexey.dev$path"))
         }
+    }
+
+    @Test fun `pairing links on both hosts carry the device's link and damaged ones are malformed`() {
+        val fragment = "v1.ABCD2345.QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
+        hosts.forEach { host ->
+            val link = AppLinks.parse("$host/pair#$fragment")
+            assertTrue(host, link is AppLink.Pair && link.link.toUrl() == "$host/pair#$fragment")
+            assertEquals(host, AppLink.Malformed, AppLinks.parse("$host/pair"))
+            assertEquals(host, AppLink.Malformed, AppLinks.parse("$host/pair?$fragment"))
+        }
+        assertNull(AppLinks.parse("https://example.com/pair#$fragment"))
     }
 
     @Test fun `links that are not the app's are ignored`() {

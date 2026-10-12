@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
+    "pair_unlock_reason" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтвердите подключение устройства"
+          }
+        }
+      }
+    },
     "web_login_approve" : {
       "comment" : "Generated from strings_weblogin.xml",
       "extractionState" : "manual",
@@ -189,6 +201,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Подтверждайте только свой вход"
+          }
+        }
+      }
+    },
+    "web_login_pair_unavailable" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключение устройств появится в следующей версии"
           }
         }
       }

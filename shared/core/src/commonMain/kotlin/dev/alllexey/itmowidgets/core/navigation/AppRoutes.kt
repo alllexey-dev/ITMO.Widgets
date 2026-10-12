@@ -139,13 +139,16 @@ object AppRoutes {
     }
 
     /**
-     * Approves a browser's sign-in to the web version; refused in the demo session. [code] is the iOS Universal Link's
-     * `/app/login?code=`; Android always opens it without one.
+     * Approves a browser's sign-in to the web version; refused in the demo session. [code] is what the sheet reads as a
+     * scan: an iOS Universal Link's `/app/login?code=` or a pairing App Link (`PairLink`), whose fragment holds a
+     * device key, so [toString] hides it.
      */
     @Serializable
     data class WebLogin(val code: String? = null) : AppRoute {
         override val kind get() = RouteKind.SHEET
         override val sheetPolicy get() = SheetPolicy(textInput = true)
+
+        override fun toString(): String = "WebLogin(code=${if (code == null) "null" else "redacted"})"
     }
 
     /** A form: it asks before a draft is discarded. */
