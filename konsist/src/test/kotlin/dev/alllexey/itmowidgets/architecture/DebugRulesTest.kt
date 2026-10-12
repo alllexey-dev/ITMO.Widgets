@@ -17,12 +17,7 @@ class DebugRulesTest {
                 val inDebug =
                     packageName.startsWith(CORE_DEBUG_PACKAGE) || packageName.startsWith(FEATURE_DEBUG_PACKAGE)
                 declaration.name == "FileAcademicTimeOverrideStore" ||
-                    inDebug && (
-                        declaration.name.startsWith("File") ||
-                            declaration.name.endsWith("Fragment") ||
-                            // It replaces the real session's refresh token.
-                            declaration.name.endsWith("RefreshTokenController")
-                        )
+                    inDebug && (declaration.name.startsWith("File") || declaration.name.endsWith("Fragment"))
             }
             .requireAtLeast(MIN_DEBUG_ONLY_CLASSES, "debug state stores and debug screens")
             .assertTrue { it.hasAnnotationWithName(DEBUG_ONLY) }
