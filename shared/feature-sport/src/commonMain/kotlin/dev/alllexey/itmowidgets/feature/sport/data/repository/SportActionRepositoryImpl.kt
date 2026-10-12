@@ -27,10 +27,6 @@ class SportActionRepositoryImpl(
         return backend.isConnected()
     }
 
-    /**
-     * MyITMO's refusal stays a `MyItmoException.Api` with its message inside [AppError.Unknown]: the push handler
-     * tells a full lesson from another rule by it (`SportSignOutcome`).
-     */
     override suspend fun signIn(lessonId: Long): AppResult<Unit> {
         return runAction {
             withContext(dispatchers.io) { myItmo.sport.signInLessons(listOf(lessonId)).requireResult() }

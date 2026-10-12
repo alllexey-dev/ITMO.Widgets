@@ -1,19 +1,22 @@
 package dev.alllexey.itmowidgets.feature.sport.data.push
 
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.sport.SportSignResult
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.push.FcmDecoder
 import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.sport.model.SportLessonDto
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking.QueueKind
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import kotlin.time.Clock
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -29,7 +32,8 @@ import kotlinx.serialization.json.JsonObject
  * book nothing.
  */
 class SportSignPushBooker(
-    private val actions: SportActionRepository,
+    private val myItmo: MyItmoClient,
+    private val dispatchers: AppDispatchers,
     private val api: SportApi,
     private val bookings: SportBookingRepository,
     private val pending: PendingSportBookingsRepository,
@@ -61,20 +65,20 @@ class SportSignPushBooker(
                 if (lesson.id <= 0 || !seen.add(lesson.id) || lesson.end <= clock.now()) return@safely
                 val section = lesson.sectionName.trim().takeIf { it.isNotEmpty() } ?: return@safely
                 if (!backend.mayCallBackend()) return@safely
-                when (actions.signIn(lesson.id).sportSignOutcome()) {
-                    SportSignOutcome.SIGNED_IN -> {
+                when (withContext(dispatchers.io) { myItmo.sport.signInLesson(lesson.id) }) {
+                    SportSignResult.Booked -> {
                         // A failed report must never turn a successful booking into a cancellation.
                         safely { report(SportSignNotice(lesson.id, section, lesson.start, booked = true)) }
                         safely { markSatisfied(queue, lesson.id) }
                         safely { widgets.refreshScheduleWidgets() }
                     }
-                    SportSignOutcome.REJECTED -> {
+                    is SportSignResult.Rejected -> {
                         safely { report(SportSignNotice(lesson.id, section, lesson.start, booked = false)) }
                         safely { cancel(queue, lesson.id) }
                         safely { widgets.refreshScheduleWidgets() }
                     }
-                    SportSignOutcome.NO_CAPACITY -> Unit
-                    SportSignOutcome.RETRY_LATER ->
+                    SportSignResult.Full -> Unit
+                    is SportSignResult.RetryLater ->
                         diagnostics.warn(TAG, "Sport push booking deferred for lesson ${lesson.id}")
                 }
             }

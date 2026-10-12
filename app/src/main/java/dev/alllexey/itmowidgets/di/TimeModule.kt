@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.di
 
+import dev.alllexey.itmoapi.core.MOSCOW
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideStore
@@ -8,7 +9,6 @@ import dev.alllexey.itmowidgets.core.time.DefaultAcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.FileAcademicTimeOverrideStore
 import java.io.File
 import kotlin.time.Clock
-import kotlinx.datetime.TimeZone
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.binds
 import org.koin.dsl.module
@@ -25,9 +25,8 @@ val timeModule = module {
             AtomicTextFile(File(androidContext().noBackupFilesDir, ACADEMIC_TIME_OVERRIDE_FILE))
         )
     }
-    single { DefaultAcademicTimeProvider(get(), TimeZone.of(ACADEMIC_TIME_ZONE), get()) } binds
+    single { DefaultAcademicTimeProvider(get(), MOSCOW, get()) } binds
         arrayOf(AcademicTimeProvider::class, AcademicTimeOverrideController::class)
 }
 
-private const val ACADEMIC_TIME_ZONE = "Europe/Moscow"
 private const val ACADEMIC_TIME_OVERRIDE_FILE = "debug/academic_date_override"
