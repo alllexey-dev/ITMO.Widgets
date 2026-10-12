@@ -1,5 +1,10 @@
 # 0025 MyItmoApi 2.x is a Kotlin Multiplatform library beside 1.x
 
+**Amended (2026-10-12).** 2.1 adds an easy entry for third-party developers (`MyItmo.login`, `fromRefreshToken`,
+`fromStorage`), including the password login ported from 1.x. It lives in the library only: the app still signs in on
+the official ITMO.ID page and never handles a password. The sentence below about the password login not being ported
+describes 2.0.
+
 **Decision (2026-10-03).** MyItmoApi stays the only client of official ITMO.ID, My ITMO and BARS endpoints and gets a second,
 Kotlin Multiplatform line in the same repository.
 - Coordinates `dev.alllexey:my-itmo-api-kmp`, root package `dev.alllexey.itmoapi` (`itmoid`, `myitmo`, `bars`),
