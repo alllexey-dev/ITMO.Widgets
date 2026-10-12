@@ -39,7 +39,7 @@ list of the subject page and is listed in its own block. Labels, icons and visib
 | Visibility | Label | Who sees it |
 |---|---|---|
 | `PRIVATE` | `Только я` | the owner |
-| `FLOW` | the flow name, e.g. `ФИЗ ПИИКТ 3.2.1` | students with exactly this schedule flow (`flowId`) of the subject and period |
+| `FLOW` | the flow name, e.g. `ФИЗ ПИИКТ 3.2.1` | students with exactly this schedule flow (`flowId`) of the subject and period, after review while premoderation is on |
 | `ALL` | `Все` | every student of the subject, after review while premoderation is on |
 
 A `FLOW` link names one MyITMO schedule `flow_id` of the author, of any
@@ -50,8 +50,10 @@ names of two different years never share links. Backend records flows from the
 schedule the app uploads and offers every flow the viewer has now as
 `SubjectLinksSnapshot.audiences` (`LinkAudience(flowId, label, typeId, depth)`,
 sorted by depth, then name); `SubjectLink.flowId` and `audienceLabel` name the
-flow of a `FLOW` link. Flow links are published at once; `ALL` waits for a
-moderator while `premoderation` is true.
+flow of a `FLOW` link. While `premoderation` is true both wait for review: an
+`ALL` link for a moderator; a `FLOW` link is approved by Backend's ISU check
+when ISU confirms the author is in the flow and the flow has at most 50 members
+(configurable on Backend), otherwise a moderator decides.
 
 Other students always see published content. The owner additionally sees
 `на проверке`, `отклонена` or `скрыта`; the actions sheet shows the moderator's
@@ -143,7 +145,8 @@ sheet that opens another sheet, a screen or the report closes itself first.
   is a list of radio rows (at least 48 dp) ordered from the widest audience to
   the narrowest: `Все` (with `После проверки` while premoderation is on), every
   flow of the viewer from broad to nested (the flow name over the kind of
-  classes from `lessonTypeName`), then `Только я`. A chosen flow that is no
+  classes from `lessonTypeName`, then `после проверки` while premoderation is
+  on), then `Только я`. A chosen flow that is no
   longer offered falls back to `Только я`; without the connection only
   `Только я` is listed with a line saying sharing needs the connection. The new
   link's UUID survives process death, so a retried save reaches the same link.

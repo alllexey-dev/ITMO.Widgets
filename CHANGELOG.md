@@ -115,6 +115,9 @@ new iOS app.
   another device; existing items move over on their next write.
 - The debug refresh-token tool signs in through the session like any other
   sign-in instead of writing the token file directly.
+- The link editor's `Кто видит` shows `после проверки` under each flow while
+  premoderation is on: Backend publishes a flow link after an ISU check (or a
+  moderator for big flows), no longer at once.
 
 ### Architecture and build
 
