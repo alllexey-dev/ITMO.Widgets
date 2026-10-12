@@ -27,3 +27,4 @@ docs/product/releases.md:path:V10__teacher_summaries.sql  # Backend migration wi
 docs/settings.md:path:docs/ops/account-deletion.md  # Backend doc without the B/ prefix
 
 shared/backend-client/src/commonTest/resources/contract/README.md  # Backend README vendored verbatim by scripts/sync-backend-contract.sh; its paths are Backend paths
+

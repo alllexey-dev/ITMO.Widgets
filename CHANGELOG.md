@@ -134,14 +134,18 @@ new iOS app.
   snapshot, QR pass, tokens); `UpgradeFrom22Test` and
   `StableIdentifiersTest` guard the upgrade.
 - Gradle 9.7, AGP 9.3, Kotlin 2.4.20, compileSdk 37, minSdk 26, targetSdk 36;
-  MyItmoApi builds from source at a pinned commit, release builds take it
-  from Maven Central. The QR encoder is a Kotlin port, Google Sheets parse
+  MyItmoApi comes from Maven Central (`MYITMOAPI_DIR` builds against a local
+  checkout). The QR encoder is a Kotlin port, Google Sheets parse
   with Ksoup, avatars load with Coil 3, OkHttp is 5.5.
 - `scripts/verify.sh` is the one build entry point. CI runs the checks, both
   lints, Roborazzi screenshot baselines (four Android appearances, plus iOS
   ones for the design system) and every instrumented test on GitHub's
   emulators for each PR; the Konsist architecture rules cover the app and
   every shared module.
+- Developer documentation: `docs/getting-started.md`, `docs/feature-flow.md`,
+  `docs/testing.md`, `docs/troubleshooting.md` and `CONTRIBUTING.md`; the
+  architecture and feature docs describe the Compose, Koin and Navigation 3
+  code.
 
 ## 2.2 — 2026-10-03
 

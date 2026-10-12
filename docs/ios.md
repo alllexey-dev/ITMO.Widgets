@@ -191,7 +191,8 @@ placeholder state (`AppGroupSnapshot`, `SnapshotReaderTests`).
 | schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`) | lesson and day widgets |
 | `locks/<name>.lock` | `FileCrossProcessLock` (`flock`), held only around the guarded call | app, notification service |
 
-Keychain (`KeychainSecureStore`, `kSecAttrAccessibleAfterFirstUnlock`, never synchronised): `myitmo_tokens` (app and
+Keychain (`KeychainSecureStore`, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, never synchronised or restored
+from a backup on another device): `myitmo_tokens` (app and
 notification service; refreshed inside the `myitmo-refresh` lock), `bars_tokens.enc` and `itmo_id_cookies` (app).
 Sign-out clears the Keychain items, the App Group files (keeping `locks` and system metadata) and WebKit's data.
 

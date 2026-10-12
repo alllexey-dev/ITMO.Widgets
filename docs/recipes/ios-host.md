@@ -2,7 +2,7 @@
 
 How an iOS screen is built under [ADR 0031](../decisions/0031-swiftui-ios-screens.md): a native SwiftUI view in
 `iosApp/` over the feature's shared view model. The current state of the app is [the iOS app](../ios.md); the Android
-half and the shared module are [Screen in a shared module](shared-module-screen.md).
+half and the shared module follow [one feature end to end](../feature-flow.md).
 
 ## Worked example: settings
 

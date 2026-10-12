@@ -14,7 +14,7 @@ page of the site. Lessons from the schedule and subjects are not shared.
 | `https://<host>/sport/p/{prototypeLessonId}` | a predicted lesson, named by the catalog lesson it repeats |
 
 `<host>` is `widgets.alllexey.dev` or `dev.widgets.alllexey.dev`.
-`core/navigation/AppLinks.parse` reads them as plain Kotlin (`java.net.URI`):
+`core/navigation/AppLinks.parse` reads them as common Kotlin (`core/url/StrictUri`):
 `https` only, an ISU `[1-9][0-9]{0,9}` within `Int`, a lesson id
 `[1-9][0-9]{0,18}` within `Long`, one trailing `/` allowed, query and fragment
 ignored. Anything else under `/u/` and `/sport/` is `AppLink.Malformed`;
@@ -79,7 +79,7 @@ release builds share `https://widgets.alllexey.dev`, debug builds
 
 | Where | When | Text |
 |---|---|---|
-| `USER_PROFILE` top bar | the page is `Content`, the own profile too | `<name> в ITMO.Widgets: <url>` |
+| `AppRoutes.UserProfile` top bar | the page is `Content`, the own profile too | `<name> в ITMO.Widgets: <url>` |
 | profile tab, beside the own name | the ISU is known | the same |
 | sport lesson card, toolbar menu | the lesson has not ended: a real lesson or booking with a positive id, or a prediction | `<section>, <weekday, date, time> — ITMO.Widgets: <url>` |
 
@@ -133,15 +133,17 @@ to the latest GitHub release.
 ## Tests
 
 - JVM: `AppLinksTest`, `ShareLinkFactoryTest`, `EntryRouteParserTest`,
-  `RouteQueueTest` (`:shared:core`),
+  `RouteQueueTest` (`:shared:core`), `ShellHostTest` (`app/src/test`: every
+  entry intent runs once, the malformed-link alert, Recents),
   `SportSignViewModelTest` (shared, hidden, ended and missing lessons;
   predictions, real repeats and a missing prototype; a request before the
   catalog answers), `SportSessionPresentationTest` (prototype id, shared date),
   `UserProfileScreenTest.theStatesOfferRetryOnlyForAFailureAndShareOnlyForAPage`
   (`:shared:feature-social`).
+- `SportDetailsSheetTest.upcomingLessonsBookingsAndPredictionsCanBeShared`
+  (`:shared:feature-sport`, Robolectric).
 - Instrumented: `MainActivityDeepLinkTest` (profile, sport and predicted links,
-  the malformed dialog, waiting for sign-in, Recents), `ShareTextTest`,
-  `SportDetailsSheetVisualTest.shareActionForUpcomingLessonsBookingsAndPredictions`.
+  the malformed dialog, waiting for sign-in, Recents), `ShareTextTest`.
 
 ## Manual check
 

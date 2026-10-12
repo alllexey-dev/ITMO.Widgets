@@ -1,8 +1,9 @@
 # Notifications
 
 `core/notification` owns the FCM receiver, token sync, the payload dispatcher and
-the notification contract. Feature handlers are Hilt multibindings; the app
-layer renders notifications and PendingIntents. Next to the pushes, the
+the notification contract. Feature handlers are `FcmPayloadHandler` bindings in
+Koin (`di/ComponentBindingsModule.kt`), which `FcmPayloadDispatcher` reads with
+`getAll()`; the app layer renders notifications and PendingIntents. Next to the pushes, the
 schedule's and the recordbook's background checks post local notifications
 through the same contract ([schedule changes](#schedule-changes),
 [marks](#marks)).
@@ -15,8 +16,8 @@ message is for. Payload types:
 
 | Type | Handler | Effect |
 |---|---|---|
-| `SPORT_FREE_SIGN_LESSONS_PAYLOAD` | `SportSignPushHandler(auto = false)` | book the listed lessons, settle the free queue |
-| `SPORT_AUTO_SIGN_LESSONS_PAYLOAD` | `SportSignPushHandler(auto = true)` | book the listed lessons, settle the auto queue |
+| `SPORT_FREE_SIGN_LESSONS_PAYLOAD` | `SportSignPushHandler(QueueKind.FREE)` | book the listed lessons, settle the free queue |
+| `SPORT_AUTO_SIGN_LESSONS_PAYLOAD` | `SportSignPushHandler(QueueKind.AUTO)` | book the listed lessons, settle the auto queue |
 | `FRIENDSHIP_EVENT_PAYLOAD` | `FriendshipPushHandler` | notify about a received or accepted request |
 
 Unknown types and malformed payloads are logged by type only and ignored;
@@ -42,9 +43,9 @@ payloads above 4 KB are dropped.
    `publicTitle` it also gets a public version (`setPublicVersion`) with that
    title only and the same tap, otherwise the lock screen hides its content.
    `AppNotifier.cancel(channel, id)` removes one notification, `clear()` all of
-   them. A tap goes through the shared route queue of `MainActivity`
-   ([navigation](../architecture.md#navigation)): Recents never repeats it and
-   Back leads home.
+   them. A tap goes through `EntryRouteParser` and the `RouteQueue` of the
+   shell ([navigation](../architecture.md#navigation)): Recents never repeats
+   it and Back leads home.
 
 ## Token sync
 
@@ -88,8 +89,8 @@ never turns a successful booking into a cancellation.
 Decodes `FriendshipEventPayload`, shows "`Имя` хочет добавить вас в друзья" or
 "`Имя` принял вашу заявку" and refreshes `SocialRepository` if it already holds
 a loaded list. Tapping opens the actor's profile: the intent carries
-`ACTION_OPEN_USER_PROFILE` and the ISU, `MainActivityIntentRouting` validates
-it, the activity selects the profile root and opens `USER_PROFILE` once.
+`ACTION_OPEN_USER_PROFILE` and the ISU, `EntryRouteParser` validates it, and
+the shell selects the profile tab and opens `AppRoutes.UserProfile` once.
 
 ## Schedule changes
 
@@ -105,10 +106,10 @@ A local notification, not a push: `ScheduleChangesCheck` in
 - A change of today or tomorrow makes a sound; later ones arrive silently
   (`setSilent(true)`). `VISIBILITY_PRIVATE` like every notification of the app.
   Nothing is shown from 00:00 to 06:00 Moscow time.
-- Tapping sends `ACTION_OPEN_SCHEDULE_CHANGES`; `MainActivityIntentRouting`
-  turns it into the schedule root with `screen = SCHEDULE_CHANGES`, and
-  `MainActivity` selects the root and opens the history overlay on top. The
-  pending screen is saved across recreation and consumed once.
+- Tapping sends `ACTION_OPEN_SCHEDULE_CHANGES`; `EntryRouteParser` turns it
+  into the schedule tab with `AppRoutes.ScheduleChanges` above it, and the
+  shell selects the tab and opens the history on top. The pending route is
+  saved across recreation and runs once.
 - `ScheduleChangesRepository.markAllRead()` (the history screen, the home
   card's close button) cancels it through `AppNotifier.cancel`; sign-out
   clears every notification as before.
@@ -136,15 +137,15 @@ tag `marks`.
 - A tap on a digest with one subject that has a page sends
   `ACTION_OPEN_RECORDBOOK_SUBJECT` with the page's arguments as extras
   (`RecordbookSubjectArgs.toBundle()`: entry, programme, semester, study year
-  and optionally the whole BARS journal reference). `MainActivityIntentRouting`
-  validates them (`RecordbookSubjectArgs.from`, `validOrNull`: positive ids, a
-  `YYYY/YYYY` study year, a journal given entirely or not at all) and selects
-  the recordbook root with `screen = RECORDBOOK_SUBJECT`; arguments that do not
-  describe a page open the root alone. Any other digest sends
-  `ACTION_OPEN_RECORDBOOK`, the prompt `ACTION_OPEN_BARS_LOGIN`, which selects
-  the recordbook root and starts `BarsLoginActivity` above it. `MainActivity`
-  keeps the pending subject and sign-in (`pendingSubject`, `pendingBarsLogin`)
-  across recreation and consumes them once.
+  and optionally the whole BARS journal reference). `ShellHost` reads them
+  (`RecordbookSubjectArgs.from`) and `EntryRouteParser` validates them
+  (`validOrNull`: positive ids, a `YYYY/YYYY` study year, a journal given
+  entirely or not at all) into the recordbook tab with
+  `AppRoutes.RecordbookSubject` above it; arguments that do not describe a
+  page open the tab alone. Any other digest sends `ACTION_OPEN_RECORDBOOK`,
+  the prompt `ACTION_OPEN_BARS_LOGIN`, which selects the recordbook tab and
+  starts `BarsLoginActivity` above it. The pending route survives recreation
+  in the `RouteQueue` and runs once.
 - `markRead` that leaves no unread subject and `markAllRead()` (the home card's
   close button) cancel the digest; a successful BARS answer and switching
   `Оценки БАРС` off cancel the prompt; sign-out clears every notification.
@@ -155,16 +156,16 @@ tag `marks`.
 ## Tests
 
 `FcmPayloadDispatcherTest`, `FcmDeliveryGuardTest`, `DefaultFcmTokenSyncTest`,
-`BackendDeviceRegistrationTest`, `SportSignPushHandlerTest`,
-`FriendshipPushHandlerTest`, `MainActivityIntentRoutingTest` (including
-`ACTION_OPEN_SCHEDULE_CHANGES`, `ACTION_OPEN_RECORDBOOK`,
+`BackendDeviceRegistrationTest`, `FriendshipPushHandlerTest`, `SportBridgeTest`
+(debug: the three handlers in the Koin graph), `EntryRouteParserTest`
+(including `ACTION_OPEN_SCHEDULE_CHANGES`, `ACTION_OPEN_RECORDBOOK`,
 `ACTION_OPEN_RECORDBOOK_SUBJECT` with and without valid arguments and
-`ACTION_OPEN_BARS_LOGIN`), `RecordbookSubjectArgsTest`; the instrumented
-`FcmNotificationFlowTest`
-drives the flow through a debug entry point. `ScheduleChangesNotificationTest`
-shows the digest through the app's notifier: tag and id, channel, title and
-text, the tap intent, replacement, `cancel` and the channel's importance and
-name. `MarksNotificationTest` does the same for the marks digest (three names
+`ACTION_OPEN_BARS_LOGIN`), `RouteQueueTest`, `RecordbookSubjectArgsTest`; the
+instrumented `FcmNotificationFlowTest` posts synthetic local notifications and
+checks that each opens its target once, after sign-in and recreation.
+`ScheduleChangesNotificationTest` shows the digest through the app's notifier:
+tag and id, channel, title and text, the tap intent, replacement, `cancel` and
+the channel's importance and name. `MarksNotificationTest` does the same for the marks digest (three names
 and `… и ещё N`, the public version, the recordbook or subject tap with
 arguments that survive the intent) and the prompt with its sign-in tap.
 

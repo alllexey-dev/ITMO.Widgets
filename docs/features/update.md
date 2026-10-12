@@ -15,12 +15,14 @@ by Back postpones it like `Напомнить позже`. The demo session neve
 
 ## Screen
 
-The screen is Compose in `:shared:feature-account`: `AppUpdateScreen(state,
-onUpdate, onLater, onClose, onSkip)` is stateless, and `AppUpdateRoute` obtains
-`AppUpdateViewModel` from Koin. `AppUpdateFragment` (`app_update`, arguments
-`installed_version`, `latest_version`, `note`, `unsupported`) keeps its name and
-hosts the route through `itmoComposeView`; the ViewModel reads the check result
-from the Fragment's arguments, so the screen has no loading or error state.
+`ShellHost` runs the check (`AppUpdateGateViewModel`) once per process outside
+the demo and opens an offer only while the activity is resumed. The offer is
+the key `UpdateRoutes.AppUpdate` (`feature/update/navigation/UpdateRoutes.kt`),
+which carries the check result as `AppUpdateArgs`, so the screen has no loading
+or error state. `AccountEntries.kt` registers it with `AppUpdateRoute`, which
+obtains `AppUpdateViewModel` with `koinViewModel()` (`UpdateModule.kt`,
+`viewModelOf`) and draws the stateless `AppUpdateScreen(state, onUpdate,
+onLater, onClose, onSkip)` of `:shared:feature-account`.
 
 - A close button (48 dp minimum at any font scale), then one scrolling column:
   the download icon, the title (`Вышла новая версия`, or `Эта версия устарела`
@@ -55,7 +57,7 @@ per variant. `onFailed` shows `Не удалось открыть страниц
   installed from GitHub, Play failed) it opens the app's card:
   `market://details?id=…`, then `BuildConfig.DOWNLOAD_URL` in the browser.
 
-`MainActivity` starts `InstallStateWatcher` in `onResume` and stops it in
+`ShellHost` starts `InstallStateWatcher` in `onResume` and stops it in
 `onPause`. When Play reports a flexible update as downloaded, also one that
 finished while the app was away, it shows the indefinite Snackbar
 `Обновление загружено` with `Перезапустить` (`completeUpdate()`, Play installs
@@ -65,7 +67,8 @@ never reports.
 Tests: `AppUpdateScreenTest` (JVM host test in `:shared:feature-account`:
 texts, the skip hidden for an unsupported build, callbacks, the skip stored
 before the route closes, the open-failed snackbar, nothing clipped at font 1.3
-in 320 dp), the `AppUpdateScreen_{supported,unsupported,long-note}` goldens of
+in 320 dp), `AccountEntriesTest` (the key opens the offer and round-trips
+through the saved shell), the `AppUpdateScreen_{supported,unsupported,long-note}` goldens of
 `AccountScreenshotTest` in four appearances, `GithubUpdateActionTest` (JVM,
 `app/src/testGithub`) and `PlayUpdateActionTest` (instrumented,
 `app/src/androidTestPlay`: Play's `FakeAppUpdateManager` needs real

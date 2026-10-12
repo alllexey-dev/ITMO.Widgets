@@ -9,23 +9,24 @@ The schedule side (the FAB, the selected user, the header) is in
 
 ## Entry and result
 
-`FriendSelectorDialogFragment` is the dialog destination `friend_selector`
-of `main_nav_graph`, opened by the schedule FAB with
-`FriendSelectionContract.ARG_SELECTED_ISU` (the shown user, or `NO_USER_ISU`
-for the own schedule). It is the design system's sheet host
-(`ItmoBottomSheetFragment` with `SheetHeight.Tall`): expanded at 90 % of the
-screen height, never collapsed. Its body is `FriendSelectorSheetRoute` from
-`:shared:feature-social`, which obtains the Koin `FriendSelectorViewModel`
-(reading the opening ISU from the host's arguments) and renders the stateless
-`FriendSelectorSheetContent`; the iOS app hosts the same route.
+The picker is the sheet key `AppRoutes.FriendSelector(selectedIsu)`, opened
+by the schedule FAB with the shown user's ISU, or
+`FriendSelectionContract.NO_USER_ISU` for the own schedule. Its policy is
+`SheetPolicy.Height.TALL`: the shell's sheet scene keeps it expanded at 90 %
+of the window height, never collapsed. `shell/entries/SocialEntries.kt`
+registers it with `FriendSelectorSheetRoute` from `:shared:feature-social`,
+which takes `FriendSelectorViewModel` (registered with `viewModelOf` in
+`FriendSelectorModule.kt`; it reads `ARG_SELECTED_ISU` from the entry's
+arguments) and renders the stateless `FriendSelectorSheetContent`; the iOS
+app hosts the same route.
 
 Apply asks the ViewModel, which records a chosen friend in the history and
 then emits `FriendSelectorEvent.Apply(target)` once (`target` is the person,
-or `null` for the own schedule). The route passes it to the host, which sets
-one fragment result under `FriendSelectionContract.RESULT_KEY` with
-`RESULT_USE_MY_SCHEDULE`, `RESULT_USER_ISU`, `RESULT_USER_NAME` and
-`RESULT_USER_PICTURE_URL`, then dismisses the sheet. Close («Закрыть»)
-delivers nothing. Opening a profile dismisses the sheet first.
+or `null` for the own schedule). The route passes it to the entry, which
+sends one `FriendSelection` (`useMySchedule`, `isu`, `name`, `pictureUrl`) on
+the Navigation 3 result bus and closes the sheet; `ScheduleTabRoot` takes it
+with `ResultEffect`. Close («Закрыть») delivers nothing. Opening a profile
+closes the sheet first.
 
 ## Sheet
 
@@ -111,8 +112,6 @@ otherwise.
   (`FriendSelectorSheetContent_<state>`: friends, selection, locked, groups,
   empty-filter, people, people-idle, people-loading, people-empty,
   people-error, no-friends, loading, disabled, error) in four appearances.
-- The sheet renders with `FriendSelectorFixture` in
-  `SettingsNavigationTestActivity` (debug).
 
 ## iOS
 
@@ -122,8 +121,8 @@ router, `FriendSelectorSheet` (`iosApp/Sources/Features/Schedule/`) shows the
 content of `friendSelectorViewController` (`shared/ios`,
 `screens/ScheduleScreens.kt`) at full height with the system's drag indicator,
 and `FriendSelectorIosRoute` (`:shared:feature-social`, iosMain) seeds the
-ViewModel's `SavedStateHandle` with `ARG_SELECTED_ISU`, as the dialog's
-arguments do.
+ViewModel's `SavedStateHandle` with `ARG_SELECTED_ISU`, as Android's entry
+does.
 
 - The schedule root opens the key with `AppRouter.open(_:onResult:)`; the
   applied choice goes back once through `deliver(_:from:)` as a `FriendPick`

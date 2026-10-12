@@ -14,7 +14,8 @@ after the previous one (`DemoEntryTaps`, `REQUIRED_TAPS = 5`,
 `DemoEntryTaps` times the taps on the injected `kotlin.time.TimeSource`, which
 `authModule` binds to `TimeSource.Monotonic` (tests use `TestTimeSource`). Taps
 during a sign-in or a session change are ignored. On success the route hands
-`Демо-режим` to the host: `AuthFragment` confirms with
+`Демо-режим` to the sign-in entry (`AppRoutes.Auth` in
+`shell/entries/AccountEntries.kt`), whose `confirmDemoEntry` confirms with
 `HapticFeedbackConstants.CONFIRM` (`VIRTUAL_KEY` below Android 11) and the toast
 `Демо-режим`, then `SessionRepository.startDemo()` replaces the screen.
 
@@ -37,9 +38,10 @@ reviewer finds the entry in the access instructions of the Play listing.
   the flag.
 - `DemoCurrentUserProvider` wraps the ID-token provider and answers
   `DemoPeople.ME` while the flag is on.
-- `MainActivity` skips the first-run flow without marking it passed and does
-  not check for updates. `My ITMO` in the browser and `Вход на сайт` show the
-  toast `Недоступно в демо` instead of opening.
+- The shell (`ShellGate`) skips the first-run flow without marking it passed,
+  and `ShellHost` does not check for updates. `My ITMO` in the browser and
+  `Вход на сайт` are refused by `ShellGate` with the toast `Недоступно в демо`
+  instead of opening.
 - The banner `demo_banner` sits above the bottom bar: `Демо-режим · вымышленные
   данные` and `Войти`. `Войти`, like `Выйти` in the profile, goes through
   `signOut()`, whose demo branch clears every cache and the flag without
@@ -49,16 +51,18 @@ reviewer finds the entry in the access instructions of the Play listing.
 
 `core/demo/DemoMode` (`suspend fun isActive()`, `fun observeActive()`) is
 implemented by `feature/auth/data/DataStoreDemoMode` on `demo_active` and bound
-in `SessionModule`. Every class whose constructor takes `ItmoWidgetsApi`,
-`MyItmo`, `MyItmoApi`, `Bars` or the `@PublicWebClient` `OkHttpClient` also
-takes `DemoMode` and checks it where it actually calls the network:
+in `authModule`. Every class whose constructor takes a network client
+(Backend's `BackendClient` or one of its `*Api`s, MyItmoApi's `MyItmoClient`,
+`BarsClient` or `ItmoIdClient`, Ktor's `HttpClient`) also takes `DemoMode` and
+checks it where it actually calls the network:
 
 - reads answer with the feature's fictional data from its `data/demo` package;
 - writes and pages outside the app fail with `AppError.DemoUnavailable`, shown
   as `Недоступно в демо`.
 
-The Konsist rule `network clients are gated by demo mode` enforces the
-constructor parameter (`core/network`, which builds the clients, is exempt);
+The Konsist rule `network clients are gated by demo mode` (`GateRulesTest`)
+enforces the constructor parameter (`core/network`, which builds the clients,
+is exempt);
 the per-feature `*DemoGateTest` and `DemoNetworkGateTest` check the behaviour.
 
 | Area | In the demo |
@@ -98,10 +102,9 @@ next ten-minute mark; `DemoContentTest` checks today always has a lesson to sign
 up for.
 
 `StoreScreenshotCapture` (the Google Play frames, which are also the landing's
-screenshots) walks this set through the real `MainActivity`, and the debug
-`HomeFixture` reads it too. `RecordbookPreviewFixtures` and the profile
-previews of `:shared:feature-social` keep their own edge cases for the visual
-tests.
+screenshots) walks this set through the real `MainActivity`.
+`RecordbookPreviewSamples` and the profile previews of `:shared:feature-social`
+keep their own edge cases for the screenshot tests.
 
 ## iOS
 

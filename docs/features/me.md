@@ -11,16 +11,16 @@ custom-services opt-in and `SocialRepository`. The social screens it opens are i
 
 The screen is Compose in `:shared:feature-account`:
 `feature/me/ui/MeScreen.kt` is the stateless `MeScreen(state, showDebugTools,
-actions)` and `feature/me/ui/MeRoute.kt` obtains `MeViewModel` from Koin and
-wires sign-out and the link snackbar. `MeFragment` (`app/`) is
-`navigation_me` (`AppRoot.ME`); it hosts `MeRoute` through `itmoComposeView`,
-passes `showDebugTools = BuildConfig.DEBUG` and performs the platform
-`MeActions`: `openScreen`/`openWebLogin`, the share sheet with
-`ShareLinkFactory` and the project links. iOS hosts the same `MeRoute` in a
-`ComposeUIViewController`. The first frame already shows the cached state, so
+actions)` and `feature/me/ui/MeRoute.kt` takes `MeViewModel` (registered with `viewModelOf`
+in `feature/me/di/MeModule.kt`) and wires sign-out and the link snackbar. On
+Android the profile tab's root is `MeTabRoot`
+(`shell/entries/AccountEntries.kt`): it passes `showDebugTools =
+BuildConfig.DEBUG` and the platform `MeActions`, which open the keys through
+the navigator and share and open the project links through the helpers of
+`feature/me/ui/MeHost.kt` with `ShareLinkFactory`. iOS hosts the same
+`MeRoute` in a `ComposeUIViewController`. The first frame already shows the cached state, so
 a recreated tab never shows a blank card. Every row is one target, at least
-48 dp high, and one screen-reader focus stop; the root stays one transition
-group under an overlay's back gesture.
+48 dp high, and one screen-reader focus stop.
 
 Header:
 
@@ -38,11 +38,10 @@ Group «Друзья», while the opt-in is on:
 - «Друзья» with `MeFriendsSummary`: `Loading` «Загружаем…», `Error` «Не
   загрузились», `Content` «Пока никого» or the count, and a badge with the
   number of incoming requests when there are any (TalkBack «Входящих заявок:
-  N»). Opens `AppScreen.FRIENDS`.
-- «Найти людей» / «По имени в My ITMO» opens `AppScreen.USER_SEARCH`.
+  N»). Opens `AppRoutes.Friends`.
+- «Найти людей» / «По имени в My ITMO» opens `AppRoutes.UserSearch`.
 - «Приватность» / «Кто видит расписание, спорт и друзей» opens
-  `AppScreen.SETTINGS` on the privacy page (argument `settings_page` =
-  `PRIVACY`, mirrored as a literal because features never import each other).
+  `AppRoutes.Settings` on the privacy page (`page` = `PRIVACY`).
 
 With the opt-in off (`MeFriendsSummary.Disabled`) the three rows are hidden and
 one row «Нет подключения к ITMO.Widgets» / «Друзья, заявки и приватность
@@ -79,16 +78,15 @@ switching it on in settings fills the card without reopening the tab.
 
 ## Tests
 
-JVM: `MeViewModelTest`, `MeModuleTest` and the host test `MeScreenTest` (48 dp
-rows, one target per row, the badge's description, the web sign-in row and
-its divider only with the connection, the confirmation and the disabled
-sign-out). Goldens: the five `MeScreen` previews in
-`feature/me/ui/MeScreenPreviews.kt`, in four appearances, through
-`AccountScreenshotTest`. Instrumented: `ProfileBackMotionTest` and
-`MainNavigationTest` open the tab in `SettingsNavigationTestActivity` (debug)
-and click `MeTestTags.SETTINGS_ROW` through its semantics. The store frame
-`10-me` sets `MeFragment.releaseLook`, so a debug build shows the release
-screen without the developer tools row. `MeRulesTest` keeps the row debug only.
+JVM: `MeViewModelTest`, `MeModuleTest` and the Compose test `MeScreenTest`
+(`commonTest`; 48 dp rows, one target per row, the badge's description, the
+web sign-in row and its divider only with the connection, the confirmation and
+the disabled sign-out). `AccountEntriesTest` (`app/src/test`) opens the tab
+root's routes from its rows, `MeTestTags.SETTINGS_ROW` among them. Goldens:
+the five `MeScreen` previews in `feature/me/ui/MeScreenPreviews.kt`, in four
+appearances, through `AccountScreenshotTest`. `StoreScreenshotCapture` sets
+`MeHost.releaseLook`, so a debug build shows the release screen without the
+developer tools row.
 
 ## iOS
 

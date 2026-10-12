@@ -8,18 +8,17 @@ sign-in in [First-run flow](onboarding.md).
 
 ## Screen
 
-`AuthFragment` is `auth`, the start destination of `main_nav_graph`.
-`MainActivity` returns to it for `SignedOut`, `SigningOut` and
-`ReauthenticationRequired`: it dismisses overlays, hides the bottom bar and
-resets the graph unless `auth` is already shown.
+The sign-in screen is the gate key `AppRoutes.Auth`. `ShellGate.surface`
+shows it for `SignedOut`, `SigningOut` and `ReauthenticationRequired`: the
+overlays, sheets and dialogs are gone and the bottom bar is hidden.
 
 The screen is Compose in `:shared:feature-account`
-(`feature/auth/ui/AuthScreen.kt`, stateless, and `AuthRoute.kt`, which takes
-`AuthViewModel` from Koin). `AuthFragment` hosts the route in
-`itmoComposeView`, launches `LoginActivity` for a result and plays the demo
-confirmation (see [Demo session](demo.md)). Test tags keep the old view ids
-(`AuthTestTags`: `auth_logo`, `auth_content`, `auth_unofficial_notice`,
-`itmo_id_login_button`, ...).
+(`feature/auth/ui/AuthScreen.kt`, stateless, and `AuthRoute.kt`).
+`AccountEntries.kt` registers the key: it passes `AuthViewModel` from Koin
+(`AuthModule.kt`, `viewModelOf`) to `AuthRoute`, launches `LoginActivity` for a
+result and plays the demo confirmation (see [Demo session](demo.md)). Its test tags
+are in `AuthTestTags` (`auth_logo`, `auth_content`,
+`auth_unofficial_notice`, `itmo_id_login_button`, ...).
 
 `AuthUiState` follows `SessionRepository.state`:
 

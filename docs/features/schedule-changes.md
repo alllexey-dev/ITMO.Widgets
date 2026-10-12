@@ -35,8 +35,9 @@ The code is part of the schedule feature ([modules](schedule.md#modules)).
 - `ScheduleChangeTracking` (`core/schedule`, implemented by
   `DefaultScheduleChangeTracking`) keeps the work in line with the session and
   the switch: `syncWork()` enqueues it with a refresh token and the switch on
-  and cancels it otherwise. It runs on application start (`@ApplicationScope`),
-  after sign-in and when the switch changes; `stopWork()` runs before a session
+  and cancels it otherwise. It runs on application start
+  (`ItmoWidgetsApplication`, for every `BackgroundCheck` of the graph), after
+  sign-in and when the switch changes; `stopWork()` runs before a session
   change. Cancelling removes both the periodic and the one-off work.
 - The check asks `MyItmoApi.getPersonalSchedule(today, today + 7)` itself,
   8 days with Moscow dates from `AcademicTimeProvider`, like
@@ -177,9 +178,12 @@ named change's headline (`Физика — отменена: вт, 8 сентя�
 
 ## History
 
-`ScheduleChangesFragment` is the `SCHEDULE_CHANGES` overlay with the contextual
-header (back, `Изменения в расписании`), opened from the notification and the
-home card.
+The history is the key `AppRoutes.ScheduleChanges` (`ScheduleChangesRoute`
+with `ScheduleChangesViewModel`, registered in `ScheduleEntries.kt`) above the
+schedule tab, with the contextual header (back, `Изменения в расписании`). The
+home card opens it, and the notification sends
+`ACTION_OPEN_SCHEDULE_CHANGES`, which `EntryRouteParser` turns into the
+schedule tab with the history above it.
 
 - Rows are grouped by the Moscow day of detection, newest first; within a day
   newest first, then by the soonest lesson. Day titles are `Сегодня`, `Вчера`
@@ -204,7 +208,7 @@ home card.
   marked read (`markAllRead()`, which also removes the notification). The rows
   that were unread when shown keep the dot for the life of the screen; their
   ids are kept in `SavedStateHandle`, so recreation keeps them. A screen hidden
-  under another overlay marks nothing.
+  under another screen marks nothing.
 
 ## Debug tools
 
@@ -231,7 +235,7 @@ marks, the block and the flow; `ScheduleChangesScreenTest` and
 `ScheduleChangesRouteTest` (`:shared:feature-schedule`) the history rows and
 the read mark on start, the `ScheduleChangesScreen_*` goldens its look.
 Instrumented: `ScheduleChangesWorkTest` (the
-app's `WorkManager` through the debug `ScheduleChangesTestEntryPoint`),
+app's `WorkManager` and scheduler, read through `TestGraph`),
 `ScheduleChangesNotificationTest`; the marks and the block are covered by the
 `ScheduleList*` and `LessonDetailsContent_change` goldens. They use synthetic `pairId`s and
 dates and restore the WorkManager state they found.
