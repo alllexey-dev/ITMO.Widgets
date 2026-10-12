@@ -25,7 +25,8 @@ opt-in and `SocialRepository`. Social screens: [Social](social.md); web sign-in:
 - The social rows (`MeFriendsSummary`) show only while the opt-in is on;
   `MeFriendsSummary.Disabled` replaces them with one row to settings. Privacy
   opens `AppRoutes.Settings` with `page` = `PRIVACY`.
-- `Вход на сайт` shows only while the opt-in is on (`webLoginAvailable`); the
+- `Подключить устройство` ([web sign-in and pairing](web-login.md)) shows only while the opt-in is on
+  (`webLoginAvailable`); the
   demo refuses it. Developer tools only in debug builds ([Debug tools](debug.md)).
 - `StoreScreenshotCapture` sets `MeHost.releaseLook`, so a debug build shows the
   release screen without the developer tools row.

@@ -1,6 +1,8 @@
-# Web sign-in
+# Web sign-in and device pairing
 
 Product behaviour: [Как это работает: веб-версия](../how-it-works/web.md).
+The profile row and the sheet are called `Подключить устройство`: the same
+sheet signs a browser in and pairs a device ([Device pairing](#device-pairing)).
 
 The web version at `https://<domain>/app/` has no password form: a browser
 signs in when the signed-in app approves its eight-character code (typed or
@@ -11,7 +13,7 @@ parser, data, view model and sheet. Backend contract:
 
 ## Entry point
 
-- `Вход на сайт` on the profile tab is shown only while
+- `Подключить устройство` on the profile tab is shown only while
   `Подключение к ITMO.Widgets` is on (`MeViewModel` maps
   `CustomServicesRepository.observeEnabled()` to
   `MeUiState.webLoginAvailable`), so there is never a row that can only fail.
@@ -44,8 +46,10 @@ parser, data, view model and sheet. Backend contract:
 ## States
 
 `WebLoginViewModel` exposes one `WebLoginUiState`: `Input(code, error)`,
-`Checking(code)`, `Confirm(code, preview, browser, requestedAt, approving)`,
-`Done`, `Error(text, code)`.
+`Checking(code)`, `Confirm(code, kind, title, name, client, requestedAt,
+access, scopes, scopesEditable, sharedSession, verification, warning, approve,
+approving)`, `Unlocking`, `Rotating`, `Sending`, `Done(text)`,
+`Error(text, code)`.
 
 - `requestedAt` uses the academic clock's zone; the field value lives in
   `SavedStateHandle`.
@@ -95,10 +99,42 @@ cookie) is never called by the app.
 
 ## Device pairing
 
-Groundwork for «Подключить устройство» (connect a self-hosted agent or a site
-with ITMO access); nothing reaches Backend yet. The sheet recognises a pairing
-link (scanned, pasted, or from an App Link) and answers `Подключение устройств
-появится в следующей версии`. In `feature/weblogin/domain`:
+The same sheet connects a self-hosted agent: a link
+`https://<host>/pair#v1.<CODE>.<pk>.<s>` from the scanner, a pasted link or an
+App Link (`PairLink`, our two hosts only). Backend contract:
+`../itmo-widgets-backend/docs/contracts/pairing.md`; design:
+`vibe/plans/session-handoff-plan.md`.
+
+1. `PairingRepository.open(code, link)` calls `POST
+   /api/users/me/pair/{code}/open` and shows the card only when Backend's
+   `keyCommitment` equals `PairingCrypto.keyCommitment(pk, s)` of the link
+   (`QR не совпадает с запросом` otherwise). The key never comes from Backend:
+   a typed code of a keyed kind is refused with `Для этого устройства
+   отсканируйте QR или вставьте ссылку` (the old web-login route answers 404
+   for such a code, then `open` names the kind).
+2. `Confirm` shows the kind's title (`Свой клиент (сервер)`, `Новая сессия для
+   своего клиента`), the device's own name (`название задаёт само
+   устройство`), its version, the time, `Получит полный доступ к My ITMO`, the
+   permissions (switches `Спорт`, `Друзья`, `Расписание` for a new agent,
+   read-only for an agent session), the shared-session notice, `Код проверки
+   482 913 — сверьте с экраном устройства` and `Подключайте только своё
+   устройство`. `Отмена` rejects the challenge.
+3. `Подключить`: `Unlocking` (the screen lock), `Rotating` (`Входим…`, the
+   hand-off), `Sending` (`Отправляем…`, `POST .../{challengeId}/approve` with
+   the sealed bundle and, for a new agent, the scopes), then `Done`
+   (`Готово — проверьте экран устройства`).
+
+| Situation | Result |
+|---|---|
+| Commitment differs | `QR не совпадает с запросом`, no retry |
+| `WEB_ITMO` or a kind this version does not know | `Обновите приложение…` |
+| 403 `permission_denied` (agent access off) | `Свои клиенты пока недоступны…` |
+| 409 (five agents) | `Подключено слишком много устройств…` |
+| Screen lock cancelled / not set up | back to the card / `Включите блокировку экрана…` |
+| Rotation rejected | `Войдите в приложение заново`, nothing sent |
+| Network | common text; `Повторить` opens the link again |
+
+The link stays in the view model's memory; the saved state never holds it.
 
 - `PairingCrypto`: the key commitment `SHA-256("iw-pair-commit-v1" || pk || s)`,
   the HPKE `info` (`"itmo-widgets pair v1" || 0 || challengeId || kind || 0 ||
@@ -106,22 +142,39 @@ link (scanned, pasted, or from an App Link) and answers `Подключение 
   `SHA-256("iw-pair-sas-v1" || challengeId || pk || s)` modulo 10^6).
 - `PairingSealer.sealBundle(link, bundle)`: the `PairingBundle` JSON (`v`,
   `challengeId`, `kind`, `isu`, `refreshToken`, `refreshExpiresAt`,
-  `issuedAt`, instants as ISO-8601) sealed with HPKE base mode
-  DHKEM(X25519, HKDF-SHA256) / HKDF-SHA256 / ChaCha20-Poly1305, empty AAD, as
-  `base64url(enc || ciphertext)`, at most 16 KiB. `HpkeSender` is Tink
-  (`TinkHpkeSender`, `NO_PREFIX`) on Android and CryptoKit `HPKE.Sender`
-  through `PairingHost` on iOS.
-- `HandoffSession` (`TokenManagerHandoffSession`): one `forceRefresh` of
-  MyItmoApi's `TokenManager` keeps the new tokens as the phone's session and
-  returns the previous refresh token, never stored anywhere; the demo session
-  is refused.
-- `PairingHandoff.seal`: `DeviceUnlock` first (`BiometricDeviceUnlock` with
-  `BIOMETRIC_WEAK | DEVICE_CREDENTIAL` on Android, LocalAuthentication
-  `deviceOwnerAuthentication` on iOS), then the hand-off, then the seal; a
-  cancelled or missing screen lock rotates nothing.
+  `issuedAt`) sealed with HPKE base mode DHKEM(X25519, HKDF-SHA256) /
+  HKDF-SHA256 / ChaCha20-Poly1305, empty AAD, as `base64url(enc ||
+  ciphertext)`, at most 16 KiB. `HpkeSender` is Tink (`TinkHpkeSender`,
+  `NO_PREFIX`) on Android and CryptoKit `HPKE.Sender` through `PairingHost` on
+  iOS.
+- `HandoffSession` (`TokenManagerHandoffSession`): one `forceRefresh` keeps
+  the new tokens as the phone's session and returns the previous refresh
+  token, never stored anywhere; the demo session is refused.
+- `PairingHandoff.seal`: `DeviceUnlock` first (`BiometricDeviceUnlock` on the
+  activity on Android, `IosDeviceUnlock` on iOS), then the hand-off, then the
+  seal with the signed-in ISU; a cancelled or missing screen lock rotates
+  nothing.
 - Test vectors: `PairingVectors` (commonTest) and `PairingTests.swift` share
-  one bundle sealed by CryptoKit and one sealed by Tink; each platform opens
-  the other's, and iOS checks RFC 9180 A.2.
+  one bundle sealed by CryptoKit and one sealed by Tink; `AgentPairingVectorsTest`
+  pins the commitment, verification code and `info` the Go agent
+  (`itmo-widgets-agent`, `internal/pair`) computes for the same inputs, and a
+  bundle its suite sealed; the agent's `Target.Open` opened both phone vectors.
+
+## Connected devices
+
+`Подключённые устройства` (`AppRoutes.Connections`, `ConnectionsViewModel`)
+opens from the sheet, from Settings (`Доступ`) and from a new-connection push.
+`GET /api/users/me/connections` lists web sessions and agents with the kind
+icon, the name (an agent's own, a browser's description), `Подключено <date>`,
+the last activity and the `Общая сессия My ITMO` badge. `Отключить` asks first:
+`POST /api/users/me/connections/{id}/revoke` ends Backend access at once; for
+a device with the shared session the dialog says that the device deletes the
+ITMO session itself when it next calls, and only an ITMO.ID sign-out ends it
+otherwise (which also signs the phone out).
+
+Backend pushes `DEVICE_CONNECTED_PAYLOAD` after every connection and
+`SPORT_AGENT_BOOKED_PAYLOAD` when an agent booked a lesson
+([notifications](notifications.md)).
 
 ## iOS
 
