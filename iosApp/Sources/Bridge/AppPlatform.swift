@@ -21,12 +21,18 @@ final class AppPlatform: NSObject, IosPlatform {
         return top
     }
 
-    func clearWebsiteData(completion: @escaping () -> Void) {
+    /// WebKit's removal of every website record. Unit tests that sign out through the app's graph replace it: on a CI
+    /// simulator the real call also deletes Screen Time web history, which hangs for minutes.
+    static var removeWebsiteData: (@escaping () -> Void) -> Void = { completion in
         WKWebsiteDataStore.default().removeData(
             ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
             modifiedSince: .distantPast,
             completionHandler: completion
         )
+    }
+
+    func clearWebsiteData(completion: @escaping () -> Void) {
+        Self.removeWebsiteData(completion)
     }
 
     func webKitCookies(completion: @escaping ([WebKitCookie]) -> Void) {
