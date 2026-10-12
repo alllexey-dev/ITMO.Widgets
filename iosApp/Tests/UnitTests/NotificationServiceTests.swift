@@ -108,6 +108,25 @@ final class NotificationServiceTests: XCTestCase {
         XCTAssertTrue(transport.requests.isEmpty)
     }
 
+    func testANewConnectionPassesThroughWithBackendsLocKeys() async throws {
+        let content = try push("DEVICE_CONNECTED_PAYLOAD")
+        let shown = await handler().handle(content)
+        XCTAssertTrue(shown === content)
+        XCTAssertEqual(
+            Bundle.main.localizedString(forKey: "notification_device_connected_title", value: nil, table: nil),
+            "Подключено новое устройство"
+        )
+        XCTAssertTrue(transport.requests.isEmpty)
+    }
+
+    func testAnAgentsBookingNamesTheAgentAndBooksNothing() async throws {
+        let shown = await handler().handle(try push("SPORT_AGENT_BOOKED_PAYLOAD"))
+        XCTAssertEqual(shown.title, "Вы записаны на спорт")
+        XCTAssertEqual(shown.body, "Плавание, 7 окт., 10:00 — записал «nas»")
+        XCTAssertEqual(shown.threadIdentifier, "sport")
+        XCTAssertTrue(transport.requests.isEmpty)
+    }
+
     func testAPushForAnotherAccountIsDropped() async throws {
         let other = SessionFile(isu: 100_002, demo: false, alertsAllowed: true, servicesEnabled: true)
         let shown = await handler(session: other)

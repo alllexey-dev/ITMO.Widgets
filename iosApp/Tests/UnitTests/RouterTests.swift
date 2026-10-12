@@ -341,6 +341,7 @@ final class RouterTests: XCTestCase {
         router.sessionChanged(ShellSessionState.demo.sessionState, onboarding: .passed)
         XCTAssertEqual(router.open(AppRoutes.MyItmoWeb.shared), .refusedInDemo)
         XCTAssertEqual(router.open(AppRoutes.WebLogin(code: nil)), .refusedInDemo)
+        XCTAssertEqual(router.open(AppRoutes.Connections.shared), .refusedInDemo)
 
         router.sessionChanged(signedIn, onboarding: .passed)
         XCTAssertEqual(router.open(AppRoutes.MyItmoWeb.shared), .opened)
@@ -523,6 +524,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.FriendSelector(selectedIsu: 0), .composeSheet),
             (AppRoutes.SheetScores(args: scores), .composeSheet),
             (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),
+            (AppRoutes.Connections.shared, .swiftUI),
             (AppRoutes.ReviewEditor(args: teacher), .composeSheet),
             (AppRoutes.SubjectLinks(args: links), .composeSheet),
             (AppRoutes.LinkEditor(args: links, linkId: nil), .composeSheet),
