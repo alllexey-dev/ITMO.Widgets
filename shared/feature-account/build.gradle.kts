@@ -19,6 +19,11 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.jetbrains.lifecycle.runtime.compose)
         }
+        // Pairing: Tink seals to the device's key (CryptoKit on iOS); BiometricPrompt asks for the screen lock.
+        androidMain.dependencies {
+            implementation(libs.tink.android)
+            implementation(libs.androidx.biometric)
+        }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
         }

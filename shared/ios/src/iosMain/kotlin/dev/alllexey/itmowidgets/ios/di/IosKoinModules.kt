@@ -38,6 +38,7 @@ import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppStoreListing
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
+import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginIosModule
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import dev.alllexey.itmowidgets.ios.IosPlatform
 import org.koin.core.module.Module
@@ -65,8 +66,9 @@ object IosKoinModules {
         recordbookModule, recordbookIosModule(platform),
         // The schedule widgets' App Group timeline and the schedule widget refresh port.
         scheduleWidgetIosModule,
-        // The web sign-in sheet and the update offer on their iOS ports.
-        webLoginDataModule, webLoginModule, updateModule, updateIosModule,
+        // The web sign-in sheet, pairing's CryptoKit and LocalAuthentication ports and the update offer on their iOS
+        // ports.
+        webLoginDataModule, webLoginModule, webLoginIosModule(platform), updateModule, updateIosModule,
         // The home feed with the hints over WidgetKit and UNUserNotificationCenter.
         homeModule, homeIosModule(PlacedWidgetKinds { completion -> platform.installedWidgetKinds(completion) }),
         // The notifier, the app refresh task and the schedule change check's iOS ports and step; the runner

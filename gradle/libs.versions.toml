@@ -67,6 +67,9 @@ playAppUpdate = "2.1.0"
 okhttp = "5.5.0"
 mockwebserver = "5.5.0"
 lifecycle = "2.11.0"
+# Device pairing: HPKE sender (Android) and the screen-lock check before an ITMO session leaves the phone.
+tink = "1.23.0"
+biometric = "1.1.0"
 
 [libraries]
 # Gradle plugins on build-logic's classpath (the only place they are versioned).
@@ -181,6 +184,8 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-savedstate = { module = "androidx.lifecycle:lifecycle-viewmodel-savedstate", version.ref = "lifecycle" }
+tink-android = { module = "com.google.crypto.tink:tink-android", version.ref = "tink" }
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 
 [plugins]
 # Only plugins that are not on build-logic's classpath carry a version here. AGP, Kotlin (multiplatform,

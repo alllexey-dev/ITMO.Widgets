@@ -4,8 +4,8 @@ import WebKit
 import WidgetKit
 
 /// The app's `IosPlatform`: what the Kotlin graph needs from UIKit, WidgetKit and WebKit, the BARS
-/// session's cookies and hidden view included. `App.init` passes it to `startKoinIos`; Kotlin calls it on
-/// the main thread.
+/// session's cookies and hidden view included, and pairing's CryptoKit HPKE and LocalAuthentication.
+/// `App.init` passes it to `startKoinIos`; Kotlin calls it on the main thread.
 final class AppPlatform: NSObject, IosPlatform {
     func reload(kind: String) {
         WidgetCenter.shared.reloadTimelines(ofKind: kind)
@@ -39,6 +39,18 @@ final class AppPlatform: NSObject, IosPlatform {
         completion: @escaping (String?) -> Void
     ) -> any BarsWebLoad {
         HiddenBarsBrowser.load(url: url, navigation: navigation, completion: completion)
+    }
+
+    func hpkeSeal(recipientPublicKey: Data, info: Data, plaintext: Data) -> Data? {
+        try? PairingHpke.seal(recipientPublicKey: recipientPublicKey, info: info, plaintext: plaintext)
+    }
+
+    func canUnlockDevice() -> Bool {
+        DeviceUnlocker.canUnlock()
+    }
+
+    func unlockDevice(reason: String, completion: @escaping (KotlinBoolean) -> Void) {
+        DeviceUnlocker.unlock(reason: reason) { completion(KotlinBoolean(bool: $0)) }
     }
 
     func installedWidgetKinds(completion: @escaping (Set<String>) -> Void) {

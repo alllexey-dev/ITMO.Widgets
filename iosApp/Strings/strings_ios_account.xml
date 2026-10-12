@@ -5,4 +5,6 @@
     <string name="ios_web_login_camera_usage">Камера нужна, чтобы сканировать QR для входа на сайт</string>
     <!-- Under the camera of the scanner. -->
     <string name="ios_web_login_scan_hint">Наведите камеру на QR на странице входа</string>
+    <!-- NSFaceIDUsageDescription (InfoPlist row): Face ID confirms that the owner pairs a device. -->
+    <string name="ios_pair_face_id_usage">Face ID подтверждает, что устройство подключаете вы</string>
 </resources>

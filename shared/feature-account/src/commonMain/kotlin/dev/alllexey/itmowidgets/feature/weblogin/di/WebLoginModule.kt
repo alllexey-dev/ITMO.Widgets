@@ -1,7 +1,11 @@
 package dev.alllexey.itmowidgets.feature.weblogin.di
 
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
+import dev.alllexey.itmowidgets.feature.weblogin.data.TokenManagerHandoffSession
 import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
+import dev.alllexey.itmowidgets.feature.weblogin.domain.HandoffSession
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingHandoff
+import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingSealer
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -11,10 +15,14 @@ import org.koin.dsl.module
 /**
  * The web sign-in repository over Core 2.0's users area; the gate, the demo switch and the dispatchers come from the
  * platform. A separate module from [webLoginModule], so a debug fixture that reloads the sheet never builds a second
- * repository.
+ * repository. Pairing's hand-off and seal take MyItmoApi's client and token storage, the clock and the platform's
+ * `HpkeSender` (Tink on Android, CryptoKit on iOS).
  */
 val webLoginDataModule = module {
     singleOf(::WebLoginRepositoryImpl) { bind<WebLoginRepository>() }
+    singleOf(::TokenManagerHandoffSession) { bind<HandoffSession>() }
+    singleOf(::PairingSealer)
+    singleOf(::PairingHandoff)
 }
 
 /**

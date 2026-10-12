@@ -28,6 +28,8 @@
 	<string>$(APP_STORE_ID)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Камера нужна, чтобы сканировать QR для входа на сайт</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID подтверждает, что устройство подключаете вы</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Чтобы записывать пары в календарь «ITMO.Widgets» и обновлять их, когда меняется расписание</string>
 	<key>CFBundleDisplayName</key>
