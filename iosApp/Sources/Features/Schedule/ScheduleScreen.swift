@@ -366,6 +366,9 @@ private struct ScheduleFeedList: View {
                 let index = Int(days.indexOf(date: jump.date))
                 if index >= 0, let target = items.first(where: { "\($0.date)" == "\(days.rows[index].date)" }) {
                     proxy.scrollTo(target.id, anchor: .top)
+                    // The lazy rows above are only estimated on the first pass; once laid out the second lands exactly.
+                    try? await Task.sleep(for: .milliseconds(100))
+                    proxy.scrollTo(target.id, anchor: .top)
                 }
                 actions.jumped(jump.id)
             }
@@ -391,9 +394,11 @@ private struct ScheduleFeedList: View {
                 .accessibilityAddTraits(.isHeader)
             if header.today {
                 ItmoStatusPill(pill: ItmoPill(text: AppStrings.string("schedule_today_pill"), tone: .primary))
+                    .fixedSize()
             }
             Spacer(minLength: ItmoSpacing.compact)
             Text(verbatim: header.count.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary).monospacedDigit()
+                .fixedSize()
         }
         .padding(.horizontal, ItmoKit.margin)
         .padding(.top, ItmoSpacing.content)

@@ -52,7 +52,7 @@ object ScheduleSamples {
     private val Monday = LocalDate(2026, 9, 7)
     private val Now = LocalDateTime(Monday, LocalTime(12, 22))
     private val CachedAt = Instant.parse("2026-09-07T08:44:00Z")
-    private val Window = LocalDate(2026, 8, 31)..LocalDate(2026, 9, 27)
+    private val WindowEnd = LocalDate(2026, 9, 27)
 
     private const val Lebedev = "Лебедев Артём Сергеевич"
     private const val Smirnova = "Смирнова Ольга Петровна"
@@ -175,7 +175,7 @@ object ScheduleSamples {
     )
 
     private val known: Set<LocalDate> =
-        generateSequence(Window.start) { it.plus(1, DateTimeUnit.DAY) }.takeWhile { it <= LocalDate(2026, 9, 20) }.toSet()
+        generateSequence(LocalDate(2026, 8, 31)) { it.plus(1, DateTimeUnit.DAY) }.takeWhile { it <= LocalDate(2026, 9, 20) }.toSet()
 
     val Polina = SelectedUser(300002, "Егорова Полина", null, "M3204")
 
@@ -188,7 +188,8 @@ object ScheduleSamples {
         error: AppError? = null,
         now: LocalDateTime = Now,
     ) = ScheduleFeedPresenter.state(
-        FeedInput(now, owner, Window, days, known, visible, loading, error, denied = null, refreshing = false, jump = FeedJump(visible, 0)),
+        // The window starts on the shown week, so the jump lands on the first row and the iOS snapshot is exact.
+        FeedInput(now, owner, visible..WindowEnd, days, known, visible, loading, error, denied = null, refreshing = false, jump = FeedJump(visible, 0)),
     )
 
     /** The own feed on today, Monday. */
