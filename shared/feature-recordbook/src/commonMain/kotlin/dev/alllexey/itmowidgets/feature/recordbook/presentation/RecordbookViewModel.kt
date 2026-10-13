@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgra
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,7 +54,6 @@ class RecordbookViewModel(
     private var official: List<RecordbookSubject> = emptyList()
     private var barsData: RecordbookBarsData = RecordbookBarsData.Off
     private var sport: RecordbookSportState? = null
-    private var view: RecordbookView? = null
     private var sourcesId: Long? = null
     private var refreshing = false
     private var refreshError: AppError? = null
@@ -109,15 +109,8 @@ class RecordbookViewModel(
         val selected = RecordbookSelection(program, period)
         if (selection == selected) return
         selection = selected
-        view = null
         sourcesId = null
         load(silent = true)
-    }
-
-    /** `Семестр` or `Сессия`; the choice holds until another period is chosen. */
-    fun selectView(selected: RecordbookView) {
-        view = selected
-        publish()
     }
 
     /** The BARS sign-in finished: BARS is connected in the recordbook from now on and the list loads again. */
@@ -172,7 +165,6 @@ class RecordbookViewModel(
                 refreshing = false
                 return@launch publish()
             }
-            if (selected != selection) view = null
             selection = selected
             val journals = if (barsEnabled) async { bars.getSubjects(selected.period) } else null
             when (val result = repository.getSubjects(selected.program.id, selected.period.semester)) {
@@ -267,7 +259,6 @@ class RecordbookViewModel(
             }.toMap(),
             unread = selected.period.studyHalf()?.let(newsByHalf::get).orEmpty(),
             sheets = sheetTotals(selected),
-            view = view,
             offerHidden = offerHidden,
             sourcesId = sourcesId,
             today = time.today(),
@@ -276,12 +267,12 @@ class RecordbookViewModel(
         return RecordbookPresenter.content(input).copy(refreshing = refreshing, refreshError = refreshError)
     }
 
-    /** Non-empty totals of the connected sheets of the period, by discipline. */
+    /** The connected sheets of the period by discipline, empty cells included: [RecordbookPointsRule] decides. */
     private fun sheetTotals(selected: RecordbookSelection): Map<Long, RecordbookSheetTotal> {
         val periodKey = selected.period.studyHalf()?.periodKey ?: return emptyMap()
-        val byScope = sheetScores.mapNotNull { score ->
-            score.value?.takeIf(String::isNotBlank)?.let { score.scope.key to RecordbookSheetTotal(it, score.updatedAt) }
-        }.toMap()
+        val byScope = sheetScores.associate { score ->
+            score.scope.key to RecordbookSheetTotal(score.value, score.updatedAt, fresh = score.status == SheetStatus.OK)
+        }
         return official.mapNotNull { subject ->
             byScope[ResourceScope(subject.disciplineId, subject.name, periodKey).key]?.let { subject.disciplineId to it }
         }.toMap()

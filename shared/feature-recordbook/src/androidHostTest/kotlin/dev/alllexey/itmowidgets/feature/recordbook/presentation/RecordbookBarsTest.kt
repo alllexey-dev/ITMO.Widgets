@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
@@ -21,6 +22,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.of
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -47,8 +49,9 @@ class RecordbookBarsTest {
     private val bars = FakeBarsRepository().apply { subjects = AppResult.Success(listOf(barsSubject(rate = null))) }
     private val preference = FakeBarsPreference()
     private val marks = FakeMarkTrackingRepository()
+    private val sheets = FakeSheetScoresRepository()
     private fun loaded() = RecordbookViewModel(myItmo, bars, preference, RecordbookSportResolver(FakeSportScoreRepository()),
-        FixedAcademicTime(LocalDate(2026, 9, 7)), marks, FakeSheetScoresRepository()).apply { refresh(RefreshMode.Silent) }
+        FixedAcademicTime(LocalDate(2026, 9, 7)), marks, sheets).apply { refresh(RefreshMode.Silent) }
 
     @Test fun `without BARS the list is complete from My ITMO and offers BARS quietly`() = runTest {
         val vm = loaded(); advanceUntilIdle()
@@ -77,6 +80,25 @@ class RecordbookBarsTest {
         assertEquals(RecordbookStrings.recordbook_source_myitmo, state.row(43).sourceKey)
         assertFalse(state.content.barsOffer)
         assertEquals(barsJournal().planId, (state.row(42).target as RecordbookTarget.Subject).args.barsPlan)
+    }
+
+    @Test fun `an empty BARS journal hides neither a connected sheet nor My ITMO`() = runTest {
+        preference.enabled = true
+        myItmo.subjects = AppResult.Success(listOf(
+            recordbookSubject().copy(rate = null, score = null),
+            recordbookSubject(id = 43L, name = "Другой тестовый предмет").copy(disciplineId = 2, rate = null),
+        ))
+        bars.subjects = AppResult.Success(listOf(
+            barsSubject(score = null, rate = null),
+            barsSubject(name = "Другой тестовый предмет", score = null, rate = null),
+        ))
+        sheets.scores.value = listOf(sheetScore(scope = ResourceScope(1, "Тестовый предмет", "2026-1"), value = "41,5"))
+        val vm = loaded(); advanceUntilIdle()
+        val state = vm.uiState.value
+        assertEquals("41,5", state.row(42).points)
+        assertEquals(RecordbookStrings.recordbook_source_sheet, state.row(42).sourceKey)
+        assertEquals("75", state.row(43).points)
+        assertEquals(RecordbookStrings.recordbook_source_myitmo, state.row(43).sourceKey)
     }
 
     @Test fun `a BARS failure keeps My ITMO values and says so over the list`() = runTest {

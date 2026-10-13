@@ -66,16 +66,20 @@ the action.
 
 ## On the subject page
 
-The connected sheet sits in the hero of `Баллы` with its menu (open, `Изменить итог`, disconnect); while
-the subject is in progress its total is the hero's number (`таблица, в 16:30`). The stored value shows
+The connected sheet sits in the hero of `Баллы` with its menu (open, `Изменить итог`, disconnect); its
+total is the hero's number (`таблица, в 16:30`) by the
+[recordbook's rule](recordbook.md#which-number-is-shown). The stored value shows
 at once and the tab is downloaded on entry and on every pull. Without a connection `Мои баллы из
 таблицы` offers the subject's sheet links.
 
 ## In the recordbook list
 
-`RecordbookViewModel` only collects `SheetScoresRepository.observe()` and never downloads. A connected
-total is the row's number with the source `таблица` while the subject is in progress and has no BARS
-journal (not for PE or a no-show); `Откуда баллы` shows it beside My ITMO and BARS.
+`RecordbookViewModel` only collects `SheetScoresRepository.observe()` and never downloads. Every
+connection of the period goes to the list with its value and whether its last reading succeeded; a total
+is the row's number with the source `таблица` by the
+[recordbook's rule](recordbook.md#which-number-is-shown): over BARS and My ITMO while the subject is in
+progress, behind BARS once a reading failed, never for PE or a no-show. `Откуда баллы` shows it beside My
+ITMO and BARS.
 
 ## Background check of sheets
 

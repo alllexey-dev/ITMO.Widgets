@@ -21,7 +21,6 @@ fun RecordbookRoute(title: String, actions: RecordbookActions, viewModel: Record
             onRefresh = { viewModel.refresh(RefreshMode.Pull) },
             onRetry = { viewModel.refresh(RefreshMode.Force) },
             onSelectPeriod = viewModel::selectPeriod,
-            onSelectView = viewModel::selectView,
             onHideOffer = viewModel::hideBarsOffer,
             onOpenSources = viewModel::openSources,
             onCloseSources = viewModel::closeSources,
