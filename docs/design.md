@@ -162,7 +162,7 @@ group takes 26 pt ([Platform styles](#platform-styles)).
 | `Card.Content.Outlined` | 20 dp, 1 dp `outlineVariant` | Sport lesson and booking cards, debug cards |
 | `Card.Content.Tonal` | 20 dp, `surfaceContainerLow`, no stroke | The AI summary of a teacher's reviews above the reviews |
 | `Card.CompactSummary` | `cardContent` 20 dp | The recordbook summary row |
-| `Card.Summary` | `cardSummary` 28 dp, 20 dp padding | The PE sport score card (`SportScoreCard`) |
+| `Card.Summary` | `cardSummary` 28 dp, 20 dp padding | The sport score card of `Моё` and the formula of `Откуда баллы` (`ScoreCard`, `ItmoCard(hero = true)`) |
 | `Card.Hero` | `cardHero` 28 dp, `surfaceContainer`, no stroke | The subject result and the person on a profile, above the page's connected groups |
 | `Card.SettingsGroup` | 20 dp, no stroke, inner dividers | One card per settings or profile group, never per row (the kit's `SettingsGroup`) |
 | `Card.ScheduleDay` | `scheduleDay` 16 dp, 16 dp between days | A day of lessons with its timeline (`ScheduleDayCard`) |
@@ -303,15 +303,13 @@ description and optional action: the kit's `ContentState` and
   shows the end state at once). Components move with springs from
   `MotionScheme.standard()` (`ItmoTheme.motion.scheme`), hero moments with
   `ItmoTheme.heroMotionScheme`; the few fixed durations come from
-  `ItmoTheme.motion`. The sport week strip and the score card's status move on
-  springs (standard scheme; the status on the hero scheme); the sport score
-  ring and its counters keep a 700 ms fill. A colour that appears or
+  `ItmoTheme.motion`. A colour that appears or
   disappears fades its own alpha; never animate a colour to or from
   `Color.Transparent`, which is transparent black and greys the colour half
-  way. Do not animate unchanged text or flash the screen on refresh. Sport
-  tabs switch by tap and pager gesture; the sport date strip moves only with
-  its arrows; the month label
-  animates only when the month changes.
+  way. Do not animate unchanged text or flash the screen on refresh. `Моё` and
+  `Запись` of sport switch by their `SegmentedChoice` only; the sport week
+  strip pages by weeks (`tabSwipeHandover` is
+  left over from the tab swipe).
 - Past schedule days fade their card content once to 0.72 (`ScheduleDayCard`);
   today and future days 1.0; inner lesson rows get no second alpha layer.
 - Schedule timeline markers: a hollow neutral circle for a lesson not yet
@@ -480,14 +478,16 @@ screens that have not moved yet.
 | `ItmoCard`, `IconTile` | One topic per card (`cardContent`), a tonal card, the one hero (`cardHero`); an icon in a tone's tile |
 | `StatusPill`, `PillSpec` | `идёт`, `далее`, `изменена`, `отменена`, `очередь 2 из 5`, `записаны`, `онлайн`; `solid` for `идёт` |
 | `SegmentedChoice` | The one choice pattern for two to four options and in-screen tabs: connected toggle buttons, a check on the chosen one up to three options |
-| `ListGroup`, `ListRow`, `SwitchListRow`, `ListGroupNote` | Connected groups of rows: icon tile or avatar, title, subtitle, count, value, accessory, chevron, destructive; a switch row; a caption |
+| `ListGroup`, `ListRow`, `SwitchListRow`, `ListGroupNote` | Connected groups of rows: icon tile or avatar, title, subtitle, lines below it, count, value, accessory, chevron, destructive; a switch row; a caption |
 | `GateCard`, `ActionCard`, `LockNote`, `StaleContent` | Gated (what, why, one fix), worth doing, locked without a fix, old data dimmed under its date; empty and error stay `ContentState` |
-| `LessonView`, `LessonCard` | One lesson outside a day list: subject; `тип, преподаватель`; `аудитория, корпус` (none online); note; pills; friends |
+| `LessonView`, `LessonCard` | One lesson outside a day list: subject; `тип, преподаватель`; `аудитория, корпус` (none online); note; pills; friends; with `onClick` the card opens the lesson |
 | `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary`, the `сейчас` marker, `Окно 2 ч 10 мин` rows, a change note under a lesson; with `onLessonClick` each lesson is a target |
 | `toLessonView`, `toTimelineRows`, `lessonTypeAccent` | The shared lesson presentation (`core/lesson`) drawn by the kit: texts resolved, pills toned (`идёт` solid `Primary`, `далее` `Neutral`, `изменена` and `очередь` `Warning`, `отменена` `Error`, `записаны` `Success`, `онлайн` `Neutral` with the camera), lesson types coloured |
 | `SectionHeader`, `TextTile` | A section's title with a neutral count at the end; a short text (`+9`) in a tone's tile, the size of an `IconTile` |
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
 | `VotePill` | The votes of a link: ▲ N ▼, the viewer's own vote in `primary`, only the score when voting is not allowed |
+| `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a short bar and `22 из 24` in a tone |
+| `WeekStrip`, `WeekStripDay` | One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on `primary`; a pager of these pages by weeks |
 
 ## Platform styles
 
@@ -603,6 +603,9 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   gap rows for an hour or more, the change note under the lesson. A single
   lesson is `ItmoLessonCard`. Both say subject; type, teacher; room, building
   (no line when online); the note; pills.
+- Filters (`ItmoFilters.swift`): `ItmoSearchField` (in the content, with a trailing action and its badge),
+  `ItmoChips`, `ItmoWeekStrip` (a paging scroll view of them pages by weeks), `ItmoSwitchRow` (a group's switch row)
+  and `ItmoOccupancy`, the twins of Android's kit.
 - Numbers (`ItmoScores.swift`): `ItmoValueWithSource` (a number over its quiet source), `ItmoPointsMeter`,
   `ItmoSportRing`, `ItmoGradeScale` (the hero's 100-point bar with the grade ticks) and `ItmoVotePill`, the same
   pieces as Android's kit.
@@ -638,8 +641,7 @@ wrappers only; a new screen follows the rules below.
   - the lesson in progress on home, the home flow's second hero: its elapsed
     share is `ItmoWavyProgress`; every other schedule row keeps plain type and
     no progress;
-  - the sport score card: the ring keeps its 700 ms fill, the status chip grows
-    in on the hero springs (`SportScoreCard`);
+  - the sport score card of `Моё`: the ring of visits and the counted bonus;
   - the subject page's hero card: the points in `displayMedium` over the
     grade scale;
   - the person profile hero: `ItmoHeroAvatar` under the nine-sided cookie and
@@ -666,8 +668,8 @@ wrappers only; a new screen follows the rules below.
   switch) keeps `ItmoActivityIndicator`. First loads keep the skeleton.
   Determinate progress in dense rows (recordbook scores, the people search
   load-more edge, the My ITMO page load) stays a flat linear bar.
-- **Tabs and toggles.** Tabs stay only where the content swipes: the sport tabs
-  are secondary tabs over their pager. A segmented toggle becomes
+- **Tabs and toggles.** In-screen tabs are a `SegmentedChoice` (`Моё` /
+  `Запись`, the subject's tabs). A segmented toggle becomes
   `ItmoButtonGroup`, single-select with a selection required (the friend
   picker's scope); so may a single-select chip set of up to four options.
   Filter chips stay chips (link categories, review subjects),
@@ -738,10 +740,11 @@ in [Shared components](#shared-components).
 - Schedule day: `ScheduleDayCard` and the rows of
   `feature/schedule/ui/list/ScheduleRows.kt` in `:shared:feature-schedule`
   (`ui/list/`).
-- Sport cards: the `Мой спорт` score card `SportScoreCard` (`Card.Summary`, the
-  sport flow's hero) and booking card `SportBookingCard`, the `Запись` lesson
-  card `SportLessonCard` and week strip `SportWeekStrip`, the details sheet
-  `SportDetailsSheetContent` (`ui/details/`) in `:shared:feature-sport`.
+- Sport: `SportScreen` in `feature/sport/ui/` of `:shared:feature-sport` on the M3 Expressive kit: `Моё` with the
+  score ring card (the flow's hero), bookings as `LessonCard`s under day labels and the `Мои секции` row; `Запись`
+  with `SearchField`, `FilterChips`, the paging `WeekStrip` and dense `ListRow`s with `OccupancyBar` and one action;
+  `SportLessonSheetContent`, `SportFiltersSheetContent` and `SportJoinSheetContent` on `SheetScaffold`;
+  `SportSectionsScreen` and `SportPointsScreen` on `ItmoDetailScreen`.
 - Settings and profile groups: `SettingsScreen` in `:shared:feature-settings`
   (`feature/settings/ui/SettingsScreen.kt`) and `MeScreen` in
   `:shared:feature-account`, on the kit's `SettingsGroup` and `SettingsRow`.

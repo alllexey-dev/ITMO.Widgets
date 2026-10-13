@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.app.shell.entries
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -29,9 +28,10 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.navigation.SportDetailsOpener
 import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes
-import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
-import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
-import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsSheetTestTags
+import dev.alllexey.itmowidgets.feature.sport.ui.SportPointsTags
+import dev.alllexey.itmowidgets.feature.sport.ui.SportSectionsTags
+import dev.alllexey.itmowidgets.feature.sport.ui.SportSheetTags
+import dev.alllexey.itmowidgets.feature.sport.ui.SportTestTags
 import dev.alllexey.itmowidgets.feature.sport.ui.user.UserSportScreenTestTags
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
@@ -96,8 +96,7 @@ class SportEntriesTest {
 
     @Test
     fun sportTabRootRendersTheSportScreen() {
-        compose.onNodeWithTag(SportScreenTestTags.PAGER).assertIsDisplayed()
-        compose.onNodeWithTag(SportScreenTestTags.tab(SportPage.MY)).assertIsSelected()
+        compose.onNodeWithTag(SportTestTags.MY_LIST).assertIsDisplayed()
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.TabRoot(AppTab.SPORT))).assertDoesNotExist()
     }
 
@@ -105,7 +104,7 @@ class SportEntriesTest {
     fun aSharedLessonRequestOpensTheSignPageOnce() {
         act { apply(EntryRoute(AppTab.SPORT, request = TabRequest.SportLesson(LESSON_ID))) }
 
-        compose.onNodeWithTag(SportScreenTestTags.tab(SportPage.SIGN)).assertIsSelected()
+        compose.onNodeWithTag(SportTestTags.SIGN_LIST).assertIsDisplayed()
         assertNull(navigator.pendingRequest(AppTab.SPORT))
     }
 
@@ -115,7 +114,7 @@ class SportEntriesTest {
         compose.waitForIdle()
         act { open(SportRoutes.details(UPCOMING, SportDetailsOpener.MY)) }
 
-        compose.onNodeWithTag(SportDetailsSheetTestTags.ACTION).performClick()
+        compose.onNodeWithTag(SportSheetTags.LESSON_ACTION).performClick()
         compose.waitForIdle()
 
         assertEquals(emptyList<AppRoute>(), navigator.state.floating)
@@ -128,7 +127,7 @@ class SportEntriesTest {
         compose.waitForIdle()
         act { open(SportRoutes.details(UPCOMING, SportDetailsOpener.SIGN)) }
 
-        compose.onNodeWithTag(SportDetailsSheetTestTags.ACTION).performClick()
+        compose.onNodeWithTag(SportSheetTags.LESSON_ACTION).performClick()
         compose.waitForIdle()
 
         assertEquals(emptyList<AppRoute>(), navigator.state.floating)
@@ -140,7 +139,7 @@ class SportEntriesTest {
         sport.bookings.value = LoadState.Content(listOf(UPCOMING))
         act { open(SportRoutes.details(UPCOMING, SportDetailsOpener.SHELL)) }
 
-        compose.onNodeWithTag(SportDetailsSheetTestTags.ACTION).performClick()
+        compose.onNodeWithTag(SportSheetTags.LESSON_ACTION).performClick()
         compose.waitForIdle()
         assertEquals(listOf<AppRoute>(AppRoutes.CancelBookingConfirm(LESSON_ID)), navigator.state.floating)
 
@@ -169,11 +168,30 @@ class SportEntriesTest {
         // The booking was cancelled elsewhere while the sheet still offers it.
         sport.bookings.value = LoadState.Content(listOf(UPCOMING.copy(signed = false)))
 
-        compose.onNodeWithTag(SportDetailsSheetTestTags.ACTION).performClick()
+        compose.onNodeWithTag(SportSheetTags.LESSON_ACTION).performClick()
         compose.waitForIdle()
 
         assertEquals(emptyList<AppRoute>(), navigator.state.floating)
         assertEquals(emptyList<Long>(), sport.cancelled)
+    }
+
+    @Test
+    fun mySectionsRenderAndBackClosesThem() {
+        act { open(AppRoutes.SportSections) }
+        assertEquals(listOf<AppRoute>(AppRoutes.SportSections), navigator.state.overlays)
+        compose.onNodeWithTag(SportSectionsTags.EMPTY).assertIsDisplayed()
+
+        compose.onNodeWithContentDescription(BACK).performClick()
+        compose.waitForIdle()
+        assertEquals(emptyList<AppRoute>(), navigator.state.overlays)
+    }
+
+    @Test
+    fun theScoreOpensWherePointsComeFrom() {
+        compose.onNodeWithTag(SportTestTags.SCORE).performClick()
+        compose.waitForIdle()
+        assertEquals(listOf<AppRoute>(AppRoutes.SportPoints), navigator.state.overlays)
+        compose.onNodeWithTag(SportPointsTags.CAP).assertIsDisplayed()
     }
 
     @Test

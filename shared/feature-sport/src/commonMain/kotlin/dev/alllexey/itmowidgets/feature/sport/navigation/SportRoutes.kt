@@ -32,14 +32,18 @@ object SportRoutes {
     ) : AppRoute {
         override val kind get() = RouteKind.SHEET
 
-        /** The whole height below the status bar however short the content. */
-        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
+        /** 0.82 of the screen, draggable to full: the places and the action show first, the details below. */
+        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.TALL)
         override val exclusiveGroup get() = AppRoutes.SPORT_DETAILS_GROUP
     }
 
     /** The details sheet of [item] with its actions, whose action goes to [replyTo]. */
     fun details(item: SportCommon, replyTo: SportDetailsOpener, busy: Boolean = false): AppRoute =
-        SportCommonDetails(item.toDetailsArgs(), replyTo, actionsEnabled = true, busy = busy)
+        details(item.toDetailsArgs(), replyTo, busy)
+
+    /** The details sheet of the snapshot [item] a screen made, whose action goes to [replyTo]. */
+    fun details(item: SportCommonDetailsArgs, replyTo: SportDetailsOpener, busy: Boolean = false): AppRoute =
+        SportCommonDetails(item, replyTo, actionsEnabled = true, busy = busy)
 
     /** This module's keys, for `appRouteSerializersModule` and `rememberNav3AppNavigator`. */
     val registration: AppRouteRegistration = {
@@ -50,11 +54,14 @@ object SportRoutes {
 /** Who opened a [SportRoutes.SportCommonDetails] sheet and hears its booking action. */
 @Serializable
 enum class SportDetailsOpener {
-    /** The sport tab's `Мой спорт` page. */
+    /** The sport tab's `Моё`. */
     MY,
 
-    /** The sport tab's `Запись` page. */
+    /** The sport tab's `Запись`. */
     SIGN,
+
+    /** `Мои секции`. */
+    SECTIONS,
 
     /** The shell, for a sport lesson or a pending sport row of the feed or the schedule: it asks before cancelling. */
     SHELL,

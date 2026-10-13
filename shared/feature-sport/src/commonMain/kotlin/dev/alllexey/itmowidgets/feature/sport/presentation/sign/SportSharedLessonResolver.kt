@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -25,14 +26,14 @@ class SportSharedLessonResolver(
      * that has ended or is not in the catalog is unavailable; with [predicted] the id names the prototype, see
      * [findLinked].
      */
-    suspend fun resolve(lessonId: Long, predicted: Boolean): SportSignEvent {
+    suspend fun resolve(lessonId: Long, predicted: Boolean): SportLinkedLesson {
         val state = scheduleRepository.observeSportSchedule()
             .first { it.valueOrNull() != null || it.errorOrNull() != null }
-        val lessons = state.valueOrNull() ?: return SportSignEvent.ShowError(checkNotNull(state.errorOrNull()))
+        val lessons = state.valueOrNull() ?: return SportLinkedLesson.Failed(checkNotNull(state.errorOrNull()))
         val lesson = lessons.findLinked(lessonId, predicted)?.takeIf { it.end > timeProvider.now() }
-            ?: return SportSignEvent.ShowLinkUnavailable
+            ?: return SportLinkedLesson.Unavailable
         linkedKey = lesson.lessonId to lesson.isLessonReal
-        return SportSignEvent.OpenLessonDetails(lesson)
+        return SportLinkedLesson.Found(lesson)
     }
 
     /** The current state in [catalog] of the lesson a link opened, also when filters hide it from the list. */
@@ -40,4 +41,14 @@ class SportSharedLessonResolver(
         val (id, real) = linkedKey?.takeIf { it.first == lessonId } ?: return null
         return catalog.firstOrNull { it.lessonId == id && it.isLessonReal == real }
     }
+}
+
+/** What a shared link names in the catalog. */
+sealed interface SportLinkedLesson {
+    data class Found(val lesson: SportLesson) : SportLinkedLesson
+
+    /** The lesson has passed or is not in the catalog. */
+    data object Unavailable : SportLinkedLesson
+
+    data class Failed(val error: AppError) : SportLinkedLesson
 }

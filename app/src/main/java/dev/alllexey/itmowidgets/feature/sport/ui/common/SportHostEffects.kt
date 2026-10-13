@@ -14,10 +14,10 @@ import dev.alllexey.itmowidgets.core.ui.shareTextIntent
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportShareTarget
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.shareDate
 
 /**
- * What only an Android host does for the sport screens: the `geo:` map, the debug template-lesson notice and the
- * share sheet of a lesson.
+ * What only an Android host does for the sport screens: the `geo:` map and the share sheet of a lesson.
  */
 
 /** The map app at [address]'s building; false when no app handles `geo:`. */
@@ -31,11 +31,6 @@ fun Context.openSportMap(address: String): Boolean = try {
 /** The details sheet's map: without a map app it says `sport_map_unavailable`. */
 fun Context.openSportMapOrSay(address: String) {
     if (!openSportMap(address)) Toast.makeText(this, R.string.sport_map_unavailable, Toast.LENGTH_SHORT).show()
-}
-
-/** A debug template lesson sent nothing to the server. */
-fun Context.showTemplateLessonNotice() {
-    Toast.makeText(this, R.string.debug_sport_lesson_action_disabled, Toast.LENGTH_SHORT).show()
 }
 
 /** The share sheet of [item]'s link ([target] picks the lesson's or the prediction's), with its date and time. */

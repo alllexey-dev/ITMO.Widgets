@@ -105,6 +105,16 @@ new iOS app.
   checkpoints by group with their minimums), `Пары` (teachers as rows with the tone of their reviews in words, the
   lessons ahead) and `Материалы` (chats, links by category with votes, own links with their review state; a gate
   without `Подключение к ITMO.Widgets`). The My ITMO LMS link is no longer shown.
+- Спорт is rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one view model per screen): `Моё`
+  and `Запись` as a segmented choice under the static header instead of the pager. `Моё` has the score ring (it
+  opens `Откуда баллы`), bookings and queues as lesson cards by day (`записаны`, `очередь 2 из 5`, `ждём
+  расписание`) and the entry to `Мои секции`. `Запись` has a search by sport or teacher, chips (`Есть места`,
+  `Вечер`, `Мои секции`, `Друзья`, `Утро`), a week strip that pages by weeks and dense rows with `22 из 24`, friends,
+  a clash with a lesson by name and one action; more filters are in a sheet. The lesson sheet shows the places large,
+  one main action, the conditions and the clash as an orange line that does not block. `Встать в очередь?` is a sheet
+  with the steps, `Пытаться до самого начала` and the queues left. `Мои секции` pins sections on the device and shows
+  their next lessons and the queue limit. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
+  awards by month with the day the credit was reached; no forecast. Another user's sport shows lesson cards.
 - New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
   обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
   палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep

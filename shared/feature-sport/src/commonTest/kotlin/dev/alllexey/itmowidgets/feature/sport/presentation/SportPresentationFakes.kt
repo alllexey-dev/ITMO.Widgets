@@ -1,11 +1,14 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation
 
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
@@ -19,6 +22,8 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportRecurringQueueRepository
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportRecurringRule
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
@@ -28,10 +33,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.job
 import kotlinx.coroutines.test.TestScope
+import kotlinx.datetime.LocalDate
 
 /** Repositories whose refreshes can be held open, so a refresh is observable mid-flight. */
 internal class FakeSportBookingRepository : SportBookingRepository {
@@ -121,8 +128,39 @@ internal class FakeSportActionRepository : SportActionRepository {
     override suspend fun cancelAutoSignEntry(entryId: Long): AppResult<Unit> = result
 }
 
-internal object FakeSportSignPreferences : SportSignPreferencesRepository {
-    override fun observeDisplayOptions(): Flow<SportSignDisplayOptions> = flowOf(SportSignDisplayOptions())
+internal class FakeSportSignPreferences(pinned: Set<SectionName> = emptySet()) : SportSignPreferencesRepository {
+    val pinned = MutableStateFlow(pinned)
+    val display = MutableStateFlow(SportSignDisplayOptions())
+
+    override fun observeDisplayOptions(): Flow<SportSignDisplayOptions> = display
+    override fun observePinnedSections(): Flow<Set<SectionName>> = pinned
+    override suspend fun setPinned(section: SectionName, pinned: Boolean) {
+        this.pinned.value = if (pinned) this.pinned.value + section else this.pinned.value - section
+    }
+}
+
+/** The own timetable as the schedule cache has it. */
+internal class FakeDayLessonsGateway(vararg days: LessonDay) : DayLessonsGateway {
+    val days = MutableStateFlow(days.toList())
+
+    override fun observe(from: LocalDate, to: LocalDate): Flow<List<LessonDay>> = days
+    override suspend fun refresh(from: LocalDate, to: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
+}
+
+/** A Backend that keeps repeat rules, for the screens built before it exists. */
+internal class FakeRecurringQueue(override val available: Boolean = true) : SportRecurringQueueRepository {
+    val rules = MutableStateFlow<List<SportRecurringRule>>(emptyList())
+    var result: AppResult<Unit> = AppResult.Success(Unit)
+
+    override fun observeRules(): Flow<List<SportRecurringRule>> = rules
+    override suspend fun enable(rule: SportRecurringRule): AppResult<Unit> {
+        if (result is AppResult.Success) rules.value = rules.value + rule
+        return result
+    }
+    override suspend fun disable(rule: SportRecurringRule): AppResult<Unit> {
+        if (result is AppResult.Success) rules.value = rules.value - rule
+        return result
+    }
 }
 
 internal fun bookingDelegate(

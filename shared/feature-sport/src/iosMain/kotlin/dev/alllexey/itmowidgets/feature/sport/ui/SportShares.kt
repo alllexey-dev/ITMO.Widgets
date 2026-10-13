@@ -7,7 +7,7 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportShareTarget
-import dev.alllexey.itmowidgets.feature.sport.ui.common.shareDate
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.shareDate
 import dev.alllexey.itmowidgets.shared.feature.sport.Res
 import dev.alllexey.itmowidgets.shared.feature.sport.share_sport_text
 import dev.alllexey.itmowidgets.shared.feature.sport.share_sport_title

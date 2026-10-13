@@ -29,8 +29,8 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
-import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
-import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
+import dev.alllexey.itmowidgets.feature.sport.ui.SportTab
+import dev.alllexey.itmowidgets.feature.sport.ui.SportTestTags
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -178,7 +178,7 @@ class MainActivityDeepLinkTest {
                 awaitRoute(AppTab.SPORT, overlay = null)
                 eventually {
                     onActivity { activity ->
-                        assertTrue(path, selected(activity, SportScreenTestTags.tab(SportPage.SIGN)))
+                        assertTrue(path, selected(activity, SportTestTags.tab(SportTab.SIGN)))
                     }
                 }
             }
