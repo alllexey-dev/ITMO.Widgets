@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.user
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,7 +10,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
@@ -27,8 +27,12 @@ import dev.alllexey.itmowidgets.designsystem.components.state.SkeletonStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportUiState
-import dev.alllexey.itmowidgets.feature.sport.ui.my.SportBookingActions
-import dev.alllexey.itmowidgets.feature.sport.ui.my.SportBookingCard
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.sportDayLabel
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.toLessonUi
+import dev.alllexey.itmowidgets.feature.sport.ui.DayLabel
+import dev.alllexey.itmowidgets.designsystem.kit.LessonCard
+import dev.alllexey.itmowidgets.designsystem.kit.toLessonView
+import kotlinx.datetime.toLocalDateTime
 import dev.alllexey.itmowidgets.shared.compose.strings.common_back
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
@@ -137,17 +141,26 @@ fun UserSportScreen(
     }
 }
 
+/** The bookings as lesson cards by day, as the viewer's own; a card opens the building's map. */
 @Composable
 private fun Bookings(bookings: List<SportBooking>, time: AcademicTimeProvider, actions: UserSportActions) {
-    val cardActions = remember(actions) { SportBookingActions(onOpenMap = actions.onOpenMap) }
+    val today = time.today()
     LazyColumn(
         Modifier
             .fillMaxSize()
             .testTag(UserSportScreenTestTags.LIST),
-        contentPadding = PaddingValues(bottom = ItmoTheme.spacing.group),
+        contentPadding = PaddingValues(
+            start = ItmoTheme.spacing.screenMargin,
+            end = ItmoTheme.spacing.screenMargin,
+            bottom = ItmoTheme.spacing.group,
+        ),
+        verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
     ) {
-        items(bookings, key = { it.lessonId }, contentType = { BOOKING_CONTENT_TYPE }) { booking ->
-            SportBookingCard(booking, time, cardActions, readOnly = true)
+        bookings.groupBy { it.start.toLocalDateTime(time.timeZone).date }.forEach { (date, day) ->
+            item(key = "day-$date") { DayLabel(sportDayLabel(date, today).asString()) }
+            items(day, key = { it.lessonId }, contentType = { BOOKING_CONTENT_TYPE }) { booking ->
+                LessonCard(booking.toLessonUi(time).toLessonView(), onClick = { actions.onOpenMap(booking) })
+            }
         }
     }
 }

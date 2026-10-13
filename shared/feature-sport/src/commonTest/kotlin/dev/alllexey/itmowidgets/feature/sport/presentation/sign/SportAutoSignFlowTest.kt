@@ -82,7 +82,7 @@ class SportAutoSignFlowTest {
     @Test
     fun aPredictedLessonWithinTheLimitConfirmsAnAutoSign() = runTest {
         assertEquals(
-            SportAutoSignDecision.ConfirmAutoSign(SportSignCommand.CreateAutoSign(7)),
+            SportAutoSignDecision.ConfirmAutoSign(SportSignCommand.CreateAutoSign(7), available = 2, limit = 3),
             flow().onClick(predicted)
         )
     }

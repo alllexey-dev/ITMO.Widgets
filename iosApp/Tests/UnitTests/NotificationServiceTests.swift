@@ -108,7 +108,7 @@ final class NotificationServiceTests: XCTestCase {
         ] {
             transport = FakeTransport()
             transport.answers[Self.signUp] = answer
-            var recorded: [SportSignNotice] = []
+            var recorded: [ITMOWidgets.SportSignNotice] = []
             var handler = handler()
             handler.record = { recorded.append($0) }
 

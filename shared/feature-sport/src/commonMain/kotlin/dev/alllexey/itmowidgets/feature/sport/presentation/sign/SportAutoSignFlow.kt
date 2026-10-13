@@ -26,8 +26,12 @@ sealed interface SportAutoSignDecision {
     /** A real lesson: confirm a free-sign queue, with the force-sign switch. */
     data class ConfirmFreeSign(val command: SportSignCommand.CreateFreeSign) : SportAutoSignDecision
 
-    /** A predicted lesson within the limit: confirm an auto-sign entry. */
-    data class ConfirmAutoSign(val command: SportSignCommand.CreateAutoSign) : SportAutoSignDecision
+    /** A predicted lesson within the limit: confirm an auto-sign entry; [available] of [limit] queues are left. */
+    data class ConfirmAutoSign(
+        val command: SportSignCommand.CreateAutoSign,
+        val available: Int,
+        val limit: Int,
+    ) : SportAutoSignDecision
 
     /** The predicted lesson's day already has an auto-sign entry, for [section] with [teacher]. */
     data class DayTaken(val section: String, val teacher: String) : SportAutoSignDecision
@@ -86,8 +90,11 @@ class SportAutoSignFlow(
                 teacher = existingEntry.targetLesson.teacherFio
             )
 
-            availability.limits.available > 0 ->
-                SportAutoSignDecision.ConfirmAutoSign(SportSignCommand.CreateAutoSign(lesson.lessonId))
+            availability.limits.available > 0 -> SportAutoSignDecision.ConfirmAutoSign(
+                SportSignCommand.CreateAutoSign(lesson.lessonId),
+                available = availability.limits.available,
+                limit = availability.limits.limit,
+            )
 
             // Pinned to Russian "1 сент. 2026 г., 09:30:00" in the academic zone; java.time followed the
             // device locale and the offset Backend sent.
