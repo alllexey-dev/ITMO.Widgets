@@ -118,7 +118,9 @@ new iOS app.
 - `Запись` filters: the sheet shows six sport types first (the ones the student books or attended, then the most
   booked) with `Ещё` for the rest and a search over them; chosen types stay in sight. The building filter lists every
   building with lessons, `Другие корпуса` for venues My ITMO's list lacks and `Онлайн`. The week strip runs from this
-  week to the week of the last published or predicted lesson, at least to the next week.
+  week to the week of the last published or predicted lesson, at least to the next week. The chosen day's
+  indicator slides to a new day on a spring and the colours crossfade (none under reduced motion), and the
+  places bar in the rows is twice as wide.
 - New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
   обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
   палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep

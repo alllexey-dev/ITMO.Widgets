@@ -202,7 +202,8 @@ struct ItmoSwitchRow: View {
     }
 }
 
-/// Places taken: a short bar and "22 of 24", both in the tone.
+/// Places taken: a bar and "22 of 24", both in the tone. The text keeps its width; the bar takes up to 88 pt of what
+/// is left, down to 44 pt in a tight row.
 struct ItmoOccupancy: View {
     let text: String
     let share: Double
@@ -214,12 +215,16 @@ struct ItmoOccupancy: View {
         HStack(spacing: 6) {
             Capsule()
                 .fill(track)
-                .frame(width: 88, height: 6)
+                .frame(minWidth: 44, maxWidth: 88)
+                .frame(height: 6)
                 .overlay(alignment: .leading) {
-                    Capsule().fill(tone.color).frame(width: 88 * min(max(share, 0), 1))
+                    GeometryReader { bar in
+                        Capsule().fill(tone.color).frame(width: bar.size.width * min(max(share, 0), 1))
+                    }
                 }
                 .accessibilityHidden(true)
             Text(verbatim: text).font(.itmo(.labelMedium, emphasized: true)).foregroundStyle(tone.color).monospacedDigit()
+                .fixedSize()
         }
     }
 }
