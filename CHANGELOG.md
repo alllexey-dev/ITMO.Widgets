@@ -109,12 +109,16 @@ new iOS app.
   and `Запись` as a segmented choice under the static header instead of the pager. `Моё` has the score ring (it
   opens `Откуда баллы`), bookings and queues as lesson cards by day (`записаны`, `очередь 2 из 5`, `ждём
   расписание`) and the entry to `Мои секции`. `Запись` has a search by sport or teacher, chips (`Есть места`,
-  `Вечер`, `Мои секции`, `Друзья`, `Утро`), a week strip that pages by weeks and dense rows with `22 из 24`, friends,
+  `Утро`, `Вечер`, `Друзья`), a week strip that pages by weeks and dense rows with `22 из 24`, friends,
   a clash with a lesson by name and one action; more filters are in a sheet. The lesson sheet shows the places large,
   one main action, the conditions and the clash as an orange line that does not block. `Встать в очередь?` is a sheet
   with the steps, `Пытаться до самого начала` and the queues left. `Мои секции` pins sections on the device and shows
   their next lessons and the queue limit. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
   awards by month with the day the credit was reached; no forecast. Another user's sport shows lesson cards.
+- `Запись` filters: the sheet shows six sport types first (the ones the student books or attended, then the most
+  booked) with `Ещё` for the rest and a search over them; chosen types stay in sight. The building filter lists every
+  building with lessons, `Другие корпуса` for venues My ITMO's list lacks and `Онлайн`. The week strip runs from this
+  week to the week of the last published or predicted lesson, at least to the next week.
 - New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
   обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
   палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep

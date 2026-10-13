@@ -55,7 +55,7 @@ import kotlinx.datetime.toLocalDateTime
 
 /**
  * `Запись` on both platforms: the merged catalog with the viewer's queues and friends, filtered by the search, the
- * chips and the more-filters sheet, one day at a time on a six-week strip, and the booking actions of its rows and of
+ * chips and the more-filters sheet, one day at a time on a strip of the published weeks, and the booking actions of its rows and of
  * the lesson sheet ([SportLessonActions]).
  */
 class SportSignViewModel(
@@ -74,6 +74,8 @@ class SportSignViewModel(
     private val operations = MutableStateFlow(0)
     private val filters = MutableStateFlow(SportSignFilters(selectedDate = time.today()))
     private val filtersOpen = MutableStateFlow(false)
+    /** The search over every type after `Ещё` in the sheet; null while it shows the top ones. */
+    private val sectionQuery = MutableStateFlow<String?>(null)
     private val eventQueue = EventQueue<SportSignEvent>()
 
     /** The last catalog answer, kept while a refresh runs or fails. */
@@ -84,17 +86,17 @@ class SportSignViewModel(
         scheduleRepository.observeSportSchedule().answered(),
         scheduleRepository.observeSportFilters().map { it.valueOrNull() }.onStart { emit(null) },
         timetable.observe(time.today(), time.today().plus(MAX_WEEKS_FORWARD + 1, DateTimeUnit.WEEK)).onStart { emit(emptyList()) },
-        combine(preferences.observePinnedSections(), preferences.observeDisplayOptions(), ::Prefs),
+        combine(preferences.observePinnedSections(), preferences.observeDisplayOptions(), attendedSections(), ::Prefs),
         combine(operations, refreshes.refreshing) { count, byUser -> (count > 0) to byUser },
     ) { schedule, catalog, days, prefs, (running, byUser) -> Sources(schedule, catalog, days, prefs, running, byUser) }
 
     val uiState: StateFlow<SportSignUiState> = combine(
         sources,
         filters,
-        filtersOpen,
+        combine(filtersOpen, sectionQuery, ::Pair),
         actions.busy,
         actions.prompt,
-    ) { sources, filters, open, busy, prompt -> state(sources, filters, open, busy).copy(prompt = prompt) }
+    ) { sources, filters, (open, sections), busy, prompt -> state(sources, filters, open, sections, busy).copy(prompt = prompt) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SportSignUiState())
 
     val events: Flow<SportSignEvent> = merge(eventQueue.events, actions.notices.map { SportSignEvent.Notice(it) })
@@ -121,7 +123,6 @@ class SportSignViewModel(
             SportQuickFilter.FREE -> it.copy(onlyFree = !it.onlyFree)
             SportQuickFilter.MORNING -> it.copy(dayPart = if (it.dayPart == SportDayPart.MORNING) SportDayPart.ANYTIME else SportDayPart.MORNING)
             SportQuickFilter.EVENING -> it.copy(dayPart = if (it.dayPart == SportDayPart.EVENING) SportDayPart.ANYTIME else SportDayPart.EVENING)
-            SportQuickFilter.PINNED -> it.copy(onlyPinned = !it.onlyPinned)
             SportQuickFilter.FRIENDS -> it.copy(onlyFriends = !it.onlyFriends)
         }
     }
@@ -131,7 +132,7 @@ class SportSignViewModel(
     /** A swipe to the week [index] of the strip: today in the current week, its Monday in another. */
     fun showWeek(index: Int) {
         val today = time.today()
-        val week = index.coerceIn(0, MAX_WEEKS_FORWARD)
+        val week = index.coerceIn(0, maxOf(0, uiState.value.weeks.lastIndex))
         if (today.weeksUntil(filters.value.selectedDate) == week) return
         selectDate(if (week == 0) today else today.weekMonday().plus(week, DateTimeUnit.WEEK))
     }
@@ -142,6 +143,16 @@ class SportSignViewModel(
 
     fun closeFilters() {
         filtersOpen.value = false
+        sectionQuery.value = null
+    }
+
+    /** `Ещё` under the types: every type with a search over them. */
+    fun showAllSections() {
+        sectionQuery.value = ""
+    }
+
+    fun setSectionQuery(query: String) {
+        sectionQuery.value = query
     }
 
     fun toggleSection(name: String) = filters.update {
@@ -228,7 +239,7 @@ class SportSignViewModel(
             ?: candidates.firstOrNull()
     }
 
-    private fun state(sources: Sources, filters: SportSignFilters, open: Boolean, busy: Set<Long>): SportSignUiState {
+    private fun state(sources: Sources, filters: SportSignFilters, open: Boolean, sectionQuery: String?, busy: Set<Long>): SportSignUiState {
         val schedule = sources.schedule
         schedule?.valueOrNull()?.let { lessons = it }
         val loaded = lessons
@@ -244,6 +255,8 @@ class SportSignViewModel(
             now = time.now(),
             today = time.today(),
             zone = time.timeZone,
+            history = sources.prefs.attended,
+            sectionQuery = sectionQuery,
         ).also { input = it }
         val state = SportSignPresenter.present(input, open)
         val error: AppError? = schedule?.errorOrNull()
@@ -280,7 +293,13 @@ class SportSignViewModel(
     /** Null until the source answers for the first time. */
     private fun <T> Flow<LoadState<T>>.answered(): Flow<LoadState<T>?> = map<LoadState<T>, LoadState<T>?> { it }.onStart { emit(null) }
 
-    private class Prefs(val pinned: Set<SectionName>, val display: SportSignDisplayOptions)
+    /** The sections of the own visits this semester, for the types the sheet shows first; empty until the score answers. */
+    private fun attendedSections(): Flow<List<SectionName>> = dataRepository.observeSportScore()
+        .map { score -> score.valueOrNull()?.attendancesData.orEmpty().mapNotNull { it.name } }
+        .onStart { emit(emptyList()) }
+        .distinctUntilChanged()
+
+    private class Prefs(val pinned: Set<SectionName>, val display: SportSignDisplayOptions, val attended: List<SectionName>)
 
     private class Sources(
         val schedule: LoadState<List<SportLesson>>?,
