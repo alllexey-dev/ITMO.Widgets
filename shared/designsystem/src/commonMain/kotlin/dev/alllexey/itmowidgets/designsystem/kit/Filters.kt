@@ -167,5 +167,5 @@ fun OccupancyBar(text: String, share: Float, tone: Tone, modifier: Modifier = Mo
 
 private val ChipIconSize = 18.dp
 private val SearchHeight = 56.dp
-private val OccupancyWidth = 44.dp
+private val OccupancyWidth = 88.dp
 private val OccupancyHeight = 6.dp
