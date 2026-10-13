@@ -49,7 +49,7 @@ final class TodayUITests: XCTestCase {
         attachScreenshot(named: "today-ax1")
 
         // The list scrolls: its end comes clear of the demo banner, the pass accessory and the tab bar.
-        for _ in 0..<6 { element(app, "today.list").swipeUp() }
+        for _ in 0..<6 { app.scrollViews.firstMatch.swipeUp() }
         attachScreenshot(named: "today-ax1-end")
         XCTAssertTrue(element(app, "shell.passAccessory").isHittable, "the pass accessory is reachable at AX1")
     }
