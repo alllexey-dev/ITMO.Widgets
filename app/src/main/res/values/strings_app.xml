@@ -1,5 +1,8 @@
 <resources>
+    <string name="title_me">Профиль</string>
+    <string name="title_home">Главная</string>
     <string name="title_qr">Пропуск</string>
+    <string name="title_schedule">Расписание</string>
     <string name="update_downloaded">Обновление загружено</string>
     <string name="update_restart">Перезапустить</string>
     <string name="demo_banner_text">Демо-режим · вымышленные данные</string>
