@@ -200,7 +200,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Подключиться"
+            "value" : "Войти"
           }
         }
       }

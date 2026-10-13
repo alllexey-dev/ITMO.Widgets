@@ -18,6 +18,8 @@ enum ItmoKit {
     static let heroPadding = ItmoSpacing.summaryPadding
     /// The corner of cards and row groups: iOS 26's inset grouped container, a platform metric with no token.
     static let cardCorner: CGFloat = 26
+    /// The opacity of a progress track over the hue of its container (`itmoTrack`), Android's `progressTrack` alpha.
+    static let trackOpacity = 0.16
 }
 
 /// The meaning of a card, pill or icon tile. The word carries the meaning; the colour only helps scanning.
@@ -76,6 +78,13 @@ struct ItmoCard<Content: View>: View {
         .padding(hero ? ItmoKit.heroPadding : ItmoKit.padding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(background, in: .rect(cornerRadius: ItmoKit.cardCorner))
+        .environment(\.itmoTrack, track)
+    }
+
+    /// A tinted card's tracks are grooves in its own hue, never the system's grey on a light wash.
+    private var track: Color {
+        guard let tone, tone != .neutral else { return Color.primary.opacity(ItmoKit.trackOpacity) }
+        return tone.color.opacity(ItmoKit.trackOpacity)
     }
 
     private var background: Color {
@@ -119,6 +128,10 @@ struct ItmoSectionHeader: View {
 }
 
 extension EnvironmentValues {
+    /// The track of every progress bar, meter, scale and ring of the kit: the hue of the container it stands in at
+    /// `ItmoKit.trackOpacity` (a tinted `ItmoCard` sets its tone), the label colour on the screen and neutral cards.
+    @Entry var itmoTrack = Color.primary.opacity(ItmoKit.trackOpacity)
+
     /// True inside `ItmoSheet`: section headers sit closer to the content above.
     @Entry var itmoOnSheet = false
 }

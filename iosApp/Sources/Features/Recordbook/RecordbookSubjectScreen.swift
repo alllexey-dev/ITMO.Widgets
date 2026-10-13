@@ -29,9 +29,7 @@ struct RecordbookSubjectScreen: View {
         let content = model.state as? RecordbookSubjectUiStateContent
         RecordbookSubjectContent(state: model.state, actions: actions)
             .refreshable { model.viewModel.refresh(mode: .pull) }
-            .navigationTitle(Text(verbatim: content?.title ?? ""))
-            .navigationSubtitle(Text(verbatim: content?.subtitle.resolved ?? ""))
-            .toolbarTitleDisplayMode(.inlineLarge)
+            .itmoDetailHeader(title: content?.title ?? "", subtitle: content?.subtitle.resolved)
             .toolbar {
                 if content?.tab == .materials, let links = content?.materials as? SubjectMaterialsContent {
                     ToolbarItem(placement: .topBarTrailing) {

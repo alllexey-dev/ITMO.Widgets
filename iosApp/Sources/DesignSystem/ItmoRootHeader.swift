@@ -1,8 +1,9 @@
 import SwiftUI
 
 extension View {
-    /// The header of a tab's root screen: the title with its one-line subtitle on the leading side and `actions` in
-    /// the same row, centred on them. It is static (owner, 2026-10-13): the system's large title collapses to
+    /// The header of a tab's root screen (owner, 2026-10-13, header lab variant 7): the title and its subtitle on one
+    /// baseline on the leading side and `actions` in the same row, centred on them; the subtitle goes under the title
+    /// when both do not fit, and the title never truncates. It is static: the system's large title collapses to
     /// `.inline` on scroll, so the root hides the navigation bar and draws the header as a bar of its own
     /// (`safeAreaBar`, with the scroll edge effect) that the content scrolls under. The navigation title stays for the
     /// back button of a pushed screen.
@@ -12,6 +13,13 @@ extension View {
         @ViewBuilder actions: () -> Actions = { EmptyView() }
     ) -> some View {
         modifier(ItmoRootHeader(title: title, subtitle: subtitle, actions: actions()))
+    }
+
+    /// The header of a pushed screen: the system bar keeps the back button and the toolbar items, and under it the
+    /// title and `subtitle` flow as one paragraph that wraps in full, never truncated (a long subject name). Static,
+    /// like the root header; the navigation title stays for the back button's history menu.
+    func itmoDetailHeader(title: String, subtitle: String?) -> some View {
+        modifier(ItmoDetailHeader(title: title, subtitle: subtitle))
     }
 }
 
@@ -26,16 +34,11 @@ private struct ItmoRootHeader<Actions: View>: ViewModifier {
             .toolbarVisibility(.hidden, for: .navigationBar)
             .safeAreaBar(edge: .top) {
                 HStack(spacing: ItmoSpacing.content) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(verbatim: title)
-                            .font(.itmo(.displaySmall, emphasized: true))
-                        if let subtitle {
-                            Text(verbatim: subtitle)
-                                .font(.itmo(.titleSmall))
-                                .foregroundStyle(.secondary)
-                        }
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .firstTextBaseline, spacing: ItmoSpacing.compact) { titleAndSubtitle }
+                            .fixedSize(horizontal: true, vertical: false)
+                        VStack(alignment: .leading, spacing: 0) { titleAndSubtitle }
                     }
-                    .lineLimit(1)
                     .accessibilityElement(children: .combine)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("kit.rootHeader")
@@ -45,6 +48,55 @@ private struct ItmoRootHeader<Actions: View>: ViewModifier {
                 .padding(.horizontal, ItmoSpacing.screenMargin)
                 .padding(.vertical, ItmoSpacing.compact)
             }
+    }
+
+    @ViewBuilder private var titleAndSubtitle: some View {
+        Text(verbatim: title)
+            .font(.itmo(.titleLarge, emphasized: true))
+            .fixedSize(horizontal: false, vertical: true)
+        if let subtitle {
+            Text(verbatim: subtitle)
+                .font(.itmo(.bodyMedium))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+private struct ItmoDetailHeader: ViewModifier {
+    let title: String
+    let subtitle: String?
+
+    func body(content: Content) -> some View {
+        content
+            .navigationTitle(Text(verbatim: title))
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                // The paragraph below is the title; the bar's own would repeat it in one truncated line.
+                ToolbarItem(placement: .principal) { Text(verbatim: "") }
+            }
+            .safeAreaBar(edge: .top) {
+                // Nothing while the title is not known yet (loading), so no empty strip.
+                if !title.isEmpty {
+                    Text(paragraph)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, ItmoSpacing.screenMargin)
+                        .padding(.bottom, ItmoSpacing.compact)
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityIdentifier("kit.detailHeader")
+                }
+            }
+    }
+
+    private var paragraph: AttributedString {
+        var text = AttributedString(title)
+        text.font = .itmo(.titleLarge, emphasized: true)
+        guard let subtitle, !subtitle.isEmpty else { return text }
+        var rest = AttributedString("  " + subtitle)
+        rest.font = .itmo(.bodyMedium)
+        rest.foregroundColor = .secondary
+        return text + rest
     }
 }
 
