@@ -28,7 +28,7 @@ and keep their numbers.
 - [0020 One Navigation 3 shell with `@Serializable` routes](0020-navigation-3.md) - accepted
 - [0021 Material 3 Expressive through one token schema](0021-m3-expressive-order.md) - amended by 0031
 - [0022 JVM screenshot tests replace emulator matrices](0022-jvm-screenshot-tests.md) - amended by 0031
-- [0023 The iOS client: a SwiftUI app in this repository over shared Kotlin](0023-ios-client.md) - partly superseded by 0031
+- [0023 The iOS client: a SwiftUI app in this repository over shared Kotlin](0023-ios-client.md) - partly superseded by 0031 (screens, minimum iOS)
 - [0024 MyItmoApi 2.x from Maven Central, a local checkout as an opt-in composite build](0024-pinned-composite-build.md) - accepted
 - [0025 MyItmoApi 2.x is a Kotlin Multiplatform library beside 1.x](0025-myitmoapi-2-kmp.md) - accepted
 - [0026 Core 2.0 is a client-only KMP module; Backend owns the wire DTOs](0026-core-2-backend-client.md) - accepted

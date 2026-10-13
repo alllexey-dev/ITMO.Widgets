@@ -45,9 +45,17 @@ little once the view model is platform-neutral.
 `:shared:compose-strings` compiles a copy of every catalog for Compose and the
 feature modules keep CMP for their screens, so strings sit twice in the app.
 
+**Amended (2026-10-13).** The minimum iOS is 26.1 for every target (app, widgets,
+notification service), set by the owner for the UX overhaul: screens use Liquid
+Glass, `.glass`/`.glassProminent` buttons and the tab bar accessory directly, with
+no `#available` fallbacks. 26.1 rather than 26.0 because
+`tabViewBottomAccessory(isEnabled:)`, which shows the pass accessory on one tab
+only, first ships in it; both run on the same iPhones. This closes the first open
+question below and replaces the iOS 18 of ADR 0023.
+
 **Supersedes.**
 - ADR 0023, the clause that iOS content screens are CMP screens hosted through
-  `ComposeUIViewController`.
+  `ComposeUIViewController`, and its minimum iOS 18 (amendment of 2026-10-13).
 
 **Amends.**
 - ADR 0017: iOS no longer hosts the `commonMain` screens.
@@ -56,8 +64,6 @@ feature modules keep CMP for their screens, so strings sit twice in the app.
 - ADR 0022: the iOS coverage clause; every SwiftUI screen has snapshot references.
 
 **Open questions.** Not decided by this record:
-- The minimum iOS version. ADR 0023 sets iOS 18; the prototypes use iOS 26 APIs
-  such as Liquid Glass and `tabViewBottomAccessory`.
 - How view models are exposed to Swift: the current SKIE and
   `ObservableViewModel` adapter or another one.
 - The order in which screens move.

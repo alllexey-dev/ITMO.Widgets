@@ -3,6 +3,31 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
+/// The today tab's root until its SwiftUI screen lands (ux-overhaul phase 2): the root header of the shared
+/// `TodayHeaderViewModel` (the tab's name, today's academic date) with the bell, over the Compose home feed. Until the
+/// bell sheet exists the bell opens the schedule changes, as on Android.
+struct TodayScreen: View {
+    let router: AppRouter
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var header = ObservableViewModel(TodayHeaderViewModel.self, state: \.uiState)
+
+    var body: some View {
+        HomeScreen(router: router)
+            .itmoRootHeader(title: header.state.title.resolved, subtitle: header.state.subtitle.resolved)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ItmoBellButton(label: AppStrings.string("today_notifications")) {
+                        router.open(AppRoutes.ScheduleChanges.shared)
+                    }
+                }
+            }
+            .observing(header)
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { header.viewModel.refresh() }
+            }
+    }
+}
+
 /// The home tab's root: the Compose feed (`homeViewController`) with the router behind its cards and
 /// buttons. What only iOS does stays here: the widget hint opens `WidgetHowToSheet` (iOS lets no app place a widget),
 /// the notification hint asks iOS once and then opens the app's notification settings, and a key the demo refuses

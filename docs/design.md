@@ -572,18 +572,51 @@ screen do not change between styles.
 
 SwiftUI-owned screens (the shell, settings, sign-in, the first-run flow, the
 web sign-in, the update offer) and the system surfaces (widgets, the Control,
-quick actions) follow Apple's HIG: native controls tinted with the shared
-tokens (`Tokens.generated.swift`: `ItmoColor`, `Font.itmo`, `ItmoSpacing`),
-Dynamic Type text styles, no fixed sizes. The Compose screens draw the kit's
-iOS style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
+quick actions) follow Apple's HIG for iOS 26: native controls and Liquid Glass
+tinted with the shared tokens (`Tokens.generated.swift`: `ItmoColor`,
+`Font.itmo`, `ItmoSpacing`), Dynamic Type text styles, no fixed sizes. The
+target look is the design lab's (`vibe/design-lab/ux-native/DECISIONS.md`,
+https://design.widgets.alllexey.dev). The Compose screens draw the kit's iOS
+style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
 
+- Shell. A glass tab bar with five labelled tabs (Сегодня, Расписание,
+  Зачётка, Спорт, Профиль); pushed screens keep it and show the parent as
+  back. The `QR-пропуск` accessory sits above the bar only while Сегодня is
+  selected and opens the pass sheet.
+- Root header. Title and a one-line subtitle on the leading side, the actions
+  (the bell on Сегодня only) in the same row, `.inlineLarge`; once the content
+  scrolls, `.inline`. `.itmoRootHeader(title:subtitle:)`.
+- Sheets. A SwiftUI `.sheet` with the grabber, an inline title and the close
+  button; content scrolls. Three heights (`ItmoSheetHeight`): the content's
+  (short content is never cut), 0.82 of the screen draggable to full, or full
+  below the status bar; never under it. A Compose sheet's content is hosted in
+  a SwiftUI `.sheet`, never a Compose `ModalBottomSheet`.
+- Layout. Side margin `ItmoKit.margin` (16), `ItmoKit.gap` between cards,
+  `ItmoSectionHeader` before a section (closer on a sheet), at most one hero
+  card (`ItmoCard(tone: .primary, hero: true)`), sets of rows in an
+  `ItmoListGroup` (separators inset 56 under icons, 68 under 40 pt avatars).
+  Cards and groups use iOS 26's inset grouped corner, 26 pt.
+- Choices. `ItmoSegmentedChoice` (the native segmented picker) for two to
+  four options and in-screen tabs; filters are chips; more options a list or a
+  sheet. One `.glassProminent` button per area, others `.glass` or
+  `.bordered`.
+- Lessons. A day's list is `ItmoLessonTimeline`: a rail with a dot per lesson
+  in its type colour, the elapsed part in the accent colour, the now marker,
+  gap rows for an hour or more, the change note under the lesson. A single
+  lesson is `ItmoLessonCard`. Both say subject; type, teacher; room, building
+  (no line when online); the note; pills.
+- States. Content; empty and error are the system's unavailable view with one
+  glass button (`Повторить` for errors); a gate (`ItmoGateCard`) says what,
+  why and one fix in place of the content; `ItmoActionCard` is something to
+  do; `ItmoLockNote` is closed with no fix; stale content stays dimmed under
+  its date (`ItmoStale`).
+- Tones (`ItmoTone`): neutral (secondary text), primary, tertiary, ok
+  (`success`), warn (`warning`) and bad (`error`), all from the shared roles.
 - Icons: SF Symbols through `AppSymbol` (generated from `docs/design/icons.tsv`)
   on SwiftUI and system surfaces; Material Symbols Rounded in Compose
   ([ADR 0028](decisions/0028-strings-and-icons.md)).
 - Chrome rule: a Compose route draws its own top bar and hides the navigation
-  bar (edge swipe back stays on); a SwiftUI screen keeps the native bar. Sheets
-  are SwiftUI `.sheet`s with system detents and drag indicator hosting the
-  shared sheet content, never a Compose `ModalBottomSheet`.
+  bar (edge swipe back stays on); a SwiftUI screen keeps the native bar.
 - Tabs switch by the native tab bar only ([Tab swipe](#tab-swipe)).
 
 Details: [iOS app](ios.md#design-system).

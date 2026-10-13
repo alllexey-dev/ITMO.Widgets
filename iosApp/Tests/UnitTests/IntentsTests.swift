@@ -138,8 +138,8 @@ final class IntentsTests: XCTestCase {
     }
 
     private func assertQrPassOpened(file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertEqual(router.selectedTab, .home, file: file, line: line)
-        XCTAssertEqual(router.path(of: .home), [ShellDestination(AppRoutes.QrPass.shared)], file: file, line: line)
+        XCTAssertEqual(router.selectedTab, .today, file: file, line: line)
+        XCTAssertEqual(router.sheet, .route(ShellDestination(AppRoutes.QrPass.shared)), file: file, line: line)
         XCTAssertNil(router.pendingRoute, file: file, line: line)
     }
 

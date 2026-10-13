@@ -2,8 +2,6 @@
 
 /// The icon registry on SwiftUI and system surfaces.
 enum AppSymbol: String, CaseIterable {
-    case accountCircle = "account_circle"
-    case accountCircleFilled = "account_circle_filled"
     case add = "add"
     case arrowBack = "arrow_back"
     case arrowDropDown = "arrow_drop_down"
@@ -37,7 +35,6 @@ enum AppSymbol: String, CaseIterable {
     case error = "error"
     case eventNote = "event_note"
     case exercise = "exercise"
-    case exerciseFilled = "exercise_filled"
     case expandMore = "expand_more"
     case flag = "flag"
     case folder = "folder"
@@ -46,7 +43,6 @@ enum AppSymbol: String, CaseIterable {
     case group = "group"
     case history = "history"
     case home = "home"
-    case homeFilled = "home_filled"
     case howToReg = "how_to_reg"
     case info = "info"
     case keep = "keep"
@@ -59,7 +55,6 @@ enum AppSymbol: String, CaseIterable {
     case login = "login"
     case logout = "logout"
     case menuBook = "menu_book"
-    case menuBookFilled = "menu_book_filled"
     case moreVert = "more_vert"
     case notification = "notification"
     case openInNew = "open_in_new"
@@ -71,7 +66,6 @@ enum AppSymbol: String, CaseIterable {
     case refresh = "refresh"
     case remove = "remove"
     case schedule = "schedule"
-    case scheduleFilled = "schedule_filled"
     case school = "school"
     case search = "search"
     case settings = "settings"
@@ -91,8 +85,6 @@ enum AppSymbol: String, CaseIterable {
     /// The SF Symbol name, or the asset name of a custom symbol image when `isCustom`.
     var systemName: String {
         switch self {
-        case .accountCircle: "person.crop.circle"
-        case .accountCircleFilled: "person.crop.circle.fill"
         case .add: "plus"
         case .arrowBack: "chevron.backward"
         case .arrowDropDown: "arrowtriangle.down.fill"
@@ -126,7 +118,6 @@ enum AppSymbol: String, CaseIterable {
         case .error: "exclamationmark.circle"
         case .eventNote: "calendar.day.timeline.left"
         case .exercise: "dumbbell"
-        case .exerciseFilled: "dumbbell.fill"
         case .expandMore: "chevron.down"
         case .flag: "flag"
         case .folder: "folder"
@@ -135,7 +126,6 @@ enum AppSymbol: String, CaseIterable {
         case .group: "person.2"
         case .history: "clock.arrow.circlepath"
         case .home: "house"
-        case .homeFilled: "house.fill"
         case .howToReg: "person.crop.circle.badge.checkmark"
         case .info: "info.circle"
         case .keep: "pin"
@@ -148,7 +138,6 @@ enum AppSymbol: String, CaseIterable {
         case .login: "arrow.right.to.line"
         case .logout: "rectangle.portrait.and.arrow.right"
         case .menuBook: "book"
-        case .menuBookFilled: "book.fill"
         case .moreVert: "ellipsis"
         case .notification: "bell"
         case .openInNew: "arrow.up.right.square"
@@ -160,7 +149,6 @@ enum AppSymbol: String, CaseIterable {
         case .refresh: "arrow.clockwise"
         case .remove: "minus"
         case .schedule: "clock"
-        case .scheduleFilled: "clock.fill"
         case .school: "graduationcap"
         case .search: "magnifyingglass"
         case .settings: "gearshape"

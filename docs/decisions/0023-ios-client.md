@@ -1,7 +1,8 @@
 # 0023 The iOS client: a SwiftUI app in this repository over shared Kotlin
 
 **Partly superseded by [0031](0031-swiftui-ios-screens.md):** content screens are
-SwiftUI, not CMP screens hosted through `ComposeUIViewController`.
+SwiftUI, not CMP screens hosted through `ComposeUIViewController`; the minimum iOS
+is 26.1 since 2026-10-13, not 18.
 
 **Decision (2026-10-03).** The iOS client lives in `iosApp/` in this repository:
 XcodeGen generates the project from `iosApp/project.yml` (no tracked
@@ -15,8 +16,9 @@ XcodeGen generates the project from `iosApp/project.yml` (no tracked
   Kotlin, reading versioned App Group JSON (ADR 0027). The notification service
   extension uses a Swift micro-client without Kotlin. Widgets read App Group files
   and never call the network; push text resolves from the bundle by `loc-key`.
-- Minimum iOS 18 (open in ADR 0031). Identifiers: bundle ID
-  `dev.alllexey.itmowidgets` (`.widgets`, `.notification-service`), App Group
+- Minimum iOS 18 (iOS 26.1 since ADR 0031's amendment of 2026-10-13).
+  Identifiers: bundle ID `dev.alllexey.itmowidgets` (`.widgets`,
+  `.notification-service`), App Group
   `group.dev.alllexey.itmowidgets`, Keychain group
   `$(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared`; they are stable
   (ADR 0016). App Group and Keychain IDs come from build settings into

@@ -7,7 +7,7 @@ enum WidgetSizes {
     static let medium = CGSize(width: 364, height: 170)
     static let large = CGSize(width: 364, height: 382)
 
-    /// The narrowest phone iOS 18 runs on (iPhone SE, 375 pt wide): the 321 pt medium family is where long names
+    /// The narrowest phone iOS 26 runs on (iPhone SE, 375 pt wide): the 321 pt medium family is where long names
     /// wrap and truncate first.
     static let narrowMedium = CGSize(width: 321, height: 148)
 

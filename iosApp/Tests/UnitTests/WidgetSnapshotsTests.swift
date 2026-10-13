@@ -1,5 +1,6 @@
 @testable import ITMOWidgets
 import Shared
+import SwiftUI
 import XCTest
 
 /// The App Group files the widgets read, written by the app's started graph: after the demo starts and
@@ -38,10 +39,10 @@ final class WidgetSnapshotsTests: XCTestCase {
         XCTAssertEqual(SessionFile.read(fromContainer: container)?.demo, true)
         assertTheContainerIsKept()
 
-        // The pass screen fetches the pass, as opening it in the app does.
+        // The pass sheet fetches the pass, as opening it in the app does.
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let window = UIWindow(windowScene: scene)
-        window.rootViewController = qrPassViewController(onBack: {})
+        window.rootViewController = UIHostingController(rootView: QrPassSheet())
         window.makeKeyAndVisible()
         defer { window.isHidden = true }
         await waitUntil(timeout: 10) { QrPassSnapshot.read(fromContainer: self.container) != nil }
