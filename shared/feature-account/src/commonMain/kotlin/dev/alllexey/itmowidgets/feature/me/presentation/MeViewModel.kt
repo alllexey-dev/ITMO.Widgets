@@ -21,6 +21,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/**
+ * The Me tab's state. The social summary refreshes once, on creation (the tab's first show), and again on every
+ * opt-in change; nothing in composition triggers it, so returning from a pushed screen or another tab costs nothing.
+ */
 class MeViewModel(
     private val sessionRepository: SessionRepository,
     private val socialRepository: SocialRepository,

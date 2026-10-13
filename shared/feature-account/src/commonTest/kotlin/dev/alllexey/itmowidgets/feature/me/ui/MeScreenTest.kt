@@ -23,9 +23,14 @@ import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
+import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
@@ -50,6 +55,25 @@ class MeScreenTest {
             val appRows = 3 + if (value.webLoginAvailable) 1 else 0
             assertEquals(1 + rows + appRows + 3, onAllNodes(hasClickAction()).fetchSemanticsNodes().size)
         }
+    }
+
+    @Test
+    fun aReturnToTheTabRefreshesNothingAfterTheFirstShow() = runComposeUiTest {
+        val social = FakeSocialRepository()
+        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true))
+        var shown by mutableStateOf(true)
+        setContent { ItmoTheme { if (shown) MeRoute(MeActions(), showDebugTools = false, viewModel = viewModel) } }
+        waitForIdle()
+
+        // A pop to the tab root composes it again, as a tab switch does.
+        repeat(2) {
+            shown = false
+            waitForIdle()
+            shown = true
+            waitForIdle()
+        }
+
+        assertEquals(1, social.refreshes)
     }
 
     @Test
