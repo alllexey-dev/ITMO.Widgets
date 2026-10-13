@@ -36,7 +36,7 @@ fun GradeScale(
     fillColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    val trackColor = ItmoTheme.colorScheme.surfaceContainerHighest
+    val trackColor = ItmoTheme.progressTrack
     val inkColor = ItmoTheme.colorScheme.onSurfaceVariant
     val labelStyle = ItmoTheme.typography.labelSmall.copy(
         color = inkColor,

@@ -31,8 +31,11 @@ final class ShellSnapshotTests: XCTestCase {
                             ) { $0 }
                             ItmoLessonCard(lesson: KitFixtures.day(at: 12 * 60 + 22)[2])
                         }
-                        .navigationTitle(Text(verbatim: "Программирование"))
-                        .navigationBarTitleDisplayMode(.inline)
+                        // A long title wraps in full under the bar.
+                        .itmoDetailHeader(
+                            title: "Математический анализ и дифференциальные уравнения в частных производных",
+                            subtitle: "Экзамен, 3 семестр"
+                        )
                     }
             }
         }

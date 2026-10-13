@@ -45,7 +45,7 @@ fun ScoreRing(
     sectors: List<ScoreRingSector>,
     modifier: Modifier = Modifier,
     thickness: Dp = DefaultThickness,
-    trackColor: Color = ItmoTheme.colorScheme.surfaceContainerHighest,
+    trackColor: Color = ItmoTheme.progressTrack,
     gapAngle: Float = DefaultGapAngle,
     animated: Boolean = false,
     content: @Composable BoxScope.() -> Unit = {},

@@ -239,8 +239,9 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
   `sf_symbol` names the iOS SF Symbol. Code names an icon with `AppIcon`.
 - FILL 1 only for a selected or active state (the selected navigation tab).
 - A button may look smaller than 48 dp through insets; its touch area stays 48 dp.
-- Filled button for the strong primary action, tonal for an ordinary prominent
-  action, outlined or text for secondary and contextual ones.
+- Filled button for the strong primary action, tonal (`TonalButton`, the
+  primary family) for an ordinary prominent action, outlined or text for
+  secondary and contextual ones.
 - Every actionable icon has a localized `contentDescription`; decorative ones `@null`.
 - Selection is shown by a check or a container surface plus `selected` or
   `checkable` state for TalkBack, and the whole row is the target. A closed or
@@ -436,16 +437,19 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
   Профиль (`AppTab`, which also names each tab's label key and its outlined and FILL 1 icons: `book_2`,
   `calendar_month`, `today`, `sprint`, `person`). The bar is `ItmoNavigationBar` (M3E `ShortNavigationBar`) with
   labels.
-- Every tab root has the root header (`ItmoRootScreen`, `app/shell/entries/TabRootFrames.kt`): the title and its
-  one-line subtitle on the left, the actions in the same row, centred on the title block; 112 dp (96 without a
-  subtitle). It is static (owner, 2026-10-13): it never collapses, the content scrolls under it. Сегодня shows the date
+- Every tab root has the root header (`ItmoRootScreen`, `app/shell/entries/TabRootFrames.kt`), one line (owner,
+  2026-10-13, header lab variant 7): the title (`titleLarge`) and its subtitle (`bodyMedium`) on one baseline on the
+  left, the actions in the same row, centred on the title block; 56 dp. When the subtitle does not fit next to the
+  title (a narrow window, a large font) it goes under it; the title never truncates, the header grows instead. It is
+  static (owner, 2026-10-13): it never collapses, the content scrolls under it. Сегодня shows the date
   (`понедельник, 7 сентября`, `TodayHeaderViewModel`) and the bell with the count of unseen events, which is in this
   header only and opens the bell's sheet ([the bell](features/home.md#the-bell)). Tabs whose new screens come later show their name over their current
   content.
 - The `Пропуск` extended FAB is on Сегодня only and opens the pass sheet; the widgets, the tile and the shortcut open
   the same sheet.
 - Pushed screens cover the bar: back, a title, no navigation bar. The bar stays in place under them, so the
-  predictive Back uncovers the root with its bar.
+  predictive Back uncovers the root with its bar. The title and its subtitle flow as one paragraph
+  (`ItmoDetailScreen`, 64 dp in one line) and a long title wraps in full, never truncated.
 - Sheets come in three sizes (`SheetPolicy.Height`): content height (`FIT_CONTENT`, the pass, the links), 82 % of the
   window (`TALL`, the bell's sheet) or the whole height below the status bar (`FULL`, the details sheets and
   the friend picker); none goes under the status bar.
@@ -469,7 +473,10 @@ screens that have not moved yet.
 | `Tone`, `container()`, `onContainer()` | The semantic colour of a pill, tile or card: `Neutral`, `Primary`, `Tertiary`, `Success`, `Warning`, `Error`. The word carries the meaning |
 | `LocalOnSheet`, `cardSurface()` | True inside a `SheetScaffold`: cards and groups step one surface up |
 | `ItmoRootScreen`, `HeaderAction` | A tab root with the static root header and an optional FAB; an icon action with an optional badge |
-| `ItmoDetailScreen` | A pushed screen: back, `MediumFlexibleTopAppBar` title over a subtitle, actions |
+| `ItmoDetailScreen` | A pushed screen: back, the title (`titleMedium`) and its quiet subtitle as one paragraph that wraps in full, actions; static |
+| `TonalButton`, `tonalButtonColors()` | The kit's tonal button in the primary family (`primaryContainer`): an active secondary action in light and dark (`Записаться` in a sport row, `Повторить`, an action card's fix); `ProgressButton`'s tonal style uses the same colours. Material's `secondaryContainer` default reads as a disabled grey pill under the app's schemes |
+| `SmallButton` | An extra-small filled M3E button with a short label next to a hero's big text (`Войти` on the Сегодня hero) |
+| `ItmoTheme.progressTrack` | The track of every progress bar, meter, scale and ring (`ItmoWavyProgress`, `GradeScale`, `ScoreRing`, `PointsMeter`, the score rows): the surrounding content colour (the card's "on" colour, `onBackground` on the screen) at alpha 0.16, a groove in the container's hue in light and dark |
 | `ItmoCard`, `IconTile` | One topic per card (`cardContent`), a tonal card, the one hero (`cardHero`); an icon in a tone's tile |
 | `StatusPill`, `PillSpec` | `идёт`, `далее`, `изменена`, `отменена`, `очередь 2 из 5`, `записаны`, `онлайн`; `solid` for `идёт` |
 | `SegmentedChoice` | The one choice pattern for two to four options and in-screen tabs: connected toggle buttons, a check on the chosen one up to three options |
@@ -575,9 +582,14 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   Сегодня, Спорт, Профиль); pushed screens keep it and show the parent as
   back. The `QR-пропуск` accessory sits above the bar only while Сегодня is
   selected and opens the pass sheet.
-- Root header. Title and a one-line subtitle on the leading side, the actions
-  (the bell on Сегодня only) in the same row. Static: it never collapses, the
-  content scrolls under it. `.itmoRootHeader(title:subtitle:actions:)`.
+- Root header. One line: the title (Title 2 weight) and the subtitle on one
+  baseline on the leading side, the actions (the bell on Сегодня only) in the
+  same row; the subtitle goes under the title when both do not fit, the title
+  never truncates. Static: it never collapses, the content scrolls under it.
+  `.itmoRootHeader(title:subtitle:actions:)`.
+- Pushed header. The system bar keeps back and the toolbar items; under it the
+  title and the subtitle flow as one paragraph that wraps in full (a long
+  subject name), static. `.itmoDetailHeader(title:subtitle:)`.
 - Sheets. A SwiftUI `.sheet` with the grabber, an inline title and the close
   button; content scrolls. Three heights (`ItmoSheetHeight`): the content's
   (short content is never cut), 0.82 of the screen draggable to full, or full
@@ -591,7 +603,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
 - Choices. `ItmoSegmentedChoice` (the native segmented picker) for two to
   four options and in-screen tabs; filters are chips; more options a list or a
   sheet. One prominent button per area (`ItmoProminentButton`: `.glassProminent`
-  in the primary role with an `onPrimary` label, readable in light and dark),
+  in the primary role with an `onPrimary` label, readable in light and dark;
+  `.controlSize(.small)` next to a hero's big text, `Войти` on Сегодня),
   others `.glass` or `.bordered`.
 - Lessons. A day's list is `ItmoLessonTimeline`: a rail with a dot per lesson
   in its type colour, the elapsed part in the accent colour, the now marker,
@@ -601,9 +614,12 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
 - Filters (`ItmoFilters.swift`): `ItmoSearchField` (in the content, with a trailing action and its badge),
   `ItmoChips`, `ItmoWeekStrip` (a paging scroll view of them pages by weeks), `ItmoSwitchRow` (a group's switch row)
   and `ItmoOccupancy`, the twins of Android's kit.
-- Numbers (`ItmoScores.swift`): `ItmoValueWithSource` (a number over its quiet source), `ItmoPointsMeter`,
+- Numbers (`ItmoScores.swift`): `ItmoValueWithSource` (a number over its quiet source), `ItmoProgressBar` (a
+  4 pt capsule in place of `ProgressView`, read as one by VoiceOver), `ItmoPointsMeter`,
   `ItmoSportRing`, `ItmoGradeScale` (the hero's 100-point bar with the grade ticks) and `ItmoVotePill`, the same
-  pieces as Android's kit.
+  pieces as Android's kit. Every track is the environment's `itmoTrack`: a tinted `ItmoCard` sets its tone's colour
+  at `ItmoKit.trackOpacity` (0.16), the screen and neutral cards the label colour at it, so a track is a groove in its
+  container's hue, never the system grey on a light wash.
 - States. Content; empty and error are the system's unavailable view with one
   glass button (`Повторить` for errors); a gate (`ItmoGateCard`) says what,
   why and one fix in place of the content; `ItmoActionCard` is something to
@@ -682,10 +698,9 @@ wrappers only; a new screen follows the rules below.
   predictive back. Under reduced motion the end state shows at once.
 - **Shapes.** Connected groups already have the expressive connected-list shape
   (`largeIncreased` 20 dp outside, `extraSmall` 4 dp inside) and keep it.
-- **Flexible bars.** `ShortNavigationBar` is the bar and
-  `MediumFlexibleTopAppBar` the pushed screen's bar (`ItmoDetailScreen`); the
-  root header is the kit's own, since the large flexible bar puts actions in a
-  row above the title. Expressive list items, the `SearchBar` state and
+- **Flexible bars.** `ShortNavigationBar` is the bar. Both headers are the
+  kit's own, static (header lab variant 7): the large flexible bar puts actions
+  in a row above the title, and the medium one truncates a long subject name. Expressive list items, the `SearchBar` state and
   `FlexibleBottomAppBar` are not used yet. The material3 alpha line
   (`1.12.0-alpha03` over Jetpack `1.5.0-alpha22`) is approved for production
   behind the wrappers.
@@ -817,7 +832,8 @@ in [Shared components](#shared-components).
   label and the countdown in `labelLarge`, the subject in emphasized
   `headlineSmall`, the room in emphasized `displayMedium` beside the full
   address in `titleMedium`, `ItmoWavyProgress` for the lesson in progress, or
-  emphasized `displaySmall` `Онлайн` with a filled `Подключиться`), a
+  emphasized `displaySmall` `Онлайн` with the extra-small `SmallButton`
+  `Войти` next to it, at least a `content` gap apart), a
   `SectionHeader` with the count over the `LessonTimeline`, `ActionCard`s in
   `Tone.Warning` under `Нужно сделать`; see [Сегодня](features/home.md#сегодня).
 - The bell's sheet: `BellSheetContent` (`feature/home/ui/BellSheet.kt`) on the

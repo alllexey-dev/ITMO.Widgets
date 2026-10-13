@@ -37,7 +37,9 @@ enum class ItmoWavyProgressShape { Linear, Circular }
  * instrumented suite hung in `Instrumentation.waitForIdleSync` under the home feed's lesson in progress). The bar only
  * moves when [progress] changes.
  *
- * Under the iOS style it is a plain `UIProgressView` whatever the switch says: a capsule track in `systemFill` with
+ * The track is [ItmoTheme.progressTrack] in every form: a groove in the hue of the card it stands on.
+ *
+ * Under the iOS style it is a plain `UIProgressView` whatever the switch says: a capsule track with
  * the progress in the tint over it, [IosMetrics.progressBarHeight] thick, no wave, no gap and no stop indicator; the
  * circular form is a ring of the same track and stroke.
  */
@@ -53,24 +55,25 @@ fun ItmoWavyProgress(
         return
     }
     val expressive = ItmoTheme.expressive
+    val track = ItmoTheme.progressTrack
     when (shape) {
         ItmoWavyProgressShape.Linear -> if (expressive) {
-            LinearWavyProgressIndicator(progress, modifier, waveSpeed = 0.dp)
+            LinearWavyProgressIndicator(progress, modifier, trackColor = track, waveSpeed = 0.dp)
         } else {
-            LinearProgressIndicator(progress, modifier)
+            LinearProgressIndicator(progress, modifier, trackColor = track)
         }
 
         ItmoWavyProgressShape.Circular -> if (expressive) {
-            CircularWavyProgressIndicator(progress, modifier, waveSpeed = 0.dp)
+            CircularWavyProgressIndicator(progress, modifier, trackColor = track, waveSpeed = 0.dp)
         } else {
-            CircularProgressIndicator(progress, modifier)
+            CircularProgressIndicator(progress, modifier, trackColor = track)
         }
     }
 }
 
 @Composable
 private fun IosProgress(progress: () -> Float, modifier: Modifier, shape: ItmoWavyProgressShape) {
-    val track = ItmoTheme.iosColors.systemFill
+    val track = ItmoTheme.progressTrack
     val tint = ItmoTheme.colorScheme.primary
     val reported = modifier.semantics {
         progressBarRangeInfo = ProgressBarRangeInfo(progress().coerceIn(0f, 1f), 0f..1f)

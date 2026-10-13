@@ -196,7 +196,7 @@ struct RecordbookSessionHero: View {
                     .monospacedDigit()
                 Text(verbatim: summary.of.resolved).foregroundStyle(.secondary)
             }
-            ProgressView(value: Double(summary.share)).itmoTint().padding(.vertical, 4)
+            ItmoProgressBar(value: Double(summary.share)).padding(.vertical, 4)
             if let average = summary.average {
                 Text(verbatim: average.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
             }

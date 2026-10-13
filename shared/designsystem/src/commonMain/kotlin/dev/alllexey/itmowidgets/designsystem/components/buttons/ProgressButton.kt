@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -86,7 +85,7 @@ fun ProgressButton(
     // Material's buttons draw 40 dp and reserve a 48 dp touch target around it, as the XML buttons' insets do.
     when (style) {
         ProgressButtonStyle.Filled -> Button(click, modifier, enabled, contentPadding = padding) { content() }
-        ProgressButtonStyle.Tonal -> FilledTonalButton(click, modifier, enabled, contentPadding = padding) { content() }
+        ProgressButtonStyle.Tonal -> TonalButton(click, modifier, enabled, contentPadding = padding) { content() }
         ProgressButtonStyle.Outlined -> OutlinedButton(click, modifier, enabled, contentPadding = padding) { content() }
         ProgressButtonStyle.Text -> TextButton(click, modifier, enabled, contentPadding = padding) { content() }
     }

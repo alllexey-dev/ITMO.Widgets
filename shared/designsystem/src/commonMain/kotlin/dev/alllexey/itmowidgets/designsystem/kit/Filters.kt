@@ -157,7 +157,7 @@ fun SearchField(
 @Composable
 fun OccupancyBar(text: String, share: Float, tone: Tone, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box(Modifier.width(OccupancyWidth).heightIn(min = OccupancyHeight).background(ItmoTheme.colorScheme.surfaceContainerHighest, ItmoTheme.shapes.full)) {
+        Box(Modifier.width(OccupancyWidth).heightIn(min = OccupancyHeight).background(ItmoTheme.progressTrack, ItmoTheme.shapes.full)) {
             Box(Modifier.fillMaxHeight().heightIn(min = OccupancyHeight).fillMaxWidth(share.coerceIn(0f, 1f)).background(tone.ink(), ItmoTheme.shapes.full))
         }
         Text(text, color = tone.ink(), style = ItmoTheme.typography.labelMedium, maxLines = 1)

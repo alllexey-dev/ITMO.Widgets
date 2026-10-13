@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
@@ -87,6 +86,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_tune
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
+import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 
 /** The two parts of the Спорт tab. */
 enum class SportTab { MY, SIGN }
@@ -454,7 +454,7 @@ private fun CatalogRow(row: SportCatalogRow, actions: SportSignActions) {
 internal fun RowAction(action: SportRowAction, lessonId: Long, onAction: (Long) -> Unit) {
     val tag = Modifier.testTag(SportTestTags.rowAction(lessonId))
     when (action) {
-        is SportRowAction.Sign -> FilledTonalButton(onClick = { onAction(lessonId) }, modifier = tag, enabled = !action.busy, contentPadding = SportSizes.smallButton) {
+        is SportRowAction.Sign -> TonalButton(onClick = { onAction(lessonId) }, modifier = tag, enabled = !action.busy, contentPadding = SportSizes.smallButton) {
             if (action.busy) ItmoActivityIndicator() else Text(text(SportStrings.sport_lesson_sign_up))
         }
         is SportRowAction.Queue -> OutlinedButton(onClick = { onAction(lessonId) }, modifier = tag, enabled = !action.busy, contentPadding = SportSizes.smallButton) {

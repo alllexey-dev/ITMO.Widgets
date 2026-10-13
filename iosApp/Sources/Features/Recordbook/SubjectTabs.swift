@@ -160,7 +160,7 @@ private struct SubjectControlRowView: View {
                     .foregroundStyle(row.graded ? Color.primary : .secondary)
             }
             if let share = row.share {
-                ProgressView(value: Double(share.floatValue)).tint(row.tone.kit.color)
+                ItmoProgressBar(value: Double(share.floatValue), tint: row.tone.kit.color)
             }
             if row.minimum != nil || row.date != nil {
                 HStack {

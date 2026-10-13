@@ -79,7 +79,7 @@ fun ValueWithSource(
 fun PointsMeter(text: String, share: Float, tone: Tone, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
         Text(text, style = ItmoTheme.typography.titleLarge.tabular(), color = ItmoTheme.colorScheme.onSurface)
-        Box(Modifier.width(MeterWidth).height(MeterHeight).clip(ItmoTheme.shapes.full).background(ItmoTheme.colorScheme.surfaceContainerHighest)) {
+        Box(Modifier.width(MeterWidth).height(MeterHeight).clip(ItmoTheme.shapes.full).background(ItmoTheme.progressTrack)) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(share.coerceIn(0f, 1f)).clip(ItmoTheme.shapes.full).background(tone.ink()))
         }
     }

@@ -48,7 +48,7 @@ internal fun EntryRegistry.Builder.homeEntries() {
 /**
  * Сегодня's root: `TodayRoute` with its ViewModel from Koin, kept in the root's own store. A lesson opens the lesson
  * sheet (a sport lesson through [SportDetailsRedirect], which opens the sport tab's sheet when it finds the booking),
- * `Подключиться` the meeting link, a thing to do its route.
+ * `Войти` the meeting link, a thing to do its route.
  */
 @Composable
 internal fun HomeTabRoot(navigator: Nav3AppNavigator) {

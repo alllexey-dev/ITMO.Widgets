@@ -89,11 +89,11 @@ android {
                 "proguard-rules.pro"
             )
         }
-        // The release R8 and resource shrinking, debug-signed and pointed at dev, so a smoke run of the shrunk
-        // app on an emulator reaches no production data.
+        // The release R8 and resource shrinking, pointed at dev, so a smoke run of the shrunk app reaches no
+        // production data. Release key when keystore.properties is present, so it installs over a local debug build.
         create("minifiedSmoke") {
             initWith(getByName("release"))
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             matchingFallbacks += "release"
             buildConfigField(
                 "String",

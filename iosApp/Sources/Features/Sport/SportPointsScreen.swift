@@ -14,9 +14,7 @@ struct SportPointsScreen: View {
             retry: { model.viewModel.refresh(mode: .force) }
         )
         .refreshable { model.viewModel.refresh(mode: .pull) }
-        .navigationTitle(Text(verbatim: AppStrings.string("sport_points_title")))
-        .navigationSubtitle(Text(verbatim: AppStrings.string("sport_points_subtitle")))
-        .toolbarTitleDisplayMode(.inlineLarge)
+        .itmoDetailHeader(title: AppStrings.string("sport_points_title"), subtitle: AppStrings.string("sport_points_subtitle"))
         .observing(model)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("sport.points")
@@ -68,7 +66,7 @@ struct SportPointsContent: View {
                 Text(verbatim: content.cap.resolved).font(.itmo(.titleMedium, emphasized: true)).monospacedDigit()
                     .foregroundStyle(ItmoColor.tertiary)
             }
-            ProgressView(value: Double(content.capShare), total: 1).tint(ItmoColor.tertiary)
+            ItmoProgressBar(value: Double(content.capShare), tint: ItmoColor.tertiary)
             Text(verbatim: AppStrings.string("sport_points_cap_text")).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
         }
         .accessibilityIdentifier("sport.points.cap")

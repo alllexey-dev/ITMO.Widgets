@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -27,6 +26,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import org.jetbrains.compose.resources.painterResource
+import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 
 /**
  * A card with one topic (`Card.Content`, 20 dp, no stroke): [cardSurface] by default, a [tone]'s container to stand
@@ -136,7 +136,7 @@ private fun NoticeCard(title: String, reason: String, icon: Painter, tone: Tone,
                 Text(title, style = ItmoTheme.typography.titleMedium)
                 Text(reason, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
                 if (action != null) {
-                    FilledTonalButton(onClick = action.onClick, Modifier.padding(top = ItmoTheme.spacing.compact)) {
+                    TonalButton(onClick = action.onClick, Modifier.padding(top = ItmoTheme.spacing.compact)) {
                         Text(action.label)
                     }
                 }
