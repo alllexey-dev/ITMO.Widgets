@@ -85,6 +85,18 @@
         }
       }
     },
+    "recordbook_bars_connect" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить"
+          }
+        }
+      }
+    },
     "recordbook_bars_error" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -93,6 +105,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "БАРС недоступен, показываем My ITMO. %1$@"
+          }
+        }
+      }
+    },
+    "recordbook_bars_expired" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "БАРС: сессия истекла"
+          }
+        }
+      }
+    },
+    "recordbook_bars_failed" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "БАРС: не удалось загрузить"
+          }
+        }
+      }
+    },
+    "recordbook_bars_hide" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть"
           }
         }
       }
@@ -129,6 +177,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "нет в БАРС"
+          }
+        }
+      }
+    },
+    "recordbook_bars_offer" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контрольные и минимумы из БАРС"
+          }
+        }
+      }
+    },
+    "recordbook_bars_sign_in" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти"
           }
         }
       }
@@ -313,6 +385,18 @@
         }
       }
     },
+    "recordbook_period_label" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Семестр"
+          }
+        }
+      }
+    },
     "recordbook_period_program" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -481,6 +565,78 @@
         }
       }
     },
+    "recordbook_section_ahead" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экзамены впереди"
+          }
+        }
+      }
+    },
+    "recordbook_section_passed" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сдано"
+          }
+        }
+      }
+    },
+    "recordbook_session_average" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Средний балл %1$@"
+          }
+        }
+      }
+    },
+    "recordbook_session_of" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "из %1$lld"
+          }
+        }
+      }
+    },
+    "recordbook_session_passed" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сдано %1$lld"
+          }
+        }
+      }
+    },
+    "recordbook_session_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сессия"
+          }
+        }
+      }
+    },
     "recordbook_source_bars" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -489,6 +645,270 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "БАРС"
+          }
+        }
+      }
+    },
+    "recordbook_source_myitmo" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My ITMO"
+          }
+        }
+      }
+    },
+    "recordbook_source_sheet" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "таблица"
+          }
+        }
+      }
+    },
+    "recordbook_source_since" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "recordbook_source_sport" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спорт"
+          }
+        }
+      }
+    },
+    "recordbook_sources_action" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откуда баллы: %1$@"
+          }
+        }
+      }
+    },
+    "recordbook_sources_bars" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "БАРС"
+          }
+        }
+      }
+    },
+    "recordbook_sources_bars_expired" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "сессия истекла"
+          }
+        }
+      }
+    },
+    "recordbook_sources_bars_missing" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "предмета нет в БАРС"
+          }
+        }
+      }
+    },
+    "recordbook_sources_bars_note" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "контрольные и минимумы"
+          }
+        }
+      }
+    },
+    "recordbook_sources_bars_off" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не подключён"
+          }
+        }
+      }
+    },
+    "recordbook_sources_myitmo" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My ITMO"
+          }
+        }
+      }
+    },
+    "recordbook_sources_myitmo_note" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "итог ставят здесь"
+          }
+        }
+      }
+    },
+    "recordbook_sources_open" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть предмет"
+          }
+        }
+      }
+    },
+    "recordbook_sources_sheet" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таблица преподавателя"
+          }
+        }
+      }
+    },
+    "recordbook_sources_sheet_note" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ваша строка"
+          }
+        }
+      }
+    },
+    "recordbook_sources_sheet_off" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не подключена"
+          }
+        }
+      }
+    },
+    "recordbook_sources_sheet_updated" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ваша строка, обновлено %1$@"
+          }
+        }
+      }
+    },
+    "recordbook_sources_shown" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "показываем"
+          }
+        }
+      }
+    },
+    "recordbook_sources_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откуда баллы"
+          }
+        }
+      }
+    },
+    "recordbook_sources_why_bars" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "БАРС обновляется раньше и показывает контрольные, поэтому берём его. Итог в зачётку всё равно ставят в My ITMO"
+          }
+        }
+      }
+    },
+    "recordbook_sources_why_myitmo" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Других чисел нет, поэтому показываем My ITMO, где ставят итог"
+          }
+        }
+      }
+    },
+    "recordbook_sources_why_sheet" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таблица преподавателя обновляется раньше My ITMO, поэтому берём её. Итог ставят только в My ITMO, так что разница уйдёт, когда преподаватель перенесёт баллы"
           }
         }
       }
@@ -537,6 +957,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Спортивные баллы не загрузились"
+          }
+        }
+      }
+    },
+    "recordbook_sport_meta" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, баллы за спорт"
           }
         }
       }
@@ -601,6 +1033,18 @@
         }
       }
     },
+    "recordbook_subtitle" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld курс, %2$@"
+          }
+        }
+      }
+    },
     "recordbook_summary_closed" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -609,6 +1053,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сдано %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "recordbook_view_label" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что показать"
+          }
+        }
+      }
+    },
+    "recordbook_view_semester" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Семестр"
+          }
+        }
+      }
+    },
+    "recordbook_view_session" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сессия"
           }
         }
       }
@@ -985,6 +1465,30 @@
         }
       }
     },
+    "subject_connect" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить"
+          }
+        }
+      }
+    },
+    "subject_control_absent" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "неявка"
+          }
+        }
+      }
+    },
     "subject_controls_title" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1033,6 +1537,18 @@
         }
       }
     },
+    "subject_group_sum" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ из %2$@"
+          }
+        }
+      }
+    },
     "subject_lesson_date" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1069,6 +1585,18 @@
         }
       }
     },
+    "subject_lessons_none" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ближайших пар нет"
+          }
+        }
+      }
+    },
     "subject_lessons_title" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1093,6 +1621,30 @@
         }
       }
     },
+    "subject_link_add" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить ссылку"
+          }
+        }
+      }
+    },
+    "subject_link_hidden" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "скрыта"
+          }
+        }
+      }
+    },
     "subject_link_lms" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1101,6 +1653,222 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "LMS"
+          }
+        }
+      }
+    },
+    "subject_link_mine" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "моя"
+          }
+        }
+      }
+    },
+    "subject_link_more" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Действия со ссылкой"
+          }
+        }
+      }
+    },
+    "subject_link_pending" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "на проверке"
+          }
+        }
+      }
+    },
+    "subject_link_private" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "только у вас"
+          }
+        }
+      }
+    },
+    "subject_link_rejected" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "отклонена"
+          }
+        }
+      }
+    },
+    "subject_materials_chats" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чаты"
+          }
+        }
+      }
+    },
+    "subject_materials_empty_text" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавьте таблицу баллов, материалы или чат группы — их увидят однокурсники"
+          }
+        }
+      }
+    },
+    "subject_materials_empty_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылок пока нет"
+          }
+        }
+      }
+    },
+    "subject_materials_off_text" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Их собирают студенты на сервере ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "subject_materials_off_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылки и чаты недоступны"
+          }
+        }
+      }
+    },
+    "subject_reviews_few_text" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сводка появится от трёх отзывов. Расскажите, как проходят пары, можно без имени"
+          }
+        }
+      }
+    },
+    "subject_reviews_few_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отзывов пока мало"
+          }
+        }
+      }
+    },
+    "subject_reviews_off_text" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отзывы о преподавателях хранятся на сервере ITMO.Widgets. Без подключения видно только имена"
+          }
+        }
+      }
+    },
+    "subject_reviews_off_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отзывы недоступны"
+          }
+        }
+      }
+    },
+    "subject_reviews_write" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Написать отзыв"
+          }
+        }
+      }
+    },
+    "subject_role_labs" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лабораторные"
+          }
+        }
+      }
+    },
+    "subject_role_lectures" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лекции"
+          }
+        }
+      }
+    },
+    "subject_role_practice" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Практики"
           }
         }
       }
@@ -1141,6 +1909,54 @@
         }
       }
     },
+    "subject_sheet_caption" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лист «%1$@», столбец «%2$@»"
+          }
+        }
+      }
+    },
+    "subject_sheet_offer_note" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если преподаватель ведёт таблицу"
+          }
+        }
+      }
+    },
+    "subject_source_at" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, в %2$@"
+          }
+        }
+      }
+    },
+    "subject_sport_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Баллы за спорт"
+          }
+        }
+      }
+    },
     "subject_subtitle" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1149,6 +1965,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$lld семестр"
+          }
+        }
+      }
+    },
+    "subject_tab_lessons" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пары"
+          }
+        }
+      }
+    },
+    "subject_tab_materials" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Материалы"
+          }
+        }
+      }
+    },
+    "subject_tabs_label" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Раздел предмета"
           }
         }
       }

@@ -1297,6 +1297,66 @@
         }
       }
     },
+    "teacher_tone_mixed" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "мнения расходятся"
+          }
+        }
+      }
+    },
+    "teacher_tone_negative" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "скорее ругают"
+          }
+        }
+      }
+    },
+    "teacher_tone_positive" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "скорее хвалят"
+          }
+        }
+      }
+    },
+    "teacher_tone_very_negative" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в основном ругают"
+          }
+        }
+      }
+    },
+    "teacher_tone_very_positive" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в основном хвалят"
+          }
+        }
+      }
+    },
     "title_recordbook" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",
