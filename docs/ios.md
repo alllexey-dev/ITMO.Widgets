@@ -4,7 +4,7 @@ The iOS client lives in `iosApp/` and links one Kotlin umbrella framework, `Shar
 ([ADR 0023](decisions/0023-ios-client.md)). It has three bundles: the app, a WidgetKit extension and a notification
 service extension. The app is a SwiftUI shell with five tabs (today, schedule, recordbook, sport, profile). System screens
 (sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in)
-and the pass sheet are SwiftUI over shared ViewModels; content screens (the home feed, schedule, sport, recordbook,
+, Сегодня with the bell's sheet and the pass sheet are SwiftUI over shared ViewModels; content screens (schedule, sport, recordbook,
 social and profile, reviews, links) are still shared Compose Multiplatform screens hosted through
 `ComposeUIViewController`. They move to
 SwiftUI screen by screen ([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
@@ -73,10 +73,12 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   (`Features/Qr/`) is a content-height `ItmoSheet` over `QrPassViewModel`: holder, the code from `QrCodeGenerator`
   drawn as the QR widget draws it, and the line with `Обновить`; full brightness while it is on screen.
 - Root header. A SwiftUI root takes `.itmoRootHeader(title:subtitle:)`: title and subtitle with the toolbar items in
-  one row (`.inlineLarge`), `.inline` once its scroll view leaves the top. Today's root (`TodayScreen`) has it with
-  today's academic date and the bell (`ItmoBellButton`, today only), over the Compose home feed until its SwiftUI
-  screen lands; the bell opens the schedule changes until the bell sheet exists, as on Android. The other roots are still Compose screens with
-  their own top bar.
+  one row (`.inlineLarge`), `.inline` once its scroll view leaves the top. Today's root (`TodayScreen`,
+  `Features/Home/`) has it with today's academic date and the bell (`ItmoBellButton` with the count of unseen events,
+  today only) over `TodayContent` (`TodayViewModel`: the hero, the day as `ItmoLessonTimeline` from the shared
+  `LessonTimelines` rows, `Support/LessonUi+Kit.swift`, the things to do); the bell opens `BellSheet`, a tall
+  `ItmoSheet` over `BellViewModel` ([the bell](features/home.md#the-bell)). The other roots are still Compose screens
+  with their own top bar.
 - Stacks and sheets. Each tab has one `NavigationStack` whose path `AppRouter` holds. One router sheet shows at a
   time; `replaceSheet(with:)` swaps it. Sheets take one of three heights (`ItmoSheet`, `ItmoSheetHeight`): the
   content's, 0.82 of the screen, or full; none goes under the status bar.
@@ -214,6 +216,7 @@ placeholder state (`AppGroupSnapshot`, `SnapshotReaderTests`).
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension | QR widget |
 | schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`) | lesson and day widgets |
 | `locks/<name>.lock` | `FileCrossProcessLock` (`flock`), held only around the guarded call | app, notification service |
+| `sport-results/<lesson>-<millis>.json` | `SportResultInbox` in the notification service, one per booked or refused queue lesson, moved in place whole | `AppGroupSportResultInbox` (`:shared:feature-sport`), which moves each into the bell's `SportResultLog` and deletes it |
 
 Keychain (`KeychainSecureStore`, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, never synchronised or restored
 from a backup on another device): `myitmo_tokens` (app and
@@ -307,7 +310,8 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
 - Whole screens with system chrome (the glass tab bar, navigation bars, presented sheets) use
   `assertScreenAppearances(of:named:)`, which draws the view in a window of its own at 375 x 667 pt; a layer render
   misses that chrome. `ShellSnapshotTests` covers the tabs, the root header, a pushed screen and the sheet heights on
-  kit fixtures, `KitSnapshotTests` the kit components.
+  kit fixtures, `KitSnapshotTests` the kit components, `TodaySnapshotTests` and `BellSheetSnapshotTests` Сегодня and
+  the bell on the states the shared presenter builds from `TodaySamples`.
 - CMP-hosted routes draw into a Metal layer those snapshots miss, so they are checked by XCUITest screenshots and
   their goldens stay Roborazzi's on the JVM until their SwiftUI screens replace them
   ([ADR 0022](decisions/0022-jvm-screenshot-tests.md)).

@@ -99,6 +99,44 @@ final class NotificationServiceTests: XCTestCase {
         }
     }
 
+    /// A booking and a refusal are left for the bell; a full lesson leaves nothing.
+    func testEveryBookingAndRefusalIsLeftForTheBell() async throws {
+        for (answer, expected) in [
+            (FakeTransport.Answer.reply(200, try fixture("lessons", "json")), [true]),
+            (.reply(200, try fixture("sign-in-error", "json")), [false]),
+            (.reply(200, Self.noCapacity(" synthetic-context-more-than-20")), []),
+        ] {
+            transport = FakeTransport()
+            transport.answers[Self.signUp] = answer
+            var recorded: [SportSignNotice] = []
+            var handler = handler()
+            handler.record = { recorded.append($0) }
+
+            _ = await handler.handle(try push("SPORT_FREE_SIGN_LESSONS_PAYLOAD"))
+
+            XCTAssertEqual(recorded.map(\.booked), expected)
+        }
+    }
+
+    /// The file the app's `AppGroupSportResultInbox` reads: the shared `SportResult`, moved in place whole.
+    func testTheInboxLeavesTheSharedSportResult() throws {
+        let container = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: container) }
+        let notice = SportSignNotice(lessonId: 42, sectionName: "Волейбол", start: Date(timeIntervalSince1970: 2), booked: true)
+
+        SportResultInbox(container: container).record(notice, at: Date(timeIntervalSince1970: 1))
+
+        let directory = container.appendingPathComponent("sport-results")
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), ["42-1000.json"])
+        let data = try Data(contentsOf: directory.appendingPathComponent("42-1000.json"))
+        let result = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertEqual(result["lessonId"] as? Int, 42)
+        XCTAssertEqual(result["sectionName"] as? String, "Волейбол")
+        XCTAssertEqual(result["start"] as? Int, 2000)
+        XCTAssertEqual(result["at"] as? Int, 1000)
+        XCTAssertEqual(result["booked"] as? Bool, true)
+    }
+
     // MARK: Gates
 
     func testAFriendshipPushPassesThrough() async throws {

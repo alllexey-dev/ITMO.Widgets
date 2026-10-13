@@ -65,7 +65,7 @@ val sportModule = module {
     // The log has an internal test constructor beside the public one, so its reference would be ambiguous.
     single { SportResultLog(get<AppDirectories>(), get(), get()) }
     single<SessionDataCleaner>(named("sport-results")) { get<SportResultLog>() }
-    single<BellSource>(qualifier = sportBellQualifier) { SportBellSource(get()) }
+    single<BellSource>(qualifier = sportBellQualifier) { SportBellSource(get(), getOrNull()) }
     singleOf(::SportSignPushBooker)
 
     // Unscoped: the holder, the sign screen and the auto-sign flow each hold their own delegate.

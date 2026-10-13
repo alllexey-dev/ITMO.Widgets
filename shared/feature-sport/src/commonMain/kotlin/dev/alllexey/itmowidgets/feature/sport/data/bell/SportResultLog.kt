@@ -50,13 +50,24 @@ class SportResultLog internal constructor(
         emitAll(state.filterNotNull())
     }
 
-    suspend fun add(notice: SportSignNotice) = lock.withLock {
-        val now = clock.now()
-        val result = SportResult(
-            notice.lessonId, notice.sectionName, notice.start.toEpochMilliseconds(), notice.booked, now.toEpochMilliseconds(),
-        )
-        val oldest = (now - RETENTION_DAYS.days).toEpochMilliseconds()
-        val next = (listOf(result) + loaded().filterNot { it.lessonId == notice.lessonId })
+    /** A result this process handled now (Android's push booker). */
+    suspend fun add(notice: SportSignNotice) = add(
+        listOf(
+            SportResult(
+                notice.lessonId, notice.sectionName, notice.start.toEpochMilliseconds(), notice.booked,
+                clock.now().toEpochMilliseconds(),
+            ),
+        ),
+    )
+
+    /** [results] with their own moments, newest kept first: a later result of a lesson replaces an earlier one. */
+    suspend fun add(results: List<SportResult>) = lock.withLock {
+        if (results.isEmpty()) return@withLock
+        val oldest = (clock.now() - RETENTION_DAYS.days).toEpochMilliseconds()
+        val lessons = results.mapTo(mutableSetOf()) { it.lessonId }
+        val next = (results.sortedByDescending { it.at } + loaded().filterNot { it.lessonId in lessons })
+            .distinctBy { it.lessonId }
+            .sortedByDescending { it.at }
             .filter { it.at >= oldest }
             .take(MAX_RESULTS)
         withContext(dispatchers.io) { file.write(JSON.encodeToString(StoredSportResults(next))) }

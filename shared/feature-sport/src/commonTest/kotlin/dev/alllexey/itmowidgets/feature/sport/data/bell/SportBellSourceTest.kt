@@ -48,6 +48,19 @@ class SportBellSourceTest {
     }
 
     @Test
+    fun aRefreshTakesTheResultsAnotherProcessLeftWithTheirOwnMoments() = runTest(dispatcher) {
+        val handled = clock.now() - 1.days
+        val inbox = SportResultInbox { listOf(SportResult(7, "Бассейн", handled.toEpochMilliseconds(), true, handled.toEpochMilliseconds())) }
+        val source = SportBellSource(log(), inbox)
+
+        source.refresh()
+
+        val item = source.observe().first().single()
+        assertEquals("sport:7:${handled.toEpochMilliseconds()}", item.id)
+        assertEquals(handled, item.at)
+    }
+
+    @Test
     fun oldResultsExpireAndSignOutForgetsThem() = runTest(dispatcher) {
         val log = log()
         log.add(SportSignNotice(42, "Волейбол", clock.now(), booked = true))
