@@ -65,8 +65,9 @@ extension ShellView {
     }
 }
 
-/// One tab's stack: its root, the screens the router pushed, and the demo banner above the tab bar. Today's root has
-/// the native root header; the other roots are still Compose screens that draw their own top bar.
+/// One tab's stack: its root, the screens the router pushed, and the demo banner above the tab bar. Today's and the
+/// recordbook's roots have the native root header; the other roots are still Compose screens that draw their own top
+/// bar.
 struct ShellStack: View {
     let tab: ShellTab
     @Bindable var router: AppRouter
@@ -79,7 +80,7 @@ struct ShellStack: View {
         VStack(spacing: 0) {
             NavigationStack(path: path) {
                 root
-                    .shellChrome(tab == .today ? .native : .compose)
+                    .shellChrome(tab == .today || tab == .recordbook ? .native : .compose)
                     .navigationDestination(for: ShellDestination.self) { destination in
                         Routes.view(for: destination)
                             .shellChrome(destination.chrome)
@@ -93,7 +94,7 @@ struct ShellStack: View {
         }
     }
 
-    /// The tab's root: today over the Compose home feed, the Compose schedule, recordbook, sport tab and profile.
+    /// The tab's root: today over the Compose home feed, the Compose schedule, the SwiftUI recordbook, the Compose sport tab and profile.
     @ViewBuilder
     private var root: some View {
         switch tab {
@@ -102,7 +103,7 @@ struct ShellStack: View {
         case .schedule:
             ScheduleScreen(router: router)
         case .recordbook:
-            RecordbookTabScreen(router: router)
+            RecordbookScreen(router: router)
         case .sport:
             SportTabScreen(router: router)
         case .profile:

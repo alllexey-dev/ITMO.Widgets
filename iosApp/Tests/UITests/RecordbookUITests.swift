@@ -1,12 +1,9 @@
 import XCTest
 
-/// The recordbook on the shared demo session: the Compose list as the first tab's root, the period picker
-/// and `Мои баллы` in SwiftUI sheets hosting the shared sheet content, the subject page pushed on the recordbook stack
-/// with its control points, the demo's own total from the stream's sheet and its links and chats
-/// (`ReviewsLinksUITests` covers the links sheets), the demo's refusal of BARS, and the list at the accessibility text size AX1. Compose maps
-/// `testTag` to the accessibility identifier (`RecordbookTestTags`, `RecordbookPeriodSheetTestTags`,
-/// `RecordbookSubjectTestTags`, `SubjectSheetTotalTestTags`); the texts are Russian on an English iPhone. The ids
-/// are the demo set's (`DemoRecordbook`, `DemoStudy`).
+/// The recordbook on the shared demo session: the SwiftUI list as the tab's root under the native root header with the
+/// period menu, the subject page pushed on the recordbook stack with its three tabs, `Мои баллы` in a SwiftUI sheet
+/// hosting the shared sheet content, and the list at the accessibility text size AX1. The ids are the demo set's
+/// (`DemoRecordbook`, `DemoStudy`); the texts are Russian on an English iPhone.
 final class RecordbookUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
@@ -15,95 +12,57 @@ final class RecordbookUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testTheListSwitchesToAnEarlierPeriodInThePicker() {
+    func testTheListSwitchesToAnEarlierPeriodInTheMenu() {
         let app = XCUIApplication.itmo()
         app.launch()
         openRecordbook(app)
         XCTAssertTrue(subjectRow(app, Self.algorithms).waitForExistence(timeout: stepTimeout), "the current semester")
-        XCTAssertFalse(app.navigationBars.firstMatch.exists, "the list draws its own top bar, as on Android")
+        XCTAssertTrue(app.navigationBars.firstMatch.exists, "the root header is the native bar")
         attachScreenshot(named: "list")
 
-        element(app, "recordbook_period").tap()
-        XCTAssertTrue(element(app, "recordbook.period").waitForExistence(timeout: stepTimeout))
-        let first = app.descendants(matching: .any).matching(
-            NSPredicate(format: "identifier BEGINSWITH 'recordbook_period_' AND identifier ENDSWITH '_1'")
-        ).firstMatch
+        element(app, "recordbook.period").tap()
+        let first = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", Self.firstSemester)).firstMatch
         XCTAssertTrue(first.waitForExistence(timeout: stepTimeout), "the first semester is a period of the demo")
         attachScreenshot(named: "period")
         first.tap()
 
-        XCTAssertTrue(waitForAbsence(element(app, "recordbook.period")), "a pick closes the picker")
         XCTAssertTrue(subjectRow(app, Self.programming).waitForExistence(timeout: stepTimeout), "the first semester")
         XCTAssertFalse(subjectRow(app, Self.algorithms).exists)
         attachScreenshot(named: "list-first-semester")
     }
 
-    func testThePeriodPickerClosesByItsButtonAndByADrag() {
-        let app = XCUIApplication.itmo()
-        app.launch()
-        openRecordbook(app)
-        XCTAssertTrue(subjectRow(app, Self.algorithms).waitForExistence(timeout: stepTimeout))
-
-        element(app, "recordbook_period").tap()
-        XCTAssertTrue(element(app, "recordbook.period").waitForExistence(timeout: stepTimeout))
-        app.buttons[Self.closeLabel].firstMatch.tap()
-        XCTAssertTrue(waitForAbsence(element(app, "recordbook.period")), "the sheet's own close button dismisses it")
-
-        element(app, "recordbook_period").tap()
-        XCTAssertTrue(element(app, "recordbook.period").waitForExistence(timeout: stepTimeout))
-        dragDown(app, element(app, "recordbook.period"))
-        XCTAssertTrue(waitForAbsence(element(app, "recordbook.period")), "a drag down dismisses it")
-        XCTAssertTrue(subjectRow(app, Self.algorithms).exists, "the period stays as it was")
-    }
-
-    func testBarsSaysItIsNotInTheDemo() {
-        let app = XCUIApplication.itmo()
-        app.launch()
-        openRecordbook(app)
-        XCTAssertTrue(subjectRow(app, Self.algorithms).waitForExistence(timeout: stepTimeout))
-
-        // The chip's state outlives a launch: turned on it asks BARS at once, so at most two taps show the refusal.
-        let refusal = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", Self.demoUnavailable))
-            .firstMatch
-        for _ in 0..<2 where !refusal.waitForExistence(timeout: 3) {
-            element(app, "recordbook_bars").tap()
-        }
-        XCTAssertTrue(refusal.waitForExistence(timeout: stepTimeout), "the demo has no BARS account")
-        attachScreenshot(named: "bars-demo")
-    }
-
-    func testTheSubjectPageShowsTheControlsAndTheSheetTotalAndOpensMyScores() {
+    func testTheSubjectPageShowsItsTabsAndOpensMyScores() {
         let app = XCUIApplication.itmo()
         app.launch()
         openRecordbook(app)
         let row = subjectRow(app, Self.algorithms)
         XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
-        if !row.isHittable { element(app, "recordbook_list").swipeUp() }
+        if !row.isHittable { element(app, "recordbook.list").swipeUp() }
         row.tap()
 
         XCTAssertTrue(element(app, "recordbook.subject").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "recordbook_subject_list").waitForExistence(timeout: stepTimeout))
-        XCTAssertFalse(app.navigationBars.firstMatch.exists, "the page draws its own top bar")
-        let total = element(app, "subject_sheet_total")
-        XCTAssertTrue(total.waitForExistence(timeout: stepTimeout), "the demo's own total from the stream's sheet")
-        XCTAssertTrue(labelled(app, Self.controlsTitle).waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(labelled(app, Self.linksTitle).exists, "the subject links")
-        XCTAssertTrue(labelled(app, Self.chatsTitle).exists)
-        attachScreenshot(named: "subject")
+        XCTAssertTrue(element(app, "subject.hero").waitForExistence(timeout: stepTimeout), "the scores tab first")
+        attachScreenshot(named: "subject-scores")
 
-        element(app, "subject_sheet_total_menu").tap()
-        let change = labelled(app, Self.changeTotalLabel)
-        XCTAssertTrue(change.waitForExistence(timeout: stepTimeout))
-        change.tap()
+        let menu = app.buttons[Self.sheetActions].firstMatch
+        XCTAssertTrue(menu.waitForExistence(timeout: stepTimeout), "the demo's own total from the stream's sheet")
+        menu.tap()
+        app.buttons[Self.changeTotalLabel].firstMatch.tap()
         XCTAssertTrue(element(app, "recordbook.sheetScores").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(labelled(app, Self.myScoresTitle).waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "my-scores")
         dragDown(app, element(app, "recordbook.sheetScores"))
         XCTAssertTrue(waitForAbsence(element(app, "recordbook.sheetScores")), "a drag down dismisses the sheet")
 
-        app.buttons[Self.backLabel].firstMatch.tap()
-        XCTAssertTrue(waitForAbsence(element(app, "recordbook.subject")), "the page's own back button")
-        XCTAssertTrue(element(app, "recordbook_list").waitForExistence(timeout: stepTimeout))
+        app.buttons[Self.lessonsTab].firstMatch.tap()
+        XCTAssertTrue(labelled(app, Self.teachersTitle).waitForExistence(timeout: stepTimeout))
+        attachScreenshot(named: "subject-lessons")
+        app.buttons[Self.materialsTab].firstMatch.tap()
+        XCTAssertTrue(labelled(app, Self.chatsTitle).waitForExistence(timeout: stepTimeout))
+        attachScreenshot(named: "subject-materials")
+
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(waitForAbsence(element(app, "recordbook.subject")), "back to the list")
+        XCTAssertTrue(element(app, "recordbook.list").waitForExistence(timeout: stepTimeout))
     }
 
     func testTheListAtAccessibilityTextSize() {
@@ -111,8 +70,7 @@ final class RecordbookUITests: XCTestCase {
         let app = XCUIApplication.itmo(arguments: ax1)
         app.launch()
         openRecordbook(app)
-        let list = element(app, "recordbook_list")
-        XCTAssertTrue(list.waitForExistence(timeout: stepTimeout))
+        let list = element(app, "recordbook.list")
         XCTAssertTrue(subjectRow(app, Self.algorithms).waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "list-ax1")
 
@@ -133,33 +91,29 @@ final class RecordbookUITests: XCTestCase {
     /// (`DemoRecordbook.FIRST_SEMESTER`); a row's id is the discipline's tenfold plus the semester.
     private static let algorithms = 990_203
     private static let programming = 990_401
-    private static let subjectRowPrefix = "recordbook_subject_99"
-    /// `common_close`, `recordbook_back`, `error_demo_unavailable`, `sheet_scores_change_total`, `sheet_scores_title`,
-    /// `subject_controls_title`, `links_title` and `links_chats`.
-    private static let closeLabel = "Закрыть"
-    private static let backLabel = "К зачётке"
-    private static let demoUnavailable = "Недоступно в демо"
+    private static let subjectRowPrefix = "recordbook.row.99"
+    /// `subject_semester` of the first, `sheet_scores_actions`, `sheet_scores_change_total`, `subject_tab_lessons`,
+    /// `subject_tab_materials`, `subject_teachers_title`, `subject_materials_chats`.
+    private static let firstSemester = "1 семестр"
+    private static let sheetActions = "Действия с таблицей"
     private static let changeTotalLabel = "Изменить итог"
-    private static let myScoresTitle = "Мои баллы"
-    private static let controlsTitle = "Контрольные точки"
-    private static let linksTitle = "Ссылки"
+    private static let lessonsTab = "Пары"
+    private static let materialsTab = "Материалы"
+    private static let teachersTitle = "Преподаватели"
     private static let chatsTitle = "Чаты"
 
     private func openRecordbook(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
         app.selectTab("recordbook")
         XCTAssertTrue(element(app, "shell.root.recordbook").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "recordbook_list").waitForExistence(timeout: rootTimeout), "the list never loaded")
+        XCTAssertTrue(element(app, "recordbook.list").waitForExistence(timeout: rootTimeout), "the list never loaded")
     }
 
     /// The list row of the discipline `id` in whichever semester the demo shows.
     private func subjectRow(_ app: XCUIApplication, _ id: Int) -> XCUIElement {
-        app.descendants(matching: .any).matching(
-            NSPredicate(format: "identifier BEGINSWITH %@", "recordbook_subject_\(id)")
-        ).firstMatch
+        element(app, "recordbook.row.\(id)")
     }
 
-    /// The first element whose label is `text` (a Compose heading is no static text).
     private func labelled(_ app: XCUIApplication, _ text: String) -> XCUIElement {
         app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", text)).firstMatch
     }

@@ -1,7 +1,7 @@
 import XCTest
 
 /// The subject links and the teacher reviews on the shared demo session: the Compose sheets in SwiftUI
-/// sheets above the shell (all links, the link editor, a link's actions) with the report dialogs as Compose dialogs
+/// sheets above the subject page's materials tab (the link editor, a link's actions) with the report dialogs as Compose dialogs
 /// over what asked for them, and the review editor, a form sheet a drag does not close. The demo shows
 /// `DemoSubjectLinks` and `DemoReviews` and refuses every change (`error_demo_unavailable`) without a request. Compose
 /// maps `testTag` to the accessibility identifier (`SubjectLinksSheetTestTags`, `LinkEditorSheetTestTags`,
@@ -15,26 +15,20 @@ final class ReviewsLinksUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testAllLinksVoteAndAddAndEditALink() {
+    func testVoteAndAddAndEditALinkOnTheMaterialsTab() {
         let app = XCUIApplication.itmo()
         app.launch()
         openAlgorithms(app)
-        XCTAssertTrue(labelled(app, Self.linksTitle).waitForExistence(timeout: stepTimeout), "the links section")
-        attachScreenshot(named: "subject-links")
+        XCTAssertTrue(labelled(app, Self.chatsTitle).waitForExistence(timeout: stepTimeout), "the chats come first")
+        attachScreenshot(named: "subject-materials")
 
-        tapRevealed(app.buttons[Self.allLinks], in: element(app, "recordbook_subject_list"))
-        let all = element(app, "resources.links")
-        XCTAssertTrue(all.waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "subject_links_list").waitForExistence(timeout: stepTimeout))
-        attachScreenshot(named: "all-links")
-
-        // A vote in the demo: the sheet says why nothing changed.
-        all.buttons[Self.voteDown].firstMatch.tap()
+        // A vote in the demo: the page says why nothing changed.
+        app.buttons[Self.voteDown].firstMatch.tap()
         XCTAssertTrue(message(app, Self.demoUnavailable).waitForExistence(timeout: stepTimeout), "the demo refusal")
         XCTAssertTrue(waitForAbsence(message(app, Self.demoUnavailable)), "the banner goes after a few seconds")
 
-        // A new link over the list: the demo refuses to save it, and the form stays.
-        element(app, "subject_links_add").tap()
+        // A new link from the bar: the demo refuses to save it, and the form stays.
+        element(app, "subject.addLink").tap()
         let editor = element(app, "resources.linkEditor")
         XCTAssertTrue(editor.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(labelled(app, Self.newLink).waitForExistence(timeout: stepTimeout))
@@ -48,13 +42,11 @@ final class ReviewsLinksUITests: XCTestCase {
         attachScreenshot(named: "editor-new")
         dragDown(app, editor)
         XCTAssertTrue(waitForAbsence(editor), "a drag down closes the editor")
-        XCTAssertTrue(all.exists, "the list stays under it")
 
-        // An own link: its actions over the list, then the editor in their place.
-        let own = all.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", Self.ownLink)).firstMatch
-        for _ in 0..<4 where !own.isHittable { element(app, "subject_links_list").swipeUp(velocity: .slow) }
+        // An own link: its actions on a long press, then the editor in their place.
+        let own = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", Self.ownLink)).firstMatch
+        for _ in 0..<4 where !own.isHittable { element(app, "subject.list").swipeUp(velocity: .slow) }
         XCTAssertTrue(own.waitForExistence(timeout: stepTimeout))
-        Thread.sleep(forTimeInterval: 1)
         own.press(forDuration: 1.2)
         let actions = element(app, "resources.linkActions")
         XCTAssertTrue(actions.waitForExistence(timeout: stepTimeout))
@@ -67,10 +59,7 @@ final class ReviewsLinksUITests: XCTestCase {
         attachScreenshot(named: "editor-edit")
         dragDown(app, element(app, "resources.linkEditor"))
         XCTAssertTrue(waitForAbsence(element(app, "resources.linkEditor")))
-        XCTAssertTrue(all.waitForExistence(timeout: stepTimeout), "the list is still under the editor")
-
-        all.buttons[Self.closeLabel].firstMatch.tap()
-        XCTAssertTrue(waitForAbsence(all), "the sheet's own close button")
+        XCTAssertTrue(element(app, "recordbook.subject").exists, "the page is still under the editor")
     }
 
     func testALinksReportIsTheDialogOverItsActions() {
@@ -148,23 +137,12 @@ final class ReviewsLinksUITests: XCTestCase {
         let app = XCUIApplication.itmo(arguments: ax1)
         app.launch()
         openAlgorithms(app)
-        let all = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", Self.allLinksPrefix)).firstMatch
-        tapRevealed(all, in: element(app, "recordbook_subject_list"), screenshot: "subject-links-ax1")
-        let sheet = element(app, "resources.links")
-        XCTAssertTrue(sheet.waitForExistence(timeout: stepTimeout))
-        attachScreenshot(named: "all-links-ax1")
-
-        // The add button stays pinned under the list, inside the sheet.
-        let add = element(app, "subject_links_add")
-        XCTAssertTrue(add.isHittable, "the add button is reachable at AX1")
-        XCTAssertLessThanOrEqual(add.frame.maxY, sheet.frame.maxY)
-        add.tap()
+        attachScreenshot(named: "subject-materials-ax1")
+        element(app, "subject.addLink").tap()
         XCTAssertTrue(element(app, "resources.linkEditor").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "editor-ax1")
         dragDown(app, element(app, "resources.linkEditor"))
         XCTAssertTrue(waitForAbsence(element(app, "resources.linkEditor")))
-        sheet.buttons[Self.closeLabel].firstMatch.tap()
-        XCTAssertTrue(waitForAbsence(sheet))
 
         openTeacher(app)
         let list = element(app, "user_profile_list")
@@ -182,13 +160,12 @@ final class ReviewsLinksUITests: XCTestCase {
     /// semester); `DemoPeople.MATH_TEACHER`, whose reviews `DemoReviews` has.
     private static let algorithms = 990_203
     private static let mathTeacher = 999_101
-    /// `links_title`, `links_all_count`, `links_vote_down`, `links_editor_new`, `links_editor_edit`, `common_close`,
+    /// `subject_materials_chats`, `subject_tab_materials`, `links_vote_down`, `links_editor_new`, `links_editor_edit`, `common_close`,
     /// `error_demo_unavailable`, `links_report_title`, `links_report_spam` (`review_report_spam`), `links_report_send`
     /// (`review_report_send`), `common_cancel`, `teacher_review_report`, `review_report_title`, `review_editor_new`,
     /// `review_discard_title`, `review_discard`.
-    private static let linksTitle = "Ссылки"
-    private static let allLinks = "Все ссылки, 5"
-    private static let allLinksPrefix = "Все ссылки"
+    private static let chatsTitle = "Чаты"
+    private static let materialsTab = "Материалы"
     private static let voteDown = "Бесполезная ссылка"
     private static let newLink = "Новая ссылка"
     private static let editLink = "Изменить ссылку"
@@ -209,18 +186,17 @@ final class ReviewsLinksUITests: XCTestCase {
     private static let newUrl = "https://disk.yandex.ru/d/demo-notes"
     private static let reviewText = "Лекции понятные, на практике разбирают каждую задачу до конца."
 
+    /// The algorithms page on its materials tab.
     private func openAlgorithms(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
         app.selectTab("recordbook")
-        XCTAssertTrue(element(app, "recordbook_list").waitForExistence(timeout: rootTimeout), "the list never loaded")
-        let row = app.descendants(matching: .any).matching(
-            NSPredicate(format: "identifier BEGINSWITH %@", "recordbook_subject_\(Self.algorithms)")
-        ).firstMatch
+        XCTAssertTrue(element(app, "recordbook.list").waitForExistence(timeout: rootTimeout), "the list never loaded")
+        let row = element(app, "recordbook.row.\(Self.algorithms)")
         XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
-        if !row.isHittable { element(app, "recordbook_list").swipeUp() }
+        if !row.isHittable { element(app, "recordbook.list").swipeUp() }
         row.tap()
         XCTAssertTrue(element(app, "recordbook.subject").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "recordbook_subject_list").waitForExistence(timeout: stepTimeout))
+        app.buttons[Self.materialsTab].firstMatch.tap()
     }
 
     /// The math teacher's profile through people search, with its reviews section.
