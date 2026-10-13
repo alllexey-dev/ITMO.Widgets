@@ -144,9 +144,9 @@ extension XCTestCase {
 extension SnapshotMatrix {
     /// A whole screen at the matrix width.
     static let screenHeight: CGFloat = 640
-    /// Liquid Glass samples what lies under it, and a handful of pixels on its rim come out a shade apart between
-    /// two renders of the same window; 0.01 % of the pixels may differ, a changed text or icon never fits in that.
-    static let windowPrecision: Float = 0.9999
+    /// Liquid Glass samples what lies under it, and some pixels on its rim come out a shade apart between two renders
+    /// of the same window (up to 0.03 % on the CI runner); 0.1 % of the pixels may differ, less than a short label.
+    static let windowPrecision: Float = 0.999
 
     /// `view` in a window above the host app, in `appearance`, drawn with its system chrome.
     @MainActor
