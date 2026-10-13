@@ -36,7 +36,7 @@ sign-in and first run are done, runs it once and never repeats it from Recents
 | Link | Root | Above it |
 |---|---|---|
 | `/u/{isu}` | profile tab | `UserProfile` |
-| `/sport/{id}`, `/sport/p/{id}` | sport, page `Запись` | the lesson card or "lesson unavailable" |
+| `/sport/{id}`, `/sport/p/{id}` | sport, `Запись` | the lesson sheet or "lesson unavailable" |
 | `/pair#...` | profile tab | `WebLogin(code = link)`, read as a scan |
 | malformed | home | `LinkUnavailable` |
 
@@ -52,8 +52,9 @@ sign-in and first run are done, runs it once and never repeats it from Recents
   section, teacher, levels, type and slot at prototype +14 days, the rule of
   `SportScheduleRepositoryImpl`), the real lesson opens.
 - An ended lesson or one missing from the catalog (today..+21 days; for a
-  prediction, a missing prototype) is unavailable. `SportSignRoute` falls back
-  to `SportSignViewModel.linkedLesson` when filters hide the lesson.
+  prediction, a missing prototype) is unavailable. The view model keeps the
+  linked lesson, so its sheet and its action work while filters hide it.
+  iOS: `SportTabScreen` consumes the request the same way.
 
 ## Sharing
 
@@ -62,7 +63,7 @@ production host, debug: dev host); `core/ui/ShareText` opens the Sharesheet.
 
 - Profile: from the `AppRoutes.UserProfile` top bar (only a `Content` page, the
   own profile too) and from the profile tab once the ISU is known.
-- Sport lesson: from the card's menu while the lesson has not ended (a real
+- Sport lesson: from the lesson sheet's `Поделиться` while the lesson has not ended (a real
   lesson or booking with a positive id, or a prediction). A predicted card shares
   `/sport/p/{prototypeLessonId}` (`SportCommonDetailsArgs.prototypeLessonId`:
   the id of a predicted lesson, the negated id of a predicted booking). Debug
