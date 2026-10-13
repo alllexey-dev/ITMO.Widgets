@@ -13,8 +13,8 @@ dark; seeded palette + font 1.3 + 320 dp; dark seeded + font 1.3 + 320 dp).
   changes; CI verifies every committed baseline.
 - Before a release candidate: the full appearance matrix on an emulator (light,
   dark, one dynamic palette, font 1.0 and 1.3, long names, every state); the iOS
-  snapshot matrix (light, dark, Dynamic Type L and AX1, 320 pt width); the upgrade
-  from the previous release on a device; `scripts/ship-check.sh`. See
+  snapshot matrix (light, dark, Dynamic Type L and AX1, 375 pt width since the
+  iOS 26.1 minimum of ADR 0031); the upgrade from the previous release on a device; `scripts/ship-check.sh`. See
   [release](../release.md).
 
 **Rules.**

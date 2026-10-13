@@ -28,8 +28,8 @@ struct SnapshotAppearance {
 
 /// The settings every snapshot shares, set once here and never per test.
 enum SnapshotMatrix {
-    /// Narrower than any supported iPhone (the smallest is 375 pt), so a layout that fits here fits everywhere.
-    static let width: CGFloat = 320
+    /// The narrowest iPhone iOS 26 runs on (iPhone SE, 375 pt), so a layout that fits here fits everywhere.
+    static let width: CGFloat = 375
     /// Fixed instead of the simulator's, so a reference does not depend on the device that recorded it.
     static let displayScale: CGFloat = 2
     /// Every pixel must match; a pixel matches within a CIE Delta E of 2 (98 %), which absorbs GPU rounding but
@@ -142,8 +142,8 @@ extension XCTestCase {
 }
 
 extension SnapshotMatrix {
-    /// A whole screen at the matrix width.
-    static let screenHeight: CGFloat = 640
+    /// A whole screen of that iPhone.
+    static let screenHeight: CGFloat = 667
     /// Liquid Glass samples what lies under it, and some pixels on its rim come out a shade apart between two renders
     /// of the same window (up to 0.03 % on the CI runner); 0.1 % of the pixels may differ, less than a short label.
     static let windowPrecision: Float = 0.999
