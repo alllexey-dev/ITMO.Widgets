@@ -13,6 +13,9 @@ import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassHolder
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassStatus
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassUiState
 import dev.alllexey.itmowidgets.feature.qr.ui.QrPassSheetContent
+import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
+import dev.alllexey.itmowidgets.feature.sport.navigation.SportDetailsOpener
+import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -80,7 +83,7 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
         DemoBanner("ShellDemoBanner", ShellSurface.Tabs(demoBanner = true), ShellBackStack()),
         Sheet("ShellSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.IcsExport)),
         PassSheet("ShellPassSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.QrPass)),
-        FullSheet("ShellFullSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.FriendSelector())),
+        FullSheet("ShellFullSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(FullSheetRoute)),
         TabSwipe("ShellTabSwipe", ShellSurface.Tabs(demoBanner = false), ShellBackStack(), Gesture.HalfwaySwipe),
     }
 
@@ -165,12 +168,15 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
                 }
             }
             entry<AppRoutes.QrPass> { _, _ -> QrPassSheetContent(Pass, onRefresh = {}, onClose = {}) }
-            entry<AppRoutes.FriendSelector> { _, _ ->
+            entry<SportRoutes.SportCommonDetails> { _, _ ->
                 SheetScaffold("Лист во всю высоту", close = SheetClose("Закрыть") {}) {
                     Text("Вся высота под строкой состояния", Modifier.padding(ItmoTheme.spacing.screenMargin))
                 }
             }
         }
+
+        /** The sport details sheet: the one key of the full height below the status bar. */
+        private val FullSheetRoute = SportRoutes.details(SportCardFixtures.booking(7), SportDetailsOpener.MY)
 
         private val TodayHeader = TodayHeaderUiState(
             UiText.Res(AppTab.HOME.label),

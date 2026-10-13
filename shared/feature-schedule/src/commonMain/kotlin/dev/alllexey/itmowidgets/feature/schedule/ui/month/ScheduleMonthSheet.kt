@@ -136,7 +136,7 @@ private fun MonthGrid(state: ScheduleMonthUiState, onSelect: (LocalDate) -> Unit
         }
         val cells: List<MonthDay?> = List(state.leading) { null } + state.days
         cells.chunked(DAYS_PER_WEEK).forEach { week ->
-            Row(Modifier.fillMaxWidth().padding(top = 2.dp)) {
+            Row(Modifier.fillMaxWidth().padding(top = CellGap)) {
                 week.forEach { day ->
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         if (day != null) DayCell(day, onSelect)
@@ -156,7 +156,7 @@ private fun DayCell(day: MonthDay, onSelect: (LocalDate) -> Unit) {
             .clip(ItmoTheme.shapes.medium)
             .selectable(day.selected, role = Role.Button, onClick = { onSelect(day.date) })
             .heightIn(min = ItmoTheme.spacing.touchTarget)
-            .padding(vertical = 2.dp)
+            .padding(vertical = CellGap)
             .testTag(ScheduleMonthTestTags.day(day.date)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -182,7 +182,7 @@ private fun DayCell(day: MonthDay, onSelect: (LocalDate) -> Unit) {
                 softWrap = false,
             )
         }
-        Row(Modifier.padding(top = 2.dp).height(DotSize), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(Modifier.padding(top = CellGap).height(DotSize), horizontalArrangement = Arrangement.spacedBy(CellGap)) {
             repeat(day.lessons) {
                 Box(
                     Modifier.size(DotSize).clip(CircleShape)
@@ -198,3 +198,4 @@ private const val DOT_ALPHA = 0.7f
 private const val PAST_DOT_ALPHA = 0.35f
 private val DayCircle = 36.dp
 private val DotSize = 4.dp
+private val CellGap = 2.dp

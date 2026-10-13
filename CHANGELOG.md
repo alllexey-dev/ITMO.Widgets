@@ -18,8 +18,7 @@ new iOS app.
   sites open in Safari).
 - The tabs are the shared screens of Android: `Зачётка` with BARS and the
   subject page (links, chats, teacher reviews with the AI summary), the
-  schedule with friends' schedules and lesson sheets (`Открыть на карте` in
-  Apple Maps), sport with `Мой спорт` and `Запись`, the home feed, and the Me
+  schedule with friends' schedules and lesson sheets, sport with `Мой спорт` and `Запись`, the home feed, and the Me
   tab with friends, people search, privacy and settings; rows iOS cannot
   support are hidden.
 - The QR pass at full brightness, the QR widget with the spoiler and dynamic
@@ -105,6 +104,19 @@ new iOS app.
   checkpoints by group with their minimums), `Пары` (teachers as rows with the tone of their reviews in words, the
   lessons ahead) and `Материалы` (chats, links by category with votes, own links with their review state; a gate
   without `Подключение к ITMO.Widgets`). The My ITMO LMS link is no longer shown.
+- Расписание is rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one view model): an endless
+  feed of days with sticky day headers under a week strip that swipes by weeks, the month in the header opens a
+  month sheet with a dot per lesson and `Открыть`, `Сегодня` appears off the current week, days without lessons are
+  a short `пар нет`, weekends collapse, a booked sport lesson is a lesson with its status, and a change sits on its
+  lesson. The friends button opens `Чьё расписание`: one tap, avatars, where each friend is now; a friend whose
+  schedule is closed is dimmed. A friend's schedule is the same feed with `Вы` on shared lessons and `Вернуться к
+  своему`. A lesson opens one lesson sheet everywhere: the time, room and building in large type, only the actions
+  that apply (`Видео`, `Друзья`), the teacher with the tone of the reviews in words, a sport queue as a row to Спорт.
+  The old schedule screen, the lesson details sheet and the friend selector with its recent friends are gone.
+- Overlapping lessons on every day timeline: one now marker, a rail that only fills forward, the lessons in start
+  order without an `Окно` between them and a quiet `одновременно с «...»` on the later one. A room booking shows
+  `Бронь помещения` instead of `Пара`. The static root header on Android no longer lets scrolled content show
+  through above it, and the iOS root header is opaque.
 - New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
   обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
   палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep

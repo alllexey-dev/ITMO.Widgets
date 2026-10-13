@@ -18,8 +18,8 @@ custom-services gate.
   `SportTabRoot` (`shell/entries/SportEntries.kt`), which keeps both
   ViewModels in the tab root's store, so `Запись` keeps its week and filters
   across tab switches and re-entering with content loaded starts no request.
-- No sport ViewModel is shared with other screens; the feed, the schedule and
-  the shell's `SportDetailsRedirect` share the singleton `SportBookingsHolder`.
+- No sport ViewModel is shared with other screens; the two pages share the singleton `SportBookingsHolder`. The
+  schedule and Сегодня open a sport lesson or an own queue in the lesson sheet, whose row leads here.
 - Each page has its own lifecycle (`STARTED` while behind) and shows
   snackbars and dialogs only while current.
 - A pending `TabRequest.SportLesson` becomes `SportSharedLesson` once; it
@@ -78,9 +78,7 @@ custom-services gate.
 - The sheet renders the selected snapshot without another request. Its action
   sends one `SportSheetAction`; the page resolves the current item, keeps
   confirmations, custom-services gates and busy protection, and rechecks
-  time-dependent offers on tap. Recreation cannot duplicate a result. A sheet
-  opened by the shell asks before a cancellation itself
-  (`AppRoutes.CancelBookingConfirm`).
+  time-dependent offers on tap. Recreation cannot duplicate a result.
 - `Поделиться` exists while the lesson has not ended, for ids > 0 and for
   predictions (`/sport/p/{prototypeLessonId}`); see
   [app-links.md](app-links.md).
@@ -125,8 +123,8 @@ Tests: `shared/feature-sport/src/*Test`; screenshots in `screenshots/`.
 
 - Entry: `SportTabScreen` (`iosApp/Sources/Features/Sport/`) hosts the same
   `SportRoute` through `sportViewController` (`shared/ios`,
-  `screens/SportScreens.kt`); Koin modules `sportModule`, `sportIosModule`,
-  `friendSelectorModule`. Tabs move by the native tab bar only.
+  `screens/SportScreens.kt`); Koin modules `sportModule`, `sportIosModule` and
+  social's `FriendRepository`. Tabs move by the native tab bar only.
 - The details sheet is a SwiftUI `.sheet` (large detent) hosting
   `SportDetailsSheet` via `sportDetailsViewController`; `SportTabState` returns
   the sheet's action to the opening page, which asks for the cancellation

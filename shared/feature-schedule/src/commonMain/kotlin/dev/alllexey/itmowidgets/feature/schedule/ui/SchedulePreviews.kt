@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedUiState
 import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedActions
 import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedScreen
 import dev.alllexey.itmowidgets.feature.schedule.ui.friends.FriendPickerActions
@@ -23,10 +22,7 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.preview.ScheduleSamples
 
 private const val SCREEN_HEIGHT = 900
 
-@Composable
-private fun FeedPreview(state: ScheduleFeedUiState, pushed: Boolean = false) = ItmoPreview {
-    ScheduleFeedScreen(state, ScheduleFeedActions(onBack = if (pushed) ({}) else null))
-}
+private fun actions(pushed: Boolean = false) = ScheduleFeedActions(onBack = if (pushed) ({}) else null)
 
 /** The sheet's colour under the body, as the shell's sheet draws it. */
 @Composable
@@ -37,43 +33,43 @@ private fun SheetPreview(content: @Composable () -> Unit) = ItmoPreview {
 internal class ScheduleFeedTodayPreview {
     @Preview(name = "today", heightDp = SCREEN_HEIGHT)
     @Composable
-    fun ScheduleFeed() = FeedPreview(ScheduleSamples.Feed)
+    fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.Feed, actions()) }
 }
 
 internal class ScheduleFeedNextWeekPreview {
     @Preview(name = "next-week", heightDp = SCREEN_HEIGHT)
     @Composable
-    fun ScheduleFeed() = FeedPreview(ScheduleSamples.NextWeek)
+    fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.NextWeek, actions()) }
 }
 
 internal class ScheduleFeedFriendPreview {
     @Preview(name = "friend", heightDp = SCREEN_HEIGHT)
     @Composable
-    fun ScheduleFeed() = FeedPreview(ScheduleSamples.FriendFeed)
+    fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.FriendFeed, actions()) }
 }
 
 internal class ScheduleFeedUserPreview {
     @Preview(name = "user", heightDp = SCREEN_HEIGHT)
     @Composable
-    fun ScheduleFeed() = FeedPreview(ScheduleSamples.FriendFeed.copy(friend = null, canPickFriend = false), pushed = true)
+    fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.FriendFeed.copy(friend = null, canPickFriend = false), actions(pushed = true)) }
 }
 
 internal class ScheduleFeedOverlapPreview {
     @Preview(name = "overlap", heightDp = SCREEN_HEIGHT)
     @Composable
-    fun ScheduleFeed() = FeedPreview(ScheduleSamples.Overlap)
+    fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.Overlap, actions()) }
 }
 
 internal class ScheduleFeedEmptyPreview {
     @Preview(name = "empty", heightDp = SCREEN_HEIGHT)
     @Composable
-    fun ScheduleFeed() = FeedPreview(ScheduleSamples.Empty)
+    fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.Empty, actions()) }
 }
 
 internal class ScheduleFeedErrorPreview {
     @Preview(name = "error", heightDp = SCREEN_HEIGHT)
     @Composable
-    fun ScheduleFeed() = FeedPreview(ScheduleSamples.Failed)
+    fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.Failed, actions()) }
 }
 
 internal class ScheduleMonthLessonsPreview {
