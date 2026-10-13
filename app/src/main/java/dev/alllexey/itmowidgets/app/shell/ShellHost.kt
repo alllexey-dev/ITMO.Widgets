@@ -40,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -172,7 +173,8 @@ class ShellHost(
                 // The window shows behind the system bars: it follows the accent colour as the screens do.
                 val background = ItmoTheme.colorScheme.background.toArgb()
                 SideEffect { activity.window.setBackgroundDrawable(ColorDrawable(background)) }
-                Box(Modifier.fillMaxSize()) {
+                // Test tags become resource ids, so the UiAutomator journeys of :baselineprofile find the shell.
+                Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                     ShellContent(navigator, registry, surface, onDemoSignIn = ::signOut)
                     SnackbarHost(
                         snackbars,
