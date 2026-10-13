@@ -71,9 +71,10 @@ every background run, `AndroidScheduleChangeNotifier` shows it (rules in
 
 - One summary, tag `schedule_changes`, id 1; today or tomorrow makes a sound,
   later changes are silent. Nothing is shown 00:00-06:00 Moscow time.
-- Tap: `ACTION_OPEN_SCHEDULE_CHANGES` -> schedule tab with
-  `AppRoutes.ScheduleChanges`; the pending route survives recreation.
-- `ScheduleChangesRepository.markAllRead()` cancels it. Without the
+- Tap: `ACTION_OPEN_SCHEDULE_CHANGES` -> Сегодня with the bell's sheet
+  (`AppRoutes.Bell`, [the bell](home.md#the-bell)); the pending route survives
+  recreation.
+- `ScheduleChangesRepository.markAllRead()` cancels it; opening the bell calls it. Without the
   permission nothing is shown, but changes still count as delivered.
 
 ## Marks
@@ -82,7 +83,8 @@ Local: `MarksCheck` (`feature/recordbook`) decides, `AndroidMarksNotifier`
 shows (rules in [mark tracking](marks-tracking.md#notification)). Channel and
 tag `marks`.
 
-- Digest, id 1, with `publicTitle` so the lock screen hides subject names;
+- Digest, id 1: one subject's value in the title (`Матанализ: 9 из 10`), else the subject names; a
+  `publicTitle` so the lock screen shows neither;
   includes sheet total changes ([sheet
   scores](sheet-scores.md#background-check-of-sheets)).
 - BARS sign-in prompt, id 2, shown once until the next successful BARS answer;

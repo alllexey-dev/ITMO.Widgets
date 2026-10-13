@@ -16,7 +16,7 @@ data class TodayTodo(
 )
 
 /**
- * A feature's contribution to «Нужно сделать»: an empty list when there is nothing to do. Sources are an open set
+ * A feature's contribution to `Нужно сделать`: an empty list when there is nothing to do. Sources are an open set
  * (`getAll()`), each under its own qualifier.
  */
 fun interface TodayTodoSource {

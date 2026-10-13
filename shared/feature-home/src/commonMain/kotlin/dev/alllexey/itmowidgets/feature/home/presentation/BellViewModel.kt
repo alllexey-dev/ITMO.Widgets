@@ -30,7 +30,7 @@ import kotlinx.datetime.toLocalDateTime
 /**
  * The bell's sheet; one instance per opening. Opening reads everything: the events the user had not seen are marked
  * seen at once (the badge goes) and every source reads its own (dots, notifications), while this opening keeps them
- * highlighted. There is no «Прочитать все». Events that arrive while the sheet is open are new as well.
+ * highlighted. There is no `Прочитать все`. Events that arrive while the sheet is open are new as well.
  */
 class BellViewModel(private val bell: BellRepository, private val time: AcademicTimeProvider) : ViewModel() {
 

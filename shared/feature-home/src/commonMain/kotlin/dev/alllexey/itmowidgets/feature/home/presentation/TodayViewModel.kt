@@ -31,7 +31,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.plus
 
 /**
- * Сегодня on both platforms: today and tomorrow from the schedule cache ([DayLessonsGateway]) and «Нужно сделать»
+ * Сегодня on both platforms: today and tomorrow from the schedule cache ([DayLessonsGateway]) and `Нужно сделать`
  * from every Koin [TodayTodoSource], re-evaluated every minute so the hero and the timeline move with the academic
  * clock. The first show refreshes once; a resume refreshes data older than five minutes.
  */

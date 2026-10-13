@@ -20,7 +20,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 
 /**
- * «Войдите в БАРС заново» under the day while the background mark check found the ITMO.ID session behind BARS ended
+ * `Войдите в БАРС заново` under the day while the background mark check found the ITMO.ID session behind BARS ended
  * (`BarsLoginPrompt` is not `NONE`); a successful BARS answer or switching BARS marks off removes it.
  */
 class BarsTodoSource(

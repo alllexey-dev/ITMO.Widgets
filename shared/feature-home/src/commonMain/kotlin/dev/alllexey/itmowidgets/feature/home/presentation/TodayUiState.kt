@@ -15,7 +15,7 @@ sealed interface TodayUiState {
 
     /**
      * The [hero] (the lesson to go to now, or tomorrow's first in the evening), the [day] as a timeline and
-     * «Нужно сделать» ([todos], only when there is something). Without a hero and a day there are no lessons today and
+     * `Нужно сделать` ([todos], only when there is something). Without a hero and a day there are no lessons today and
      * tomorrow. [stale] (`Данные на 11:44`) dims the day after a failed refresh; [refreshing] is a pull's indicator.
      */
     data class Content(

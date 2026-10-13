@@ -135,6 +135,7 @@ Tests: `shared/feature-sport/src/*Test`; screenshots in `screenshots/`.
   `UserSportIosRoute`; sharing through `SportShares`, maps in Apple Maps.
 - `sportIosModule` binds `SportApi` from the one `BackendClient` and empty
   debug ports; loading `sportModule` also wires pending sport rows into the
-  schedule, the sport home card and the sign-out cleaners.
+  schedule and Сегодня, the queue results of the bell (`SportResultLog`, the JSON file sport_results.json in the no-backup directory, written by
+  `SportSignPushBooker` on Android) and the sign-out cleaners.
 - Tests: `SportIosModuleTest` (`scripts/ios/test.sh kn :shared:feature-sport`),
   `SportUITests`.

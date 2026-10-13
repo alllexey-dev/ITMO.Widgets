@@ -36,11 +36,11 @@ included build with the convention plugins (`itmowidgets.kmp.library`,
 | `:app` | Android app: shell, Android-only surfaces, Koin start, Android ports |
 | `:shared:core` | Contracts and models every feature shares (`core/*` packages), common strings; no Compose |
 | `:shared:compose-strings` | The Compose side of the catalog: one CMP `Res` over a copy of every module's strings, the `UiText` resolvers |
-| `:shared:designsystem` | `ItmoTheme`, tokens, the component kit, the Android-only M3 Expressive kit of the redesign (`designsystem.kit`), icons, preview helpers |
+| `:shared:designsystem` | `ItmoTheme`, tokens, the component kit, the Android-only M3 Expressive kit of the redesign (`designsystem.kit`, which draws `core/lesson`), icons, preview helpers |
 | `:shared:backend-client` | Typed Ktor client of the ITMO.Widgets Backend (`BackendClient`, one `*Api` per area) |
 | `:shared:testing` | Test kit: Robolectric and screenshot harness, semantics checks, fake clocks |
 | `:shared:feature-account` | Sign-in, first-run flow, profile tab, web sign-in, My ITMO web page, update offer |
-| `:shared:feature-home` | Home feed and its cards |
+| `:shared:feature-home` | Сегодня and the bell over every feature's `DayLessonsGateway`, `TodayTodoSource`s and `BellSource`s |
 | `:shared:feature-qr` | QR pass, its cache and widget state |
 | `:shared:feature-recordbook` | Record book, BARS overlay, subject page, marks tracking, sheet scores |
 | `:shared:feature-resources` | Subject links |
@@ -55,7 +55,7 @@ included build with the convention plugins (`itmowidgets.kmp.library`,
 Allowed edges: a feature module depends on `:shared:core`,
 `:shared:designsystem` and `:shared:compose-strings` only (`:shared:testing` in
 tests). Features never depend on each other. `:shared:compose-strings` depends
-on `:shared:core` only. `:app` and `:shared:ios` depend on every shared module.
+on `:shared:core` only; `:shared:designsystem` on `:shared:core` and `:shared:compose-strings`. `:app` and `:shared:ios` depend on every shared module.
 `:shared:backend-client` depends on nothing in this repository.
 
 Shared modules target `android`, `iosArm64` and `iosSimulatorArm64`. Source
@@ -101,7 +101,7 @@ reach the UI.
 Koin is the only DI framework. Each shared feature exposes Koin modules in
 `feature/<x>/di/` (for example `scheduleModule` and `scheduleDataModule`);
 view models use `viewModelOf`, repositories `singleOf(...) { bind<...>() }`.
-Open sets (session cleaners, home card sources, background checks, push
+Open sets (session cleaners, bell and todo sources, background checks, push
 handlers) are qualified definitions read with `getAll<T>()`.
 
 - **Android.** `app/src/main/java/dev/alllexey/itmowidgets/di/KoinModules.kt`
@@ -193,7 +193,7 @@ never enforces privacy on its behalf.
 |---|---|
 | Settings and flags | One DataStore file, `app_preferences`, read through per-concern stores in `core/storage` (`AppearancePreferences`, `WidgetSettingsPreferences`, ...) built on `DataStorePreferences` |
 | Tokens and the BARS session | `SecureStore`: `FileSecureStore` on Android (files in `noBackupFilesDir` sealed with an Android Keystore key), `KeychainSecureStore` on iOS |
-| Caches and feature state (schedule cache, QR cache, change history, marks, sheet scores, calendar sync, links) | JSON files under `AppDirectories` written with `AtomicTextFile`; device-only state is excluded from backup |
+| Caches and feature state (schedule cache, QR cache, found changes, marks, queue results, sheet scores, calendar sync, links) | JSON files under `AppDirectories` written with `AtomicTextFile`; device-only state is excluded from backup |
 | Widget snapshots | Android: `widgets/schedule_snapshot.json` and the QR state; iOS: JSON files in the App Group container that the widget extension reads |
 
 `SharedPreferences` is not used. Every store of user-scoped data implements

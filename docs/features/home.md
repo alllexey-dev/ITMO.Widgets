@@ -1,62 +1,89 @@
-# Home and quick actions
+# Сегодня, the bell and quick actions
 
 Product behaviour: [Как это работает: расписание](../how-it-works/schedule.md)
-(home feed), [QR-пропуск](../how-it-works/qr.md) (tile and shortcuts).
+(Сегодня), [QR-пропуск](../how-it-works/qr.md) (tile and shortcuts).
 
-The Сегодня tab hosts, until its new screen, the feed of cards built from what
-the app already knows, under the tab's root header (the date and the bell) with
-the `Пропуск` button ([design](../design.md#shell)).
+Сегодня is the first tab: under its root header (the date and the bell) the
+hero with the lesson to go to now, the day as the timeline and `Нужно сделать`
+when there is something, with the `Пропуск` button ([design](../design.md#shell)).
+The bell opens its sheet over it. The spec is the design lab's
+(`vibe/design-lab/ux-native/DECISIONS.md`, "Сегодня", "Колокольчик").
 
-## Feed
+## Сегодня
 
-- Contract in `core/home`: `HomeCard` (`Schedule`, `ScheduleChanges`,
-  `Marks`, `Sport`, `FriendRequests`, `Hint`) and `HomeCardSource`
-  (`observe`, `refresh`, `revalidate`, `dismiss(kind)`). `dismiss` is passed
-  to every source; only the owner of that kind acts.
-- Each feature registers its source in its `data` package as a qualified Koin
-  `single<HomeCardSource>`, and its card in `ui/home` as a qualified
-  `single<HomeCardRenderer>` (`kinds` + `@Composable Content`; a Compose
-  interface, so it sits in `:shared:designsystem` under `core/home`). Every
-  kind has exactly one renderer (`HomeRenderersGraphTest`); an unclaimed card
-  is left out. Nothing in `feature/home` imports another feature.
-- `HomeViewModel` (`:shared:feature-home`, `homeModule`, sources via
-  `getAll()`) flattens the flows, drops kinds hidden in settings
-  (`home_hidden_cards`) and sorts by `HomeCardKind` declaration order.
-- `HomeRoute` / `HomeScreen` are Compose in `commonMain`. On Android
+- `TodayViewModel` (`:shared:feature-home`, `homeModule`) reads today and
+  tomorrow from `DayLessonsGateway` (`core/schedule`, implemented by the
+  schedule's `DayLessonsGatewayImpl`) and every Koin `TodayTodoSource`
+  (`core/today`, an open set read with `getAll()`), re-evaluated every minute
+  by the academic clock. `TodayPresenter` is the pure rule:
+  - while today has a lesson that is not over, the hero is the current one
+    (`Сейчас`, `ещё 48 мин`, the elapsed part on the wavy bar) or the next one
+    (`Первая пара` before the first, `Далее` after one, `через 1 ч 40 мин`),
+    and the day is today's whole timeline with the now marker;
+  - once today is over, the hero is tomorrow's first lesson (`Завтра`,
+    `в 10:00`) and the day is tomorrow, its first lesson `далее`;
+  - a free evening keeps today's finished day without a hero; nothing today
+    and tomorrow is the `Сегодня и завтра пар нет` state;
+  - cancelled lessons and sport queues are never the hero and do not count.
+- The hero says where to go: the room big with the building's full address,
+  or `Онлайн` with `Подключиться` (the meeting link), the time and the
+  lesson's note. `Маршрут` waits for the map (phase 8): it is not shown.
+- The day is the kit's timeline built by the shared lesson rules
+  (`core/lesson/LessonTimelines`, [design](../design.md#the-m3-expressive-kit)):
+  `идёт`, `далее`, `изменена` and `отменена` from the found
+  [schedule changes](schedule-changes.md), `очередь` for an own sport queue,
+  `записаны` for a booked sport lesson, `онлайн`, `Окно 2 ч 10 мин` for gaps
+  of an hour or more, `Изменено вчера в 20:14` under a changed lesson. A
+  lesson opens its sheet; a sport lesson goes through `SportDetailsRedirect`,
+  as in the schedule ([lesson details](schedule.md#lesson-details)).
+- `DayLessonsGatewayImpl` joins the schedule cache, the change history (the
+  newest change found on each occurrence; a cancelled lesson stays on its old
+  day, struck through) and the own queues while their schedule rows are on
+  (`observeSportAutoSignEnabled`).
+- `Нужно сделать`: `BarsTodoSource` (recordbook) while the background mark
+  check found the BARS session ended (`BarsLoginPrompt` not `NONE`): `Войдите
+  в БАРС заново`, since the last BARS answer, `Войти` opens the BARS sign-in.
+  A moved room with `Маршрут` joins with the map.
+- States: `Loading` while nothing is cached and the first refresh runs;
+  `Failed` (`Не удалось загрузить`, `Повторить`) when it failed; after a
+  failed refresh over the cache the day is dimmed under `Данные на 11:44`.
+  The first show refreshes once (silent), a pull and a return after five
+  minutes refresh again; only a pull shows the indicator.
+- `TodayRoute` / `TodayScreen` are Compose in `commonMain`; on Android
   `HomeTabRoot` (`app/shell/entries/HomeEntries.kt`) keeps the ViewModel and
-  does the Android-only parts: navigation (`homeActions`) and the hint actions
-  in `feature/home/ui/HomeHints.kt` (widget pin, notification permission,
-  `SERVICES_SETTINGS_PAGE`).
-- Schedule and sport cards format times in the `AcademicTimeProvider` zone
-  (`ScheduleHomeCardFormatter`, `SportHomeCardFormatter`); no UI parses ISO
-  text.
+  turns lessons, `Подключиться` and the todo routes into navigation.
 
-| Card | Source | Shown when |
+## The bell
+
+- The bell is in Сегодня's header only, with the count of events the user has
+  not seen (`TodayHeaderViewModel`); it opens `AppRoutes.Bell`, a sheet of
+  `SheetPolicy.Height.TALL`. A schedule change notification opens it too
+  (`ACTION_OPEN_SCHEDULE_CHANGES`). There is no history screen of changes.
+- Events come from every Koin `BellSource` (`core/bell`, an open set):
+
+| Event | Source | Leads to |
 |---|---|---|
-| `Сегодня` / `Завтра` | `feature/schedule/data/home/ScheduleHomeCardSource` (`HomeScheduleSelector`), one-minute ticker | always |
-| `Изменения в расписании` | `ScheduleChangesHomeCardSource`, local [schedule changes](schedule-changes.md) only; `dismiss` marks all read and removes the notification; `refresh` asks nothing | an unread change of a lesson not yet over |
-| `Новые оценки` | `feature/recordbook/data/home/MarksHomeCardSource`, local [mark tracking](marks-tracking.md) only; `dismiss(MARKS)` -> `markAllRead()`; `refresh` asks nothing | an unread subject |
-| `Спорт` | `feature/sport/data/home/SportHomeCardSource` | score below 100 or a non-empty queue |
-| `Заявки в друзья` | `feature/social/data/home/SocialHomeCardSource` | an incoming request, behind the opt-in |
-| Hints | `feature/home/data/HintHomeCardSource`: no widget placed, notifications off, user services off | while the reason holds and not closed; closed hints are per installation in `home_dismissed_hints` |
+| New marks with their value: `Матанализ: контрольная работа 2`, `9 из 10, итого 74`, `+9` in front | `MarksBellSource` (recordbook), the subjects of [mark tracking](marks-tracking.md), read ones too | the subject page, else the recordbook |
+| A schedule change: `Физика: пара перенесена`, `было` struck through over `стало` | `ScheduleChangesBellSource` (schedule), the change history | the lesson's sheet |
+| A queue's result: `Волейбол: вы записаны`, `Плавание: не удалось записать` | `SportBellSource` over `SportResultLog` (sport), written by the queue push booker | Спорт |
+| An incoming friend request with `Принять` and `Отклонить` | `FriendRequestsBellSource` (social), behind the opt-in | the person |
 
-- Lesson and pending sport rows go through `SportDetailsRedirect`, as in the
-  schedule ([lesson details](schedule.md#lesson-details)); `SportBookingsHolder`
-  loads the sport data when needed, so cancel works from the feed.
-- Refresh: first show refreshes every source once (silent); pull and a return
-  after 5 minutes (`STALE_AFTER_MILLIS`) refresh again; every return calls
-  `revalidate`. Sources refresh in parallel; a failure keeps cached cards and
-  shows one snackbar with retry. Only a pull sets `Content.refreshing`.
-- `Loading` lasts only until every source answered from cache; an empty list
-  is content. The list ends with `fabClearance` (96 dp) so the last card
-  clears the `Пропуск` button.
-- Tests: goldens in `shared/feature-home/screenshots/` and each feature's
-  `screenshots/`; `HomeScreenTest`; `HomeEntriesTest` (`app/src/test`) never
-  touches MyITMO or Backend.
+- `BellRepositoryImpl` (`homeModule`) joins the sources (requests first, then
+  newest first; a failing source counts as empty) and keeps the seen event ids
+  in `BellPreferences` (`bell_seen`, cleared on sign-out). An event's id
+  changes with its content, so a new mark of a subject is new again.
+- Opening reads everything (`BellViewModel`): the unseen events are marked
+  seen at once, so the badge goes, and every source reads its own (the mark
+  dots, the change dots and their notifications), while this opening keeps them
+  under `Новое` with a dot and a bold title; there is no `Прочитать все`.
+  Without new events the sheet says `Ничего нового` over the rest. Events
+  that arrive while it is open are new as well.
+- `Настройки уведомлений` at the end opens the system notification settings
+  of the app until its own page (phase 7).
 
 ## QR pass
 
-The `Пропуск` button of Сегодня opens the pass sheet above the feed; see [QR pass](qr.md).
+The `Пропуск` button of Сегодня opens the pass sheet above it; see [QR pass](qr.md).
 
 ## Quick-settings tile and app shortcuts
 
@@ -98,15 +125,5 @@ The `My ITMO` row of Профиль (the app group) opens `https://my.itmo.ru/` 
 
 ## iOS
 
-Same shared feed ([iOS app](../ios.md)): `HomeRoute` hosted by `HomeScreen`
-(`iosApp/Sources/Features/Home/`) through `homeViewController`
-(`shared/ios`, `screens/HomeScreens.kt`); `homeModule`, `homeIosModule`.
-
-- Cards and buttons open the shared keys through the Swift router; a key
-  without an iOS screen opens nothing. `offeredBy` keeps renderers of kinds
-  `PlatformCapabilities` offers (currently all).
-- Hints (`IosHomeHintStatus`): the widget hint shows until any widget is
-  placed and opens instructions (iOS lets no app place one); the notification
-  hint asks once, then opens notification settings. Re-checked on every
-  activation; same `home_dismissed_hints`.
-- Debug: `-itmoForgetHomeHints` restores closed hints.
+Until Сегодня's SwiftUI screen lands, the iOS home route hosts the shared
+`TodayRoute` through `homeViewController` (`shared/ios`, `screens/HomeScreens.kt`).

@@ -79,7 +79,7 @@ positive `pairId`s collapse into the earliest.
 ## Storage
 
 Model: `ScheduleChange`, `LessonSlot`, `LessonOccurrence` in `core/schedule`
-(shared with the home card). `ScheduleChangesFileStore` keeps the snapshot,
+(shared with Сегодня and the bell). `ScheduleChangesFileStore` keeps the snapshot,
 `emptyHeld` and the changes in `filesDir/schedule_changes/state.json`
 (format 1), written together through `AtomicTextFile`, excluded from backup
 and device transfer. Changes older than 30 days are dropped on every write
@@ -116,18 +116,21 @@ cancels the work and resets the snapshot; history stays.
 Channel `schedule_changes`; the rest is in
 [notifications](notifications.md#schedule-changes).
 
-## In the schedule and history
+## In the schedule, on Сегодня and in the bell
 
 - A card whose occurrence (`pairId` and date) belongs to any change of the
   30-day history gets a mark, read or not; occurrences include the old slot of
   a cancel or move, so a stale cache is marked too. Own and friend's schedule
   alike (`ScheduleDisplayDay.changedPairIds`); never pending sport rows.
-- History: `AppRoutes.ScheduleChanges` (`ScheduleChangesRoute`), opened by
-  the home card and the notification (`ACTION_OPEN_SCHEDULE_CHANGES` via
-  `EntryRouteParser`). Texts: `core/text/ScheduleChangeTexts.kt`.
-- While the screen is started (`LifecycleStartEffect`) every unread change is
-  marked read (`markAllRead()`, also removes the notification); rows shown
-  unread keep their dot via `SavedStateHandle`. A hidden screen marks nothing.
+- Сегодня's timeline marks the lesson itself ([Сегодня](home.md#сегодня)):
+  `изменена` with the old room struck through and `Изменено вчера в 20:14`, a
+  cancelled lesson struck through on its old day with `отменена`.
+- There is no history screen: each change is an event of the bell
+  ([the bell](home.md#the-bell), `ScheduleChangesBellSource`): what happened,
+  `было` over `стало`, leading to the lesson's sheet. The notification opens
+  the bell (`ACTION_OPEN_SCHEDULE_CHANGES` via `EntryRouteParser`). Opening the
+  bell marks every change read (`markAllRead()`, also removes the
+  notification). Notification texts: `core/text/ScheduleChangeTexts.kt`.
 - Debug builds: `Проверить изменения расписания` runs
   `ScheduleChangeTracking.checkNow()` (one-off `schedule-changes-now`,
   `ExistingWorkPolicy.REPLACE`) on the real account.

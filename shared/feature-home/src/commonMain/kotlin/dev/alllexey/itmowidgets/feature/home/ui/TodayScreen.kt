@@ -84,7 +84,7 @@ data class TodayActions(
 
 /**
  * Сегодня (docs/features/home.md): the hero with the lesson to go to now, the day as the kit's timeline (tomorrow in
- * the evening), then «Нужно сделать» when there is something. Pull to refresh; the shell's `Пропуск` button floats over
+ * the evening), then `Нужно сделать` when there is something. Pull to refresh; the shell's `Пропуск` button floats over
  * the bottom end, so the list keeps clear of it. Stateless; [TodayRoute] feeds it.
  */
 @Composable
