@@ -19,7 +19,12 @@ class ShellBackStackTest {
 
         assertEquals(AppTab.ME, nested.tab)
         assertEquals(
-            listOf(AppRoutes.TabRoot(AppTab.ME), AppRoutes.Settings(), AppRoutes.Settings("PRIVACY")),
+            listOf(
+                AppRoutes.TabRoot(AppTab.HOME),
+                AppRoutes.TabRoot(AppTab.ME),
+                AppRoutes.Settings(),
+                AppRoutes.Settings("PRIVACY"),
+            ),
             nested.entries
         )
         assertTrue(nested.coversBar)

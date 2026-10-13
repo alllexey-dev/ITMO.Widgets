@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.app.shell.ShellContent
+import dev.alllexey.itmowidgets.app.shell.ShellTags
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
@@ -263,8 +264,8 @@ class AccountEntriesTest {
     }
 
     /**
-     * The web history takes Back first; without history the entry's handler is off, so the shell's overlay handler,
-     * the one that follows the predictive gesture, closes the screen.
+     * The web history takes Back first; without history the entry's handler is off, so `NavDisplay`'s handler, the
+     * one that follows the predictive gesture, closes the screen.
      */
     @Test
     fun backOnMyItmoGoesBackInTheWebHistoryThenLeavesItToTheOverlayGesture() {
@@ -285,15 +286,15 @@ class AccountEntriesTest {
         assertEquals(1, shadowOf(page).goBackInvocations)
         assertEquals(listOf<AppRoute>(AppRoutes.MyItmoWeb), navigator.state.overlays)
 
-        val bar = compose.onNodeWithTag(MyItmoWebTestTags.RELOAD).getBoundsInRoot()
-        val width = compose.activity.window.decorView.width / compose.density.density
+        val screen = compose.onNodeWithTag(ShellTags.overlay(AppRoutes.MyItmoWeb.toString()))
+        val full = screen.getBoundsInRoot()
         compose.runOnIdle {
             compose.activity.onBackPressedDispatcher.dispatchOnBackStarted(backEvent(0f))
             compose.activity.onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(0.5f))
         }
         compose.waitForIdle()
-        val moved = compose.onNodeWithTag(MyItmoWebTestTags.RELOAD).getBoundsInRoot().left - bar.left
-        assertEquals(width / 2, moved.value, 1f)
+        val held = screen.getBoundsInRoot()
+        assertTrue("the predictive Back shrinks the screen: $held of $full", held.right - held.left < full.right - full.left)
 
         compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitForIdle()

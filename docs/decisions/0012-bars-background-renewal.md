@@ -51,3 +51,32 @@ stays on the device.
 - Backend: it would need the user's ITMO.ID cookies or BARS token and a copy
   of the marks on the server, which the privacy boundary rules out, and it
   would make the check depend on `Подключение к ITMO.Widgets`.
+
+## The sign-in keeps the ITMO.ID session
+
+**Amendment (2026-10-13).** The app's ITMO.ID sign-in keeps the web store it
+ran in, so the BARS sign-in that follows needs no second password. Before,
+`SessionTransitions.signIn` ran every `SessionDataCleaner`, the web store's
+included, right after the sign-in page: the ITMO.ID SSO cookies it had just
+set were gone, `Подключить` showed the ITMO.ID form again on both platforms,
+and iOS's `ItmoIdCookieExport` copied an empty store to the Keychain.
+
+- The sign-in page and the BARS page share one store: Android's
+  `CookieManager`, iOS's `WKWebsiteDataStore.default()`. BARS signs in with the
+  official OIDC request of its own `bars` client in the same ITMO.ID realm, so
+  the SSO session answers it with a code at once, as in a browser.
+- `WebStoreDataCleaner` marks the web store's cleaner;
+  `completeItmoIdLogin` alone skips it. Its tokens came from the page that ran
+  in that store after the store was cleared: both platforms clear it when the
+  sign-in page opens and load the page only after that, so the SSO cookies there
+  belong to the same account, also after an expired session followed by
+  another account. BARS still checks the ISU (`Forbidden` for another account).
+- Unchanged: a refresh-token sign-in has no page behind it and clears the
+  store; the demo, sign-out and a failed sign-in clear it; the cookies never
+  leave the device.
+
+Rejected: a BARS token from the app's ITMO.ID tokens (BARS has no token
+exchange and accepts only a code for its own client); the system browser
+(a Custom Tab or `ASWebAuthenticationSession`) for both sign-ins (the app
+reads the My ITMO tokens from its own WebView, and the background renewal needs
+the cookies in the app's store).

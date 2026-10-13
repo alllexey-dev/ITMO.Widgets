@@ -36,7 +36,8 @@ class EntryRegistry private constructor(private val registrations: Map<KClass<ou
         val layer = when (route.kind) {
             RouteKind.SHEET -> bottomSheet(checkNotNull(route.sheetPolicy) { "$route is a sheet without a policy" })
             RouteKind.DIALOG -> DialogSceneStrategy.dialog()
-            RouteKind.GATE, RouteKind.TAB_ROOT, RouteKind.SCREEN -> emptyMap()
+            RouteKind.TAB_ROOT -> ShellMotion.tabRoot
+            RouteKind.GATE, RouteKind.SCREEN -> emptyMap()
         }
         return if (args == null) layer else layer + routeArgs(args)
     }

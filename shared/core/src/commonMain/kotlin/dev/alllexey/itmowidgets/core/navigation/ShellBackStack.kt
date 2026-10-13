@@ -7,9 +7,9 @@ import kotlinx.serialization.Serializable
  * every command returns the next state, which the host keeps in saved state, so the tab, the overlays, the sheets and
  * the tab requests survive recreation and process death.
  *
- * Layers, bottom to top: the selected [tab]'s own stack ([tabStack], only its root), the [overlays] (full-window
- * screens above the bar, which keeps its size and is hidden from accessibility while [coversBar]) and the [floating]
- * sheets and dialogs. [requests] wait for their tab's root.
+ * Layers, bottom to top: the start tab's stack under any other [tab]'s, the selected [tab]'s own stack ([tabStack],
+ * only its root), the [overlays] (pushed screens, full window over the bar, which keeps its place and is hidden from
+ * accessibility while [coversBar]) and the [floating] sheets and dialogs. [requests] wait for their tab's root.
  */
 @Serializable
 data class ShellBackStack(
@@ -18,8 +18,11 @@ data class ShellBackStack(
     val floating: List<AppRoute> = emptyList(),
     val requests: Map<AppTab, TabRequest> = emptyMap(),
 ) {
-    /** What the display shows, bottom to top. */
-    val entries: List<AppRoute> get() = tabStack(tab) + overlays + floating
+    /** What the display shows, bottom to top; Back pops it one entry at a time. */
+    val entries: List<AppRoute> get() = shownTabs.flatMap(::tabStack) + overlays + floating
+
+    /** The start tab, then the selected one if it is another. */
+    val shownTabs: List<AppTab> get() = listOfNotNull(AppTab.START, tab.takeIf { it != AppTab.START })
 
     val coversBar: Boolean get() = overlays.isNotEmpty()
 

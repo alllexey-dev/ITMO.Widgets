@@ -1,5 +1,15 @@
 # 0020 One Navigation 3 shell with `@Serializable` routes
 
+**Amended (2026-10-13).** `NavDisplay` owns every screen of the tabs surface: its entries are the start tab's root,
+the selected tab's root above it, the pushed screens, then the sheets and dialogs (`ShellBackStack.entries`). It does
+the transitions (fade through between tab roots from their entry metadata, M3 shared axis X for pushed screens), the
+predictive Back (the previous entry composed under the top one) and the entries' lifecycles; the shell has no scene,
+layer or Back handler of its own. Per-tab state follows the Navigation 3 `multiplestacks` recipe: each tab's stack
+and the contextual stack are decorated on their own, so a hidden tab keeps its saveable state and view models. A
+tab's stack is its root: pushed screens cover the bar and a tab switch closes them, so "each tab keeps its own back
+stack" below means its root's state. Tabs switch by the bar only; the tab swipe is gone (owner, 2026-10-13). The bar
+is laid out under `NavDisplay`, so pushed screens cover it and the predictive Back uncovers it.
+
 **Decision (2026-10-03).** The Android app has one Navigation 3 Compose shell in
 `MainActivity` (`app/shell/AppShell.kt`).
 - Routes are `@Serializable` keys on `navigation3-runtime` in `commonMain`; a key

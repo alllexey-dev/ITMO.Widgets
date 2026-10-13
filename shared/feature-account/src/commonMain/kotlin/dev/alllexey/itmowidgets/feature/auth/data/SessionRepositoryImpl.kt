@@ -86,7 +86,7 @@ class SessionRepositoryImpl(
         } catch (_: Exception) {
             return AppResult.Failure(AppError.Unauthorized)
         }
-        return replaceSession(tokens)
+        return replaceSession(tokens, keepWebStore = true)
     }
 
     override suspend fun signInWithRefreshToken(
@@ -147,9 +147,9 @@ class SessionRepositoryImpl(
         }
     }
 
-    private suspend fun replaceSession(tokens: TokenSet): AppResult<Unit> {
+    private suspend fun replaceSession(tokens: TokenSet, keepWebStore: Boolean = false): AppResult<Unit> {
         return try {
-            transitions.signIn(tokens)
+            transitions.signIn(tokens, keepWebStore)
             mutableState.value = SessionState.SignedIn(transitions.currentUser())
             transitions.completeSignIn()
             AppResult.Success(Unit)

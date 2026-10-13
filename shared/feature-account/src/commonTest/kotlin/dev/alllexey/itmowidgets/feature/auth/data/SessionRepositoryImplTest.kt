@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.session.WebStoreDataCleaner
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeSessionDataCleaner
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
@@ -351,6 +352,30 @@ class SessionRepositoryImplTest {
     }
 
     @Test
+    fun theInteractiveSignInKeepsTheWebStoreWithItsItmoIdSessionForBars() = runTest(dispatcher) {
+        val webStore = FakeWebStoreCleaner()
+        val fixture = fixture(session = null, extraCleaners = listOf(webStore))
+
+        val result = fixture.repository.completeItmoIdLogin(TOKEN_RESPONSE)
+
+        assertEquals(AppResult.Success(Unit), result)
+        assertEquals(1, fixture.cleaner.requests)
+        assertEquals(0, webStore.requests, "The sign-in page's SSO cookies are the new session's")
+    }
+
+    @Test
+    fun aRefreshTokenSignInAndASignOutClearTheWebStore() = runTest(dispatcher) {
+        val webStore = FakeWebStoreCleaner()
+        val fixture = fixture(session = stored(), extraCleaners = listOf(webStore)) { respondJson(TOKEN_RESPONSE) }
+
+        fixture.repository.signInWithRefreshToken("candidate-token")
+        assertEquals(1, webStore.requests, "No sign-in page vouches for the web store's ITMO.ID session")
+
+        fixture.repository.signOut()
+        assertEquals(2, webStore.requests)
+    }
+
+    @Test
     fun aHugeTokenLifetimeSaturatesLikeTwoPointTwo() = runTest(dispatcher) {
         val fixture = fixture(session = null)
 
@@ -542,5 +567,14 @@ class SessionRepositoryImplTest {
     private companion object {
         const val TOKEN_RESPONSE = """{"access_token":"access","expires_in":300,"refresh_token":"refresh",""" +
             """"refresh_expires_in":600,"id_token":"header.payload.signature","session_state":"synthetic"}"""
+    }
+
+    private class FakeWebStoreCleaner : WebStoreDataCleaner {
+        var requests = 0
+            private set
+
+        override suspend fun clearSessionData() {
+            requests += 1
+        }
     }
 }

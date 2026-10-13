@@ -5,7 +5,7 @@ import android.webkit.WebView
 import android.webkit.CookieManager
 import android.webkit.WebStorage
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.session.WebStoreDataCleaner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -15,7 +15,7 @@ import kotlin.coroutines.resume
 class WebSessionDataCleaner(
     private val context: Context,
     private val dispatchers: AppDispatchers
-) : SessionDataCleaner {
+) : WebStoreDataCleaner {
     override suspend fun clearSessionData() {
         val cookies = withContext(Dispatchers.Main.immediate) {
             WebStorage.getInstance().deleteAllData()

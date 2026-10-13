@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.app.shell
 
+import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,9 +22,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureScreenRoboImage
@@ -41,7 +39,6 @@ import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarBack
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
-import dev.alllexey.itmowidgets.designsystem.gesture.TabSwipeDefaults
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.preview.LocalPreviewAppearance
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewAppearance
@@ -61,9 +58,9 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * The shell's chrome in `app/screenshots/Shell*`: Сегодня with its root header, bell and `Пропуск` button, an overlay
- * above the bar, the demo banner, a content-height sheet, the pass sheet, a full-height sheet and a tab swipe held
- * halfway from Сегодня to Расписание (the bar already on Расписание), each in the appearances of the run (light, dark
+ * The shell's chrome in `app/screenshots/Shell*`: Сегодня with its root header, bell and `Пропуск` button, a pushed
+ * screen over the bar, the demo banner, a content-height sheet, the pass sheet, a full-height sheet and a predictive
+ * Back held halfway on the second of two pushed screens (the first one peeking from under it), each in the appearances of the run (light, dark
  * and both narrow ones are recorded), with every action at least 48 dp. The tab roots are the real frames over
  * synthetic content. The whole screen is captured, so a sheet's own window is in the picture. No preview renders
  * these, so `references.txt` lists them for `DebugToolsScreenshotTest`'s baseline check.
@@ -84,11 +81,16 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
         Sheet("ShellSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.IcsExport)),
         PassSheet("ShellPassSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.QrPass)),
         FullSheet("ShellFullSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(FullSheetRoute)),
-        TabSwipe("ShellTabSwipe", ShellSurface.Tabs(demoBanner = false), ShellBackStack(), Gesture.HalfwaySwipe),
+        PredictiveBack(
+            "ShellPredictiveBack",
+            ShellSurface.Tabs(demoBanner = false),
+            ShellBackStack().open(AppRoutes.Friends).open(AppRoutes.Settings()),
+            Gesture.HalfwayBack,
+        ),
     }
 
     /** What the finger does before the capture. */
-    enum class Gesture { None, HalfwaySwipe }
+    enum class Gesture { None, HalfwayBack }
 
     private val window = object : ExternalResource() {
         override fun before() {
@@ -114,28 +116,25 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
         compose.waitForIdle()
         when (case.gesture) {
             Gesture.None -> Unit
-            Gesture.HalfwaySwipe -> holdSwipeHalfway()
+            Gesture.HalfwayBack -> holdBackHalfway()
         }
 
         captureScreenRoboImage(AppScreenshotRule.appBaselines.file(case.base, appearance), ShotsCompare.options)
         compose.assertTouchTargets()
     }
 
-    /**
-     * A finger down on Сегодня, moved towards Расписание by half the width past the pager's slop of two system touch slops, and
-     * kept down: the pages sit at offset 0.5.
-     */
-    private fun holdSwipeHalfway() {
-        compose.onNodeWithTag(ShellTags.TAB_CONTENT).performTouchInput {
-            val distance = width / 2f + viewConfiguration.touchSlop * TabSwipeDefaults.slopMultiplier
-            down(center)
-            repeat(SWIPE_STEPS) { moveBy(Offset(-distance / SWIPE_STEPS, 0f)) }
+    /** A back swipe from the left edge held at half its progress: Друзья peeks from under the shrunk Настройки. */
+    private fun holdBackHalfway() {
+        val dispatcher = compose.activity.onBackPressedDispatcher
+        compose.runOnIdle {
+            dispatcher.dispatchOnBackStarted(BackEventCompat(0f, 0f, 0f, BackEventCompat.EDGE_LEFT))
+            dispatcher.dispatchOnBackProgressed(BackEventCompat(0f, 0f, HALF, BackEventCompat.EDGE_LEFT))
         }
         compose.waitForIdle()
     }
 
     companion object {
-        private const val SWIPE_STEPS = 20
+        private const val HALF = 0.5f
 
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}_{1}")
@@ -157,11 +156,8 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
                     }
                 }
             }
-            entry<AppRoutes.Friends> { _, _ ->
-                Column(Modifier.fillMaxSize()) {
-                    AppTopBar("Друзья", navigation = { AppTopBarBack("Назад", onClick = {}) })
-                }
-            }
+            entry<AppRoutes.Friends> { _, _ -> SyntheticScreen("Друзья") }
+            entry<AppRoutes.Settings> { _, _ -> SyntheticScreen("Настройки") }
             entry<AppRoutes.IcsExport> { _, _ ->
                 SheetScaffold("Экспорт расписания", close = SheetClose("Закрыть") {}) {
                     Text("Синтетический текст листа", Modifier.padding(ItmoTheme.spacing.screenMargin))
@@ -188,9 +184,21 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
             QrPassStatus.Ready("11:44"),
         )
 
+        /** A pushed screen: its top bar over the same synthetic cards. */
+        @Composable
+        private fun SyntheticScreen(title: String) {
+            Column(Modifier.fillMaxSize()) {
+                AppTopBar(title, navigation = { AppTopBarBack("Назад", onClick = {}) })
+                SyntheticCards(title)
+            }
+        }
+
         /** The tab's name on full-width cards, enough of them to scroll. */
         @Composable
-        private fun SyntheticRoot(tab: AppTab) {
+        private fun SyntheticRoot(tab: AppTab) = SyntheticCards(UiText.Res(tab.label).asString())
+
+        @Composable
+        private fun SyntheticCards(name: String) {
             LazyColumn(Modifier.fillMaxSize()) {
                 items(ROOT_ROWS) { row ->
                     Surface(
@@ -201,7 +209,7 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
                         color = ItmoTheme.colorScheme.surfaceContainer,
                     ) {
                         Text(
-                            "${UiText.Res(tab.label).asString()}: синтетическая карточка ${row + 1}",
+                            "$name: синтетическая карточка ${row + 1}",
                             Modifier.padding(ItmoTheme.spacing.screenMargin),
                             color = ItmoTheme.colorScheme.onSurface,
                             style = ItmoTheme.typography.bodyLarge,

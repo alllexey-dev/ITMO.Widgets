@@ -57,7 +57,7 @@ class AppGroupSessionDataCleaner(
 class WebsiteDataSessionDataCleaner(
     private val clearer: WebsiteDataClearer,
     private val dispatchers: AppDispatchers
-) : SessionDataCleaner {
+) : WebStoreDataCleaner {
 
     override suspend fun clearSessionData() = withContext(dispatchers.main) {
         suspendCancellableCoroutine { continuation ->
