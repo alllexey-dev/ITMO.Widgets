@@ -146,8 +146,7 @@ private fun LessonRow(row: TimelineRow.Lesson, first: Boolean, last: Boolean, sh
                 .weight(1f)
                 .padding(start = ItmoTheme.spacing.related, top = LessonTopGap, bottom = LessonBottomGap)
                 .alpha(if (done) DONE_ALPHA else 1f)
-                .clip(ItmoTheme.shapes.cardContent)
-                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+                .then(if (onClick != null) Modifier.clip(ItmoTheme.shapes.cardContent).clickable(onClick = onClick) else Modifier),
             shape = ItmoTheme.shapes.cardContent,
             color = if (now) ItmoTheme.colorScheme.primaryContainer else Color.Transparent,
             contentColor = if (now) ItmoTheme.colorScheme.onPrimaryContainer else ItmoTheme.colorScheme.onSurface,

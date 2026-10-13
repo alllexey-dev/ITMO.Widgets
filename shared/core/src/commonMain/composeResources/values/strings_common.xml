@@ -84,7 +84,6 @@
     <string name="common_load_error_title">Не удалось загрузить</string>
     <string name="common_close">Закрыть</string>
     <string name="sport_score_goal">из 100</string>
-    <string name="schedule_changes_title">Изменения в расписании</string>
     <string name="friend_picker_title">Чьё расписание?</string>
     <string name="settings_back">Назад</string>
     <string name="settings_qr_custom_image_failed">Не удалось сохранить изображение</string>
@@ -109,9 +108,6 @@
     <string name="user_profile_schedule_title">Расписание</string>
     <string name="user_profile_sport_title">Спорт</string>
     <string name="user_profile_hidden">Скрыто настройками приватности</string>
-    <string name="home_schedule_today">Сегодня</string>
-    <string name="home_pending_waiting">ждём запись</string>
-    <string name="home_pending_predicted">прогноз</string>
     <string name="my_itmo_web_title">My ITMO</string>
     <string name="links_title">Ссылки</string>
     <string name="links_add">Добавить ссылку</string>

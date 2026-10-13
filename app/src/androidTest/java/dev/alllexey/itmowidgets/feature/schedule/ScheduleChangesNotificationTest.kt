@@ -74,7 +74,7 @@ class ScheduleChangesNotificationTest {
                 .setData(Uri.parse("itmowidgets-notification://$CHANNEL/1")),
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
         )
-        assertNotNull("The tap must open the schedule changes", expected)
+        assertNotNull("The tap must open the bell", expected)
         assertEquals(expected, shown.notification.contentIntent)
 
         notifier.show(ScheduleChangeDigest(unread = 1, first = cancelled(), audible = false))

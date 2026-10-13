@@ -301,42 +301,6 @@
         }
       }
     },
-    "home_pending_predicted" : {
-      "comment" : "Generated from strings_common.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "прогноз"
-          }
-        }
-      }
-    },
-    "home_pending_waiting" : {
-      "comment" : "Generated from strings_common.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ждём запись"
-          }
-        }
-      }
-    },
-    "home_schedule_today" : {
-      "comment" : "Generated from strings_common.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сегодня"
-          }
-        }
-      }
-    },
     "lesson_changed_on" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",
@@ -741,18 +705,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "My ITMO"
-          }
-        }
-      }
-    },
-    "schedule_changes_title" : {
-      "comment" : "Generated from strings_common.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Изменения в расписании"
           }
         }
       }

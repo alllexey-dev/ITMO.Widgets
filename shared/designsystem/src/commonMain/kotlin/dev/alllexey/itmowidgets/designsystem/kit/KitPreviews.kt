@@ -47,6 +47,19 @@ private fun KitTonesPreview() = KitColumn {
     }
     StatusPill(PillSpec("идёт", Tone.Primary, solid = true))
     StatusPill("онлайн", icon = painterResource(Res.drawable.ic_videocam))
+    androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        TextTile("+9", Tone.Success)
+        TextTile("\u22123,5", Tone.Warning)
+    }
+}
+
+/** A section's title with its neutral count, and one without. */
+@Preview
+@Composable
+private fun SectionHeaderPreview() = KitColumn {
+    SectionHeader("Пары", count = "5 пар")
+    SectionHeader(PreviewFixtures.LongSubjectName, count = "12")
+    SectionHeader("Нужно сделать")
 }
 
 /** A card, a tonal card and the one hero of a screen. */
