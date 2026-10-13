@@ -16,8 +16,8 @@ struct QrPassScreen: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("qr.pass")
-        // A half sheet over today, as the design lab draws it; the Compose content cannot report its height.
-        .presentationDetents([.medium, .large])
+        // The Compose content cannot report its height, and half the screen cuts off the refresh button: the tall size.
+        .presentationDetents([.fraction(ItmoSheetHeight.tallFraction), .large])
         .presentationDragIndicator(.visible)
         .onAppear {
             isVisible = true

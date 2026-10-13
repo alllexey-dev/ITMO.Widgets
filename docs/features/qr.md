@@ -74,7 +74,7 @@ Sign-out: the repository is a `SessionDataCleaner` `named("qr")`, beside
 
 ## iOS
 
-- The pass is a half sheet over today, draggable to full:
+- The pass is a sheet over today at 0.82 of the screen, draggable to full:
   `QrPassScreen` (`iosApp/Sources/Features/Qr/`) hosts the shared
   `QrPassRoute` (the sheet's content) in a SwiftUI sheet until the SwiftUI pass
   sheet over `QrPassViewModel` replaces it; the `QR-пропуск` tab bar accessory

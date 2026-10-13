@@ -18,7 +18,12 @@ final class SettingsUITests: XCTestCase {
 
         XCTAssertTrue(element(app, "settings.row.page_services").exists)
         XCTAssertTrue(element(app, "settings.row.notifications").exists)
-        XCTAssertTrue(element(app, "settings.row.page_recordbook").exists, "mark tracking is on iOS")
+        // The form is lazy: the recordbook row exists once it scrolls near the screen.
+        let recordbook = element(app, "settings.row.page_recordbook")
+        for _ in 0..<4 where !recordbook.exists {
+            element(app, "settings.page.root").swipeUp()
+        }
+        XCTAssertTrue(recordbook.exists, "mark tracking is on iOS")
         XCTAssertTrue(app.navigationBars.firstMatch.exists, "a SwiftUI screen uses the stack's navigation bar")
         attachScreenshot(named: "root")
     }
@@ -114,8 +119,11 @@ final class SettingsUITests: XCTestCase {
         openSettings(app)
         attachScreenshot(named: "root-ax1")
 
-        element(app, "settings.page.root").swipeUp()
+        // The form is lazy: the last row exists once it scrolls near the screen.
         let maintenance = element(app, "settings.row.page_maintenance")
+        for _ in 0..<6 where !maintenance.exists || !maintenance.isHittable {
+            element(app, "settings.page.root").swipeUp()
+        }
         XCTAssertTrue(maintenance.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(maintenance.isHittable, "the last row is reachable at AX1")
         attachScreenshot(named: "root-ax1-end")
@@ -129,8 +137,9 @@ final class SettingsUITests: XCTestCase {
         // The settings row of the Compose Me tab (`MeTestTags.SETTINGS_ROW`).
         let entry = element(app, "settings_row")
         XCTAssertTrue(entry.waitForExistence(timeout: stepTimeout))
-        // At large text sizes the row starts under the floating tab bar.
-        for _ in 0..<4 where !entry.isHittable {
+        // At large text sizes the row starts under the floating tab bar, which covers the content but not its frame.
+        let bar = app.tabBars.firstMatch
+        for _ in 0..<4 where !entry.isHittable || entry.frame.maxY > bar.frame.minY {
             element(app, "main").swipeUp()
         }
         entry.tap()
