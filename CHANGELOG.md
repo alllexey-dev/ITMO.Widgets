@@ -136,6 +136,9 @@ new iOS app.
 
 ### Fixes
 
+- Connecting BARS right after signing in no longer asks for the ITMO.ID
+  password again: the sign-in keeps its ITMO.ID session in the app's browser,
+  and BARS signs in with it on Android and iOS.
 - Зачётка and the subject page show a connected sheet's total again when the subject has an empty BARS journal: the
   most current source with a value wins (the sheet, then BARS, then a sheet that failed to update, then My ITMO),
   and a source without points never hides one with points.

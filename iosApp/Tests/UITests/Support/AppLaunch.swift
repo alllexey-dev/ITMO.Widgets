@@ -2,18 +2,20 @@ import XCTest
 
 extension XCUIApplication {
     /// The app as every UI test launches it: English language and locale, so a test that reads a CMP or
-    /// `.xcstrings` text also proves the English fallback, and the shared demo session (`-itmoDemo`), so the
+    /// `.xcstrings` text also proves the English fallback, `-itmoUITests` (WebKit's website data removal completes
+    /// at once, it hangs on a CI simulator), and the shared demo session (`-itmoDemo`), so the
     /// Compose screens show fictional data and send nothing. Fixture arguments are added here, never per test.
     static func itmo(arguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-itmoDemo"] + arguments
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-itmoUITests", "-itmoDemo"]
+            + arguments
         return app
     }
 
     /// The app on the shared session, signed out first (`-itmoSignedOut`): the sign-in screen, never the demo.
     static func itmoSignedOut() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-itmoSignedOut"]
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-itmoUITests", "-itmoSignedOut"]
         return app
     }
 
