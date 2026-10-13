@@ -102,16 +102,11 @@
 
     <!-- Зачётка (ux overhaul) -->
     <string name="recordbook_subtitle">%1$d курс, %2$s</string>
-    <string name="recordbook_view_label">Что показать</string>
-    <string name="recordbook_view_semester">Семестр</string>
-    <string name="recordbook_view_session">Сессия</string>
     <string name="recordbook_period_label">Семестр</string>
     <string name="recordbook_session_title">Сессия</string>
     <string name="recordbook_session_passed">Сдано %1$d</string>
     <string name="recordbook_session_of">из %1$d</string>
     <string name="recordbook_session_average">Средний балл %1$s</string>
-    <string name="recordbook_section_ahead">Экзамены впереди</string>
-    <string name="recordbook_section_passed">Сдано</string>
     <string name="recordbook_source_myitmo">My ITMO</string>
     <string name="recordbook_source_sheet">таблица</string>
     <string name="recordbook_source_sport">Спорт</string>
@@ -136,9 +131,11 @@
     <string name="recordbook_sources_sheet_note">ваша строка</string>
     <string name="recordbook_sources_sheet_updated">ваша строка, обновлено %1$s</string>
     <string name="recordbook_sources_sheet_off">не подключена</string>
+    <string name="recordbook_sources_sheet_stale">не удалось обновить, прошлое значение</string>
     <string name="recordbook_sources_shown">показываем</string>
-    <string name="recordbook_sources_why_bars">БАРС обновляется раньше и показывает контрольные, поэтому берём его. Итог в зачётку всё равно ставят в My ITMO</string>
-    <string name="recordbook_sources_why_sheet">Таблица преподавателя обновляется раньше My ITMO, поэтому берём её. Итог ставят только в My ITMO, так что разница уйдёт, когда преподаватель перенесёт баллы</string>
+    <string name="recordbook_sources_why_bars">БАРС обновляется раньше My ITMO и показывает контрольные, поэтому берём его, если в таблице преподавателя нет свежего числа. Итог в зачётку всё равно ставят в My ITMO</string>
+    <string name="recordbook_sources_why_sheet">Таблица преподавателя обновляется раньше БАРС и My ITMO, поэтому берём её. Итог ставят только в My ITMO, так что разница уйдёт, когда преподаватель перенесёт баллы</string>
+    <string name="recordbook_sources_why_none">Баллов пока нет ни в одном источнике</string>
     <string name="recordbook_sources_why_myitmo">Других чисел нет, поэтому показываем My ITMO, где ставят итог</string>
     <string name="recordbook_sources_open">Открыть предмет</string>
 

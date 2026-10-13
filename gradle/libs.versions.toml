@@ -52,6 +52,10 @@ androidxTestMonitor = "1.8.0"
 androidxTestRunner = "1.7.0"
 androidxTestOrchestrator = "1.6.1"
 espressoCore = "3.7.0"
+# Baseline and startup profiles, the :baselineprofile generator and its nightly macrobenchmarks.
+benchmark = "1.5.0"
+uiautomator = "2.4.0"
+profileinstaller = "1.4.1"
 appcompat = "1.8.0"
 material = "1.13.0"
 workRuntimeKtx = "2.12.0"
@@ -79,6 +83,7 @@ kotlin-composeCompiler-gradlePlugin = { module = "org.jetbrains.kotlin:compose-c
 kotlin-serialization-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 compose-gradlePlugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "composeMultiplatform" }
 google-services-gradlePlugin = { module = "com.google.gms:google-services", version.ref = "googleGmsGoogleServices" }
+baselineprofile-gradlePlugin = { module = "androidx.benchmark:benchmark-baseline-profile-gradle-plugin", version.ref = "benchmark" }
 roborazzi-gradlePlugin = { module = "io.github.takahirom.roborazzi:roborazzi-gradle-plugin", version.ref = "roborazzi" }
 
 # Compose Multiplatform
@@ -165,6 +170,9 @@ androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTes
 androidx-test-monitor = { module = "androidx.test:monitor", version.ref = "androidxTestMonitor" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 androidx-test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "androidxTestOrchestrator" }
+androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "benchmark" }
+androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
+androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
@@ -189,7 +197,7 @@ androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "b
 
 [plugins]
 # Only plugins that are not on build-logic's classpath carry a version here. AGP, Kotlin (multiplatform,
-# compose, serialization), CMP, google-services and Roborazzi come from build-logic: apply them by
+# compose, serialization), CMP, google-services, Roborazzi and androidx.baselineprofile come from build-logic: apply them by
 # id without a version, or Gradle fails with "already on the classpath with an unknown version".
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
 # Not in any plugins {} block: the root build.gradle.kts loads it only with -Pitmo.buildHealth=true.

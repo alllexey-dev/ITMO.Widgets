@@ -50,8 +50,8 @@ import kotlinx.datetime.toLocalDateTime
 
 /** What the subject page knows about the subject's scores, before it is put into words. */
 internal data class SubjectScoresInput(
+    val official: RecordbookSubject,
     val subject: RecordbookSubject,
-    val fromBars: Boolean,
     val barsEnabled: Boolean,
     val barsError: AppError?,
     val controls: List<RecordbookControl>,
@@ -96,16 +96,16 @@ internal object SubjectPresenter {
         )
     }
 
-    /** The sheet's total while the subject is in progress, else BARS or My ITMO, as on the list. */
+    /** The number [RecordbookPointsRule] picks, as on the list. */
     private fun hero(input: SubjectScoresInput, sheet: SubjectSheetState.Connected?): SubjectHero {
         val subject = input.subject
         val inProgress = subject.normalizedRate == RecordbookRate.InProgress && !subject.absent
-        val sheetValue = sheet?.score?.value?.takeIf { inProgress && !input.fromBars && it.isNotBlank() }
-        val points = sheetValue?.replace(',', '.')?.replace(" ", "")?.toDoubleOrNull()
-            ?: subject.score?.takeIf { it.isFinite() && it >= 0 }
-        val source = when {
-            input.fromBars -> UiText.Res(RecordbookStrings.recordbook_source_bars)
-            sheetValue != null -> sheet.updatedAt?.let { at ->
+        val total = sheet?.score?.let { RecordbookSheetTotal(it.value, it.updatedAt, fresh = it.status == SheetStatus.OK) }
+        val shown = RecordbookPointsRule.pick(input.official, subject, total)
+        val points = shown.points
+        val source = when (shown.source) {
+            RecordbookSource.BARS -> UiText.Res(RecordbookStrings.recordbook_source_bars)
+            RecordbookSource.SHEET -> sheet?.updatedAt?.let { at ->
                 UiText.Res(RecordbookStrings.subject_source_at, listOf(UiText.Res(RecordbookStrings.recordbook_source_sheet), moment(at, input.today)))
             } ?: UiText.Res(RecordbookStrings.recordbook_source_sheet)
             else -> UiText.Res(RecordbookStrings.recordbook_source_myitmo)
@@ -119,7 +119,7 @@ internal object SubjectPresenter {
             else -> RecordbookGradeScale.gradeFor(points)?.let(UiText::Dynamic) to RecordbookTone.PRIMARY
         }
         return SubjectHero(
-            points = sheetValue ?: points?.let(::formatRecordbookNumber),
+            points = shown.text,
             share = ((points ?: 0.0) / MAX_POINTS).coerceIn(0.0, 1.0).toFloat(),
             grade = grade,
             gradeTone = tone,

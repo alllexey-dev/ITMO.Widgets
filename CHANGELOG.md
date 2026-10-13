@@ -95,8 +95,8 @@ new iOS app.
   still shows `Новые оценки` only.
 - Зачётка is rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one view model): what needs
   action first, each number over a quiet source (`БАРС`, `My ITMO`, `таблица`, `Спорт`) with a 0-100 bar in the tone
-  of its reason, passed subjects as a result pill, `Семестр` / `Сессия` with `Сдано N из M` and the average only in
-  the session, the period in the header (`3 семестр`). BARS is optional: without it the list is complete from My ITMO
+  of its reason, passed subjects as a result pill, one list with `Сдано N из M` and the average only near the end of
+  the semester and in the session, the period in the header (`3 семестр`). BARS is optional: without it the list is complete from My ITMO
   with one quiet `Подключить` line that can be hidden; an ended BARS session keeps its numbers dimmed with their date
   and offers `Войти`. Физкультура shows the sport points in a ring and opens Спорт. A tap on a source opens `Откуда
   баллы` with every source side by side. The BARS chip and the period sheet are gone.
@@ -138,6 +138,9 @@ new iOS app.
 
 ### Fixes
 
+- Зачётка and the subject page show a connected sheet's total again when the subject has an empty BARS journal: the
+  most current source with a value wins (the sheet, then BARS, then a sheet that failed to update, then My ITMO),
+  and a source without points never hides one with points.
 - The schedule widgets show lessons again on Android 8-11; the day-list
   widget no longer shows an older list after a refresh; on Android 12+ both
   schedule widgets follow the launcher's corner radius.
@@ -194,6 +197,11 @@ new iOS app.
   checkout). The QR encoder is a Kotlin port, Google Sheets parse
   with Ksoup, avatars load with Coil 3, OkHttp is 5.5.
 - MyItmoApi 2.1.0: MyITMO's HTTP 403 means no access, not an ended session.
+- Release builds ship a baseline and a startup profile generated from the demo
+  session: startup, the tabs, sheets and pushed screens run compiled ahead of
+  time (from install on Google Play, after the first background dexopt for the
+  GitHub APK) instead of interpreted. Frame-timing benchmarks of tab taps and
+  of a push and pop run nightly.
 - `scripts/verify.sh` is the one build entry point. A PR runs the unit and
   host tests, Konsist, the debug APK and the Roborazzi screenshot baselines of
   the modules it changes (four Android appearances, plus iOS ones for the
