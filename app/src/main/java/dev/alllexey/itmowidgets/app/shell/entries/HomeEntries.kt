@@ -11,7 +11,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.alllexey.itmowidgets.app.shell.ActivityRoutes
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
-import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.EntryRoute
 import dev.alllexey.itmowidgets.core.ui.permission.openAppNotificationSettings
@@ -47,22 +46,15 @@ internal fun EntryRegistry.Builder.homeEntries() {
 
 /**
  * Сегодня's root: `TodayRoute` with its ViewModel from Koin, kept in the root's own store. A lesson opens the lesson
- * sheet (a sport lesson through [SportDetailsRedirect], which opens the sport tab's sheet when it finds the booking),
- * `Подключиться` the meeting link, a thing to do its route.
+ * sheet ([openLesson]), `Подключиться` the meeting link, a thing to do its route.
  */
 @Composable
 internal fun HomeTabRoot(navigator: Nav3AppNavigator) {
     val context = LocalContext.current
     val viewModel: TodayViewModel = viewModel { KoinStarter.ensureStarted(context).get() }
-    val sport = rememberSportDetailsRedirect()
-    val actions = remember(navigator, sport, context) {
+    val actions = remember(navigator, context) {
         TodayActions(
-            onLesson = { target ->
-                when (target) {
-                    is LessonTarget.Lesson -> sport.openLesson(navigator, target.args)
-                    is LessonTarget.PendingSport -> sport.openPendingSport(navigator, target.args)
-                }
-            },
+            onLesson = { target -> navigator.openLesson(target) },
             onJoin = { url -> context.openUrl(url) },
             onTodo = { route -> navigator.run(context, route) },
         )

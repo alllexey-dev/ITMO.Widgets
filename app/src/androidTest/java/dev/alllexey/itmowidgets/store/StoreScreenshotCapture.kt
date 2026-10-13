@@ -17,6 +17,7 @@ import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedTestTags
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.app.shell.ShellHost
@@ -34,8 +35,6 @@ import dev.alllexey.itmowidgets.feature.home.HomeSemantics
 import dev.alllexey.itmowidgets.feature.home.ui.TodayTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeHost
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreenTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
 import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
 import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
@@ -192,10 +191,10 @@ class StoreScreenshotCapture {
             var opened = false
             scenario.onActivity { main ->
                 val nodes = main.composedNodes()
-                val listNode = nodes.first { it.tag == ScheduleScreenTestTags.LIST }
+                val listNode = nodes.first { it.tag == ScheduleFeedTestTags.LIST }
                 val list = listNode.boundsInWindow
                 val row = nodes.firstOrNull { node ->
-                    node.tag.orEmpty().startsWith(ScheduleListTestTags.LESSON_PREFIX) &&
+                    node.tag.orEmpty().startsWith(ScheduleFeedTestTags.LESSON_PREFIX) &&
                         node.boundsInWindow.center.y in list.top..list.bottom &&
                         node.texts().let { texts -> lecture in texts && texts.any { DemoStudy.ALGORITHMS.name in it } }
                 }

@@ -35,7 +35,7 @@ class RegistryCompletenessTest {
         val classes = keys.map { it::class }
 
         assertTrue(AppRoutes.QrPass::class in classes)
-        assertTrue(AppRoutes.CancelBookingConfirm::class in classes)
+        assertTrue(AppRoutes.ScheduleMonth::class in classes)
         assertTrue(SportRoutes.SportCommonDetails::class in classes)
         assertTrue(UpdateRoutes.AppUpdate::class in classes)
         assertEquals(classes.size, classes.toSet().size)

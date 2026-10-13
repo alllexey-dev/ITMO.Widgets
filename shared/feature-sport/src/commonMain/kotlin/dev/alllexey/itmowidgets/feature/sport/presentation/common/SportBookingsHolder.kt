@@ -4,16 +4,13 @@ import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyEvent
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -28,21 +25,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.toLocalDateTime
 
 /**
- * The `Мой спорт` data as the whole app sees it: the tab, the feed and the schedule load it, look bookings up and
- * cancel them through this one holder. It outlives every screen and holds no user data: the repositories do, and
+ * The `Мой спорт` data as the whole app sees it: the sport pages load it and cancel bookings through this one
+ * holder. It outlives every screen and holds no user data: the repositories do, and
  * their session cleaners clear it.
  */
 class SportBookingsHolder(
     private val sportBookingRepository: SportBookingRepository,
     private val sportDataRepository: SportDataRepository,
     private val bookingDelegate: SportBookingDelegate,
-    private val timeProvider: AcademicTimeProvider,
     private val scope: CoroutineScope
 ) {
 
@@ -93,49 +85,6 @@ class SportBookingsHolder(
         }
     }
 
-    /**
-     * The tab's merged bookings. Every source behind them is a replay flow that only emits after its own refresh,
-     * so the first caller loads the tab's data exactly as opening the tab would; afterwards the answer is immediate.
-     * Null when the bookings failed or did not arrive within [BOOKINGS_WAIT]; a `Loading` state is no answer.
-     */
-    suspend fun bookingsSnapshot(): List<SportBooking>? {
-        ensureDataLoaded()
-        val state = withTimeoutOrNull(BOOKINGS_WAIT) {
-            sportBookingRepository.observeSportBookings().first { it !is LoadState.Loading }
-        }
-        return state?.valueOrNull()
-    }
-
-    suspend fun findSportBooking(lessonId: Long): SportBooking? =
-        bookingsSnapshot()?.firstOrNull { it.lessonId == lessonId }
-
-    /**
-     * Several items can share a slot: a confirmed booking and a queue for another
-     * section. The confirmed one wins, and the section name breaks the remaining ties.
-     */
-    suspend fun findSportBookingAt(date: LocalDate, start: LocalTime, subject: String): SportBooking? {
-        val candidates = bookingsSnapshot()?.filter { booking ->
-            val local = booking.start.toLocalDateTime(timeProvider.timeZone)
-            local.date == date && local.time == start
-        }.orEmpty()
-        val wanted = subject.trim().lowercase()
-        fun SportBooking.named() = wanted.isNotEmpty() && sectionName.raw.trim().lowercase().let { it in wanted || wanted in it }
-        return candidates.firstOrNull { it.signed && it.named() }
-            ?: candidates.firstOrNull { it.signed }
-            ?: candidates.firstOrNull { it.named() }
-            ?: candidates.firstOrNull()
-    }
-
-    /**
-     * The booking a details sheet asked to cancel, when the sheet's [action] is still what the booking offers now.
-     * Null for a missing booking, an action that changed meanwhile or one that offers nothing.
-     */
-    suspend fun cancelCandidate(lessonId: Long, action: String?): SportBooking? {
-        val booking = findSportBooking(lessonId) ?: return null
-        val expected = booking.toDetailsArgs().bookingAction(timeProvider.now())
-        return booking.takeIf { expected != SportBookingAction.NONE && expected.name == action }
-    }
-
     private suspend fun refreshAll() {
         coroutineScope {
             awaitAll(
@@ -156,9 +105,5 @@ class SportBookingsHolder(
         } finally {
             inFlight.update { it - 1 }
         }
-    }
-
-    private companion object {
-        val BOOKINGS_WAIT = 8.seconds
     }
 }

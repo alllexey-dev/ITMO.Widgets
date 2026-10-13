@@ -12,12 +12,10 @@ import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
-import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
-import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
-import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherReviewsRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
@@ -67,7 +65,6 @@ class SocialDebugFixturesTest {
         assertSame(koin.get<PeopleSearchRepositoryImpl>(), koin.get<PeopleSearchRepository>())
         assertSame(koin.get<FriendRepositoryImpl>(), koin.get<FriendRepository>())
         assertSame(koin.get<PersonRepositoryImpl>(), koin.get<PersonRepository>())
-        assertSame(koin.get<DataStoreFriendSelectionHistory>(), koin.get<FriendSelectionHistory>())
         assertSame(koin.get<TeacherReviewsRepositoryImpl>(), koin.get<TeacherReviewsRepository>())
         assertSame(currentUser, koin.get<CurrentUserProvider>())
     }
@@ -78,21 +75,18 @@ class SocialDebugFixturesTest {
         val koin = GlobalContext.get()
         val social = koin.get<SocialRepository>()
         val friends = koin.get<FriendRepository>()
-        val history = koin.get<FriendSelectionHistory>()
 
         val fixture = SocialDebugFixtures.load(
             application,
             SocialDebugFixtures.Fakes(
                 social = { FakeSocialRepository() },
                 friends = { error("not read") },
-                history = { error("not read") },
             ),
         )
         SocialDebugFixtures.unload(application, fixture)
 
         assertSame(social, koin.get<SocialRepository>())
         assertSame(friends, koin.get<FriendRepository>())
-        assertSame(history, koin.get<FriendSelectionHistory>())
     }
 
     @Test

@@ -122,6 +122,8 @@
     <string name="lesson_pill_queue">очередь</string>
     <string name="lesson_pill_booked">записаны</string>
     <string name="lesson_pill_online">онлайн</string>
+    <string name="lesson_with_you">Вы</string>
+    <string name="lesson_overlap">одновременно с «%1$s»</string>
     <string name="lesson_gap">Окно %1$s</string>
     <string name="lesson_changed_today">Изменено сегодня в %1$s</string>
     <string name="lesson_changed_yesterday">Изменено вчера в %1$s</string>

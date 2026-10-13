@@ -4,7 +4,6 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
-import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
@@ -50,7 +49,6 @@ class SportMyViewModelTest {
         SportBookingsHolder(
             bookings, data,
             bookingDelegate(bookings, FakeSportScheduleRepository(), data, backgroundScope, actions),
-            FixedAcademicTime(),
             applicationScope()
         )
     )

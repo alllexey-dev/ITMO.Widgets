@@ -31,6 +31,7 @@
     <string name="schedule_lesson_type_credit">Зачёт</string>
     <string name="schedule_lesson_type_consultation">Консультация</string>
     <string name="schedule_lesson_type_default">Пара</string>
+    <string name="schedule_lesson_type_booking">Бронь помещения</string>
     <string name="schedule_unknown_subject">Предмет не указан</string>
     <string name="schedule_room_assembly_hall">Акт. зал</string>
     <string name="schedule_building_kronva">Кронва</string>

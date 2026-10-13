@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import dev.alllexey.itmowidgets.app.shell.BottomSheetSceneStrategy
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
@@ -24,33 +25,19 @@ import dev.alllexey.itmowidgets.core.navigation.ShellBackStack
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.core.navigation.TabRequest
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
-import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoScreenTags
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
-import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorTestTags
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsTestTags
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsTestTags
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleScreenTestTags
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.UserScheduleTestTags
-import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
-import dev.alllexey.itmowidgets.feature.sport.navigation.SportDetailsOpener
-import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes
-import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.datetime.LocalDateTime
+import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedTestTags
+import dev.alllexey.itmowidgets.feature.schedule.ui.friends.FriendPickerTestTags
+import dev.alllexey.itmowidgets.feature.schedule.ui.lesson.LessonSheetTestTags
+import dev.alllexey.itmowidgets.feature.schedule.ui.month.ScheduleMonthTestTags
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.isoDayNumber
-import kotlinx.datetime.toInstant
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -66,13 +53,12 @@ import org.robolectric.annotation.Config
 
 /**
  * The schedule keys in the Compose shell with Koin ViewModels on synthetic data: the tab root, another user's
- * schedule, the changes and both sheets render under the real [shellEntries]; the root opens the lesson sheet and the
- * friend picker and shows the picked friend, and a sport lesson opens the sport tab's sheet of its booking through
- * the sport redirect; `ScheduleToday` reaches the own schedule exactly once, also across a
- * saved-state restore, and another user's schedule never takes it.
+ * schedule, the lesson sheet (a lesson and an own sport queue), the friend picker and the month sheet render under the
+ * real [shellEntries]; a lesson of any kind opens the lesson sheet, the picker hands the friend to the feed, the month
+ * sheet closes after `Открыть`; `ScheduleToday` reaches the own schedule exactly once, also across a saved-state
+ * restore, and another user's schedule never takes it.
  */
 @RunWith(RobolectricTestRunner::class)
-// A phone window: the default 470 dp leaves the tall picker sheet no room for its list.
 @Config(application = PreviewHostApplication::class, qualifiers = "w411dp-h891dp")
 class ScheduleEntriesTest {
 
@@ -83,60 +69,52 @@ class ScheduleEntriesTest {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val schedules = ScheduleSamples.repository()
-    private val sportScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val sport = SportTestGraph(sportScope)
     private lateinit var koin: Koin
     private lateinit var navigator: Nav3AppNavigator
 
     @Before
     fun startGraph() {
-        koin = startKoin { modules(scheduleTestModule(schedules), socialTestModule(), sport.holderModule()) }.koin
+        koin = startKoin { modules(scheduleTestModule(schedules), socialTestModule()) }.koin
     }
-
-    @After
-    fun stopSportScope() = sportScope.cancel()
 
     @Test
     fun theScheduleKeysRenderTheirScreensAndCloseThemselves() {
         show(Nav3AppNavigator(ShellBackStack(AppTab.SCHEDULE)))
-        compose.onNodeWithTag(ScheduleListTestTags.lesson(LESSON.pairId)).assertIsDisplayed()
+        compose.onNodeWithTag(ScheduleFeedTestTags.LIST).assertIsDisplayed()
+        compose.onNodeWithText(LESSON.subjectName).assertIsDisplayed()
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.TabRoot(AppTab.SCHEDULE))).assertDoesNotExist()
 
-        assertRendersAndCloses(AppRoutes.UserSchedule(FRIEND_ISU, FRIEND_NAME), UserScheduleTestTags.TOP_BAR)
+        assertRendersAndCloses(AppRoutes.UserSchedule(FRIEND_ISU, FRIEND_NAME), ScheduleFeedTestTags.LIST)
         assertTrue(schedules.observed.any { it.userIsu == FRIEND_ISU })
 
-        assertSheetRenders(AppRoutes.LessonDetails(LESSON_ARGS), LessonDetailsTestTags.SCROLL)
+        assertSheetRenders(AppRoutes.LessonDetails(LESSON_ARGS), LessonSheetTestTags.ROOM)
         assertSheetRenders(
             AppRoutes.PendingSportDetails(ScheduleSamples.BOOKING.toDetailsArgs(ScheduleSamples.time.timeZone)),
-            PendingSportDetailsTestTags.SCROLL,
+            LessonSheetTestTags.SPORT,
         )
+        assertSheetRenders(AppRoutes.FriendSelector(), FriendPickerTestTags.OWN)
+        assertSheetRenders(AppRoutes.ScheduleMonth(DATE.toString()), ScheduleMonthTestTags.OPEN)
     }
 
     @Test
     fun aLessonOpensItsSheet() {
         show(Nav3AppNavigator(ShellBackStack(AppTab.SCHEDULE)))
 
-        compose.onNodeWithTag(ScheduleListTestTags.lesson(LESSON.pairId)).performClick()
+        compose.onNodeWithText(LESSON.subjectName).performClick()
         compose.waitForIdle()
 
         assertEquals(listOf<AppRoute>(AppRoutes.LessonDetails(LESSON_ARGS)), navigator.state.floating)
     }
 
     @Test
-    fun aSportLessonOnTheRootOpensTheSportSheetOfItsBooking() {
+    fun aSportLessonOpensTheLessonSheetToo() {
         schedules.days.value = listOf(DaySchedule(DATE.dayOfWeek.isoDayNumber, 1, DATE, null, listOf(SPORT_LESSON)))
-        val start = LocalDateTime(DATE, SPORT_LESSON.start).toInstant(ScheduleSamples.time.timeZone)
-        val booking = SportCardFixtures.booking(SPORT_BOOKING_ID)
-            .copy(start = start, end = start + 90.minutes, sectionName = SectionName(SPORT_LESSON.subjectName))
-        sport.bookings.value = LoadState.Content(listOf(booking))
         show(Nav3AppNavigator(ShellBackStack(AppTab.SCHEDULE)))
 
-        compose.onNodeWithTag(ScheduleListTestTags.lesson(SPORT_LESSON.pairId)).performClick()
+        compose.onNodeWithText(SPORT_LESSON.subjectName).performClick()
         compose.waitForIdle()
 
-        val sheet = navigator.state.floating.single() as SportRoutes.SportCommonDetails
-        assertEquals(SPORT_BOOKING_ID, sheet.item.lessonId)
-        assertEquals(SportDetailsOpener.SHELL, sheet.replyTo)
+        assertEquals(listOf<AppRoute>(AppRoutes.LessonDetails(SPORT_LESSON.toDetailsArgs(DATE))), navigator.state.floating)
     }
 
     @Test
@@ -144,7 +122,7 @@ class ScheduleEntriesTest {
         show(Nav3AppNavigator(ShellBackStack(AppTab.SCHEDULE)), withoutScheduleRoot())
         act { open(AppRoutes.UserSchedule(FRIEND_ISU, FRIEND_NAME)) }
 
-        compose.onNodeWithTag(ScheduleListTestTags.lesson(LESSON.pairId)).performClick()
+        compose.onNodeWithText(LESSON.subjectName).performClick()
         compose.waitForIdle()
 
         assertEquals(listOf<AppRoute>(AppRoutes.UserSchedule(FRIEND_ISU, FRIEND_NAME)), navigator.state.overlays)
@@ -158,8 +136,25 @@ class ScheduleEntriesTest {
         pickFriend()
 
         assertTrue(navigator.state.floating.isEmpty())
-        compose.onNodeWithTag(ScheduleScreenTestTags.SELECTED_USER).assertIsDisplayed()
+        compose.onNodeWithTag(ScheduleFeedTestTags.BACK_TO_MINE).assertIsDisplayed()
         assertTrue(schedules.refreshed.any { it.userIsu == FRIEND_ISU })
+
+        compose.onNodeWithTag(ScheduleFeedTestTags.BACK_TO_MINE).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag(ScheduleFeedTestTags.BACK_TO_MINE).assertDoesNotExist()
+    }
+
+    @Test
+    fun theTitleOpensTheMonthSheetAndOpenClosesIt() {
+        show(Nav3AppNavigator(ShellBackStack(AppTab.SCHEDULE)))
+
+        compose.onNodeWithTag(ItmoScreenTags.ROOT_HEADER).performClick()
+        compose.waitForIdle()
+        assertEquals(listOf<AppRoute>(AppRoutes.ScheduleMonth(DATE.toString())), navigator.state.floating)
+
+        compose.onNodeWithTag(ScheduleMonthTestTags.OPEN).performClick()
+        compose.waitForIdle()
+        assertTrue(navigator.state.floating.isEmpty())
     }
 
     @Test
@@ -170,25 +165,24 @@ class ScheduleEntriesTest {
         act { apply(EntryRoute(tab = AppTab.SCHEDULE, request = TabRequest.ScheduleToday)) }
 
         assertNull(navigator.pendingRequest(AppTab.SCHEDULE))
-        compose.onNodeWithTag(ScheduleScreenTestTags.SELECTED_USER).assertDoesNotExist()
+        compose.onNodeWithTag(ScheduleFeedTestTags.BACK_TO_MINE).assertDoesNotExist()
         pickFriend()
-        compose.onNodeWithTag(ScheduleScreenTestTags.SELECTED_USER).assertIsDisplayed()
+        compose.onNodeWithTag(ScheduleFeedTestTags.BACK_TO_MINE).assertIsDisplayed()
     }
 
     @Test
     fun scheduleTodayWaitsAcrossASavedStateRestoreAndIsDeliveredOnce() {
         var surface: ShellSurface by mutableStateOf(ShellSurface.Tabs(demoBanner = false))
         // The saved navigator starts on the home tab, whose root this test does not need.
-        val scheduleAndPicker = entryRegistry {
+        val scheduleOnly = entryRegistry {
             entry<AppRoutes.TabRoot> { key, shown -> if (key.tab == AppTab.SCHEDULE) ScheduleTabRoot(shown) }
             scheduleEntries()
-            socialEntries()
         }
         val restoration = StateRestorationTester(compose)
         restoration.setContent {
             navigator = rememberNav3AppNavigator()
             KoinContext(koin) {
-                ItmoTheme { ShellContent(navigator, scheduleAndPicker, surface, onDemoSignIn = {}) }
+                ItmoTheme { ShellContent(navigator, scheduleOnly, surface, onDemoSignIn = {}) }
             }
         }
         act { select(AppTab.SCHEDULE) }
@@ -202,14 +196,14 @@ class ScheduleEntriesTest {
         surface = ShellSurface.Tabs(demoBanner = false)
         compose.waitForIdle()
         assertNull(navigator.pendingRequest(AppTab.SCHEDULE))
-        compose.onNodeWithTag(ScheduleScreenTestTags.LIST).assertIsDisplayed()
-        compose.onNodeWithTag(ScheduleScreenTestTags.SELECTED_USER).assertDoesNotExist()
+        compose.onNodeWithTag(ScheduleFeedTestTags.LIST).assertIsDisplayed()
+        compose.onNodeWithTag(ScheduleFeedTestTags.BACK_TO_MINE).assertDoesNotExist()
 
         pickFriend()
         restoration.emulateSavedInstanceStateRestore()
         compose.waitForIdle()
         assertNull(navigator.pendingRequest(AppTab.SCHEDULE))
-        compose.onNodeWithTag(ScheduleScreenTestTags.SELECTED_USER).assertIsDisplayed()
+        compose.onNodeWithTag(ScheduleFeedTestTags.BACK_TO_MINE).assertIsDisplayed()
     }
 
     @Test
@@ -221,8 +215,8 @@ class ScheduleEntriesTest {
         )
         show(Nav3AppNavigator(waiting), withoutScheduleRoot())
 
-        compose.onNodeWithTag(UserScheduleTestTags.TOP_BAR).assertIsDisplayed()
-        compose.onNodeWithTag(ScheduleListTestTags.lesson(LESSON.pairId)).assertIsDisplayed()
+        compose.onNodeWithTag(ScheduleFeedTestTags.LIST).assertIsDisplayed()
+        compose.onNodeWithText(LESSON.subjectName).assertIsDisplayed()
         assertEquals(TabRequest.ScheduleToday, navigator.pendingRequest(AppTab.SCHEDULE))
     }
 
@@ -248,14 +242,12 @@ class ScheduleEntriesTest {
         compose.waitForIdle()
     }
 
-    /** The own schedule's friend button opens the picker, which hands the one friend back to the schedule. */
+    /** The own schedule's friend button opens the picker, where one tap hands the friend back to the feed. */
     private fun pickFriend() {
-        compose.onNodeWithTag(ScheduleScreenTestTags.FRIENDS_BUTTON).performClick()
+        compose.onNodeWithTag(ScheduleFeedTestTags.FRIENDS).performClick()
         compose.waitForIdle()
         assertTrue(navigator.state.floating.single() is AppRoutes.FriendSelector)
-        compose.onNodeWithTag(FriendSelectorTestTags.row(FRIEND_ISU)).performClick()
-        compose.waitForIdle()
-        compose.onNodeWithTag(FriendSelectorTestTags.APPLY).performClick()
+        compose.onNodeWithTag(FriendPickerTestTags.friend(FRIEND_ISU)).performClick()
         compose.waitForIdle()
     }
 
@@ -286,9 +278,8 @@ class ScheduleEntriesTest {
         val LESSON = ScheduleSamples.LESSON
         val LESSON_ARGS = LESSON.toDetailsArgs(ScheduleSamples.DATE)
         val DATE = ScheduleSamples.DATE
-        const val SPORT_BOOKING_ID = 7L
 
-        /** A sport lesson (type 11) of the own schedule, in the slot of the sport graph's one booking. */
+        /** A sport lesson (type 11) of the own schedule. */
         val SPORT_LESSON = LESSON.copy(
             pairId = 7002, typeId = Lesson.TypeId(11), type = "Спорт", subjectName = "Плавание",
             start = LocalTime(18, 30), end = LocalTime(20, 0),

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.designsystem.kit
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,9 +23,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
+import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_down
 import org.jetbrains.compose.resources.painterResource
 
 /** Test tags of the kit's screen frames. */
@@ -43,19 +47,23 @@ object ItmoScreenTags {
  * The root screen of a tab: the static root header ([title] and its one-line [subtitle] on the left, [actions] in the
  * same row, centred on the title block) that the [content] scrolls under, and an optional [floatingActionButton]. The
  * navigation bar belongs to the shell; window insets too: the frame pads none. [content] gets the padding to apply.
+ * With [onTitleClick] the title is a menu (`Сентябрь ▾`, the schedule's month sheet) that TalkBack reads as
+ * [titleClickLabel].
  */
 @Composable
 fun ItmoRootScreen(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    onTitleClick: (() -> Unit)? = null,
+    titleClickLabel: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { RootHeader(title, subtitle, actions) },
+        topBar = { RootHeader(title, subtitle, onTitleClick, titleClickLabel, actions) },
         floatingActionButton = floatingActionButton,
         containerColor = ItmoTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0),
@@ -68,7 +76,13 @@ fun ItmoRootScreen(
  * `displaySmall` and `titleMedium`. It never collapses (owner, 2026-10-13).
  */
 @Composable
-private fun RootHeader(title: String, subtitle: String?, actions: @Composable RowScope.() -> Unit) {
+private fun RootHeader(
+    title: String,
+    subtitle: String?,
+    onTitleClick: (() -> Unit)?,
+    titleClickLabel: String?,
+    actions: @Composable RowScope.() -> Unit,
+) {
     val type = ItmoTheme.typography
     val colors = ItmoTheme.colorScheme
     Surface(color = colors.surface, modifier = Modifier.testTag(ItmoScreenTags.ROOT_HEADER)) {
@@ -79,8 +93,25 @@ private fun RootHeader(title: String, subtitle: String?, actions: @Composable Ro
                 .padding(start = ItmoTheme.spacing.screenMargin, end = ItmoTheme.spacing.related),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(Modifier.weight(1f).semantics(mergeDescendants = true) { heading() }) {
-                Text(title, color = colors.onSurface, style = type.displaySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val menu = if (onTitleClick == null) {
+                Modifier
+            } else {
+                Modifier.clip(ItmoTheme.shapes.medium).clickable(onClickLabel = titleClickLabel, role = Role.Button, onClick = onTitleClick)
+            }
+            Column(Modifier.weight(1f).then(menu).semantics(mergeDescendants = true) { heading() }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        title,
+                        Modifier.weight(1f, fill = false),
+                        color = colors.onSurface,
+                        style = type.displaySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (onTitleClick != null) {
+                        Icon(painterResource(Res.drawable.ic_arrow_drop_down), contentDescription = null, tint = colors.onSurface)
+                    }
+                }
                 if (subtitle != null) {
                     Text(
                         subtitle,

@@ -46,8 +46,7 @@ import org.koin.dsl.module
 
 /**
  * The sport data of the shell tests on synthetic fakes: the bookings holder, the sport tab's two ViewModels and
- * another user's sport, all over the same repositories, so a test sets [bookings] and every screen and the
- * redirect see them. Every source answers at once (an empty list) unless a test sets it to `Loading`; the holder and
+ * another user's sport, all over the same repositories, so a test sets [bookings] and every screen sees them. Every source answers at once (an empty list) unless a test sets it to `Loading`; the holder and
  * the cancellation follow-ups run in [scope]. [cancelled] records the lessons whose booking was signed out.
  */
 internal class SportTestGraph(scope: CoroutineScope) {
@@ -83,13 +82,7 @@ internal class SportTestGraph(scope: CoroutineScope) {
         timeProvider = time,
         followUpScope = scope,
     )
-    val holder = SportBookingsHolder(bookingRepository, SportData, delegate, time, scope)
-
-    /**
-     * Only [holder], for a graph whose academic clock comes from another test module: what the schedule root's sport
-     * redirect reads.
-     */
-    fun holderModule(): Module = module { single { holder } }
+    val holder = SportBookingsHolder(bookingRepository, SportData, delegate, scope)
 
     fun module(): Module = module {
         single { holder }

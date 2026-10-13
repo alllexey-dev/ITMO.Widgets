@@ -433,6 +433,18 @@
         }
       }
     },
+    "lesson_with_you" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы"
+          }
+        }
+      }
+    },
     "link_open_failed" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

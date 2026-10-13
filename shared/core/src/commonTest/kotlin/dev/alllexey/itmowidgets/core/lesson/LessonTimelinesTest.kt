@@ -120,16 +120,82 @@ class LessonTimelinesTest {
         assertEquals("дистант", lesson("10:00", "11:30").copy(note = "дистант").noteText)
     }
 
+    @Test
+    fun overlappingLessonsShareOneNowMarkerAndAMonotonicRailWithoutAWindow() {
+        // Веб-программирование 15:30-17:00 and a room booking 16:00-20:30, at 16:30.
+        val items = LessonTimelines.build(
+            listOf(lesson("16:00", "20:30", subject = "Бронь"), lesson("15:30", "17:00", subject = "Веб")),
+            DayMoment.Today(LocalTime(16, 30)),
+            today,
+        )
+
+        val lessons = items.map { assertIs<TimelineItem.Lesson>(it) }
+        assertEquals(listOf("Веб", "Бронь"), lessons.map { it.lesson.subject })
+        assertEquals(listOf(LessonState.NOW, LessonState.NOW), lessons.map { it.lesson.state })
+        // The earlier lesson's rail runs to its end: the moment is on it, the later one has not started its stretch.
+        assertEquals(60f / 90f, lessons[0].progress, 0.001f)
+        assertEquals(0f, lessons[1].progress)
+        assertEquals(listOf(true, false), lessons.map { it.reached })
+        assertEquals(1, lessons.count { it.progress > 0f && it.progress < 1f })
+        assertNull(lessons[0].overlapNote)
+        assertEquals(UiText.Res(CoreStrings.lesson_overlap, listOf("Веб")), lessons[1].overlapNote)
+
+        val later = LessonTimelines.build(lessons.map { it.lesson.toDay() }, DayMoment.Today(LocalTime(18, 0)), today)
+            .map { it as TimelineItem.Lesson }
+        assertEquals(listOf(1f, 60f / 210f), later.map { it.progress })
+    }
+
+    @Test
+    fun aNestedLessonAndIdenticalTimesKeepOneMarkerOnTheEarliestOngoing() {
+        val nested = LessonTimelines.build(
+            listOf(lesson("10:00", "14:00", subject = "Длинная"), lesson("11:00", "12:00", subject = "Внутри")),
+            DayMoment.Today(LocalTime(11, 30)),
+            today,
+        ).map { it as TimelineItem.Lesson }
+        assertEquals(listOf(90f / 240f, 0f), nested.map { it.progress })
+        assertEquals(UiText.Res(CoreStrings.lesson_overlap, listOf("Длинная")), nested[1].overlapNote)
+
+        val same = LessonTimelines.build(
+            listOf(lesson("10:00", "11:30", subject = "А"), lesson("10:00", "11:30", subject = "Б")),
+            DayMoment.Today(LocalTime(10, 45)),
+            today,
+        ).map { it as TimelineItem.Lesson }
+        assertEquals(listOf(0.5f, 0f), same.map { it.progress })
+        assertEquals(listOf(LessonState.NOW, LessonState.NOW), same.map { it.lesson.state })
+        assertEquals(UiText.Res(CoreStrings.lesson_overlap, listOf("А")), same[1].overlapNote)
+    }
+
+    @Test
+    fun aWindowAfterAnOverlapCountsFromTheLatestEnd() {
+        val items = LessonTimelines.build(
+            listOf(lesson("15:30", "17:00"), lesson("16:00", "20:30"), lesson("21:40", "23:00")),
+            DayMoment.Today(LocalTime(21, 0)),
+            today,
+        )
+
+        assertEquals(listOf(true, true, false, true), items.map { it is TimelineItem.Lesson })
+        val gap = items[2] as TimelineItem.Gap
+        assertEquals(
+            UiText.Res(CoreStrings.lesson_gap, listOf(UiText.Res(CoreStrings.duration_hours_minutes, listOf(1, 10)))),
+            gap.label,
+        )
+        assertEquals(30f / 70f, gap.progress, 0.001f)
+        assertEquals(listOf(1f, 1f, 0f), items.filterIsInstance<TimelineItem.Lesson>().map { it.progress })
+    }
+
+    private fun LessonUi.toDay() = lesson(start, end, subject = subject)
+
     private fun lesson(
         start: String,
         end: String,
         online: Boolean = false,
         change: LessonChange? = null,
         sport: SportMark? = null,
+        subject: String = "Физика",
     ) = DayLesson(
         start = LocalTime.parse(start),
         end = LocalTime.parse(end),
-        subject = "Физика",
+        subject = subject,
         typeId = 1,
         teacher = "Белов Павел Игоревич",
         room = if (online) null else "2202",

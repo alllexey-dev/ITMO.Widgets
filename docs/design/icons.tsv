@@ -3,6 +3,8 @@ add	add	0	shared	plus	-
 arrow_back	arrow_back	0	shared	chevron.backward	-
 arrow_drop_down	arrow_drop_down	0	shared	arrowtriangle.down.fill	-
 arrow_drop_up	arrow_drop_up	0	shared	arrowtriangle.up.fill	-
+arrow_forward	arrow_forward	0	shared	arrow.right	-
+arrow_upward	arrow_upward	0	shared	arrow.up	-
 assignment	assignment	0	shared	doc.text	-
 auto_awesome	auto_awesome	0	shared	sparkles	-
 book_2	book_2	0	shared	book.closed	Bottom navigation tab
@@ -30,6 +32,7 @@ edit	edit	0	shared	pencil	-
 edit_calendar	edit_calendar	0	shared	calendar	SF Symbols has no calendar with a pencil
 edit_note	edit_note	0	shared	square.and.pencil	-
 error	error	0	shared	exclamationmark.circle	-
+event_available	event_available	0	shared	calendar.badge.checkmark	-
 event_note	event_note	0	shared	calendar.day.timeline.left	-
 exercise	exercise	0	shared	dumbbell	-
 expand_more	expand_more	0	shared	chevron.down	Same glyph as summary_expand
@@ -81,6 +84,8 @@ table	table	0	shared	tablecells	-
 tile_qr	qr_code	0	android	-	Quick Settings tile; SystemUI tints it
 today	today	0	shared	sun.max	Bottom navigation tab
 today_filled	today	1	shared	sun.max.fill	Selected bottom navigation tab
+undo	undo	0	shared	arrow.uturn.backward	-
 videocam	videocam	0	shared	video	-
+weekend	weekend	0	shared	sofa	-
 widgets	widgets	0	shared	square.grid.2x2	-
 work	work	0	shared	briefcase	-

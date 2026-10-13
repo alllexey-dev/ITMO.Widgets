@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
@@ -11,7 +10,6 @@ import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
-import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
 import kotlinx.coroutines.delay
@@ -51,17 +49,15 @@ class SocialSessionTest {
 
         assertEquals(1, cleaners.count { it === koin.get<SocialRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<PersonRepositoryImpl>() })
-        assertEquals(1, cleaners.count { it === koin.get<DataStoreFriendSelectionHistory>() })
     }
 
     @Test
-    fun `sign-out clears every social cache and the recent friends`() = runBlocking {
+    fun `sign-out clears every social cache`() = runBlocking {
         bootApplication()
         val koin = GlobalContext.get()
         val dataStore = koin.get<DataStore<Preferences>>()
         val social = koin.get<SocialRepositoryImpl>()
         val people = koin.get<PersonRepositoryImpl>()
-        val history = koin.get<DataStoreFriendSelectionHistory>()
         // Disabled: the opt-in follower has read the stored state. DataStore 1.2.1 can lose a write made while a new
         // collector's first read is in flight (seen on Linux), and the follower would never see the demo session.
         withTimeout(TIMEOUT_MS) { social.observeFriends().first { it == LoadState.Disabled } }
@@ -71,11 +67,9 @@ class SocialSessionTest {
         social.profile(DemoPeople.ARTEM.isu)
         social.userFriends(DemoPeople.IVAN.isu)
         people.person(DemoPeople.MARIA.isu)
-        history.record(DemoPeople.IVAN.isu)
         assertNotNull(social.cachedProfile(DemoPeople.ARTEM.isu))
         assertNotNull(social.cachedUserFriends(DemoPeople.IVAN.isu))
         assertNotNull(people.cachedPerson(DemoPeople.MARIA.isu))
-        assertEquals(listOf(DemoPeople.IVAN.isu), history.getRecentIsu())
 
         cleaners().forEach { it.clearSessionData() }
 
@@ -87,8 +81,6 @@ class SocialSessionTest {
         assertTrue(social.observeRequests().first() !is LoadState.Content)
         assertNull(social.observeCurrentUser().first())
         assertNull(people.cachedPerson(DemoPeople.MARIA.isu))
-        assertEquals(emptyList<Int>(), history.getRecentIsu())
-        assertNull(dataStore.data.first()[stringPreferencesKey("recent_schedule_friends")])
     }
 
     private fun cleaners(): Collection<SessionDataCleaner> = GlobalContext.get().get<SessionDataCleaners>().current()

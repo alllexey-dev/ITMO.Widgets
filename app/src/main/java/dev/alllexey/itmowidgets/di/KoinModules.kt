@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.di
 
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
-import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
@@ -57,7 +56,6 @@ object KoinModules {
         settingsModule,
         recordbookModule,
         socialModule,
-        friendSelectorModule,
         scheduleModule,
         scheduleDataModule,
         sportModule,

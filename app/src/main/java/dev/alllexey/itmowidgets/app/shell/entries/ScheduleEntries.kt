@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
+import android.view.View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,181 +14,197 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.runtime.result.ResultEffect
+import com.google.android.material.snackbar.Snackbar
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
-import dev.alllexey.itmowidgets.core.location.BuildingDirectory
+import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
-import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.TabRequest
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
-import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.KoinStarter
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
-import dev.alllexey.itmowidgets.feature.schedule.presentation.SelectedUser
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsActions
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsSheetRoute
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsActions
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsContent
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsSheetState
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.lessonMapDestination
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.openLessonLink
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.openLessonMap
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.openPendingSportMap
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.viewModelArgs
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleRoute
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleRouteActions
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleRouteRequest
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.UserScheduleScreen
+import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.SelectedUser
+import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonSheetArgs
+import dev.alllexey.itmowidgets.feature.schedule.presentation.month.ScheduleMonthViewModel
+import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedHost
+import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedRequest
+import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedRoute
+import dev.alllexey.itmowidgets.feature.schedule.ui.friends.FriendPickerActions
+import dev.alllexey.itmowidgets.feature.schedule.ui.friends.FriendPickerRoute
+import dev.alllexey.itmowidgets.feature.schedule.ui.lesson.LessonSheetActions
+import dev.alllexey.itmowidgets.feature.schedule.ui.lesson.LessonSheetRoute
+import dev.alllexey.itmowidgets.feature.schedule.ui.month.ScheduleMonthRoute
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.datetime.LocalDate
 import org.koin.core.parameter.parametersOf
 
+/** The friend picker's answer to the schedule tab: [user]'s schedule, or the own one for null. */
+internal data class FriendPick(val user: SelectedUser?)
+
+/** The month sheet's `Открыть` for the schedule tab. */
+internal data class DatePick(val date: LocalDate)
+
 /**
- * The schedule's keys: another user's schedule, the lesson sheet and the pending sport sheet.
- * Both sheets close before a profile opens in their place.
+ * The schedule's keys: another user's schedule, the lesson sheet (a timetable lesson or an own sport queue), the
+ * friend picker and the month sheet. The picker and the month sheet answer the schedule tab on the result bus and
+ * close; every sheet closes before a screen opens in its place.
  */
 internal fun EntryRegistry.Builder.scheduleEntries() {
     entry<AppRoutes.UserSchedule>(
         args = { bundleOf(UserScreenArgs.ISU to it.isu, UserScreenArgs.NAME to it.name) },
     ) { key, navigator ->
-        UserScheduleEntry(key, navigator)
+        UserScheduleEntry(onBack = { navigator.close(key) }, navigator)
     }
-    entry<AppRoutes.LessonDetails>(args = { it.args.viewModelArgs() }) { key, navigator ->
-        LessonDetailsEntry(key.args, onClose = { navigator.close(key) }, navigator)
+    entry<AppRoutes.LessonDetails>(args = { it.sheetArgs() }) { key, navigator ->
+        LessonSheetEntry(onClose = { navigator.close(key) }, navigator)
     }
-    entry<AppRoutes.PendingSportDetails> { key, navigator ->
-        PendingSportDetailsEntry(key.args, onClose = { navigator.close(key) }, navigator)
+    entry<AppRoutes.PendingSportDetails>(args = { it.sheetArgs() }) { key, navigator ->
+        LessonSheetEntry(onClose = { navigator.close(key) }, navigator)
+    }
+    entry<AppRoutes.FriendSelector>(
+        args = { bundleOf(FriendSelectionContract.ARG_SELECTED_ISU to it.selectedIsu) },
+    ) { key, navigator ->
+        FriendPickerEntry(onClose = { navigator.close(key) }, navigator)
+    }
+    entry<AppRoutes.ScheduleMonth>(
+        args = { bundleOf(ScheduleMonthViewModel.ARG_DATE to it.date, ScheduleMonthViewModel.ARG_USER_ISU to it.userIsu) },
+    ) { key, navigator ->
+        MonthEntry(onClose = { navigator.close(key) })
     }
 }
 
+private fun AppRoute.sheetArgs() = bundleOf(*LessonSheetArgs.of(this).toList().toTypedArray())
+
 /**
- * The schedule tab's root: the own `ScheduleRoute`. It alone takes [TabRequest.ScheduleToday], once,
- * and the friend picker's [FriendSelection]; the request stays with the back stack until this root hands it on, so it
- * survives recreation, and it is never handed out twice. A sport lesson or a pending sport row goes through the
- * [SportDetailsRedirect], which opens the sport tab's sheet when it finds the booking, the schedule's own otherwise.
+ * The schedule tab's root: the feed of the own schedule (or a friend's). It alone takes [TabRequest.ScheduleToday],
+ * once, the picker's [FriendPick] and the month sheet's [DatePick]; the request stays with the back stack until this
+ * root hands it on, so it survives recreation, and it is never handed out twice.
  */
 @Composable
 internal fun ScheduleTabRoot(navigator: Nav3AppNavigator) {
-    val timeProvider = koinGet<AcademicTimeProvider>()
-    val requests = remember { Channel<ScheduleRouteRequest>(Channel.UNLIMITED) }
+    val requests = remember { Channel<ScheduleFeedRequest>(Channel.UNLIMITED) }
     val requestFlow = remember(requests) { requests.receiveAsFlow() }
-    val sport = rememberSportDetailsRedirect()
 
     val pending = navigator.pendingRequest(AppTab.SCHEDULE)
     LaunchedEffect(pending) {
         if (pending is TabRequest.ScheduleToday) {
-            requests.trySend(ScheduleRouteRequest.Today)
+            requests.trySend(ScheduleFeedRequest.Today)
             navigator.consume(AppTab.SCHEDULE)
         }
     }
-    ResultEffect<FriendSelection> { requests.trySend(ScheduleRouteRequest.SelectUser(it.toSelectedUser())) }
+    ResultEffect<FriendPick> { requests.trySend(ScheduleFeedRequest.SelectUser(it.user)) }
+    ResultEffect<DatePick> { requests.trySend(ScheduleFeedRequest.ShowDate(it.date)) }
 
-    val actions = remember(navigator, timeProvider, sport) {
-        ScheduleRouteActions(
-            onLessonClick = { lesson, date -> sport.openLesson(navigator, lesson.toDetailsArgs(date)) },
-            onPendingClick = { sport.openPendingSport(navigator, it.toDetailsArgs(timeProvider.timeZone)) },
-            onPickFriend = { shown ->
-                navigator.open(AppRoutes.FriendSelector(shown?.isu ?: FriendSelectionContract.NO_USER_ISU))
+    val host = remember(navigator) {
+        ScheduleFeedHost(
+            onMonth = { date, userIsu ->
+                navigator.open(AppRoutes.ScheduleMonth(date.toString(), userIsu ?: FriendSelectionContract.NO_USER_ISU))
             },
+            onPickFriend = { shown -> navigator.open(AppRoutes.FriendSelector(shown ?: FriendSelectionContract.NO_USER_ISU)) },
+            onLesson = { navigator.openLesson(it) },
         )
     }
-    ScheduleRoute(
-        ownTab = true,
-        actions = actions,
-        requests = requestFlow,
-        viewModel = entryViewModel(),
-        timeProvider = timeProvider,
-    )
+    ScheduleFeedRoute(host, viewModel = entryViewModel(), requests = requestFlow)
 }
 
-/** The picker's result as the schedule tab reads it: no user for the own schedule, the picture URL as delivered. */
-private fun FriendSelection.toSelectedUser(): SelectedUser? =
-    if (useMySchedule) null else SelectedUser(isu = isu, name = name, avatar = pictureUrl)
+/** Another user's schedule from their profile: the same feed on a pushed screen, without the picker. */
+@Composable
+private fun UserScheduleEntry(onBack: () -> Unit, navigator: Nav3AppNavigator) {
+    val host = remember(navigator, onBack) { ScheduleFeedHost(onLesson = { navigator.openLesson(it) }, onBack = onBack) }
+    ScheduleFeedRoute(host, viewModel = entryViewModel())
+}
+
+/** A lesson of any list opens its sheet: a timetable lesson, or an own sport queue. */
+internal fun Nav3AppNavigator.openLesson(target: LessonTarget) {
+    when (target) {
+        is LessonTarget.Lesson -> open(AppRoutes.LessonDetails(target.args))
+        is LessonTarget.PendingSport -> open(AppRoutes.PendingSportDetails(target.args))
+    }
+}
 
 /**
- * Another user's schedule: every lesson opens the lesson sheet, there are no pending sport rows and no
- * friend picker, and it never reads the schedule tab's request.
+ * The lesson sheet: the meeting link stays on this activity (a snackbar when nothing takes it); the subject, its links,
+ * a person and Спорт open in the sheet's place.
  */
 @Composable
-private fun UserScheduleEntry(key: AppRoutes.UserSchedule, navigator: Nav3AppNavigator) {
-    val actions = remember(navigator) {
-        ScheduleRouteActions(
-            onLessonClick = { lesson, date -> navigator.open(AppRoutes.LessonDetails(lesson.toDetailsArgs(date))) },
+private fun LessonSheetEntry(onClose: () -> Unit, navigator: Nav3AppNavigator) {
+    val view = LocalView.current
+    val platform = LocalPlatformActions.current
+    val actions = remember(view, platform, onClose, navigator) {
+        LessonSheetActions(
+            onVideo = { url -> if (!platform.openLink(url)) view.say(R.string.link_open_failed) },
+            onRoute = { route ->
+                onClose()
+                navigator.open(route)
+            },
+            onProfile = { isu ->
+                onClose()
+                navigator.openUserProfile(isu)
+            },
+            onSport = {
+                onClose()
+                navigator.select(AppTab.SPORT)
+            },
+            onClose = onClose,
         )
     }
-    UserScheduleScreen(name = key.name, onBack = { navigator.close(key) }) {
-        ScheduleRoute(
-            ownTab = false,
-            actions = actions,
+    SheetBody { LessonSheetRoute(entryViewModel(), actions) }
+}
+
+/** The friend picker: the choice goes to the schedule tab before the sheet closes. */
+@Composable
+private fun FriendPickerEntry(onClose: () -> Unit, navigator: Nav3AppNavigator) {
+    val results = LocalResultEventBus.current
+    val actions = remember(results, onClose, navigator) {
+        FriendPickerActions(
+            onPick = { user ->
+                results.sendResult(FriendPick(user))
+                onClose()
+            },
+            onConnect = {
+                onClose()
+                navigator.open(AppRoutes.Settings(SERVICES_PAGE))
+            },
+            onClose = onClose,
+        )
+    }
+    SheetBody { FriendPickerRoute(entryViewModel(), actions) }
+}
+
+/** The month sheet: `Открыть` goes to the schedule tab before the sheet closes. */
+@Composable
+private fun MonthEntry(onClose: () -> Unit) {
+    val results = LocalResultEventBus.current
+    SheetBody {
+        ScheduleMonthRoute(
             viewModel = entryViewModel(),
-            timeProvider = koinGet(),
-        )
-    }
-}
-
-/** The lesson sheet: the map and the meeting link stay on this activity, a profile opens in its place. */
-@Composable
-private fun LessonDetailsEntry(lesson: LessonDetailsArgs, onClose: () -> Unit, navigator: Nav3AppNavigator) {
-    val context = LocalContext.current
-    val view = LocalView.current
-    val buildings = koinGet<BuildingDirectory>()
-    val destination = remember(buildings, lesson, context) { buildings.lessonMapDestination(lesson, context) }
-    val actions = remember(destination, context, view, onClose, navigator) {
-        LessonDetailsActions(
-            onMap = { destination?.let { context.openLessonMap(it, view) } },
-            onLink = { url -> context.openLessonLink(url, view) },
-            onProfile = navigator::openUserProfile,
+            onOpen = { date ->
+                results.sendResult(DatePick(date))
+                onClose()
+            },
             onClose = onClose,
         )
     }
-    LessonDetailsSheetRoute(
-        lesson = lesson,
-        mapAvailable = destination != null,
-        actions = actions,
-        modifier = SheetSurface,
-        viewModel = entryViewModel(),
-    )
 }
 
-/**
- * The pending sport sheet: its open-sport button selects the sport tab, which closes the sheet, and a profile opens
- * in its place.
- */
+/** The sheets fill the shell's sheet on the lowest container. */
 @Composable
-private fun PendingSportDetailsEntry(
-    booking: PendingSportDetailsArgs,
-    onClose: () -> Unit,
-    navigator: Nav3AppNavigator,
-) {
-    val context = LocalContext.current
-    val view = LocalView.current
-    val zone = koinGet<AcademicTimeProvider>().timeZone
-    val actions = remember(booking, context, view, onClose, navigator) {
-        PendingSportDetailsActions(
-            onMap = { context.openPendingSportMap(booking, view) },
-            onProfile = navigator::openUserProfile,
-            onOpenSport = { navigator.select(AppTab.SPORT) },
-            onClose = onClose,
-        )
-    }
-    PendingSportDetailsContent(PendingSportDetailsSheetState(booking, zone), actions, SheetSurface)
+private fun SheetBody(content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxSize().background(ItmoTheme.colorScheme.surfaceContainerLowest)) { content() }
 }
 
-/** Both sheets fill the shell's sheet on the lowest container. */
-private val SheetSurface: Modifier
-    @Composable get() = Modifier.fillMaxSize().background(ItmoTheme.colorScheme.surfaceContainerLowest)
+private fun View.say(text: Int) = Snackbar.make(this, text, Snackbar.LENGTH_SHORT).show()
 
-@Composable
-private inline fun <reified T : Any> koinGet(): T {
-    val context = LocalContext.current
-    return remember(context) { KoinStarter.ensureStarted(context).get<T>() }
-}
+/** The settings page of the connection to ITMO.Widgets (`SettingsPage.SERVICES`). */
+private const val SERVICES_PAGE = "SERVICES"
 
 /**
  * Koin's definition of [VM] in this entry's own store, with the entry's `SavedStateHandle` (its arguments, seeded by

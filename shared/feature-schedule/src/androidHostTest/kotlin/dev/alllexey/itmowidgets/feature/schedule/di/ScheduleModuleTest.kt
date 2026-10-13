@@ -5,9 +5,12 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.friend.FriendRepository
+import dev.alllexey.itmowidgets.core.lesson.LessonSubjectSource
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -30,7 +33,7 @@ import org.koin.test.verify.verify
 class ScheduleModuleTest {
 
     /**
-     * The schedule data, the calendar sync, the selectors and the three screens resolve inside the two modules; the
+     * The schedule data, the calendar sync, the selectors and the four screens resolve inside the two modules; the
      * core contracts, the notifier, the phone's calendars and the schedulers, which the platform supplies (the app's
      * Koin modules on Android), are given.
      */
@@ -61,6 +64,11 @@ class ScheduleModuleTest {
                 CustomServicesRepository::class,
                 TeacherLevelsRepository::class,
                 SavedStateHandle::class,
+                FriendRepository::class,
+                CalendarSync::class,
+                // The lesson sheet's subject sources: an open set read with getAll().
+                List::class,
+                LessonSubjectSource::class,
             ),
         )
     }

@@ -55,9 +55,6 @@ enum class SportDetailsOpener {
 
     /** The sport tab's `Запись` page. */
     SIGN,
-
-    /** The shell, for a sport lesson or a pending sport row of the feed or the schedule: it asks before cancelling. */
-    SHELL,
     ;
 
     /** The result-bus key of this opener's actions (`sport_action/<opener>`). */

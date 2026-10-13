@@ -18,14 +18,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 50 key names
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 49 key names
  * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The four
  * `push_registered_*` keys are written only by iOS, whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 50 key names, each declared once`() {
+    fun `the app preferences keep their 49 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules.
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -36,7 +36,7 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(50, declared.map { it.name }.toSet().size)
+        assertEquals(49, declared.map { it.name }.toSet().size)
     }
 
     @Test
@@ -144,7 +144,6 @@ class PreferenceKeyParityTest {
             Key("PushRegistrationPreferences.kt", "string", "push_registered_app_version"),
             Key("DataStoreSubjectBindingStore.kt", "string", "subject_bindings"),
             Key("BarsPreferenceRepositoryImpl.kt", "boolean", "recordbook_bars"),
-            Key("DataStoreFriendSelectionHistory.kt", "string", "recent_schedule_friends"),
             Key("QrWidgetStateStoreImpl.kt", "string", "qr_widget_state_\$appWidgetId")
         )
     }

@@ -1,47 +1,33 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.runtime.result.ResultEffect
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
-import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.TabRequest
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialogSurface
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.KoinStarter
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.navigation.SportDetailsOpener
 import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
 import dev.alllexey.itmowidgets.feature.sport.ui.SportHostActions
@@ -56,19 +42,13 @@ import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsSheet
 import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsSubmission
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportSheetAction
 import dev.alllexey.itmowidgets.feature.sport.ui.user.UserSportRoute
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
 import org.koin.core.parameter.parametersOf
 
 /**
- * The sport keys: another user's sport, the details sheet of a
- * lesson or a booking and the question before a cancellation the shell asks. The sheet's booking action goes where
- * its [SportRoutes.SportCommonDetails.replyTo] says: to the sport page that opened it on the result bus, or, for a
- * sheet the [SportDetailsRedirect] opened from the feed or the schedule, to the shell's own question.
+ * The sport keys: another user's sport and the details sheet of a lesson or a booking. The sheet's booking action goes
+ * on the result bus to the sport page that opened it ([SportRoutes.SportCommonDetails.replyTo]).
  */
 internal fun EntryRegistry.Builder.sportEntries() {
     entry<AppRoutes.UserSport>(
@@ -77,7 +57,6 @@ internal fun EntryRegistry.Builder.sportEntries() {
         UserSportEntry(onBack = { navigator.close(key) })
     }
     entry<SportRoutes.SportCommonDetails> { key, navigator -> SportDetailsEntry(key, navigator) }
-    entry<AppRoutes.CancelBookingConfirm> { key, navigator -> CancelBookingEntry(key, onClose = { navigator.close(key) }) }
 }
 
 /**
@@ -124,73 +103,6 @@ internal fun SportTabRoot(navigator: Nav3AppNavigator) {
     )
 }
 
-/**
- * How the feed and the schedule open a lesson: a sport lesson (type 11) or a pending sport row opens the sport tab's
- * details sheet when [holder] finds its booking (the holder's tie-break and wait), the schedule's own sheet otherwise;
- * every other lesson opens its sheet at once. The cancel those sheets offer is asked first
- * ([AppRoutes.CancelBookingConfirm]) and runs only while the booking still offers it. [scope] outlives the screen
- * that asked, so a slow lookup still opens its sheet.
- */
-internal class SportDetailsRedirect(
-    private val holder: SportBookingsHolder,
-    private val time: AcademicTimeProvider,
-    private val scope: CoroutineScope,
-) {
-
-    fun openLesson(navigator: Nav3AppNavigator, args: LessonDetailsArgs) {
-        if (args.typeId != SPORT_TYPE_ID) {
-            navigator.open(AppRoutes.LessonDetails(args))
-            return
-        }
-        scope.launch {
-            val booking = holder.findSportBookingAt(LocalDate.parse(args.date), LocalTime.parse(args.start), args.subjectName)
-            navigator.open(booking?.let(::shellDetails) ?: AppRoutes.LessonDetails(args))
-        }
-    }
-
-    fun openPendingSport(navigator: Nav3AppNavigator, args: PendingSportDetailsArgs) {
-        scope.launch {
-            val booking = holder.findSportBooking(args.lessonId)
-            navigator.open(booking?.let(::shellDetails) ?: AppRoutes.PendingSportDetails(args))
-        }
-    }
-
-    /** The action of a sheet this redirect opened: the question opens only while the booking offers [action]. */
-    fun onAction(navigator: Nav3AppNavigator, lessonId: Long, action: String?) {
-        scope.launch {
-            holder.cancelCandidate(lessonId, action) ?: return@launch
-            navigator.open(AppRoutes.CancelBookingConfirm(lessonId))
-        }
-    }
-
-    /** `Отменить` in the question: cancels only while the booking still offers a cancellation now. */
-    fun confirmCancel(lessonId: Long) {
-        scope.launch {
-            val booking = holder.findSportBooking(lessonId) ?: return@launch
-            if (booking.toDetailsArgs().bookingAction(time.now()) != SportBookingAction.NONE) holder.cancel(booking)
-        }
-    }
-
-    private fun shellDetails(item: SportCommon) = SportRoutes.details(item, SportDetailsOpener.SHELL)
-
-    private companion object {
-        /** The schedule's lesson type of a sport booking. */
-        const val SPORT_TYPE_ID = 11
-    }
-}
-
-/** The redirect of this activity: the holder from Koin, the activity's scope (the composition's without one). */
-@Composable
-internal fun rememberSportDetailsRedirect(): SportDetailsRedirect {
-    val context = LocalContext.current
-    val fallback = rememberCoroutineScope()
-    val scope = (LocalActivity.current as? ComponentActivity)?.lifecycleScope ?: fallback
-    return remember(context, scope) {
-        val koin = KoinStarter.ensureStarted(context)
-        SportDetailsRedirect(koin.get(), koin.get(), scope)
-    }
-}
-
 /** Another user's sport; its ViewModel reads the ISU and the name from the entry's arguments. */
 @Composable
 private fun UserSportEntry(onBack: () -> Unit) {
@@ -215,16 +127,12 @@ private fun SportDetailsEntry(key: SportRoutes.SportCommonDetails, navigator: Na
     val koin = remember(context) { KoinStarter.ensureStarted(context) }
     val time = remember(koin) { koin.get<AcademicTimeProvider>() }
     val results = LocalResultEventBus.current
-    val redirect = rememberSportDetailsRedirect()
     val submission = rememberSaveable(saver = SubmissionSaver) { SportDetailsSubmission() }
     val item = key.item
-    val actions = remember(key, navigator, results, redirect) {
+    val actions = remember(key, navigator, results) {
         SportDetailsActions(
             onAction = { action ->
-                when (key.replyTo) {
-                    SportDetailsOpener.SHELL -> redirect.onAction(navigator, item.lessonId, action.name)
-                    else -> results.sendResult(key.replyTo.resultKey, SportSheetAction(item.lessonId, action.name))
-                }
+                results.sendResult(key.replyTo.resultKey, SportSheetAction(item.lessonId, action.name))
                 navigator.close(key)
             },
             onShare = { target -> context.shareSportLesson(item, target, koin.get<ShareLinkFactory>(), time) },
@@ -248,26 +156,6 @@ private fun SportDetailsEntry(key: SportRoutes.SportCommonDetails, navigator: Na
             busy = key.busy,
         )
     }
-}
-
-/**
- * The cancel question of a sport sheet opened from the feed or the schedule: `Назад` closes it, `Отменить` cancels
- * and closes it.
- */
-@Composable
-private fun CancelBookingEntry(key: AppRoutes.CancelBookingConfirm, onClose: () -> Unit) {
-    val redirect = rememberSportDetailsRedirect()
-    ConfirmDialogSurface(
-        title = null,
-        text = stringResource(R.string.sport_cancel_booking_question),
-        confirmLabel = stringResource(R.string.sport_cancel_booking_action),
-        dismissLabel = stringResource(R.string.common_back),
-        onConfirm = {
-            redirect.confirmCancel(key.lessonId)
-            onClose()
-        },
-        onDismiss = onClose,
-    )
 }
 
 private val SubmissionSaver = Saver<SportDetailsSubmission, Boolean>(

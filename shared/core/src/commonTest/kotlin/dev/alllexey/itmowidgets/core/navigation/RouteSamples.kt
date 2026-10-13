@@ -41,6 +41,7 @@ object RouteSamples {
             actual = listOf(true, false), selectedProgram = 1, selectedSemester = 1
         ),
         AppRoutes.FriendSelector(),
+        AppRoutes.ScheduleMonth("2026-09-17"),
         AppRoutes.SheetScores(
             SheetScoresArgs(5, "Математика", "2026/2027:1", "https://example.com/s", SheetScoresArgs.Step.TOTAL)
         ),
@@ -55,8 +56,7 @@ object RouteSamples {
         AppRoutes.PendingSportDetails(pendingSport),
         AppRoutes.ReportReview(teacher, "review-1"),
         AppRoutes.ReportLink(links, "link-1"),
-        AppRoutes.LinkUnavailable,
-        AppRoutes.CancelBookingConfirm(42)
+        AppRoutes.LinkUnavailable
     )
 
     fun ofKind(kind: RouteKind): List<AppRoute> = all.filter { it.kind == kind }

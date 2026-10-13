@@ -62,6 +62,17 @@ private fun SectionHeaderPreview() = KitColumn {
     SectionHeader("Нужно сделать")
 }
 
+/** A week of the schedule's strip: today selected, a changed day, the weekend quiet. */
+@Preview
+@Composable
+private fun WeekStripPreview() = KitColumn {
+    val days = listOf("пн" to 5, "вт" to 4, "ср" to 6, "чт" to 4, "пт" to 3, "сб" to 1, "вс" to 0).mapIndexed { index, (day, lessons) ->
+        WeekStripDay(day, "${index + 7}", lessons, changed = index == 2, today = index == 0, past = false)
+    }
+    WeekStrip(days, selected = 0, onDayClick = {})
+    WeekStrip(days, selected = 3, onDayClick = {})
+}
+
 /** A card, a tonal card and the one hero of a screen. */
 @Preview
 @Composable
@@ -267,7 +278,7 @@ private object Lessons {
     val now = LessonView(
         "10:00", "11:30", PreviewFixtures.LongSubjectName, "Практика, Лебедев А. С.", "1506, Кронва", practice,
         LessonState.Now, pills = listOf(PillSpec("идёт", Tone.Primary, solid = true)),
-        friends = listOf("Иван Петров", "Анна Смирнова"),
+        friends = listOf("ИП", "АС"),
     )
     val next = LessonView(
         "11:40", "13:10", "Базы данных", "Лабораторная, Орлова Н. В.", "2304, Кронва", lab,

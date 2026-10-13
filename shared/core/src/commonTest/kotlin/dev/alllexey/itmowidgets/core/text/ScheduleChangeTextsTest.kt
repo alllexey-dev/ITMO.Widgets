@@ -76,8 +76,8 @@ class ScheduleChangeTextsTest {
     @Test
     fun aPlaceChangeShortensRoomAndBuilding() {
         val change = scheduleChange(fields = setOf(ScheduleChangeField.PLACE), after = slot(1, WED, room = null, building = "ул. Ломоносова, 9"))
-        val oldPlace = UiText.Joined(listOf(UiText.Dynamic("1506"), UiText.Res(CoreStrings.schedule_building_kronva)), " · ")
-        val newPlace = UiText.Joined(listOf(UiText.Res(CoreStrings.schedule_building_lomo)), " · ")
+        val oldPlace = UiText.Joined(listOf(UiText.Dynamic("1506"), UiText.Res(CoreStrings.schedule_building_kronva)), ", ")
+        val newPlace = UiText.Joined(listOf(UiText.Res(CoreStrings.schedule_building_lomo)), ", ")
 
         assertEquals(UiText.Res(CoreStrings.schedule_change_place, listOf(newPlace)), change.summary())
         assertEquals(listOf<UiText>(line(CoreStrings.schedule_change_field_place, oldPlace, newPlace)), change.detailLines())

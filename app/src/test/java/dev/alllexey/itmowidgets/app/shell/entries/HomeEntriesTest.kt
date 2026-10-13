@@ -97,7 +97,7 @@ class HomeEntriesTest {
 
     private val navigator = Nav3AppNavigator()
 
-    /** The sport rows go through the sport redirect, whose holder finds no booking here. */
+    /** The sport graph's follow-ups run here. */
     private val sportScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     @Before

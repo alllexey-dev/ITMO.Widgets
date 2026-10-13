@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -42,7 +43,7 @@ sealed interface TimelineRow {
     /**
      * A lesson and the rail under its dot, which spans the lesson and the short break after it: [progress] 0..1 of it
      * is elapsed; [reached] colours the rail above the dot. [changeNote] is the quiet line about a change under the
-     * lesson (`Изменено вчера в 20:14`).
+     * lesson (`Изменено вчера в 20:14`), [overlapNote] the one about a lesson at the same time (`одновременно с …`).
      */
     @Immutable
     data class Lesson(
@@ -50,6 +51,7 @@ sealed interface TimelineRow {
         val progress: Float,
         val reached: Boolean,
         val changeNote: String? = null,
+        val overlapNote: String? = null,
     ) : TimelineRow
 
     /** A gap of an hour or more: [label] `Окно 2 ч 10 мин`, [progress] 0..1 of it elapsed. */
@@ -62,7 +64,8 @@ sealed interface TimelineRow {
  * its type's colour, the elapsed part of the day in `primary`, and the lesson's lines without a card around them;
  * done lessons are dimmed, the current one sits on `primaryContainer`. With [showNow] the `сейчас` marker stands where
  * the elapsed part ends inside the current lesson or gap (today); without it another day shows no marker. With
- * [onLessonClick] each lesson is a target that reports its index in [rows] (the lesson sheet).
+ * [onLessonClick] each lesson is a target that reports its index in [rows] (the lesson sheet); [lessonTag] names it
+ * for tests.
  */
 @Composable
 fun LessonTimeline(
@@ -70,6 +73,7 @@ fun LessonTimeline(
     modifier: Modifier = Modifier,
     showNow: Boolean = false,
     onLessonClick: ((index: Int) -> Unit)? = null,
+    lessonTag: ((index: Int) -> String)? = null,
 ) {
     val firstLesson = rows.indexOfFirst { it is TimelineRow.Lesson }
     val lastLesson = rows.indexOfLast { it is TimelineRow.Lesson }
@@ -82,6 +86,7 @@ fun LessonTimeline(
                     index == lastLesson,
                     showNow,
                     onLessonClick?.let { click -> { click(index) } },
+                    lessonTag?.invoke(index),
                 )
                 is TimelineRow.Gap -> GapRow(row, showNow)
             }
@@ -90,7 +95,14 @@ fun LessonTimeline(
 }
 
 @Composable
-private fun LessonRow(row: TimelineRow.Lesson, first: Boolean, last: Boolean, showNow: Boolean, onClick: (() -> Unit)?) {
+private fun LessonRow(
+    row: TimelineRow.Lesson,
+    first: Boolean,
+    last: Boolean,
+    showNow: Boolean,
+    onClick: (() -> Unit)?,
+    tag: String?,
+) {
     val lesson = row.lesson
     val now = lesson.state == LessonState.Now
     val done = lesson.state == LessonState.Done
@@ -146,7 +158,8 @@ private fun LessonRow(row: TimelineRow.Lesson, first: Boolean, last: Boolean, sh
                 .weight(1f)
                 .padding(start = ItmoTheme.spacing.related, top = LessonTopGap, bottom = LessonBottomGap)
                 .alpha(if (done) DONE_ALPHA else 1f)
-                .then(if (onClick != null) Modifier.clip(ItmoTheme.shapes.cardContent).clickable(onClick = onClick) else Modifier),
+                .then(if (onClick != null) Modifier.clip(ItmoTheme.shapes.cardContent).clickable(onClick = onClick) else Modifier)
+                .then(if (tag != null) Modifier.testTag(tag) else Modifier),
             shape = ItmoTheme.shapes.cardContent,
             color = if (now) ItmoTheme.colorScheme.primaryContainer else Color.Transparent,
             contentColor = if (now) ItmoTheme.colorScheme.onPrimaryContainer else ItmoTheme.colorScheme.onSurface,
@@ -156,6 +169,9 @@ private fun LessonRow(row: TimelineRow.Lesson, first: Boolean, last: Boolean, sh
                 verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related),
             ) {
                 LessonLines(lesson)
+                if (row.overlapNote != null) {
+                    Text(row.overlapNote, color = secondary(now), style = ItmoTheme.typography.bodySmall)
+                }
                 if (row.changeNote != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

@@ -18,6 +18,7 @@ import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedTestTags
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.app.shell.ShellHost
 import dev.alllexey.itmowidgets.app.shell.ShellModeRule
@@ -38,7 +39,6 @@ import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksSheetTestTags
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
 import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
 import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
@@ -258,7 +258,7 @@ class DemoModeFlowTest {
             .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }
             .first { node ->
                 node.layoutInfo.isPlaced &&
-                    node.config.getOrNull(SemanticsProperties.TestTag)?.startsWith(ScheduleListTestTags.LESSON_PREFIX) == true
+                    node.config.getOrNull(SemanticsProperties.TestTag)?.startsWith(ScheduleFeedTestTags.LESSON_PREFIX) == true
             }
         checkNotNull(row.config[SemanticsActions.OnClick].action) { "the lesson row has no click" }.invoke()
     }

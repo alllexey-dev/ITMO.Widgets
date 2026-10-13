@@ -99,7 +99,7 @@ class SportRouteTest {
     private val viewModels = module {
         viewModel {
             val delegate = bookingDelegate(bookings, schedule, data, scope, FakeSportActionRepository())
-            val holder = SportBookingsHolder(bookings, data, delegate, time, scope)
+            val holder = SportBookingsHolder(bookings, data, delegate, scope)
             SportMyViewModel(bookings, data, holder).also(myCreated::add)
         }
         viewModel {
