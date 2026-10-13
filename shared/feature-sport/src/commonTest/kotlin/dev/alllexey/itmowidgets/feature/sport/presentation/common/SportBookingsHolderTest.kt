@@ -4,6 +4,8 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.text.toUiText
+import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSignPreferences
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
@@ -15,7 +17,6 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataReposito
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.applicationScope
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
-import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyEvent
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
@@ -143,8 +144,8 @@ class SportBookingsHolderTest {
         holder.cancel(SportCardFixtures.booking(7))
         advanceUntilIdle()
 
-        val tab = SportMyViewModel(bookings, data, holder)
-        assertEquals(SportMyEvent.ShowError(AppError.Network), tab.events.first())
+        val tab = SportMyViewModel(bookings, data, FakeSportSignPreferences(), holder, FixedAcademicTime())
+        assertEquals(AppError.Network.toUiText(), tab.events.first())
     }
 
     @Test

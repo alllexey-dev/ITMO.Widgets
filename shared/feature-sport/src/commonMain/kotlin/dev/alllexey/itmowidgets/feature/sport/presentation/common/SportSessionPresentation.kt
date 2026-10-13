@@ -1,10 +1,12 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.common
 
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.format
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
@@ -48,3 +50,7 @@ class SportSessionTiming(start: Instant, end: Instant, time: AcademicTimeProvide
     val isToday = this.start.date == time.today()
     val isTomorrow = this.start.date == time.today().plus(1, DateTimeUnit.DAY)
 }
+
+/** "вторник, 8 сентября, 18:30–20:00": absolute, because the recipient of a shared link reads it on another day. */
+fun SportSessionTiming.shareDate(): String =
+    "${start.date.format(DateTexts.WEEKDAY_DAY_MONTH)}, ${start.time.format(DateTexts.TIME)}–${end.time.format(DateTexts.TIME)}"

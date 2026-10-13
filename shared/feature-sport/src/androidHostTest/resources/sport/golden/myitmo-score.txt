@@ -1,5 +1,5 @@
 # score
-SportScore(attendances=2, other=3, attendancesData=[SportAttendance(type=lesson, name=SectionName(raw=Synthetic lesson), evaluationId=9, evaluationName=Attendance, sectionLevel=1, score=2, dateTime=2026-01-05T07:00:00Z, isCompetition=false), SportAttendance(type=competition, name=SectionName(raw=Synthetic competition), evaluationId=9, evaluationName=Attendance, sectionLevel=1, score=3, dateTime=2026-01-05T07:00:00Z, isCompetition=true)])
+SportScore(attendances=2, other=3, attendancesData=[SportAttendance(type=lesson, name=SectionName(raw=Synthetic lesson), evaluationId=9, evaluationName=Attendance, sectionLevel=1, score=2, dateTime=2026-01-05T07:00:00Z, isCompetition=false, competitionName=null, place=null), SportAttendance(type=competition, name=SectionName(raw=Synthetic competition), evaluationId=9, evaluationName=Attendance, sectionLevel=1, score=3, dateTime=2026-01-05T07:00:00Z, isCompetition=true, competitionName=Synthetic cup, place=Participation)])
 
 # attempts
 SportAttempts(total=4, used=1, free=3, canSignIn=true)

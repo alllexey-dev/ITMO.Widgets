@@ -438,10 +438,12 @@ user services suppresses FCM actions and attempts to unregister this device.
 
 ## Sport
 
-- `Показывать фильтр по преподавателю` controls the optional teacher selector.
-- `Показывать фильтр по времени` controls the optional time selector.
-- Sport type, building, availability, auto-sign, and friends remain ordinary
+- `Показывать фильтр по преподавателю` shows the teacher in the more-filters
+  sheet of `Запись`.
+- `Показывать фильтр по времени` shows the part of the day there.
+- Sections, building, `Есть места`, `Мои секции` and friends remain ordinary
   sport-screen filters, separate from the schedule display preference above.
+  Pinned sections are kept on the device (`sport_pinned_sections`).
 
 ## Recordbook BARS overlay
 

@@ -29,6 +29,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_link
 import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
+import dev.alllexey.itmowidgets.shared.designsystem.ic_tune
 import dev.alllexey.itmowidgets.shared.designsystem.ic_videocam
 import dev.alllexey.itmowidgets.shared.designsystem.ic_widgets
 import org.jetbrains.compose.resources.painterResource
@@ -60,6 +61,30 @@ private fun SectionHeaderPreview() = KitColumn {
     SectionHeader("Пары", count = "5 пар")
     SectionHeader(PreviewFixtures.LongSubjectName, count = "12")
     SectionHeader("Нужно сделать")
+}
+
+/** The search with the filters' badge, chips in a row and wrapped, the places taken in each tone. */
+@Preview
+@Composable
+private fun FiltersPreview() = KitColumn {
+    SearchField("", {}, "Вид спорта или преподаватель", "Очистить", action = painterResource(Res.drawable.ic_tune), actionLabel = "Фильтры", badge = 2)
+    SearchField("волейбол", {}, "Вид спорта или преподаватель", "Очистить")
+    FilterChips(listOf(ChipSpec("Есть места", true), ChipSpec("Вечер", true), ChipSpec("Мои секции", false), ChipSpec("Друзья", false)), {})
+    FilterChips(listOf(ChipSpec("Все", true), ChipSpec("Посещения", false, 13), ChipSpec("Бонусы", false, 2)), {}, wrap = true)
+    OccupancyBar("6 из 20", 0.3f, Tone.Success)
+    OccupancyBar("22 из 24", 0.92f, Tone.Warning)
+    OccupancyBar("18 из 18", 1f, Tone.Error)
+}
+
+/** A week of the schedule's strip: today selected, a changed day, the weekend quiet. */
+@Preview
+@Composable
+private fun WeekStripPreview() = KitColumn {
+    val days = listOf("пн" to 5, "вт" to 4, "ср" to 6, "чт" to 4, "пт" to 3, "сб" to 1, "вс" to 0).mapIndexed { index, (day, lessons) ->
+        WeekStripDay(day, "${index + 7}", lessons, changed = index == 2, today = index == 0, past = false)
+    }
+    WeekStrip(days, selected = 0, onDayClick = {})
+    WeekStrip(days, selected = 3, onDayClick = {})
 }
 
 /** A card, a tonal card and the one hero of a screen. */
