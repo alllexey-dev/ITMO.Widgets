@@ -14,14 +14,14 @@ import org.koin.dsl.module
 
 /**
  * Сегодня and the bell. The open sets of `BellSource`s and `TodayTodoSource`s come from the features (`getAll()`,
- * each under its own qualifier), `DayLessonsGateway` from the schedule, `BellPreferences` and the academic time from
- * the platform's Koin modules.
+ * each under its own qualifier), `DayLessonsGateway` from the schedule, `BellPreferences`, the academic time and the
+ * app's foreground (`AppForeground`) from the platform's Koin modules.
  */
 val homeModule = module {
     single<BellRepository> { BellRepositoryImpl(getAll(), get()) }
     // The seen ids are the account's: sign-out forgets them.
     single<SessionDataCleaner>(named("bell")) { SessionDataCleaner { get<BellPreferences>().clearSeen() } }
-    viewModel { TodayViewModel(get(), getAll(), get()) }
+    viewModel { TodayViewModel(get(), getAll(), get(), get()) }
     viewModelOf(::BellViewModel)
     viewModelOf(::TodayHeaderViewModel)
 }

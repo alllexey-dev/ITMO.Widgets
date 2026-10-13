@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.platform.AppForeground
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -41,7 +43,9 @@ import kotlin.time.Duration.Companion.minutes
  * strip, the month sheet, `Сегодня`) brings its weeks in and asks the view to scroll there once ([jump] in the state).
  *
  * With `ARG_USER_ISU` the feed is that user's on a pushed screen; otherwise it is the tab's own schedule, or a friend's
- * picked with [selectUser], kept across process death.
+ * picked with [selectUser], kept across process death. The first show loads the window once ([refresh] with
+ * `Silent`); after that only a pull, a retry and each return of the app to the foreground ([AppForeground]) reload it,
+ * never a tab switch, a pop or a sheet closing.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleFeedViewModel(
@@ -49,6 +53,7 @@ class ScheduleFeedViewModel(
     private val days: ScheduleDays,
     private val time: AcademicTimeProvider,
     private val calendarSync: CalendarSync,
+    foreground: AppForeground,
 ) : ViewModel() {
 
     private val owner = MutableStateFlow(initialOwner())
@@ -61,6 +66,10 @@ class ScheduleFeedViewModel(
     private var generation = 0
     private var started = false
     private var cachedEmpty = true
+
+    init {
+        foreground.returns().onEach { if (started) reloadWindow() }.launchIn(viewModelScope)
+    }
 
     private val eventQueue = EventQueue<ScheduleFeedEvent>()
     val events: Flow<ScheduleFeedEvent> = eventQueue.events
@@ -110,8 +119,12 @@ class ScheduleFeedViewModel(
     fun refresh(mode: RefreshMode) {
         if (mode == RefreshMode.Silent && started) return
         started = true
+        reloadWindow(indicator = mode.showsIndicator)
+    }
+
+    private fun reloadWindow(indicator: Boolean = false) {
         val range = window.value
-        load(range.start, range.endInclusive, indicator = mode.showsIndicator)
+        load(range.start, range.endInclusive, indicator)
     }
 
     /** The view's top day changed: the header, the strip and `Сегодня` follow it. */

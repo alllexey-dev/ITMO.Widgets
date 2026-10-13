@@ -12,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
@@ -55,16 +54,12 @@ internal fun TabRootFrame(tab: AppTab, navigator: Nav3AppNavigator, content: @Co
     }
 }
 
-/** Сегодня with its header's view model: the date re-read whenever the tab resumes. */
+/** Сегодня with its header's view model, which re-reads the date and the bell when the app comes back. */
 @Composable
 private fun TodayFrame(navigator: Nav3AppNavigator, content: @Composable () -> Unit) {
     val context = LocalContext.current
     val header: TodayHeaderViewModel = viewModel { KoinStarter.ensureStarted(context).get() }
     val state by header.uiState.collectAsStateWithLifecycle()
-    LifecycleResumeEffect(header) {
-        header.refresh()
-        onPauseOrDispose { }
-    }
     TodayRootScreen(
         header = state,
         onOpenNotifications = { navigator.open(AppRoutes.Bell) },

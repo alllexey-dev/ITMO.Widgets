@@ -31,6 +31,7 @@ import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.testing.FakeAppForeground
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
@@ -107,8 +108,8 @@ class HomeEntriesTest {
         val koin = startKoin {
             modules(
                 module {
-                    viewModel { TodayViewModel(FakeDays, listOf(TodayTodoSource { flowOf(listOf(TODO)) }), time) }
-                    viewModel { TodayHeaderViewModel(time, FakeBell) }
+                    viewModel { TodayViewModel(FakeDays, listOf(TodayTodoSource { flowOf(listOf(TODO)) }), time, FakeAppForeground()) }
+                    viewModel { TodayHeaderViewModel(time, FakeBell, FakeAppForeground()) }
                     viewModel { BellViewModel(FakeBell, time) }
                     viewModel {
                         QrPassViewModel(FakeQrRepository, PlainQrAppearance, signedIn, FakeSocialRepository(), clock)

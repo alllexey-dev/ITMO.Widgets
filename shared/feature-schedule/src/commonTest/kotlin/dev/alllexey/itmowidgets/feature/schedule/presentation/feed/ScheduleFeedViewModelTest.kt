@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.testing.FakeAppForeground
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.schedule.DaysRefresh
@@ -39,8 +40,10 @@ class ScheduleFeedViewModelTest {
     @AfterTest
     fun tearDown() = main.reset()
 
+    private val foreground = FakeAppForeground()
+
     private fun viewModel(days: FakeScheduleDays, state: SavedStateHandle = SavedStateHandle()) =
-        ScheduleFeedViewModel(state, days, time, FakeCalendarSync())
+        ScheduleFeedViewModel(state, days, time, FakeCalendarSync(), foreground)
 
     @Test
     fun theFirstShowLoadsTheWindowOnceAndJumpsToToday() = runTest(main.dispatcher) {
@@ -55,6 +58,23 @@ class ScheduleFeedViewModelTest {
         assertEquals(monday, state.jump?.date)
         vm.onJumped(state.jump!!.id)
         assertEquals(null, vm.uiState.first { it.jump == null }.jump)
+    }
+
+    @Test
+    fun onlyAReturnToTheForegroundAfterTheFirstShowReloadsTheWindow() = runTest(main.dispatcher) {
+        val days = FakeScheduleDays(LessonDay(monday, listOf(feedLesson("11:40", "13:10")), null))
+        val vm = viewModel(days)
+        runCurrent()
+
+        foreground.comeBack()
+        runCurrent()
+        assertEquals(emptyList(), days.refreshes)
+
+        vm.refresh(RefreshMode.Silent)
+        runCurrent()
+        foreground.comeBack()
+        runCurrent()
+        assertEquals(listOf(window, window), days.refreshes)
     }
 
     @Test

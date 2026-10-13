@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FakeAppForeground
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
@@ -52,7 +53,7 @@ internal fun scheduleTestModule(schedules: FakeScheduleRepository = ScheduleSamp
     single<ScheduleDays> {
         ScheduleDaysImpl(schedules, NoCache, FakeScheduleChangesRepository(), NoPendingSport, NoAutoSign, ScheduleSamples.time)
     }
-    viewModel { ScheduleFeedViewModel(get<SavedStateHandle>(), get(), get(), NoCalendarSync) }
+    viewModel { ScheduleFeedViewModel(get<SavedStateHandle>(), get(), get(), NoCalendarSync, FakeAppForeground()) }
     viewModel { ScheduleMonthViewModel(get<SavedStateHandle>(), get(), get()) }
     viewModel { FriendPickerViewModel(get<SavedStateHandle>(), get(), get(), get()) }
     viewModel {

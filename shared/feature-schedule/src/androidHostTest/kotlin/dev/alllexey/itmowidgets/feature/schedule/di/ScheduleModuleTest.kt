@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.lesson.LessonSubjectSource
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
+import dev.alllexey.itmowidgets.core.platform.AppForeground
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
@@ -66,6 +67,7 @@ class ScheduleModuleTest {
                 SavedStateHandle::class,
                 FriendRepository::class,
                 CalendarSync::class,
+                AppForeground::class,
                 // The lesson sheet's subject sources: an open set read with getAll().
                 List::class,
                 LessonSubjectSource::class,

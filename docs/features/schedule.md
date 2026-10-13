@@ -108,8 +108,9 @@ every minute:
 - The view reports the day at its top (`onVisibleDate`) and its ends (`onNearStart`, `onNearEnd`): the window grows by
   two weeks there and those weeks load. A jump (a strip day, the month sheet, `Сегодня`) brings the day's weeks in
   (or moves the window when it is far) and asks the view to scroll there once (`FeedJump`).
-- The first show loads the window once; a pull reloads it and, on the own schedule, brings the phone's calendar up to
-  date when it is synced. Nothing cached and a failed load: `Не удалось загрузить` with `Повторить`; a failure behind
+- The first show loads the window once; each return of the app to the foreground (`AppForeground`) reloads it
+  silently, a tab switch, a pop or a sheet closing does not. A pull reloads it and, on the own schedule, brings the
+  phone's calendar up to date when it is synced. Nothing cached and a failed load: `Не удалось загрузить` with `Повторить`; a failure behind
   content: a snackbar (Android) or a banner (iOS) with the error.
 - A friend's schedule is the same feed with `Расписание` over the friend's name and group, `Вы` on the lessons the
   viewer's own cache has on the same occurrence, and `Вернуться к своему`. The friend survives process death

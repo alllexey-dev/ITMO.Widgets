@@ -47,7 +47,6 @@ import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
-import dev.alllexey.itmowidgets.designsystem.gesture.tabSwipeHandover
 import dev.alllexey.itmowidgets.designsystem.kit.HeaderAction
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoRootScreen
@@ -263,7 +262,7 @@ private fun WeekPager(state: ScheduleFeedUiState, actions: ScheduleFeedActions) 
     }
     HorizontalPager(
         pager,
-        Modifier.fillMaxWidth().tabSwipeHandover(pager).testTag(ScheduleFeedTestTags.STRIP),
+        Modifier.fillMaxWidth().testTag(ScheduleFeedTestTags.STRIP),
         contentPadding = PaddingValues(horizontal = ItmoTheme.spacing.related),
         key = { weeks.getOrNull(it)?.monday?.toString() ?: "$it" },
     ) { page ->
