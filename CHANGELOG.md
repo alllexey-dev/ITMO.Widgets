@@ -126,6 +126,9 @@ new iOS app.
 
 ### Fixes
 
+- Connecting BARS right after signing in no longer asks for the ITMO.ID
+  password again: the sign-in keeps its ITMO.ID session in the app's browser,
+  and BARS signs in with it on Android and iOS.
 - The schedule widgets show lessons again on Android 8-11; the day-list
   widget no longer shows an older list after a refresh; on Android 12+ both
   schedule widgets follow the launcher's corner radius.

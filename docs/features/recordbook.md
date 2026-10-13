@@ -105,6 +105,10 @@ Session:
   `BarsSilentLogin`. Six named `SessionDataCleaner`s in `RecordbookKoinModule.kt` join sign-out,
   among them `RecordbookRepositoryImpl` (memory cache), `BarsPreferenceRepositoryImpl` (token,
   connection and offer) and `BarsRecordbookRepositoryImpl` (in-memory `cachedControls`).
+- The interactive sign-in (`BarsLoginActivity`, iOS `BarsLoginSheet`) opens the same OIDC URL in the web store
+  the ITMO.ID sign-in used (`CookieManager`, `WKWebsiteDataStore.default()`), so the SSO session that sign-in left
+  there redirects straight to the callback, with no second password (decision
+  [0012](../decisions/0012-bars-background-renewal.md#the-sign-in-keeps-the-itmoid-session)).
 - Screens renew via `BarsWebSilentLogin`: the official OIDC URL in a hidden WebView, intercepting
   only the exact callback with a checked `state`; the library retries once on 401 through
   `BarsRenewal`. No JavaScript bridge, no localStorage reads.

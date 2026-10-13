@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
+import dev.alllexey.itmowidgets.core.session.WebStoreDataCleaner
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import kotlinx.coroutines.withContext
 
@@ -39,10 +40,15 @@ class SessionTransitions(
     /**
      * Replaces whatever session is on the device with [tokens]. Strict: a failed step throws, and the caller ends
      * the attempt with [abandonSignIn].
+     *
+     * [keepWebStore] is for the interactive ITMO.ID sign-in: its page cleared the web store before it opened (or a
+     * sign-out did), so the store now holds only the SSO session of these tokens, which BARS signs in with.
      */
-    suspend fun signIn(tokens: TokenSet) {
+    suspend fun signIn(tokens: TokenSet, keepWebStore: Boolean = false) {
         lifecycleEffects.prepareForSessionChange()
-        dataCleaners.current().forEach { cleaner -> cleaner.clearSessionData() }
+        dataCleaners.current()
+            .filterNot { keepWebStore && it is WebStoreDataCleaner }
+            .forEach { cleaner -> cleaner.clearSessionData() }
         demoPreferences.setDemoActive(false)
         withContext(dispatchers.io) { myItmo.tokens.replaceTokens(tokens) }
     }

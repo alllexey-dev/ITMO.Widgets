@@ -60,7 +60,8 @@ tokens ITMO.ID issues and never sees a password. See also
   sliding with every refresh; a rotation does not revoke the old refresh token.
 - Sign-in accepts a token response of at most 32 KiB
   (`MAX_TOKEN_RESPONSE_LENGTH`) with non-blank tokens and positive expirations.
-  Then: prepare widgets, run every `SessionDataCleaner`, clear the demo flag,
+  Then: prepare widgets, run every `SessionDataCleaner` (the ITMO.ID page's
+  sign-in skips the web store's `WebStoreDataCleaner`, see below), clear the demo flag,
   store tokens, publish `SignedIn`, run signed-in effects, sync Backend
   identity, the FCM token and device registration (their failures never fail
   the sign-in). A failure before that clears tokens and data and ends
@@ -77,12 +78,24 @@ Same shared ViewModels and `SessionRepository` under SwiftUI
 - `AuthScreen` (`iosApp/Sources/Features/Auth/`); `ItmoSignInScreen`: `WKWebView` on the default data store with the same
   `token_refresh_interceptor.js`, accepted only from the main frame of
   `https://my.itmo.ru` on `/login/callback`. Website data is not cleared
-  before loading (sign-out clears it; an expired session keeps ITMO.ID's SSO
-  cookies).
+  before loading or after the sign-in (sign-out clears it; an expired session
+  keeps ITMO.ID's SSO cookies).
 - Tokens are one Keychain item, `myitmo_tokens`; `TokenManager` refreshes them
   under a cross-process file lock. Sign-out also clears the Keychain, the App
   Group container and WebKit's website data.
 - The demo entry is the same five taps ([demo](demo.md#ios)).
+
+## Web store after sign-in
+
+The ITMO.ID page's sign-in (`completeItmoIdLogin`) keeps the web store: the
+`WebStoreDataCleaner` (`WebSessionDataCleaner` on Android,
+`WebsiteDataSessionDataCleaner` on iOS) is the one cleaner it skips. The page
+ran in that store after it was cleared (Android clears it on open, iOS on
+sign-out), so its ITMO.ID SSO cookies belong to the account of the new tokens,
+and the BARS sign-in and renewal use them
+([ADR 0012](../decisions/0012-bars-background-renewal.md#the-sign-in-keeps-the-itmoid-session)).
+A refresh-token sign-in, the demo, sign-out and a failed sign-in clear it as
+before.
 
 ## Stable identifiers
 
