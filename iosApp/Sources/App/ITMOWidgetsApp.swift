@@ -16,6 +16,11 @@ struct ITMOWidgetsApp: App {
 
     init() {
         IosStrings.shared.installAppLocale()
+        #if DEBUG
+        if CommandLine.arguments.contains(Self.uiTestsArgument) {
+            AppPlatform.removeWebsiteData = { $0() }
+        }
+        #endif
         _ = startKoinIos(platform: AppPlatform())
         BackgroundRefresh.start()
         let router = AppRouter()
@@ -40,6 +45,11 @@ struct ITMOWidgetsApp: App {
         }
         .backgroundRefresh()
     }
+
+    /// The launch argument of a Debug build that every UI test passes: WebKit's removal of website data (sign-out,
+    /// the demo start, the ITMO.ID sign-in page) completes at once, as unit tests replace it, since the real call
+    /// hangs for minutes on a CI simulator.
+    static let uiTestsArgument = "-itmoUITests"
 
     /// The launch argument of a Debug build that opens the shared demo session, the way most UI tests start.
     static let demoArgument = "-itmoDemo"

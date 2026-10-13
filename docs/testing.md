@@ -127,7 +127,9 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   stalls the WebKit cookie store after it. A test that builds a core graph
   passes `FakeCoreHost`, which counts the clears; a test that signs out through
   the app's graph or loads the ITMO.ID sign-in page replaces
-  `AppPlatform.removeWebsiteData`.
+  `AppPlatform.removeWebsiteData`. UI tests launch a Debug build with
+  `-itmoUITests` (`XCUIApplication.itmo`, `itmoSignedOut`), which makes that
+  removal complete at once; Release builds ignore it.
 - The last line is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha>`.
 
 ## CI
