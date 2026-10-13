@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.app.shell
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
@@ -46,8 +47,9 @@ import org.junit.runner.RunWith
 /**
  * Back and the predictive Back on the real `MainActivity` in the demo session, all through `NavDisplay`: the system
  * Back key through two pushed screens and off another tab's root, Back on a sheet, a tab switch that keeps each tab's
- * scroll, and the predictive Back held half way, where the previous pushed screen (not the tab root) is already
- * composed under the shrunk top one. With gesture navigation the last one is a real edge swipe from the system, and its
+ * scroll, the predictive Back held half way, where the previous pushed screen (not the tab root) is already
+ * composed and still under the shrunk top one, and a predictive Back released at the end of the gesture, which still
+ * dissolves the top screen. With gesture navigation the last one is a real edge swipe from the system, and its
  * frame is saved with `captureScreenshots=true` (`shell/predictive-back-halfway.png`).
  */
 @RunWith(AndroidJUnit4::class)
@@ -164,6 +166,31 @@ class ShellNavigationTest {
         eventually { assertEquals(window, bounds(ShellTags.overlay(settings.toString()))) }
     }
 
+    /** Released at the very end (a long drag or a fling), the top screen still stays for its dissolve, then pops. */
+    @Test
+    fun aPredictiveBackReleasedAtTheEndStillDissolvesTheTopScreen() = onComposeShell {
+        assumeTrue("needs animations", ValueAnimator.areAnimatorsEnabled())
+        navigate {
+            select(AppTab.ME)
+            open(settings)
+            open(privacy)
+        }
+        awaitShown(AppTab.ME, settings, privacy)
+        TestUi.settle(SETTLE_MILLIS)
+
+        onActivity { it.dragBack(1f) }
+        eventually { assertTrue(checkNotNull(bounds(ShellTags.overlay(privacy.toString()))).width > 0f) }
+        var releasedAt = 0L
+        onActivity {
+            it.onBackPressedDispatcher.onBackPressed()
+            releasedAt = SystemClock.uptimeMillis()
+        }
+        eventually { assertNull(bounds(ShellTags.overlay(privacy.toString()))) }
+        val shown = SystemClock.uptimeMillis() - releasedAt
+        assertTrue("the top screen dissolves for a while: $shown ms", shown >= MIN_DISSOLVE_MILLIS)
+        awaitShown(AppTab.ME, settings)
+    }
+
     @Test
     fun theSystemBackSwipeHeldHalfwayPeeksAtThePreviousScreen() = onComposeShell {
         assumeTrue("needs gesture navigation", gestureNavigation())
@@ -186,12 +213,12 @@ class ShellNavigationTest {
         awaitShown(AppTab.ME, settings)
     }
 
-    /** The previous screen is composed at full window size under the top one, which shrank; the tab root is not. */
+    /** The previous screen is composed and still at the window's size under the top one, which shrank; the tab root is not. */
     private fun assertPeek(window: Rect) {
         val under = checkNotNull(bounds(ShellTags.overlay(settings.toString()))) { "the previous screen is not composed" }
         val top = checkNotNull(bounds(ShellTags.overlay(privacy.toString())))
         assertTrue("the top screen shrinks: $top in $window", top.width < window.width - 1f)
-        assertTrue("the previous screen fills the window: $under", under.width > window.width * MIN_UNDER_SCALE)
+        assertEquals("the previous screen stands still", window, under)
         assertNull("the tab root stays out of the peek", bounds(ShellTags.TAB_CONTENT))
     }
 
@@ -380,9 +407,9 @@ class ShellNavigationTest {
 
     private companion object {
         const val SETTLE_MILLIS = 700L
+        const val MIN_DISSOLVE_MILLIS = 200L
         const val HALF = 0.5f
         const val SCROLL_PX = 600f
-        const val MIN_UNDER_SCALE = 0.9f
         const val EDGE_X = 2f
         const val MOVE_STEPS = 12
         const val MOVE_STEP_MILLIS = 16L

@@ -64,6 +64,10 @@ new iOS app.
   each tab keeps its scroll and state. Pushed screens move on the shared X
   axis over the bar, and the predictive Back shows the previous screen under
   the one being closed, already in place when the gesture ends (2026-10-13).
+- The predictive Back on a pushed screen is Material's back preview: the
+  screen shrinks to 90 % under the finger and dissolves over 300 ms on
+  release, also after a long drag or a fling; tab roots have no preview
+  (2026-10-14).
 - Smaller changes: the `.ics` sheet buttons stand side by side when they fit;
   deleting an own link asks first; report dialogs keep their text across
   rotation; the review editor's button stays above the keyboard; another

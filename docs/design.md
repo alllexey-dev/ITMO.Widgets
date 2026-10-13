@@ -350,12 +350,19 @@ Android only; iOS has its native tab bar and `NavigationStack`s ([iOS app](ios.m
 3. A pushed screen comes and goes on the shared X axis: both screens move a
    tenth of the width and fade through, on the standard scheme's spatial spring.
    It covers the bar, which stays in place under it.
-4. Back is the platform's predictive Back from `NavDisplay`: the top screen
-   shrinks to 90 % away from the swipe edge and rounds its corners, the screen
-   under it (the previous pushed screen, or the tab root with its bar) is
-   already composed, grows from 95 % and drifts in from the edge; on release it
-   is in place and nothing pops in. Back on another tab's root goes to Сегодня
-   the same way; Back on Сегодня's root leaves the app.
+4. Back on a pushed screen is Material's back preview (`ShellBack`), as
+   material3's SearchBar and MDC's main container draw it: under the finger the
+   top screen shrinks to 90 % on the predictive back curve (0.1, 0.1, 0, 1),
+   moves towards the far side until 8 dp from the edge, follows the finger by up
+   to 24 dp vertically and rounds its corners to 28 dp; the screen under it (the
+   previous pushed screen, or the tab root with its bar) is already composed and
+   stands still. On release the top screen dissolves from where the finger left
+   it: transparent over 300 ms (MDC's `hideDurationMax`) and 5 % smaller,
+   whatever the progress, so a long drag or a fling never ends in a blink. A
+   cancel follows the system's progress back to rest. Nothing fades while the
+   finger is down. Back on another tab's root has no preview: the gesture moves
+   nothing and its commit runs the tab fade through to Сегодня; Back on
+   Сегодня's root leaves the app with the system's back-to-home animation.
 5. Sheets and dialogs are their own windows with the system's predictive Back.
 6. System gestures win: no gesture exclusion, the back edges stay the system's
    (`GestureRulesTest`).

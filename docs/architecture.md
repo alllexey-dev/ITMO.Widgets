@@ -146,10 +146,14 @@ allow it.
   (`TodayHeaderViewModel`), the bell and the `Пропуск` button that opens the
   `QrPass` sheet ([design](design.md#shell)). `NavDisplay` shows
   `ShellBackStack.entries`: the start tab's root, the selected tab's root above
-  it, the pushed screens and the sheets and dialogs, and does every transition,
-  the predictive Back and the entries' lifecycles itself (`ShellMotion.kt`: fade
-  through between tab roots, shared axis X for pushed screens, the predictive
-  Back spec). Per-tab state follows the Navigation 3 `multiplestacks` recipe:
+  it, the pushed screens and the sheets and dialogs, and does every transition
+  and the entries' lifecycles itself (`ShellMotion.kt`: fade through between tab
+  roots, shared axis X for pushed screens). The predictive Back is the shell's
+  (`ShellBack.kt`): it takes the system gesture, draws Material's back preview
+  on a pushed screen (entries with `backPreview()` metadata) and hands
+  `NavDisplay` a gesture held at 0 through a private dispatcher, so the release
+  always gets the whole dissolve; Nav3 1.3's gesture and release handoff can
+  replace that once it is stable. Per-tab state follows the Navigation 3 `multiplestacks` recipe:
   each tab's stack and the contextual stack are decorated on their own
   (saveable state, `ViewModelStore`, route arguments), so a hidden tab keeps its
   state and view models. The `ShortNavigationBar` and the demo banner are laid
