@@ -46,7 +46,7 @@ import org.junit.runner.RunWith
 /**
  * Back and the predictive Back on the real `MainActivity` in the demo session, all through `NavDisplay`: the system
  * Back key through two pushed screens and off another tab's root, Back on a sheet, a tab switch that keeps each tab's
- * scroll, and the predictive Back held half way, where the previous pushed screen (not the tab root) is already
+ * scroll, a pop that keeps every tab root's scroll, and the predictive Back held half way, where the previous pushed screen (not the tab root) is already
  * composed under the shrunk top one. With gesture navigation the last one is a real edge swipe from the system, and its
  * frame is saved with `captureScreenshots=true` (`shell/predictive-back-halfway.png`).
  */
@@ -136,6 +136,36 @@ class ShellNavigationTest {
         TestUi.settle(SETTLE_MILLIS)
 
         assertEquals("the profile root keeps its scroll", scrolled, checkNotNull(tabScroll()), 1f)
+    }
+
+    @Test
+    fun aPopKeepsTheScrollOfEveryTabRoot() = onComposeShell {
+        eventually { assertEquals(AppTab.HOME, ShellProbe.current().tab) }
+        val checked = mutableListOf<AppTab>()
+        for (tab in AppTab.entries) {
+            clickTab(tab)
+            awaitShown(tab)
+            TestUi.settle(SETTLE_MILLIS)
+            // Сегодня's demo day fits the window at some hours: nothing to scroll, nothing to keep.
+            if (checkNotNull(tabScrollMax()) { "the $tab root has no vertical scroller" } == 0f) continue
+            onActivity { activity -> scrollTabContent(activity, SCROLL_PX) }
+            TestUi.settle(SETTLE_MILLIS)
+            val scrolled = checkNotNull(tabScroll())
+            assertTrue("the $tab root scrolled: $scrolled", scrolled > 0f)
+            checked += tab
+
+            // NavDisplay disposes the root under the pushed screen; staying past the view models' 5 s
+            // WhileSubscribed lets their flows stop, as when the user reads the pushed screen.
+            onActivity { it.navigator().open(settings) }
+            awaitShown(tab, settings)
+            SystemClock.sleep(PUSHED_MILLIS)
+            pressBackKey()
+            awaitShown(tab)
+            TestUi.settle(SETTLE_MILLIS)
+
+            assertEquals("the $tab root keeps its scroll after a pop", scrolled, checkNotNull(tabScroll()), 1f)
+        }
+        assertTrue("scrolled roots: $checked", checked.size >= AppTab.entries.size - 1)
     }
 
     @Test
@@ -248,6 +278,14 @@ class ShellNavigationTest {
         var value: Float? = null
         onActivity { activity ->
             value = tabScroller(activity)?.config?.get(SemanticsProperties.VerticalScrollAxisRange)?.value?.invoke()
+        }
+        return value
+    }
+
+    private fun tabScrollMax(): Float? {
+        var value: Float? = null
+        onActivity { activity ->
+            value = tabScroller(activity)?.config?.get(SemanticsProperties.VerticalScrollAxisRange)?.maxValue?.invoke()
         }
         return value
     }
@@ -382,6 +420,7 @@ class ShellNavigationTest {
         const val SETTLE_MILLIS = 700L
         const val HALF = 0.5f
         const val SCROLL_PX = 600f
+        const val PUSHED_MILLIS = 5_500L
         const val MIN_UNDER_SCALE = 0.9f
         const val EDGE_X = 2f
         const val MOVE_STEPS = 12
