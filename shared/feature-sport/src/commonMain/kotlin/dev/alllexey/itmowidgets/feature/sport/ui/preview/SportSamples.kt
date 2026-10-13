@@ -262,8 +262,8 @@ object SportSamples {
         return SportLessonSheetPresenter.present(args, now, zone)
     }
 
-    /** «Встать в очередь?» at the lab's axes: [case] `full` (Фитнес, Tuesday) or `future` (Плавание in two weeks). */
-    fun join(case: String): SportPrompt.Join = if (case == "future") {
+    /** «Встать в очередь?» at the lab's axes: [kind] `full` (Фитнес, Tuesday) or `future` (Плавание in two weeks). */
+    fun join(kind: String): SportPrompt.Join = if (kind == "future") {
         SportPrompt.Join(
             lessonId = swimNext.lessonId,
             what = UiText.Dynamic("Плавание, Ломо"),

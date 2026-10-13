@@ -26,6 +26,8 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPrefere
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonActions
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetPresenter
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetUi
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
@@ -117,8 +119,8 @@ class SportSignViewModel(
     fun toggle(chip: SportQuickFilter) = filters.update {
         when (chip) {
             SportQuickFilter.FREE -> it.copy(onlyFree = !it.onlyFree)
-            SportQuickFilter.MORNING -> it.copy(dayPart = if (it.dayPart == SportDayPart.MORNING) SportDayPart.ANY else SportDayPart.MORNING)
-            SportQuickFilter.EVENING -> it.copy(dayPart = if (it.dayPart == SportDayPart.EVENING) SportDayPart.ANY else SportDayPart.EVENING)
+            SportQuickFilter.MORNING -> it.copy(dayPart = if (it.dayPart == SportDayPart.MORNING) SportDayPart.ANYTIME else SportDayPart.MORNING)
+            SportQuickFilter.EVENING -> it.copy(dayPart = if (it.dayPart == SportDayPart.EVENING) SportDayPart.ANYTIME else SportDayPart.EVENING)
             SportQuickFilter.PINNED -> it.copy(onlyPinned = !it.onlyPinned)
             SportQuickFilter.FRIENDS -> it.copy(onlyFriends = !it.onlyFriends)
         }
@@ -188,6 +190,10 @@ class SportSignViewModel(
     }
 
     /** `Встать в очередь` or `Выйти` in the prompt; [lateSign] is the switch of a real lesson's queue. */
+    /** The lesson sheet of [details] now, as the iOS host draws it; [submitted] once it has sent its action. */
+    fun sheet(details: SportCommonDetailsArgs, submitted: Boolean): SportLessonSheetUi =
+        SportLessonSheetPresenter.present(details, time.now(), time.timeZone, busy = isBusy(details.lessonId), submitted = submitted)
+
     /** Whether a request for [lessonId] is in flight: its sheet opens with the action disabled. */
     fun isBusy(lessonId: Long): Boolean = lessonId in actions.busy.value
 

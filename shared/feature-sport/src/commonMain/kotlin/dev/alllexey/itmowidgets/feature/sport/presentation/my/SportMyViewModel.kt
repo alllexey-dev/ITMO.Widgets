@@ -18,6 +18,8 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPrefere
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetPresenter
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetUi
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.sportDayLabel
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
@@ -86,6 +88,10 @@ class SportMyViewModel(
 
     /** The sheet of the booking [lessonId] as it is now; null once it is gone. */
     fun details(lessonId: Long): SportCommonDetailsArgs? = bookings.firstOrNull { it.lessonId == lessonId }?.toDetailsArgs()
+
+    /** The lesson sheet of [details] now, as the iOS host draws it; [submitted] once it has sent its action. */
+    fun sheet(details: SportCommonDetailsArgs, submitted: Boolean): SportLessonSheetUi =
+        SportLessonSheetPresenter.present(details, time.now(), time.timeZone, submitted = submitted)
 
     /**
      * The lesson sheet asked for [action] on [lessonId]: a cancellation is asked first, and only while the booking still

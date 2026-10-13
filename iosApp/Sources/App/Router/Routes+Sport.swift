@@ -2,15 +2,20 @@ import Shared
 import SwiftUI
 
 extension Routes {
-    /// The sport root (`SportTabScreen`) and another user's sport, the Compose route pushed on the selected tab's
-    /// stack. The details sheet is the root's own sheet, not a route; `CancelBookingConfirm` asks for the
-    /// schedule's pending sheet.
+    /// The sport root (`SportTabScreen`), My sections and Where the points come from pushed on its stack, and another user's
+    /// sport, the Compose route. The lesson sheet is the screens' own sheet, not a route.
     static func sport(_ route: any AppRoute) -> RouteTarget {
-        if let sport = route as? AppRoutes.UserSport {
+        switch route {
+        case is AppRoutes.SportSections:
+            return .swiftUI { AnyView(SportSectionsScreen()) }
+        case is AppRoutes.SportPoints:
+            return .swiftUI { AnyView(SportPointsScreen()) }
+        case let sport as AppRoutes.UserSport:
             let isu = sport.isu
             let name = sport.name
             return .compose { AnyView(UserSportScreen(isu: isu, name: name)) }
+        default:
+            return tab(of: route).map(RouteTarget.tab) ?? .notOnIOS
         }
-        return tab(of: route).map(RouteTarget.tab) ?? .notOnIOS
     }
 }

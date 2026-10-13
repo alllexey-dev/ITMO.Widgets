@@ -484,7 +484,7 @@ internal fun RowAction(action: SportRowAction, lessonId: Long, onAction: (Long) 
 /** The part of the day as the sheet's choice. */
 internal val SportDayPart.labelKey: String
     get() = when (this) {
-        SportDayPart.ANY -> SportStrings.sport_part_any
+        SportDayPart.ANYTIME -> SportStrings.sport_part_any
         SportDayPart.MORNING -> SportStrings.sport_part_morning
         SportDayPart.DAY -> SportStrings.sport_part_day
         SportDayPart.EVENING -> SportStrings.sport_part_evening

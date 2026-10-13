@@ -154,10 +154,10 @@ data class SportFiltersUi(
 data class SportOption(val value: String?, val label: UiText, val selected: Boolean)
 
 /** Morning before 12:00, day before 17:00, evening after. */
-enum class SportDayPart { ANY, MORNING, DAY, EVENING;
+enum class SportDayPart { ANYTIME, MORNING, DAY, EVENING;
 
     fun contains(time: LocalTime): Boolean = when (this) {
-        ANY -> true
+        ANYTIME -> true
         MORNING -> time < NOON
         DAY -> time >= NOON && time < EVENING_START
         EVENING -> time >= EVENING_START
@@ -176,7 +176,7 @@ data class SportSignFilters(
     val sections: Set<SectionName> = emptySet(),
     val building: String? = null,
     val teacher: String? = null,
-    val dayPart: SportDayPart = SportDayPart.ANY,
+    val dayPart: SportDayPart = SportDayPart.ANYTIME,
     val onlyFree: Boolean = false,
     val onlyPinned: Boolean = false,
     val onlyFriends: Boolean = false,
@@ -184,7 +184,7 @@ data class SportSignFilters(
     /** How many filters narrow the list, for the badge on the filters button; the search does not count. */
     val count: Int
         get() = sections.size + listOfNotNull(building, teacher).size +
-            listOf(dayPart != SportDayPart.ANY, onlyFree, onlyPinned, onlyFriends).count { it }
+            listOf(dayPart != SportDayPart.ANYTIME, onlyFree, onlyPinned, onlyFriends).count { it }
 
     fun cleared(): SportSignFilters = SportSignFilters(selectedDate = selectedDate, query = query)
 }
