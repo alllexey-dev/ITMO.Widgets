@@ -8,3 +8,10 @@ fun interface SessionDataCleaner {
      */
     suspend fun clearSessionData()
 }
+
+/**
+ * Clears the platform's web store: the WebView's or WebKit's cookies and site storage. The interactive ITMO.ID sign-in
+ * skips it, since its page left the SSO session that issued the new tokens there and BARS signs in with that session
+ * (ADR 0012). Every other transition, sign-out included, runs it.
+ */
+interface WebStoreDataCleaner : SessionDataCleaner
