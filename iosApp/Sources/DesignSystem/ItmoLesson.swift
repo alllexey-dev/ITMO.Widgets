@@ -130,7 +130,7 @@ struct ItmoLessonDetails: View {
                         Text(verbatim: was).strikethrough().foregroundStyle(.secondary)
                     }
                     Text(verbatim: lesson.place)
-                        .foregroundStyle(lesson.was == nil ? Color.secondary : Color.orange)
+                        .foregroundStyle(lesson.was == nil ? Color.secondary : ItmoTone.warn.color)
                         .fontWeight(lesson.was == nil ? nil : .semibold)
                 }
                 .font(.itmo(.bodyMedium))

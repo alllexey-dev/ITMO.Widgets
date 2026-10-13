@@ -177,6 +177,8 @@ extension SnapshotMatrix {
             RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.2))
         }
         if height == nil {
+            // A component, not a screen: no status bar or home indicator inset around it.
+            host.safeAreaRegions = []
             let fitted = host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude))
             window.frame.size.height = ceil(fitted.height)
         }

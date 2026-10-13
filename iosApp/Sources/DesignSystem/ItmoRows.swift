@@ -53,7 +53,7 @@ struct ItmoRow<Leading: View, Accessory: View>: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: title)
                     .font(.itmo(.bodyLarge))
-                    .foregroundStyle(danger ? Color.red : Color.primary)
+                    .foregroundStyle(danger ? ItmoColor.error : Color.primary)
                 if let subtitle {
                     Text(verbatim: subtitle)
                         .font(.itmo(.bodyMedium))
@@ -68,7 +68,7 @@ struct ItmoRow<Leading: View, Accessory: View>: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
-                    .background(.red, in: .capsule)
+                    .background(ItmoColor.error, in: .capsule)
             }
             if let trailing {
                 Text(verbatim: trailing)
@@ -150,7 +150,7 @@ struct ItmoRowIcon: View {
             ItmoIconTile(symbol: symbol, tone: danger ? .bad : tone, size: 30)
         } else {
             symbol.image
-                .foregroundStyle(danger ? Color.red : ItmoColor.primary)
+                .foregroundStyle(danger ? ItmoColor.error : ItmoColor.primary)
                 .frame(width: 30)
                 .accessibilityHidden(true)
         }

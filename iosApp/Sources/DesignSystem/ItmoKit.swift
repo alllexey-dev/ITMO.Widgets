@@ -24,15 +24,15 @@ enum ItmoKit {
 enum ItmoTone: Hashable, Sendable {
     case neutral, primary, tertiary, ok, warn, bad
 
-    /// The colour of text and symbols in this tone. Status tones are the system's, so they match native controls.
+    /// The colour of text and symbols in this tone, from the shared roles.
     var color: Color {
         switch self {
         case .neutral: .secondary
         case .primary: ItmoColor.primary
         case .tertiary: ItmoColor.tertiary
-        case .ok: .green
-        case .warn: .orange
-        case .bad: .red
+        case .ok: ItmoColor.success
+        case .warn: ItmoColor.warning
+        case .bad: ItmoColor.error
         }
     }
 

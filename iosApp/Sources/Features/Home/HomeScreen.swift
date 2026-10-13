@@ -4,8 +4,8 @@ import UIKit
 import UserNotifications
 
 /// The today tab's root until its SwiftUI screen lands (ux-overhaul phase 2): the root header (the tab's title, today's
-/// academic date, the bell) over the Compose home feed. The bell leads to the notification switches of settings until
-/// the bell sheet exists.
+/// academic date, the bell) over the Compose home feed. Until the bell sheet exists the bell opens the schedule
+/// changes, as on Android.
 struct TodayScreen: View {
     let router: AppRouter
     @Environment(\.scenePhase) private var scenePhase
@@ -17,7 +17,7 @@ struct TodayScreen: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     ItmoBellButton(label: AppStrings.string("today_notifications")) {
-                        router.open(AppRoutes.Settings(page: AppRoutes.Settings.companion.ROOT_PAGE))
+                        router.open(AppRoutes.ScheduleChanges.shared)
                     }
                 }
             }

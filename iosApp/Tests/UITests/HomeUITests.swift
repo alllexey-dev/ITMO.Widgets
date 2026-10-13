@@ -2,7 +2,8 @@ import XCTest
 
 /// The today tab on the shared demo session: the Compose feed under the today root header, its hints
 /// (the widget hint's instruction sheet, a closed hint that stays closed across a relaunch), the new-marks card,
-/// the QR and My ITMO buttons, and the feed at the accessibility text size AX1. Compose maps `testTag` to the accessibility identifier
+/// and the feed at the accessibility text size AX1. The pass has its accessory (`QrPassUITests`), My ITMO its row in
+/// the profile (`SocialUITests`). Compose maps `testTag` to the accessibility identifier
 /// (`HomeTestTags`, `HomeCardTestTags`); the texts are Russian on an English iPhone. A launch with
 /// `-itmoForgetHomeHints` starts with every hint the simulator's state shows: no widget is placed there, so the widget
 /// hint always shows.
@@ -16,15 +17,15 @@ final class HomeUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testDemoFeedShowsTheHintsAndBothButtons() {
+    func testDemoFeedShowsTheHintsUnderTheTodayHeader() {
         let app = XCUIApplication.itmo(arguments: [Self.forgetHints])
         app.launch()
         waitForFeed(app)
 
         XCTAssertTrue(scrollTo(element(app, "home_card_hint_widgets"), in: app))
-        XCTAssertTrue(element(app, "home_qr_fab").isHittable)
-        XCTAssertTrue(element(app, "home_web_fab").isHittable)
         XCTAssertTrue(app.navigationBars.firstMatch.exists, "the today root header sits over the feed")
+        XCTAssertTrue(element(app, "shell.bell").isHittable)
+        XCTAssertTrue(element(app, "shell.passAccessory").isHittable)
         attachScreenshot(named: "demo-feed")
     }
 
@@ -64,7 +65,7 @@ final class HomeUITests: XCTestCase {
         let relaunched = XCUIApplication.itmo()
         relaunched.launch()
         waitForFeed(relaunched)
-        XCTAssertTrue(element(relaunched, "home_qr_fab").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(relaunched, "shell.passAccessory").waitForExistence(timeout: stepTimeout))
         XCTAssertFalse(element(relaunched, "home_card_hint_widgets").exists, "the closed hint came back")
         attachScreenshot(named: "hint-closed")
     }
@@ -88,33 +89,6 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(hint.exists, "the instruction does not close the hint")
     }
 
-    /// The feed's own QR button opens the same pass sheet as the accessory.
-    func testQrButtonOpensThePassSheetAndCloseReturnsHome() {
-        let app = XCUIApplication.itmo()
-        app.launch()
-        waitForFeed(app)
-
-        element(app, "home_qr_fab").tap()
-
-        XCTAssertTrue(element(app, "qr.pass").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "qr_pass_image").waitForExistence(timeout: stepTimeout))
-        app.buttons[QrPassUITests.closeLabel].tap()
-        XCTAssertTrue(element(app, "qr.pass").waitForNonExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "home_qr_fab").exists)
-    }
-
-    func testMyItmoButtonSaysTheDemoCannotOpenIt() {
-        let app = XCUIApplication.itmo()
-        app.launch()
-        waitForFeed(app)
-
-        element(app, "home_web_fab").tap()
-
-        XCTAssertTrue(app.staticTexts[Self.demoUnavailable].waitForExistence(timeout: stepTimeout))
-        attachScreenshot(named: "web-demo")
-        XCTAssertTrue(element(app, "shell.root.home").exists, "nothing opens over home")
-    }
-
     func testFeedAtAccessibilityTextSize() {
         let ax1 = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityM"]
         let app = XCUIApplication.itmo(arguments: [Self.forgetHints] + ax1)
@@ -128,20 +102,16 @@ final class HomeUITests: XCTestCase {
         }
         XCTAssertTrue(hint.waitForExistence(timeout: stepTimeout))
 
-        // The feed scrolls: its end comes clear of the buttons, and the buttons of the demo banner and the tab bar.
+        // The feed scrolls: its end comes clear of the demo banner, the pass accessory and the tab bar.
         element(app, "home_feed").swipeUp()
         element(app, "home_feed").swipeUp()
         attachScreenshot(named: "demo-feed-ax1-end")
-        let qr = element(app, "home_qr_fab")
-        XCTAssertTrue(qr.isHittable, "the QR button is reachable at AX1")
-        XCTAssertLessThanOrEqual(qr.frame.maxY, element(app, "kit.demoBanner").frame.minY)
+        XCTAssertTrue(hint.isHittable, "the last card is reachable at AX1")
+        XCTAssertTrue(element(app, "shell.passAccessory").isHittable, "the pass accessory is reachable at AX1")
     }
 
     /// The new-marks card's title, `marks_new_title`.
     private static let newMarksTitle = "Новые оценки"
-
-    /// The demo refusal, `error_demo_unavailable`.
-    private static let demoUnavailable = "Недоступно в демо"
 
     /// The home root and its feed or its empty state: every source has answered from its cache.
     private func waitForFeed(_ app: XCUIApplication) {

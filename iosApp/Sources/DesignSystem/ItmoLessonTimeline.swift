@@ -148,7 +148,7 @@ private struct TimelineLessonRow: View {
                 ItmoLessonDetails(lesson: lesson)
                 if let changeNote = lesson.changeNote {
                     HStack(spacing: 6) {
-                        AppSymbol.history.image.foregroundStyle(.orange).accessibilityHidden(true)
+                        AppSymbol.history.image.foregroundStyle(ItmoTone.warn.color).accessibilityHidden(true)
                         Text(verbatim: changeNote).foregroundStyle(.secondary)
                     }
                     .font(.itmo(.labelMedium))

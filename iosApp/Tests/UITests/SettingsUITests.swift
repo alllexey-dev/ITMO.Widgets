@@ -129,6 +129,10 @@ final class SettingsUITests: XCTestCase {
         // The settings row of the Compose Me tab (`MeTestTags.SETTINGS_ROW`).
         let entry = element(app, "settings_row")
         XCTAssertTrue(entry.waitForExistence(timeout: stepTimeout))
+        // At large text sizes the row starts under the floating tab bar.
+        for _ in 0..<4 where !entry.isHittable {
+            element(app, "main").swipeUp()
+        }
         entry.tap()
         XCTAssertTrue(element(app, "settings.page.root").waitForExistence(timeout: stepTimeout))
     }

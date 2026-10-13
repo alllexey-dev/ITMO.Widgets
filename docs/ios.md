@@ -72,7 +72,7 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
 - Root header. A SwiftUI root takes `.itmoRootHeader(title:subtitle:)`: title and subtitle with the toolbar items in
   one row (`.inlineLarge`), `.inline` once its scroll view leaves the top. Today's root (`TodayScreen`) has it with
   today's academic date and the bell (`ItmoBellButton`, today only), over the Compose home feed until its SwiftUI
-  screen lands; the bell opens settings until the bell sheet exists. The other roots are still Compose screens with
+  screen lands; the bell opens the schedule changes until the bell sheet exists, as on Android. The other roots are still Compose screens with
   their own top bar.
 - Stacks and sheets. Each tab has one `NavigationStack` whose path `AppRouter` holds. One router sheet shows at a
   time; `replaceSheet(with:)` swaps it. Sheets take one of three heights (`ItmoSheet`, `ItmoSheetHeight`): the

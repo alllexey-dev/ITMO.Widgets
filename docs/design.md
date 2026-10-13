@@ -610,8 +610,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   why and one fix in place of the content; `ItmoActionCard` is something to
   do; `ItmoLockNote` is closed with no fix; stale content stays dimmed under
   its date (`ItmoStale`).
-- Tones (`ItmoTone`): neutral, primary and tertiary from the tokens; ok, warn
-  and bad are the system's green, orange and red, as native controls use.
+- Tones (`ItmoTone`): neutral (secondary text), primary, tertiary, ok
+  (`success`), warn (`warning`) and bad (`error`), all from the shared roles.
 - Icons: SF Symbols through `AppSymbol` (generated from `docs/design/icons.tsv`)
   on SwiftUI and system surfaces; Material Symbols Rounded in Compose
   ([ADR 0028](decisions/0028-strings-and-icons.md)).

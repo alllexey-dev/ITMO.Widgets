@@ -16,7 +16,8 @@ struct QrPassScreen: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("qr.pass")
-        .presentationDetents([.fraction(ItmoSheetHeight.tallFraction), .large])
+        // A half sheet over today, as the design lab draws it; the Compose content cannot report its height.
+        .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .onAppear {
             isVisible = true
