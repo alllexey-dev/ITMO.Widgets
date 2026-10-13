@@ -39,7 +39,6 @@ class SettingsPreviewDataTest {
             SettingsPage.COMPACT_SCHEDULE_WIDGET to SettingsPreviewData.CompactScheduleWidget,
             SettingsPage.FULL_SCHEDULE_WIDGET to SettingsPreviewData.FullScheduleWidget,
             SettingsPage.QR_WIDGET to SettingsPreviewData.QrWidget,
-            SettingsPage.HOME to SettingsPreviewData.Home,
             SettingsPage.SCHEDULE to SettingsPreviewData.Schedule,
             SettingsPage.RECORDBOOK to SettingsPreviewData.Recordbook,
             SettingsPage.SPORT to SettingsPreviewData.Sport,

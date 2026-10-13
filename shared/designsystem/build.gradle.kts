@@ -9,6 +9,8 @@ kotlin {
         commonMain.dependencies {
             // AppIcon, PlatformActions and the theme settings live in core.
             implementation(project(":shared:core"))
+            // The kit draws the shared lesson presentation and resolves its `UiText` (kit/LessonMapping.kt).
+            implementation(project(":shared:compose-strings"))
             // ItmoTheme hands MaterialTheme to every module that renders the kit.
             api(libs.compose.material3)
             // Seed -> scheme and harmonize in commonMain; moves with every material3 bump.

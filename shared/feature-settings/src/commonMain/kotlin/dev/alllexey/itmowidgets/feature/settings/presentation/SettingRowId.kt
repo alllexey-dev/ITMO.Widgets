@@ -13,11 +13,6 @@ enum class SettingRowId(val key: String) {
     FRIENDS_SHARING("friends_sharing"),
     SCHEDULE_SPORT_AUTO_SIGN("schedule_sport_auto_sign"),
     SCHEDULE_CHANGES("schedule_changes"),
-    HOME_CARD_SCHEDULE("home_card_schedule"),
-    HOME_CARD_SCHEDULE_CHANGES("home_card_schedule_changes"),
-    HOME_CARD_MARKS("home_card_marks"),
-    HOME_CARD_SPORT("home_card_sport"),
-    HOME_CARD_FRIENDS("home_card_friends"),
     MYITMO_MARKS("myitmo_marks"),
     BARS_MARKS("bars_marks"),
     SHEET_MARKS("sheet_marks"),
@@ -59,7 +54,6 @@ enum class SettingRowId(val key: String) {
     PAGE_COMPACT_SCHEDULE_WIDGET("page_compact_schedule_widget"),
     PAGE_FULL_SCHEDULE_WIDGET("page_full_schedule_widget"),
     PAGE_QR_WIDGET("page_qr_widget"),
-    PAGE_HOME("page_home"),
     PAGE_SCHEDULE("page_schedule"),
     PAGE_RECORDBOOK("page_recordbook"),
     PAGE_SPORT("page_sport"),
@@ -75,7 +69,6 @@ enum class SettingRowId(val key: String) {
             SettingsPage.COMPACT_SCHEDULE_WIDGET -> PAGE_COMPACT_SCHEDULE_WIDGET
             SettingsPage.FULL_SCHEDULE_WIDGET -> PAGE_FULL_SCHEDULE_WIDGET
             SettingsPage.QR_WIDGET -> PAGE_QR_WIDGET
-            SettingsPage.HOME -> PAGE_HOME
             SettingsPage.SCHEDULE -> PAGE_SCHEDULE
             SettingsPage.RECORDBOOK -> PAGE_RECORDBOOK
             SettingsPage.SPORT -> PAGE_SPORT

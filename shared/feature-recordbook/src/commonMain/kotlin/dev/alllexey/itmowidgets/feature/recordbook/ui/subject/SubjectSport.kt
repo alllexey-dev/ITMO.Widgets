@@ -34,7 +34,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSportProgress
 import dev.alllexey.itmowidgets.feature.recordbook.ui.displayRate
-import dev.alllexey.itmowidgets.feature.recordbook.ui.formatRecordbookNumber
+import dev.alllexey.itmowidgets.feature.recordbook.domain.formatRecordbookNumber
 import dev.alllexey.itmowidgets.feature.recordbook.ui.preview.RecordbookPreviewSamples
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.compose.strings.sport_score_goal

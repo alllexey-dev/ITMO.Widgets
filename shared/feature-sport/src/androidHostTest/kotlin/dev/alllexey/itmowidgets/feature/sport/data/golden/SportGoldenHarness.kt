@@ -1,5 +1,9 @@
 package dev.alllexey.itmowidgets.feature.sport.data.golden
 
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
+import dev.alllexey.itmowidgets.feature.sport.data.bell.SportResultLog
+import dev.alllexey.itmowidgets.testkit.fakeFileSystemOf
+import okio.Path.Companion.toPath
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportScoreOverrideSource
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
@@ -99,7 +103,8 @@ class SportGoldenHarness(
 
     private val booker = SportSignPushBooker(
         clients.myItmo, dispatchers, sportApi, bookings, NoPending, ScheduleWidgetRefreshRequester { requests += "widgets refresh" },
-        clock, RecordingDiagnostics(), gate, noDemo()
+        clock, RecordingDiagnostics(), gate, noDemo(),
+        SportResultLog(AtomicTextFile("/sport_results.json".toPath(), fakeFileSystemOf()), clock, dispatchers)
     )
 
     /** The push booker's MyITMO sign-up of one lesson. */

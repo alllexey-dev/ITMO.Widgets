@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 /** Unread subjects from [news]; reads, resets and advances are recorded, not compared. */
 class FakeMarkTrackingRepository(vararg initial: MarkNews) : MarkTrackingRepository {
@@ -45,7 +46,13 @@ class FakeMarkTrackingRepository(vararg initial: MarkNews) : MarkTrackingReposit
 
     data class SeenMyItmo(val half: StudyHalf, val programId: Long, val semester: Int, val subjects: List<RecordbookSubject>)
 
-    override fun observeNews(): Flow<List<MarkNews>> = news
+    val barsCheckedAt = MutableStateFlow<Instant?>(null)
+
+    override fun observeNews(): Flow<List<MarkNews>> = news.map { all -> all.filterNot { it.read } }
+
+    override fun observeHistory(): Flow<List<MarkNews>> = news
+
+    override fun observeBarsCheckedAt(): Flow<Instant?> = barsCheckedAt
 
     override suspend fun checkMyItmo(): AppResult<MarkCheckResult> {
         myItmoChecks++

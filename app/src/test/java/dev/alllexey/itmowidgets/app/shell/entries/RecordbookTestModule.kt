@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
+import kotlin.time.Instant
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -110,6 +111,8 @@ internal class RecordbookTestGraph(var barsEnabled: Boolean = false) {
 
     private object NoMarks : MarkTrackingRepository {
         override fun observeNews(): Flow<List<MarkNews>> = flowOf(emptyList())
+        override fun observeHistory(): Flow<List<MarkNews>> = flowOf(emptyList())
+        override fun observeBarsCheckedAt(): Flow<Instant?> = flowOf(null)
         override suspend fun checkMyItmo(): AppResult<MarkCheckResult> = AppResult.Success(MarkCheckResult.Baseline)
         override suspend fun checkBars(): BarsCheck = BarsCheck.NoSession
         override suspend fun checkSheets() = SheetsCheck(MarkCheckResult.Baseline, emptyList())

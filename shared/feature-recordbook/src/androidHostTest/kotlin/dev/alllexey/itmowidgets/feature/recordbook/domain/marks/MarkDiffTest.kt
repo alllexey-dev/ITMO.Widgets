@@ -60,7 +60,10 @@ class MarkDiffTest {
         assertEquals(setOf(1L, 2L, 3L), short.snapshot.subjects.map { it.entryId }.toSet())
 
         val back = MarkDiff.myItmo(short.snapshot, myItmo(subject(2, "Химия", score = 25.0)))
-        assertEquals(listOf(MarkEvent(MarkSource.MY_ITMO, HALF, "Химия", MARK_CHANGED)), back.events)
+        assertEquals(
+            listOf(MarkEvent(MarkSource.MY_ITMO, HALF, "Химия", MARK_CHANGED, MarkValue(delta = 5.0, total = 25.0))),
+            back.events
+        )
     }
 
     @Test

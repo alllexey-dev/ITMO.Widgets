@@ -19,7 +19,6 @@ import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
-import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
@@ -113,10 +112,6 @@ object AppPreferencesUpgrade {
         DeviceHintPreferences(preferences).let {
             assertTrue(it.observeBackgroundWorkHintShown().first())
             assertTrue(it.observeQrTileAdded().first())
-        }
-        HomeLayoutPreferences(preferences).let {
-            assertEquals(setOf("WIDGETS", "SERVICES"), it.observeDismissedHomeHints().first())
-            assertEquals(setOf("SPORT", "FRIEND_REQUESTS"), it.observeHiddenHomeCards().first())
         }
         assertTrue(DemoPreferences(preferences).getDemoActive())
 

@@ -553,6 +553,18 @@
         }
       }
     },
+    "social_bell_request" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ хочет добавить вас в друзья"
+          }
+        }
+      }
+    },
     "teacher_review_actions" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",

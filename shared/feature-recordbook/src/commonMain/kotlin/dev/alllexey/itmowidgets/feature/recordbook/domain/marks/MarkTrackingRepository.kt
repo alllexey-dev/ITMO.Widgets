@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import kotlin.jvm.JvmInline
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Instant
 
 /** How a check of one source ended once it had an answer. */
 sealed interface MarkCheckResult {
@@ -38,6 +39,12 @@ interface MarkTrackingRepository {
     /** Unread subjects of the last 30 days, newest first; the file is read on the first collection. */
     fun observeNews(): Flow<List<MarkNews>>
 
+    /** Every subject with news of the last 30 days, read ones too, newest first: the bell's list. */
+    fun observeHistory(): Flow<List<MarkNews>>
+
+    /** When BARS last answered for this account; null before its first answer and in the demo session. */
+    fun observeBarsCheckedAt(): Flow<Instant?>
+
     /** Reads My ITMO's recordbook of the current half-year and compares it with the snapshot. */
     suspend fun checkMyItmo(): AppResult<MarkCheckResult>
 
@@ -66,7 +73,7 @@ interface MarkTrackingRepository {
 
     suspend fun markNotified(ids: Set<String>)
 
-    /** Opening a subject reads it; the digest goes away with the last unread subject. */
+    /** Opening a subject reads it (it stays in [observeHistory]); the digest goes away with the last unread subject. */
     suspend fun markRead(half: StudyHalf, nameKey: String)
 
     /** Reads everything and removes the digest notification. */

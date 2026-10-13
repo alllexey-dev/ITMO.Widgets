@@ -1,5 +1,10 @@
 package dev.alllexey.itmowidgets.feature.sport.data.push
 
+import kotlinx.coroutines.flow.first
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
+import dev.alllexey.itmowidgets.feature.sport.data.bell.SportResultLog
+import dev.alllexey.itmowidgets.testkit.fakeFileSystemOf
+import okio.Path.Companion.toPath
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.NotificationDestination
@@ -47,6 +52,7 @@ class SportSignPushBookerTest {
             assertEquals(1, fixture.bookingsRefresh)
             assertEquals(1, fixture.pendingRefresh)
             assertEquals(1, fixture.widgetRefresh)
+            assertEquals(listOf(42L to true), fixture.results.observe().first().map { it.lessonId to it.booked })
         }
     }
 
@@ -56,6 +62,7 @@ class SportSignPushBookerTest {
         fixture.run()
         assertTrue(fixture.queue.isEmpty())
         assertTrue(fixture.notifications.isEmpty())
+        assertTrue(fixture.results.observe().first().isEmpty())
     }
 
     @Test fun `other MyITMO rejections cancel only the matching kind and notify failure`() = runTest {
@@ -65,6 +72,7 @@ class SportSignPushBookerTest {
             fixture.run()
             assertEquals(listOf("/api/sport/${if (auto) "auto" else "free"}-sign/lesson/42/cancel"), fixture.queue)
             assertEquals(UiText.Res(CoreStrings.notification_sport_failure), fixture.notifications.single().title)
+            assertEquals(listOf(42L to false), fixture.results.observe().first().map { it.lessonId to it.booked })
         }
         // Preserve the legacy signature's context-length condition, not a generic substring test.
         val shortContext = Fixture(false)
@@ -156,6 +164,11 @@ class SportSignPushBookerTest {
             }
         }
         private val api = clients.client.sport
+        val results = SportResultLog(
+            AtomicTextFile("/sport_results.json".toPath(), fakeFileSystemOf()),
+            FakeClock(Instant.parse("2026-09-15T10:00:00Z")),
+            dispatchers,
+        )
         private val booker = SportSignPushBooker(
             clients.myItmo, dispatchers, api,
             proxy<SportBookingRepository> { method, _ ->
@@ -165,7 +178,7 @@ class SportSignPushBookerTest {
                 check(method == "refresh")
                 pendingRefresh++; Unit
             }, ScheduleWidgetRefreshRequester { widgetRefresh++ },
-            FakeClock(Instant.parse("2026-09-15T10:00:00Z")), diagnostics, gate, demo)
+            FakeClock(Instant.parse("2026-09-15T10:00:00Z")), diagnostics, gate, demo, results)
 
         suspend fun run(vararg lessons: String, enabled: Boolean = true) {
             gate.optedIn.value = enabled

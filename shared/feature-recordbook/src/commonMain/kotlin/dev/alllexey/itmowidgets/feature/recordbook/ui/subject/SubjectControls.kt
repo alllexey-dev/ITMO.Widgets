@@ -38,7 +38,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookProgress
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
-import dev.alllexey.itmowidgets.feature.recordbook.ui.formatRecordbookNumber
+import dev.alllexey.itmowidgets.feature.recordbook.domain.formatRecordbookNumber
 import dev.alllexey.itmowidgets.feature.recordbook.ui.preview.RecordbookPreviewSamples
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry

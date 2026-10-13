@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_note
 import dev.alllexey.itmowidgets.shared.designsystem.ic_folder
 import dev.alllexey.itmowidgets.shared.designsystem.ic_format_list_numbered
 import dev.alllexey.itmowidgets.shared.designsystem.ic_link
+import dev.alllexey.itmowidgets.shared.designsystem.ic_login
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person_filled
@@ -46,6 +47,7 @@ val AppIcon.drawable: DrawableResource
         AppIcon.FOLDER -> Res.drawable.ic_folder
         AppIcon.FORMAT_LIST_NUMBERED -> Res.drawable.ic_format_list_numbered
         AppIcon.LINK -> Res.drawable.ic_link
+        AppIcon.LOGIN -> Res.drawable.ic_login
         AppIcon.OPEN_IN_NEW -> Res.drawable.ic_open_in_new
         AppIcon.PERSON -> Res.drawable.ic_person
         AppIcon.PERSON_FILLED -> Res.drawable.ic_person_filled

@@ -119,4 +119,18 @@
     <string name="share_action">Поделиться</string>
     <string name="share_profile_title">Профиль в ITMO.Widgets</string>
     <string name="share_profile_text">%1$s в ITMO.Widgets: %2$s</string>
+    <string name="lesson_pill_now">идёт</string>
+    <string name="lesson_pill_next">далее</string>
+    <string name="lesson_pill_changed">изменена</string>
+    <string name="lesson_pill_cancelled">отменена</string>
+    <string name="lesson_pill_queue">очередь</string>
+    <string name="lesson_pill_booked">записаны</string>
+    <string name="lesson_pill_online">онлайн</string>
+    <string name="lesson_gap">Окно %1$s</string>
+    <string name="lesson_changed_today">Изменено сегодня в %1$s</string>
+    <string name="lesson_changed_yesterday">Изменено вчера в %1$s</string>
+    <string name="lesson_changed_on">Изменено %1$s в %2$s</string>
+    <string name="duration_minutes">%1$d мин</string>
+    <string name="duration_hours">%1$d ч</string>
+    <string name="duration_hours_minutes">%1$d ч %2$d мин</string>
 </resources>

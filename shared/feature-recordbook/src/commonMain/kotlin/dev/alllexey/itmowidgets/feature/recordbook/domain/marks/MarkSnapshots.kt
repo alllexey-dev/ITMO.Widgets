@@ -18,8 +18,17 @@ data class MyItmoSubjectMark(
 /** My ITMO's marks of one half-year, every program's matching periods together. */
 data class MyItmoMarkSnapshot(val half: StudyHalf, val subjects: List<MyItmoSubjectMark>)
 
-/** A graded or missed checkpoint; the additional points of a plan have the id `-planId`. */
-data class BarsCheckpointMark(val id: Long, val mark: Double?, val absent: Boolean)
+/**
+ * A graded or missed checkpoint; the additional points of a plan have the id `-planId`. [name] and [max] say what a
+ * news row shows (`Контрольная работа 2`, `9 из 10`); snapshots written before they existed have neither.
+ */
+data class BarsCheckpointMark(
+    val id: Long,
+    val mark: Double?,
+    val absent: Boolean,
+    val name: String? = null,
+    val max: Double? = null
+)
 
 /** The own marks of one BARS journal: its checkpoints and the last unambiguous statement. */
 data class BarsPlanMarks(
@@ -54,7 +63,9 @@ fun BarsPlanMarks.Companion.of(journal: RecordbookSubject, controls: List<Record
         rate = journal.rate,
         attempt = journal.attempt,
         absent = journal.absent,
-        marks = controls.filter { it.score != null || it.absent }.map { BarsCheckpointMark(it.id, it.score, it.absent) }
+        marks = controls.filter { it.score != null || it.absent }.map {
+            BarsCheckpointMark(it.id, it.score, it.absent, it.name.trim().takeIf(String::isNotEmpty), it.maximum)
+        }
     )
 }
 

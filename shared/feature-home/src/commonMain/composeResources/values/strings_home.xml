@@ -1,13 +1,24 @@
 <resources>
-    <string name="home_empty_title">Пока пусто</string>
-    <string name="home_hint_dismiss">Скрыть подсказку</string>
-    <string name="home_hint_widgets_title">Добавьте виджет</string>
-    <string name="home_hint_widgets_description">Ближайшая пара и QR-пропуск прямо на домашнем экране.</string>
-    <string name="home_hint_widgets_action">Добавить</string>
-    <string name="home_hint_notifications_title">Уведомления выключены</string>
-    <string name="home_hint_notifications_description">Без них не придут результаты автозаписи на спорт и заявки в друзья.</string>
-    <string name="home_hint_notifications_action">Включить</string>
-    <string name="home_hint_services_title">Друзья и автозапись</string>
-    <string name="home_hint_services_description">Друзья на паре, очереди на спорт и уведомления.</string>
-    <string name="home_hint_services_action">Подключиться</string>
+    <string name="today_hero_now">Сейчас</string>
+    <string name="today_hero_first">Первая пара</string>
+    <string name="today_hero_next">Далее</string>
+    <string name="today_hero_tomorrow">Завтра</string>
+    <string name="today_left">ещё %1$s</string>
+    <string name="today_in">через %1$s</string>
+    <string name="today_at">в %1$s</string>
+    <string name="today_day_title">Пары</string>
+    <string name="today_tomorrow_title">Завтра</string>
+    <string name="today_todo_title">Нужно сделать</string>
+    <string name="today_empty_title">Сегодня и завтра пар нет</string>
+    <string name="today_stale">Данные на %1$s</string>
+    <string name="today_online">Онлайн</string>
+    <string name="today_join">Подключиться</string>
+    <string name="bell_new">Новое</string>
+    <string name="bell_earlier">Раньше</string>
+    <string name="bell_nothing_new">Ничего нового</string>
+    <string name="bell_empty_text">Здесь появятся баллы, изменения в расписании, итоги очередей и заявки в друзья</string>
+    <string name="bell_settings">Настройки уведомлений</string>
+    <string name="bell_accept">Принять</string>
+    <string name="bell_decline">Отклонить</string>
+    <string name="bell_yesterday">вчера</string>
 </resources>

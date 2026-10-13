@@ -23,7 +23,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
-import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleChangesViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -54,7 +53,6 @@ internal fun scheduleTestModule(schedules: FakeScheduleRepository = ScheduleSamp
             NoCalendarSync,
         )
     }
-    viewModel { ScheduleChangesViewModel(FakeScheduleChangesRepository(), get(), get<SavedStateHandle>()) }
     viewModel {
         LessonDetailsViewModel(get<SavedStateHandle>(), NobodyOnLessons, ServicesOff, NoLevels, FakeScheduleChangesRepository())
     }

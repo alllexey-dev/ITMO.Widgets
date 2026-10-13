@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
@@ -59,7 +58,6 @@ internal fun createFixture(
         root = RootPageProvider(repository, capabilities),
         services = ServicesPageProvider(repository, customServicesRepository, refresher),
         widgets = WidgetsPageProvider(repository, tileAccess, capabilities),
-        home = HomePageProvider(repository),
         schedule = SchedulePageProvider(repository, tracking, calendarSync, capabilities),
         recordbook = RecordbookPageProvider(markTracking),
         sport = SportPageProvider(repository),
@@ -324,13 +322,6 @@ internal class FakeSettingsRepository(
         scheduleSportAutoSignRequests += enabled
         scheduleSportAutoSignWrite()
         local.value = local.value.copy(showSportAutoSign = enabled)
-    }
-
-    val homeCardRequests = mutableListOf<Pair<HomeCardKind, Boolean>>()
-
-    override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
-        homeCardRequests += kind to visible
-        local.value = local.value.copy(hiddenHomeCards = if (visible) local.value.hiddenHomeCards - kind else local.value.hiddenHomeCards + kind)
     }
 
     override suspend fun setBackgroundWorkHintShown() {

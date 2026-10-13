@@ -60,4 +60,10 @@
     </plurals>
     <string name="home_schedule_changes_dismiss">Прочитано</string>
     <string name="home_schedule_changes_description">%1$s, %2$d. %3$s</string>
+    <string name="schedule_bell_change_moved">%1$s: пара перенесена</string>
+    <string name="schedule_bell_change_cancelled">%1$s: пара отменена</string>
+    <string name="schedule_bell_change_added">%1$s: новая пара</string>
+    <string name="schedule_bell_change_updated">%1$s: пара изменена</string>
+    <string name="schedule_bell_unknown_subject">Пара</string>
+    <string name="schedule_bell_value_none">не указано</string>
 </resources>

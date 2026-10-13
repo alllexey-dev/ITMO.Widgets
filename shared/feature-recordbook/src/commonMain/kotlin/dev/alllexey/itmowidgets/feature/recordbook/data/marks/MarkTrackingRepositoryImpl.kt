@@ -40,6 +40,7 @@ import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
 import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -83,13 +84,24 @@ class MarkTrackingRepositoryImpl(
     /** The demo session's news the user has read, in memory only. */
     private val demoRead = MutableStateFlow<Set<String>>(emptySet())
 
-    override fun observeNews(): Flow<List<MarkNews>> = flow {
+    override fun observeNews(): Flow<List<MarkNews>> = observeHistory().map { news -> news.filterNot { it.read } }
+
+    override fun observeHistory(): Flow<List<MarkNews>> = flow {
         if (demo.isActive()) {
-            emitAll(demoRead.map { read -> DemoRecordbook.news(time.today(), clock.now()).filterNot { it.id in read } })
+            emitAll(demoRead.map { read -> DemoRecordbook.news(time.today(), clock.now()).map { it.copy(read = it.id in read) } })
             return@flow
         }
         lock.withLock { loaded() }
         emitAll(state.filterNotNull().map { stored -> MarkNewsRules.pruned(stored.news.map { it.toModel() }, clock.now()) })
+    }
+
+    override fun observeBarsCheckedAt(): Flow<Instant?> = flow {
+        if (demo.isActive()) {
+            emit(null)
+            return@flow
+        }
+        lock.withLock { loaded() }
+        emitAll(state.filterNotNull().map { stored -> stored.bars?.fetchedAt?.let(Instant::fromEpochMilliseconds) })
     }
 
     override suspend fun checkMyItmo(): AppResult<MarkCheckResult> = checks.withLock {
@@ -230,9 +242,9 @@ class MarkTrackingRepositoryImpl(
         val id = MarkNews.idOf(half, nameKey)
         var readLast = false
         update { stored ->
-            val remaining = stored.news.filterNot { it.id == id }
-            readLast = remaining.size < stored.news.size && remaining.isEmpty()
-            stored.copy(news = remaining)
+            val news = stored.news.map { if (it.id == id) it.copy(read = true) else it }
+            readLast = stored.news.any { it.id == id && it.read != true } && news.none { it.read != true }
+            stored.copy(news = news)
         }
         if (readLast) notifier.cancel(AppNotificationChannels.MARKS, MarkDigests.DIGEST_ID)
     }
@@ -242,7 +254,7 @@ class MarkTrackingRepositoryImpl(
             demoRead.update { read -> read + DemoRecordbook.news(time.today(), clock.now()).map { it.id } }
             return
         }
-        update { stored -> stored.copy(news = emptyList()) }
+        update { stored -> stored.copy(news = stored.news.map { it.copy(read = true) }) }
         notifier.cancel(AppNotificationChannels.MARKS, MarkDigests.DIGEST_ID)
     }
 

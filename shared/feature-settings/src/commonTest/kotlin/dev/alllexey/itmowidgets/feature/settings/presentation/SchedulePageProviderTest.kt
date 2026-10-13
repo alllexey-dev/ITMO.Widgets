@@ -119,7 +119,6 @@ class SchedulePageProviderTest {
             assertEquals(listOf(false, true, true), fixture.tracking.setCalls)
             assertEquals(listOf(SettingsEvent.RequestNotificationPermission), fixture.viewModel.events.take(1).toList())
             assertEquals(0, fixture.widgetRefresher.refreshCount)
-            assertTrue(fixture.repository.homeCardRequests.isEmpty())
         }
 
     @Test
