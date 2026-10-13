@@ -18,7 +18,6 @@ import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedTestTags
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.app.shell.ShellHost
 import dev.alllexey.itmowidgets.app.shell.ShellModeRule
@@ -39,6 +38,7 @@ import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksSheetTestTags
+import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedTestTags
 import dev.alllexey.itmowidgets.feature.sport.ui.SportTab
 import dev.alllexey.itmowidgets.feature.sport.ui.SportTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
@@ -128,7 +128,8 @@ class DemoModeFlowTest {
             open(scenario) { it.select(AppTab.SCHEDULE) }
             awaitShown(AppTab.SCHEDULE)
             shot(activity, "schedule")
-            scenario.onActivity(::openFirstLesson)
+            // The feed jumps to today after its first frame; the lesson rows are placed once it lands.
+            eventually { scenario.onActivity(::openFirstLesson) }
             settle()
             eventually { assertNotNull("the lesson sheet is not shown", ShellProbe.current().floating) }
             Screenshots.capture(DIRECTORY, "lesson") { settle() }

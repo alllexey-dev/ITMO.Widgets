@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.feature.schedule.ui.lesson.LessonSheetTestTags
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestSession
@@ -184,7 +185,7 @@ class SheetOverlayPopTest {
     /** The sheet's teacher row, in the sheet's own window, by its semantics click. */
     private fun clickTeacher() {
         val row = WindowInspector.getGlobalWindowViews().flatMap(::composedNodes).firstOrNull { node ->
-            node.config.getOrNull(SemanticsActions.OnClick)?.label == OPEN_PROFILE
+            node.tag == LessonSheetTestTags.TEACHER && node.config.getOrNull(SemanticsActions.OnClick) != null
         }
         checkNotNull(checkNotNull(row) { "the sheet has no teacher row" }.config[SemanticsActions.OnClick].action)
             .invoke()
@@ -268,8 +269,5 @@ class SheetOverlayPopTest {
         const val SETTLE_TIMEOUT_MILLIS = 10_000L
         const val HALF = 0.5f
         const val EDGE_PX = 1.5f
-
-        /** The teacher row's click label (`teacher_open_profile`). */
-        const val OPEN_PROFILE = "Открыть профиль"
     }
 }

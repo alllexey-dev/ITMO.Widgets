@@ -196,7 +196,7 @@ class StoreScreenshotCapture {
                 val row = nodes.firstOrNull { node ->
                     node.tag.orEmpty().startsWith(ScheduleFeedTestTags.LESSON_PREFIX) &&
                         node.boundsInWindow.center.y in list.top..list.bottom &&
-                        node.texts().let { texts -> lecture in texts && texts.any { DemoStudy.ALGORITHMS.name in it } }
+                        node.texts().let { texts -> texts.any { it.startsWith(lecture) } && texts.any { DemoStudy.ALGORITHMS.name in it } }
                 }
                 if (row != null) {
                     checkNotNull(row.config[SemanticsActions.OnClick].action) { "the lesson row has no click" }.invoke()
