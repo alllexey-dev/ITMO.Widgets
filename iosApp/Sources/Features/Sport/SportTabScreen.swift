@@ -267,10 +267,12 @@ struct SportScoreRing: View {
     let score: SportScoreUi
     var size: CGFloat = 88
 
+    @Environment(\.itmoTrack) private var track
+
     var body: some View {
         let width = size / 11
         ZStack {
-            Circle().stroke(Color(.tertiarySystemFill), lineWidth: width)
+            Circle().stroke(track, lineWidth: width)
             if score.done {
                 Circle().stroke(ItmoColor.success, lineWidth: width)
             } else {

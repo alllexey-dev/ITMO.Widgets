@@ -239,8 +239,9 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
   `sf_symbol` names the iOS SF Symbol. Code names an icon with `AppIcon`.
 - FILL 1 only for a selected or active state (the selected navigation tab).
 - A button may look smaller than 48 dp through insets; its touch area stays 48 dp.
-- Filled button for the strong primary action, tonal for an ordinary prominent
-  action, outlined or text for secondary and contextual ones.
+- Filled button for the strong primary action, tonal (`TonalButton`, the
+  primary family) for an ordinary prominent action, outlined or text for
+  secondary and contextual ones.
 - Every actionable icon has a localized `contentDescription`; decorative ones `@null`.
 - Selection is shown by a check or a container surface plus `selected` or
   `checkable` state for TalkBack, and the whole row is the target. A closed or
@@ -484,6 +485,7 @@ screens that have not moved yet.
 | `LocalOnSheet`, `cardSurface()` | True inside a `SheetScaffold`: cards and groups step one surface up |
 | `ItmoRootScreen`, `HeaderAction` | A tab root with the static root header and an optional FAB; an icon action with an optional badge |
 | `ItmoDetailScreen` | A pushed screen: back, the title (`titleMedium`) and its quiet subtitle as one paragraph that wraps in full, actions; static |
+| `TonalButton`, `tonalButtonColors()` | The kit's tonal button in the primary family (`primaryContainer`): an active secondary action in light and dark (`Записаться` in a sport row, `Повторить`, an action card's fix); `ProgressButton`'s tonal style uses the same colours. Material's `secondaryContainer` default reads as a disabled grey pill under the app's schemes |
 | `SmallButton` | An extra-small filled M3E button with a short label next to a hero's big text (`Войти` on the Сегодня hero) |
 | `ItmoTheme.progressTrack` | The track of every progress bar, meter, scale and ring (`ItmoWavyProgress`, `GradeScale`, `ScoreRing`, `PointsMeter`, the score rows): the surrounding content colour (the card's "on" colour, `onBackground` on the screen) at alpha 0.16, a groove in the container's hue in light and dark |
 | `ItmoCard`, `IconTile` | One topic per card (`cardContent`), a tonal card, the one hero (`cardHero`); an icon in a tone's tile |

@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilledTonalButton
+import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -44,7 +44,7 @@ internal fun AppearanceSample(modifier: Modifier = Modifier) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
             Button(onClick = {}) { Text(stringResource(Res.string.settings_appearance_sample_action)) }
-            FilledTonalButton(onClick = {}) { Text(stringResource(CoreRes.string.common_cancel)) }
+            TonalButton(onClick = {}) { Text(stringResource(CoreRes.string.common_cancel)) }
         }
     }
 }
