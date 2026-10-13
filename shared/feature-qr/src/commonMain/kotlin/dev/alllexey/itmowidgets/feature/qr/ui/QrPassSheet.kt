@@ -2,19 +2,22 @@ package dev.alllexey.itmowidgets.feature.qr.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -27,7 +30,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -36,20 +38,28 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
-import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
-import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
+import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
+import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
+import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
+import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
-import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeUiState
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassStatus
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassUiState
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeImage
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.qrColors
-import dev.alllexey.itmowidgets.shared.compose.strings.common_back
+import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
+import dev.alllexey.itmowidgets.shared.designsystem.ic_history
+import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
+import dev.alllexey.itmowidgets.shared.designsystem.ic_refresh
 import dev.alllexey.itmowidgets.shared.feature.qr.Res
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_description
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_empty_description
@@ -57,9 +67,6 @@ import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_empty_title
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_image_description
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_refresh
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_title
-import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
-import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
-import dev.alllexey.itmowidgets.shared.designsystem.ic_refresh
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
@@ -68,77 +75,88 @@ import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
-/** Test tags of [QrPassScreen], read by host tests and the instrumented home-to-pass flow. */
+/** Test tags of [QrPassSheetContent], read by host tests and the instrumented flows. */
 object QrPassTestTags {
     /** The square that holds the code, the loading indicator or the empty and error state. */
     const val AREA = "qr_pass_area"
     const val IMAGE = "qr_pass_image"
     const val LOADING = "qr_pass_loading"
     const val STATE = "qr_pass_state"
+    const val HOLDER = "qr_pass_holder"
+    const val LINE = "qr_pass_line"
     const val REFRESH = "qr_pass_refresh"
 }
 
 /**
- * The QR pass: a square area of at most 300 dp that shows the code, the loading indicator or the empty and error
- * state, the instruction under it and a refresh button that never moves between states. Stateless; [QrPassRoute]
- * feeds it. Failed refreshes of a still valid pass show in [snackbarHostState].
+ * The pass sheet: the title with a close button, who the pass belongs to, a square area of at most [AreaMaxSize] with
+ * the code (dimmed under the loading indicator while a new one loads), the empty or error state, the instruction
+ * under the code and one line: when the code was loaded, or that it is the last one while there is no network, with
+ * «Обновить» at its end. No validity or countdown. Stateless; [QrPassRoute] feeds it.
  *
- * The code is the flow's hero: one that arrives while the screen is open (after the loading state, or a new code
- * after a refresh) grows and fades in on [ItmoTheme.heroMotionScheme]; a code already there on the first frame, and
- * every code under reduced motion, shows at once.
+ * The code is the flow's hero: one that arrives while the sheet is open grows and fades in on
+ * [ItmoTheme.heroMotionScheme]; a code already there on the first frame, and every code under reduced motion, shows at
+ * once.
  */
 @Composable
-fun QrPassScreen(
-    state: QrCodeUiState,
+fun QrPassSheetContent(
+    state: QrPassUiState,
     onRefresh: () -> Unit,
-    onBack: () -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
-        Column(Modifier.fillMaxSize()) {
-            AppTopBar(
-                title = stringResource(Res.string.qr_pass_title),
-                navigation = {
-                    AppTopBarAction(
-                        painterResource(KitRes.drawable.ic_arrow_back),
-                        stringResource(CoreRes.string.common_back),
-                        onClick = onBack,
-                    )
-                },
-            )
-            QrPassBody(state, onRefresh, Modifier.weight(1f))
+    Box(modifier) {
+        SheetScaffold(
+            title = stringResource(Res.string.qr_pass_title),
+            close = SheetClose(stringResource(CoreRes.string.common_close), onClose),
+        ) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = ItmoTheme.spacing.section)
+                    .padding(bottom = ItmoTheme.spacing.compact),
+                verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+            ) {
+                Holder(state)
+                PassArea(state, onRefresh)
+                StatusLine(state.status, onRefresh)
+            }
         }
         SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
     }
 }
 
 @Composable
-private fun QrPassBody(state: QrCodeUiState, onRefresh: () -> Unit, modifier: Modifier) {
-    val content = state as? QrCodeUiState.Content
-    val matrix = rememberQrMatrix(content?.code?.hex)
-    val showsCode = content != null && matrix != null
+private fun Holder(state: QrPassUiState) {
+    val holder = state.holder ?: return
+    Column(Modifier.fillMaxWidth().testTag(QrPassTestTags.HOLDER)) {
+        holder.name?.let { Text(it, color = ItmoTheme.colorScheme.onSurface, style = ItmoTheme.typography.bodyLarge) }
+        holder.details?.let {
+            Text(it.asString(), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+        }
+    }
+}
+
+@Composable
+private fun PassArea(state: QrPassUiState, onRefresh: () -> Unit) {
+    val code = state.code
+    val matrix = rememberQrMatrix(code?.hex)
     val firstFrame = remember { FirstFrame() }
     SideEffect { firstFrame.passed = true }
-    // fillMaxSize before verticalScroll keeps the viewport as the minimum height, so the column centres in it.
-    Column(
-        modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(ItmoTheme.spacing.screenMargin),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.passArea().testTag(QrPassTestTags.AREA), contentAlignment = Alignment.Center) {
+            val status = state.status
             when {
-                content != null && matrix != null -> key(content.code.hex) {
+                code != null && matrix != null -> key(code.hex) {
                     val description = stringResource(Res.string.qr_pass_image_description)
                     val reveal = rememberHeroReveal(animate = firstFrame.passed)
                     QrCodeImage(
                         matrix,
-                        qrColors(content.useDynamicColors),
+                        qrColors(code.useDynamicColors),
                         Modifier
                             .fillMaxSize()
+                            .alpha(if (status == QrPassStatus.Refreshing) REFRESHING_ALPHA else 1f)
                             .heroReveal(reveal)
                             .testTag(QrPassTestTags.IMAGE)
                             .semantics {
@@ -146,62 +164,91 @@ private fun QrPassBody(state: QrCodeUiState, onRefresh: () -> Unit, modifier: Mo
                                 role = Role.Image
                             },
                     )
+                    if (status == QrPassStatus.Refreshing) ItmoLoadingIndicator()
                 }
-                content != null -> PassState(
+                code != null -> PassState(
                     stringResource(CoreRes.string.common_load_error_title),
                     stringResource(Res.string.qr_pass_empty_description),
                 )
-                state == QrCodeUiState.Loading -> ContentStateLoading(Modifier.testTag(QrPassTestTags.LOADING))
-                state == QrCodeUiState.Empty -> PassState(
+                status is QrPassStatus.Failed -> PassState(
+                    stringResource(CoreRes.string.common_load_error_title),
+                    status.error.toUiText().asString(),
+                    ContentStateAction(stringResource(CoreRes.string.common_retry), onRefresh),
+                )
+                status == QrPassStatus.Empty -> PassState(
                     stringResource(Res.string.qr_pass_empty_title),
                     stringResource(Res.string.qr_pass_empty_description),
+                    ContentStateAction(stringResource(Res.string.qr_pass_refresh), onRefresh),
                 )
-                state is QrCodeUiState.Error -> PassState(
-                    stringResource(CoreRes.string.common_load_error_title),
-                    state.error.toUiText().asString(),
-                )
+                else -> ContentStateLoading(Modifier.testTag(QrPassTestTags.LOADING), ContentStateSize.Compact)
             }
         }
-        // Invisible, not gone, outside content: the button below keeps its place in every state.
+        if (code != null && matrix != null) {
+            Text(
+                stringResource(Res.string.qr_pass_description),
+                Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.compact),
+                color = ItmoTheme.colorScheme.onSurfaceVariant,
+                style = ItmoTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+/** When the code was loaded, with «Обновить» at the end; only under a code. */
+@Composable
+private fun StatusLine(status: QrPassStatus, onRefresh: () -> Unit) {
+    val line = status.line ?: return
+    val muted = ItmoTheme.colorScheme.onSurfaceVariant
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+    ) {
+        when (status) {
+            QrPassStatus.Refreshing -> ItmoActivityIndicator()
+            is QrPassStatus.Offline -> Icon(painterResource(KitRes.drawable.ic_cloud_off), null, tint = muted)
+            else -> Icon(painterResource(KitRes.drawable.ic_history), null, tint = muted)
+        }
         Text(
-            stringResource(Res.string.qr_pass_description),
-            Modifier
-                .fillMaxWidth()
-                .padding(top = ItmoTheme.spacing.section)
-                .alpha(if (showsCode) 1f else 0f)
-                .then(if (showsCode) Modifier else Modifier.clearAndSetSemantics {}),
-            color = ItmoTheme.colorScheme.onSurfaceVariant,
-            style = ItmoTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
+            line.asString(),
+            Modifier.weight(1f).testTag(QrPassTestTags.LINE),
+            color = muted,
+            style = ItmoTheme.typography.bodyMedium,
         )
-        ProgressButton(
-            label = stringResource(Res.string.qr_pass_refresh),
+        TextButton(
             onClick = onRefresh,
-            modifier = Modifier.padding(top = ItmoTheme.spacing.group).testTag(QrPassTestTags.REFRESH),
-            style = ProgressButtonStyle.Tonal,
-            inProgress = content?.refreshing == true,
-            enabled = state != QrCodeUiState.Loading,
-            icon = painterResource(KitRes.drawable.ic_refresh),
-        )
+            modifier = Modifier.testTag(QrPassTestTags.REFRESH),
+            enabled = status != QrPassStatus.Refreshing,
+        ) {
+            Icon(painterResource(KitRes.drawable.ic_refresh), null, Modifier.size(ButtonIconSize))
+            Text(
+                stringResource(
+                    if (status is QrPassStatus.Offline) CoreRes.string.common_retry else Res.string.qr_pass_refresh,
+                ),
+                Modifier.padding(start = ItmoTheme.spacing.compact),
+            )
+        }
     }
 }
 
 /**
  * The empty or error state, centred on the area. Its height is unbounded, so at a large font in a narrow window the
- * text runs past the square into the space the hidden instruction keeps instead of being cut off; the area itself
- * stays square.
+ * text runs past the square instead of being cut off; the area itself stays square.
  */
 @Composable
-private fun PassState(title: String, description: String) {
+private fun PassState(title: String, description: String, action: ContentStateAction? = null) {
     ContentState(
         title = title,
         modifier = Modifier.wrapContentHeight(unbounded = true).testTag(QrPassTestTags.STATE),
+        size = ContentStateSize.Compact,
         icon = painterResource(KitRes.drawable.ic_qr_code),
         description = description,
+        action = action,
     )
 }
 
-/** False until the screen's first composition is applied; a code composed before that needs no reveal. */
+/** False until the sheet's first composition is applied; a code composed before that needs no reveal. */
 private class FirstFrame {
     var passed = false
 }
@@ -247,7 +294,7 @@ private fun rememberQrMatrix(hex: String?): List<List<Boolean>>? = remember(hex)
 }
 
 /**
- * `fragment_qr_code.xml`'s area: 80 % of the width, at most [AreaMaxSize], square. A layout of its own, since
+ * A square of [AREA_WIDTH_FRACTION] of the width, at most [AreaMaxSize]. A layout of its own, since
  * `fillMaxWidth(0.8f)` and `widthIn(max)` in either order give a different size on wide windows.
  */
 private fun Modifier.passArea(): Modifier = layout { measurable, constraints ->
@@ -257,7 +304,11 @@ private fun Modifier.passArea(): Modifier = layout { measurable, constraints ->
 }
 
 private const val AREA_WIDTH_FRACTION = 0.8f
-private val AreaMaxSize = 300.dp
+private val AreaMaxSize = 240.dp
+private val ButtonIconSize = 18.dp
+
+/** The old code under the loading indicator while a new one loads. */
+private const val REFRESHING_ALPHA = 0.25f
 
 /** Where a revealed code starts growing from, as a fraction of its size. */
 private const val REVEAL_START_SCALE = 0.85f

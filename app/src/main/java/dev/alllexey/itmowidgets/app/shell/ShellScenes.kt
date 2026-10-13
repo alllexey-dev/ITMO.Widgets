@@ -2,7 +2,11 @@ package dev.alllexey.itmowidgets.app.shell
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
@@ -14,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.min
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavMetadataKey
 import androidx.navigation3.runtime.get
@@ -32,9 +37,9 @@ fun bottomSheet(policy: SheetPolicy): Map<String, Any> = metadata { put(SheetPol
 /**
  * Navigation 3 1.2 has no first-party sheet scene: an entry with [bottomSheet] metadata becomes an
  * [OverlayScene] in a material3 [ModalBottomSheet] above the entries below it, which stay composed. The sheet is the
- * container: expanded without a collapsed step, as tall as its content up to
- * [MAX_HEIGHT_FRACTION] of the window or always that tall ([SheetPolicy.Height.TALL]); the body (a `SheetScaffold`)
- * draws its own handle.
+ * container: expanded without a collapsed step, in one of the three sizes of [SheetPolicy.Height] (as tall as its
+ * content, [SheetPolicy.TALL_FRACTION] of the window, or the whole height below the status bar), never under the
+ * status bar; the body (a `SheetScaffold`) draws its own handle.
  */
 class BottomSheetSceneStrategy<T : Any> : SceneStrategy<T> {
     override fun SceneStrategyScope<T>.calculateScene(entries: List<NavEntry<T>>): Scene<T>? {
@@ -45,8 +50,6 @@ class BottomSheetSceneStrategy<T : Any> : SceneStrategy<T> {
     }
 
     companion object {
-        const val MAX_HEIGHT_FRACTION = 0.9f
-
         /** The test tag of the sheet holding the entry with [contentKey]. */
         fun tag(contentKey: Any): String = "sheet:$contentKey"
     }
@@ -79,12 +82,14 @@ private class BottomSheetScene<T : Any>(
             confirmValueChange = { free || it != SheetValue.Hidden },
         )
         sheetState = state
-        val maxHeight = with(LocalDensity.current) {
-            (LocalWindowInfo.current.containerSize.height * BottomSheetSceneStrategy.MAX_HEIGHT_FRACTION).toDp()
-        }
+        // Read here: the sheet's own window may not get the activity's insets.
+        val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val window = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
+        val belowStatusBar = window - statusBar
         val height = when (policy.height) {
-            SheetPolicy.Height.FIT_CONTENT -> Modifier.heightIn(max = maxHeight)
-            SheetPolicy.Height.TALL -> Modifier.heightIn(min = maxHeight, max = maxHeight)
+            SheetPolicy.Height.FIT_CONTENT -> Modifier.heightIn(max = belowStatusBar)
+            SheetPolicy.Height.TALL -> Modifier.height(min(window * SheetPolicy.TALL_FRACTION, belowStatusBar))
+            SheetPolicy.Height.FULL -> Modifier.height(belowStatusBar)
         }
         ModalBottomSheet(
             onDismissRequest = onBack,

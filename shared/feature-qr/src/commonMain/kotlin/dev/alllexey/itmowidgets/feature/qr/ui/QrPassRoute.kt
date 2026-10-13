@@ -15,20 +15,20 @@ import androidx.lifecycle.repeatOnLifecycle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.text.toUiText
-import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeEvent
-import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassEvent
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassViewModel
 import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * The QR pass screen with its Koin ViewModel: requests run while the screen is started, and a failed refresh of a still
- * valid pass shows a snackbar with a retry. Android hosts it in the shell's `QrPass` entry, iOS in
- * `qrPassViewController`.
+ * The pass sheet with its Koin ViewModel: requests run while the sheet is started, and a failed refresh that keeps the
+ * code shows a snackbar with a retry. Android hosts it in the shell's `QrPass` sheet, iOS in `qrPassViewController`
+ * until its SwiftUI sheet replaces it.
  */
 @Composable
-fun QrPassRoute(onBack: () -> Unit, viewModel: QrCodeViewModel = koinViewModel()) {
+fun QrPassRoute(onClose: () -> Unit, viewModel: QrPassViewModel = koinViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -41,7 +41,7 @@ fun QrPassRoute(onBack: () -> Unit, viewModel: QrCodeViewModel = koinViewModel()
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.events.collect { event ->
                 when (event) {
-                    is QrCodeEvent.RefreshFailed -> {
+                    is QrPassEvent.RefreshFailed -> {
                         val result = snackbars.showSnackbar(
                             message = event.error.toUiText().resolve(),
                             actionLabel = getString(Res.string.common_retry),
@@ -54,10 +54,10 @@ fun QrPassRoute(onBack: () -> Unit, viewModel: QrCodeViewModel = koinViewModel()
         }
     }
 
-    QrPassScreen(
+    QrPassSheetContent(
         state = state,
         onRefresh = { viewModel.refresh(RefreshMode.Force) },
-        onBack = onBack,
+        onClose = onClose,
         snackbarHostState = snackbars,
     )
 }

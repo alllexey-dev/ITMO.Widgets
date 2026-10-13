@@ -20,6 +20,8 @@ import com.github.takahirom.roborazzi.captureScreenRoboImage
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.navigation.ShellBackStack
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
@@ -139,7 +141,7 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
         private val tabRootEntries = entryRegistry {
             entry<AppRoutes.TabRoot> { key, _ ->
                 Column(Modifier.fillMaxSize().background(ItmoTheme.colorScheme.background)) {
-                    AppTopBar(stringResource(key.tab.title))
+                    AppTopBar(UiText.Res(key.tab.label).asString())
                     repeat(ROOT_ROWS) { row ->
                         Surface(
                             Modifier
@@ -161,14 +163,5 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
         }
 
         private const val ROOT_ROWS = 4
-
-        private val AppTab.title: Int
-            get() = when (this) {
-                AppTab.RECORDBOOK -> R.string.title_recordbook
-                AppTab.SCHEDULE -> R.string.title_schedule
-                AppTab.HOME -> R.string.title_home
-                AppTab.SPORT -> R.string.title_sport
-                AppTab.ME -> R.string.title_me
-            }
     }
 }

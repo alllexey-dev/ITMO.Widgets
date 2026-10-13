@@ -40,7 +40,8 @@ class QrCodeLocalDataSourceImplTest {
         val source = source()
 
         assertEquals(PASS_HEX, source.get())
-        assertEquals(QrCodeSnapshot(PASS_HEX, (SAVED_AT + 60.minutes).toEpochMilliseconds()), source.snapshot())
+        assertEquals(QrCodeSnapshot(PASS_HEX, SAVED_AT.toEpochMilliseconds()), source.snapshot())
+        assertEquals((SAVED_AT + 60.minutes).toEpochMilliseconds(), source.snapshot()?.expiresAtMillis)
     }
 
     @Test
@@ -83,6 +84,7 @@ class QrCodeLocalDataSourceImplTest {
         assertNull(source.get())
         assertNull(source.snapshot())
         assertEquals(PASS_HEX, source.get(allowExpired = true))
+        assertEquals(PASS_HEX, source.snapshot(allowExpired = true)?.hex)
     }
 
     @Test

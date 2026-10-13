@@ -23,7 +23,7 @@ import dev.alllexey.itmowidgets.feature.qr.ui.QrPassRoute
 
 /** The home tab's overlays: the QR pass, opened by the home button, the tile and the shortcut. */
 internal fun EntryRegistry.Builder.homeEntries() {
-    entry<AppRoutes.QrPass> { key, navigator -> QrPassRoute(onBack = { navigator.close(key) }) }
+    entry<AppRoutes.QrPass> { key, navigator -> QrPassRoute(onClose = { navigator.close(key) }) }
 }
 
 /**

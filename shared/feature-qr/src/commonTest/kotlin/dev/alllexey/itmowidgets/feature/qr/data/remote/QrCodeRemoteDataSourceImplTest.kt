@@ -164,7 +164,7 @@ class QrCodeRemoteDataSourceImplTest {
         private var cached: String? = null
         val savedValues = mutableListOf<String>()
 
-        override fun snapshot() = cached?.let { QrCodeSnapshot(it, 3_600_000L) }
+        override fun snapshot(allowExpired: Boolean) = cached?.let { QrCodeSnapshot(it, 0L) }
 
         override fun observe(): Flow<String> = flowOf(cached.orEmpty())
 

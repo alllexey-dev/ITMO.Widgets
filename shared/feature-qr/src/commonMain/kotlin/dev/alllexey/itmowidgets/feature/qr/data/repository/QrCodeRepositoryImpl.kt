@@ -26,6 +26,8 @@ class QrCodeRepositoryImpl(
 
     override suspend fun currentQr() = withContext(dispatchers.io) { local.snapshot() }
 
+    override suspend fun lastQr() = withContext(dispatchers.io) { local.snapshot(allowExpired = true) }
+
     override fun observeQrHex(): Flow<String> {
         return local.observe()
     }

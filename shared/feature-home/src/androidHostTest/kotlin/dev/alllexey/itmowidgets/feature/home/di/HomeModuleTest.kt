@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
 import kotlin.test.Test
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import kotlin.time.Clock
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.test.verify.verify
@@ -27,6 +28,7 @@ class HomeModuleTest {
                 HomeHintStatus::class,
                 Clock::class,
                 SavedStateHandle::class,
+                AcademicTimeProvider::class,
             )
         )
     }

@@ -1,4 +1,10 @@
 <resources>
+    <string name="tab_today">Сегодня</string>
+    <string name="tab_schedule">Расписание</string>
+    <string name="tab_recordbook">Зачётка</string>
+    <string name="tab_sport">Спорт</string>
+    <string name="tab_profile">Профиль</string>
+    <string name="today_notifications">Уведомления</string>
     <string name="title_recordbook">Зачётка</string>
     <string name="common_error_network">Нет связи. Проверьте интернет.</string>
     <string name="common_error_unauthorized">Сессия истекла — войдите снова.</string>

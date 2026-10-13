@@ -53,7 +53,10 @@ import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
-import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
+import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
+import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassViewModel
 import dev.alllexey.itmowidgets.feature.qr.ui.QrPassTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.ui.home.MarksHomeCardRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.home.ScheduleHomeCardRenderer
@@ -115,7 +118,9 @@ class HomeEntriesTest {
                     viewModel {
                         HomeViewModel(listOf(FakeHomeSource), NothingHidden, NoHintDismissed, clock)
                     }
-                    viewModel { QrCodeViewModel(FakeQrRepository, PlainQrAppearance, clock) }
+                    viewModel {
+                        QrPassViewModel(FakeQrRepository, PlainQrAppearance, signedIn, FakeSocialRepository(), clock)
+                    }
                     single<HomeCardRenderer>(named("schedule")) { ScheduleHomeCardRenderer(ZONE) }
                     single<HomeCardRenderer>(named("recordbook")) { MarksHomeCardRenderer }
                     single<HomeCardRenderer>(named("sport")) { SportHomeCardRenderer(ZONE) }
@@ -241,13 +246,16 @@ class HomeEntriesTest {
     }
 
     private object FakeQrRepository : QrCodeRepository {
-        private val code = QrCodeSnapshot("0123456789ABCDEF", expiresAtMillis = 600_000)
+        private val code = QrCodeSnapshot("0123456789ABCDEF", savedAtMillis = 0)
         override suspend fun currentQr() = code
+        override suspend fun lastQr() = code
         override fun observeQrHex() = flowOf(code.hex)
         override suspend fun currentQrHex(allowExpired: Boolean) = code.hex
         override suspend fun refreshQrHex(force: Boolean): AppResult<Unit> = AppResult.Success(Unit)
         override fun clearCache() = Unit
     }
+
+    private val signedIn = FakeSessionRepository(SessionState.SignedIn(user = null))
 
     private object PlainQrAppearance : QrAppearancePreferences {
         override suspend fun useDynamicColors() = false

@@ -9,8 +9,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.mapNotNull
 
-private const val QR_CACHE_EXPIRATION_MS = 60 * 60 * 1000L
-
 internal data class QrCacheEntry(
     val hex: String,
     val timestamp: Long
@@ -18,8 +16,8 @@ internal data class QrCacheEntry(
 
 /**
  * The last pass in `cacheDir/qr_hex` ([AppDirectories.cache]) as `<epochMillis>|<hex>`, the 2.2 format byte for
- * byte; the v2.0 file with the hex alone still reads. A pass expires 60 minutes after it was saved on the wall
- * [clock], never on academic time.
+ * byte; the v2.0 file with the hex alone still reads. A pass is fresh for [QrCodeSnapshot.FRESH_MILLIS] after it was
+ * saved on the wall [clock], never on academic time.
  */
 class QrCodeLocalDataSourceImpl internal constructor(
     private val file: AtomicTextFile,
@@ -39,9 +37,9 @@ class QrCodeLocalDataSourceImpl internal constructor(
         }
     }
 
-    override fun snapshot(): QrCodeSnapshot? {
+    override fun snapshot(allowExpired: Boolean): QrCodeSnapshot? {
         val entry = _flow.value ?: return null
-        return if (isExpired(entry)) null else QrCodeSnapshot(entry.hex, entry.timestamp + QR_CACHE_EXPIRATION_MS)
+        return if (allowExpired || !isExpired(entry)) QrCodeSnapshot(entry.hex, entry.timestamp) else null
     }
 
     override fun get(allowExpired: Boolean): String? {
@@ -71,7 +69,7 @@ class QrCodeLocalDataSourceImpl internal constructor(
     }
 
     internal fun isExpired(entry: QrCacheEntry): Boolean {
-        return nowMillis() - entry.timestamp >= QR_CACHE_EXPIRATION_MS
+        return nowMillis() - entry.timestamp >= QrCodeSnapshot.FRESH_MILLIS
     }
 
     private fun nowMillis(): Long = clock.now().toEpochMilliseconds()

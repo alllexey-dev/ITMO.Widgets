@@ -37,6 +37,18 @@
         }
       }
     },
+    "qr_pass_group_isu" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, ИСУ %2$lld"
+          }
+        }
+      }
+    },
     "qr_pass_image_description" : {
       "comment" : "Generated from strings_qr.xml",
       "extractionState" : "manual",
@@ -49,6 +61,30 @@
         }
       }
     },
+    "qr_pass_isu" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИСУ %1$lld"
+          }
+        }
+      }
+    },
+    "qr_pass_offline" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет сети, показан код от %1$@"
+          }
+        }
+      }
+    },
     "qr_pass_refresh" : {
       "comment" : "Generated from strings_qr.xml",
       "extractionState" : "manual",
@@ -56,7 +92,19 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Обновить QR-код"
+            "value" : "Обновить"
+          }
+        }
+      }
+    },
+    "qr_pass_refreshing" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновляется…"
           }
         }
       }
@@ -68,7 +116,19 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "QR-пропуск"
+            "value" : "Пропуск"
+          }
+        }
+      }
+    },
+    "qr_pass_updated_at" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновлён в %1$@"
           }
         }
       }

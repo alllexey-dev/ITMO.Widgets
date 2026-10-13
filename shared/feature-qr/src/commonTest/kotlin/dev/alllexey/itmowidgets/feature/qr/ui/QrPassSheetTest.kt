@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.qr.ui
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,9 +11,11 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Dp
@@ -23,8 +25,9 @@ import androidx.compose.ui.unit.width
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
-import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeUiState
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassCode
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassStatus
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassUiState
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
@@ -35,64 +38,73 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
-class QrPassScreenTest {
+class QrPassSheetTest {
 
     @Test
-    fun theAreaIsASquareOfAtMost300DpAndTheRefreshButtonStaysPutInEveryState() = runComposeUiTest {
-        var state by mutableStateOf<QrCodeUiState>(QrCodeUiState.Loading)
+    fun theAreaIsASquareOfAtMost240DpInEveryState() = runComposeUiTest {
+        var state by mutableStateOf(QrPassUiState())
         var width by mutableStateOf(NarrowWidth)
         setContent {
-            // The sides below are Material's (16 dp screen margin).
+            // The sides below are Material's (24 dp sheet margin).
             ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
-                Box(Modifier.requiredSize(width, WindowHeight)) { QrPassScreen(state, onRefresh = {}, onBack = {}) }
+                Box(Modifier.requiredWidth(width)) { QrPassSheetContent(state, onRefresh = {}, onClose = {}) }
             }
         }
 
-        for ((window, expectedSide) in listOf(NarrowWidth to NarrowSide, WideWidth to 300.dp)) {
+        for ((window, expectedSide) in listOf(NarrowWidth to NarrowSide, WideWidth to 240.dp)) {
             width = window
-            val buttons = States.map { (name, value) ->
+            States.forEach { (name, value) ->
                 state = value
                 waitForIdle()
                 val area = onNodeWithTag(QrPassTestTags.AREA).getBoundsInRoot()
                 assertClose(area.width, area.height, "$name at $window: not square")
                 assertClose(expectedSide, area.width, "$name at $window: side")
-                assertTrue(area.width <= 300.dp + Tolerance, "$name at $window: ${area.width} above 300 dp")
                 assertTouchTargets()
-                onNodeWithTag(QrPassTestTags.REFRESH).getBoundsInRoot()
             }
-            assertEquals(1, buttons.distinct().size, "the refresh button moved at $window: $buttons")
         }
     }
 
     @Test
-    fun contentShowsTheLabelledCodeAndLoadingBlocksTheRefresh() = runComposeUiTest {
-        var state by mutableStateOf<QrCodeUiState>(QrCodeUiState.Loading)
+    fun theLineSaysWhenTheCodeLoadedAndRefreshWaitsWhileItLoads() = runComposeUiTest {
+        var state by mutableStateOf(QrPassUiState(code = Code, status = QrPassStatus.Ready("11:44")))
         var refreshes = 0
-        var backs = 0
-        setContent {
-            ItmoTheme { QrPassScreen(state, onRefresh = { refreshes++ }, onBack = { backs++ }) }
-        }
+        var closes = 0
+        setContent { ItmoTheme { QrPassSheetContent(state, onRefresh = { refreshes++ }, onClose = { closes++ }) } }
 
-        onNodeWithTag(QrPassTestTags.LOADING).assertExists()
+        onNodeWithContentDescription("QR-код пропуска").assertExists()
+        onNodeWithTag(QrPassTestTags.LINE).assertTextEquals("Обновлён в 11:44")
+        onNodeWithTag(QrPassTestTags.REFRESH).assertIsEnabled().performClick()
+        onNodeWithContentDescription("Закрыть").performClick()
+
+        state = QrPassUiState(code = Code, status = QrPassStatus.Refreshing)
+        waitForIdle()
         onNodeWithTag(QrPassTestTags.REFRESH).assertIsNotEnabled()
 
-        state = QrCodeUiState.Content(Pass)
+        state = QrPassUiState(code = Code, status = QrPassStatus.Offline("11:44"))
         waitForIdle()
+        onNodeWithTag(QrPassTestTags.LINE).assertTextEquals("Нет сети, показан код от 11:44")
         onNodeWithContentDescription("QR-код пропуска").assertExists()
-        onNodeWithTag(QrPassTestTags.REFRESH).assertIsEnabled().performClick()
-        onNodeWithContentDescription("Назад").performClick()
 
         assertEquals(1, refreshes)
-        assertEquals(1, backs)
+        assertEquals(1, closes)
+    }
+
+    @Test
+    fun withoutACodeAnErrorOffersARetry() = runComposeUiTest {
+        var refreshes = 0
+        val state = QrPassUiState(status = QrPassStatus.Failed(AppError.Network))
+        setContent { ItmoTheme { QrPassSheetContent(state, onRefresh = { refreshes++ }, onClose = {}) } }
+
+        onNodeWithTag(QrPassTestTags.STATE).assertExists()
+        onNodeWithTag(QrPassTestTags.LINE).assertDoesNotExist()
+        onNodeWithText("Повторить").performClick()
+        assertEquals(1, refreshes)
     }
 
     @Test
     fun aPassTooLongForTheCodeShowsTheErrorStateInsteadOfCrashing() = runComposeUiTest {
-        setContent {
-            ItmoTheme {
-                QrPassScreen(QrCodeUiState.Content(QrCodeSnapshot("X".repeat(64), 1)), onRefresh = {}, onBack = {})
-            }
-        }
+        val state = QrPassUiState(code = QrPassCode("X".repeat(64), false), status = QrPassStatus.Ready("11:44"))
+        setContent { ItmoTheme { QrPassSheetContent(state, onRefresh = {}, onClose = {}) } }
 
         onNodeWithTag(QrPassTestTags.STATE).assertExists()
         onNodeWithTag(QrPassTestTags.IMAGE).assertDoesNotExist()
@@ -100,23 +112,19 @@ class QrPassScreenTest {
 
     @Test
     fun aCodeThatArrivesGrowsInAndOneThereFromTheStartShowsAtOnce() = runComposeUiTest {
-        var state by mutableStateOf<QrCodeUiState>(QrCodeUiState.Content(Pass))
+        var state by mutableStateOf(QrPassUiState(code = Code, status = QrPassStatus.Ready("11:44")))
         mainClock.autoAdvance = false
-        setContent { ItmoTheme { QrPassScreen(state, onRefresh = {}, onBack = {}) } }
+        setContent { ItmoTheme { QrPassSheetContent(state, onRefresh = {}, onClose = {}) } }
         mainClock.advanceTimeByFrame()
         assertImageFillsTheArea("a code on the first frame")
 
-        state = QrCodeUiState.Content(QrCodeSnapshot("ITMO-NEXT", 3_600_000))
+        state = QrPassUiState(code = QrPassCode("ITMO-NEXT", false), status = QrPassStatus.Ready("11:45"))
         Snapshot.sendApplyNotifications()
         mainClock.advanceTimeByFrame()
         mainClock.advanceTimeByFrame()
         val area = onNodeWithTag(QrPassTestTags.AREA).getBoundsInRoot()
         val growing = onNodeWithTag(QrPassTestTags.IMAGE).getBoundsInRoot()
-        assertTrue(
-            growing.width < area.width - Tolerance,
-            "a new code starts smaller: ${growing.width} of ${area.width}",
-        )
-        onNodeWithContentDescription("QR-код пропуска").assertExists()
+        assertTrue(growing.width < area.width - Tolerance, "a new code starts smaller: ${growing.width} of ${area.width}")
 
         mainClock.advanceTimeBy(REVEAL_SETTLE_MILLIS)
         assertImageFillsTheArea("a revealed code")
@@ -133,21 +141,20 @@ class QrPassScreenTest {
         assertTrue(abs(expected.value - actual.value) <= Tolerance.value, "$message: expected $expected, got $actual")
 
     private companion object {
-        val Pass = QrCodeSnapshot("ITMO-TEST", 3_600_000)
+        val Code = QrPassCode("ITMO-TEST", useDynamicColors = false)
         val States = listOf(
-            "loading" to QrCodeUiState.Loading,
-            "content" to QrCodeUiState.Content(Pass),
-            "refreshing" to QrCodeUiState.Content(Pass, refreshing = true),
-            "dynamic" to QrCodeUiState.Content(Pass, useDynamicColors = true),
-            "empty" to QrCodeUiState.Empty,
-            "error" to QrCodeUiState.Error(AppError.Network),
+            "loading" to QrPassUiState(),
+            "ready" to QrPassUiState(code = Code, status = QrPassStatus.Ready("11:44")),
+            "refreshing" to QrPassUiState(code = Code, status = QrPassStatus.Refreshing),
+            "dynamic" to QrPassUiState(code = Code.copy(useDynamicColors = true), status = QrPassStatus.Ready("11:44")),
+            "empty" to QrPassUiState(status = QrPassStatus.Empty),
+            "error" to QrPassUiState(status = QrPassStatus.Failed(AppError.Network)),
         )
         val NarrowWidth = 320.dp
         val WideWidth = 600.dp
-        val WindowHeight = 891.dp
 
-        /** 80 % of the width inside the 16 dp screen margins. */
-        val NarrowSide = (320.dp - 32.dp) * 0.8f
+        /** 80 % of the width inside the 24 dp sheet margins. */
+        val NarrowSide = (320.dp - 48.dp) * 0.8f
 
         /** Pixel rounding of the area's side. */
         val Tolerance = 1.dp

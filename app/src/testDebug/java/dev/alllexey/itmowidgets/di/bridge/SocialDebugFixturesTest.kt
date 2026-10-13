@@ -148,6 +148,7 @@ class SocialDebugFixturesTest {
 
     private object NoQr : QrCodeRepository {
         override suspend fun currentQr(): QrCodeSnapshot? = null
+        override suspend fun lastQr(): QrCodeSnapshot? = null
         override fun observeQrHex() = emptyFlow<String>()
         override suspend fun currentQrHex(allowExpired: Boolean): String? = null
         override suspend fun refreshQrHex(force: Boolean): AppResult<Unit> = AppResult.Success(Unit)

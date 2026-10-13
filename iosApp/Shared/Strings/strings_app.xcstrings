@@ -61,30 +61,6 @@
         }
       }
     },
-    "title_home" : {
-      "comment" : "Generated from strings_app.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Главная"
-          }
-        }
-      }
-    },
-    "title_me" : {
-      "comment" : "Generated from strings_app.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Профиль"
-          }
-        }
-      }
-    },
     "title_qr" : {
       "comment" : "Generated from strings_app.xml",
       "extractionState" : "manual",
@@ -93,18 +69,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пропуск"
-          }
-        }
-      }
-    },
-    "title_schedule" : {
-      "comment" : "Generated from strings_app.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Расписание"
           }
         }
       }

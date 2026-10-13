@@ -5,6 +5,8 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
@@ -33,6 +35,8 @@ class QrModuleTest {
                 AppDispatchers::class,
                 Clock::class,
                 SavedStateHandle::class,
+                SessionRepository::class,
+                SocialRepository::class,
             ),
         )
     }

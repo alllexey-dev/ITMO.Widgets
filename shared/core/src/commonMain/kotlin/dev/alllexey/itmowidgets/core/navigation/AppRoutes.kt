@@ -97,9 +97,11 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** The pass sheet over Сегодня; the Сегодня button, widgets, the tile and the shortcuts open it. */
     @Serializable
     data object QrPass : AppRoute {
-        override val kind get() = RouteKind.SCREEN
+        override val kind get() = RouteKind.SHEET
+        override val sheetPolicy get() = SheetPolicy()
     }
 
     /** Refused in the demo session ([ShellGate.check]). */
