@@ -17,7 +17,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.preview.RecordbookSamples
 private fun RecordbookPreview(state: RecordbookUiState) = ItmoPreview {
     // The sources sheet is a separate window; its content has its own preview.
     val shown = (state.body as? RecordbookBody.Content)?.let { state.copy(body = it.copy(sources = null)) } ?: state
-    Box(Modifier.background(ItmoTheme.colorScheme.background)) { RecordbookScreen("Зачётка", shown, RecordbookActions()) }
+    Box(Modifier.background(ItmoTheme.colorScheme.background)) { RecordbookScreen(RecordbookSamples.TITLE, shown, RecordbookActions()) }
 }
 
 internal class RecordbookScreenSemesterPreview {

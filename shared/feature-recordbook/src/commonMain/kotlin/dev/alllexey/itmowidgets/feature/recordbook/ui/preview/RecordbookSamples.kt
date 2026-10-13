@@ -63,6 +63,9 @@ object RecordbookSamples {
     ))
     private val selection = RecordbookSelection(program, period)
 
+    /** The tab's name in the header. */
+    const val TITLE = "Зачётка"
+
     const val PPRIS = "Проектирование и разработка распределённых информационных систем"
     private const val MATAN = "Математический анализ (продвинутый уровень)"
     private const val ALGO = "Алгоритмы и структуры данных"

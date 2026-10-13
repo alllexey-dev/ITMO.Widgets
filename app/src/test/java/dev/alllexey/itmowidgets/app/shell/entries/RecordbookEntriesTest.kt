@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.app.shell.entries
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -15,7 +14,6 @@ import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.app.shell.ShellContent
 import dev.alllexey.itmowidgets.app.shell.entries.RecordbookTestGraph.Companion.CURRENT_SEMESTER
 import dev.alllexey.itmowidgets.app.shell.entries.RecordbookTestGraph.Companion.EARLIER_SEMESTER
-import dev.alllexey.itmowidgets.app.shell.entries.RecordbookTestGraph.Companion.PROGRAM
 import dev.alllexey.itmowidgets.app.shell.entries.RecordbookTestGraph.Companion.PROGRAM_ID
 import dev.alllexey.itmowidgets.app.shell.entries.RecordbookTestGraph.Companion.STUDY_YEAR
 import dev.alllexey.itmowidgets.app.shell.entries.RecordbookTestGraph.Companion.entryId
@@ -32,11 +30,9 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelection
-import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPeriodSheetTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresSheetTestTags
-import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.RecordbookSubjectTestTags
+import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.SubjectTestTags
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -49,9 +45,8 @@ import org.robolectric.annotation.Config
 
 /**
  * The recordbook keys in the Compose shell with the real [shellEntries] and Koin ViewModels on synthetic data: the
- * tab root opens a subject's page and the period picker, the picked period reaches the tab's ViewModel once, invalid
- * subject arguments keep the root, the scores sheet renders and closes itself when done, and the BARS sign-in starts
- * `BarsLoginActivity`.
+ * tab root opens a subject's page, a period picked in the header's menu loads once, invalid subject arguments keep
+ * the root, the scores sheet renders and closes itself when done, and the BARS sign-in starts `BarsLoginActivity`.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = PreviewHostApplication::class)
@@ -72,11 +67,12 @@ class RecordbookEntriesTest {
         compose.onNodeWithTag(RecordbookTestTags.LIST).assertIsDisplayed()
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.TabRoot(AppTab.RECORDBOOK))).assertDoesNotExist()
 
-        compose.onNodeWithTag(RecordbookTestTags.subject(entryId(CURRENT_SEMESTER))).performClick()
+        compose.onNodeWithTag(RecordbookTestTags.row(entryId(CURRENT_SEMESTER))).performClick()
         compose.waitForIdle()
 
         assertEquals(listOf<AppRoute>(AppRoutes.RecordbookSubject(SUBJECT)), navigator.state.overlays)
-        compose.onNodeWithTag(RecordbookSubjectTestTags.TITLE).assertTextEquals("Тестовый предмет $CURRENT_SEMESTER")
+        compose.onNodeWithTag(SubjectTestTags.TABS).assertExists()
+        compose.onNodeWithText("Тестовый предмет $CURRENT_SEMESTER").assertExists()
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.RecordbookSubject(SUBJECT))).assertDoesNotExist()
     }
 
@@ -90,20 +86,17 @@ class RecordbookEntriesTest {
     }
 
     @Test
-    fun thePickedPeriodReachesTheRecordbookOnce() {
+    fun thePeriodPickedInTheHeaderMenuLoadsOnce() {
         show()
         compose.onNodeWithTag(RecordbookTestTags.PERIOD).performClick()
         compose.waitForIdle()
-        val picker = recordbookPeriodRoute(listOf(PROGRAM), RecordbookSelection(PROGRAM, PROGRAM.periods.first()))
-        assertEquals(listOf<AppRoute>(picker), navigator.state.floating)
-        sheet(picker).assertExists()
+        assertEquals(emptyList<AppRoute>(), navigator.state.floating)
 
-        compose.onNodeWithTag(RecordbookPeriodSheetTestTags.option(PROGRAM_ID, EARLIER_SEMESTER)).performClick()
+        compose.onNodeWithText("$EARLIER_SEMESTER семестр").performClick()
         compose.waitForIdle()
 
-        assertEquals(emptyList<AppRoute>(), navigator.state.floating)
         assertEquals(1, recordbook.subjectRequests.count { it == EARLIER_SEMESTER })
-        compose.onNodeWithTag(RecordbookTestTags.subject(entryId(EARLIER_SEMESTER))).assertIsDisplayed()
+        compose.onNodeWithTag(RecordbookTestTags.row(entryId(EARLIER_SEMESTER))).assertIsDisplayed()
     }
 
     @Test
@@ -176,7 +169,7 @@ class RecordbookEntriesTest {
 
     private companion object {
         const val TIMEOUT_MS = 5_000L
-        const val BARS_LOGIN = "Войти в БАРС"
+        const val BARS_LOGIN = "Войти"
         const val BARS_LOGIN_ACTIVITY = "dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity"
         val SUBJECT = RecordbookSubjectArgs(
             entryId = entryId(CURRENT_SEMESTER),
