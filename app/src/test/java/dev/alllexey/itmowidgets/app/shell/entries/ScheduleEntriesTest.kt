@@ -36,6 +36,9 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.friends.FriendPickerTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.lesson.LessonSheetTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.month.ScheduleMonthTestTags
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.isoDayNumber
 import org.junit.Assert.assertEquals
@@ -72,9 +75,14 @@ class ScheduleEntriesTest {
     private lateinit var koin: Koin
     private lateinit var navigator: Nav3AppNavigator
 
+    /** Sport rows go through the sport redirect, whose holder finds no booking here. */
+    private val sportScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     @Before
     fun startGraph() {
-        koin = startKoin { modules(scheduleTestModule(schedules), socialTestModule()) }.koin
+        koin = startKoin {
+            modules(scheduleTestModule(schedules), socialTestModule(), SportTestGraph(sportScope).module())
+        }.koin
     }
 
     @Test
@@ -107,7 +115,7 @@ class ScheduleEntriesTest {
     }
 
     @Test
-    fun aSportLessonOpensTheLessonSheetToo() {
+    fun aSportLessonWithoutItsBookingOpensTheLessonSheet() {
         schedules.days.value = listOf(DaySchedule(DATE.dayOfWeek.isoDayNumber, 1, DATE, null, listOf(SPORT_LESSON)))
         show(Nav3AppNavigator(ShellBackStack(AppTab.SCHEDULE)))
 

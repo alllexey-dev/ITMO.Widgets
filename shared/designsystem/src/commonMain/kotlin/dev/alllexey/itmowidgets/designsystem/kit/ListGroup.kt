@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,9 +60,9 @@ fun ListGroup(modifier: Modifier = Modifier, build: ListGroupScope.() -> Unit) {
 
 /**
  * A list row: an optional [icon] (in a tile when [iconTone] is set) or a custom [leading] such as an avatar, the
- * [title] in `bodyLarge` over an optional [subtitle], then a [badge] count, a [trailing] value, an [accessory] (a
- * check, a lock, a small button) and a chevron when [chevron]. [danger] turns the title and icon to the error colour
- * (`Удалить аккаунт`). With [onClick] the whole row is the target.
+ * [title] in `bodyLarge` over an optional [subtitle] and any lines [below] it, then a [badge] count, a [trailing] value,
+ * an [accessory] (a check, a lock, a small button) and a chevron when [chevron]. [danger] turns the title and icon to
+ * the error colour (`Удалить аккаунт`). With [onClick] the whole row is the target.
  */
 @Composable
 fun ListRow(
@@ -76,6 +77,7 @@ fun ListRow(
     accessory: (@Composable RowScope.() -> Unit)? = null,
     chevron: Boolean = false,
     danger: Boolean = false,
+    below: (@Composable ColumnScope.() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
 ) {
     Row(
@@ -96,6 +98,9 @@ fun ListRow(
             )
             if (subtitle != null) {
                 Text(subtitle, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+            }
+            if (below != null) {
+                Column(Modifier.padding(top = ItmoTheme.spacing.related), verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related), content = below)
             }
         }
         if (badge != null && badge > 0) Badge { Text("$badge") }

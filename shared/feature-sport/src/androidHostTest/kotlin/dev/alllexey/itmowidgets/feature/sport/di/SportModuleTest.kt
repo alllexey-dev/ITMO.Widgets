@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -53,9 +54,9 @@ import org.koin.test.verify.verify
 class SportModuleTest {
 
     /**
-     * The data, the push decision, the controllers, the holder and the three screens resolve inside the module; the
-     * core contracts (the platform's Koin modules, `friendSelectorModule` and `settingsDataModule`) and the debug
-     * ports (`androidSportModule`) are given.
+     * The data, the push decision, the controllers, the holder and the screens resolve inside the module; the core
+     * contracts (the platform's Koin modules, the schedule's timetable, `socialModule` and `settingsDataModule`)
+     * and the debug ports (`androidSportModule`) are given.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
@@ -79,6 +80,7 @@ class SportModuleTest {
                 CoroutineScope::class,
                 ScheduleRefreshGateway::class,
                 ScheduleWidgetRefreshRequester::class,
+                DayLessonsGateway::class,
                 SavedStateHandle::class,
             ),
         )

@@ -5,8 +5,9 @@ The iOS client lives in `iosApp/` and links one Kotlin umbrella framework, `Shar
 service extension. The app is a SwiftUI shell with five tabs (today, schedule, recordbook, sport, profile). System screens
 (sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in),
 Сегодня with the bell's sheet, the pass sheet, the schedule with its sheets (the lesson sheet, the month sheet, the
-friend picker), the recordbook and the subject page are SwiftUI over shared ViewModels; content screens (sport, social
-and profile, reviews, links, `Мои баллы`) are still shared Compose
+friend picker), the recordbook, the subject page and the sport tab with `Мои секции` and `Откуда баллы` are SwiftUI
+over shared ViewModels; content screens (another user's sport, social and profile, reviews, links, `Мои баллы`) are
+still shared Compose
 Multiplatform screens hosted through
 `ComposeUIViewController`. They move to
 SwiftUI screen by screen ([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
@@ -174,8 +175,8 @@ the design lab's prototype (`proto/kit/ios`, DECISIONS.md) and described in [des
   `ItmoGroupNote`; `ItmoStatusPill` over `ItmoPill`, `ItmoAvatar`, `ItmoFlow`; `ItmoSegmentedChoice` (the native
   segmented picker) for two to four options and in-screen tabs. Tones (`ItmoTone`) colour cards, pills and tiles.
 - Lessons: `ItmoLesson` is what a lesson says, resolved by the caller; a day's list is `ItmoLessonTimeline` (rail,
-  now marker, gap rows, change and overlap notes), a single lesson `ItmoLessonCard`; `ItmoWeekStrip` is one week of
-  the schedule's strip.
+  now marker, gap rows, change and overlap notes), a single lesson `ItmoLessonCard`; `ItmoWeekStrip` (in
+  `ItmoFilters.swift`) is one week of the schedule's and the sport tab's strip.
 - States: `ItmoLoadingView`, `ItmoEmptyView` and `ItmoErrorView` (the system's unavailable view with one glass
   button), `ItmoGateCard`, `ItmoActionCard`, `ItmoLockNote`, `ItmoStale`; settings pages keep `ItmoFormSection` and
   the form rows. `ItmoProgressButton`, `ItmoDemoBanner`.

@@ -34,6 +34,8 @@ kotlin {
             export(project(":shared:feature-home"))
             // The schedule feed, its sheets and their ViewModels.
             export(project(":shared:feature-schedule"))
+            // The sport tab's, `Мои секции` and `Откуда баллы` ViewModels, SportSamples of the snapshot tests.
+            export(project(":shared:feature-sport"))
         }
     }
 
@@ -46,7 +48,7 @@ kotlin {
             api(project(":shared:feature-qr"))
             api(project(":shared:feature-home"))
             api(project(":shared:feature-schedule"))
-            implementation(project(":shared:feature-sport"))
+            api(project(":shared:feature-sport"))
             api(project(":shared:feature-recordbook"))
             implementation(project(":shared:feature-social"))
             api(project(":shared:feature-settings"))

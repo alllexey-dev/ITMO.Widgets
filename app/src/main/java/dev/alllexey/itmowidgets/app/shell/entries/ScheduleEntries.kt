@@ -103,13 +103,14 @@ internal fun ScheduleTabRoot(navigator: Nav3AppNavigator) {
     ResultEffect<FriendPick> { requests.trySend(ScheduleFeedRequest.SelectUser(it.user)) }
     ResultEffect<DatePick> { requests.trySend(ScheduleFeedRequest.ShowDate(it.date)) }
 
-    val host = remember(navigator) {
+    val sport = rememberSportDetailsRedirect()
+    val host = remember(navigator, sport) {
         ScheduleFeedHost(
             onMonth = { date, userIsu ->
                 navigator.open(AppRoutes.ScheduleMonth(date.toString(), userIsu ?: FriendSelectionContract.NO_USER_ISU))
             },
             onPickFriend = { shown -> navigator.open(AppRoutes.FriendSelector(shown ?: FriendSelectionContract.NO_USER_ISU)) },
-            onLesson = { navigator.openLesson(it) },
+            onLesson = { sport.open(navigator, it) },
         )
     }
     ScheduleFeedRoute(host, viewModel = entryViewModel(), requests = requestFlow)
@@ -118,15 +119,19 @@ internal fun ScheduleTabRoot(navigator: Nav3AppNavigator) {
 /** Another user's schedule from their profile: the same feed on a pushed screen, without the picker. */
 @Composable
 private fun UserScheduleEntry(onBack: () -> Unit, navigator: Nav3AppNavigator) {
-    val host = remember(navigator, onBack) { ScheduleFeedHost(onLesson = { navigator.openLesson(it) }, onBack = onBack) }
+    val sport = rememberSportDetailsRedirect()
+    val host = remember(navigator, sport, onBack) { ScheduleFeedHost(onLesson = { sport.open(navigator, it) }, onBack = onBack) }
     ScheduleFeedRoute(host, viewModel = entryViewModel())
 }
 
-/** A lesson of any list opens its sheet: a timetable lesson, or an own sport queue. */
-internal fun Nav3AppNavigator.openLesson(target: LessonTarget) {
+/**
+ * A lesson of the feed opens its sheet: a sport lesson or an own queue the sport tab's sheet when the redirect finds
+ * the booking, the lesson sheet otherwise.
+ */
+private fun SportDetailsRedirect.open(navigator: Nav3AppNavigator, target: LessonTarget) {
     when (target) {
-        is LessonTarget.Lesson -> open(AppRoutes.LessonDetails(target.args))
-        is LessonTarget.PendingSport -> open(AppRoutes.PendingSportDetails(target.args))
+        is LessonTarget.Lesson -> openLesson(navigator, target.args)
+        is LessonTarget.PendingSport -> openPendingSport(navigator, target.args)
     }
 }
 

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.designsystem.kit
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -57,14 +59,16 @@ data class LessonView(
 /**
  * A single lesson outside a day list (the neighbour of a hero, a sport booking, a stale preview): the time column, a
  * bar in the type's colour and the lesson's lines. The current lesson sits on `primaryContainer`; a done one is
- * dimmed. A day's lessons are a [LessonTimeline], never a stack of these.
+ * dimmed. With [onClick] the whole card opens the lesson. A day's lessons are a [LessonTimeline], never a stack of
+ * these.
  */
 @Composable
-fun LessonCard(lesson: LessonView, modifier: Modifier = Modifier) {
+fun LessonCard(lesson: LessonView, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val now = lesson.state == LessonState.Now
     val dimmed = lesson.state == LessonState.Done && !lesson.cancelled
     Surface(
-        modifier = modifier.fillMaxWidth().alpha(if (dimmed) DONE_ALPHA else 1f),
+        modifier = modifier.fillMaxWidth().alpha(if (dimmed) DONE_ALPHA else 1f)
+            .then(if (onClick != null) Modifier.clip(ItmoTheme.shapes.cardContent).clickable(onClick = onClick) else Modifier),
         shape = ItmoTheme.shapes.cardContent,
         color = if (now) ItmoTheme.colorScheme.primaryContainer else cardSurface(),
         contentColor = if (now) ItmoTheme.colorScheme.onPrimaryContainer else ItmoTheme.colorScheme.onSurface,

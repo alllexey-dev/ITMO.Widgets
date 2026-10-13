@@ -39,8 +39,8 @@ import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksSheetTestTags
-import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
-import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
+import dev.alllexey.itmowidgets.feature.sport.ui.SportTab
+import dev.alllexey.itmowidgets.feature.sport.ui.SportTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestGraph
@@ -165,7 +165,7 @@ class DemoModeFlowTest {
             open(scenario) { it.select(AppTab.SPORT) }
             awaitShown(AppTab.SPORT)
             shot(activity, "sport-my")
-            open(scenario) { clickComposedTag(activity, SportScreenTestTags.tab(SportPage.SIGN)) }
+            open(scenario) { clickComposedTag(activity, SportTestTags.tab(SportTab.SIGN)) }
             awaitShown(AppTab.SPORT)
             shot(activity, "sport-sign")
 

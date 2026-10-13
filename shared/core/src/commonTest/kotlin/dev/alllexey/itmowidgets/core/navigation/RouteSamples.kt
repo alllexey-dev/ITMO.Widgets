@@ -31,6 +31,8 @@ object RouteSamples {
         AppRoutes.UserProfile(100001),
         AppRoutes.UserSchedule(100001, "Тестовый Пользователь"),
         AppRoutes.UserSport(100001),
+        AppRoutes.SportSections,
+        AppRoutes.SportPoints,
         AppRoutes.Bell,
         AppRoutes.QrPass,
         AppRoutes.MyItmoWeb,
@@ -50,7 +52,8 @@ object RouteSamples {
         AppRoutes.PendingSportDetails(pendingSport),
         AppRoutes.ReportReview(teacher, "review-1"),
         AppRoutes.ReportLink(links, "link-1"),
-        AppRoutes.LinkUnavailable
+        AppRoutes.LinkUnavailable,
+        AppRoutes.CancelBookingConfirm(42)
     )
 
     fun ofKind(kind: RouteKind): List<AppRoute> = all.filter { it.kind == kind }

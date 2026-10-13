@@ -28,11 +28,16 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
+import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsViewModel
+import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsViewModel
+import dev.alllexey.itmowidgets.feature.sport.data.repository.UnavailableSportRecurringQueueRepository
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
+import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
+import kotlinx.datetime.LocalDate
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportAutoSignFlow
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSharedLessonResolver
-import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignFilterController
-import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignStateFactory
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportViewModel
 import kotlin.time.Instant
@@ -45,8 +50,9 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 /**
- * The sport data of the shell tests on synthetic fakes: the bookings holder, the sport tab's two ViewModels and
- * another user's sport, all over the same repositories, so a test sets [bookings] and every screen sees them. Every source answers at once (an empty list) unless a test sets it to `Loading`; the holder and
+ * The sport data of the shell tests on synthetic fakes: the bookings holder, the sport tab's two ViewModels, `Мои
+ * секции`, `Откуда баллы` and another user's sport, all over the same repositories, so a test sets [bookings] and every screen and the
+ * redirect see them. Every source answers at once (an empty list) unless a test sets it to `Loading`; the holder and
  * the cancellation follow-ups run in [scope]. [cancelled] records the lessons whose booking was signed out.
  */
 internal class SportTestGraph(scope: CoroutineScope) {
@@ -82,20 +88,32 @@ internal class SportTestGraph(scope: CoroutineScope) {
         timeProvider = time,
         followUpScope = scope,
     )
-    val holder = SportBookingsHolder(bookingRepository, SportData, delegate, scope)
+    val holder = SportBookingsHolder(bookingRepository, SportData, delegate, time, scope)
+
+    /**
+     * Only [holder], for a graph whose academic clock comes from another test module: what the schedule root's sport
+     * redirect reads.
+     */
+    fun holderModule(): Module = module { single { holder } }
 
     fun module(): Module = module {
         single { holder }
         single { time }
         single { ShareLinkFactory("https://widgets.alllexey.dev") }
-        viewModel { SportMyViewModel(bookingRepository, SportData, holder) }
+        viewModel { SportMyViewModel(bookingRepository, SportData, PlainSignOptions, holder, time) }
         viewModel {
             SportSignViewModel(
-                NoSportSchedule, SportData, SportSignFilterController(time), SportSignStateFactory(time), delegate,
-                SportAutoSignFlow(delegate, time), SportSharedLessonResolver(NoSportSchedule, time), PlainSignOptions,
-                time,
+                NoSportSchedule, SportData, PlainSignOptions, NoTimetable, SportSharedLessonResolver(NoSportSchedule, time), time,
+                delegate, SportAutoSignFlow(delegate, time),
             )
         }
+        viewModel {
+            SportSectionsViewModel(
+                NoSportSchedule, SportData, PlainSignOptions, UnavailableSportRecurringQueueRepository, NoTimetable, time,
+                delegate, SportAutoSignFlow(delegate, time),
+            )
+        }
+        viewModel { SportPointsViewModel(SportData, time) }
         viewModel { UserSportViewModel(get<SavedStateHandle>(), NoUserSport, NoSportSchedule) }
     }
 
@@ -131,6 +149,13 @@ internal class SportTestGraph(scope: CoroutineScope) {
 
     private object PlainSignOptions : SportSignPreferencesRepository {
         override fun observeDisplayOptions(): Flow<SportSignDisplayOptions> = flowOf(SportSignDisplayOptions())
+        override fun observePinnedSections(): Flow<Set<SectionName>> = flowOf(emptySet())
+        override suspend fun setPinned(section: SectionName, pinned: Boolean) = Unit
+    }
+
+    private object NoTimetable : DayLessonsGateway {
+        override fun observe(from: LocalDate, to: LocalDate): Flow<List<LessonDay>> = flowOf(emptyList())
+        override suspend fun refresh(from: LocalDate, to: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
     }
 
     private object NoUserSport : UserSportRepository {

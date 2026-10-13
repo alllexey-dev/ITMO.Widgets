@@ -19,11 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /**
@@ -42,29 +40,19 @@ data class WeekStripDay(
 
 /**
  * One week, Monday to Sunday, as seven equal targets; the [selected] day sits on `primary`. A pager of these is the
- * schedule's week strip, which swipes by weeks; a tap reports the day's index. Below seven touch targets (a 320 dp
- * phone) the days keep a touch target's width and overlap by a few dp instead of shrinking, as the sport strip does.
+ * schedule's week strip, which swipes by weeks; a tap reports the day's index.
  */
 @Composable
 fun WeekStrip(days: List<WeekStripDay>, selected: Int?, onDayClick: (Int) -> Unit, modifier: Modifier = Modifier) {
-    val minWidth = ItmoTheme.spacing.touchTarget
-    Layout(
-        content = { days.forEachIndexed { index, day -> StripDayCell(day, index == selected, { onDayClick(index) }) } },
-        modifier = modifier.fillMaxWidth(),
-    ) { measurables, constraints ->
-        val width = constraints.maxWidth
-        if (measurables.isEmpty()) return@Layout layout(width, 0) {}
-        val cell = maxOf(width / measurables.size, minWidth.roundToPx()).coerceAtMost(width)
-        val placeables = measurables.map { it.measure(constraints.copy(minWidth = cell, maxWidth = cell, minHeight = 0)) }
-        val step = if (placeables.size > 1) (width - cell).toFloat() / (placeables.size - 1) else 0f
-        layout(width, placeables.maxOf { it.height }) {
-            placeables.forEachIndexed { index, day -> day.placeRelative((index * step).roundToInt(), 0) }
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(DayGap)) {
+        days.forEachIndexed { index, day ->
+            StripDayCell(day, index == selected, { onDayClick(index) }, Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun StripDayCell(day: WeekStripDay, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun StripDayCell(day: WeekStripDay, selected: Boolean, onClick: () -> Unit, modifier: Modifier) {
     val colors = ItmoTheme.colorScheme
     val content = when {
         selected -> colors.onPrimary
@@ -74,7 +62,6 @@ private fun StripDayCell(day: WeekStripDay, selected: Boolean, onClick: () -> Un
     }
     Column(
         modifier
-            .padding(horizontal = DayGap / 2)
             .clip(ItmoTheme.shapes.large)
             .background(if (selected) colors.primary else Color.Transparent)
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)

@@ -23,6 +23,9 @@ import dev.alllexey.itmowidgets.feature.social.ui.friends.FriendsTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.list.UserListTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.search.UserSearchTestTags
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -53,9 +56,12 @@ class SocialEntriesTest {
     private val navigator = Nav3AppNavigator(ShellBackStack(AppTab.SCHEDULE))
     private lateinit var koin: Koin
 
+    /** A friend's schedule opens its lessons through the sport redirect. */
+    private val sportScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     @Before
     fun startGraph() {
-        koin = startKoin { modules(socialTestModule(), scheduleTestModule()) }.koin
+        koin = startKoin { modules(socialTestModule(), scheduleTestModule(), SportTestGraph(sportScope).module()) }.koin
     }
 
     @Test

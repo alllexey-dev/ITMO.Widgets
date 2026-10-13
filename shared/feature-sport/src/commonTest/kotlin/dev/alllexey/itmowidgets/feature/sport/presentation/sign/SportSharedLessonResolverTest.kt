@@ -34,7 +34,7 @@ class SportSharedLessonResolverTest {
         val lesson = lessonOn(5, day = 10)
         catalog(lessonOn(1, day = 9), lesson)
 
-        assertEquals(SportSignEvent.OpenLessonDetails(lesson), resolver.resolve(5, predicted = false))
+        assertEquals(SportLinkedLesson.Found(lesson), resolver.resolve(5, predicted = false))
     }
 
     @Test
@@ -42,7 +42,7 @@ class SportSharedLessonResolverTest {
         val prototype = lessonOn(7, day = 9)
         val lessons = catalog(prototype, prototype.predicted())
 
-        assertEquals(SportSignEvent.OpenLessonDetails(prototype.predicted()), resolver.resolve(7, predicted = true))
+        assertEquals(SportLinkedLesson.Found(prototype.predicted()), resolver.resolve(7, predicted = true))
         assertEquals(prototype.predicted(), resolver.linkedLesson(7, lessons))
     }
 
@@ -50,7 +50,7 @@ class SportSharedLessonResolverTest {
     fun anEndedLessonIsUnavailable() = runTest {
         catalog(lessonOn(3, day = 8, hour = 9))
 
-        assertEquals(SportSignEvent.ShowLinkUnavailable, resolver.resolve(3, predicted = false))
+        assertEquals(SportLinkedLesson.Unavailable, resolver.resolve(3, predicted = false))
         assertNull(resolver.linkedLesson(3, emptyList()))
     }
 
@@ -58,7 +58,7 @@ class SportSharedLessonResolverTest {
     fun aLessonMissingFromTheCatalogIsUnavailable() = runTest {
         catalog(lessonOn(1, day = 9))
 
-        assertEquals(SportSignEvent.ShowLinkUnavailable, resolver.resolve(404, predicted = false))
+        assertEquals(SportLinkedLesson.Unavailable, resolver.resolve(404, predicted = false))
     }
 
     @Test

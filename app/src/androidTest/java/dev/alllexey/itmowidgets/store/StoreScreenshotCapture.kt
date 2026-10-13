@@ -36,8 +36,8 @@ import dev.alllexey.itmowidgets.feature.home.ui.TodayTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeHost
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
-import dev.alllexey.itmowidgets.feature.sport.ui.SportPage
-import dev.alllexey.itmowidgets.feature.sport.ui.SportScreenTestTags
+import dev.alllexey.itmowidgets.feature.sport.ui.SportTab
+import dev.alllexey.itmowidgets.feature.sport.ui.SportTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestSession
@@ -116,9 +116,9 @@ class StoreScreenshotCapture {
             frame(activity, "05-subject")
 
             open(scenario, AppTab.SPORT) { it.select(AppTab.SPORT) }
-            showSportPage(scenario, SportPage.SIGN)
+            showSportPage(scenario, SportTab.SIGN)
             frame(activity, "06-sport")
-            showSportPage(scenario, SportPage.MY)
+            showSportPage(scenario, SportTab.MY)
             frame(activity, "07-sport-mine")
 
             val teacher = AppRoutes.UserProfile(DemoPeople.MATH_TEACHER.isu)
@@ -169,9 +169,9 @@ class StoreScreenshotCapture {
     }
 
     /** The sport pager's segment [page], by its tab's semantics click. */
-    private fun showSportPage(scenario: ActivityScenario<MainActivity>, page: SportPage) {
+    private fun showSportPage(scenario: ActivityScenario<MainActivity>, page: SportTab) {
         scenario.onActivity { main ->
-            val tag = SportScreenTestTags.tab(page)
+            val tag = SportTestTags.tab(page)
             val segment = main.composedNodes().first { it.tag == tag }
             checkNotNull(segment.config[SemanticsActions.OnClick].action) { "$tag has no click" }.invoke()
         }

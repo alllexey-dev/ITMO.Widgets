@@ -50,7 +50,9 @@ fun dev.alllexey.itmoapi.myitmo.sport.SportAttendance.toModel(): SportAttendance
         sectionLevel = sectionLevel,
         score = score,
         dateTime = date,
-        isCompetition = isCompetition
+        isCompetition = isCompetition,
+        competitionName = competitionName?.trim()?.takeIf { it.isNotEmpty() },
+        place = place?.trim()?.takeIf { it.isNotEmpty() }
     )
 }
 

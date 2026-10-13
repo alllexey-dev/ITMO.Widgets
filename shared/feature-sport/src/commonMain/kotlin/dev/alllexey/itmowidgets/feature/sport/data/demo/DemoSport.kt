@@ -116,9 +116,9 @@ object DemoSport {
             attendance("lesson", "Волейбол", 2, date.at(DemoSportSlots.ANNA_WEEKLY.start, time), competition = false)
         }
         val tournament = attendance(
-            "competition", "Межфакультетский турнир по волейболу", 10,
+            "competition", "Волейбол", 10,
             today.plusDays(-17).at(LocalTime(12, 0), time), competition = true
-        )
+        ).copy(competitionName = "Межфакультетский турнир по волейболу", place = "2 место")
         val standards = attendance(
             "exercise", "Общая физическая подготовка", 4,
             today.plusDays(-24).at(LocalTime(18, 40), time), competition = false

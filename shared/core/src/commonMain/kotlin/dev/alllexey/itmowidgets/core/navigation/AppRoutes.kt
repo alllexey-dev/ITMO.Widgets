@@ -92,6 +92,18 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** `Мои секции` of the Спорт tab: the pinned sections, their next lessons and the queue limit. */
+    @Serializable
+    data object SportSections : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
+    /** `Откуда баллы`: the sport points' formula, the bonus cap and My ITMO's history of awards. */
+    @Serializable
+    data object SportPoints : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
     /** The bell's sheet over Сегодня: scores, schedule changes, queue results and friend requests. */
     @Serializable
     data object Bell : AppRoute {
@@ -217,6 +229,12 @@ object AppRoutes {
         override val kind get() = RouteKind.DIALOG
     }
 
+    /** Asks before a booking is cancelled from a sheet the shell opened: `sport_cancel_booking_question`. */
+    @Serializable
+    data class CancelBookingConfirm(val lessonId: Long) : AppRoute {
+        override val kind get() = RouteKind.DIALOG
+    }
+
     /** Every key of this object, in the order of the route map. */
     val registration: AppRouteRegistration = {
         subclass(Auth::class)
@@ -232,6 +250,8 @@ object AppRoutes {
         subclass(UserProfile::class)
         subclass(UserSchedule::class)
         subclass(UserSport::class)
+        subclass(SportSections::class)
+        subclass(SportPoints::class)
         subclass(Bell::class)
         subclass(QrPass::class)
         subclass(MyItmoWeb::class)
@@ -250,6 +270,7 @@ object AppRoutes {
         subclass(ReportReview::class)
         subclass(ReportLink::class)
         subclass(LinkUnavailable::class)
+        subclass(CancelBookingConfirm::class)
     }
 }
 

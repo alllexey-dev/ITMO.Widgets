@@ -37,9 +37,9 @@ final class StringsTests: XCTestCase {
     func testPluralWithoutPlaceholderSelectsByCount() {
         // The forms show no number; the `count` substitution still takes argument 1.
         withEnglishLanguages {
-            XCTAssertEqual(AppStrings.plural("sport_capacity_free_label", count: 5), "Свободных мест")
-            XCTAssertEqual(AppStrings.plural("sport_capacity_free_label", count: 21), "Свободное место")
-            XCTAssertEqual(String(localized: .StringsSport.sportCapacityFreeLabel(count: 2)), "Свободных места")
+            XCTAssertEqual(AppStrings.plural("sport_seats_free", count: 5), "мест свободно")
+            XCTAssertEqual(AppStrings.plural("sport_seats_free", count: 21), "место свободно")
+            XCTAssertEqual(String(localized: .StringsSport.sportSeatsFree(count: 2)), "места свободны")
         }
     }
 

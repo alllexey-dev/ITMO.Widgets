@@ -33,7 +33,12 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportViewModel
 import dev.alllexey.itmowidgets.feature.sport.ui.SportShares
-import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsSamples
+import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
+import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsViewModel
+import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsViewModel
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
+import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
@@ -62,8 +67,8 @@ import platform.UIKit.UIViewController
 /**
  * The sport tab's graph as the iOS app starts it (`IosKoinModules`): the core module, [sportModule] and
  * [sportIosModule], with the account types, the services opt-in (`settingsDataModule` on iOS), the friend picker's
- * `FriendRepository` (`friendSelectorModule`, a feature this module cannot read), the schedule widget refresh, the
- * schedule refresh after a booking (`scheduleDataModule`) and the simulator test binary's device stood in, on the demo session: the screens resolve and answer from the demo set with
+ * `FriendRepository` (`socialModule`, a feature this module cannot read), the schedule widget refresh, the
+ * schedule refresh after a booking and the timetable (`scheduleDataModule`), and the simulator test binary's device stood in, on the demo session: the screens resolve and answer from the demo set with
  * no request, and a shared lesson names the build's site.
  */
 class SportIosModuleTest {
@@ -95,6 +100,8 @@ class SportIosModuleTest {
 
         koin.get<SportMyViewModel>()
         koin.get<SportSignViewModel>()
+        koin.get<SportSectionsViewModel>()
+        koin.get<SportPointsViewModel>()
         koin.get<UserSportViewModel> { parametersOf(arguments()) }
         assertEquals(emptyList(), requests)
         koin.close()
@@ -105,7 +112,7 @@ class SportIosModuleTest {
         val koin = graph()
 
         val ivan = koin.get<UserSportRepository>().getUserBookings(DemoPeople.IVAN.isu)
-        val sign = koin.get<SportActionRepository>().signIn(SportDetailsSamples.open.lessonId)
+        val sign = koin.get<SportActionRepository>().signIn(SportCardFixtures.lesson(1).lessonId)
 
         assertTrue(assertIs<AppResult.Success<UserSportBookings>>(ivan).value.confirmedLessonIds.isNotEmpty())
         assertEquals(AppResult.Failure(AppError.DemoUnavailable), sign)
@@ -117,7 +124,7 @@ class SportIosModuleTest {
     fun aSharedLessonOrPredictionNamesTheBuildsSiteAndParsesBack() = runTest {
         val koin = graph()
         val shares = koin.get<SportShares>()
-        val item = SportDetailsSamples.open
+        val item = SportCardFixtures.lesson(1).toDetailsArgs()
 
         shares.lesson(item, SportShareTarget.Lesson(item.lessonId))
         shares.lesson(item, SportShareTarget.Prediction(PROTOTYPE))
@@ -148,6 +155,7 @@ class SportIosModuleTest {
         single<FriendRepository> { NoFriends }
         single<ScheduleWidgetRefreshRequester> { ScheduleWidgetRefreshRequester {} }
         single<ScheduleRefreshGateway> { NoScheduleRefresh }
+        single<DayLessonsGateway> { NoTimetable }
         single<PlatformActions> { RecordingShares(shared) }
     }
 
@@ -188,6 +196,12 @@ class SportIosModuleTest {
     private object NoScheduleRefresh : ScheduleRefreshGateway {
         override suspend fun refreshOwnSchedule(startDate: LocalDate, endDate: LocalDate): AppResult<Unit> =
             AppResult.Success(Unit)
+    }
+
+    /** The timetable the schedule's module gives the sport lessons' clashes: nothing cached. */
+    private object NoTimetable : DayLessonsGateway {
+        override fun observe(from: LocalDate, to: LocalDate): Flow<List<LessonDay>> = flowOf(emptyList())
+        override suspend fun refresh(from: LocalDate, to: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
     }
 
     /** The share sheet's title and text; the other actions open nothing. */

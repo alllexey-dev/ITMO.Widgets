@@ -239,12 +239,12 @@ struct ScheduleFeedContent: View {
                 ItmoWeekStrip(
                     days: week.days.map {
                         ItmoWeekDay(
-                            weekday: $0.weekday, number: $0.number, lessons: Int($0.lessons), changed: $0.changed,
-                            today: $0.today, past: $0.past
+                            id: "\($0.date)", weekday: $0.weekday, number: $0.number, lessons: Int($0.lessons),
+                            changed: $0.changed, today: $0.today, past: $0.past,
+                            selected: "\($0.date)" == "\(state.selected)", label: "\($0.weekday) \($0.number)"
                         )
                     },
-                    selected: week.days.firstIndex { "\($0.date)" == "\(state.selected)" },
-                    onDay: { actions.day(week.days[$0].date) }
+                    tap: { actions.day(week.days[$0].date) }
                 )
                 .padding(.horizontal, ItmoSpacing.related)
                 .tag(index)

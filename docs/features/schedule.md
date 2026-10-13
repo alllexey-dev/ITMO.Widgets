@@ -162,6 +162,10 @@ for a timetable lesson, `AppRoutes.PendingSportDetails` for an own sport queue, 
 reads the route's arguments (`LessonSheetArgs`, one JSON string in the `SavedStateHandle`); nothing is fetched for the
 lesson itself.
 
+On Android the feed and Сегодня open a sport lesson or an own queue through `SportDetailsRedirect`
+(`app/shell/entries/SportEntries.kt`): the sport tab's lesson sheet when `SportBookingsHolder` finds the booking, this
+sheet otherwise. On iOS there is no shell route to the sport tab's sheet yet, so they open this sheet.
+
 - The lesson's type and day as the sheet's title, the status pill (`отменена`, `изменена`, `очередь`, `идёт ещё
   48 мин`, `через 2 ч 58 мин`), the subject, the room big (`Онлайн` for an online lesson) with the time and its length
   and the building's full address (`BuildingDirectory`, else MyITMO's text).

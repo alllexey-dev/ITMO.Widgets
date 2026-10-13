@@ -15,20 +15,22 @@ import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositor
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScheduleRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScoreRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportSignPreferencesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.data.repository.UnavailableSportRecurringQueueRepository
 import dev.alllexey.itmowidgets.feature.sport.data.repository.UserSportRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportRecurringQueueRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
+import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsViewModel
+import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportAutoSignFlow
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSharedLessonResolver
-import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignFilterController
-import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignStateFactory
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportViewModel
 import org.koin.core.module.dsl.bind
@@ -46,8 +48,9 @@ val sportBellQualifier: Qualifier = named("sport")
  * Sport, data and screens. Koin is the only graph for these types. The core contracts (`MyItmoClient`, `SportApi`,
  * the academic and wall clocks, `DemoMode`, `BackendGate`, `AppDispatchers`, `AppDiagnostics`, the sport-sign
  * preferences, the application `CoroutineScope`, the schedule refresh contracts) come from the platform's Koin
- * modules, `FriendRepository` from `friendSelectorModule`, the opt-in from `settingsDataModule`, and the debug ports
- * (`SportLessonTemplateProvider`, `SportScoreOverrideSource`) from the platform (`androidSportModule` on Android).
+ * modules, `FriendRepository` from `socialModule`, the opt-in from `settingsDataModule`, and the debug ports
+ * (`SportLessonTemplateProvider`, `SportScoreOverrideSource`) from the platform (`androidSportModule` on Android), and
+ * `DayLessonsGateway` from the schedule's module for the lessons a sport lesson clashes with.
  */
 val sportModule = module {
     // One instance per repository for the screens, Сегодня, the widgets and sign-out; the cleaner and bell
@@ -61,6 +64,8 @@ val sportModule = module {
     singleOf(::SportActionRepositoryImpl) { bind<SportActionRepository>() }
     singleOf(::SportSignPreferencesRepositoryImpl) { bind<SportSignPreferencesRepository>() }
     singleOf(::UserSportRepositoryImpl) { bind<UserSportRepository>() }
+    // `Очередь через неделю` waits for Backend to keep the rules (docs/features/sport.md).
+    single<SportRecurringQueueRepository> { UnavailableSportRecurringQueueRepository }
     singleOf(::PendingSportBookingsRepositoryImpl) { bind<PendingSportBookingsRepository>() }
     // The log has an internal test constructor beside the public one, so its reference would be ambiguous.
     single { SportResultLog(get<AppDirectories>(), get(), get()) }
@@ -71,12 +76,12 @@ val sportModule = module {
     // Unscoped: the holder, the sign screen and the auto-sign flow each hold their own delegate.
     factoryOf(::SportBookingDelegate)
     factoryOf(::SportAutoSignFlow)
-    factoryOf(::SportSignFilterController)
-    factoryOf(::SportSignStateFactory)
     factoryOf(::SportSharedLessonResolver)
     // One holder for the tab, the feed and the schedule; it outlives every screen.
     singleOf(::SportBookingsHolder)
     viewModelOf(::SportMyViewModel)
     viewModelOf(::SportSignViewModel)
+    viewModelOf(::SportSectionsViewModel)
+    viewModelOf(::SportPointsViewModel)
     viewModelOf(::UserSportViewModel)
 }
