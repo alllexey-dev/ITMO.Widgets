@@ -130,6 +130,14 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   `AppPlatform.removeWebsiteData`. UI tests launch a Debug build with
   `-itmoUITests` (`XCUIApplication.itmo`, `itmoSignedOut`), which makes that
   removal complete at once; Release builds ignore it.
+- `test.sh ui` waits for SpringBoard's notification server to take in the
+  installed apps (two minutes after the simulator boots; an app installed
+  earlier never gets the notification dialog nor its scheduled notifications),
+  then deletes the app, so each run starts with notifications unasked. Nothing
+  else resets that answer, so `FirstRunUITests`, which asserts the dialog,
+  sorts before `NotificationTapUITests`, which only answers it.
+- Window snapshots (`assertScreenAppearances`) draw with UIKit animations off:
+  a presented sheet is already where it ends, however slow the runner.
 - The last line is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha>`.
 
 ## Baseline profiles

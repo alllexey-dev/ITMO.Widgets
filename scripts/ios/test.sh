@@ -16,6 +16,7 @@
 # - One simulator per worktree, `itmo-<worktree directory>` (`itmo-ci` with --ci), created from the pinned device
 #   type and runtime on first use; --cleanup (and the end of a --ci run) deletes it. No other simulator is touched.
 # - The default run and --only skip the UITests target; `ui` runs only it (XCUITest launches the app, so it is slower).
+#   It first waits for SpringBoard's notification server, then deletes the app, so iOS asks for notifications again.
 # - Snapshots (swift-snapshot-testing): the test process gets SNAPSHOT_TESTING_RECORD (all with --record, never
 #   with --ci, else unset: the library records a missing reference and fails the test) and SNAPSHOT_ARTIFACTS =
 #   iosApp/build/snapshot-artifacts (failure images, emptied before each run) through xcodebuild's TEST_RUNNER_ prefix.
@@ -164,6 +165,25 @@ run_checks() {
 
 # ---- runs ----------------------------------------------------------------------------------------------------
 
+# SpringBoard's notification server takes in the installed apps two minutes after SpringBoard starts. An app installed
+# before that never gets the notification dialog (its request is dropped) nor its scheduled notifications ("local
+# client does not exist") while it stays installed, so a UI run installs the app only after that load, waiting up to
+# five minutes for its log line from the running SpringBoard.
+wait_for_notification_server() {
+  local pid started deadline=$((SECONDS + 300))
+  pid=$(xcrun simctl spawn "$udid" launchctl list | awk '$3 == "com.apple.SpringBoard" { print $1 }')
+  started=$(LC_ALL=C date -j -f '%a %b %e %T %Y' "$(LC_ALL=C ps -o lstart= -p "$pid" | xargs)" '+%Y-%m-%d %H:%M:%S') ||
+    return 0
+  until xcrun simctl spawn "$udid" log show --style compact --start "$started" \
+    --predicate "processIdentifier == $pid AND eventMessage CONTAINS 'initialLoad=1'" 2> /dev/null | grep -q initialLoad; do
+    if [ "$SECONDS" -ge "$deadline" ]; then
+      note "SpringBoard has not loaded its notification sources; the notification tests may fail"
+      return 0
+    fi
+    sleep 5
+  done
+}
+
 run_xcode() { # label
   local results="iosApp/build/test-results" artifacts="$root/iosApp/build/snapshot-artifacts" bundle label=$1 class
   local -a test_args=()
@@ -202,6 +222,12 @@ run_xcode() { # label
   )
   note "xcodebuild build-for-testing for $sim_name"
   xcodebuild "${xcode_args[@]}" build-for-testing || return 1
+  if [ "$mode" = ui ]; then
+    xcrun simctl bootstatus "$udid" -b > /dev/null || return 1
+    wait_for_notification_server
+    # iOS keeps a notification answer until the app is deleted: every UI run starts unasked.
+    xcrun simctl uninstall "$udid" dev.alllexey.itmowidgets 2> /dev/null
+  fi
   note "xcodebuild test-without-building on $sim_name ${test_args[*]:-}"
   xcodebuild "${xcode_args[@]}" -resultBundlePath "$bundle" ${test_args[@]+"${test_args[@]}"} test-without-building
 }
