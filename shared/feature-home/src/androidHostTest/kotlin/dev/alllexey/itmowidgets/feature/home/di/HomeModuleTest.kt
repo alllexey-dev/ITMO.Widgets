@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.home.di
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.bell.BellSource
+import dev.alllexey.itmowidgets.core.platform.AppForeground
 import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -13,8 +14,9 @@ import org.koin.test.verify.verify
 class HomeModuleTest {
 
     /**
-     * The features' bell and todo sources, the schedule's days, the seen store and the academic time come from the
-     * platform's Koin modules; the bell's repository and the three view models resolve inside the module.
+     * The features' bell and todo sources, the schedule's days, the seen store, the academic time and the app's
+     * foreground come from the platform's Koin modules; the bell's repository and the three view models resolve inside
+     * the module.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
@@ -26,6 +28,7 @@ class HomeModuleTest {
                 DayLessonsGateway::class,
                 BellPreferences::class,
                 AcademicTimeProvider::class,
+                AppForeground::class,
                 SavedStateHandle::class,
                 List::class,
             )
