@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.google.services.gradlePlugin)
     implementation(libs.roborazzi.gradlePlugin)
     implementation(libs.baselineprofile.gradlePlugin)
+    testImplementation(libs.junit)
 }
 
 gradlePlugin {

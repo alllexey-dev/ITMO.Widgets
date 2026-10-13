@@ -44,7 +44,8 @@ final class SportUITests: XCTestCase {
         XCTAssertTrue(element(app, "sport.search").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "sign")
 
-        let signUp = app.buttons.matching(identifier: "sport.rowAction").matching(NSPredicate(format: "label == %@", Self.signUpLabel)).firstMatch
+        // The list's identifier (`sport.rows`) replaces its buttons' `sport.rowAction`, so the action is found by its label.
+        let signUp = app.buttons.matching(NSPredicate(format: "label == %@", Self.signUpLabel)).firstMatch
         for _ in 0..<4 where !signUp.isHittable {
             element(app, "sport.list").swipeUp()
             Thread.sleep(forTimeInterval: 1)
@@ -75,7 +76,7 @@ final class SportUITests: XCTestCase {
 
         let sections = element(app, "sport.sections")
         for _ in 0..<4 where !sections.isHittable { element(app, "sport.list").swipeUp() }
-        sections.buttons.firstMatch.tap()
+        sections.tap()
         XCTAssertTrue(element(app, "sport.sections.add").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "sections")
     }
