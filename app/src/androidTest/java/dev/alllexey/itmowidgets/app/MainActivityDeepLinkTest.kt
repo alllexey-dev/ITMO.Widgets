@@ -11,6 +11,7 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.matcher.RootMatchers.isDialog
@@ -64,8 +65,8 @@ class MainActivityDeepLinkTest {
     fun qrShortcutFromColdStartOpensThePassAboveHome() {
         signedIn()
         ActivityScenario.launch<MainActivity>(route(AppEntryIntents.ACTION_OPEN_QR_PASS)).use {
-            awaitRoute(AppTab.HOME, AppRoutes.QrPass)
-            back()
+            awaitPass()
+            pressBack()
             awaitRoute(AppTab.HOME, overlay = null)
         }
     }
@@ -89,7 +90,7 @@ class MainActivityDeepLinkTest {
             TestSession.seedActiveSession()
             awaitSurface(ShellSurface.Onboarding)
             TestSession.completeOnboarding()
-            awaitRoute(AppTab.HOME, AppRoutes.QrPass)
+            awaitPass()
         }
     }
 
@@ -97,11 +98,11 @@ class MainActivityDeepLinkTest {
     fun routeRunsOnceAcrossRecreation() {
         signedIn()
         ActivityScenario.launch<MainActivity>(route(AppEntryIntents.ACTION_OPEN_QR_PASS)).use { scenario ->
-            awaitRoute(AppTab.HOME, AppRoutes.QrPass)
+            awaitPass()
             scenario.recreate()
             // One pass, not a second one stacked on the restored one.
-            awaitRoute(AppTab.HOME, AppRoutes.QrPass)
-            back()
+            awaitPass()
+            pressBack()
             awaitRoute(AppTab.HOME, overlay = null)
             scenario.recreate()
             awaitRoute(AppTab.HOME, overlay = null)
@@ -121,8 +122,8 @@ class MainActivityDeepLinkTest {
             context.startActivity(link("/u/100001").setFlags(RUNNING_TASK))
             awaitRoute(AppTab.ME, AppRoutes.UserProfile(100001))
             context.startActivity(route(AppEntryIntents.ACTION_OPEN_QR_PASS).setFlags(RUNNING_TASK))
-            awaitRoute(AppTab.HOME, AppRoutes.QrPass)
-            back()
+            awaitPass()
+            pressBack()
             awaitRoute(AppTab.HOME, overlay = null)
         } finally {
             runCatching { onActivity { it.finish() } }
@@ -238,8 +239,16 @@ class MainActivityDeepLinkTest {
         val shown = ShellProbe.current()
         assertEquals(TABS, shown.surface)
         assertEquals(tab, shown.tab)
-        // The route above the tab: an overlay screen or a sheet such as the pass.
-        assertEquals(listOfNotNull(overlay), shown.overlays + listOfNotNull(shown.floating))
+        assertEquals(listOfNotNull(overlay), shown.overlays)
+    }
+
+    /** Сегодня with the pass sheet above it, one sheet and no overlay screen. */
+    private fun awaitPass() = eventually {
+        val shown = ShellProbe.current()
+        assertEquals(TABS, shown.surface)
+        assertEquals(AppTab.HOME, shown.tab)
+        assertEquals(emptyList<AppRoute>(), shown.overlays)
+        assertEquals(AppRoutes.QrPass, shown.floating)
     }
 
     private fun awaitSurface(surface: ShellSurface) = eventually { assertEquals(surface, ShellProbe.current().surface) }
