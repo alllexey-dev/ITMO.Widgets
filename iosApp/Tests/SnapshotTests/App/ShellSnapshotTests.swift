@@ -8,7 +8,7 @@ import XCTest
 /// accessory on today only, the root header (title and subtitle with the bell in one row, `.inline` once scrolled),
 /// a pushed screen that keeps the tab bar, the three sheet heights, the signed-out gate and the damaged-link sheet.
 /// The tab roots are kit fixtures: the roots of the app are still Compose screens a snapshot misses (Metal), checked
-/// by the UITests (`ShellUITests`, `HomeUITests` and the tab classes).
+/// by the UITests (`ShellUITests` and the tab classes); Сегодня has its own (`TodaySnapshotTests`).
 @MainActor
 final class ShellSnapshotTests: XCTestCase {
     func testTodayTab() {
@@ -98,7 +98,7 @@ private struct ShellFixtureRoot: View {
             ItmoScreenStack {
                 ItmoSectionHeader(title: "Пары", count: "5 пар")
                 ItmoLessonTimeline(
-                    lessons: KitFixtures.day(at: 12 * 60 + 22), now: 12 * 60 + 22, gapLabel: KitFixtures.gap
+                    rows: KitFixtures.rows(KitFixtures.day(at: 12 * 60 + 22), now: 12 * 60 + 22), showsNow: true
                 )
             }
             .defaultScrollAnchor(scrolled ? .bottom : .top)

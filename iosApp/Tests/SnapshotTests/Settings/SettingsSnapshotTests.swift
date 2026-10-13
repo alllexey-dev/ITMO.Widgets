@@ -165,7 +165,6 @@ enum SettingsFixtures {
             myItmoMarksEnabled: true,
             barsMarksEnabled: barsMarksEnabled,
             sheetMarksEnabled: true,
-            hiddenHomeCards: [],
             backgroundWorkHintShown: false,
             qrTileAdded: false,
             theme: theme ?? ThemeSpec(

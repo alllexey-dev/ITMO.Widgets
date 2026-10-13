@@ -26,8 +26,11 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
 
-/** Synthetic days for Сегодня's previews: Monday 7 September 2026 with five lessons, Tuesday with three. */
-internal object TodaySamples {
+/**
+ * Synthetic days for Сегодня's previews and the iOS snapshot tests, through the real presenter: Monday 7 September
+ * 2026 with five lessons, Tuesday with three; the bell's events.
+ */
+object TodaySamples {
     private val Monday = LocalDate(2026, 9, 7)
     private val Tuesday = LocalDate(2026, 9, 8)
     private val Zone = TimeZone.of("Europe/Moscow")

@@ -125,5 +125,9 @@ The `My ITMO` row of Профиль (the app group) opens `https://my.itmo.ru/` 
 
 ## iOS
 
-Until Сегодня's SwiftUI screen lands, the iOS home route hosts the shared
-`TodayRoute` through `homeViewController` (`shared/ios`, `screens/HomeScreens.kt`).
+Сегодня is SwiftUI over the same view models ([iOS app](../ios.md)): `TodayScreen` and `TodayContent`
+(`iosApp/Sources/Features/Home/`) draw the hero, the day with the kit's `ItmoLessonTimeline` from the shared rows
+(`Support/LessonUi+Kit.swift`) and the things to do under the root header with the bell; `BellSheet` is the bell's
+tall sheet (`Routes+Home.swift`, `AppRoutes.Bell`). The notification service leaves each queue result in the App
+Group (`SportResultInbox`); the bell's sport source takes them on refresh (`AppGroupSportResultInbox`), so both
+platforms show queue results. Snapshot references: `TodaySnapshotTests`, `BellSheetSnapshotTests`.

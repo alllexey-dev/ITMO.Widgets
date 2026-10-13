@@ -29,16 +29,30 @@ private struct ItmoRootHeader: ViewModifier {
     }
 }
 
-/// The bell of the today header, the only screen that shows it.
+/// The bell of the today header, the only screen that shows it; `badge` counts the events the user has not seen.
 struct ItmoBellButton: View {
     let label: String
+    var badge = 0
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             AppSymbol.notification.image
+                .overlay(alignment: .topTrailing) {
+                    if badge > 0 {
+                        Text(verbatim: "\(badge)")
+                            .font(.itmo(.labelSmall, emphasized: true))
+                            .monospacedDigit()
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 4)
+                            .frame(minWidth: 16, minHeight: 16)
+                            .background(ItmoColor.error, in: .capsule)
+                            .offset(x: 9, y: -7)
+                    }
+                }
         }
         .accessibilityLabel(Text(verbatim: label))
+        .accessibilityValue(Text(verbatim: badge > 0 ? "\(badge)" : ""))
         .accessibilityIdentifier("shell.bell")
     }
 }

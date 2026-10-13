@@ -86,6 +86,9 @@ new iOS app.
   `Отклонить`; each row leads to its subject, lesson, Спорт or person. Opening it reads everything, new events are
   marked with a dot and bold, the badge counts the unseen ones. The schedule changes history screen is gone; a change
   notification opens the bell.
+- Сегодня and the bell's sheet are native SwiftUI screens on iOS over the same view models, with the header
+  collapsing on scroll; the notification service leaves sport queue results for the bell, so they show on both
+  platforms.
 - A marks notification about one subject carries the value in its title (`Матанализ: 9 из 10`); the lock screen
   still shows `Новые оценки` only.
 - New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
