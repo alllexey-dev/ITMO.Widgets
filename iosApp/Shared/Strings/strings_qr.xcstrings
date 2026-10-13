@@ -109,7 +109,7 @@
         }
       }
     },
-    "qr_pass_title" : {
+    "qr_pass_sheet_title" : {
       "comment" : "Generated from strings_qr.xml",
       "extractionState" : "manual",
       "localizations" : {
@@ -117,6 +117,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пропуск"
+          }
+        }
+      }
+    },
+    "qr_pass_title" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-пропуск"
           }
         }
       }
