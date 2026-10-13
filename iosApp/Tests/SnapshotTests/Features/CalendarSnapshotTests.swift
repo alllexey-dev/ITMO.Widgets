@@ -28,21 +28,34 @@ final class CalendarSnapshotTests: XCTestCase {
     }
 
     func testIcsEmpty() {
-        assertSheet(IcsExportUiStateEmpty.shared, named: "ics-empty")
+        assertSheet(IcsExportUiStateEmpty.shared, named: "ics-empty", inWindow: true)
     }
 
     func testIcsFailed() {
-        assertSheet(IcsExportUiStateFailed(error: AppErrorNetwork.shared), named: "ics-failed")
+        assertSheet(IcsExportUiStateFailed(error: AppErrorNetwork.shared), named: "ics-failed", inWindow: true)
     }
 
     private func assertSheet(
         _ state: IcsExportUiState,
         named name: String,
+        inWindow: Bool = false,
         file: StaticString = #filePath,
         testName: String = #function,
         line: UInt = #line
     ) {
         let view = sheet(state)
+        // The empty and error states are the system's unavailable view with a glass button: only a window draws them.
+        if inWindow {
+            assertScreenAppearances(
+                of: view, named: name, appearances: [.light, .dark], height: height,
+                file: file, testName: testName, line: line
+            )
+            assertScreenAppearances(
+                of: view, named: name, appearances: [.lightAX1, .darkAX1], height: ax1Height,
+                file: file, testName: testName, line: line
+            )
+            return
+        }
         assertAppearances(
             of: view, named: name, appearances: [.light, .dark], height: height,
             file: file, testName: testName, line: line

@@ -102,3 +102,91 @@ extension XCTestCase {
         }
     }
 }
+
+extension XCTestCase {
+    /// Snapshots `view` in a window of its own, once per appearance, into the same `__Snapshots__` files as
+    /// `assertAppearances`. A layer render misses system chrome and materials (the glass tab bar and buttons, the
+    /// navigation bar, the system's unavailable view, sheets with their dimming); the window draws them as the screen
+    /// shows them. Without a `height` the window is as tall as the content (no scroll view at the root then).
+    /// `settle` waits for presentations and the bars' first layout.
+    @MainActor
+    func assertScreenAppearances<V: View>(
+        of view: V,
+        named name: String,
+        appearances: [SnapshotAppearance] = SnapshotAppearance.all,
+        width: CGFloat = SnapshotMatrix.width,
+        height: CGFloat? = SnapshotMatrix.screenHeight,
+        settle: TimeInterval = 1,
+        fileID: StaticString = #fileID,
+        file: StaticString = #filePath,
+        testName: String = #function,
+        line: UInt = #line,
+        column: UInt = #column
+    ) {
+        for appearance in appearances {
+            let image = SnapshotMatrix.renderInWindow(view, appearance, width: width, height: height, settle: settle)
+            assertSnapshot(
+                of: image,
+                as: .image(
+                    precision: SnapshotMatrix.windowPrecision, perceptualPrecision: SnapshotMatrix.perceptualPrecision
+                ),
+                named: "\(name)-\(appearance.name)",
+                fileID: fileID,
+                file: file,
+                testName: testName,
+                line: line,
+                column: column
+            )
+        }
+    }
+}
+
+extension SnapshotMatrix {
+    /// A whole screen at the matrix width.
+    static let screenHeight: CGFloat = 640
+    /// Liquid Glass samples what lies under it, and a handful of pixels on its rim come out a shade apart between
+    /// two renders of the same window; 0.01 % of the pixels may differ, a changed text or icon never fits in that.
+    static let windowPrecision: Float = 0.9999
+
+    /// `view` in a window above the host app, in `appearance`, drawn with its system chrome.
+    @MainActor
+    static func renderInWindow<V: View>(
+        _ view: V, _ appearance: SnapshotAppearance, width: CGFloat, height: CGFloat?, settle: TimeInterval
+    ) -> UIImage {
+        guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else {
+            preconditionFailure("the snapshot tests run hosted in the app, which has a window scene")
+        }
+        let themed = view
+            .environment(\.locale, Locale(identifier: "ru_RU"))
+            .environment(\.dynamicTypeSize, appearance.dynamicTypeSize)
+            .background(Color(uiColor: .systemBackground))
+        let host = UIHostingController(rootView: themed)
+        let window = UIWindow(windowScene: scene)
+        window.windowLevel = .alert + 1
+        window.overrideUserInterfaceStyle = appearance.colorScheme == .dark ? .dark : .light
+        window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategory(appearance.dynamicTypeSize)
+        window.frame = CGRect(x: 0, y: 0, width: width, height: height ?? screenHeight)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer {
+            // Takes the window and its presentations down before the next test, so nothing outlives the test.
+            host.dismiss(animated: false)
+            window.isHidden = true
+            window.rootViewController = nil
+            window.windowScene = nil
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.2))
+        }
+        if height == nil {
+            let fitted = host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude))
+            window.frame.size.height = ceil(fitted.height)
+        }
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: settle))
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = displayScale
+        // 8-bit sRGB like the layer renders: the simulator's wide-colour default keeps sub-pixel noise of the glass.
+        format.preferredRange = .standard
+        return UIGraphicsImageRenderer(size: window.bounds.size, format: format).image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+    }
+}
