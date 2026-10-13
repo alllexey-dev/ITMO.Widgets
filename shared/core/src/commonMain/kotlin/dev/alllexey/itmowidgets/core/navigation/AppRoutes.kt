@@ -112,23 +112,6 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
-    /** The period picker of the recordbook; the lists are parallel, one element per period. */
-    @Serializable
-    data class RecordbookPeriod(
-        val programName: String,
-        val programNames: List<String>,
-        val programIds: List<Long>,
-        val semesters: List<Int>,
-        val courses: List<Int>,
-        val years: List<String>,
-        val actual: List<Boolean>,
-        val selectedProgram: Long,
-        val selectedSemester: Int,
-    ) : AppRoute {
-        override val kind get() = RouteKind.SHEET
-        override val sheetPolicy get() = SheetPolicy()
-    }
-
     /** The schedule's friend picker; [selectedIsu] is [FriendSelectionContract.NO_USER_ISU] for the own schedule. */
     @Serializable
     data class FriendSelector(val selectedIsu: Int = FriendSelectionContract.NO_USER_ISU) : AppRoute {
@@ -247,7 +230,6 @@ object AppRoutes {
         subclass(Bell::class)
         subclass(QrPass::class)
         subclass(MyItmoWeb::class)
-        subclass(RecordbookPeriod::class)
         subclass(FriendSelector::class)
         subclass(SheetScores::class)
         subclass(WebLogin::class)

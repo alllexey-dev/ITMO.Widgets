@@ -223,6 +223,10 @@ class MarksRefreshTest {
         override suspend fun isEnabled(): Boolean = false
 
         override suspend fun setEnabled(enabled: Boolean): AppResult<Unit> = AppResult.Success(Unit)
+
+        override suspend fun isOfferHidden(): Boolean = false
+
+        override suspend fun hideOffer(): AppResult<Unit> = AppResult.Success(Unit)
     }
 
     private companion object {

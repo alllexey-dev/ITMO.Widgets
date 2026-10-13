@@ -1,39 +1,43 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
-import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
-import dev.alllexey.itmowidgets.feature.recordbook.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
-import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
-import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.feature.recordbook.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.recordbook.TEST_HALF
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
-import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.markNews
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
-import kotlinx.datetime.LocalDate
+import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookPlurals
+import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import kotlinx.datetime.LocalDate
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -42,73 +46,86 @@ class RecordbookViewModelTest {
     @get:Rule val mainDispatcherRule = MainDispatcherRule()
     private val repository = FakeRecordbookRepository()
     private val sport = FakeSportScoreRepository()
-
     private val marks = FakeMarkTrackingRepository()
 
     private fun model(
-        state: SavedStateHandle = SavedStateHandle(),
         date: String = "2026-09-07",
         sheets: FakeSheetScoresRepository = FakeSheetScoresRepository(),
-    ) = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), state, RecordbookSportResolver(sport),
+    ) = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), RecordbookSportResolver(sport),
         FixedAcademicTime(LocalDate.parse(date)), marks, sheets)
 
+    private fun loaded(vm: RecordbookViewModel = model()) = vm.apply { refresh(RefreshMode.Silent) }
+
     @Test fun `loads current academic period without asking sport for regular subjects`() = runTest {
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertEquals(3, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
+        val vm = loaded(); advanceUntilIdle()
+        assertEquals(3, vm.uiState.value.selectedSemester)
         assertEquals(0, sport.periodRequests)
     }
 
-    @Test fun `stored sheet totals of the selected period reach the list`() = runTest {
+    @Test fun `the header says the course and year and offers every period newest first`() = runTest {
+        val vm = loaded(); advanceUntilIdle()
+        val state = vm.uiState.value
+        assertEquals(UiText.Res(RecordbookStrings.recordbook_subtitle, listOf(2, "2026/2027")), state.subtitle)
+        assertEquals(UiText.Res(RecordbookStrings.subject_semester, listOf(3)), state.periods!!.label)
+        val group = state.periods!!.groups.single()
+        assertEquals(listOf(3, 2, 1), group.options.map { it.semester })
+        assertNull(group.program)
+    }
+
+    @Test fun `a connected sheet's total stands in for My ITMO while the subject is in progress`() = runTest {
         val sheets = FakeSheetScoresRepository(
-            sheetScore(scope = ResourceScope(1, "Тестовый предмет", "2026-1")),
+            sheetScore(scope = ResourceScope(1, "Тестовый предмет", "2026-1"), value = "41,5"),
             sheetScore(scope = ResourceScope(2, "Тестовый предмет 2", "2026-1"), value = null),
-            sheetScore(scope = ResourceScope(3, "Тестовый предмет 3", "2025-2")),
         )
         repository.subjects = AppResult.Success(listOf(
-            recordbookSubject(), recordbookSubject(id = 43, name = "Тестовый предмет 2").copy(disciplineId = 2),
-            recordbookSubject(id = 44, name = "Тестовый предмет 3").copy(disciplineId = 3),
+            recordbookSubject().copy(rate = null, score = 35.0),
+            recordbookSubject(id = 43, name = "Тестовый предмет 2").copy(disciplineId = 2, rate = null, score = 20.0),
         ))
-        val vm = model(sheets = sheets); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+        val vm = loaded(model(sheets = sheets)); advanceUntilIdle()
 
-        assertEquals(mapOf(1L to "66,3"), (vm.uiState.value as RecordbookUiState.Content).sheetTotals)
+        assertEquals("41,5", vm.uiState.value.row(42).points)
+        assertEquals(RecordbookStrings.recordbook_source_sheet, vm.uiState.value.row(42).sourceKey)
+        assertEquals("20", vm.uiState.value.row(43).points)
+        assertEquals(RecordbookStrings.recordbook_source_myitmo, vm.uiState.value.row(43).sourceKey)
     }
 
     @Test fun `a new sheet total reaches the open list without a request or a download`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null)))
         val sheets = FakeSheetScoresRepository()
-        val vm = model(sheets = sheets); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+        val vm = loaded(model(sheets = sheets)); advanceUntilIdle()
         val requests = repository.subjectRequests.size
-        assertEquals(emptyMap<Long, String>(), (vm.uiState.value as RecordbookUiState.Content).sheetTotals)
 
         sheets.scores.value = listOf(sheetScore(scope = ResourceScope(1, "Тестовый предмет", "2026-1"), value = "70"))
         advanceUntilIdle()
 
-        assertEquals(mapOf(1L to "70"), (vm.uiState.value as RecordbookUiState.Content).sheetTotals)
+        assertEquals("70", vm.uiState.value.row(42).points)
         assertEquals(requests, repository.subjectRequests.size)
         assertTrue(sheets.refreshes.isEmpty())
         assertTrue(sheets.inspected.isEmpty())
     }
 
     @Test fun `academic override selects spring even when server actual is autumn`() = runTest {
-        val vm = model(date = "2026-06-01"); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertEquals(2, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
-    }
-
-    @Test fun `restores explicitly selected historical period`() = runTest {
-        val vm = model(SavedStateHandle(mapOf<String, Any>("recordbook_program_id" to 1L, "recordbook_semester" to 1)))
-        vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertEquals(1, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
+        val vm = loaded(model(date = "2026-06-01")); advanceUntilIdle()
+        assertEquals(2, vm.uiState.value.selectedSemester)
     }
 
     @Test fun `renders real empty catalog instead of not found error`() = runTest {
         repository.programs = AppResult.Success(emptyList())
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertEquals(RecordbookUiState.Empty(), vm.uiState.value)
+        val vm = loaded(); advanceUntilIdle()
+        assertEquals(RecordbookBody.Empty, vm.uiState.value.body)
     }
 
-    @Test fun `catalog failure is retryable`() = runTest {
+    @Test fun `catalog failure is retryable and a retry shows its progress`() = runTest {
         repository.programs = AppResult.Failure(AppError.Network)
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertEquals(RecordbookUiState.Error(AppError.Network), vm.uiState.value)
+        val vm = loaded(); advanceUntilIdle()
+        assertEquals(RecordbookBody.Failed(AppError.Network, retrying = false), vm.uiState.value.body)
+
+        val gate = CompletableDeferred<AppResult<List<RecordbookProgram>>>()
+        repository.programLoader = { gate.await() }
+        vm.refresh(RefreshMode.Force); runCurrent()
+        assertEquals(RecordbookBody.Failed(AppError.Network, retrying = true), vm.uiState.value.body)
+        gate.complete(AppResult.Success(listOf(recordbookProgram()))); advanceUntilIdle()
+        assertEquals(listOf(42L), vm.uiState.value.rows.map { it.id })
     }
 
     @Test fun `a fresh screen shows the cached period before the network answers`() = runTest {
@@ -116,72 +133,58 @@ class RecordbookViewModelTest {
         repository.cachedSubjects = listOf(recordbookSubject(name = "Из кэша"))
         val gate = CompletableDeferred<AppResult<List<RecordbookProgram>>>()
         repository.programLoader = { gate.await() }
-        val vm = model(); vm.refresh(RefreshMode.Silent); runCurrent()
-        val seeded = vm.uiState.value as RecordbookUiState.Content
-        assertFalse(seeded.refreshing)
-        assertEquals("Из кэша", seeded.subjects.single().name)
-        assertEquals(3, seeded.selection.period.semester)
+        val vm = loaded(); runCurrent()
+        assertFalse(vm.uiState.value.content.refreshing)
+        assertEquals("Из кэша", vm.uiState.value.rows.single().name)
         gate.complete(repository.programs); advanceUntilIdle()
-        val fresh = vm.uiState.value as RecordbookUiState.Content
-        assertFalse(fresh.refreshing)
-        assertEquals(listOf(recordbookSubject()), fresh.subjects)
+        assertEquals("Тестовый предмет", vm.uiState.value.rows.single().name)
     }
 
     @Test fun `a cached catalog without the selected period still starts loading`() = runTest {
         repository.cachedPrograms = listOf(recordbookProgram())
-        val vm = model(); vm.refresh(RefreshMode.Silent)
-        assertTrue(vm.uiState.value is RecordbookUiState.Loading)
+        val vm = loaded()
+        assertEquals(RecordbookBody.Loading, vm.uiState.value.body)
     }
 
-    @Test fun `refresh keeps content and ends spinner even when identical result arrives`() = runTest {
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+    @Test fun `a pull shows its indicator and ends it even when the identical result arrives`() = runTest {
+        val vm = loaded(); advanceUntilIdle()
         val before = vm.uiState.value
         vm.refresh(RefreshMode.Pull)
-        assertTrue((vm.uiState.value as RecordbookUiState.Content).refreshing)
+        assertTrue(vm.uiState.value.content.refreshing)
         advanceUntilIdle()
         assertEquals(before, vm.uiState.value)
         assertEquals(2, repository.programRequests)
     }
 
-    @Test fun `repeated failed refresh keeps previous values and clears spinner`() = runTest {
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+    @Test fun `a failed pull keeps the rows and says so`() = runTest {
+        val vm = loaded(); advanceUntilIdle()
         repository.subjects = AppResult.Failure(AppError.Network)
         vm.refresh(RefreshMode.Pull); vm.refresh(RefreshMode.Pull); advanceUntilIdle()
-        val state = vm.uiState.value as RecordbookUiState.Content
-        assertFalse(state.refreshing)
-        assertEquals(AppError.Network, state.refreshError)
-        assertEquals(listOf(recordbookSubject()), state.subjects)
+        val content = vm.uiState.value.content
+        assertFalse(content.refreshing)
+        assertEquals(AppError.Network, content.refreshError)
+        assertEquals(listOf(42L), vm.uiState.value.rows.map { it.id })
     }
 
     @Test fun `rapid period selection cancels old result and cannot mix periods`() = runTest {
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        val oldRequest = CompletableDeferred<AppResult<List<dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject>>>()
+        val vm = loaded(); advanceUntilIdle()
+        val oldRequest = CompletableDeferred<AppResult<List<RecordbookSubject>>>()
         repository.subjectLoader = { semester -> if (semester == 1) oldRequest.await() else AppResult.Success(listOf(recordbookSubject(semester.toLong()))) }
         vm.selectPeriod(1, 1); runCurrent()
         vm.selectPeriod(1, 2); advanceUntilIdle()
         oldRequest.complete(AppResult.Success(listOf(recordbookSubject(99))))
         advanceUntilIdle()
-        val state = vm.uiState.value as RecordbookUiState.Content
-        assertEquals(2, state.selection.period.semester)
-        assertEquals(2L, state.subjects.single().entryId)
-    }
-
-    @Test fun `sport failure does not hide official grades or mark PE passed`() = runTest {
-        repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Физическая культура и спорт (элективная)").copy(rate = null)))
-        sport.periods = AppResult.Failure(AppError.Network)
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        val state = vm.uiState.value as RecordbookUiState.Content
-        assertEquals(RecordbookSportState.Error, state.sport)
-        assertNull(state.subjects.single().rate)
+        assertEquals(2, vm.uiState.value.selectedSemester)
+        assertEquals(listOf(2L), vm.uiState.value.rows.map { it.id })
     }
 
     @Test fun `same period does not trigger another request`() = runTest {
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+        val vm = loaded(); advanceUntilIdle()
         vm.selectPeriod(1, 3); advanceUntilIdle()
         assertEquals(listOf(3), repository.subjectRequests)
     }
 
-    // --- attention and summary
+    // --- physical education
 
     private val pe = recordbookSubject(id = 7, name = "Физическая культура и спорт (элективная)").copy(controlType = "Зачёт", rate = null, score = null)
 
@@ -190,76 +193,125 @@ class RecordbookViewModelTest {
         sport.score = AppResult.Success(SportScoreSummary(30, 10))
     }
 
+    @Test fun `physical education shows the sport total in a ring and leads to the sport tab`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(), pe))
+        sportPeriodEndingOn("2026-12-28")
+        val vm = loaded(); advanceUntilIdle()
+        val row = vm.uiState.value.row(7)
+        assertEquals(RecordbookValue.Sport("40", 0.3f, 0.1f), row.value)
+        assertEquals(RecordbookTarget.Sport, row.target)
+        assertEquals(RecordbookStrings.recordbook_source_sport, row.sourceKey)
+        assertFalse(row.hasSources)
+    }
+
+    @Test fun `sport failure does not hide official grades or mark PE passed`() = runTest {
+        repository.subjects = AppResult.Success(listOf(pe))
+        sport.periods = AppResult.Failure(AppError.Network)
+        val vm = loaded(); advanceUntilIdle()
+        assertEquals(RecordbookValue.None, vm.uiState.value.row(7).value)
+    }
+
     @Test fun `physical education short of points early in the semester stays in the regular list`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject(), pe))
         sportPeriodEndingOn("2026-12-28")
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertTrue((vm.uiState.value as RecordbookUiState.Content).attention.isEmpty())
+        val vm = loaded(); advanceUntilIdle()
+        assertTrue(vm.uiState.value.attentionIds.isEmpty())
     }
 
     @Test fun `physical education four weeks before the end needs attention with the missing points`() = runTest {
-        repository.subjects = AppResult.Success(listOf(recordbookSubject(), pe))
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null), pe))
         sportPeriodEndingOn("2026-12-28")
-        val vm = model(date = "2026-12-01"); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        val state = vm.uiState.value as RecordbookUiState.Content
-        assertEquals(mapOf(7L to RecordbookAttentionReason.SportShort(60)), state.attention)
+        val vm = loaded(model(date = "2026-12-01")); advanceUntilIdle()
+        assertEquals(listOf(7L), vm.uiState.value.attentionIds)
+        val row = vm.uiState.value.row(7)
+        assertEquals(UiText.Plural(RecordbookPlurals.recordbook_reason_sport, 60, listOf(60)), row.meta)
+        assertEquals(RecordbookTone.WARN, row.metaTone)
     }
 
-    @Test fun `a credited physical education never needs attention`() = runTest {
-        repository.subjects = AppResult.Success(listOf(pe.copy(rate = "зачет")))
-        sportPeriodEndingOn("2026-12-28")
-        val vm = model(date = "2026-12-01"); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertTrue((vm.uiState.value as RecordbookUiState.Content).attention.isEmpty())
-    }
-
-    @Test fun `a known control under its minimum names the reason`() = runTest {
+    @Test fun `a known control under its minimum names the reason and turns the bar red`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = 30.0)))
         repository.cachedControls = listOf(
             RecordbookControl(1, "Лабораторная 1", 8.0, 5.0, 10.0, true, null, null),
-            RecordbookControl(2, "КР 1", 3.0, 6.0, 15.0, true, null, null)
+            RecordbookControl(2, "КР 1", 3.0, 6.0, 15.0, true, null, null),
         )
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertEquals(mapOf(42L to RecordbookAttentionReason.BelowMinimum("КР 1")),
-            (vm.uiState.value as RecordbookUiState.Content).attention)
+        val vm = loaded(); advanceUntilIdle()
+        val row = vm.uiState.value.row(42)
+        assertEquals(listOf(42L), vm.uiState.value.attentionIds)
+        assertEquals(UiText.Res(RecordbookStrings.recordbook_reason_below_minimum, listOf("КР 1")), row.meta)
+        assertEquals(RecordbookValue.Points("30", 0.3f, RecordbookTone.BAD), row.value)
     }
 
-    @Test fun `failed and absent subjects need attention, passed ones do not`() = runTest {
+    @Test fun `failed and absent subjects need attention, passed ones show their result`() = runTest {
         repository.subjects = AppResult.Success(listOf(
             recordbookSubject(id = 1).copy(rate = "2/FX"),
             recordbookSubject(id = 2).copy(rate = null, absent = true),
-            recordbookSubject(id = 3)
+            recordbookSubject(id = 3),
         ))
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertEquals(mapOf(1L to RecordbookAttentionReason.Failed, 2L to RecordbookAttentionReason.Absent),
-            (vm.uiState.value as RecordbookUiState.Content).attention)
+        val vm = loaded(); advanceUntilIdle()
+        val state = vm.uiState.value
+        assertEquals(listOf(1L, 2L), state.attentionIds)
+        assertEquals(RecordbookValue.Result(UiText.Dynamic("2FX"), RecordbookTone.BAD), state.row(1).value)
+        assertEquals(RecordbookValue.Result(UiText.Dynamic("4C"), RecordbookTone.OK), state.row(3).value)
     }
+
+    // --- moments
+
+    @Test fun `the session shows once a final result exists, with the passed count and the average`() = runTest {
+        repository.subjects = AppResult.Success(listOf(
+            recordbookSubject(id = 1).copy(rate = "4/C", score = 79.0),
+            recordbookSubject(id = 2).copy(rate = "5/A", score = 92.0),
+            recordbookSubject(id = 3).copy(rate = null, score = 55.0),
+        ))
+        val vm = loaded(); advanceUntilIdle()
+        val content = vm.uiState.value.content
+        assertEquals(RecordbookView.SESSION, content.view)
+        val summary = content.summary!!
+        assertEquals(UiText.Res(RecordbookStrings.recordbook_session_passed, listOf(2)), summary.passed)
+        assertEquals(UiText.Res(RecordbookStrings.recordbook_session_average, listOf("85,5")), summary.average)
+        assertEquals(
+            listOf(RecordbookStrings.recordbook_section_ahead, RecordbookStrings.recordbook_section_passed),
+            content.sections.map { (it.title as UiText.Res).key },
+        )
+    }
+
+    @Test fun `the term has no average and the choice of moment holds until the period changes`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null)))
+        val vm = loaded(); advanceUntilIdle()
+        assertEquals(RecordbookView.SEMESTER, vm.uiState.value.content.view)
+        assertNull(vm.uiState.value.content.summary)
+
+        vm.selectView(RecordbookView.SESSION)
+        assertEquals(RecordbookView.SESSION, vm.uiState.value.content.view)
+        vm.selectPeriod(1, 2); advanceUntilIdle()
+        assertEquals(RecordbookView.SEMESTER, vm.uiState.value.content.view)
+    }
+
+    // --- marks
 
     @Test fun `unread marks of the listed half-year mark their subjects whatever the case and ё`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Тестовый предмет по химии")))
         marks.news.value = listOf(markNews("ТЕСТОВЫЙ ПРЕДМЁТ ПО ХИМИИ"), markNews("Другой предмет", half = StudyHalf(2025, 2)))
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertEquals(setOf(subjectNameKey("Тестовый предмет по химии")), (vm.uiState.value as RecordbookUiState.Content).newSubjects)
+        val vm = loaded(); advanceUntilIdle()
+        assertTrue(vm.uiState.value.row(42).unread)
 
-        repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Тестовый предмет по химии")))
         vm.selectPeriod(1L, 1); advanceUntilIdle()
-        val autumn = vm.uiState.value as RecordbookUiState.Content
-        assertEquals(1, autumn.selection.period.semester)
-        assertTrue(autumn.newSubjects.isEmpty())
+        assertEquals(1, vm.uiState.value.selectedSemester)
+        assertFalse(vm.uiState.value.row(42).unread)
     }
 
     @Test fun `a new unread mark reaches the open list without a request`() = runTest {
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+        val vm = loaded(); advanceUntilIdle()
         val requests = repository.programRequests to repository.subjectRequests.size
-        assertTrue((vm.uiState.value as RecordbookUiState.Content).newSubjects.isEmpty())
+        assertFalse(vm.uiState.value.row(42).unread)
 
         marks.news.value = listOf(markNews("Тестовый предмет")); advanceUntilIdle()
 
-        assertEquals(setOf(subjectNameKey("Тестовый предмет")), (vm.uiState.value as RecordbookUiState.Content).newSubjects)
+        assertTrue(vm.uiState.value.row(42).unread)
         assertEquals(requests, repository.programRequests to repository.subjectRequests.size)
     }
 
     @Test fun `only a loaded list of the current half-year advances the My ITMO snapshot`() = runTest {
-        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+        val vm = loaded(); advanceUntilIdle()
         assertEquals(listOf(FakeMarkTrackingRepository.SeenMyItmo(TEST_HALF, 1L, 3, listOf(recordbookSubject()))), marks.seenMyItmo)
 
         vm.selectPeriod(1L, 2); advanceUntilIdle()
@@ -267,20 +319,28 @@ class RecordbookViewModelTest {
 
         val failing = FakeMarkTrackingRepository()
         repository.subjects = AppResult.Failure(AppError.Network)
-        val failed = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), SavedStateHandle(),
+        val failed = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(),
             RecordbookSportResolver(sport), FixedAcademicTime(LocalDate(2026, 9, 7)), failing, FakeSheetScoresRepository())
         failed.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertTrue(failed.uiState.value is RecordbookUiState.Error)
+        assertTrue(failed.uiState.value.body is RecordbookBody.Failed)
         assertTrue(failing.seenMyItmo.isEmpty())
     }
 
-    @Test fun `the summary waits for the first final grade or credit`() = runTest {
-        repository.subjects = AppResult.Success(listOf(recordbookSubject(id = 1).copy(rate = null), recordbookSubject(id = 2).copy(rate = null, score = null)))
-        val midSemester = model(); midSemester.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertFalse((midSemester.uiState.value as RecordbookUiState.Content).showSummary)
+    // --- sources
 
-        repository.subjects = AppResult.Success(listOf(recordbookSubject(id = 1).copy(rate = "зачет"), recordbookSubject(id = 2).copy(rate = null)))
-        val session = model(); session.refresh(RefreshMode.Silent); advanceUntilIdle()
-        assertTrue((session.uiState.value as RecordbookUiState.Content).showSummary)
+    @Test fun `the sources sheet shows every source with the shown one first and opens the subject`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = 35.0)))
+        val sheets = FakeSheetScoresRepository(sheetScore(scope = ResourceScope(1, "Тестовый предмет", "2026-1"), value = "41,5"))
+        val vm = loaded(model(sheets = sheets)); advanceUntilIdle()
+
+        vm.openSources(42)
+        val sources = vm.uiState.value.content.sources!!
+        assertEquals(listOf(RecordbookSource.SHEET, RecordbookSource.BARS, RecordbookSource.MY_ITMO), sources.rows.map { it.source })
+        assertEquals(listOf("41,5", null, "35"), sources.rows.map { it.value })
+        assertEquals(listOf(true, false, false), sources.rows.map { it.shown })
+        assertEquals(42L, sources.target.args.entryId)
+
+        vm.closeSources()
+        assertNull(vm.uiState.value.content.sources)
     }
 }

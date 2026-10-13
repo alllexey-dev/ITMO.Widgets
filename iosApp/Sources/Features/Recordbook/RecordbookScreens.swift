@@ -1,51 +1,6 @@
 import Shared
 import SwiftUI
 
-/// One subject (`AppRoutes.RecordbookSubject`, from the recordbook): the Compose subject page
-/// (`recordbookSubjectPage`). The scores sheet, a teacher's profile and the links sheets open through the router,
-/// the sheet, LMS and subject links in the system, the BARS sign-in in `BarsLoginSheet`.
-struct RecordbookSubjectView: View {
-    let args: RecordbookSubjectArgs
-    @Environment(\.dismiss) private var dismiss
-    @Environment(AppRouter.self) private var router
-    @State private var host = RecordbookHost()
-
-    var body: some View {
-        ComposeHost { [args, router, host, dismiss] in
-            host.makeSubject(args: args, router: router, onBack: { dismiss() })
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("recordbook.subject")
-        .recordbookBarsLogin(host)
-        .scheduleMessages(host.messages)
-    }
-}
-
-/// The period picker (`AppRoutes.RecordbookPeriod`, from the recordbook's period button): the Compose sheet content
-/// (`recordbookPeriodViewController`). The pick answers the tab root through the router before the sheet
-/// closes.
-struct RecordbookPeriodSheetView: View {
-    let period: AppRoutes.RecordbookPeriod
-    @Environment(\.dismiss) private var dismiss
-    @Environment(AppRouter.self) private var router
-
-    var body: some View {
-        ComposeHost { [period, router, dismiss] in
-            recordbookPeriodViewController(
-                period: period,
-                deliver: { choice in
-                    router.deliver(choice, from: period)
-                    dismiss()
-                },
-                onClose: { dismiss() }
-            )
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("recordbook.period")
-        .recordbookSheet()
-    }
-}
-
 /// The scores sheet (`AppRoutes.SheetScores`, `sheet_scores_title`, from the subject page's sheet total): the Compose
 /// sheet content (`sheetScoresViewController`). It closes itself once the total is saved; a failed save says
 /// why over it.

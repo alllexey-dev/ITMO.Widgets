@@ -501,11 +501,6 @@ final class RouterTests: XCTestCase {
             start: "2026-10-06T10:00+03:00", end: "2026-10-06T11:30+03:00", teacherFio: "Teacher", roomName: "Room",
             teacherIsu: nil
         )
-        let period = AppRoutes.RecordbookPeriod(
-            programName: "Program", programNames: ["Program"], programIds: [KotlinLong(value: 1)],
-            semesters: [KotlinInt(value: 1)], courses: [KotlinInt(value: 1)], years: ["2026/2027"],
-            actual: [KotlinBoolean(value: true)], selectedProgram: 1, selectedSemester: 1
-        )
         let scores = SheetScoresArgs(
             subjectId: 5, subjectName: "Subject", periodKey: "2026/2027:1", url: "https://example.com/s", step: .total
         )
@@ -516,7 +511,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.Settings(page: "ROOT"), .swiftUI),
             (AppRoutes.Diagnostics.shared, .swiftUI),
             (AppRoutes.DebugTools.shared, .notOnIOS),
-            (AppRoutes.RecordbookSubject(args: subject), .compose),
+            (AppRoutes.RecordbookSubject(args: subject), .swiftUI),
             (AppRoutes.Friends.shared, .compose),
             (AppRoutes.UserFriends(isu: 100_001, name: ""), .compose),
             (AppRoutes.UserSearch.shared, .compose),
@@ -526,7 +521,6 @@ final class RouterTests: XCTestCase {
             (AppRoutes.Bell.shared, .swiftUISheet),
             (AppRoutes.QrPass.shared, .swiftUISheet),
             (AppRoutes.MyItmoWeb.shared, .swiftUI),
-            (period, .composeSheet),
             (AppRoutes.FriendSelector(selectedIsu: 0), .composeSheet),
             (AppRoutes.SheetScores(args: scores), .composeSheet),
             (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),

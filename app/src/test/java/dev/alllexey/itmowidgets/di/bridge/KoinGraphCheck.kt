@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.di.bridge
 
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
@@ -48,8 +50,11 @@ internal object KoinGraphCheck {
         AccessTokenSource::class,
     )
 
-    /** Definitions whose constructor takes a list the module parses in place. */
-    private val inPlaceLists = injectedParameters(definition<BuildingDirectory>(List::class))
+    /** Definitions whose constructor takes a list the module parses in place, or the screen's arguments the caller passes. */
+    private val inPlaceLists = injectedParameters(
+        definition<BuildingDirectory>(List::class),
+        definition<RecordbookSubjectViewModel>(RecordbookSubjectArgs::class),
+    )
 
     @OptIn(KoinExperimentalAPI::class)
     fun assertValid(modules: List<Module>) {

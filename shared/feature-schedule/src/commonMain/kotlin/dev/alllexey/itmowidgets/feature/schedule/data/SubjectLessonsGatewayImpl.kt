@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
@@ -37,7 +38,8 @@ class SubjectLessonsGatewayImpl(
         teacherFio = teacherFio,
         room = room?.raw,
         building = building?.raw,
-        formatId = formatId
+        formatId = formatId,
+        details = toDetailsArgs(date),
     )
 
     private companion object {

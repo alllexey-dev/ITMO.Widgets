@@ -148,6 +148,9 @@ class DemoModeFlowTest {
                 assertEquals(listOf(AppRoutes.RecordbookSubject::class), overlays.map { it::class })
             }
             shot(activity, "subject")
+            scenario.onActivity(::openMaterials)
+            settle()
+            shot(activity, "subject-materials")
             scenario.onActivity(::voteOnFirstLink)
             eventually { assertComposedText(activity, R.string.error_demo_unavailable) }
             val links = SubjectLinksArgs(algorithms.id, algorithms.name, scope)
@@ -264,10 +267,21 @@ class DemoModeFlowTest {
     }
 
     /** The first link's up arrow votes by its semantics click. */
+    /** The subject page's `Материалы` tab: the segment whose merged text is the tab's name. */
+    private fun openMaterials(activity: MainActivity) {
+        val label = activity.getString(R.string.subject_tab_materials)
+        val segment = mergedNodes(activity).first { node ->
+                node.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text == label } &&
+                    node.config.getOrNull(SemanticsActions.OnClick) != null
+            }
+        checkNotNull(segment.config[SemanticsActions.OnClick].action) { "the tab has no click" }.invoke()
+    }
+
     private fun voteOnFirstLink(activity: MainActivity) {
         val label = activity.getString(R.string.links_vote_up)
-        val arrow = composedNodes(activity).first { node ->
-            node.layoutInfo.isPlaced && label in node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty()
+        val arrow = mergedNodes(activity).first { node ->
+            node.layoutInfo.isPlaced && label in node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty() &&
+                node.config.getOrNull(SemanticsActions.OnClick) != null
         }
         checkNotNull(arrow.config[SemanticsActions.OnClick].action) { "the vote arrow has no click" }.invoke()
     }
@@ -280,6 +294,11 @@ class DemoModeFlowTest {
             composedNodes(activity).any { node -> node.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text == expected } },
         )
     }
+
+    /** The merged semantics: a button with its icon's or text's label. */
+    private fun mergedNodes(activity: MainActivity): List<SemanticsNode> =
+        activity.window.decorView.descendants().filter { it.isShown }.filterIsInstance<ViewRootForTest>()
+            .flatMap { it.semanticsOwner.rootSemanticsNode.descendants() }.toList()
 
     private fun composedNodes(activity: MainActivity): List<SemanticsNode> =
         activity.window.decorView.descendants().filter { it.isShown }.filterIsInstance<ViewRootForTest>()

@@ -354,7 +354,7 @@ Google Sheets.
 | Switch | Key | Default |
 |---|---|---|
 | `Оценки My ITMO` | `myitmo_marks_enabled` | on (absent means on); a device setting that survives sign-out |
-| `Оценки БАРС` | `bars_marks_enabled` | absent: the switch is hidden. The first successful BARS answer of the account (sign-in, the `БАРС` chip or the background read) stores on; cleared with the BARS session on sign-out |
+| `Оценки БАРС` | `bars_marks_enabled` | absent: the switch is hidden. The first successful BARS answer of the account (sign-in, BARS connected in the recordbook or the background read) stores on; cleared with the BARS session on sign-out |
 | `Оценки из таблиц` | `sheet_marks_enabled` | on (absent means on); always shown, a device setting that survives sign-out |
 
 - `Оценки БАРС` appears only once BARS has answered for this account; before

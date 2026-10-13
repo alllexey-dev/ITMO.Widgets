@@ -34,12 +34,6 @@ object RouteSamples {
         AppRoutes.Bell,
         AppRoutes.QrPass,
         AppRoutes.MyItmoWeb,
-        AppRoutes.RecordbookPeriod(
-            programName = "Программа", programNames = listOf("Программа", "Программа"),
-            programIds = listOf(1, 1), semesters = listOf(1, 2), courses = listOf(1, 1),
-            years = listOf("2026/2027", "2026/2027"),
-            actual = listOf(true, false), selectedProgram = 1, selectedSemester = 1
-        ),
         AppRoutes.FriendSelector(),
         AppRoutes.SheetScores(
             SheetScoresArgs(5, "Математика", "2026/2027:1", "https://example.com/s", SheetScoresArgs.Step.TOTAL)

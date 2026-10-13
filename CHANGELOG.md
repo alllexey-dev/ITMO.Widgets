@@ -94,6 +94,17 @@ new iOS app.
   under it on a narrow screen or with large text. Prominent buttons on iOS keep a readable label in the dark theme.
 - A marks notification about one subject carries the value in its title (`Матанализ: 9 из 10`); the lock screen
   still shows `Новые оценки` only.
+- Зачётка is rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one view model): what needs
+  action first, each number over a quiet source (`БАРС`, `My ITMO`, `таблица`, `Спорт`) with a 0-100 bar in the tone
+  of its reason, passed subjects as a result pill, `Семестр` / `Сессия` with `Сдано N из M` and the average only in
+  the session, the period in the header (`3 семестр`). BARS is optional: without it the list is complete from My ITMO
+  with one quiet `Подключить` line that can be hidden; an ended BARS session keeps its numbers dimmed with their date
+  and offers `Войти`. Физкультура shows the sport points in a ring and opens Спорт. A tap on a source opens `Откуда
+  баллы` with every source side by side. The BARS chip and the period sheet are gone.
+- The subject page has the tabs `Баллы` (the points over the grade scale with `до 3D ещё 4,5`, the connected sheet,
+  checkpoints by group with their minimums), `Пары` (teachers as rows with the tone of their reviews in words, the
+  lessons ahead) and `Материалы` (chats, links by category with votes, own links with their review state; a gate
+  without `Подключение к ITMO.Widgets`). The My ITMO LMS link is no longer shown.
 - New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
   обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
   палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep
