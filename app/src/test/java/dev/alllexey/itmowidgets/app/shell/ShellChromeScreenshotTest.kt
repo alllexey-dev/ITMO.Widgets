@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.test.swipeUp
 import dev.alllexey.itmowidgets.app.shell.entries.TodayRootScreen
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoRootScreen
 import dev.alllexey.itmowidgets.feature.home.presentation.TodayHeaderUiState
@@ -60,12 +58,12 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * The shell's chrome in `app/screenshots/Shell*`: Сегодня with its root header, bell and `Пропуск` button, the header
- * collapsed by a scroll, an overlay above the bar, the demo banner, a content-height sheet, the pass sheet, a full-height
- * sheet and a tab swipe held halfway from Сегодня to Расписание (the bar already on Расписание), each in the
- * appearances of the run (light, dark and both narrow ones are recorded), with every action at least 48 dp. The tab
- * roots are the real frames over synthetic content. The whole screen is captured, so a sheet's own window is in the
- * picture. No preview renders these, so `references.txt` lists them for `DebugToolsScreenshotTest`'s baseline check.
+ * The shell's chrome in `app/screenshots/Shell*`: Сегодня with its root header, bell and `Пропуск` button, an overlay
+ * above the bar, the demo banner, a content-height sheet, the pass sheet, a full-height sheet and a tab swipe held
+ * halfway from Сегодня to Расписание (the bar already on Расписание), each in the appearances of the run (light, dark
+ * and both narrow ones are recorded), with every action at least 48 dp. The tab roots are the real frames over
+ * synthetic content. The whole screen is captured, so a sheet's own window is in the picture. No preview renders
+ * these, so `references.txt` lists them for `DebugToolsScreenshotTest`'s baseline check.
  */
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @Config(application = PreviewHostApplication::class)
@@ -78,7 +76,6 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
         val gesture: Gesture = Gesture.None,
     ) {
         Bar("ShellBar", ShellSurface.Tabs(demoBanner = false), ShellBackStack()),
-        TodayCollapsed("ShellTodayCollapsed", ShellSurface.Tabs(demoBanner = false), ShellBackStack(), Gesture.Scroll),
         Overlay("ShellOverlay", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.Friends)),
         DemoBanner("ShellDemoBanner", ShellSurface.Tabs(demoBanner = true), ShellBackStack()),
         Sheet("ShellSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.IcsExport)),
@@ -88,7 +85,7 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
     }
 
     /** What the finger does before the capture. */
-    enum class Gesture { None, Scroll, HalfwaySwipe }
+    enum class Gesture { None, HalfwaySwipe }
 
     private val window = object : ExternalResource() {
         override fun before() {
@@ -114,18 +111,11 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
         compose.waitForIdle()
         when (case.gesture) {
             Gesture.None -> Unit
-            Gesture.Scroll -> scrollTheRootList()
             Gesture.HalfwaySwipe -> holdSwipeHalfway()
         }
 
         captureScreenRoboImage(AppScreenshotRule.appBaselines.file(case.base, appearance), ShotsCompare.options)
         compose.assertTouchTargets()
-    }
-
-    /** A drag up the Сегодня list, past the header's collapse. */
-    private fun scrollTheRootList() {
-        compose.onNodeWithTag(ROOT_LIST).performTouchInput { swipeUp(startY = bottom - 1f, endY = centerY) }
-        compose.waitForIdle()
     }
 
     /**
@@ -193,12 +183,10 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
             QrPassStatus.Ready("11:44"),
         )
 
-        private const val ROOT_LIST = "synthetic_root_list"
-
         /** The tab's name on full-width cards, enough of them to scroll. */
         @Composable
         private fun SyntheticRoot(tab: AppTab) {
-            LazyColumn(Modifier.fillMaxSize().testTag(ROOT_LIST)) {
+            LazyColumn(Modifier.fillMaxSize()) {
                 items(ROOT_ROWS) { row ->
                     Surface(
                         Modifier

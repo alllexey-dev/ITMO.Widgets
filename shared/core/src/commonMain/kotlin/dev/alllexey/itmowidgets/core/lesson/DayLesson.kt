@@ -10,7 +10,8 @@ import kotlin.time.Instant
 /**
  * One own lesson of a day as every lesson view needs it, built by the schedule feature from its cache, the found
  * changes and the sport queues. [room] and [building] are MyITMO's raw texts: rows shorten them, a hero shows the
- * building in full. [online] lessons have no place line. [videoUrl] is the meeting link.
+ * building in full. [online] is MyITMO's remote format; [isOnline] also counts a placeholder room such as `дистант`,
+ * and such lessons have no place line. [videoUrl] is the meeting link.
  */
 data class DayLesson(
     val start: LocalTime,
@@ -26,7 +27,21 @@ data class DayLesson(
     val videoUrl: String? = null,
     val change: LessonChange? = null,
     val sport: SportMark? = null,
-)
+) {
+    /** Remote by format, or with a placeholder instead of a room or a building (`дистант`, `онлайн`). */
+    val isOnline: Boolean get() = online || isOnlinePlaceholder(room) || isOnlinePlaceholder(building)
+
+    /** The note unless it only repeats that an online lesson is online. */
+    val noteText: String? get() = note?.trim()?.takeIf { it.isNotEmpty() && !(isOnline && isOnlinePlaceholder(it)) }
+}
+
+/** MyITMO's words for "no room, it is remote" that come in the room, building or note fields. */
+fun isOnlinePlaceholder(text: String?): Boolean {
+    val word = text?.trim()?.trimEnd('.')?.lowercase() ?: return false
+    return ONLINE_PLACEHOLDERS.any(word::startsWith)
+}
+
+private val ONLINE_PLACEHOLDERS = listOf("дистант", "дистанц", "онлайн", "online", "удален", "удалён", "zoom", "зум")
 
 /**
  * A change the background check found on this lesson. [previousRoom] is the room before a move, struck through

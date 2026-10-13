@@ -16,7 +16,7 @@ final class TodayUITests: XCTestCase {
         app.launch()
         waitForToday(app)
 
-        XCTAssertTrue(app.navigationBars.firstMatch.exists, "the today root header sits over the list")
+        XCTAssertTrue(element(app, "kit.rootHeader").exists, "the today root header sits over the list")
         XCTAssertTrue(element(app, "shell.bell").isHittable)
         XCTAssertTrue(element(app, "shell.passAccessory").isHittable)
         attachScreenshot(named: "today")

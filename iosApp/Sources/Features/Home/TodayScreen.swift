@@ -4,8 +4,8 @@ import UIKit
 
 /// Today (docs/features/home.md) over the shared `TodayViewModel`: the hero with the lesson to go to now, the day
 /// as the kit's timeline (tomorrow in the evening) and the things to do when there is something, under the root
-/// header of `TodayHeaderViewModel` (the date, the bell with the count of unseen events). The header collapses to
-/// `.inline` once the list scrolls. A key the demo refuses says `error_demo_unavailable`, as Android's shell does.
+/// header of `TodayHeaderViewModel` (the date, the bell with the count of unseen events); the header stays static
+/// while the list scrolls under it. A key the demo refuses says `error_demo_unavailable`, as Android's shell does.
 struct TodayScreen: View {
     let router: AppRouter
     @Environment(\.scenePhase) private var scenePhase
@@ -24,12 +24,9 @@ struct TodayScreen: View {
             )
         )
         .refreshable { model.viewModel.refresh(mode: .pull) }
-        .itmoRootHeader(title: header.state.title.resolved, subtitle: header.state.subtitle.resolved)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                ItmoBellButton(label: AppStrings.string("today_notifications"), badge: Int(header.state.badge)) {
-                    opened(router.open(AppRoutes.Bell.shared))
-                }
+        .itmoRootHeader(title: header.state.title.resolved, subtitle: header.state.subtitle.resolved) {
+            ItmoBellButton(label: AppStrings.string("today_notifications"), badge: Int(header.state.badge)) {
+                opened(router.open(AppRoutes.Bell.shared))
             }
         }
         .overlay(alignment: .bottom) {
@@ -190,25 +187,16 @@ struct TodayHeroCard: View {
 
     private var online: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.related) {
-            HStack {
-                Text(verbatim: AppStrings.string("today_online"))
-                    .font(.itmo(.displaySmall, emphasized: true))
-                    .lineLimit(1)
-                Spacer(minLength: ItmoSpacing.compact)
-                if let url = hero.videoUrl {
-                    Button {
-                        actions.join(url)
-                    } label: {
-                        Label {
-                            Text(verbatim: AppStrings.string("today_join"))
-                        } icon: {
-                            AppSymbol.videocam.image
-                        }
-                    }
-                    .buttonStyle(.glassProminent)
-                    .itmoTint()
-                    .fixedSize()
-                    .accessibilityIdentifier("today.join")
+            // The big word never clips: the button goes under it when the row is too narrow for both.
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    onlineTitle
+                    Spacer(minLength: ItmoSpacing.compact)
+                    join
+                }
+                VStack(alignment: .leading, spacing: ItmoSpacing.compact) {
+                    onlineTitle
+                    join
                 }
             }
             Text(verbatim: hero.time).font(.itmo(.titleSmall)).foregroundStyle(.secondary).monospacedDigit()
@@ -216,19 +204,25 @@ struct TodayHeroCard: View {
         .padding(.top, ItmoSpacing.related)
     }
 
+    private var onlineTitle: some View {
+        Text(verbatim: AppStrings.string("today_online")).font(.itmo(.displaySmall, emphasized: true))
+    }
+
+    @ViewBuilder private var join: some View {
+        if let url = hero.videoUrl {
+            ItmoProminentButton(title: AppStrings.string("today_join"), symbol: .videocam) { actions.join(url) }
+                .fixedSize()
+                .accessibilityIdentifier("today.join")
+        }
+    }
+
     private var place: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.related) {
             if hero.room != nil || hero.address != nil {
-                HStack(alignment: .firstTextBaseline, spacing: ItmoSpacing.content) {
-                    if let room = hero.room {
-                        Text(verbatim: room.resolved)
-                            .font(.itmo(.displayMedium, emphasized: true))
-                            .monospacedDigit()
-                            .lineLimit(1)
-                    }
-                    if let address = hero.address {
-                        Text(verbatim: address).font(.itmo(.titleMedium)).lineLimit(2)
-                    }
+                // The big room never clips: the address goes under it when the row is too narrow for both.
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline, spacing: ItmoSpacing.content) { roomAndAddress }
+                    VStack(alignment: .leading, spacing: ItmoSpacing.related) { roomAndAddress }
                 }
             }
             if let progress = hero.progress {
@@ -247,5 +241,14 @@ struct TodayHeroCard: View {
             }
         }
         .padding(.top, ItmoSpacing.related)
+    }
+
+    @ViewBuilder private var roomAndAddress: some View {
+        if let room = hero.room {
+            Text(verbatim: room.resolved).font(.itmo(.displayMedium, emphasized: true)).monospacedDigit()
+        }
+        if let address = hero.address {
+            Text(verbatim: address).font(.itmo(.titleMedium))
+        }
     }
 }

@@ -100,14 +100,14 @@ object TodayPresenter {
         countdown = countdown,
         subject = lesson.subject.trim(),
         byline = LessonTimelines.byline(lesson),
-        room = lesson.room?.trim()?.takeIf { it.isNotEmpty() && !lesson.online }?.let(::roomShortTitle),
-        address = lesson.building?.trim()?.takeIf { it.isNotEmpty() && !lesson.online },
-        online = lesson.online,
+        room = lesson.room?.trim()?.takeIf { it.isNotEmpty() && !lesson.isOnline }?.let(::roomShortTitle),
+        address = lesson.building?.trim()?.takeIf { it.isNotEmpty() && !lesson.isOnline },
+        online = lesson.isOnline,
         videoUrl = lesson.videoUrl,
         start = lesson.start.format(DateTexts.TIME),
         end = lesson.end.format(DateTexts.TIME),
         progress = progress,
-        note = lesson.note?.trim()?.takeIf(String::isNotEmpty),
+        note = lesson.noteText,
         target = lesson.target,
     )
 

@@ -453,7 +453,7 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
   `ItmoNavigationBar` (M3E `ShortNavigationBar`) with labels.
 - Every tab root has the root header (`ItmoRootScreen`, `app/shell/entries/TabRootFrames.kt`): the title and its
   one-line subtitle on the left, the actions in the same row, centred on the title block; 112 dp (96 without a
-  subtitle) collapsing to a 64 dp `surfaceContainer` bar while the content scrolls. Сегодня shows the date
+  subtitle). It is static (owner, 2026-10-13): it never collapses, the content scrolls under it. Сегодня shows the date
   (`понедельник, 7 сентября`, `TodayHeaderViewModel`) and the bell with the count of unseen events, which is in this
   header only and opens the bell's sheet ([the bell](features/home.md#the-bell)). Tabs whose new screens come later show their name over their current
   content.
@@ -472,7 +472,8 @@ design lab: Material 3 Expressive, Android's only, so its previews are captured 
 never in the iOS ones (`materialOnlyPackageTrees` of the kit's screenshot test); iOS draws the same screens in
 SwiftUI ([ADR 0031](decisions/0031-swiftui-ios-screens.md)). Its components take formatted text, icons and colours;
 what a lesson says and which pills it gets is decided by shared presentation: `core/lesson/LessonTimelines` builds
-`LessonUi` and `TimelineItem` (states, pills, gaps of an hour or more, progress, change notes) for every lesson list,
+`LessonUi` and `TimelineItem` (states, pills, gaps of an hour or more, progress, change notes) for every lesson list;
+a lesson is online by MyITMO's remote format or by a placeholder room (`дистант`, `онлайн`, `DayLesson.isOnline`),
 and the kit's `LessonMapping.kt` draws them. The older components above serve the
 screens that have not moved yet.
 
@@ -480,7 +481,7 @@ screens that have not moved yet.
 |---|---|
 | `Tone`, `container()`, `onContainer()` | The semantic colour of a pill, tile or card: `Neutral`, `Primary`, `Tertiary`, `Success`, `Warning`, `Error`. The word carries the meaning |
 | `LocalOnSheet`, `cardSurface()` | True inside a `SheetScaffold`: cards and groups step one surface up |
-| `ItmoRootScreen`, `HeaderAction` | A tab root with the collapsing root header and an optional FAB; an icon action with an optional badge |
+| `ItmoRootScreen`, `HeaderAction` | A tab root with the static root header and an optional FAB; an icon action with an optional badge |
 | `ItmoDetailScreen` | A pushed screen: back, `MediumFlexibleTopAppBar` title over a subtitle, actions |
 | `ItmoCard`, `IconTile` | One topic per card (`cardContent`), a tonal card, the one hero (`cardHero`); an icon in a tone's tile |
 | `StatusPill`, `PillSpec` | `идёт`, `далее`, `изменена`, `отменена`, `очередь 2 из 5`, `записаны`, `онлайн`; `solid` for `идёт` |
@@ -584,8 +585,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   back. The `QR-пропуск` accessory sits above the bar only while Сегодня is
   selected and opens the pass sheet.
 - Root header. Title and a one-line subtitle on the leading side, the actions
-  (the bell on Сегодня only) in the same row, `.inlineLarge`; once the content
-  scrolls, `.inline`. `.itmoRootHeader(title:subtitle:)`.
+  (the bell on Сегодня only) in the same row. Static: it never collapses, the
+  content scrolls under it. `.itmoRootHeader(title:subtitle:actions:)`.
 - Sheets. A SwiftUI `.sheet` with the grabber, an inline title and the close
   button; content scrolls. Three heights (`ItmoSheetHeight`): the content's
   (short content is never cut), 0.82 of the screen draggable to full, or full
@@ -598,8 +599,9 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   Cards and groups use iOS 26's inset grouped corner, 26 pt.
 - Choices. `ItmoSegmentedChoice` (the native segmented picker) for two to
   four options and in-screen tabs; filters are chips; more options a list or a
-  sheet. One `.glassProminent` button per area, others `.glass` or
-  `.bordered`.
+  sheet. One prominent button per area (`ItmoProminentButton`: `.glassProminent`
+  in the primary role with an `onPrimary` label, readable in light and dark),
+  others `.glass` or `.bordered`.
 - Lessons. A day's list is `ItmoLessonTimeline`: a rail with a dot per lesson
   in its type colour, the elapsed part in the accent colour, the now marker,
   gap rows for an hour or more, the change note under the lesson. A single

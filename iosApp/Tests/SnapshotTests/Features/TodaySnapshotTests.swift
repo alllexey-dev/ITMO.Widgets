@@ -19,11 +19,14 @@ final class TodaySnapshotTests: XCTestCase {
         assertToday(samples.at(time: "08:05", todos: [], refresh: TodayRefreshDone.shared), named: "morning")
     }
 
+    /// The room is MyITMO's "дистант" placeholder: no place line. At AX1 "join" goes under "online".
     func testOnline() {
-        assertToday(
-            samples.at(time: "15:30", todos: [], refresh: TodayRefreshDone.shared), named: "online",
-            appearances: [.light, .dark]
-        )
+        assertToday(samples.at(time: "15:30", todos: [], refresh: TodayRefreshDone.shared), named: "online")
+    }
+
+    /// The big room never clips: at AX1 the address goes under it.
+    func testLongRoom() {
+        assertToday(samples.LongRoom, named: "long-room")
     }
 
     /// Tomorrow in the evening, with the BARS sign-in under it; scrolled to the end, where it sits.
@@ -58,11 +61,8 @@ final class TodaySnapshotTests: XCTestCase {
             NavigationStack {
                 TodayContent(state: state)
                     .defaultScrollAnchor(scrolled ? .bottom : .top)
-                    .itmoRootHeader(title: "Сегодня", subtitle: "понедельник, 7 сентября")
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            ItmoBellButton(label: "Уведомления", badge: 3) {}
-                        }
+                    .itmoRootHeader(title: "Сегодня", subtitle: "понедельник, 7 сентября") {
+                        ItmoBellButton(label: "Уведомления", badge: 3) {}
                     }
             }
         }

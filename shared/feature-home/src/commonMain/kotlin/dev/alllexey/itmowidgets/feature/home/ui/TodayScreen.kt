@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.feature.home.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -210,22 +212,26 @@ private fun Hero(hero: TodayHero, actions: TodayActions) {
     }
 }
 
+/** The big word never clips: the button goes under it when the row is too narrow for both. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Online(hero: TodayHero, actions: TodayActions) {
     val quiet = LocalContentColor.current.copy(alpha = QUIET_ALPHA)
-    Row(
+    FlowRow(
         Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.related),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
     ) {
         Text(
             stringResource(Res.string.today_online),
-            Modifier.weight(1f),
+            Modifier.align(Alignment.CenterVertically),
             style = ItmoTheme.emphasizedTypography.displaySmall,
-            maxLines = 1,
         )
         hero.videoUrl?.let { url ->
-            Button(onClick = { actions.onJoin(url) }, modifier = Modifier.testTag(TodayTestTags.JOIN)) {
+            Button(
+                onClick = { actions.onJoin(url) },
+                modifier = Modifier.align(Alignment.CenterVertically).testTag(TodayTestTags.JOIN),
+            ) {
                 Icon(painterResource(KitRes.drawable.ic_videocam), contentDescription = null)
                 Text(stringResource(Res.string.today_join), Modifier.padding(start = ItmoTheme.spacing.compact))
             }
@@ -235,21 +241,22 @@ private fun Online(hero: TodayHero, actions: TodayActions) {
     hero.note?.let { Text(it, color = quiet, style = ItmoTheme.typography.bodyMedium) }
 }
 
+/** The big room never clips: the address goes under it when the row is too narrow for both. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Place(hero: TodayHero, quiet: Color) {
-    Row(
+    FlowRow(
         Modifier.padding(top = ItmoTheme.spacing.related),
-        verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
     ) {
-        hero.room?.let { Text(it.asString(), style = ItmoTheme.emphasizedTypography.displayMedium, maxLines = 1) }
+        hero.room?.let {
+            Text(it.asString(), Modifier.align(Alignment.Bottom), style = ItmoTheme.emphasizedTypography.displayMedium)
+        }
         hero.address?.let {
             Text(
                 it,
-                Modifier.weight(1f, fill = false).padding(bottom = ItmoTheme.spacing.compact),
+                Modifier.align(Alignment.Bottom).padding(bottom = ItmoTheme.spacing.compact),
                 style = ItmoTheme.typography.titleMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }

@@ -27,7 +27,9 @@ The bell opens its sheet over it. The spec is the design lab's
   - cancelled lessons and sport queues are never the hero and do not count.
 - The hero says where to go: the room big with the building's full address,
   or `Онлайн` with `Подключиться` (the meeting link), the time and the
-  lesson's note. `Маршрут` waits for the map (phase 8): it is not shown.
+  lesson's note. A placeholder room (`дистант`) means online. The big text
+  never clips: the address or the button goes under it when the row is too
+  narrow. `Маршрут` waits for the map (phase 8): it is not shown.
 - The day is the kit's timeline built by the shared lesson rules
   (`core/lesson/LessonTimelines`, [design](../design.md#the-m3-expressive-kit)):
   `идёт`, `далее`, `изменена` and `отменена` from the found

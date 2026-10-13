@@ -158,9 +158,7 @@ struct BellEventRow: View {
                 }
                 if item.request != nil {
                     HStack(spacing: ItmoSpacing.compact) {
-                        Button { actions.answer(item, true) } label: { Text(verbatim: AppStrings.string("bell_accept")) }
-                            .buttonStyle(.glassProminent)
-                            .itmoTint()
+                        ItmoProminentButton(title: AppStrings.string("bell_accept")) { actions.answer(item, true) }
                             .accessibilityIdentifier("bell.accept.\(item.id)")
                         Button { actions.answer(item, false) } label: { Text(verbatim: AppStrings.string("bell_decline")) }
                             .buttonStyle(.bordered)

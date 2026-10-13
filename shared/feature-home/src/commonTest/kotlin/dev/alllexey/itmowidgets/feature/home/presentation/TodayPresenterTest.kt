@@ -65,6 +65,20 @@ class TodayPresenterTest {
     }
 
     @Test
+    fun aPlaceholderRoomMakesTheHeroOnlineWithoutARoomOrAnAddress() {
+        val remote = dayLesson("10:00", "11:30", room = "дистант").copy(note = "Дистант")
+        val hero = TodayPresenter.state(
+            LocalDateTime(monday, LocalTime(9, 30)), listOf(LessonDay(monday, listOf(remote), null)), emptyList(),
+            TodayRefresh.Done, refreshing = false, zone,
+        ).let { (it as TodayUiState.Content).hero!! }
+
+        assertTrue(hero.online)
+        assertNull(hero.room)
+        assertNull(hero.address)
+        assertNull(hero.note)
+    }
+
+    @Test
     fun inTheEveningTomorrowLeadsWithItsFirstLessonAsNext() {
         val state = content("19:40")
 

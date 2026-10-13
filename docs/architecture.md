@@ -141,7 +141,7 @@ allow it.
   registered in `app/shell/entries/<Area>Entries.kt`, which renders the
   feature's `<Name>Route` and turns its lambdas into navigator calls. Each tab
   root renders inside its frame (`entries/TabRootFrames.kt`): the kit's
-  `ItmoRootScreen` with the collapsing root header, and on Сегодня the date
+  `ItmoRootScreen` with the static root header, and on Сегодня the date
   (`TodayHeaderViewModel`), the bell and the `Пропуск` button that opens the
   `QrPass` sheet ([design](design.md#shell)). Tab roots sit in a pager
   (`TabPager.kt`) with swipe between tabs under the `ShortNavigationBar`;

@@ -94,6 +94,32 @@ class LessonTimelinesTest {
         assertEquals(listOf(LessonPillKind.NEXT, LessonPillKind.BOOKED), items[2].lesson.pills.map { it.kind })
     }
 
+    @Test
+    fun aPlaceholderRoomMakesTheLessonOnlineWithoutAPlaceLine() {
+        val remote = lesson("10:00", "11:30").copy(room = " Дистант ", building = null, note = "дистанционно")
+        val ui = LessonTimelines.lesson(remote, LessonState.UPCOMING)
+
+        assertEquals(true, remote.isOnline)
+        assertNull(ui.place)
+        assertNull(ui.note)
+        assertEquals(listOf(LessonPillKind.ONLINE), ui.pills.map { it.kind })
+
+        val withNote = lesson("10:00", "11:30", online = true).copy(room = "онлайн", note = "Ссылка в чате")
+        assertNull(LessonTimelines.lesson(withNote, LessonState.UPCOMING).place)
+        assertEquals("Ссылка в чате", LessonTimelines.lesson(withNote, LessonState.UPCOMING).note)
+    }
+
+    @Test
+    fun onlyPlaceholdersCountAsOnline() {
+        listOf("дистант", "Дистанционно", "онлайн", "Online", "удалённо", "Zoom").forEach {
+            assertEquals(true, isOnlinePlaceholder(it), it)
+        }
+        listOf(null, "", "2202", "Актовый зал", "Кронверкский пр., 49").forEach {
+            assertEquals(false, isOnlinePlaceholder(it), it.toString())
+        }
+        assertEquals("дистант", lesson("10:00", "11:30").copy(note = "дистант").noteText)
+    }
+
     private fun lesson(
         start: String,
         end: String,

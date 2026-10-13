@@ -72,7 +72,7 @@ object LessonTimelines {
             previousPlace = lesson.change?.previousRoom?.trim()?.takeIf { it.isNotEmpty() && place != null && !cancelled }
                 ?.let(::roomShortTitle),
             cancelled = cancelled,
-            note = lesson.note?.trim()?.takeIf(String::isNotEmpty),
+            note = lesson.noteText,
             pills = pills(lesson, state, cancelled),
         )
     }
@@ -88,7 +88,7 @@ object LessonTimelines {
 
     /** `1506, Кронва`; null online or without a room and a building. */
     fun place(lesson: DayLesson): UiText? {
-        if (lesson.online) return null
+        if (lesson.isOnline) return null
         val parts = listOfNotNull(
             lesson.room?.trim()?.takeIf(String::isNotEmpty)?.let(::roomShortTitle),
             lesson.building?.trim()?.takeIf(String::isNotEmpty)?.let { buildingShortTitle(it) },
@@ -145,7 +145,7 @@ object LessonTimelines {
             SportMark.BOOKED -> add(pill(LessonPillKind.BOOKED, CoreStrings.lesson_pill_booked))
             null -> Unit
         }
-        if (lesson.online) add(pill(LessonPillKind.ONLINE, CoreStrings.lesson_pill_online))
+        if (lesson.isOnline) add(pill(LessonPillKind.ONLINE, CoreStrings.lesson_pill_online))
     }
 
     private fun pill(kind: LessonPillKind, key: String) = LessonPill(kind, UiText.Res(key))

@@ -72,8 +72,10 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   opens the pass sheet (`AppRoutes.QrPass`), the same sheet widgets, the Control and shortcuts open. `QrPassSheet`
   (`Features/Qr/`) is a content-height `ItmoSheet` over `QrPassViewModel`: holder, the code from `QrCodeGenerator`
   drawn as the QR widget draws it, and the line with `Обновить`; full brightness while it is on screen.
-- Root header. A SwiftUI root takes `.itmoRootHeader(title:subtitle:)`: title and subtitle with the toolbar items in
-  one row (`.inlineLarge`), `.inline` once its scroll view leaves the top. Today's root (`TodayScreen`,
+- Root header. A SwiftUI root takes `.itmoRootHeader(title:subtitle:actions:)`: title and subtitle with the actions in
+  one row, static (owner, 2026-10-13). The system's `.inlineLarge` title collapses to `.inline` on scroll, so the root
+  hides the navigation bar and draws the header in a `safeAreaBar` that the content scrolls under, with the scroll
+  edge effect; the navigation title stays for a pushed screen's back button. Today's root (`TodayScreen`,
   `Features/Home/`) has it with today's academic date and the bell (`ItmoBellButton` with the count of unseen events,
   today only) over `TodayContent` (`TodayViewModel`: the hero, the day as `ItmoLessonTimeline` from the shared
   `LessonTimelines` rows, `Support/LessonUi+Kit.swift`, the things to do); the bell opens `BellSheet`, a tall
@@ -306,7 +308,8 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
 - SwiftUI screens and widget entry views have swift-snapshot-testing references in `__Snapshots__/` beside each test:
   `assertAppearances(of:named:)` renders light and dark at Dynamic Type L and AX1, 375 pt wide (iPhone SE, the
   narrowest iPhone of iOS 26). `test.sh --ci` never records; when CI disagrees with a local recording, the CI images
-  win.
+  win. The system spinner starts on a frame picked by the time it appears, so layer renders draw an indeterminate
+  `ProgressView` with a still stand-in (`StillSpinnerStyle` in `AssertAppearances.swift`).
 - Whole screens with system chrome (the glass tab bar, navigation bars, presented sheets) use
   `assertScreenAppearances(of:named:)`, which draws the view in a window of its own at 375 x 667 pt; a layer render
   misses that chrome. `ShellSnapshotTests` covers the tabs, the root header, a pushed screen and the sheet heights on

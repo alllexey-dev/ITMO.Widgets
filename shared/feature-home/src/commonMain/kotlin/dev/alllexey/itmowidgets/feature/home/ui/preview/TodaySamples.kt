@@ -70,7 +70,8 @@ object TodaySamples {
             change = LessonChange(LocalDateTime(2026, 9, 6, 20, 14), previousRoom = "1506"),
         ),
         lesson("11:40", "13:10", PreviewFixtures.LongSubjectName, 3, "Лебедев Алексей Сергеевич", "1506", "Кронверкский пр., 49"),
-        lesson("15:20", "16:50", "Английский язык", 3, "Петрова Анна Викторовна", null, null, online = true),
+        // MyITMO puts a placeholder in the room of a remote lesson: no place line.
+        lesson("15:20", "16:50", "Английский язык", 3, "Петрова Анна Викторовна", "дистант", null, online = true),
         lesson("17:00", "18:30", "Волейбол", 11, "Захаров Николай Иванович", "спортзал", "Ломоносова ул., 9", sport = SportMark.BOOKED),
     )
 
@@ -96,6 +97,22 @@ object TodaySamples {
 
     fun at(time: String, todos: List<TodayTodo> = emptyList(), refresh: TodayRefresh = TodayRefresh.Done): TodayUiState =
         TodayPresenter.state(LocalDateTime(Monday, LocalTime.parse(time)), days, todos, refresh, refreshing = false, Zone)
+
+    /** The next lesson in a room with a long name: the address goes under it on a narrow phone. */
+    val LongRoom: TodayUiState = TodayPresenter.state(
+        LocalDateTime(Monday, LocalTime(9, 30)),
+        listOf(
+            LessonDay(
+                Monday,
+                listOf(lesson("10:00", "11:30", "Физика", 1, "Смирнова Елена Андреевна", "Актовый зал", "Ломоносова ул., 9")),
+                Instant.parse("2026-09-07T06:20:00Z"),
+            ),
+        ),
+        emptyList(),
+        TodayRefresh.Done,
+        refreshing = false,
+        Zone,
+    )
 
     val Empty: TodayUiState = TodayPresenter.state(
         LocalDateTime(Monday, LocalTime(9, 0)), emptyList(), emptyList(), TodayRefresh.Done, refreshing = false, Zone,

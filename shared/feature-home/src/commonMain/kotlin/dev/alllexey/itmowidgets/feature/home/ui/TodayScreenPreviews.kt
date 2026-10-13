@@ -43,6 +43,12 @@ internal class TodayScreenOnlinePreview {
     fun TodayScreen() = TodayPreview(TodaySamples.at("15:30"))
 }
 
+internal class TodayScreenLongRoomPreview {
+    @Preview(name = "longRoom")
+    @Composable
+    fun TodayScreen() = TodayPreview(TodaySamples.LongRoom)
+}
+
 internal class TodayScreenEveningPreview {
     @Preview(name = "evening")
     @Composable
