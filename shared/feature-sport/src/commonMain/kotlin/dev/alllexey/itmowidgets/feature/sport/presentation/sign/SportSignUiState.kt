@@ -13,7 +13,7 @@ import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 
 /**
- * «Запись» of the Спорт tab (docs/features/sport.md): the [query], the quick [chips], the [weeks] strip with its
+ * `Запись` of the Спорт tab (docs/features/sport.md): the [query], the quick [chips], the [weeks] strip with its
  * [selectedWeek], the chosen day's lessons in [body], the more-filters sheet ([filters], null while closed) with
  * [filterCount] on its button, and the queue's question ([prompt]).
  */
@@ -28,7 +28,7 @@ data class SportSignUiState(
     val prompt: SportPrompt? = null,
 )
 
-/** What «Запись» asks of its screen once. */
+/** What `Запись` asks of its screen once. */
 sealed interface SportSignEvent {
     /** A message for a snackbar: `Записали`, an error. */
     data class Notice(val text: UiText) : SportSignEvent
@@ -169,7 +169,7 @@ enum class SportDayPart { ANYTIME, MORNING, DAY, EVENING;
     }
 }
 
-/** The filters of «Запись»; the chosen day travels with them. */
+/** The filters of `Запись`; the chosen day travels with them. */
 data class SportSignFilters(
     val selectedDate: LocalDate,
     val query: String = "",

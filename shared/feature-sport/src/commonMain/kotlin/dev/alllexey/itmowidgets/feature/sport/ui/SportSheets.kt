@@ -194,7 +194,7 @@ internal fun SportPromptSheet(prompt: SportPrompt, actions: SportPromptActions) 
 }
 
 /**
- * «Встать в очередь?» (DECISIONS.md, Очередь): what and when, the three steps, the late-sign switch of a real lesson,
+ * `Встать в очередь?` (DECISIONS.md, Очередь): what and when, the three steps, the late-sign switch of a real lesson,
  * the queues left, `Встать в очередь` and `Не сейчас`.
  */
 @Composable

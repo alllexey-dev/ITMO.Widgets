@@ -7,8 +7,8 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 
 /**
- * «Моё» of the Спорт tab (docs/features/sport.md): the score ring that leads to «Откуда баллы», the bookings and
- * queues as lesson cards by day, the entry to «Мои секции» with its [sections] line, and the question before a
+ * `Моё` of the Спорт tab (docs/features/sport.md): the score ring that leads to `Откуда баллы`, the bookings and
+ * queues as lesson cards by day, the entry to `Мои секции` with its [sections] line, and the question before a
  * cancellation ([cancel]).
  */
 data class SportMyUiState(

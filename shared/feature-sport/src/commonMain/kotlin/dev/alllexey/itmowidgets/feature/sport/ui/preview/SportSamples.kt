@@ -198,7 +198,7 @@ object SportSamples {
     )
 
     /**
-     * «Запись» at the lab's axes: [filters] `none`, `active` (`Есть места`, `Вечер`) or `sheet`; [day] `normal`
+     * `Запись` at the lab's axes: [filters] `none`, `active` (`Есть места`, `Вечер`) or `sheet`; [day] `normal`
      * (Tuesday) or `empty` (Sunday).
      */
     fun sign(filters: String, day: String): SportSignUiState {
@@ -230,7 +230,7 @@ object SportSamples {
 
     private val score = SportScoreUi.of(SportScoreSummary(attendances = 15, bonus = 15))
 
-    /** «Моё» at the lab's axes: [state] `active` (bookings and a queue) or `none`. */
+    /** `Моё` at the lab's axes: [state] `active` (bookings and a queue) or `none`. */
     fun my(state: String): SportMyUiState = SportMyUiState(
         score = score,
         body = SportMyBody.Content(
@@ -262,7 +262,7 @@ object SportSamples {
         return SportLessonSheetPresenter.present(args, now, zone)
     }
 
-    /** «Встать в очередь?» at the lab's axes: [kind] `full` (Фитнес, Tuesday) or `future` (Плавание in two weeks). */
+    /** `Встать в очередь?` at the lab's axes: [kind] `full` (Фитнес, Tuesday) or `future` (Плавание in two weeks). */
     fun join(kind: String): SportPrompt.Join = if (kind == "future") {
         SportPrompt.Join(
             lessonId = swimNext.lessonId,
@@ -296,7 +296,7 @@ object SportSamples {
     }
 
     /**
-     * «Мои секции» at the lab's axes: [queue] `on`, `off` or `limit`. The repeat needs Backend; the app hides it, the
+     * `Мои секции` at the lab's axes: [queue] `on`, `off` or `limit`. The repeat needs Backend; the app hides it, the
      * samples show it with rules of their own.
      */
     fun sections(queue: String): SportSectionsUiState {
@@ -311,7 +311,7 @@ object SportSamples {
         )
     }
 
-    /** «Мои секции» as the app shows it today: without the repeat, which waits for Backend. */
+    /** `Мои секции` as the app shows it today: without the repeat, which waits for Backend. */
     val sectionsWithoutRepeat: SportSectionsUiState
         get() {
             val pinned = setOf(SectionName("Плавание"), SectionName("Волейбол"))
@@ -333,7 +333,7 @@ object SportSamples {
             score = score, dateTime = at(date, "18:00"), isCompetition = competition != null, competitionName = competition, place = place,
         )
 
-    /** «Откуда баллы» at the lab's axes: [progress] `short` (30 of 100) or `done`. */
+    /** `Откуда баллы` at the lab's axes: [progress] `short` (30 of 100) or `done`. */
     fun points(progress: String): SportPointsUiState {
         val history = if (progress == "done") {
             (1..13).map { award("lesson", if (it % 2 == 0) "Плавание" else "Волейбол", 5, LocalDate(2026, 9, 1).plusDays(it * 4)) } +

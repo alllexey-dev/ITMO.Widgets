@@ -111,7 +111,7 @@ object SportTestTags {
     fun rowAction(lessonId: Long) = "sport:row_action:$lessonId"
 }
 
-/** What «Моё» asks of its host and ViewModel. */
+/** What `Моё` asks of its host and ViewModel. */
 data class SportMyActions(
     val onRefresh: () -> Unit = {},
     val onRetry: () -> Unit = {},
@@ -123,7 +123,7 @@ data class SportMyActions(
     val onDismissCancel: () -> Unit = {},
 )
 
-/** What «Запись» asks of its host and ViewModel; the more-filters sheet has its own [filters]. */
+/** What `Запись` asks of its host and ViewModel; the more-filters sheet has its own [filters]. */
 data class SportSignActions(
     val onRefresh: () -> Unit = {},
     val onRetry: () -> Unit = {},
@@ -258,7 +258,7 @@ private fun MyPart(state: SportMyUiState, actions: SportMyActions, tabs: LazyLis
     }
 }
 
-/** The score ring with the formula; it opens «Откуда баллы». */
+/** The score ring with the formula; it opens `Откуда баллы`. */
 @Composable
 internal fun ScoreCard(score: SportScoreUi, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
     val open = text(SportStrings.sport_points_title)

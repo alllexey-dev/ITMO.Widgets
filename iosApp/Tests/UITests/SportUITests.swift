@@ -1,9 +1,9 @@
 import XCTest
 
-/// The sport tab and another user's sport on the shared demo session: «Моё» and «Запись» of the SwiftUI root, a
+/// The sport tab and another user's sport on the shared demo session: `Моё` and `Запись` of the SwiftUI root, a
 /// booking's lesson sheet with its share action on the system share sheet, the demo's refusal of a booking, the
-/// more-filters sheet, «Мои секции» and «Откуда баллы» pushed on the stack, another user's sport from a profile, and
-/// «Моё» at the accessibility text size AX1. The texts are Russian on an English iPhone; the ISUs are the demo set's
+/// more-filters sheet, `Мои секции` and `Откуда баллы` pushed on the stack, another user's sport from a profile, and
+/// `Моё` at the accessibility text size AX1. The texts are Russian on an English iPhone; the ISUs are the demo set's
 /// (`DemoPeople`).
 final class SportUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
@@ -114,7 +114,7 @@ final class SportUITests: XCTestCase {
         XCTAssertTrue(list.waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "my-ax1")
 
-        // The page scrolls: «Мои секции» at its end comes clear of the demo banner and the tab bar.
+        // The page scrolls: `Мои секции` at its end comes clear of the demo banner and the tab bar.
         let sections = element(app, "sport.sections")
         for _ in 0..<12 where !sections.isHittable { list.swipeUp() }
         attachScreenshot(named: "my-ax1-end")

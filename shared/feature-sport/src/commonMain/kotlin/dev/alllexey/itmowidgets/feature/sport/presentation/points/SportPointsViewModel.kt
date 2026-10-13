@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * «Откуда баллы» on both platforms: the current semester's points from My ITMO with every award in its history. There
+ * `Откуда баллы` on both platforms: the current semester's points from My ITMO with every award in its history. There
  * is no forecast: it cannot be computed honestly.
  */
 class SportPointsViewModel(

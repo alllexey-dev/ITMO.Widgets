@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportOption
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportRowAction
 
 /**
- * «Мои секции» (DECISIONS.md, Спорт): the pinned sections with their next lessons and «Очередь через неделю»; the
+ * `Мои секции` (DECISIONS.md, Спорт): the pinned sections with their next lessons and `Очередь через неделю`; the
  * queue limit in the [subtitle]; the [limitGate] when it is spent; the [picker] of sections to pin (null while closed);
  * the queue's [prompt].
  */
@@ -32,12 +32,12 @@ sealed interface SportSectionsBody {
     data class Content(val sections: List<SportSectionCard>, val note: UiText?, val refreshing: Boolean = false) : SportSectionsBody
 }
 
-/** «Новая очередь не включится»: why ([reason]) and the way to free one. */
+/** `Новая очередь не включится`: why ([reason]) and the way to free one. */
 data class SportLimitGate(val title: UiText, val reason: UiText, val fix: UiText)
 
 /**
  * One pinned section: [title] (`Плавание`), the [teacher] of its next lesson, its [kind] and [place], the next
- * [lessons] and «Очередь через неделю» ([repeat], null while Backend has no rules). [name] is My ITMO's own, for unpin.
+ * [lessons] and `Очередь через неделю` ([repeat], null while Backend has no rules). [name] is My ITMO's own, for unpin.
  */
 data class SportSectionCard(
     val name: String,
@@ -54,7 +54,7 @@ data class SportSectionCard(
 data class SportSectionLesson(val lessonId: Long, val day: UiText, val time: String, val action: SportRowAction)
 
 /**
- * «Очередь через неделю»: [on], the slot in [subtitle] (`Вторник, 15:20, через неделю`), [enabled] while the limit
+ * `Очередь через неделю`: [on], the slot in [subtitle] (`Вторник, 15:20, через неделю`), [enabled] while the limit
  * allows, the next [dates] it queues for and the one-line [clash] with a lesson.
  */
 data class SportRepeatUi(

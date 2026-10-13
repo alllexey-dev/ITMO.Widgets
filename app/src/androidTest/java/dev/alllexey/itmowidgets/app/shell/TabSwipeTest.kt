@@ -42,7 +42,7 @@ import org.junit.runner.RunWith
 
 /**
  * The tab swipe on the real `MainActivity` in the demo session (design.md "Tab swipe"): through all five roots and
- * back, Back after swipes, an App Link while on another tab, and «Моё» of sport passing the swipe on. Swipes
+ * back, Back after swipes, an App Link while on another tab, and `Моё` of sport passing the swipe on. Swipes
  * start inside the tab content, away from the system's back edges, at a height read from the screen's geometry, so no
  * status bar or cutout height moves them onto content that keeps drags from the tabs.
  */
@@ -71,7 +71,7 @@ class TabSwipeTest {
         awaitTab(AppTab.HOME)
         assertTrue(ShellProbe.current().swipeEnabled)
 
-        // «Моё» and «Запись» of sport switch by their segmented choice only: a swipe moves the tab.
+        // `Моё` and `Запись` of sport switch by their segmented choice only: a swipe moves the tab.
         listOf(AppTab.SCHEDULE, AppTab.RECORDBOOK, AppTab.SPORT, AppTab.ME, AppTab.ME).forEach { tab ->
             swipe(towardsNext = true)
             awaitTab(tab)
@@ -249,7 +249,7 @@ class TabSwipeTest {
         /** Clear of the strip's blocked bottom padding (8 dp) and of the content's end. */
         const val SWIPE_MARGIN_DP = 24
 
-        /** «Моё» of the sport tab's segmented choice (`sport_tab_my`). */
+        /** `Моё` of the sport tab's segmented choice (`sport_tab_my`). */
         const val MY_SPORT = "Моё"
     }
 }

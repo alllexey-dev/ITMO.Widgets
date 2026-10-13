@@ -6,8 +6,8 @@ import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsUiState
 import dev.alllexey.itmowidgets.feature.sport.ui.preview.SportSamples
 
-// «Мои секции» at the design lab's axes (the repeat on, off, the limit spent) and as the app shows it before Backend
-// keeps the rules; «Откуда баллы» at both progress axes.
+// `Мои секции` at the design lab's axes (the repeat on, off, the limit spent) and as the app shows it before Backend
+// keeps the rules; `Откуда баллы` at both progress axes.
 
 @Composable
 private fun SectionsPreview(state: SportSectionsUiState) = ItmoPreview { SportSectionsScreen(state.copy(picker = null), SportSectionsActions()) }

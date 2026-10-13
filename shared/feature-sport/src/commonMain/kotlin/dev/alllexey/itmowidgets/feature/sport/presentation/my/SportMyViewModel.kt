@@ -37,7 +37,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.toLocalDateTime
 
 /**
- * «Моё» on both platforms over [SportBookingsHolder], which Сегодня and the schedule share: the score, the bookings and
+ * `Моё` on both platforms over [SportBookingsHolder], which Сегодня and the schedule share: the score, the bookings and
  * queues that are still ahead, and the cancellation a lesson sheet asked for, confirmed first.
  */
 class SportMyViewModel(

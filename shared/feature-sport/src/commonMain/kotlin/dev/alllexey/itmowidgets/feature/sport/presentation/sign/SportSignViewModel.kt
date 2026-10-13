@@ -54,7 +54,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 /**
- * «Запись» on both platforms: the merged catalog with the viewer's queues and friends, filtered by the search, the
+ * `Запись` on both platforms: the merged catalog with the viewer's queues and friends, filtered by the search, the
  * chips and the more-filters sheet, one day at a time on a six-week strip, and the booking actions of its rows and of
  * the lesson sheet ([SportLessonActions]).
  */

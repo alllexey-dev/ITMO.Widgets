@@ -50,8 +50,8 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
 
 /**
- * «Мои секции» on both platforms: the sections pinned on this device with their next lessons from the catalog and
- * their actions, the queue limit, and «Очередь через неделю» through [SportRecurringQueueRepository], shown only while
+ * `Мои секции` on both platforms: the sections pinned on this device with their next lessons from the catalog and
+ * their actions, the queue limit, and `Очередь через неделю` through [SportRecurringQueueRepository], shown only while
  * it is [SportRecurringQueueRepository.available].
  */
 class SportSectionsViewModel(
@@ -149,7 +149,7 @@ class SportSectionsViewModel(
 
     fun dismissPrompt() = actions.dismiss()
 
-    /** «Очередь через неделю» of the section [name]: on for the slot of its next lesson, or off. */
+    /** `Очередь через неделю` of the section [name]: on for the slot of its next lesson, or off. */
     fun toggleRepeat(name: String) {
         val card = (uiState.value.body as? SportSectionsBody.Content)?.sections?.firstOrNull { it.name == name } ?: return
         val repeat = card.repeat ?: return

@@ -32,7 +32,7 @@ import kotlinx.datetime.toLocalDateTime
 sealed interface SportPrompt {
 
     /**
-     * «Встать в очередь?» for [lessonId]: [what] (`Фитнес, Чайковского`) and [whenText], the three [steps] of a queue,
+     * `Встать в очередь?` for [lessonId]: [what] (`Фитнес, Чайковского`) and [whenText], the three [steps] of a queue,
      * the late-sign switch of a real lesson ([lateSign] with its [lateSignHint]), the queues left ([limit]).
      */
     data class Join(
@@ -46,7 +46,7 @@ sealed interface SportPrompt {
         val command: SportSignCommand,
     ) : SportPrompt
 
-    /** «Выйти из очереди?» with the place in it. */
+    /** `Выйти из очереди?` with the place in it. */
     data class Leave(val message: UiText, val command: SportSignCommand) : SportPrompt
 
     /** Why a queue cannot be joined now (no connection, the day or the limit is taken). */

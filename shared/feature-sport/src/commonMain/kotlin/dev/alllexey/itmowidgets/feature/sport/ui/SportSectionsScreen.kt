@@ -66,7 +66,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import org.jetbrains.compose.resources.painterResource
 
-/** Test tags of «Мои секции». */
+/** Test tags of `Мои секции`. */
 object SportSectionsTags {
     const val LIST = "sport_sections:list"
     const val EMPTY = "sport_sections:empty"
@@ -76,7 +76,7 @@ object SportSectionsTags {
     fun repeat(name: String) = "sport_sections:repeat:$name"
 }
 
-/** What «Мои секции» asks of its host and ViewModel. */
+/** What `Мои секции` asks of its host and ViewModel. */
 data class SportSectionsActions(
     val onBack: () -> Unit = {},
     val onRefresh: () -> Unit = {},
@@ -92,7 +92,7 @@ data class SportSectionsActions(
 )
 
 /**
- * «Мои секции» (DECISIONS.md, Спорт): each pinned section with its next lessons and «Очередь через неделю», the queue
+ * `Мои секции` (DECISIONS.md, Спорт): each pinned section with its next lessons and `Очередь через неделю`, the queue
  * limit in the subtitle and a gate when it is spent; `+` pins another section.
  */
 @Composable

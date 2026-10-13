@@ -64,7 +64,7 @@ val sportModule = module {
     singleOf(::SportActionRepositoryImpl) { bind<SportActionRepository>() }
     singleOf(::SportSignPreferencesRepositoryImpl) { bind<SportSignPreferencesRepository>() }
     singleOf(::UserSportRepositoryImpl) { bind<UserSportRepository>() }
-    // «Очередь через неделю» waits for Backend to keep the rules (docs/features/sport.md).
+    // `Очередь через неделю` waits for Backend to keep the rules (docs/features/sport.md).
     single<SportRecurringQueueRepository> { UnavailableSportRecurringQueueRepository }
     singleOf(::PendingSportBookingsRepositoryImpl) { bind<PendingSportBookingsRepository>() }
     // The log has an internal test constructor beside the public one, so its reference would be ambiguous.

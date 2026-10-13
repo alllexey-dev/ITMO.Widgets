@@ -39,8 +39,8 @@ data class SportSheetAction(val lessonId: Long, val action: String?) {
 
 /**
  * What only the platform host does for the sport screens: the lesson sheet of [SportCommonDetailsArgs] (with the part
- * that opened it, to send the sheet's action back, and whether a request for it is in flight), the pushed «Мои
- * секции» and «Откуда баллы».
+ * that opened it, to send the sheet's action back, and whether a request for it is in flight), the pushed `Мои
+ * секции` and `Откуда баллы`.
  */
 data class SportHostActions(
     val onOpenLesson: (details: SportCommonDetailsArgs, from: SportTab, busy: Boolean) -> Unit = { _, _, _ -> },
@@ -49,7 +49,7 @@ data class SportHostActions(
 )
 
 /**
- * The Спорт tab on its two ViewModels. «Моё» loads once; a link from [sharedLessons] selects «Запись» and opens the
+ * The Спорт tab on its two ViewModels. `Моё` loads once; a link from [sharedLessons] selects `Запись` and opens the
  * lesson's sheet there. [mySheetActions] and [signSheetActions] carry the lesson sheet's action back to the part that
  * opened it, which checks it against what the lesson offers now. Messages show only while the tab is resumed.
  */
@@ -142,7 +142,7 @@ fun SportRoute(
     SportScreen(title, tab, { tab = it }, my, sign, myActions, signActions, modifier, snackbars)
 }
 
-/** «Мои секции» on its ViewModel; a lesson's sheet opens through [onOpenLesson], its action comes back in [sheetActions]. */
+/** `Мои секции` on its ViewModel; a lesson's sheet opens through [onOpenLesson], its action comes back in [sheetActions]. */
 @Composable
 fun SportSectionsRoute(
     viewModel: SportSectionsViewModel,
@@ -182,7 +182,7 @@ fun SportSectionsRoute(
     SportSectionsScreen(state, actions, modifier, snackbars)
 }
 
-/** «Откуда баллы» on its ViewModel. */
+/** `Откуда баллы` on its ViewModel. */
 @Composable
 fun SportPointsRoute(viewModel: SportPointsViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()

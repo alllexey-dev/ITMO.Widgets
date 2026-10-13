@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Whether the sport sign-up hides its teacher and time selectors (both hidden by default), and the sections pinned
- * to «Мои секции» by their My ITMO names.
+ * to `Мои секции` by their My ITMO names.
  */
 class SportSignSelectorPreferences(dataStore: DataStore<Preferences>) : DataStorePreferences(dataStore) {
 

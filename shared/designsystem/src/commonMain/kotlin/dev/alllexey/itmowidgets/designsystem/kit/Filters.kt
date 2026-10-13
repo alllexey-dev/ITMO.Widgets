@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.gesture.tabSwipeHandover
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
@@ -45,7 +46,7 @@ import org.jetbrains.compose.resources.painterResource
 data class ChipSpec(val label: String, val selected: Boolean, val count: Int? = null)
 
 /**
- * Filter chips (the one pattern for filters): a row that scrolls sideways under the screen's content, or, with [wrap],
+ * Filter chips (the one pattern for filters): a row that scrolls sideways before the tab swipe takes over, or, with [wrap],
  * lines that wrap within the margins (a filter set in a sheet). [onClick] gets the chip's index.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -80,8 +81,9 @@ fun FilterChips(chips: List<ChipSpec>, onClick: (Int) -> Unit, modifier: Modifie
             horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
         ) { content() }
     } else {
+        val scroll = rememberScrollState()
         Row(
-            modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            modifier.fillMaxWidth().tabSwipeHandover(scroll).horizontalScroll(scroll),
             horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
         ) { content() }
     }

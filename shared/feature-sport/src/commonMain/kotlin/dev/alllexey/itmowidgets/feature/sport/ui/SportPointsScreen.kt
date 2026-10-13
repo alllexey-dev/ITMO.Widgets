@@ -48,7 +48,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import org.jetbrains.compose.resources.painterResource
 
-/** Test tags of «Откуда баллы». */
+/** Test tags of `Откуда баллы`. */
 object SportPointsTags {
     const val LIST = "sport_points:list"
     const val CAP = "sport_points:cap"
@@ -56,7 +56,7 @@ object SportPointsTags {
     const val EMPTY = "sport_points:empty"
 }
 
-/** What «Откуда баллы» asks of its host and ViewModel. */
+/** What `Откуда баллы` asks of its host and ViewModel. */
 data class SportPointsActions(
     val onBack: () -> Unit = {},
     val onRefresh: () -> Unit = {},
@@ -65,7 +65,7 @@ data class SportPointsActions(
 )
 
 /**
- * «Откуда баллы» (DECISIONS.md, Спорт): visits plus the bonus make the total in the ring, the bonus counts up to 40,
+ * `Откуда баллы` (DECISIONS.md, Спорт): visits plus the bonus make the total in the ring, the bonus counts up to 40,
  * then My ITMO's awards by month. No forecast.
  */
 @Composable

@@ -67,9 +67,9 @@ import kotlinx.datetime.LocalTime
 import org.koin.core.parameter.parametersOf
 
 /**
- * The sport keys: «Мои секции», «Откуда баллы», another user's sport, the lesson sheet of a lesson or a booking and
+ * The sport keys: `Мои секции`, `Откуда баллы`, another user's sport, the lesson sheet of a lesson or a booking and
  * the question before a cancellation the shell asks. The sheet's booking action goes where its
- * [SportRoutes.SportCommonDetails.replyTo] says: to the part of the tab or «Мои секции» that opened it on the result
+ * [SportRoutes.SportCommonDetails.replyTo] says: to the part of the tab or `Мои секции` that opened it on the result
  * bus, or, for a sheet the [SportDetailsRedirect] opened from the feed or the schedule, to the shell's own question.
  */
 internal fun EntryRegistry.Builder.sportEntries() {
@@ -85,9 +85,9 @@ internal fun EntryRegistry.Builder.sportEntries() {
 }
 
 /**
- * The sport tab's root: `SportRoute` with both ViewModels in the root's own store, so «Запись» keeps its week and
+ * The sport tab's root: `SportRoute` with both ViewModels in the root's own store, so `Запись` keeps its week and
  * filters across tab switches. A [TabRequest.SportLesson] (a shared link, a sport notification) opens its lesson on
- * «Запись» once; the lesson sheets reply on the result key of the part that opened them.
+ * `Запись` once; the lesson sheets reply on the result key of the part that opened them.
  */
 @Composable
 internal fun SportTabRoot(navigator: Nav3AppNavigator) {
@@ -127,7 +127,7 @@ internal fun SportTabRoot(navigator: Nav3AppNavigator) {
     )
 }
 
-/** «Мои секции»: its lessons' sheets reply on its own result key; `Мои записи` of the limit gate goes back to Спорт. */
+/** `Мои секции`: its lessons' sheets reply on its own result key; `Мои записи` of the limit gate goes back to Спорт. */
 @Composable
 private fun SportSectionsEntry(navigator: Nav3AppNavigator, onBack: () -> Unit) {
     val sheetActions = remember { Channel<SportSheetAction>(Channel.UNLIMITED) }

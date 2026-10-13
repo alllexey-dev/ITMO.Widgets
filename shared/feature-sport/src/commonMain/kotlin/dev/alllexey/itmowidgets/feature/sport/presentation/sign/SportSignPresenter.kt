@@ -27,7 +27,7 @@ import kotlinx.datetime.format
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
-/** What «Запись» shows of the catalog; pure, so every case is a host test. */
+/** What `Запись` shows of the catalog; pure, so every case is a host test. */
 class SportSignInput(
     val lessons: List<SportLesson>,
     val catalog: SportFilterCatalog,

@@ -162,7 +162,7 @@ group takes 26 pt ([Platform styles](#platform-styles)).
 | `Card.Content.Outlined` | 20 dp, 1 dp `outlineVariant` | Sport lesson and booking cards, debug cards |
 | `Card.Content.Tonal` | 20 dp, `surfaceContainerLow`, no stroke | The AI summary of a teacher's reviews above the reviews |
 | `Card.CompactSummary` | `cardContent` 20 dp | The recordbook summary row |
-| `Card.Summary` | `cardSummary` 28 dp, 20 dp padding | The sport score card of «Моё» and the formula of «Откуда баллы» (`ScoreCard`, `ItmoCard(hero = true)`) |
+| `Card.Summary` | `cardSummary` 28 dp, 20 dp padding | The sport score card of `Моё` and the formula of `Откуда баллы` (`ScoreCard`, `ItmoCard(hero = true)`) |
 | `Card.Hero` | `cardHero` 28 dp, `surfaceContainer`, no stroke | The subject result and the person on a profile, above the page's connected groups |
 | `Card.SettingsGroup` | 20 dp, no stroke, inner dividers | One card per settings or profile group, never per row (the kit's `SettingsGroup`) |
 | `Card.ScheduleDay` | `scheduleDay` 16 dp, 16 dp between days | A day of lessons with its timeline (`ScheduleDayCard`) |
@@ -647,7 +647,7 @@ wrappers only; a new screen follows the rules below.
   - the lesson in progress on home, the home flow's second hero: its elapsed
     share is `ItmoWavyProgress`; every other schedule row keeps plain type and
     no progress;
-  - the sport score card of «Моё»: the ring of visits and the counted bonus;
+  - the sport score card of `Моё`: the ring of visits and the counted bonus;
   - the subject page's hero card: the points in `displayMedium` over the
     grade scale;
   - the person profile hero: `ItmoHeroAvatar` under the nine-sided cookie and

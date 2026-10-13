@@ -13,7 +13,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 
-/** «Откуда баллы» (DECISIONS.md, Спорт): the formula, the bonus cap and My ITMO's history of awards by date. */
+/** `Откуда баллы` (DECISIONS.md, Спорт): the formula, the bonus cap and My ITMO's history of awards by date. */
 sealed interface SportPointsUiState {
     data object Loading : SportPointsUiState
 

@@ -24,7 +24,7 @@ import kotlinx.datetime.format
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
-/** What «Мои секции» is made of; pure, so every case is a host test. */
+/** What `Мои секции` is made of; pure, so every case is a host test. */
 class SportSectionsInput(
     val lessons: List<SportLesson>,
     val pinned: Set<SectionName>,

@@ -54,13 +54,13 @@ object SportRoutes {
 /** Who opened a [SportRoutes.SportCommonDetails] sheet and hears its booking action. */
 @Serializable
 enum class SportDetailsOpener {
-    /** The sport tab's «Моё». */
+    /** The sport tab's `Моё`. */
     MY,
 
-    /** The sport tab's «Запись». */
+    /** The sport tab's `Запись`. */
     SIGN,
 
-    /** «Мои секции». */
+    /** `Мои секции`. */
     SECTIONS,
 
     /** The shell, for a sport lesson or a pending sport row of the feed or the schedule: it asks before cancelling. */

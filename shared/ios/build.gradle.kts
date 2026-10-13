@@ -32,7 +32,7 @@ kotlin {
             export(project(":shared:feature-qr"))
             // The today header's TodayHeaderViewModel.
             export(project(":shared:feature-home"))
-            // The sport tab's, «Мои секции» and «Откуда баллы» ViewModels, SportSamples of the snapshot tests.
+            // The sport tab's, `Мои секции` and `Откуда баллы` ViewModels, SportSamples of the snapshot tests.
             export(project(":shared:feature-sport"))
         }
     }

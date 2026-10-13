@@ -50,8 +50,8 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 /**
- * The sport data of the shell tests on synthetic fakes: the bookings holder, the sport tab's two ViewModels, «Мои
- * секции», «Откуда баллы» and another user's sport, all over the same repositories, so a test sets [bookings] and every screen and the
+ * The sport data of the shell tests on synthetic fakes: the bookings holder, the sport tab's two ViewModels, `Мои
+ * секции`, `Откуда баллы` and another user's sport, all over the same repositories, so a test sets [bookings] and every screen and the
  * redirect see them. Every source answers at once (an empty list) unless a test sets it to `Loading`; the holder and
  * the cancellation follow-ups run in [scope]. [cancelled] records the lessons whose booking was signed out.
  */

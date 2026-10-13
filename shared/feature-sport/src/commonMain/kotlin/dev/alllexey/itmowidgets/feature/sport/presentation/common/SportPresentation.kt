@@ -30,7 +30,7 @@ import kotlinx.datetime.toLocalDateTime
 /** MyITMO's lesson type id of sport in the timetable; it colours a booking as the schedule colours it. */
 const val SPORT_TYPE_ID = 11
 
-/** «Свободное», «Тренировка», «Секция», «Сборная», or the full name of a rarer kind (`Нормативы`). */
+/** `Свободное`, `Тренировка`, `Секция`, `Сборная`, or the full name of a rarer kind (`Нормативы`). */
 fun SportLessonKind.shortText(): UiText = UiText.Res(
     when (this) {
         SportLessonKind.FREE_ATTENDANCE -> SportStrings.sport_kind_free_short
@@ -85,7 +85,7 @@ fun SportCommon.place(): SportPlace {
     return SportPlace(room.takeIf(String::isNotEmpty), address)
 }
 
-/** «Сегодня, 7 сент.», «Завтра, 8 сент.», «Чт, 10 сент.». */
+/** `Сегодня, 7 сент.`, `Завтра, 8 сент.`, `Чт, 10 сент.`. */
 fun sportDayLabel(date: LocalDate, today: LocalDate): UiText {
     val day = "${date.day} ${date.format(DateTexts.MONTH_SHORT)}"
     return when (date) {
@@ -95,14 +95,14 @@ fun sportDayLabel(date: LocalDate, today: LocalDate): UiText {
     }
 }
 
-/** «Вторник, 8 сентября». */
+/** `Вторник, 8 сентября`. */
 fun sportDayTitle(date: LocalDate): UiText = UiText.Dynamic(date.format(DateTexts.WEEKDAY_DAY_MONTH).capitalized())
 
 /** A queue entry that still waits for a place or for its lesson. */
 val SportQueueEntry.waiting: Boolean
     get() = !isCancelled && status in SportQueueEntryStatus.notifiableStatuses
 
-/** «очередь 2 из 5»; «очередь» while the position is unknown. */
+/** `очередь 2 из 5`; `очередь` while the position is unknown. */
 fun SportQueueEntry.queueText(): UiText =
     if (position > 0 && total > 0) UiText.Res(SportStrings.sport_queue_position, listOf(position, total))
     else UiText.Res(SportStrings.sport_queue_pill)

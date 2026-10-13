@@ -92,13 +92,13 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
-    /** «Мои секции» of the Спорт tab: the pinned sections, their next lessons and the queue limit. */
+    /** `Мои секции` of the Спорт tab: the pinned sections, their next lessons and the queue limit. */
     @Serializable
     data object SportSections : AppRoute {
         override val kind get() = RouteKind.SCREEN
     }
 
-    /** «Откуда баллы»: the sport points' formula, the bonus cap and My ITMO's history of awards. */
+    /** `Откуда баллы`: the sport points' formula, the bonus cap and My ITMO's history of awards. */
     @Serializable
     data object SportPoints : AppRoute {
         override val kind get() = RouteKind.SCREEN
