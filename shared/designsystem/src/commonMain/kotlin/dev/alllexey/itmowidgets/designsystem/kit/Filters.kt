@@ -33,7 +33,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.gesture.tabSwipeHandover
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
@@ -83,7 +82,7 @@ fun FilterChips(chips: List<ChipSpec>, onClick: (Int) -> Unit, modifier: Modifie
     } else {
         val scroll = rememberScrollState()
         Row(
-            modifier.fillMaxWidth().tabSwipeHandover(scroll).horizontalScroll(scroll),
+            modifier.fillMaxWidth().horizontalScroll(scroll),
             horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
         ) { content() }
     }

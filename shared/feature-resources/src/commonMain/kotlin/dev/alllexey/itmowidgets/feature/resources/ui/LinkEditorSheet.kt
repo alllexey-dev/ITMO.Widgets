@@ -54,7 +54,6 @@ import dev.alllexey.itmowidgets.core.schedule.lessonTypeName
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
-import dev.alllexey.itmowidgets.designsystem.gesture.tabSwipeHandover
 import dev.alllexey.itmowidgets.designsystem.icons.drawable
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkAudienceOption
@@ -315,8 +314,6 @@ private fun CategoryChips(selected: LinkCategory?, url: String, onSelect: (LinkC
         Modifier
             .fillMaxWidth()
             .padding(top = ItmoTheme.spacing.compact)
-            // The kit's rule for every chip row; inside a sheet there is no tab swipe to hand over to.
-            .tabSwipeHandover(list)
             .testTag(LinkEditorSheetTestTags.CATEGORIES),
         state = list,
         contentPadding = PaddingValues(horizontal = ItmoTheme.spacing.screenMargin),

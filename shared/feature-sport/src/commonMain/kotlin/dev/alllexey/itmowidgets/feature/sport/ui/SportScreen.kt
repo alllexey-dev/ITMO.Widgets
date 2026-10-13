@@ -46,7 +46,6 @@ import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
-import dev.alllexey.itmowidgets.designsystem.gesture.tabSwipeHandover
 import dev.alllexey.itmowidgets.designsystem.kit.ChipSpec
 import dev.alllexey.itmowidgets.designsystem.kit.FilterChips
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
@@ -401,7 +400,7 @@ private fun WeekPager(state: SportSignUiState, actions: SportSignActions) {
     LaunchedEffect(pager) {
         snapshotFlow { pager.settledPage }.collect { page -> if (page != selectedWeek) onWeek(page) }
     }
-    HorizontalPager(pager, Modifier.fillMaxWidth().tabSwipeHandover(pager).testTag(SportTestTags.STRIP)) { page ->
+    HorizontalPager(pager, Modifier.fillMaxWidth().testTag(SportTestTags.STRIP)) { page ->
         val week = weeks[page]
         WeekStrip(
             days = week.map { WeekStripDay(it.weekday, it.number, it.lessons, changed = false, today = it.today, past = it.past) },
