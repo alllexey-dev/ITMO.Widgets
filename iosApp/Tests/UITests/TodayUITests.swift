@@ -38,7 +38,9 @@ final class TodayUITests: XCTestCase {
         attachScreenshot(named: "bell")
         element(app, "sheet.close").tap()
         XCTAssertTrue(sheet.waitForNonExistence(timeout: stepTimeout))
-        XCTAssertEqual(element(app, "shell.bell").value as? String ?? "", "", "opening the bell read everything")
+        // The badge follows the seen mark through the header's flow, a moment after the sheet closes.
+        let read = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == ''"), object: element(app, "shell.bell"))
+        XCTAssertEqual(XCTWaiter().wait(for: [read], timeout: stepTimeout), .completed, "opening the bell read everything")
     }
 
     func testTodayAtAccessibilityTextSize() {
