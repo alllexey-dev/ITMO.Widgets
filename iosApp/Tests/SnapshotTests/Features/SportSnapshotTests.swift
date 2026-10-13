@@ -140,9 +140,7 @@ final class SportSnapshotTests: XCTestCase {
     ) {
         let screen = NavigationStack {
             content
-                .navigationTitle(Text(verbatim: AppStrings.string(title)))
-                .navigationSubtitle(Text(verbatim: subtitle))
-                .toolbarTitleDisplayMode(.inlineLarge)
+                .itmoDetailHeader(title: AppStrings.string(title), subtitle: subtitle)
         }
         assertScreenAppearances(of: screen, named: name, appearances: appearances, settle: 1, testName: testName)
     }

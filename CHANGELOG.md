@@ -139,6 +139,11 @@ new iOS app.
 - New switch `Виджеты в цвет темы` (off by default) paints the schedule and QR
   widgets in the app's colours on Android and iOS; with `Динамические цвета`
   off the QR code stays black on white.
+- Headers are one line on both platforms: the tab's title and the date on one baseline (the date goes under it when
+  it does not fit), and on a pushed screen such as a subject the title and its subtitle flow as one paragraph that
+  wraps in full instead of being cut. The Сегодня hero joins an online lesson with a small `Войти` next to
+  `Онлайн`. Progress tracks in cards are a soft groove in the card's own colour instead of a dark bar, and tonal
+  buttons such as `Записаться` in Спорт are in the accent colour instead of a grey that looked disabled.
 - Every icon is a Material Symbols Rounded glyph, and the selected bottom tab
   shows its filled variant. On iOS the shared screens use iOS controls, text
   styles and haptics.

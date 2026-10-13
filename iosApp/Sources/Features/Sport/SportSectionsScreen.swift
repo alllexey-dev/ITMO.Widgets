@@ -14,9 +14,7 @@ struct SportSectionsScreen: View {
     var body: some View {
         SportSectionsContent(state: model.state, actions: actions)
             .refreshable { model.viewModel.refresh(mode: .pull) }
-            .navigationTitle(Text(verbatim: AppStrings.string("sport_sections_title")))
-            .navigationSubtitle(Text(verbatim: model.state.subtitle?.resolved ?? ""))
-            .toolbarTitleDisplayMode(.inlineLarge)
+            .itmoDetailHeader(title: AppStrings.string("sport_sections_title"), subtitle: model.state.subtitle?.resolved)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { model.viewModel.openPicker() } label: { AppSymbol.add.image }

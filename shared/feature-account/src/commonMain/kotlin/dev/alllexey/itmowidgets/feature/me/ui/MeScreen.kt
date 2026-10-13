@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
+import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
@@ -446,7 +446,7 @@ private fun ProjectLinks(actions: MeActions) {
 /** `Widget.ItmoWidgets.ProjectLink`: a 40 dp tonal pill in a 48 dp target, an 18 dp icon, the label in `labelLarge`. */
 @Composable
 private fun ProjectLinkButton(label: String, description: String, icon: Painter, tag: String, onClick: () -> Unit) {
-    FilledTonalButton(
+    TonalButton(
         onClick = onClick,
         modifier = Modifier.testTag(tag).semantics { contentDescription = description },
         contentPadding = PaddingValues(start = ItmoTheme.spacing.group, end = ItmoTheme.spacing.summaryPadding),

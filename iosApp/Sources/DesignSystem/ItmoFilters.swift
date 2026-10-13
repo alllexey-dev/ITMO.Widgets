@@ -202,10 +202,12 @@ struct ItmoOccupancy: View {
     let share: Double
     let tone: ItmoTone
 
+    @Environment(\.itmoTrack) private var track
+
     var body: some View {
         HStack(spacing: 6) {
             Capsule()
-                .fill(Color(.tertiarySystemFill))
+                .fill(track)
                 .frame(width: 44, height: 6)
                 .overlay(alignment: .leading) {
                     Capsule().fill(tone.color).frame(width: 44 * min(max(share, 0), 1))

@@ -26,10 +26,13 @@ The bell opens its sheet over it. The spec is the design lab's
     and tomorrow is the `Сегодня и завтра пар нет` state;
   - cancelled lessons and sport queues are never the hero and do not count.
 - The hero says where to go: the room big with the building's full address,
-  or `Онлайн` with `Подключиться` (the meeting link), the time and the
-  lesson's note. A placeholder room (`дистант`) means online. The big text
-  never clips: the address or the button goes under it when the row is too
-  narrow. `Маршрут` waits for the map (phase 8): it is not shown.
+  or `Онлайн` with a small `Войти` next to it (the meeting link; owner,
+  2026-10-13, hero lab variant 2), the time and the lesson's note. A
+  placeholder room (`дистант`) means online. The big text never clips and
+  never touches the button: at least the kit's `content` gap, the address or
+  the button goes under it when the row is too narrow. `Маршрут`, the same
+  small button for in-person lessons, waits for the map (phase 8): it is not
+  shown.
 - The day is the kit's timeline built by the shared lesson rules
   (`core/lesson/LessonTimelines`, [design](../design.md#the-m3-expressive-kit)):
   `идёт`, `далее`, `изменена` and `отменена` from the found
@@ -55,7 +58,7 @@ The bell opens its sheet over it. The spec is the design lab's
   minutes refresh again; only a pull shows the indicator.
 - `TodayRoute` / `TodayScreen` are Compose in `commonMain`; on Android
   `HomeTabRoot` (`app/shell/entries/HomeEntries.kt`) keeps the ViewModel and
-  turns lessons, `Подключиться` and the todo routes into navigation.
+  turns lessons, `Войти` and the todo routes into navigation.
 
 ## The bell
 

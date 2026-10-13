@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +25,7 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonSt
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 
 /** The two sizes of the empty, error and loading family. */
 enum class ContentStateSize {
@@ -121,7 +121,7 @@ private fun ContentStateButton(action: ContentStateAction) {
     }
     when (action.style) {
         ContentStateActionStyle.Tonal ->
-            FilledTonalButton(onClick = action.onClick, modifier = action.modifier) { Text(action.label) }
+            TonalButton(onClick = action.onClick, modifier = action.modifier) { Text(action.label) }
         ContentStateActionStyle.Filled ->
             Button(onClick = action.onClick, modifier = action.modifier) { Text(action.label) }
     }

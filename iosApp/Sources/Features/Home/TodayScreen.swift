@@ -143,7 +143,7 @@ struct TodayContent: View {
     }
 }
 
-/// The flow's one hero: where to go (the big room and the building in full) or "online" with "join", how long
+/// The flow's one hero: where to go (the big room and the building in full) or "online" with a small "join", how long
 /// until it starts or ends, what it is; the current lesson's elapsed part. The way there ("route") waits for the
 /// map.
 struct TodayHeroCard: View {
@@ -187,11 +187,12 @@ struct TodayHeroCard: View {
 
     private var online: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.related) {
-            // The big word never clips: the button goes under it when the row is too narrow for both.
+            // The small "join" sits next to the big word, at least a content gap from it (owner, 2026-10-13, hero lab
+            // variant 2); under it when the row is too narrow for both.
             ViewThatFits(in: .horizontal) {
-                HStack {
+                HStack(spacing: 0) {
                     onlineTitle
-                    Spacer(minLength: ItmoSpacing.compact)
+                    Spacer(minLength: ItmoSpacing.content)
                     join
                 }
                 VStack(alignment: .leading, spacing: ItmoSpacing.compact) {
@@ -211,6 +212,7 @@ struct TodayHeroCard: View {
     @ViewBuilder private var join: some View {
         if let url = hero.videoUrl {
             ItmoProminentButton(title: AppStrings.string("today_join"), symbol: .videocam) { actions.join(url) }
+                .controlSize(.small)
                 .fixedSize()
                 .accessibilityIdentifier("today.join")
         }
@@ -226,8 +228,7 @@ struct TodayHeroCard: View {
                 }
             }
             if let progress = hero.progress {
-                ProgressView(value: Double(truncating: progress))
-                    .tint(ItmoColor.primary)
+                ItmoProgressBar(value: Double(truncating: progress))
                 HStack {
                     Text(verbatim: hero.start)
                     Spacer()

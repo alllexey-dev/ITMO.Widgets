@@ -15,17 +15,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.lesson.TimelineItem
 import dev.alllexey.itmowidgets.core.navigation.EntryRoute
@@ -41,6 +43,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.ActionCard
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
 import dev.alllexey.itmowidgets.designsystem.kit.LessonTimeline
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
+import dev.alllexey.itmowidgets.designsystem.kit.SmallButton
 import dev.alllexey.itmowidgets.designsystem.kit.StaleContent
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.kit.toTimelineRows
@@ -172,7 +175,7 @@ private fun Day(day: TodayDay, actions: TodayActions) {
 }
 
 /**
- * The flow's one hero: where to go (the big room and the building in full) or `Онлайн` with `Подключиться`, how long
+ * The flow's one hero: where to go (the big room and the building in full) or `Онлайн` with `Войти`, how long
  * until it starts or ends, what it is; the current lesson's elapsed part on the wavy bar. The way there
  * (`Маршрут`) waits for the map.
  */
@@ -212,14 +215,18 @@ private fun Hero(hero: TodayHero, actions: TodayActions) {
     }
 }
 
-/** The big word never clips: the button goes under it when the row is too narrow for both. */
+/**
+ * `Онлайн` with the small `Войти` next to it (owner, 2026-10-13, hero lab variant 2): at least a `content` gap
+ * between them, the button under the word when the row is too narrow for both.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Online(hero: TodayHero, actions: TodayActions) {
     val quiet = LocalContentColor.current.copy(alpha = QUIET_ALPHA)
+    val gap = ItmoTheme.spacing.content
     FlowRow(
         Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.related),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = remember(gap) { SpaceBetweenAtLeast(gap) },
         verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
     ) {
         Text(
@@ -228,17 +235,22 @@ private fun Online(hero: TodayHero, actions: TodayActions) {
             style = ItmoTheme.emphasizedTypography.displaySmall,
         )
         hero.videoUrl?.let { url ->
-            Button(
+            SmallButton(
+                stringResource(Res.string.today_join),
                 onClick = { actions.onJoin(url) },
                 modifier = Modifier.align(Alignment.CenterVertically).testTag(TodayTestTags.JOIN),
-            ) {
-                Icon(painterResource(KitRes.drawable.ic_videocam), contentDescription = null)
-                Text(stringResource(Res.string.today_join), Modifier.padding(start = ItmoTheme.spacing.compact))
-            }
+                icon = painterResource(KitRes.drawable.ic_videocam),
+            )
         }
     }
     Text(hero.time, color = quiet, style = ItmoTheme.typography.titleSmall)
     hero.note?.let { Text(it, color = quiet, style = ItmoTheme.typography.bodyMedium) }
+}
+
+/** [Arrangement.SpaceBetween] with a minimum gap: a `FlowRow` wraps by [spacing], which `SpaceBetween` has as zero. */
+private class SpaceBetweenAtLeast(override val spacing: Dp) : Arrangement.Horizontal {
+    override fun Density.arrange(totalSize: Int, sizes: IntArray, layoutDirection: LayoutDirection, outPositions: IntArray) =
+        with(Arrangement.SpaceBetween) { arrange(totalSize, sizes, layoutDirection, outPositions) }
 }
 
 /** The big room never clips: the address goes under it when the row is too narrow for both. */

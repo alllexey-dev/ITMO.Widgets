@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -101,10 +102,15 @@ fun ScheduleMonthSheetContent(state: ScheduleMonthUiState, actions: ScheduleMont
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(state.title, Modifier.weight(1f), style = ItmoTheme.typography.titleMedium)
-                FilledTonalIconButton(actions.onPrevious, Modifier.testTag(ScheduleMonthTestTags.PREVIOUS)) {
+                // The kit's tonal family (TonalButton): Material's secondaryContainer reads as disabled here.
+                val arrows = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = ItmoTheme.colorScheme.primaryContainer,
+                    contentColor = ItmoTheme.colorScheme.onPrimaryContainer,
+                )
+                FilledTonalIconButton(actions.onPrevious, Modifier.testTag(ScheduleMonthTestTags.PREVIOUS), colors = arrows) {
                     Icon(painterResource(KitRes.drawable.ic_chevron_left), stringResource(Res.string.schedule_month_previous))
                 }
-                FilledTonalIconButton(actions.onNext, Modifier.testTag(ScheduleMonthTestTags.NEXT)) {
+                FilledTonalIconButton(actions.onNext, Modifier.testTag(ScheduleMonthTestTags.NEXT), colors = arrows) {
                     Icon(painterResource(KitRes.drawable.ic_chevron_right), stringResource(Res.string.schedule_month_next))
                 }
             }

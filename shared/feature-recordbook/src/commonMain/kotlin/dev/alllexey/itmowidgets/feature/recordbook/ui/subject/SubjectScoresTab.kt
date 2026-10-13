@@ -262,7 +262,7 @@ private fun ControlRow(row: SubjectControlRow) {
                 progress = { share },
                 modifier = Modifier.fillMaxWidth().height(BarHeight),
                 color = row.tone.kit().ink(),
-                trackColor = ItmoTheme.colorScheme.surfaceContainerHighest,
+                trackColor = ItmoTheme.progressTrack,
                 drawStopIndicator = {},
             )
         }

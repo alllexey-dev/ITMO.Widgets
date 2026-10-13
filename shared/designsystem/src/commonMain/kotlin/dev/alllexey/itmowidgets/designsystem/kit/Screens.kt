@@ -3,27 +3,27 @@ package dev.alllexey.itmowidgets.designsystem.kit
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,12 +31,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
@@ -50,10 +51,10 @@ object ItmoScreenTags {
 }
 
 /**
- * The root screen of a tab: the static root header ([title] and its one-line [subtitle] on the left, [actions] in the
- * same row, centred on the title block) that the [content] scrolls under, and an optional [floatingActionButton]. The
- * navigation bar belongs to the shell; window insets too: the frame pads none. [content] gets the padding to apply.
- * With [onTitleClick] the title is a menu (`Сентябрь ▾`, the schedule's month sheet) that TalkBack reads as
+ * The root screen of a tab: the static root header ([title] and its one-line [subtitle] on one baseline, [actions] in
+ * the same row, centred on the title block) that the [content] scrolls under, and an optional [floatingActionButton].
+ * The navigation bar belongs to the shell; window insets too: the frame pads none. [content] gets the padding to apply.
+ * With [onTitleClick] the title block is a menu (`Сентябрь ▾`, the schedule's month sheet) that TalkBack reads as
  * [titleClickLabel].
  */
 @Composable
@@ -90,9 +91,10 @@ fun ItmoRootScreen(
 }
 
 /**
- * Material's large flexible bar puts the actions in a row above the title, so the header is the kit's own: one row,
- * `displaySmall` and `titleMedium`. It never collapses (owner, 2026-10-13).
+ * One line (owner, 2026-10-13, header lab variant 7): the title and the date on one baseline, 56 dp. The date goes
+ * under the title when both do not fit; the title never truncates, so the header grows instead. It never collapses.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RootHeader(
     title: String,
@@ -103,12 +105,13 @@ private fun RootHeader(
 ) {
     val type = ItmoTheme.typography
     val colors = ItmoTheme.colorScheme
+    val spacing = ItmoTheme.spacing
     Surface(color = colors.surface, modifier = Modifier.testTag(ItmoScreenTags.ROOT_HEADER)) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .height(if (subtitle != null) RootHeaderTokens.Height else RootHeaderTokens.HeightTitleOnly)
-                .padding(start = ItmoTheme.spacing.screenMargin, end = ItmoTheme.spacing.related),
+                .heightIn(min = RootHeaderHeight)
+                .padding(start = spacing.screenMargin, end = spacing.related),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val menu = if (onTitleClick == null) {
@@ -116,28 +119,22 @@ private fun RootHeader(
             } else {
                 Modifier.clip(ItmoTheme.shapes.medium).clickable(onClickLabel = titleClickLabel, role = Role.Button, onClick = onTitleClick)
             }
-            Column(Modifier.weight(1f).then(menu).semantics(mergeDescendants = true) { heading() }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        title,
-                        Modifier.weight(1f, fill = false),
-                        color = colors.onSurface,
-                        style = type.displaySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+            FlowRow(
+                Modifier
+                    .weight(1f)
+                    .then(menu)
+                    .padding(vertical = spacing.compact)
+                    .semantics(mergeDescendants = true) { heading() },
+                horizontalArrangement = Arrangement.spacedBy(spacing.compact),
+            ) {
+                Row(Modifier.alignByBaseline(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(title, color = colors.onSurface, style = type.titleLarge)
                     if (onTitleClick != null) {
                         Icon(painterResource(Res.drawable.ic_arrow_drop_down), contentDescription = null, tint = colors.onSurface)
                     }
                 }
                 if (subtitle != null) {
-                    Text(
-                        subtitle,
-                        color = colors.onSurfaceVariant,
-                        style = type.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    Text(subtitle, Modifier.alignByBaseline(), color = colors.onSurfaceVariant, style = type.bodyMedium)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, content = actions)
@@ -158,11 +155,10 @@ fun HeaderAction(icon: Painter, label: String, onClick: () -> Unit, modifier: Mo
 }
 
 /**
- * A pushed screen (subject, person, a settings page): the back button, a medium flexible title over an optional
- * [subtitle] that collapses on scroll, [actions], no navigation bar. [backLabel] is what TalkBack reads for the back
- * button.
+ * A pushed screen (subject, person, a settings page): the back button, the title and its optional [subtitle] as one
+ * paragraph that wraps in full, [actions], no navigation bar; the header is static and grows with the title.
+ * [backLabel] is what TalkBack reads for the back button.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ItmoDetailScreen(
     title: String,
@@ -174,18 +170,12 @@ fun ItmoDetailScreen(
     floatingActionButton: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = modifier.nestedScroll(scroll.nestedScrollConnection),
+        modifier = modifier,
         topBar = {
-            MediumFlexibleTopAppBar(
-                title = { Text(title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                subtitle = subtitle?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
-                navigationIcon = { HeaderAction(painterResource(Res.drawable.ic_arrow_back), backLabel, onBack) },
-                actions = actions,
-                windowInsets = WindowInsets(0),
-                scrollBehavior = scroll,
-            )
+            DetailHeader(title, subtitle, actions) {
+                HeaderAction(painterResource(Res.drawable.ic_arrow_back), backLabel, onBack)
+            }
         },
         floatingActionButton = floatingActionButton,
         containerColor = ItmoTheme.colorScheme.background,
@@ -194,11 +184,56 @@ fun ItmoDetailScreen(
     )
 }
 
-/** The root header's heights. */
-object RootHeaderTokens {
-    /** Title and subtitle. */
-    val Height = 112.dp
-
-    /** A title without a subtitle. */
-    val HeightTitleOnly = 96.dp
+/** Header lab variant 7 on a pushed screen: back, the title with the subtitle flowing after it, the actions. */
+@Composable
+private fun DetailHeader(
+    title: String,
+    subtitle: String?,
+    actions: @Composable RowScope.() -> Unit,
+    navigation: @Composable () -> Unit,
+) {
+    val type = ItmoTheme.typography
+    val colors = ItmoTheme.colorScheme
+    val spacing = ItmoTheme.spacing
+    val text = buildAnnotatedString {
+        append(title)
+        if (!subtitle.isNullOrEmpty()) {
+            append("  ")
+            val quiet = SpanStyle(
+                color = colors.onSurfaceVariant,
+                fontSize = type.bodyMedium.fontSize,
+                fontWeight = type.bodyMedium.fontWeight,
+            )
+            withStyle(quiet) { append(subtitle) }
+        }
+    }
+    Surface(color = colors.surface) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = DetailHeaderHeight)
+                .padding(horizontal = spacing.related, vertical = spacing.compact),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            navigation()
+            if (title.isEmpty()) {
+                // Nothing while the title is not known yet (loading, error): an empty text is an unlabelled node.
+                Spacer(Modifier.weight(1f))
+            } else {
+                Text(
+                    text,
+                    Modifier.weight(1f).padding(start = spacing.related).semantics { heading() },
+                    color = colors.onSurface,
+                    style = type.titleMedium,
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, content = actions)
+        }
+    }
 }
+
+/** The root header's height in one line. */
+private val RootHeaderHeight = 56.dp
+
+/** The pushed screen's header height in one line, Material's small top app bar. */
+private val DetailHeaderHeight = 64.dp
