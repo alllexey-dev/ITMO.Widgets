@@ -203,12 +203,12 @@ class RecordbookIosModuleTest {
         val definitions = koin.instanceRegistry.instances.values.map { it.beanDefinition }.distinct()
 
         definitions.forEach { definition ->
-            koin.get<Any>(definition.primaryType, definition.qualifier) { parametersOf(screenArguments()) }
+            koin.get<Any>(definition.primaryType, definition.qualifier) { parametersOf(screenArguments(), SUBJECT) }
         }
 
         koin.get<RecordbookViewModel> { parametersOf(SavedStateHandle()) }
-        koin.get<RecordbookSubjectViewModel> { parametersOf(screenArguments()) }
-        koin.get<SheetScoresViewModel> { parametersOf(screenArguments()) }
+        koin.get<RecordbookSubjectViewModel> { parametersOf(screenArguments(), SUBJECT) }
+        koin.get<SheetScoresViewModel> { parametersOf(screenArguments(), SUBJECT) }
         assertEquals(emptyList(), requests)
         koin.close()
     }
@@ -243,9 +243,8 @@ class RecordbookIosModuleTest {
         koin.close()
     }
 
-    /** The subject page's and the sheet's arguments in one handle: the keys of the two never collide. */
-    private fun screenArguments(): SavedStateHandle =
-        SavedStateHandle(mapOf(*SUBJECT.handleEntries(), *SCORES.handleEntries()))
+    /** The sheet's arguments in a handle; the subject page takes its arguments themselves. */
+    private fun screenArguments(): SavedStateHandle = SavedStateHandle(mapOf(*SCORES.handleEntries()))
 
     private fun graph(demo: Boolean = false): Koin = koinApplication {
         allowOverride(true)
