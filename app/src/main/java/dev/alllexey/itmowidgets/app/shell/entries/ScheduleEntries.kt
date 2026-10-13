@@ -29,7 +29,6 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.schedule.presentation.SelectedUser
-import dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesRoute
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsActions
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsSheetRoute
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsActions
@@ -49,7 +48,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import org.koin.core.parameter.parametersOf
 
 /**
- * The schedule's keys: another user's schedule, the schedule changes, the lesson sheet and the pending sport sheet.
+ * The schedule's keys: another user's schedule, the lesson sheet and the pending sport sheet.
  * Both sheets close before a profile opens in their place.
  */
 internal fun EntryRegistry.Builder.scheduleEntries() {
@@ -57,9 +56,6 @@ internal fun EntryRegistry.Builder.scheduleEntries() {
         args = { bundleOf(UserScreenArgs.ISU to it.isu, UserScreenArgs.NAME to it.name) },
     ) { key, navigator ->
         UserScheduleEntry(key, navigator)
-    }
-    entry<AppRoutes.ScheduleChanges> { key, navigator ->
-        ScheduleChangesRoute(onBack = { navigator.close(key) }, viewModel = entryViewModel())
     }
     entry<AppRoutes.LessonDetails>(args = { it.args.viewModelArgs() }) { key, navigator ->
         LessonDetailsEntry(key.args, onClose = { navigator.close(key) }, navigator)

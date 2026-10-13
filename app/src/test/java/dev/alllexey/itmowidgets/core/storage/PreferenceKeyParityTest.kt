@@ -18,14 +18,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 51 key names
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 50 key names
  * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The four
  * `push_registered_*` keys are written only by iOS, whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 51 key names, each declared once`() {
+    fun `the app preferences keep their 50 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules.
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -36,7 +36,7 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(51, declared.map { it.name }.toSet().size)
+        assertEquals(50, declared.map { it.name }.toSet().size)
     }
 
     @Test
@@ -71,8 +71,7 @@ class PreferenceKeyParityTest {
         assertNull(stores.markSources.getBarsMarksEnabled())
         assertTrue(stores.markSources.getSheetMarksEnabled())
         assertEquals(BarsLoginPrompt.NONE, stores.markSources.getBarsLoginPrompt())
-        assertTrue(stores.homeLayout.observeDismissedHomeHints().first().isEmpty())
-        assertTrue(stores.homeLayout.observeHiddenHomeCards().first().isEmpty())
+        assertTrue(stores.bell.observeSeen().first().isEmpty())
         assertFalse(stores.deviceHints.observeBackgroundWorkHintShown().first())
         assertFalse(stores.deviceHints.observeQrTileAdded().first())
         assertFalse(stores.demoPreferences.getDemoActive())
@@ -120,8 +119,7 @@ class PreferenceKeyParityTest {
             Key("MarkSourcePreferences.kt", "boolean", "bars_marks_enabled"),
             Key("MarkSourcePreferences.kt", "boolean", "sheet_marks_enabled"),
             Key("MarkSourcePreferences.kt", "string", "bars_marks_prompt"),
-            Key("HomeLayoutPreferences.kt", "stringSet", "home_dismissed_hints"),
-            Key("HomeLayoutPreferences.kt", "stringSet", "home_hidden_cards"),
+            Key("BellPreferences.kt", "stringSet", "bell_seen"),
             Key("DeviceHintPreferences.kt", "boolean", "background_work_hint_shown"),
             Key("DeviceHintPreferences.kt", "boolean", "qr_tile_added"),
             Key("DemoPreferences.kt", "boolean", "demo_active"),

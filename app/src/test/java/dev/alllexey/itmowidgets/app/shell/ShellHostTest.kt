@@ -119,7 +119,7 @@ class ShellHostTest {
             Row(entry(AppEntryIntents.ACTION_OPEN_USER_PROFILE).putExtra(UserScreenArgs.ISU, 0), ShellBackStack()),
             Row(
                 entry(AppEntryIntents.ACTION_OPEN_SCHEDULE_CHANGES),
-                ShellBackStack(AppTab.SCHEDULE, listOf(AppRoutes.ScheduleChanges)),
+                ShellBackStack(AppTab.HOME, floating = listOf(AppRoutes.Bell)),
             ),
             Row(entry(AppEntryIntents.ACTION_OPEN_RECORDBOOK), ShellBackStack(AppTab.RECORDBOOK)),
             Row(
@@ -187,7 +187,7 @@ class ShellHostTest {
         launch(entry(AppEntryIntents.ACTION_OPEN_SPORT)).use { scenario ->
             scenario.onActivity { it.deliver(entry(AppEntryIntents.ACTION_OPEN_SCHEDULE_CHANGES)) }
             compose.waitForIdle()
-            assertEquals(ShellBackStack(AppTab.SCHEDULE, listOf(AppRoutes.ScheduleChanges)), snapshot(scenario).backStack)
+            assertEquals(ShellBackStack(AppTab.HOME, floating = listOf(AppRoutes.Bell)), snapshot(scenario).backStack)
 
             scenario.onActivity { it.deliver(entry(AppEntryIntents.ACTION_OPEN_QR_PASS)) }
             compose.waitForIdle()

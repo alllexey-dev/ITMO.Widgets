@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.feature.sport.di
 
-import dev.alllexey.itmowidgets.core.home.HomeCardRenderer
-import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
+import dev.alllexey.itmowidgets.feature.sport.data.bell.SportBellSource
+import dev.alllexey.itmowidgets.feature.sport.data.bell.SportResultLog
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushBooker
 import dev.alllexey.itmowidgets.feature.sport.data.repository.PendingSportBookingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
@@ -31,7 +31,6 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignFilterC
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignStateFactory
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportViewModel
-import dev.alllexey.itmowidgets.feature.sport.ui.home.SportHomeCardRenderer
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -40,8 +39,8 @@ import org.koin.core.qualifier.Qualifier
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-/** The sport card's place in the open set of `HomeCardSource`s; each contributor has its own qualifier. */
-val sportCardsQualifier: Qualifier = named("sport")
+/** The queue results' place in the open set of `BellSource`s; each contributor has its own qualifier. */
+val sportBellQualifier: Qualifier = named("sport")
 
 /**
  * Sport, data and screens. Koin is the only graph for these types. The core contracts (`MyItmoClient`, `SportApi`,
@@ -51,7 +50,7 @@ val sportCardsQualifier: Qualifier = named("sport")
  * (`SportLessonTemplateProvider`, `SportScoreOverrideSource`) from the platform (`androidSportModule` on Android).
  */
 val sportModule = module {
-    // One instance per repository for the screens, the home card, the widgets and sign-out; the cleaner and home card
+    // One instance per repository for the screens, Сегодня, the widgets and sign-out; the cleaner and bell
     // contributions forward to it under their own qualifiers (open sets).
     singleOf(::SportScoreRepositoryImpl) { bind<SportScoreRepository>() }
     singleOf(::SportDataRepositoryImpl) { bind<SportDataRepository>() }
@@ -63,8 +62,10 @@ val sportModule = module {
     singleOf(::SportSignPreferencesRepositoryImpl) { bind<SportSignPreferencesRepository>() }
     singleOf(::UserSportRepositoryImpl) { bind<UserSportRepository>() }
     singleOf(::PendingSportBookingsRepositoryImpl) { bind<PendingSportBookingsRepository>() }
-    singleOf(::SportHomeCardSource)
-    single<HomeCardSource>(qualifier = sportCardsQualifier) { get<SportHomeCardSource>() }
+    // The log has an internal test constructor beside the public one, so its reference would be ambiguous.
+    single { SportResultLog(get<AppDirectories>(), get(), get()) }
+    single<SessionDataCleaner>(named("sport-results")) { get<SportResultLog>() }
+    single<BellSource>(qualifier = sportBellQualifier) { SportBellSource(get(), getOrNull()) }
     singleOf(::SportSignPushBooker)
 
     // Unscoped: the holder, the sign screen and the auto-sign flow each hold their own delegate.
@@ -78,5 +79,4 @@ val sportModule = module {
     viewModelOf(::SportMyViewModel)
     viewModelOf(::SportSignViewModel)
     viewModelOf(::UserSportViewModel)
-    single<HomeCardRenderer>(named("sport")) { SportHomeCardRenderer(get<AcademicTimeProvider>().timeZone) }
 }

@@ -102,41 +102,23 @@ final class SocialUITests: XCTestCase {
         XCTAssertTrue(element(app, "social.profile").waitForExistence(timeout: stepTimeout))
     }
 
-    /// The friend-requests card of the home feed (`socialModule`'s source and renderer, loaded with this card) opens
-    /// the requester's profile and all requests on the home stack, as Android's `homeActions`.
-    func testHomeFriendRequestsCardOpensTheProfileAndTheFriends() {
+    /// The demo's incoming request is a row of the bell with its answers; the row opens the requester's profile.
+    func testABellRequestOpensTheProfile() {
         let app = XCUIApplication.itmo()
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
-        let card = element(app, "home_card_friend_requests")
-        XCTAssertTrue(card.waitForExistence(timeout: stepTimeout), "the demo's incoming request shows on home")
-        attachScreenshot(named: "home-requests")
+        element(app, "shell.bell").tap()
+        let request = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'bell.row.friend:'")).firstMatch
+        XCTAssertTrue(request.waitForExistence(timeout: stepTimeout), "the demo's incoming request is in the bell")
+        let accept = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'bell.accept.friend:'")).firstMatch
+        XCTAssertTrue(accept.exists)
+        attachScreenshot(named: "bell-request")
 
-        element(app, "home_friend_row").tap()
+        request.staticTexts.firstMatch.tap()
+
         XCTAssertTrue(element(app, "social.profile").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "user_profile_primary").waitForExistence(timeout: stepTimeout))
-        app.buttons[QrPassUITests.backLabel].tap()
-
-        let all = element(app, "home_friends_all")
-        revealOnHome(all, in: app)
-        all.tap()
-        XCTAssertTrue(element(app, "social.friends").waitForExistence(timeout: stepTimeout))
-    }
-
-    /// Scrolls the home feed until `target` can be tapped and waits for the feed to rest: the card is the last one
-    /// before the hints, so its "all requests" button can start under the demo banner, and a tap during the fling
-    /// only stops it.
-    private func revealOnHome(_ target: XCUIElement, in app: XCUIApplication) {
-        XCTAssertTrue(target.waitForExistence(timeout: stepTimeout))
-        for _ in 0..<4 where !target.isHittable {
-            element(app, "home_feed").swipeUp()
-        }
-        var resting = CGRect.null
-        for _ in 0..<10 where target.frame != resting {
-            resting = target.frame
-            RunLoop.current.run(until: Date().addingTimeInterval(0.3))
-        }
-        XCTAssertTrue(target.isHittable, "the feed never brought \(target) into reach")
     }
 
     /// My ITMO moved from the today feed to the profile; the demo cannot open it and says so.

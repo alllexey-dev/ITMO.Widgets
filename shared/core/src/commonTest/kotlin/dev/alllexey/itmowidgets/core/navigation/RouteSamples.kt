@@ -31,7 +31,7 @@ object RouteSamples {
         AppRoutes.UserProfile(100001),
         AppRoutes.UserSchedule(100001, "Тестовый Пользователь"),
         AppRoutes.UserSport(100001),
-        AppRoutes.ScheduleChanges,
+        AppRoutes.Bell,
         AppRoutes.QrPass,
         AppRoutes.MyItmoWeb,
         AppRoutes.RecordbookPeriod(

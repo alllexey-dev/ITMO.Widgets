@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheckpointMa
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsMarkSnapshot
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNews
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkValue
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MyItmoMarkSnapshot
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MyItmoSubjectMark
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
@@ -61,7 +62,13 @@ data class StoredBarsPlan(
 )
 
 @Serializable
-data class StoredCheckpointMark(val id: Long, val mark: Double? = null, val absent: Boolean)
+data class StoredCheckpointMark(
+    val id: Long,
+    val mark: Double? = null,
+    val absent: Boolean,
+    val name: String? = null,
+    val max: Double? = null
+)
 
 @Serializable
 data class StoredMarkNews(
@@ -70,7 +77,21 @@ data class StoredMarkNews(
     val nameKey: String,
     val name: String,
     val detectedAt: Long,
-    val notified: Boolean
+    val notified: Boolean,
+    /** Absent while unread, so a file without read news stays the 2.2 document. */
+    val read: Boolean? = null,
+    val value: StoredMarkValue? = null
+)
+
+@Serializable
+data class StoredMarkValue(
+    val checkpoint: String? = null,
+    val mark: Double? = null,
+    val max: Double? = null,
+    val absent: Boolean = false,
+    val delta: Double? = null,
+    val total: Double? = null,
+    val grade: String? = null
 )
 
 /**
@@ -125,7 +146,7 @@ internal fun StoredBarsSnapshot.toModel() = BarsMarkSnapshot(
             rate = plan.rate,
             attempt = plan.attempt,
             absent = plan.absent,
-            marks = plan.marks.map { BarsCheckpointMark(it.id, it.mark, it.absent) }
+            marks = plan.marks.map { BarsCheckpointMark(it.id, it.mark, it.absent, it.name, it.max) }
         )
     }
 )
@@ -136,7 +157,7 @@ internal fun BarsMarkSnapshot.toStored(fetchedAt: Long) = StoredBarsSnapshot(
     plans = plans.map { plan ->
         StoredBarsPlan(
             plan.planId, plan.type, plan.identifier, plan.name, plan.score, plan.rate, plan.attempt, plan.absent,
-            plan.marks.map { StoredCheckpointMark(it.id, it.mark, it.absent) }
+            plan.marks.map { StoredCheckpointMark(it.id, it.mark, it.absent, it.name, it.max) }
         )
     }
 )
@@ -147,7 +168,12 @@ internal fun StoredMarkNews.toModel() = MarkNews(
     nameKey = nameKey,
     name = name,
     detectedAt = Instant.fromEpochMilliseconds(detectedAt),
-    notified = notified
+    notified = notified,
+    read = read == true,
+    value = value?.let { MarkValue(it.checkpoint, it.mark, it.max, it.absent, it.delta, it.total, it.grade) }
 )
 
-internal fun MarkNews.toStored() = StoredMarkNews(id, half.key, nameKey, name, detectedAt.toEpochMilliseconds(), notified)
+internal fun MarkNews.toStored() = StoredMarkNews(
+    id, half.key, nameKey, name, detectedAt.toEpochMilliseconds(), notified, read.takeIf { it },
+    value?.let { StoredMarkValue(it.checkpoint, it.mark, it.max, it.absent, it.delta, it.total, it.grade) }
+)

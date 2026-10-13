@@ -25,20 +25,6 @@ struct UserScheduleScreen: View {
     }
 }
 
-/// The found schedule changes (`AppRoutes.ScheduleChanges`, from the home card or a change notification): the
-/// Compose route (`scheduleChangesViewController`), which marks the shown changes read.
-struct ScheduleChangesScreen: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        ComposeHost { [dismiss] in
-            scheduleChangesViewController(onBack: { dismiss() })
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("schedule.changes")
-    }
-}
-
 /// One lesson occurrence (`AppRoutes.LessonDetails`, from the schedule, home or a widget): the Compose sheet content
 /// (`lessonDetailsViewController`) in a full-height sheet, as Android's 90 % sheet. The place opens in Apple
 /// Maps, the meeting link in Safari; a profile opens in the sheet's place.

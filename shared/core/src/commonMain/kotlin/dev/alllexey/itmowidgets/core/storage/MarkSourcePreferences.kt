@@ -53,6 +53,8 @@ class MarkSourcePreferences(dataStore: DataStore<Preferences>) : DataStorePrefer
     /** Missing or unknown values are [BarsLoginPrompt.NONE]. */
     suspend fun getBarsLoginPrompt(): BarsLoginPrompt = safeEnumOf(read()[BARS_MARKS_PROMPT], BarsLoginPrompt.NONE)
 
+    fun observeBarsLoginPrompt(): Flow<BarsLoginPrompt> = observe { safeEnumOf(it[BARS_MARKS_PROMPT], BarsLoginPrompt.NONE) }
+
     suspend fun setBarsLoginPrompt(prompt: BarsLoginPrompt) {
         write(BARS_MARKS_PROMPT, prompt.name)
     }

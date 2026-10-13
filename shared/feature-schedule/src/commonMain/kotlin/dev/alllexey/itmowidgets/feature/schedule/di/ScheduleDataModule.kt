@@ -1,7 +1,8 @@
 package dev.alllexey.itmowidgets.feature.schedule.di
 
-import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
+import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
@@ -12,6 +13,7 @@ import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImp
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherWeeksFileStore
+import dev.alllexey.itmowidgets.feature.schedule.data.bell.ScheduleChangesBellSource
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
@@ -20,13 +22,12 @@ import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleCha
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesCheck
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
-import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleChangesHomeCardSource
-import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSourceImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.today.DayLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
@@ -40,16 +41,13 @@ import org.koin.core.qualifier.Qualifier
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-/** The today/tomorrow card's place in the open set of `HomeCardSource`s. */
-val scheduleCardsQualifier: Qualifier = named("schedule")
-
-/** The unread-changes card's place in the open set of `HomeCardSource`s. */
-val scheduleChangesCardsQualifier: Qualifier = named("schedule-changes")
+/** The found changes' place in the open set of `BellSource`s. */
+val scheduleChangesBellQualifier: Qualifier = named("schedule-changes")
 
 /**
- * The schedule data. Koin is the only graph for these types: one `ScheduleRepositoryImpl` serves the screens, the
- * home card, the widget, the subject page (`SubjectLessonsGateway`, `ScheduleRefreshGateway`) and sign-out; one
- * `ScheduleChangesRepositoryImpl` the change history, its home card, the background check and sign-out; one
+ * The schedule data. Koin is the only graph for these types: one `ScheduleRepositoryImpl` serves the screens, Сегодня
+ * (`DayLessonsGateway`), the widget, the subject page (`SubjectLessonsGateway`, `ScheduleRefreshGateway`) and sign-out; one
+ * `ScheduleChangesRepositoryImpl` the lessons' change marks, the bell, the background check and sign-out; one
  * `CalendarSyncRepositoryImpl` and one `DefaultCalendarSync` the phone calendar sync. The `.ics` export and the widget
  * snapshot file stay in `:app`.
  *
@@ -84,10 +82,8 @@ val scheduleDataModule = module {
     // One run of the background check (iOS runs it from its own task).
     factoryOf(::ScheduleChangesCheck)
 
-    singleOf(::ScheduleHomeCardSource)
-    single<HomeCardSource>(qualifier = scheduleCardsQualifier) { get<ScheduleHomeCardSource>() }
-    singleOf(::ScheduleChangesHomeCardSource)
-    single<HomeCardSource>(qualifier = scheduleChangesCardsQualifier) { get<ScheduleChangesHomeCardSource>() }
+    singleOf(::DayLessonsGatewayImpl) { bind<DayLessonsGateway>() }
+    single<BellSource>(qualifier = scheduleChangesBellQualifier) { ScheduleChangesBellSource(get()) }
 
     // The phone calendar sync: the platform supplies `PhoneCalendars` and `CalendarSyncScheduler`.
     factory { CalendarSyncFileStore(get<AppDirectories>()) }

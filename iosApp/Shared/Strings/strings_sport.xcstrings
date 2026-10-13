@@ -73,66 +73,6 @@
         }
       }
     },
-    "home_sport_more" : {
-      "comment" : "Generated from strings_sport.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "ещё %1$lld записи"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "ещё %1$lld записей"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "ещё %1$lld запись"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "ещё %1$lld записи"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "home_sport_score" : {
-      "comment" : "Generated from strings_sport.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld из 100"
-          }
-        }
-      }
-    },
-    "home_sport_title" : {
-      "comment" : "Generated from strings_sport.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Спорт"
-          }
-        }
-      }
-    },
     "share_sport_text" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -273,6 +213,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Отписаться"
+          }
+        }
+      }
+    },
+    "sport_bell_booked" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: вы записаны"
+          }
+        }
+      }
+    },
+    "sport_bell_lesson" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очередь на %1$@"
+          }
+        }
+      }
+    },
+    "sport_bell_refused" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: не удалось записать"
           }
         }
       }

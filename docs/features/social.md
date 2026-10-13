@@ -59,8 +59,8 @@ still resolves current study groups in `UserData`, see
 - `core/friend/FriendRepository` is a facade over `SocialRepository` for the
   schedule picker.
 
-One `SocialRepositoryImpl` serves the screens, the friend-requests home card
-(`HomeCardSource` under the `social` qualifier), the picker, `MeViewModel`,
+One `SocialRepositoryImpl` serves the screens, the bell's friend requests
+(`FriendRequestsBellSource`, a `BellSource` under the `social` qualifier), the picker, `MeViewModel`,
 `FriendshipPushHandler` and `SportDataRepositoryImpl`.
 
 ### Invariants
@@ -170,7 +170,7 @@ Android opens profiles through `Nav3AppNavigator.openUserProfile(isu)`, which
 opens `AppRoutes.UserProfile` only for an ISU that `UserScreenArgs.profileIsu`
 accepts (`1..Int.MAX_VALUE`; My ITMO `Long` ids pass through it). No ISU is
 guessed from a name: rows without a usable ISU stay informational, without a
-chevron. Sources: social lists, people search, home feed, the friend picker,
+chevron. Sources: social lists, people search, the bell, the friend picker,
 friends and teachers in lesson and sport details, subject page `Преподаватели`.
 Sheets dismiss before navigating. Friend-sport cards stay read-only. A
 friendship push sends `AppEntryIntents.ACTION_OPEN_USER_PROFILE`, which
@@ -191,7 +191,7 @@ The iOS app ([iOS app](../ios.md)) hosts the same Compose routes through
 `IosKoinModules`); Swift hosts are in `iosApp/Sources/Features/Social/`,
 `Routes+Social.swift` maps the four routes. What differs:
 
-- Entries: the Me tab ([profile tab](me.md#ios)), the home card, a friendship
+- Entries: the Me tab ([profile tab](me.md#ios)), Сегодня, a friendship
   push and a `/u/<ISU>` route; `https` links do not reach the app yet
   ([degradations](../ios.md#degradations)).
 - `UserProfileIosRoute` and `UserFriendsIosRoute` (`src/iosMain`) build the

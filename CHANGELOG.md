@@ -73,9 +73,27 @@ new iOS app.
 ### Appearance
 
 - Android gets the new shell of the redesign: five tabs Сегодня, Расписание, Зачётка, Спорт, Профиль in the
-  Material 3 Expressive bar, a collapsing header with the tab's name (Сегодня shows the date and the bell), the
-  `Пропуск` button on Сегодня that opens the pass in a sheet (code, name, group and ISU, when it was loaded, the last
-  code offline), sheets of three sizes, and `My ITMO` as a row of Профиль.
+  Material 3 Expressive bar, a static header with the tab's name that the content scrolls under (Сегодня shows the
+  date and the bell), the `Пропуск` button on Сегодня that opens the pass in a sheet (code, name, group and ISU, when
+  it was loaded, the last code offline), sheets of three sizes, and `My ITMO` as a row of Профиль.
+- Сегодня on Android replaces the home feed: the hero with the lesson to go to now (the room in large type with the
+  building's address, the time left on a wavy bar, or `Онлайн` with `Подключиться`), the whole day as a timeline
+  (done lessons dimmed, the current one tinted, `далее`, `изменена` with the old room struck through, `отменена`,
+  `очередь`, `записаны`, `Окно 2 ч 10 мин`, the now marker), tomorrow in the evening, and `Нужно сделать` only when
+  there is something (`Войдите в БАРС заново`). The hints and the `Главный экран` settings page are gone.
+- The bell opens a sheet with new marks and their values (`Матанализ: контрольная работа 2`, `9 из 10, итого 74`,
+  `+9`), schedule changes as `было` over `стало`, sport queue results and friend requests with `Принять` and
+  `Отклонить`; each row leads to its subject, lesson, Спорт or person. Opening it reads everything, new events are
+  marked with a dot and bold, the badge counts the unseen ones. The schedule changes history screen is gone; a change
+  notification opens the bell.
+- Сегодня and the bell's sheet are native SwiftUI screens on iOS over the same view models, under the same static
+  header; the notification service leaves sport queue results for the bell, so they show on both
+  platforms.
+- A lesson whose room is a placeholder such as `дистант` counts as online on every lesson list and in the hero: no
+  room line, the `онлайн` pill. The hero's large room or `Онлайн` never clips: the address or `Подключиться` goes
+  under it on a narrow screen or with large text. Prominent buttons on iOS keep a readable label in the dark theme.
+- A marks notification about one subject carries the value in its title (`Матанализ: 9 из 10`); the lock screen
+  still shows `Новые оценки` only.
 - New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
   обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
   палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep

@@ -174,7 +174,6 @@ class DemoNetworkGateTest {
         stores.qrSettings,
         stores.sportSignSelectors,
         stores.markSources,
-        stores.homeLayout,
         stores.deviceHints,
         stores.appearance,
         gate,

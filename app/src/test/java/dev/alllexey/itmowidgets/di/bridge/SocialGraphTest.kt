@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
-import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
@@ -14,8 +14,8 @@ import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHis
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
-import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
-import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
+import dev.alllexey.itmowidgets.feature.social.data.bell.FriendRequestsBellSource
+import dev.alllexey.itmowidgets.feature.social.di.socialBellQualifier
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -51,17 +51,16 @@ class SocialGraphTest {
     }
 
     @Test
-    fun `the cleaners and the home card forward to the same singles`() {
+    fun `the cleaners forward to the same singles and the requests reach the bell once`() {
         bootApplication()
         val koin = GlobalContext.get()
         val cleaners = koin.getAll<SessionDataCleaner>()
-        val cards = koin.getAll<HomeCardSource>()
 
         assertEquals(1, cleaners.count { it === koin.get<SocialRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<PersonRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<DataStoreFriendSelectionHistory>() })
-        assertSame(koin.get<SocialHomeCardSource>(), koin.get<HomeCardSource>(socialCardsQualifier))
-        assertEquals(1, cards.count { it === koin.get<SocialHomeCardSource>() })
+        assertEquals(1, koin.getAll<BellSource>().count { it is FriendRequestsBellSource })
+        assertSame(koin.get<BellSource>(socialBellQualifier), koin.getAll<BellSource>().single { it is FriendRequestsBellSource })
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */

@@ -183,7 +183,7 @@ class NotificationTapRoutesTest {
         NotificationDestination.Sport -> EntryRoute(AppTab.SPORT)
         is NotificationDestination.UserProfile ->
             EntryRoute(AppTab.ME, overlay = AppRoutes.UserProfile(destination.isu))
-        NotificationDestination.ScheduleChanges -> EntryRoute(AppTab.SCHEDULE, overlay = AppRoutes.ScheduleChanges)
+        NotificationDestination.ScheduleChanges -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Bell)
         NotificationDestination.Recordbook -> EntryRoute(AppTab.RECORDBOOK)
         is NotificationDestination.RecordbookSubject ->
             EntryRoute(AppTab.RECORDBOOK, overlay = AppRoutes.RecordbookSubject(destination.args))

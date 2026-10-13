@@ -421,18 +421,6 @@
         }
       }
     },
-    "home_friends_title" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Заявки в друзья"
-          }
-        }
-      }
-    },
     "person_course" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
@@ -549,6 +537,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Где найти"
+          }
+        }
+      }
+    },
+    "social_bell_request" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ хочет добавить вас в друзья"
           }
         }
       }

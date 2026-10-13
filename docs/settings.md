@@ -278,23 +278,10 @@ light in both, without them black on white. The code fades in instead of the
 circle, which iOS cannot draw ([degradations](ios.md#degradations)). A custom
 spoiler image is v2.4.
 
-## Home screen
-
-- `Главный экран` lists one switch per feed card: `Расписание на сегодня`,
-  `Изменения в расписании`, `Новые оценки`, `Спорт`, `Заявки в друзья`. A
-  switched-off card leaves the feed at once; nothing else changes and no widget
-  is refreshed.
-- Stored as the string set `home_hidden_cards` (card kind names; absent means
-  shown). The page is an offline category; its footer explains that hints on
-  the home screen are closed with their own button and do not return.
-- The hints themselves are not settings. Closed hints are remembered per
-  installation in `home_dismissed_hints`; sign-out and `Повторить первоначальную
-  настройку` leave them alone.
-
 ## Schedule
 
 - `Изменения расписания` turns on the background check of the own schedule
-  for changes, its notifications, the home card and the marks in the schedule
+  for changes, its notifications, the bell's events and the marks on lessons
   ([schedule changes](features/schedule-changes.md)). It is enabled by
   default and stored as `schedule_changes_enabled` (absent means on). It does
   not need `Подключение к ITMO.Widgets`: the check talks only to My ITMO.

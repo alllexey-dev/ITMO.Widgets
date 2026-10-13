@@ -37,7 +37,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDi
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
-import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleChangesViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsViewModel
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
@@ -91,7 +90,7 @@ class ScheduleIosModuleTest {
     @Test
     fun everyDefinitionOfTheScheduleRoutesResolvesWithoutARequest() {
         val koin = graph { BUILDINGS }
-        val viewModels = setOf(ScheduleViewModel::class, ScheduleChangesViewModel::class, LessonDetailsViewModel::class)
+        val viewModels = setOf(ScheduleViewModel::class, LessonDetailsViewModel::class)
         val definitions = koin.instanceRegistry.instances.values.map { it.beanDefinition }.distinct()
 
         definitions.filter { it.primaryType !in viewModels }
@@ -99,7 +98,6 @@ class ScheduleIosModuleTest {
 
         koin.get<ScheduleViewModel> { parametersOf(SavedStateHandle()) }
         koin.get<ScheduleViewModel> { parametersOf(SavedStateHandle(mapOf(ScheduleViewModel.ARG_USER_ISU to USER))) }
-        koin.get<ScheduleChangesViewModel> { parametersOf(SavedStateHandle()) }
         koin.get<LessonDetailsViewModel> { parametersOf(SavedStateHandle(lessonArguments())) }
         assertEquals(emptyList(), requests)
         koin.close()

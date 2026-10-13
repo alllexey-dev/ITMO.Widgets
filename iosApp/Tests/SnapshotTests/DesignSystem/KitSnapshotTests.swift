@@ -11,7 +11,7 @@ final class KitSnapshotTests: XCTestCase {
     func testTimelineNow() {
         let day = KitColumn {
             ItmoSectionHeader(title: "Пары", count: "5 пар")
-            ItmoLessonTimeline(lessons: KitFixtures.day(at: 12 * 60 + 22), now: 12 * 60 + 22, gapLabel: KitFixtures.gap)
+            ItmoLessonTimeline(rows: KitFixtures.rows(KitFixtures.day(at: 12 * 60 + 22), now: 12 * 60 + 22), showsNow: true)
         }
         assertScreenAppearances(of: day, named: "now", height: nil, settle: 0.3)
     }
@@ -19,7 +19,7 @@ final class KitSnapshotTests: XCTestCase {
     /// Another day: no now marker, done lessons count as elapsed.
     func testTimelineWithoutNow() {
         let day = KitFixtures.day(at: 13 * 60 + 40)
-        let timeline = ItmoLessonTimeline(lessons: day, gapLabel: KitFixtures.gap)
+        let timeline = ItmoLessonTimeline(rows: KitFixtures.rows(day, now: nil))
             .padding(ItmoKit.margin)
             .background(Color(.systemGroupedBackground))
         assertScreenAppearances(of: timeline, named: "day", appearances: [.light, .dark], height: nil, settle: 0.3)
@@ -149,6 +149,32 @@ enum KitFixtures {
     static func gap(_ minutes: Int) -> String {
         "Окно " + [minutes / 60 > 0 ? "\(minutes / 60) ч" : nil, minutes % 60 > 0 ? "\(minutes % 60) мин" : nil]
             .compactMap { $0 }.joined(separator: " ")
+    }
+
+    /// The timeline rows of `lessons` at `now` (minutes since midnight), as `LessonTimelines` computes them in the
+    /// app: the rail under a dot spans the lesson and the short break after it; without `now` done lessons count as
+    /// elapsed. Gaps of an hour or more get a row.
+    static func rows(_ lessons: [ItmoLesson], now: Int?) -> [ItmoTimelineRow] {
+        func share(_ time: Int, _ from: Int, _ to: Int) -> CGFloat {
+            guard to > from else { return time >= to ? 1 : 0 }
+            return min(max(CGFloat(time - from) / CGFloat(to - from), 0), 1)
+        }
+        func elapsed(_ lesson: ItmoLesson) -> Bool { lesson.phase == .done || lesson.phase == .now }
+        var rows: [ItmoTimelineRow] = []
+        for (index, lesson) in lessons.enumerated() {
+            if index > 0 {
+                let from = lessons[index - 1].end
+                if lesson.start - from >= 60 {
+                    let progress = now.map { share($0, from, lesson.start) } ?? (elapsed(lesson) ? 1 : 0)
+                    rows.append(.gap(id: "gap-\(lesson.id)", label: gap(lesson.start - from), progress: progress))
+                }
+            }
+            let next = index + 1 < lessons.count ? lessons[index + 1].start : nil
+            let until = next.map { $0 - lesson.end < 60 ? $0 : lesson.end } ?? lesson.end
+            let progress = now.map { share($0, lesson.start, until) } ?? (lesson.phase == .done ? 1 : 0)
+            rows.append(.lesson(lesson, progress: progress, reached: now.map { $0 >= lesson.start } ?? elapsed(lesson)))
+        }
+        return rows
     }
 
     /// The day with each lesson's phase and pills at `now`.

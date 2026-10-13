@@ -1,18 +1,24 @@
 package dev.alllexey.itmowidgets.feature.recordbook.domain.marks
 
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 
-/** An unread subject: one per half-year and name for both sources. [notified] is false until a digest named it. */
+/**
+ * A subject with new marks: one per half-year and name for both sources. [notified] is false until a digest named it;
+ * a [read] one stays for the bell's history until it expires. [value] is the latest event's numbers.
+ */
 data class MarkNews(
     val id: String,
     val half: StudyHalf,
     val nameKey: String,
     val name: String,
     val detectedAt: Instant,
-    val notified: Boolean
+    val notified: Boolean,
+    val read: Boolean = false,
+    val value: MarkValue? = null
 ) {
     companion object {
         fun idOf(half: StudyHalf, nameKey: String): String = "${half.key}|$nameKey"
@@ -27,6 +33,17 @@ data class MarkSubjectTarget(
     val entryId: Long,
     val bars: BarsJournalReference?
 )
+
+/** The subject page's arguments; null when they would not describe a page. */
+fun MarkSubjectTarget.toSubjectArgs(): RecordbookSubjectArgs? = RecordbookSubjectArgs(
+    entryId = entryId,
+    programId = programId,
+    semester = semester,
+    studyYear = studyYear,
+    barsPlan = bars?.planId,
+    barsType = bars?.type,
+    barsIdentifier = bars?.identifier
+).validOrNull()
 
 /** How events become unread subjects. Pure: time comes from the caller. */
 object MarkNewsRules {
@@ -51,21 +68,29 @@ object MarkNewsRules {
     }
 
     /**
-     * One record per half-year and name. A new record takes its name from the first event, My ITMO before BARS; an
-     * existing one keeps its name. [notify] (a background check) makes the record wait for a digest again; without it
-     * (a list the user is looking at) the record counts as delivered.
+     * One record per half-year and name, unread again. A new record takes its name from the first event, My ITMO
+     * before BARS; an existing one keeps its name. Its value is the most telling event's of this check: a final grade,
+     * then a BARS checkpoint, then any other. [notify] (a background check) makes the record wait for a digest again;
+     * without it (a list the user is looking at) the record counts as delivered.
      */
     fun merge(news: List<MarkNews>, events: List<MarkEvent>, detectedAt: Instant, notify: Boolean): List<MarkNews> {
         if (events.isEmpty()) return news
         val byId = news.associateByTo(LinkedHashMap()) { it.id }
-        events.sortedBy { it.source }.forEach { event ->
-            val id = MarkNews.idOf(event.half, event.nameKey)
+        events.sortedBy { it.source }.groupBy { MarkNews.idOf(it.half, it.nameKey) }.forEach { (id, group) ->
+            val event = group.first()
+            val value = group.sortedWith(TELLING).firstNotNullOfOrNull { it.value }
             val existing = byId[id]
-            byId[id] = existing?.copy(detectedAt = detectedAt, notified = !notify)
-                ?: MarkNews(id, event.half, event.nameKey, event.subjectName, detectedAt, notified = !notify)
+            byId[id] = existing?.copy(detectedAt = detectedAt, notified = !notify, read = false, value = value ?: existing.value)
+                ?: MarkNews(id, event.half, event.nameKey, event.subjectName, detectedAt, notified = !notify, value = value)
         }
         return byId.values.toList()
     }
+
+    /** A final grade says the most, then a named BARS checkpoint. */
+    private val TELLING: Comparator<MarkEvent> = compareBy<MarkEvent>(
+        { it.kind != MarkEventKind.FINAL_CHANGED },
+        { it.value?.checkpoint == null },
+    )
 
     /** Without records older than [RETENTION_DAYS] and beyond the [MAX_NEWS] newest, newest first. */
     fun pruned(news: List<MarkNews>, now: Instant): List<MarkNews> {

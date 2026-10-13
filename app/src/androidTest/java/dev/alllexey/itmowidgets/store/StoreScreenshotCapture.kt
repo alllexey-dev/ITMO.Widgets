@@ -31,7 +31,7 @@ import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.home.HomeSemantics
-import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
+import dev.alllexey.itmowidgets.feature.home.ui.TodayTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeHost
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
@@ -92,8 +92,8 @@ class StoreScreenshotCapture {
             enterDemo(activity)
 
             frame(activity, "01-home")
-            // Scrolled to the end, the feed's FAB clearance keeps the last cards clear of the quick actions.
-            scenario.onActivity { main -> HomeSemantics.scrollBy(HomeSemantics.feedRoot(main), HomeTestTags.FEED, FEED_END_PX) }
+            // Scrolled to the end, the list's FAB clearance keeps the last items clear of the pass button.
+            scenario.onActivity { main -> HomeSemantics.scrollBy(HomeSemantics.feedRoot(main), TodayTestTags.LIST, FEED_END_PX) }
             settle()
             frame(activity, "01-home-end")
 

@@ -37,7 +37,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookProgress
 import dev.alllexey.itmowidgets.feature.recordbook.ui.badgeText
 import dev.alllexey.itmowidgets.feature.recordbook.ui.displayRate
-import dev.alllexey.itmowidgets.feature.recordbook.ui.formatRecordbookNumber
+import dev.alllexey.itmowidgets.feature.recordbook.domain.formatRecordbookNumber
 import dev.alllexey.itmowidgets.feature.recordbook.ui.preview.RecordbookPreviewSamples
 import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_points_missing

@@ -42,3 +42,26 @@ struct ItmoProgressButton: View {
         }
     }
 }
+
+/// The kit's prominent action: the glass prominent button in the primary role. The system draws its label white,
+/// which is unreadable on the dark scheme's light primary, so the label takes onPrimary, readable in both schemes.
+struct ItmoProminentButton: View {
+    let title: String
+    var symbol: AppSymbol?
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Group {
+                if let symbol {
+                    Label { Text(verbatim: title) } icon: { symbol.image }
+                } else {
+                    Text(verbatim: title)
+                }
+            }
+            .foregroundStyle(ItmoColor.onPrimary)
+        }
+        .buttonStyle(.glassProminent)
+        .itmoTint()
+    }
+}

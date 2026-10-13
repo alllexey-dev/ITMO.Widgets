@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
-import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.IosAppNotifier
@@ -11,6 +10,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigest
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigests
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNewsTexts
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.toSubjectArgs
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.time.Instant
 
@@ -24,8 +25,9 @@ interface MorningMarksNotifier : MarksNotifier {
 }
 
 /**
- * The iOS [MarksNotifier], Android's `AndroidMarksNotifier` over [IosAppNotifier] on the `marks` thread:
- * "Новые оценки" with the subject names only, never the marks, and the one «Войдите в БАРС», by catalog key. A newer
+ * The iOS [MarksNotifier], Android's `AndroidMarksNotifier` over [IosAppNotifier] on the `marks` thread: one
+ * subject's numbers in the title or "Новые оценки" with the subject names, and the one «Войдите в БАРС», by catalog
+ * key; the lock screen shows "Новые оценки" alone. A newer
  * digest replaces the shown or the scheduled one. One subject with a page leads to it, anything else to the
  * recordbook; the BARS reminder opens the BARS sign-in.
  */
@@ -43,12 +45,13 @@ class IosMarksNotifier(private val notifier: IosAppNotifier) : MorningMarksNotif
 
     private fun digestOf(digest: MarkDigest, target: MarkSubjectTarget?): AppNotification {
         val title = UiText.Res(CoreStrings.marks_new_title)
+        val single = digest.single
         return AppNotification(
             channel = AppNotificationChannels.MARKS,
             id = MarkDigests.DIGEST_ID,
-            title = title,
-            text = markSubjectList(digest.subjects),
-            destination = target?.toArgs()?.let(NotificationDestination::RecordbookSubject)
+            title = single?.let(MarkNewsTexts::notificationTitle) ?: title,
+            text = single?.takeIf { it.value != null }?.let(MarkNewsTexts::details) ?: markSubjectList(digest.subjects),
+            destination = target?.toSubjectArgs()?.let(NotificationDestination::RecordbookSubject)
                 ?: NotificationDestination.Recordbook,
             publicTitle = title,
         )
@@ -66,13 +69,3 @@ class IosMarksNotifier(private val notifier: IosAppNotifier) : MorningMarksNotif
         )
     }
 }
-
-private fun MarkSubjectTarget.toArgs(): RecordbookSubjectArgs? = RecordbookSubjectArgs(
-    entryId = entryId,
-    programId = programId,
-    semester = semester,
-    studyYear = studyYear,
-    barsPlan = bars?.planId,
-    barsType = bars?.type,
-    barsIdentifier = bars?.identifier,
-).validOrNull()

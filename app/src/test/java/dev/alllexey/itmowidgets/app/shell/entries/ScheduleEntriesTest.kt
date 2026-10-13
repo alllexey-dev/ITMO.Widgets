@@ -32,7 +32,6 @@ import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorTestTags
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
-import dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsTestTags
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
@@ -105,7 +104,6 @@ class ScheduleEntriesTest {
 
         assertRendersAndCloses(AppRoutes.UserSchedule(FRIEND_ISU, FRIEND_NAME), UserScheduleTestTags.TOP_BAR)
         assertTrue(schedules.observed.any { it.userIsu == FRIEND_ISU })
-        assertRendersAndCloses(AppRoutes.ScheduleChanges, ScheduleChangesTestTags.EMPTY)
 
         assertSheetRenders(AppRoutes.LessonDetails(LESSON_ARGS), LessonDetailsTestTags.SCROLL)
         assertSheetRenders(

@@ -5,18 +5,18 @@ import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.feature.sport.data.debug.DefaultSportLessonTemplateProvider
-import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.notification.FcmPayloadDispatcher
 import dev.alllexey.itmowidgets.core.notification.FcmPayloadHandler
 import dev.alllexey.itmowidgets.feature.social.data.push.FriendshipPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
-import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
+import dev.alllexey.itmowidgets.feature.sport.data.bell.SportBellSource
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportAgentBookedPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushHandler
 import dev.alllexey.itmowidgets.feature.weblogin.data.push.DeviceConnectedPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
-import dev.alllexey.itmowidgets.feature.sport.di.sportCardsQualifier
+import dev.alllexey.itmowidgets.feature.sport.di.sportBellQualifier
 import dev.alllexey.itmowidgets.feature.sport.di.sportModule
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
@@ -57,13 +57,13 @@ class SportGraphTest {
     }
 
     @Test
-    fun `the sport home card reaches the feed once, from Koin`() {
+    fun `the queue results reach the bell once, from Koin`() {
         bootApplication()
         val koin = GlobalContext.get()
-        val source = koin.get<SportHomeCardSource>()
+        val source = koin.get<BellSource>(sportBellQualifier)
 
-        assertSame(source, koin.get<HomeCardSource>(sportCardsQualifier))
-        assertEquals(1, koin.getAll<HomeCardSource>().count { it === source })
+        assertTrue(source is SportBellSource)
+        assertEquals(1, koin.getAll<BellSource>().count { it === source })
     }
 
     @Test

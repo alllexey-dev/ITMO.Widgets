@@ -2,10 +2,10 @@ import XCTest
 
 /// The schedule on the shared demo session: the Compose schedule as the root of the schedule stack (the
 /// days from today), the lesson sheet with the friends on the lesson and the place handed to Apple Maps, the friend
-/// picker's round trip back to the schedule, the found changes from the home card, the `today` route, another user's
+/// picker's round trip back to the schedule, a found change from the bell, the today hero's lesson, the `today` route, another user's
 /// schedule from a profile, and the schedule and the lesson sheet at the accessibility text size AX1. Compose maps
 /// `testTag` to the accessibility identifier (`ScheduleScreenTestTags`, `ScheduleListTestTags`,
-/// `LessonDetailsTestTags`, `FriendSelectorTestTags`, `ScheduleChangesTestTags`); the texts are Russian on an English
+/// `LessonDetailsTestTags`, `FriendSelectorTestTags`); the texts are Russian on an English
 /// iPhone. The ISUs are the demo set's (`DemoPeople`).
 final class ScheduleUITests: XCTestCase {
     /// Today's day card: the demo's days follow the academic clock, Moscow time.
@@ -135,38 +135,36 @@ final class ScheduleUITests: XCTestCase {
         attachScreenshot(named: "today")
     }
 
-    func testChangesOpenFromTheHomeCardAndGoBack() {
+    /// A found change is an event of the bell (there is no history screen) that opens its lesson.
+    func testAChangeInTheBellOpensItsLesson() {
         let app = XCUIApplication.itmo()
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
-        let card = element(app, "home_card_schedule_changes")
-        XCTAssertTrue(card.waitForExistence(timeout: stepTimeout), "the demo's unread changes show on home")
+        element(app, "shell.bell").tap()
+        let changes = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'bell.row.change:'"))
+        XCTAssertTrue(changes.firstMatch.waitForExistence(timeout: stepTimeout), "the demo's changes are in the bell")
+        attachScreenshot(named: "bell-changes")
 
-        card.tap()
-
-        XCTAssertTrue(element(app, "schedule.changes").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "schedule_changes_list").waitForExistence(timeout: stepTimeout))
-        XCTAssertFalse(app.navigationBars.firstMatch.exists, "the route draws its own top bar")
-        attachScreenshot(named: "changes")
-        app.buttons[QrPassUITests.backLabel].tap()
-        XCTAssertTrue(element(app, "schedule.changes").waitForNonExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "shell.root.home").exists)
-    }
-
-    func testHomeLessonOpensTheLessonSheet() throws {
-        let app = XCUIApplication.itmo()
-        app.launch()
-        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
-        let row = element(app, "home_schedule_row")
-        guard row.waitForExistence(timeout: stepTimeout) else {
-            // A day with no lesson left (late evening, a free day) shows no schedule row on home.
-            throw XCTSkip("no lesson on the demo home card now")
-        }
-
-        row.tap()
+        changes.firstMatch.tap()
 
         XCTAssertTrue(element(app, "schedule.lessonDetails").waitForExistence(timeout: stepTimeout))
-        attachScreenshot(named: "home-lesson")
+    }
+
+    func testTheTodayHeroOpensTheLessonSheet() throws {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
+        let hero = element(app, "today.hero")
+        guard hero.waitForExistence(timeout: stepTimeout) else {
+            // Nothing to go to today or tomorrow in the demo's week now.
+            throw XCTSkip("no hero on Сегодня now")
+        }
+
+        hero.tap()
+
+        XCTAssertTrue(element(app, "schedule.lessonDetails").waitForExistence(timeout: stepTimeout))
+        attachScreenshot(named: "today-lesson")
     }
 
     func testUserScheduleOpensFromAProfile() {
