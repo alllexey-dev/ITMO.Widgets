@@ -175,6 +175,8 @@ dependencies {
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.firebase.messaging)
     implementation(libs.play.services.code.scanner)
+    // ProcessAppForeground: the app's return to the foreground.
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.savedstate)

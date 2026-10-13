@@ -8,7 +8,6 @@ import UIKit
 /// while the list scrolls under it. A key the demo refuses says `error_demo_unavailable`, as Android's shell does.
 struct TodayScreen: View {
     let router: AppRouter
-    @Environment(\.scenePhase) private var scenePhase
     @State private var header = ObservableViewModel(TodayHeaderViewModel.self, state: \.uiState)
     @State private var model = ObservableViewModel(TodayViewModel.self, state: \.uiState)
     @State private var message: SettingsMessage?
@@ -44,11 +43,6 @@ struct TodayScreen: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("shell.root.home")
         .onAppear { model.viewModel.ensureDataLoaded() }
-        .onChange(of: scenePhase) { _, phase in
-            guard phase == .active else { return }
-            header.viewModel.refresh()
-            model.viewModel.onScreenResumed()
-        }
     }
 
     private func open(target: LessonTarget) {
