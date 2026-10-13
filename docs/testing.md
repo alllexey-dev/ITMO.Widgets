@@ -132,6 +132,49 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   removal complete at once; Release builds ignore it.
 - The last line is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha>`.
 
+## Baseline profiles
+
+Release and `minifiedSmoke` builds ship the app's baseline profile and startup
+profile from `app/src/main/generated/baselineProfiles/` (`baseline-prof.txt`,
+`startup-prof.txt`), so ART compiles the tab roots, the shell and startup ahead
+of time instead of interpreting them on first visits; the startup profile also
+orders the dex files (`dexLayoutOptimization`). `androidx.profileinstaller`
+installs the profile on sideloaded APKs as well; there ART compiles against it
+at the next background dexopt, while Google Play compiles at install. The
+profiles are committed, so
+no build needs a device.
+
+`:baselineprofile` drives the demo session with UiAutomator
+(`baselineprofile/src/main/java/.../DemoJourneys.kt`): five taps on the logo,
+every tab by a tap, the pass sheet, and `Друзья` pushed from `Профиль` and
+popped with Back. The journeys find the shell by its test tags, which
+`ShellHost` exposes as resource ids. Regenerate the profiles after a change to
+the shell, a tab root or startup, on an emulator with API 33 or later:
+
+```bash
+ANDROID_SERIAL=emulator-5554 ./gradlew :app:generateBaselineProfile \
+  -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
+```
+
+It builds `githubNonMinifiedRelease` (pointed at dev, like `minifiedSmoke`),
+runs `BaselineProfileGenerator` and writes both files; commit them. Only the
+github flavour runs; the files in `main` serve `play` too.
+
+`NavigationBenchmark` measures frame timing (`FrameTimingMetric`) of tab taps
+and of a push and pop, in a fresh process, without the app's profile and with
+it; the profile run fails when the APK ships no profile. It runs nightly in
+`android-nightly.yml`; locally:
+
+```bash
+ANDROID_SERIAL=emulator-5554 ./gradlew :baselineprofile:connectedGithubBenchmarkReleaseAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark \
+  -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR
+```
+
+Results are in
+`baselineprofile/build/outputs/connected_android_test_additional_output/`.
+Judge smoothness on these builds, never on a debug build.
+
 ## CI
 
 All workflows are in `.github/workflows/` and need no secrets. None is a
@@ -147,7 +190,7 @@ runs (`scripts/ci-plan.sh --self-test` lists the cases).
 | `ios.yml` | PRs that change `iosApp/`, `scripts/ios/`, an iOS source set or the build; pushes to `master` that also change any `shared/` module; on demand, label `full-ci` | `scripts/ios/test.sh --ci` on the `xcode-27` runner with the pinned Xcode and XcodeGen |
 | `android-ui.yml` | nightly, on demand, label `full-ci` | `verify.sh ui all` in 6 shards on an emulator without a cutout, `ShellSuite` in 2 shards with a tall cutout |
 | `android-ship.yml` | nightly, on demand, label `full-ci` | Release checks without the key: `scripts/ship-check.sh` stages version, unsigned release builds with `check-play-policy.sh`, the upgrade from v2.2 and the shrunk builds on an emulator |
-| `android-nightly.yml` | nightly, on demand | The platform list on a Gradle Managed Device, the advisory `buildHealth` report |
+| `android-nightly.yml` | nightly, on demand | The platform list on a Gradle Managed Device, `NavigationBenchmark` on an emulator, the advisory `buildHealth` report |
 | `ios-nightly.yml` | nightly, on demand | `test.sh --ci kn` over every shared module and all `UITests` |
 
 - **The full suite on a PR.** Add the label `full-ci` to a risky PR (build
@@ -157,9 +200,9 @@ runs (`scripts/ci-plan.sh --self-test` lists the cases).
   label: `gh workflow run android-ui.yml --ref <branch>` (also `android-ship`,
   `android-nightly`, `ios-nightly`, `ios`, `android-ci`).
 - **Nightly failures.** A failed nightly of `android-ui`, `android-ship`,
-  `android-nightly` (platform tests) or `ios-nightly` opens an issue titled
-  `Nightly <workflow> is failing`, or comments on the open one; the next passing
-  nightly closes it. Fix it before the next release.
+  `android-nightly` (platform tests, benchmarks) or `ios-nightly` opens an
+  issue titled `Nightly <workflow> is failing`, or comments on the open one;
+  the next passing nightly closes it. Fix it before the next release.
 - **A newer push cancels** the older run of the same PR; every `master` push
   keeps its own `android-ci` and `ios` result.
 

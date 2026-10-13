@@ -13,6 +13,7 @@ dependencies {
     implementation(libs.compose.gradlePlugin)
     implementation(libs.google.services.gradlePlugin)
     implementation(libs.roborazzi.gradlePlugin)
+    implementation(libs.baselineprofile.gradlePlugin)
 }
 
 gradlePlugin {
