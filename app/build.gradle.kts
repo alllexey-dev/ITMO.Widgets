@@ -6,6 +6,8 @@ plugins {
     id("com.google.gms.google-services")
     // Robolectric (offline) for host tests that boot the real Application.
     id("itmowidgets.testing")
+    // Consumes the profiles :baselineprofile generates (docs/testing.md "Baseline profiles").
+    id("androidx.baselineprofile")
 }
 
 // Release signing reads the ignored keystore.properties; a debug build needs none.
@@ -196,12 +198,42 @@ dependencies {
     testImplementation(libs.androidx.work.testing)
     // KoinContext for Robolectric Compose tests: Koin Compose caches the first graph per JVM, and StopKoinRule restarts it.
     testImplementation(libs.koin.compose.viewmodel)
+    // Installs the baseline profile on sideloaded APKs too; background dexopt then compiles the app against it.
+    implementation(libs.androidx.profileinstaller)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.monitor)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.espresso.core)
     if (orchestrated) androidTestUtil(libs.androidx.test.orchestrator)
+}
+
+// The profiles are committed under src/main/generated/baselineProfiles, so release and minifiedSmoke ship them and no
+// build needs a device. Regenerate them with `:app:generateBaselineProfile` (docs/testing.md "Baseline profiles").
+baselineProfile {
+    automaticGenerationDuringBuild = false
+    saveInSrc = true
+    mergeIntoMain = true
+    // The startup profile also orders the dex files so startup classes load from the first one.
+    dexLayoutOptimization = true
+    // Only github runs the journeys; the profile merged into main serves play too.
+    variants {
+        create("github") { from(project(":baselineprofile")) }
+    }
+}
+
+// The plugin's benchmark and nonMinified copies of release run the journeys on devices: like minifiedSmoke they
+// talk to dev, never to production.
+androidComponents {
+    onVariants(selector().withBuildType("benchmarkRelease")) { it.useDevBackend() }
+    onVariants(selector().withBuildType("nonMinifiedRelease")) { it.useDevBackend() }
+}
+
+fun com.android.build.api.variant.Variant.useDevBackend() {
+    buildConfigFields?.put(
+        "WIDGETS_BASE_URL",
+        com.android.build.api.variant.BuildConfigField("String", "\"https://dev.widgets.alllexey.dev\"", null),
+    )
 }
 
 // AtomicTextFileTest runs the real android.util.AtomicFile on SDK 29 (`.bak`) as well as the default SDK 35 (`.new`).
