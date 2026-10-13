@@ -261,6 +261,11 @@ struct RecordbookBarsOfferRow: View {
                     .accessibilityLabel(Text(verbatim: AppStrings.string("recordbook_bars_hide")))
                 }
             }
+            // The row is one VoiceOver element: its buttons are its actions.
+            .accessibilityActions {
+                Button(AppStrings.string("recordbook_bars_connect"), action: connect)
+                if let hide { Button(AppStrings.string("recordbook_bars_hide"), action: hide) }
+            }
     }
 }
 
