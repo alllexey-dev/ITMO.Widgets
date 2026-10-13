@@ -349,6 +349,18 @@
         }
       }
     },
+    "lesson_overlap" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "одновременно с «%1$@»"
+          }
+        }
+      }
+    },
     "lesson_pill_booked" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

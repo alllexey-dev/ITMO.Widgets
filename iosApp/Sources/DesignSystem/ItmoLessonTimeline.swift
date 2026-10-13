@@ -123,6 +123,9 @@ private struct TimelineLessonRow: View {
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: ItmoSpacing.related) {
                 ItmoLessonDetails(lesson: lesson)
+                if let overlapNote = lesson.overlapNote {
+                    Text(verbatim: overlapNote).font(.itmo(.labelMedium)).foregroundStyle(.secondary)
+                }
                 if let changeNote = lesson.changeNote {
                     HStack(spacing: 6) {
                         AppSymbol.history.image.foregroundStyle(ItmoTone.warn.color).accessibilityHidden(true)

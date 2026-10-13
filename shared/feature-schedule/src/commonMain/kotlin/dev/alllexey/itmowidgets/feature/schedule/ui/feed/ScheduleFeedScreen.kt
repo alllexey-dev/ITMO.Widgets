@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -320,7 +319,9 @@ private fun Feed(state: ScheduleFeedUiState, body: ScheduleFeedBody.Days, action
     ) {
         rows.forEach { row ->
             when (row) {
-                is FeedRow.WeekLabel -> item(row.key) { WeekLabel(row.text.asString()) }
+                // Every row that starts a day (and a week) is a sticky header, so a day's header never stays pinned over
+                // the free days after it.
+                is FeedRow.WeekLabel -> stickyHeader(row.key) { WeekLabel(row.text.asString()) }
                 is FeedRow.DayHeader -> stickyHeader(row.key) { DayHeader(row) }
                 is FeedRow.Lessons -> item(row.key) {
                     LessonTimeline(
@@ -336,10 +337,10 @@ private fun Feed(state: ScheduleFeedUiState, body: ScheduleFeedBody.Days, action
                         lessonTag = { index -> ScheduleFeedTestTags.lesson(row.date, index) },
                     )
                 }
-                is FeedRow.NoLessons -> item(row.key) {
+                is FeedRow.NoLessons -> stickyHeader(row.key) {
                     QuietRow(painterResource(KitRes.drawable.ic_event_available), row.text.asString(), row.key)
                 }
-                is FeedRow.Weekend -> item(row.key) {
+                is FeedRow.Weekend -> stickyHeader(row.key) {
                     QuietRow(painterResource(KitRes.drawable.ic_weekend), row.text.asString(), row.key)
                 }
             }
@@ -352,6 +353,7 @@ private fun WeekLabel(text: String) {
     Row(
         Modifier
             .fillMaxWidth()
+            .background(ItmoTheme.colorScheme.background)
             .padding(horizontal = ItmoTheme.spacing.screenMargin)
             .padding(top = ItmoTheme.spacing.group, bottom = ItmoTheme.spacing.related),
         verticalAlignment = Alignment.CenterVertically,
@@ -375,15 +377,20 @@ private fun DayHeader(row: FeedRow.DayHeader) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
     ) {
-        Text(
-            row.title,
-            Modifier.weight(1f, fill = false),
-            color = if (row.today) colors.primary else colors.onSurface,
-            style = ItmoTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
-        if (row.today) StatusPill(PillSpec(stringResource(Res.string.schedule_today_pill), Tone.Primary, solid = true))
-        Spacer(Modifier.weight(1f))
+        Row(
+            Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
+        ) {
+            Text(
+                row.title,
+                Modifier.weight(1f, fill = false),
+                color = if (row.today) colors.primary else colors.onSurface,
+                style = ItmoTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            if (row.today) StatusPill(PillSpec(stringResource(Res.string.schedule_today_pill), Tone.Primary, solid = true))
+        }
         Text(row.count.asString(), color = colors.onSurfaceVariant, style = ItmoTheme.typography.labelLarge)
     }
 }
@@ -394,6 +401,7 @@ private fun QuietRow(icon: Painter, text: String, key: String) {
     Surface(
         Modifier
             .fillMaxWidth()
+            .background(ItmoTheme.colorScheme.background)
             .padding(horizontal = ItmoTheme.spacing.screenMargin, vertical = ItmoTheme.spacing.compact)
             .testTag(ScheduleFeedTestTags.row(key)),
         shape = ItmoTheme.shapes.cardContent,

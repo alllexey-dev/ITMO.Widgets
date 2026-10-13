@@ -224,7 +224,7 @@ class StringOwnershipTest {
         // Only production source sets: src/debug previews and the test source sets may show any module's screens.
         val PRODUCTION_SETS = listOf("main", "github", "play")
         val ACCOUNT_FILES = setOf("auth", "onboarding", "me", "weblogin", "web", "update")
-        val FEATURE_UNITS = CATALOG_FILES.associateWith { it } + mapOf("friendselector" to "social")
+        val FEATURE_UNITS = CATALOG_FILES.associateWith { it }
         val LITERAL_FREE_DIRS = setOf("layout", "menu", "navigation", "xml")
         val LAUNCHER_PREVIEW_LAYOUTS = setOf("widget_lesson_list_preview", "widget_single_lesson_preview")
         val TEXT_ATTRIBUTES = setOf("text", "label", "hint", "contentDescription")

@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.schedule.ROOM_BOOKING_TYPE_ID
 import dev.alllexey.itmowidgets.core.text.ScheduleChangeLine
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
@@ -185,8 +186,9 @@ object ScheduleSamples {
         known: Set<LocalDate> = this.known,
         loading: Boolean = false,
         error: AppError? = null,
+        now: LocalDateTime = Now,
     ) = ScheduleFeedPresenter.state(
-        FeedInput(Now, owner, Window, days, known, visible, loading, error, denied = null, refreshing = false, jump = FeedJump(visible, 0)),
+        FeedInput(now, owner, Window, days, known, visible, loading, error, denied = null, refreshing = false, jump = FeedJump(visible, 0)),
     )
 
     /** The own feed on today, Monday. */
@@ -198,6 +200,27 @@ object ScheduleSamples {
     /** Polina's week: the shared lessons say `Вы`, `Вернуться к своему`. */
     val FriendFeed: ScheduleFeedUiState
         get() = feed(FeedOwner.Friend(Polina), friendDays, known = known.filter { it <= Monday.plus(1, DateTimeUnit.DAY) }.toSet())
+
+    /**
+     * Two lessons at once on Monday at 16:30: a lab 15:30-17:00 and a room booking 16:00-20:30. One now marker on the
+     * lab, the rail fills once, the booking says `одновременно с «Веб-программирование»`.
+     */
+    val Overlap: ScheduleFeedUiState
+        get() = feed(
+            days = listOf(
+                LessonDay(
+                    Monday,
+                    listOf(
+                        lesson("15:30", "17:00", "Веб-программирование", 2, "Лазеев Сергей Максимович", "2113", Kronva),
+                        lesson("16:00", "20:30", "Коворкинг", ROOM_BOOKING_TYPE_ID, null, "1216", Kronva)
+                            .copy(note = "Бронирование рабочего места"),
+                    ),
+                    CachedAt,
+                    2,
+                ),
+            ),
+            now = LocalDateTime(Monday, LocalTime(16, 30)),
+        )
 
     /** Weeks without a lesson (a holiday): short `пар нет` rows and collapsed weekends. */
     val Empty: ScheduleFeedUiState get() = feed(days = emptyList())
@@ -280,7 +303,7 @@ object ScheduleSamples {
             LessonAction(LessonActionKind.LINKS, UiText.Dynamic("Ссылки 3"), route = subjectRoute),
             LessonAction(LessonActionKind.SUBJECT, UiText.Dynamic("Предмет"), route = subjectRoute),
         ),
-        teacher = LessonTeacher(Ershov, 100001, UiText.Dynamic("Тон отзывов: в основном положительные")),
+        teacher = LessonTeacher(Ershov, 100001, UiText.Dynamic("в основном хвалят")),
         flow = "ПРОГ 2.1",
         friends = friendsOnLesson,
     )
@@ -316,7 +339,7 @@ object ScheduleSamples {
             note = UiText.Dynamic("Изменено вчера в 20:14"),
         ),
         note = "Возьмите лабораторный журнал",
-        teacher = LessonTeacher(PreviewFixtures.LongPersonName, 100003, UiText.Dynamic("Тон отзывов: смешанные")),
+        teacher = LessonTeacher(PreviewFixtures.LongPersonName, 100003, UiText.Dynamic("мнения расходятся")),
         flow = "ФИЗ 2.3",
     )
 

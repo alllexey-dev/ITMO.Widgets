@@ -58,6 +58,12 @@ internal class ScheduleFeedUserPreview {
     fun ScheduleFeed() = FeedPreview(ScheduleSamples.FriendFeed.copy(friend = null, canPickFriend = false), pushed = true)
 }
 
+internal class ScheduleFeedOverlapPreview {
+    @Preview(name = "overlap", heightDp = SCREEN_HEIGHT)
+    @Composable
+    fun ScheduleFeed() = FeedPreview(ScheduleSamples.Overlap)
+}
+
 internal class ScheduleFeedEmptyPreview {
     @Preview(name = "empty", heightDp = SCREEN_HEIGHT)
     @Composable

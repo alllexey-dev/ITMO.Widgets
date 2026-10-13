@@ -294,7 +294,7 @@ final class RouterTests: XCTestCase {
     func testNotOnIosRouteOpensNothing() {
         let router = readyRouter()
         let routes: [any AppRoute] = [
-            AppRoutes.DebugTools.shared, AppRoutes.IcsExport.shared, AppRoutes.CancelBookingConfirm(lessonId: 42),
+            AppRoutes.DebugTools.shared, AppRoutes.IcsExport.shared,
         ]
 
         for route in routes {
@@ -307,7 +307,7 @@ final class RouterTests: XCTestCase {
         XCTAssertNil(router.sheet)
     }
 
-    /// A Compose sheet key: one sheet above the shell, whose answer reaches its opener once, and which a
+    /// A route sheet key: one sheet above the shell, whose answer reaches its opener once, and which a
     /// screen it opens replaces.
     func testRouteSheetOpensAboveTheShellAndAnswersItsOpener() {
         let router = readyRouter()
@@ -494,7 +494,8 @@ final class RouterTests: XCTestCase {
         let lesson = LessonDetailsArgs(
             pairId: 9, date: "2026-10-06", subjectName: "Subject", typeId: 1, format: "Format", start: "10:00",
             end: "11:30", teacherFio: nil, teacherIsu: nil, room: nil, building: nil, buildingId: nil,
-            mainBuildingId: nil, note: nil, zoomUrl: nil, zoomPassword: nil, zoomInfo: nil, flowName: nil
+            mainBuildingId: nil, note: nil, zoomUrl: nil, zoomPassword: nil, zoomInfo: nil, flowName: nil,
+            subjectId: nil
         )
         let pendingSport = PendingSportDetailsArgs(
             lessonId: 42, sectionName: "Section", autoSign: true, isPrediction: false,
@@ -516,12 +517,13 @@ final class RouterTests: XCTestCase {
             (AppRoutes.UserFriends(isu: 100_001, name: ""), .compose),
             (AppRoutes.UserSearch.shared, .compose),
             (AppRoutes.UserProfile(isu: 100_001), .compose),
-            (AppRoutes.UserSchedule(isu: 100_001, name: ""), .compose),
+            (AppRoutes.UserSchedule(isu: 100_001, name: ""), .swiftUI),
             (AppRoutes.UserSport(isu: 100_001, name: ""), .compose),
             (AppRoutes.Bell.shared, .swiftUISheet),
             (AppRoutes.QrPass.shared, .swiftUISheet),
             (AppRoutes.MyItmoWeb.shared, .swiftUI),
-            (AppRoutes.FriendSelector(selectedIsu: 0), .composeSheet),
+            (AppRoutes.FriendSelector(selectedIsu: 0), .swiftUISheet),
+            (AppRoutes.ScheduleMonth(date: "2026-10-06", userIsu: -1), .swiftUISheet),
             (AppRoutes.SheetScores(args: scores), .composeSheet),
             (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),
             (AppRoutes.Connections.shared, .swiftUI),
@@ -530,13 +532,12 @@ final class RouterTests: XCTestCase {
             (AppRoutes.LinkEditor(args: links, linkId: nil), .composeSheet),
             (AppRoutes.IcsExport.shared, .notOnIOS),
             (AppRoutes.LinkActions(args: links, linkId: "link-1"), .composeSheet),
-            (AppRoutes.LessonDetails(args: lesson), .composeSheet),
-            (AppRoutes.PendingSportDetails(args: pendingSport), .composeSheet),
+            (AppRoutes.LessonDetails(args: lesson), .swiftUISheet),
+            (AppRoutes.PendingSportDetails(args: pendingSport), .swiftUISheet),
             // The reports are Compose dialogs inside the surface that asks for them.
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .notOnIOS),
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),
             (AppRoutes.LinkUnavailable.shared, .sheet(.linkUnavailable)),
-            (AppRoutes.CancelBookingConfirm(lessonId: 42), .notOnIOS),
         ]
     }
 }

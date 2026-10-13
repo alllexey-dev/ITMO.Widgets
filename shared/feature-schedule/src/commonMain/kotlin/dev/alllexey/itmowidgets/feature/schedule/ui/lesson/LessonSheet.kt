@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.ui.lesson
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -189,14 +192,16 @@ private fun ActionTiles(actions: List<LessonAction>, onAction: (LessonAction) ->
         actions.forEachIndexed { index, action ->
             val first = index == 0
             Column(
-                Modifier.weight(1f),
+                Modifier
+                    .weight(1f)
+                    .clip(ItmoTheme.shapes.large)
+                    .clickable(role = Role.Button) { onAction(action) }
+                    .testTag(LessonSheetTestTags.action(action.kind)),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
             ) {
                 Surface(
-                    onClick = { onAction(action) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = ItmoTheme.spacing.touchTarget)
-                        .testTag(LessonSheetTestTags.action(action.kind)),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = ItmoTheme.spacing.touchTarget),
                     shape = ItmoTheme.shapes.large,
                     color = if (first) ItmoTheme.colorScheme.primary else ItmoTheme.colorScheme.secondaryContainer,
                     contentColor = if (first) ItmoTheme.colorScheme.onPrimary else ItmoTheme.colorScheme.onSecondaryContainer,

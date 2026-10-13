@@ -877,6 +877,18 @@
         }
       }
     },
+    "schedule_lesson_type_booking" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бронь помещения"
+          }
+        }
+      }
+    },
     "schedule_lesson_type_consultation" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",

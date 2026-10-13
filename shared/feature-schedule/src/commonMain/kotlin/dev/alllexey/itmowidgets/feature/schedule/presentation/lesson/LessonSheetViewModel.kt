@@ -160,9 +160,7 @@ class LessonSheetViewModel(
                 LessonTeacher(
                     name = name,
                     isu = sheet.teacherIsu,
-                    tone = level?.let {
-                        UiText.Res(CoreStrings.teacher_level_description, listOf(UiText.LowercaseFirst(it.tone().label)))
-                    } ?: UiText.Res(ScheduleStrings.schedule_sheet_teacher),
+                    tone = level?.tone()?.words ?: UiText.Res(ScheduleStrings.schedule_sheet_teacher),
                 )
             },
             flow = lesson?.flowName,
