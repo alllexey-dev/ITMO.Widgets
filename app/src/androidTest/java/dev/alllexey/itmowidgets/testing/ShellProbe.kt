@@ -1,27 +1,23 @@
 package dev.alllexey.itmowidgets.testing
 
-import android.view.accessibility.AccessibilityManager
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.app.shell.ShellHost
-import dev.alllexey.itmowidgets.app.shell.TabPages
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 
 /**
  * What `MainActivity` shows, in the shell's own values: the [surface], the selected [tab] (null off the
- * tabs), the [overlays] bottom to top and the top sheet or dialog ([floating]). [swipeEnabled]: a horizontal swipe on
- * the tab content switches the tab now.
+ * tabs), the [overlays] bottom to top and the top sheet or dialog ([floating]).
  */
 data class ShellView(
     val surface: ShellSurface,
     val tab: AppTab?,
     val overlays: List<AppRoute>,
     val floating: AppRoute?,
-    val swipeEnabled: Boolean = false,
 ) {
     /** The key class name of [floating]. */
     val floatingName: String?
@@ -52,13 +48,11 @@ object ShellProbe {
     fun read(activity: MainActivity): ShellView {
         val (surface, stack) = checkNotNull(ShellHost.of(activity)) { "MainActivity has no shell yet" }.snapshot
         val tabs = surface is ShellSurface.Tabs
-        val exploring = activity.getSystemService(AccessibilityManager::class.java).isTouchExplorationEnabled
         return ShellView(
             surface = surface,
             tab = stack.tab.takeIf { tabs },
             overlays = if (tabs) stack.overlays else emptyList(),
             floating = if (tabs) stack.floating.lastOrNull() else null,
-            swipeEnabled = TabPages.swipeEnabled(surface, stack, exploring),
         )
     }
 }

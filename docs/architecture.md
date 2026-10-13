@@ -143,10 +143,18 @@ allow it.
   root renders inside its frame (`entries/TabRootFrames.kt`): the kit's
   `ItmoRootScreen` with the static root header, and on Сегодня the date
   (`TodayHeaderViewModel`), the bell and the `Пропуск` button that opens the
-  `QrPass` sheet ([design](design.md#shell)). Tab roots sit in a pager
-  (`TabPager.kt`) with swipe between tabs under the `ShortNavigationBar`;
-  overlay screens cover the bar; sheets and dialogs are overlay scenes
-  (`ShellScenes.kt` sizes a sheet by its `SheetPolicy`). Only `LoginActivity`, `BarsLoginActivity` and
+  `QrPass` sheet ([design](design.md#shell)). `NavDisplay` shows
+  `ShellBackStack.entries`: the start tab's root, the selected tab's root above
+  it, the pushed screens and the sheets and dialogs, and does every transition,
+  the predictive Back and the entries' lifecycles itself (`ShellMotion.kt`: fade
+  through between tab roots, shared axis X for pushed screens, the predictive
+  Back spec). Per-tab state follows the Navigation 3 `multiplestacks` recipe:
+  each tab's stack and the contextual stack are decorated on their own
+  (saveable state, `ViewModelStore`, route arguments), so a hidden tab keeps its
+  state and view models. The `ShortNavigationBar` and the demo banner are laid
+  out under `NavDisplay` (`AppShell.kt`); tab roots end above them, pushed
+  screens cover them. Sheets and dialogs are overlay scenes (`ShellScenes.kt`
+  sizes a sheet by its `SheetPolicy`). Only `LoginActivity`, `BarsLoginActivity` and
   `SpoilerCropActivity` remain separate activities (`app/shell/ActivityRoutes.kt`).
 - **iOS.** `iosApp/Sources/App/Router/AppRouter.swift` keeps a SwiftUI
   `NavigationStack` per tab and the sheets; `Routes+<Area>.swift` map each

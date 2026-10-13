@@ -1,5 +1,5 @@
 # The instrumented tests on emulators: `verify.sh ui all` in 6 shards on a Pixel-geometry emulator without a cutout,
-# and `verify.sh ui ShellSuite` (the shell, its insets and the tab swipe) in 2 shards on the same emulator with the
+# and `verify.sh ui ShellSuite` (the shell, its insets and Back) in 2 shards on the same emulator with the
 # tall cutout overlay, so the shell is also tested on a cutout. Nightly on `master`, on demand, and on PRs labelled
 # `full-ci`; never on other PRs, so merging never waits for an emulator. A failed nightly opens or updates an issue.
 # `android-ui` is the aggregate job: it fails when a shard failed, is missing or ran no test, and

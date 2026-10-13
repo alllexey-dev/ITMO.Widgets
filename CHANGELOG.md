@@ -60,10 +60,10 @@ new iOS app.
 - Predictive back on Android 13-15, as on 16: the gesture previews closing a
   screen or a sheet, the start tab shows the back-to-home animation, and My
   ITMO goes back in its web history first.
-- The bottom tabs switch by a horizontal swipe on a tab root: one tab per
-  swipe, no wrap-around, off under TalkBack and while a sheet or dialog is
-  open. `Мой спорт` and `Запись` keep their own swipe and switch the tab only
-  on a new swipe at either end.
+- The bottom tabs switch by a tap on the bar with a fade through, no swipe;
+  each tab keeps its scroll and state. Pushed screens move on the shared X
+  axis over the bar, and the predictive Back shows the previous screen under
+  the one being closed, already in place when the gesture ends (2026-10-13).
 - Smaller changes: the `.ics` sheet buttons stand side by side when they fit;
   deleting an own link asks first; report dialogs keep their text across
   rotation; the review editor's button stays above the keyboard; another

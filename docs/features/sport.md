@@ -12,7 +12,7 @@ custom-services gate.
 ## Tab host
 
 - `SportScreen` is a stateless `HorizontalPager` of `SportMyScreen` and
-  `SportSignScreen` with `tabSwipeHandover` ([tab swipe](../design.md#tab-swipe)).
+  `SportSignScreen` with `tabSwipeHandover`, a leftover of the tab swipe ([tab switching](../design.md#tab-switching-and-back)).
 - `SportRoute` takes `SportMyViewModel` and `SportSignViewModel`
   (`viewModelOf` in `SportModule.kt`). On Android the tab root is
   `SportTabRoot` (`shell/entries/SportEntries.kt`), which keeps both

@@ -121,30 +121,3 @@ private class BottomSheetScene<T : Any>(
 
     override fun toString(): String = "BottomSheetScene(key=$key, policy=$policy)"
 }
-
-/**
- * Everything that is not a sheet or a dialog, the selected tab's root and the overlay screens above it, is one scene
- * with a fixed key: the shell lays the layers out itself ([ShellChrome]), so `NavDisplay` never swaps scenes or
- * animates between them, and the tab content stays composed with its bounds under an overlay. The scene has no
- * previous entries, so `NavDisplay`'s own Back handler stays off and the shell's handles Back.
- */
-class ShellSceneStrategy<T : Any>(
-    private val layers: @Composable (List<NavEntry<T>>) -> Unit,
-) : SceneStrategy<T> {
-    override fun SceneStrategyScope<T>.calculateScene(entries: List<NavEntry<T>>): Scene<T> =
-        ShellScene(entries, layers)
-}
-
-private class ShellScene<T : Any>(
-    override val entries: List<NavEntry<T>>,
-    private val layers: @Composable (List<NavEntry<T>>) -> Unit,
-) : Scene<T> {
-    override val key: Any get() = ShellScene::class
-    override val previousEntries: List<NavEntry<T>> get() = emptyList()
-    override val content: @Composable () -> Unit = { layers(entries) }
-
-    override fun equals(other: Any?): Boolean =
-        this === other || (other is ShellScene<*> && entries == other.entries && layers == other.layers)
-
-    override fun hashCode(): Int = 31 * entries.hashCode() + layers.hashCode()
-}
