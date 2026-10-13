@@ -51,9 +51,9 @@ extension ShellTab {
         switch tab {
         case .recordbook: self = .recordbook
         case .schedule: self = .schedule
-        case .home: self = .home
+        case .home: self = .today
         case .sport: self = .sport
-        case .me: self = .me
+        case .me: self = .profile
         }
     }
 
@@ -61,9 +61,9 @@ extension ShellTab {
         switch self {
         case .recordbook: .recordbook
         case .schedule: .schedule
-        case .home: .home
+        case .today: .home
         case .sport: .sport
-        case .me: .me
+        case .profile: .me
         }
     }
 }

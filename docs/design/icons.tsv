@@ -1,6 +1,4 @@
 id	symbol	fill	kind	sf_symbol	note
-account_circle	account_circle	0	shared	person.crop.circle	Bottom navigation tab
-account_circle_filled	account_circle	1	shared	person.crop.circle.fill	Selected bottom navigation tab
 add	add	0	shared	plus	-
 arrow_back	arrow_back	0	shared	chevron.backward	-
 arrow_drop_down	arrow_drop_down	0	shared	arrowtriangle.down.fill	-
@@ -33,8 +31,7 @@ edit_calendar	edit_calendar	0	shared	calendar	SF Symbols has no calendar with a 
 edit_note	edit_note	0	shared	square.and.pencil	-
 error	error	0	shared	exclamationmark.circle	-
 event_note	event_note	0	shared	calendar.day.timeline.left	-
-exercise	exercise	0	shared	dumbbell	Bottom navigation tab
-exercise_filled	exercise	1	shared	dumbbell.fill	Selected bottom navigation tab
+exercise	exercise	0	shared	dumbbell	-
 expand_more	expand_more	0	shared	chevron.down	Same glyph as summary_expand
 flag	flag	0	shared	flag	-
 folder	folder	0	shared	folder	-
@@ -42,8 +39,7 @@ format_list_numbered	format_list_numbered	0	shared	list.number	-
 globe	globe	0	shared	globe	-
 group	group	0	shared	person.2	-
 history	history	0	shared	clock.arrow.circlepath	-
-home	home	0	shared	house	Bottom navigation tab
-home_filled	home	1	shared	house.fill	Selected bottom navigation tab
+home	home	0	shared	house	-
 how_to_reg	how_to_reg	0	shared	person.crop.circle.badge.checkmark	-
 info	info	0	shared	info.circle	-
 keep	keep	0	shared	pin	Same glyph as pin (push_pin is an alias of keep); here a pinned link
@@ -55,8 +51,7 @@ location_on	location_on	0	shared	mappin.and.ellipse	-
 lock	lock	0	shared	lock	-
 login	login	0	shared	arrow.right.to.line	-
 logout	logout	0	shared	rectangle.portrait.and.arrow.right	-
-menu_book	menu_book	0	shared	book	Bottom navigation tab
-menu_book_filled	menu_book	1	shared	book.fill	Selected bottom navigation tab
+menu_book	menu_book	0	shared	book	-
 more_vert	more_vert	0	shared	ellipsis	iOS shows the overflow menu horizontally
 notification	notifications	0	shared	bell	id differs from the symbol name
 open_in_new	open_in_new	0	shared	arrow.up.right.square	-
@@ -67,8 +62,7 @@ qr_code	qr_code	0	shared	qrcode	-
 qr_code_scanner	qr_code_scanner	0	shared	qrcode.viewfinder	-
 refresh	refresh	0	shared	arrow.clockwise	-
 remove	remove	0	shared	minus	-
-schedule	schedule	0	shared	clock	Bottom navigation tab
-schedule_filled	schedule	1	shared	clock.fill	Selected bottom navigation tab
+schedule	schedule	0	shared	clock	-
 school	school	0	shared	graduationcap	-
 search	search	0	shared	magnifyingglass	-
 settings	settings	0	shared	gearshape	-

@@ -4,7 +4,9 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The SwiftUI kit in all four appearances: form rows, the loading, empty and error states, the progress
-/// button and the demo banner. Texts are synthetic; the kit's own defaults (retry, demo banner) come from the catalog.
+/// button and the demo banner. The empty and error states are the system's unavailable view with a glass button,
+/// drawn in a window. Texts are synthetic; the kit's own defaults (retry, demo banner) come from the catalog.
+@MainActor
 final class DesignSystemSnapshotTests: XCTestCase {
     /// Tall enough for the section at AX1; a `Form` scrolls, so it has no height of its own.
     private let formHeight: CGFloat = 640
@@ -52,7 +54,7 @@ final class DesignSystemSnapshotTests: XCTestCase {
             title: "Пар нет",
             description: "На этот период расписание пустое."
         )
-        assertAppearances(of: view, named: "empty")
+        assertScreenAppearances(of: view, named: "empty", height: nil)
     }
 
     func testEmptyLongTexts() {
@@ -61,12 +63,12 @@ final class DesignSystemSnapshotTests: XCTestCase {
             title: SnapshotFixtures.longSubjectName,
             description: SnapshotFixtures.longPersonName
         )
-        assertAppearances(of: view, named: "long")
+        assertScreenAppearances(of: view, named: "long", height: nil)
     }
 
     func testError() {
         let view = ItmoErrorView(title: "Не удалось загрузить", description: "Проверьте подключение к интернету.") {}
-        assertAppearances(of: view, named: "error")
+        assertScreenAppearances(of: view, named: "error", height: nil)
     }
 
     func testProgressButton() {

@@ -41,7 +41,7 @@ struct ShellView: View {
         case .onboarding:
             OnboardingScreen(finished: session.onboardingFinished)
         case let .tabs(demo):
-            ShellTabs(selection: $router.selectedTab) { tab in
+            ShellTabs(selection: $router.selectedTab, openPass: { router.open(AppRoutes.QrPass.shared) }) { tab in
                 ShellStack(
                     tab: tab,
                     router: router,
@@ -65,7 +65,8 @@ extension ShellView {
     }
 }
 
-/// One tab's stack: its root, the screens the router pushed, and the demo banner above the tab bar.
+/// One tab's stack: its root, the screens the router pushed, and the demo banner above the tab bar. Today's root has
+/// the native root header; the other roots are still Compose screens that draw their own top bar.
 struct ShellStack: View {
     let tab: ShellTab
     @Bindable var router: AppRouter
@@ -78,7 +79,7 @@ struct ShellStack: View {
         VStack(spacing: 0) {
             NavigationStack(path: path) {
                 root
-                    .shellChrome(.compose)
+                    .shellChrome(tab == .today ? .native : .compose)
                     .navigationDestination(for: ShellDestination.self) { destination in
                         Routes.view(for: destination)
                             .shellChrome(destination.chrome)
@@ -92,20 +93,20 @@ struct ShellStack: View {
         }
     }
 
-    /// The tab's root: the Compose recordbook, schedule, home feed, sport tab and Me tab.
+    /// The tab's root: today over the Compose home feed, the Compose schedule, recordbook, sport tab and profile.
     @ViewBuilder
     private var root: some View {
         switch tab {
-        case .recordbook:
-            RecordbookTabScreen(router: router)
-        case .home:
-            HomeScreen(router: router)
-        case .sport:
-            SportTabScreen(router: router)
-        case .me:
-            MeTabScreen(router: router)
+        case .today:
+            TodayScreen(router: router)
         case .schedule:
             ScheduleScreen(router: router)
+        case .recordbook:
+            RecordbookTabScreen(router: router)
+        case .sport:
+            SportTabScreen(router: router)
+        case .profile:
+            MeTabScreen(router: router)
         }
     }
 
@@ -114,11 +115,10 @@ struct ShellStack: View {
     }
 }
 
-/// A shell sheet: half height first, full height on a drag. The web sign-in brings its own stack (`WebLoginSheet`),
-/// a route sheet its own content and detents (`Routes.sheetView`).
+/// A shell sheet. The damaged-link message is a content-height kit sheet; the web sign-in brings its own stack
+/// (`WebLoginSheet`), a route sheet its own content and detents (`Routes.sheetView`).
 struct ShellSheetView: View {
     let sheet: ShellSheet
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         switch sheet {
@@ -129,28 +129,13 @@ struct ShellSheetView: View {
     }
 
     private var messageSheet: some View {
-        NavigationStack {
-            ScrollView {
-                ItmoEmptyView(
-                    symbol: .error,
-                    title: AppStrings.string("app_link_unavailable_title"),
-                    description: AppStrings.string("app_link_unavailable_text")
-                )
-            }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        AppSymbol.close.image
-                    }
-                    .accessibilityLabel(Text(verbatim: AppStrings.string("common_close")))
-                    .accessibilityIdentifier("sheet.close")
-                }
-            }
+        ItmoSheet(title: "", height: .content) {
+            ItmoEmptyView(
+                symbol: .error,
+                title: AppStrings.string("app_link_unavailable_title"),
+                description: AppStrings.string("app_link_unavailable_text")
+            )
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
         .accessibilityIdentifier("shell.sheet.\(sheet.id)")
     }
 }

@@ -12,7 +12,7 @@ simulator. Read [architecture.md](architecture.md) next.
 | Android Studio | a version that supports AGP 9.3 and Kotlin 2.4 | Optional for command-line work |
 | Xcode | 27.0 (build 27A266a) | iOS only; pinned in `scripts/ios/env.sh`, CI uses exactly this one |
 | XcodeGen | 2.46.0 | iOS only; `brew install xcodegen` or the GitHub release CI uses |
-| iOS simulator | iPhone 17, iOS 27.0 runtime | Deployment target is iOS 18.0 |
+| iOS simulator | iPhone 17, iOS 27.0 runtime | Deployment target is iOS 26.1 |
 | MyItmoApi checkout | optional | Only to change the library itself, see below |
 
 `scripts/ios/env.sh` warns when your Xcode or XcodeGen differs from the pin.

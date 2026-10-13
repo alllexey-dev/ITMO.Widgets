@@ -139,6 +139,25 @@ final class SocialUITests: XCTestCase {
         XCTAssertTrue(target.isHittable, "the feed never brought \(target) into reach")
     }
 
+    /// My ITMO moved from the today feed to the profile; the demo cannot open it and says so.
+    func testMyItmoRowSaysTheDemoCannotOpenIt() {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        openMe(app)
+        let row = element(app, "my_itmo_row")
+        XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
+        for _ in 0..<4 where !row.isHittable {
+            element(app, "main").swipeUp()
+        }
+
+        row.tap()
+
+        let refusal = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", Self.demoUnavailable)).firstMatch
+        XCTAssertTrue(refusal.waitForExistence(timeout: stepTimeout))
+        attachScreenshot(named: "my-itmo-demo")
+        XCTAssertTrue(element(app, "shell.root.me").exists, "nothing opens over the profile")
+    }
+
     func testMeTabAtAccessibilityTextSize() {
         let ax1 = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityM"]
         let app = XCUIApplication.itmo(arguments: ax1)

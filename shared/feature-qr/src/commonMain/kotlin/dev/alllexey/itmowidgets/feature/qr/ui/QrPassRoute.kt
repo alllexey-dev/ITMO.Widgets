@@ -24,8 +24,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * The pass sheet with its Koin ViewModel: requests run while the sheet is started, and a failed refresh that keeps the
- * code shows a snackbar with a retry. Android hosts it in the shell's `QrPass` sheet, iOS in `qrPassViewController`
- * until its SwiftUI sheet replaces it.
+ * code shows a snackbar with a retry. Android hosts it in the shell's `QrPass` sheet; iOS draws the same view model in
+ * SwiftUI (`QrPassSheet`).
  */
 @Composable
 fun QrPassRoute(onClose: () -> Unit, viewModel: QrPassViewModel = koinViewModel()) {

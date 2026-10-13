@@ -52,8 +52,8 @@ final class DeviceRegistrationTests: XCTestCase {
         ))
         let router = readyRouter()
         XCTAssertTrue(router.open(entry: try XCTUnwrap(route)))
-        XCTAssertEqual(router.selectedTab, .me)
-        XCTAssertEqual(router.path(of: .me), [ShellDestination(AppRoutes.UserProfile(isu: 100_002))])
+        XCTAssertEqual(router.selectedTab, .profile)
+        XCTAssertEqual(router.path(of: .profile), [ShellDestination(AppRoutes.UserProfile(isu: 100_002))])
     }
 
     func testASportTapOpensItsLessonOnTheSportTab() throws {
@@ -128,8 +128,8 @@ final class DeviceRegistrationTests: XCTestCase {
         XCTAssertNil(sport.consumeRequest(of: .sport))
 
         let profile = try open(NotificationDestinationUserProfile(isu: 100_002))
-        XCTAssertEqual(profile.selectedTab, .me)
-        XCTAssertEqual(profile.path(of: .me), [ShellDestination(AppRoutes.UserProfile(isu: 100_002))])
+        XCTAssertEqual(profile.selectedTab, .profile)
+        XCTAssertEqual(profile.path(of: .profile), [ShellDestination(AppRoutes.UserProfile(isu: 100_002))])
     }
 
     /// What the system hands back: plain Foundation values, a number where an older build stored the ISU as one.

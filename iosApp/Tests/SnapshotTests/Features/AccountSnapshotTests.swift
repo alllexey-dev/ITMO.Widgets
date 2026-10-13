@@ -88,7 +88,7 @@ final class AccountSnapshotTests: XCTestCase {
 
     func testConnectionsEmpty() {
         let state = ConnectionsUiStateContent(rows: [], revoke: nil, revoking: false, message: nil)
-        assertAppearances(of: ConnectionsList(state: state), named: "connections-empty", height: pageHeight)
+        assertScreenAppearances(of: ConnectionsList(state: state), named: "connections-empty", height: pageHeight)
     }
 
     func testWebLoginError() {
@@ -129,7 +129,7 @@ final class AccountSnapshotTests: XCTestCase {
         let page = MyItmoWebContent(load: .failed, retry: {}) {
             Color(uiColor: .secondarySystemBackground)
         }
-        assertAppearances(of: page, named: "my-itmo-failed", height: pageHeight)
+        assertScreenAppearances(of: page, named: "my-itmo-failed", height: pageHeight)
     }
 
     // MARK: Helpers
