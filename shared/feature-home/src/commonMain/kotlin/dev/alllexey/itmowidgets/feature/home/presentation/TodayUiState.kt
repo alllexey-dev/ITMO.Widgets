@@ -30,7 +30,7 @@ sealed interface TodayUiState {
 /**
  * The lesson to go to now: [label] (`Сейчас`, `Первая пара`, `Далее`, `Завтра`) and [countdown] (`ещё 48 мин`,
  * `через 15 мин`, `в 10:00`) over the [subject] and [byline]; the big [room] with the building's full [address], or
- * `Онлайн` with `Подключиться` for [videoUrl]; [time] `10:00–11:30`, the current lesson's elapsed [progress] between
+ * `Онлайн` with `Войти` for [videoUrl]; [time] `10:00–11:30`, the current lesson's elapsed [progress] between
  * [start] and [end]; the lesson's [note].
  */
 data class TodayHero(

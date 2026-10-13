@@ -134,9 +134,7 @@ final class RecordbookSubjectSnapshotTests: XCTestCase {
         let content = state as? RecordbookSubjectUiStateContent
         let screen = NavigationStack {
             RecordbookSubjectContent(state: state)
-                .navigationTitle(Text(verbatim: content?.title ?? ""))
-                .navigationSubtitle(Text(verbatim: content?.subtitle.resolved ?? ""))
-                .toolbarTitleDisplayMode(.inlineLarge)
+                .itmoDetailHeader(title: content?.title ?? "", subtitle: content?.subtitle.resolved)
         }
         assertScreenAppearances(of: screen, named: name, appearances: appearances, settle: 1, testName: testName)
     }

@@ -1,7 +1,8 @@
 import SwiftUI
 
-// Numbers of the kit (docs/design.md, SwiftUI screens): a number over its quiet source, the 0-100 meter of a row,
-// the small sport ring, the grade scale of a hero and the votes of a link. Texts reach the kit resolved.
+// Numbers of the kit (docs/design.md, SwiftUI screens): a number over its quiet source, a progress bar, the 0-100
+// meter of a row, the small sport ring, the grade scale of a hero and the votes of a link. Every track is the
+// environment's `itmoTrack`. Texts reach the kit resolved.
 
 /// A number column of a row: the value (a meter, a pill, a ring) over its quiet source ("BARS", "My ITMO"). `stale`
 /// colours the source as a warning (an old answer with its date); with `onSource` the source opens where the number
@@ -34,11 +35,36 @@ struct ItmoValueWithSource<Value: View>: View {
     }
 }
 
+/// Determinate progress (the lesson in progress, a session, a checkpoint): `value` 0...1 in `tint` over the kit's
+/// track, `UIProgressView`'s 4 pt capsule; VoiceOver reads it as the system's progress view.
+struct ItmoProgressBar: View {
+    let value: Double
+    var tint: Color = ItmoColor.primary
+
+    @Environment(\.itmoTrack) private var track
+
+    var body: some View {
+        let share = min(max(value, 0), 1)
+        Capsule()
+            .fill(track)
+            .frame(height: 4)
+            .overlay(alignment: .leading) {
+                GeometryReader { geometry in
+                    // Even a sliver keeps its round ends, as UIKit's stretched capsule does.
+                    Capsule().fill(tint).frame(width: share > 0 ? max(geometry.size.width * share, 4) : 0)
+                }
+            }
+            .accessibilityRepresentation { ProgressView(value: share) }
+    }
+}
+
 /// Points out of 100 in a row: the number over a thin bar filled to `share` in `tone`.
 struct ItmoPointsMeter: View {
     let text: String
     let share: Double
     var tone: ItmoTone = .primary
+
+    @Environment(\.itmoTrack) private var track
 
     var body: some View {
         VStack(alignment: .trailing, spacing: ItmoSpacing.related) {
@@ -46,7 +72,7 @@ struct ItmoPointsMeter: View {
                 .font(.itmo(.titleLarge, emphasized: true))
                 .monospacedDigit()
             Capsule()
-                .fill(Color(.tertiarySystemFill))
+                .fill(track)
                 .frame(width: 40, height: 4)
                 .overlay(alignment: .leading) {
                     Capsule().fill(tone.color).frame(width: 40 * min(max(share, 0), 1))
@@ -64,9 +90,11 @@ struct ItmoSportRing: View {
     let bonus: Double
     var size: CGFloat = 44
 
+    @Environment(\.itmoTrack) private var track
+
     var body: some View {
         ZStack {
-            Circle().stroke(Color(.tertiarySystemFill), lineWidth: 4)
+            Circle().stroke(track, lineWidth: 4)
             arc(from: 0, to: visits, color: ItmoColor.sportScoreAttendance)
             arc(from: visits, to: visits + bonus, color: ItmoColor.sportScoreBonus)
             Text(verbatim: text)
@@ -90,12 +118,14 @@ struct ItmoGradeScale: View {
     let share: Double
     let ticks: [(label: String, score: Double)]
 
+    @Environment(\.itmoTrack) private var track
+
     var body: some View {
         VStack(spacing: ItmoSpacing.related) {
             GeometryReader { geometry in
                 let width = geometry.size.width
                 ZStack(alignment: .leading) {
-                    Capsule().fill(ItmoColor.primary.opacity(0.18))
+                    Capsule().fill(track)
                     Capsule().fill(ItmoColor.primary).frame(width: width * min(max(share, 0), 1))
                     ForEach(ticks.indices, id: \.self) { index in
                         Rectangle()

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,6 +51,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
+import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 
 /** `Пары`: the teachers as rows with the tone of their reviews in words, then the lessons ahead. */
 internal fun LazyListScope.lessonsTab(lessons: SubjectLessons, actions: RecordbookSubjectActions) {
@@ -152,7 +152,7 @@ private fun Binding(binding: SubjectBinding, actions: RecordbookSubjectActions) 
         )
         if (single != null) {
             Row(Modifier.padding(top = ItmoTheme.spacing.compact), horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
-                FilledTonalButton(onClick = { actions.onConfirmBinding(single.subjectId) }) {
+                TonalButton(onClick = { actions.onConfirmBinding(single.subjectId) }) {
                     Text(stringResource(Res.string.subject_binding_confirm))
                 }
                 OutlinedButton(onClick = actions.onRejectBinding) { Text(stringResource(Res.string.subject_binding_reject)) }

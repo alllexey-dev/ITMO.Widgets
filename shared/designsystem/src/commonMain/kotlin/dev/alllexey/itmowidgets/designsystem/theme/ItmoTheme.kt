@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
@@ -13,6 +14,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.platform.LocalItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.platform.defaultPlatformStyle
@@ -161,6 +163,16 @@ object ItmoTheme {
         @ReadOnlyComposable
         get() = LocalItmoIosColors.current
 
+    /**
+     * The track of every progress bar, meter, scale and ring: the colour of the text around it (the container's "on"
+     * colour in a card, `onBackground` on the screen) at a low alpha, so the track reads as a groove in its
+     * container's hue in light and dark, never a dark bar on a light card.
+     */
+    val progressTrack: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalContentColor.current.copy(alpha = PROGRESS_TRACK_ALPHA)
+
     /** True when the kit's expressive variants are on: the default of [ItmoTheme], Material style only. */
     val expressive: Boolean
         @Composable
@@ -202,3 +214,5 @@ private class StyleTokens(val shapes: ItmoShapes, val spacing: ItmoSpacing, val 
 /** The platform's wallpaper colours, or null where there are none (Android below 12, iOS). */
 @Composable
 internal expect fun platformWallpaperPalette(): WallpaperPalette?
+
+private const val PROGRESS_TRACK_ALPHA = 0.16f

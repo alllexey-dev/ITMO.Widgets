@@ -72,7 +72,8 @@ class RecordbookEntriesTest {
 
         assertEquals(listOf<AppRoute>(AppRoutes.RecordbookSubject(SUBJECT)), navigator.state.overlays)
         compose.onNodeWithTag(SubjectTestTags.TABS).assertExists()
-        compose.onNodeWithText("Тестовый предмет $CURRENT_SEMESTER").assertExists()
+        // The title and its subtitle are one paragraph in the pushed header.
+        compose.onNodeWithText("Тестовый предмет $CURRENT_SEMESTER", substring = true).assertExists()
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.RecordbookSubject(SUBJECT))).assertDoesNotExist()
     }
 

@@ -111,6 +111,7 @@ private fun Content(state: SportPointsUiState.Content, actions: SportPointsActio
                     progress = { state.capShare.coerceIn(0f, 1f) },
                     modifier = Modifier.fillMaxWidth(),
                     color = ItmoTheme.colorScheme.tertiary,
+                    trackColor = ItmoTheme.progressTrack,
                 )
                 Text(text(SportStrings.sport_points_cap_text), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
             }
