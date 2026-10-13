@@ -8,9 +8,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlin.time.Instant
 
-/** An academic clock standing still at [at] in Moscow. */
+/** An academic clock standing at [at] in Moscow until a test moves it. */
 class FixedAcademicTime(
-    private val at: LocalDateTime = LocalDateTime(LocalDate(2026, 10, 7), LocalTime(12, 0))
+    var at: LocalDateTime = LocalDateTime(LocalDate(2026, 10, 7), LocalTime(12, 0))
 ) : AcademicTimeProvider {
     /** The start of [date]. */
     constructor(date: LocalDate) : this(LocalDateTime(date, LocalTime(0, 0)))

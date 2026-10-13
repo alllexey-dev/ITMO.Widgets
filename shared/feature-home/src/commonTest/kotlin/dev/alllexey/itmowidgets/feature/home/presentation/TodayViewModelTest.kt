@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.navigation.EntryRoute
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.testing.FakeAppForeground
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -21,6 +22,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -41,7 +43,7 @@ class TodayViewModelTest {
     @Test
     fun theFirstShowRefreshesTodayAndTomorrowOnce() = runTest(main.dispatcher) {
         val gateway = FakeDayLessonsGateway(LessonDay(monday, listOf(dayLesson("11:40", "13:10")), null))
-        val vm = TodayViewModel(gateway, emptyList(), time)
+        val vm = TodayViewModel(gateway, emptyList(), time, FakeAppForeground())
 
         vm.ensureDataLoaded()
         vm.ensureDataLoaded()
@@ -55,7 +57,7 @@ class TodayViewModelTest {
     fun aFailedFirstRefreshWithoutCacheShowsTheErrorAndARetryLoads() = runTest(main.dispatcher) {
         val gateway = FakeDayLessonsGateway()
         gateway.result = AppResult.Failure(AppError.Network)
-        val vm = TodayViewModel(gateway, emptyList(), time)
+        val vm = TodayViewModel(gateway, emptyList(), time, FakeAppForeground())
 
         vm.ensureDataLoaded()
         assertIs<TodayUiState.Failed>(vm.uiState.first { it is TodayUiState.Failed })
@@ -73,11 +75,31 @@ class TodayViewModelTest {
     fun everyTodoSourceAddsItsThingsToDo() = runTest(main.dispatcher) {
         val todo = TodayTodo("bars", AppIcon.LOGIN, UiText.Dynamic("t"), UiText.Dynamic("r"), UiText.Dynamic("a"), EntryRoute(AppTab.HOME))
         val gateway = FakeDayLessonsGateway(LessonDay(monday, emptyList(), null))
-        val vm = TodayViewModel(gateway, listOf(TodayTodoSource { flowOf(listOf(todo)) }), time)
+        val vm = TodayViewModel(gateway, listOf(TodayTodoSource { flowOf(listOf(todo)) }), time, FakeAppForeground())
 
         vm.ensureDataLoaded()
         val state = vm.uiState.first { it is TodayUiState.Content && it.todos.isNotEmpty() } as TodayUiState.Content
 
         assertEquals(listOf(todo), state.todos)
+    }
+
+    @Test
+    fun onlyAReturnToTheForegroundRefreshesAndOnlyDataOlderThanFiveMinutes() = runTest(main.dispatcher) {
+        val gateway = FakeDayLessonsGateway(LessonDay(monday, emptyList(), null))
+        val clock = FixedAcademicTime(LocalDateTime(monday, LocalTime(12, 22)))
+        val foreground = FakeAppForeground()
+        val vm = TodayViewModel(gateway, emptyList(), clock, foreground)
+        vm.ensureDataLoaded()
+        advanceUntilIdle()
+
+        clock.at = LocalDateTime(monday, LocalTime(12, 26))
+        foreground.comeBack()
+        advanceUntilIdle()
+        assertEquals(1, gateway.refreshes.size)
+
+        clock.at = LocalDateTime(monday, LocalTime(12, 27))
+        foreground.comeBack()
+        advanceUntilIdle()
+        assertEquals(2, gateway.refreshes.size)
     }
 }
