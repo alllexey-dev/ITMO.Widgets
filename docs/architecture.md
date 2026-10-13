@@ -128,8 +128,8 @@ Routes are shared: `@Serializable` keys in
 `shared/core/src/commonMain/kotlin/dev/alllexey/itmowidgets/core/navigation/AppRoutes.kt`.
 Each key has a kind (tab root, screen, sheet, dialog, gate); a sheet's `SheetPolicy` names one of the three sizes
 (content height, `SheetPolicy.TALL_FRACTION` of the window, the whole height below the status bar), which iOS maps
-to detents. `AppTab` is the tab model of both platforms: the five tabs in bar order (Сегодня, Расписание, Зачётка,
-Спорт, Профиль; `HOME` is Сегодня, `ME` Профиль) with each tab's label key and icons.
+to detents. `AppTab` is the tab model of both platforms: the five tabs in bar order (Зачётка, Расписание, Сегодня,
+Спорт, Профиль; `HOME` is Сегодня and the start tab, `ME` Профиль) with each tab's label key and icons.
 `EntryRouteParser` turns widget, shortcut, notification and App Link intents
 into routes; `RouteQueue` holds one until the session and the first-run flow
 allow it.

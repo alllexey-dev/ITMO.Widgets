@@ -428,7 +428,7 @@ final class RouterTests: XCTestCase {
     }
 
     func testTabsFollowTheBarOrder() {
-        XCTAssertEqual(ShellTab.allCases, [.today, .schedule, .recordbook, .sport, .profile])
+        XCTAssertEqual(ShellTab.allCases, [.recordbook, .schedule, .today, .sport, .profile])
         XCTAssertEqual(ShellTab.visible, ShellTab.allCases, "every tab has its screen")
         XCTAssertEqual(ShellTab.launch, .today)
         XCTAssertEqual(ShellTab.allCases.map(\.appTab), [.home, .schedule, .recordbook, .sport, .me])

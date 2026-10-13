@@ -439,9 +439,10 @@ universal renderer.
 
 The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is the frame every screen sits in.
 
-- Five tabs in this order: Сегодня, Расписание, Зачётка, Спорт, Профиль (`AppTab`, which also names each tab's
-  label key and its outlined and FILL 1 icons: `today`, `calendar_month`, `book_2`, `sprint`, `person`). The bar is
-  `ItmoNavigationBar` (M3E `ShortNavigationBar`) with labels.
+- Five tabs in this order, close to My ITMO: Зачётка, Расписание, Сегодня (the centre and the start tab), Спорт,
+  Профиль (`AppTab`, which also names each tab's label key and its outlined and FILL 1 icons: `book_2`,
+  `calendar_month`, `today`, `sprint`, `person`). The bar is `ItmoNavigationBar` (M3E `ShortNavigationBar`) with
+  labels.
 - Every tab root has the root header (`ItmoRootScreen`, `app/shell/entries/TabRootFrames.kt`): the title and its
   one-line subtitle on the left, the actions in the same row, centred on the title block; 112 dp (96 without a
   subtitle). It is static (owner, 2026-10-13): it never collapses, the content scrolls under it. Сегодня shows the date
@@ -575,8 +576,8 @@ target look is the design lab's (`vibe/design-lab/ux-native/DECISIONS.md`,
 https://design.widgets.alllexey.dev). The Compose screens draw the kit's iOS
 style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
 
-- Shell. A glass tab bar with five labelled tabs (Сегодня, Расписание,
-  Зачётка, Спорт, Профиль); pushed screens keep it and show the parent as
+- Shell. A glass tab bar with five labelled tabs (Зачётка, Расписание,
+  Сегодня, Спорт, Профиль); pushed screens keep it and show the parent as
   back. The `QR-пропуск` accessory sits above the bar only while Сегодня is
   selected and opens the pass sheet.
 - Root header. Title and a one-line subtitle on the leading side, the actions

@@ -72,7 +72,7 @@ new iOS app.
 
 ### Appearance
 
-- Android gets the new shell of the redesign: five tabs Сегодня, Расписание, Зачётка, Спорт, Профиль in the
+- Android gets the new shell of the redesign: five tabs Зачётка, Расписание, Сегодня, Спорт, Профиль in the
   Material 3 Expressive bar, a static header with the tab's name that the content scrolls under (Сегодня shows the
   date and the bell), the `Пропуск` button on Сегодня that opens the pass in a sheet (code, name, group and ISU, when
   it was loaded, the last code offline), sheets of three sizes, and `My ITMO` as a row of Профиль.
