@@ -9,8 +9,6 @@ import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
-import dev.alllexey.itmowidgets.feature.home.data.PlacedWidgetKinds
-import dev.alllexey.itmowidgets.feature.home.di.homeIosModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
@@ -71,15 +69,15 @@ object IosKoinModules {
         // The web sign-in sheet, pairing's CryptoKit and LocalAuthentication ports and the update offer on their iOS
         // ports.
         webLoginDataModule, webLoginModule, webLoginIosModule(platform), updateModule, updateIosModule,
-        // The home feed with the hints over WidgetKit and UNUserNotificationCenter.
-        homeModule, homeIosModule(PlacedWidgetKinds { completion -> platform.installedWidgetKinds(completion) }),
+        // Сегодня and the bell over every feature's sources.
+        homeModule,
         // The notifier with the catalog's text resolver, the app refresh task and the schedule change check's iOS ports
         // and step; the runner is `IosBackgroundRefresh`, started after the graph.
         iosBackgroundModule(UiTextResolver { it.resolve() }), scheduleChangesIosModule,
         // The me tab, friends, search, profiles and a user's friends; the invitation names the App Store page or the
         // site.
         socialModule, socialIosModule(inviteUrl()), meModule,
-        // The schedule tab, another user's schedule, the changes, the lesson and pending sport sheets and the friend
+        // The schedule tab, another user's schedule, the lesson and pending sport sheets and the friend
         // picker.
         scheduleModule, scheduleDataModule, scheduleIosModule(), friendSelectorModule,
         // The sport tab, its details sheet and another user's sport; the lessons' friends come through the friend

@@ -28,7 +28,6 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.LessonDetailsIosRoute
 import dev.alllexey.itmowidgets.feature.schedule.ui.PendingSportDetailsIosRoute
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleSheetExits
 import dev.alllexey.itmowidgets.feature.schedule.ui.UserScheduleIosRoute
-import dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesRoute
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleRoute
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleRouteActions
 import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleRouteRequest
@@ -93,11 +92,6 @@ fun userScheduleViewController(
         onLessonClick = { lesson, date -> open(AppRoutes.LessonDetails(lesson.toDetailsArgs(date))) },
     )
     Padded { UserScheduleIosRoute(isu, name, actions, onBack) }
-}
-
-/** The found schedule changes (`AppRoutes.ScheduleChanges`), as Android's shell hosts them. */
-fun scheduleChangesViewController(onBack: () -> Unit): UIViewController = screenController {
-    Padded { ScheduleChangesRoute(onBack = onBack) }
 }
 
 /**

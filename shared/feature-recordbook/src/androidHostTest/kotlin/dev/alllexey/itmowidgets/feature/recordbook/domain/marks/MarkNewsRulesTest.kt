@@ -114,6 +114,23 @@ class MarkNewsRulesTest {
         assertEquals(listOf("Тестовый предмет"), merged.map { it.name })
         assertEquals("2026/2027-1|тестовый предмет", merged.single().id)
     }
+    @Test
+    fun `a record takes the most telling value of its check and a read one is unread again`() {
+        val total = MarkEvent(MarkSource.MY_ITMO, HALF, "Физика", MarkEventKind.MARK_CHANGED, MarkValue(delta = 9.0, total = 74.0))
+        val checkpoint = MarkEvent(
+            MarkSource.BARS, HALF, "Физика", MarkEventKind.MARK_ADDED,
+            MarkValue(checkpoint = "Контрольная работа 2", mark = 9.0, max = 10.0, delta = 9.0, total = 74.0),
+        )
+        val read = MarkNewsRules.merge(emptyList(), listOf(total), NOW, notify = true).single().copy(read = true)
+
+        val merged = MarkNewsRules.merge(listOf(read), listOf(total, checkpoint), NOW, notify = true).single()
+
+        assertFalse(merged.read)
+        assertEquals("Контрольная работа 2", merged.value?.checkpoint)
+        val grade = MarkEvent(MarkSource.BARS, HALF, "Физика", MarkEventKind.FINAL_CHANGED, MarkValue(grade = "5", total = 91.0))
+        assertEquals("5", MarkNewsRules.merge(emptyList(), listOf(checkpoint, grade), NOW, notify = true).single().value?.grade)
+    }
+
     private companion object {
         val HALF = StudyHalf(2026, 1)
         val NOW: Instant = Instant.parse("2026-09-07T09:00:00Z")

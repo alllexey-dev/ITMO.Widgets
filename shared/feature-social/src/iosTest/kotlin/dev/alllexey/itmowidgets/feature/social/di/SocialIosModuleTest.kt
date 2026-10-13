@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
-import dev.alllexey.itmowidgets.core.home.HomeCardRenderer
+import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
@@ -32,7 +32,6 @@ import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserSearchViewModel
-import dev.alllexey.itmowidgets.feature.social.ui.home.FriendRequestsHomeCardRenderer
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
@@ -90,7 +89,7 @@ class SocialIosModuleTest {
         koin.get<UserSearchViewModel>()
         koin.get<UserProfileViewModel> { parametersOf(arguments()) }
         koin.get<UserFriendsViewModel> { parametersOf(arguments()) }
-        assertEquals(listOf<HomeCardRenderer>(FriendRequestsHomeCardRenderer), koin.getAll<HomeCardRenderer>())
+        assertEquals(1, koin.getAll<BellSource>().size)
         assertEquals(emptyList(), requests)
         koin.close()
     }
