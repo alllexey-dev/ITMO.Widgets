@@ -3,8 +3,10 @@ import UIKit
 import WebKit
 
 /// The `WKWebView` of the sign-in page on `WKWebsiteDataStore.default()`, the store My ITMO web and the BARS login
-/// will share and that sign-out clears (`IosCoreHost.clearWebsiteData`). It reports the page lifecycle to the model,
-/// keeps the main frame on `ItmoAuthUrls.isNavigable` pages, opens no windows, and hands posted tokens to the model.
+/// will share and that sign-out clears (`IosCoreHost.clearWebsiteData`). Every load clears that store first, as
+/// Android's `LoginActivity` does, so the ITMO.ID cookies the sign-in keeps for BARS are only the new account's.
+/// It reports the page lifecycle to the model, keeps the main frame on `ItmoAuthUrls.isNavigable` pages, opens no
+/// windows, and hands posted tokens to the model.
 @MainActor
 final class ItmoSignInBrowser: NSObject, WKNavigationDelegate {
     let webView: WKWebView
@@ -36,12 +38,17 @@ final class ItmoSignInBrowser: NSObject, WKNavigationDelegate {
         webView.scrollView.refreshControl = refresh
     }
 
-    /// Loads the sign-in page once per `ItmoSignInModel.loadGeneration`.
+    /// Loads the sign-in page once per `ItmoSignInModel.loadGeneration`, after WebKit's website data is cleared.
     func loadIfNeeded() {
         guard loadedGeneration != model.loadGeneration else { return }
-        loadedGeneration = model.loadGeneration
+        let generation = model.loadGeneration
+        loadedGeneration = generation
         webView.stopLoading()
-        webView.load(URLRequest(url: ItmoAuthUrls.login, cachePolicy: .reloadIgnoringLocalCacheData))
+        AppPlatform.removeWebsiteData { [weak self] in
+            // A newer load or a closed page owns the browser by now.
+            guard let self, self.loadedGeneration == generation else { return }
+            self.webView.load(URLRequest(url: ItmoAuthUrls.login, cachePolicy: .reloadIgnoringLocalCacheData))
+        }
     }
 
     @objc private func pullToRefresh(_ control: UIRefreshControl) {

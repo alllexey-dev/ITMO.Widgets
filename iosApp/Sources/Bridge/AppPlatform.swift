@@ -21,8 +21,9 @@ final class AppPlatform: NSObject, IosPlatform {
         return top
     }
 
-    /// WebKit's removal of every website record. Unit tests that sign out through the app's graph replace it: on a CI
-    /// simulator the real call also deletes Screen Time web history, which hangs for minutes.
+    /// WebKit's removal of every website record, on sign-out and before each ITMO.ID sign-in page. Unit tests that
+    /// sign out through the app's graph or load that page replace it: on a CI simulator the real call also deletes
+    /// Screen Time web history, which hangs for minutes.
     static var removeWebsiteData: (@escaping () -> Void) -> Void = { completion in
         WKWebsiteDataStore.default().removeData(
             ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),

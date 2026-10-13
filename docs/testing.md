@@ -126,7 +126,8 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   simulator it also deletes Screen Time web history, hangs for minutes and
   stalls the WebKit cookie store after it. A test that builds a core graph
   passes `FakeCoreHost`, which counts the clears; a test that signs out through
-  the app's graph replaces `AppPlatform.removeWebsiteData`.
+  the app's graph or loads the ITMO.ID sign-in page replaces
+  `AppPlatform.removeWebsiteData`.
 - The last line is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha>`.
 
 ## CI

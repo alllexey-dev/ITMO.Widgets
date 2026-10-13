@@ -103,6 +103,31 @@ final class AuthTests: XCTestCase {
         XCTAssertFalse(model.state.showsError)
     }
 
+    /// As Android's `LoginActivity`: each load (a fresh page, a retry) clears WebKit's website data and only then
+    /// loads the page, so a previous account's ITMO.ID session never signs in and never stays for BARS.
+    func testEveryLoadClearsWebsiteDataBeforeThePageLoads() async {
+        let removeWebsiteData = AppPlatform.removeWebsiteData
+        defer { AppPlatform.removeWebsiteData = removeWebsiteData }
+        var clears: [() -> Void] = []
+        AppPlatform.removeWebsiteData = { clears.append($0) }
+        let requests = NavigationRecorder()
+        browser.webView.navigationDelegate = requests
+
+        browser.loadIfNeeded()
+        XCTAssertEqual(clears.count, 1)
+        try? await Task.sleep(for: .milliseconds(200))
+        XCTAssertTrue(requests.urls.isEmpty, "the page loaded before the clear finished")
+
+        clears[0]()
+        await waitUntil { requests.urls == [ItmoAuthUrls.login] }
+
+        browser.loadIfNeeded()
+        XCTAssertEqual(clears.count, 1, "the same generation loads once")
+        model.retry()
+        browser.loadIfNeeded()
+        XCTAssertEqual(clears.count, 2)
+    }
+
     func testTokensWithoutAPageAreIgnored() {
         model.tokensPosted(pageURL: nil, tokenResponseJson: tokenResponse)
         XCTAssertFalse(model.state.completingLogin)
@@ -296,5 +321,20 @@ private final class PageLoadReporter: NSObject, WKScriptMessageHandler {
         guard message.body as? String == page else { return }
         onLoad?()
         onLoad = nil
+    }
+}
+
+/// Records each main-frame request the browser makes and cancels it, so nothing reaches the network.
+@MainActor
+private final class NavigationRecorder: NSObject, WKNavigationDelegate {
+    private(set) var urls: [URL] = []
+
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor action: WKNavigationAction,
+        decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void
+    ) {
+        if let url = action.request.url { urls.append(url) }
+        decisionHandler(.cancel)
     }
 }

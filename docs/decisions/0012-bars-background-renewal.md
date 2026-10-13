@@ -67,9 +67,10 @@ and iOS's `ItmoIdCookieExport` copied an empty store to the Keychain.
   the SSO session answers it with a code at once, as in a browser.
 - `WebStoreDataCleaner` marks the web store's cleaner;
   `completeItmoIdLogin` alone skips it. Its tokens came from the page that ran
-  in that store after the store was cleared (Android on opening the page, iOS on
-  sign-out), so the SSO cookies there belong to the same account. BARS still
-  checks the ISU (`Forbidden` for another account).
+  in that store after the store was cleared: both platforms clear it when the
+  sign-in page opens and load the page only after that, so the SSO cookies there
+  belong to the same account, also after an expired session followed by
+  another account. BARS still checks the ISU (`Forbidden` for another account).
 - Unchanged: a refresh-token sign-in has no page behind it and clears the
   store; the demo, sign-out and a failed sign-in clear it; the cookies never
   leave the device.
