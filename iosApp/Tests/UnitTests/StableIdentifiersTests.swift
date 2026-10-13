@@ -12,7 +12,7 @@ final class StableIdentifiersTests: XCTestCase {
         XCTAssertEqual(Bundle.main.bundleIdentifier, "dev.alllexey.itmowidgets")
         XCTAssertEqual(info["AppGroupID"] as? String, appGroup)
         assertKeychainGroup(info["KeychainGroup"] as? String)
-        XCTAssertEqual(info["MinimumOSVersion"] as? String, "18.0")
+        XCTAssertEqual(info["MinimumOSVersion"] as? String, "26.1")
     }
 
     func testWidgetExtensionBundle() throws {
@@ -47,7 +47,7 @@ final class StableIdentifiersTests: XCTestCase {
         XCTAssertEqual(RouteURL.scheme, "itmowidgets")
         XCTAssertEqual(
             RouteURL.ids.compactMap { RouteURL.url(id: $0)?.absoluteString },
-            ["recordbook", "schedule", "home", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
+            ["home", "schedule", "recordbook", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
         )
     }
 

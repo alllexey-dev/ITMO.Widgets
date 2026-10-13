@@ -48,9 +48,6 @@ JDK 21 that `/usr/libexec/java_home -v 21` finds and
 Run `./gradlew verifyIosKlibs` from a terminal to see Kotlin errors without
 Xcode.
 
-One link warning is known and harmless: the ICU data object of Compose
-Multiplatform targets a newer iOS than the iOS 18.0 deployment target.
-
 ## Kotlin/Native cache
 
 The first iOS build downloads Kotlin/Native into `~/.konan` (about 1 GB per

@@ -3,7 +3,7 @@
 name: ITMOWidgets
 options:
   deploymentTarget:
-    iOS: "18.0"
+    iOS: "26.1"
   createIntermediateGroups: true
   developmentLanguage: ru
 configFiles:
