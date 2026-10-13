@@ -294,7 +294,7 @@ final class RouterTests: XCTestCase {
     func testNotOnIosRouteOpensNothing() {
         let router = readyRouter()
         let routes: [any AppRoute] = [
-            AppRoutes.DebugTools.shared, AppRoutes.IcsExport.shared,
+            AppRoutes.DebugTools.shared, AppRoutes.IcsExport.shared, AppRoutes.CancelBookingConfirm(lessonId: 42),
         ]
 
         for route in routes {
@@ -540,6 +540,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .notOnIOS),
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),
             (AppRoutes.LinkUnavailable.shared, .sheet(.linkUnavailable)),
+            (AppRoutes.CancelBookingConfirm(lessonId: 42), .notOnIOS),
         ]
     }
 }
