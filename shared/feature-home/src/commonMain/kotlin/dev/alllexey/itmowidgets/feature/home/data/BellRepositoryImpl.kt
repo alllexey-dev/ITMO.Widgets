@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.home.data
 import dev.alllexey.itmowidgets.core.bell.BellItem
 import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.BellRepository
 import kotlinx.coroutines.async
@@ -16,12 +15,13 @@ import kotlinx.coroutines.supervisorScope
 
 /**
  * The bell over every Koin `BellSource` (an open set) and the seen ids in [BellPreferences]. A source that fails
- * counts as empty, so one feature never empties the bell. The seen ids belong to the account.
+ * counts as empty, so one feature never empties the bell. The seen ids belong to the account: sign-out clears them
+ * (`homeModule`).
  */
 class BellRepositoryImpl(
     private val sources: List<BellSource>,
     private val preferences: BellPreferences,
-) : BellRepository, SessionDataCleaner {
+) : BellRepository {
 
     override fun observeItems(): Flow<List<BellItem>> = if (sources.isEmpty()) {
         flowOf(emptyList())
@@ -49,8 +49,6 @@ class BellRepositoryImpl(
 
     override suspend fun answer(isu: Int, accept: Boolean): AppResult<Unit>? =
         sources.firstNotNullOfOrNull { it.answer(isu, accept) }
-
-    override suspend fun clearSessionData() = preferences.clearSeen()
 
     private companion object {
         /** Requests wait for an answer, so they lead; the rest go newest first. */

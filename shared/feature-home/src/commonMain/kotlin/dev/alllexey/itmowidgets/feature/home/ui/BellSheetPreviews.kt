@@ -7,31 +7,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.home.presentation.BellUiState
 import dev.alllexey.itmowidgets.feature.home.ui.preview.TodaySamples
 
 // The bell's sheet with new events, with nothing new and empty; the names are `BellSheet_<state>`.
 
 /** The sheet's colour under the body, as the shell's sheet draws it. */
 @Composable
-private fun BellPreview(state: BellUiState) = ItmoPreview {
-    Box(Modifier.background(ItmoTheme.colorScheme.surfaceContainerLow)) { BellSheetContent(state, BellActions()) }
+private fun BellPreview(content: @Composable () -> Unit) = ItmoPreview {
+    Box(Modifier.background(ItmoTheme.colorScheme.surfaceContainerLow)) { content() }
 }
 
 internal class BellSheetNewPreview {
     @Preview(name = "new")
     @Composable
-    fun BellSheet() = BellPreview(TodaySamples.BellNew)
+    fun BellSheet() = BellPreview { BellSheetContent(TodaySamples.BellNew, BellActions()) }
 }
 
 internal class BellSheetReadPreview {
     @Preview(name = "read")
     @Composable
-    fun BellSheet() = BellPreview(TodaySamples.BellRead)
+    fun BellSheet() = BellPreview { BellSheetContent(TodaySamples.BellRead, BellActions()) }
 }
 
 internal class BellSheetEmptyPreview {
     @Preview(name = "empty")
     @Composable
-    fun BellSheet() = BellPreview(TodaySamples.BellEmpty)
+    fun BellSheet() = BellPreview { BellSheetContent(TodaySamples.BellEmpty, BellActions()) }
 }

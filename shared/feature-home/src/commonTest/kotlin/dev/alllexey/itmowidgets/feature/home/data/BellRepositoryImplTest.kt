@@ -35,13 +35,13 @@ class BellRepositoryImplTest {
     }
 
     @Test
-    fun theBadgeCountsWhatWasNotSeenAndSignOutForgetsTheSeen() = runTest {
+    fun theBadgeCountsWhatWasNotSeen() = runTest {
         val bell = BellRepositoryImpl(listOf(Source(bellItem("a"), bellItem("b"))), stores.bell)
 
         assertEquals(2, bell.observeUnseenCount().first())
         bell.markSeen(setOf("a"))
         assertEquals(1, bell.observeUnseenCount().first())
-        bell.clearSessionData()
+        stores.bell.clearSeen()
         assertEquals(2, bell.observeUnseenCount().first())
     }
 

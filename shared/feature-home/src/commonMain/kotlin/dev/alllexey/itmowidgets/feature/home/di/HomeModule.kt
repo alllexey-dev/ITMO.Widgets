@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.home.di
 
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.feature.home.data.BellRepositoryImpl
 import dev.alllexey.itmowidgets.feature.home.domain.BellRepository
 import dev.alllexey.itmowidgets.feature.home.presentation.BellViewModel
@@ -17,9 +18,9 @@ import org.koin.dsl.module
  * the platform's Koin modules.
  */
 val homeModule = module {
-    single { BellRepositoryImpl(getAll(), get()) }
-    single<BellRepository> { get<BellRepositoryImpl>() }
-    single<SessionDataCleaner>(named("bell")) { get<BellRepositoryImpl>() }
+    single<BellRepository> { BellRepositoryImpl(getAll(), get()) }
+    // The seen ids are the account's: sign-out forgets them.
+    single<SessionDataCleaner>(named("bell")) { SessionDataCleaner { get<BellPreferences>().clearSeen() } }
     viewModel { TodayViewModel(get(), getAll(), get()) }
     viewModelOf(::BellViewModel)
     viewModelOf(::TodayHeaderViewModel)
