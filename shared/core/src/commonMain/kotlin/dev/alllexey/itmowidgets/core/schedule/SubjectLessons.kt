@@ -1,9 +1,13 @@
 package dev.alllexey.itmowidgets.core.schedule
 
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 
-/** One academic lesson of the viewer, as the study screens see it; no sport, no room bookings. */
+/**
+ * One academic lesson of the viewer, as the study screens see it; no sport, no room bookings. [details] opens the
+ * lesson sheet.
+ */
 data class SubjectLesson(
     val pairId: Long,
     val date: LocalDate,
@@ -18,7 +22,8 @@ data class SubjectLesson(
     val teacherFio: String?,
     val room: String?,
     val building: String?,
-    val formatId: Int
+    val formatId: Int,
+    val details: LessonDetailsArgs? = null,
 )
 
 /** A subject as the schedule knows it: the id the recordbook may share, and its flows. */

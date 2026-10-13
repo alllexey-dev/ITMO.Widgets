@@ -20,49 +20,43 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation3.runtime.result.LocalResultEventBus
-import androidx.navigation3.runtime.result.ResultEffect
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.ActivityRoutes
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
+import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.toBundle
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.di.KoinStarter
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelection
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookTarget
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresEvent
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
-import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPeriodOption
-import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPeriodSheetContent
+import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookActions
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookRoute
-import dev.alllexey.itmowidgets.feature.recordbook.ui.recordbookPeriodOptions
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresActions
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresSheet
-import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.RecordbookSubjectExits
+import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.RecordbookSubjectActions
 import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.RecordbookSubjectRoute
 import org.koin.core.parameter.parametersOf
 
 /**
- * The recordbook's keys: the subject page, the period picker and `Мои баллы`. The subject page and the sheet read
- * their arguments from the key; the period picker answers the tab root with a [RecordbookPeriodChoice].
+ * The recordbook's keys: the subject page and `Мои баллы`, both reading their arguments from the key.
  */
 internal fun EntryRegistry.Builder.recordbookEntries() {
     entry<AppRoutes.RecordbookSubject>(args = { it.args.toBundle() }) { key, navigator ->
         RecordbookSubjectEntry(key, navigator)
-    }
-    entry<AppRoutes.RecordbookPeriod> { key, navigator ->
-        RecordbookPeriodEntry(key, onClose = { navigator.close(key) })
     }
     entry<AppRoutes.SheetScores>(args = { it.args.toBundle() }) { key, navigator ->
         SheetScoresEntry(onClose = { navigator.close(key) })
@@ -70,116 +64,74 @@ internal fun EntryRegistry.Builder.recordbookEntries() {
 }
 
 /**
- * The recordbook tab's root: `RecordbookRoute` with the tab's ViewModel. It opens the period picker and takes the
- * picked period back once, opens a subject only with [RecordbookSubjectArgs.validOrNull] arguments and refreshes after
- * a completed BARS sign-in.
+ * The recordbook tab's root with its own root header (the period's subtitle and the period action): a subject opens
+ * its page only with [RecordbookSubjectArgs.validOrNull] arguments, physical education the Спорт tab, `Подключить` and
+ * `Войти` the BARS sign-in, after which the list loads again with BARS connected.
  */
 @Composable
 internal fun RecordbookTabRoot(navigator: Nav3AppNavigator) {
     val viewModel: RecordbookViewModel = entryViewModel()
-    val barsLogin = rememberBarsLogin(onSignedIn = { viewModel.refresh(RefreshMode.Force) })
-    ResultEffect<RecordbookPeriodChoice> { viewModel.selectPeriod(it.programId, it.semester) }
-    RecordbookRoute(
-        onOpenPeriods = { programs, selection -> navigator.open(recordbookPeriodRoute(programs, selection)) },
-        onOpenSubject = { selection, subject ->
-            subjectArgs(selection, subject).validOrNull()?.let { navigator.open(AppRoutes.RecordbookSubject(it)) }
-        },
-        onBarsLogin = barsLogin,
-        viewModel = viewModel,
-    )
-}
-
-/** The period the picker answers with; the tab root is its only opener. */
-internal data class RecordbookPeriodChoice(val programId: Long, val semester: Int)
-
-/** The picker of [programs] with [selection] checked; the lists of the key are parallel, one element per period. */
-internal fun recordbookPeriodRoute(
-    programs: List<RecordbookProgram>,
-    selection: RecordbookSelection,
-): AppRoutes.RecordbookPeriod {
-    val options = recordbookPeriodOptions(programs)
-    return AppRoutes.RecordbookPeriod(
-        programName = selection.program.name,
-        programNames = options.map { it.programName },
-        programIds = options.map { it.programId },
-        semesters = options.map { it.semester },
-        courses = options.map { it.course },
-        years = options.map { it.studyYear },
-        actual = options.map { it.actual },
-        selectedProgram = selection.program.id,
-        selectedSemester = selection.period.semester,
-    )
-}
-
-private fun AppRoutes.RecordbookPeriod.options(): List<RecordbookPeriodOption> = semesters.indices.map { index ->
-    RecordbookPeriodOption(
-        programId = programIds[index],
-        semester = semesters[index],
-        course = courses[index],
-        studyYear = years[index],
-        actual = actual[index],
-        programName = programNames.getOrElse(index) { "" },
-    )
-}
-
-private fun subjectArgs(selection: RecordbookSelection, subject: RecordbookSubject) = RecordbookSubjectArgs(
-    entryId = subject.entryId,
-    programId = selection.program.id,
-    semester = selection.period.semester,
-    studyYear = selection.period.studyYear,
-    barsPlan = subject.barsJournal?.planId,
-    barsType = subject.barsJournal?.type,
-    barsIdentifier = subject.barsJournal?.identifier,
-)
-
-/** The period picker: a pick answers the tab root and closes the sheet. */
-@Composable
-private fun RecordbookPeriodEntry(key: AppRoutes.RecordbookPeriod, onClose: () -> Unit) {
-    val results = LocalResultEventBus.current
-    val options = remember(key) { key.options() }
-    RecordbookPeriodSheetContent(
-        options = options,
-        programName = key.programName,
-        selectedProgram = key.selectedProgram,
-        selectedSemester = key.selectedSemester,
-        onSelect = { option ->
-            results.sendResult(RecordbookPeriodChoice(option.programId, option.semester))
-            onClose()
-        },
-        onClose = onClose,
-        modifier = Modifier.fillMaxWidth(),
-    )
+    val barsLogin = rememberBarsLogin(onSignedIn = viewModel::barsSignedIn)
+    val actions = remember(navigator, barsLogin) {
+        RecordbookActions(
+            onOpen = { target ->
+                when (target) {
+                    is RecordbookTarget.Subject ->
+                        target.args.validOrNull()?.let { navigator.open(AppRoutes.RecordbookSubject(it)) }
+                    RecordbookTarget.Sport -> navigator.select(AppTab.SPORT)
+                }
+            },
+            onBarsSignIn = barsLogin,
+        )
+    }
+    RecordbookRoute(UiText.Res(AppTab.RECORDBOOK.label).asString(), actions, viewModel)
 }
 
 /**
- * The subject page: links open outside the app, the link sheets, `Мои баллы` and a teacher's profile open above it,
- * and a completed BARS sign-in refreshes it. A key whose arguments [RecordbookSubjectArgs.validOrNull] refuses closes
- * at once and leaves the recordbook root.
+ * The subject page: links open outside the app, the link sheets, `Мои баллы`, a teacher's profile and the review
+ * editor open above it, `Подключить` opens the connection settings, and a completed BARS sign-in loads it again. A key
+ * whose arguments [RecordbookSubjectArgs.validOrNull] refuses closes at once and leaves the recordbook root.
  */
 @Composable
 private fun RecordbookSubjectEntry(key: AppRoutes.RecordbookSubject, navigator: Nav3AppNavigator) {
-    if (key.args.validOrNull() == null) {
+    val args = key.args.validOrNull()
+    if (args == null) {
         LaunchedEffect(key) { navigator.close(key) }
         return
     }
     val view = LocalView.current
     val platform = LocalPlatformActions.current
-    val viewModel: RecordbookSubjectViewModel = entryViewModel()
-    val barsLogin = rememberBarsLogin(onSignedIn = { viewModel.refresh(RefreshMode.Force) })
-    val exits = remember(key, navigator, view, platform, barsLogin) {
-        RecordbookSubjectExits(
+    val context = LocalContext.current
+    val viewModel: RecordbookSubjectViewModel = viewModel {
+        KoinStarter.ensureStarted(context).get { parametersOf(args) }
+    }
+    val barsLogin = rememberBarsLogin(onSignedIn = viewModel::barsSignedIn)
+    val actions = remember(key, navigator, view, platform, barsLogin) {
+        RecordbookSubjectActions(
             onBack = { navigator.close(key) },
             onOpenLink = { url -> openLink(platform, view, url) },
-            onLinkActions = { args, linkId -> navigator.open(AppRoutes.LinkActions(args, linkId)) },
+            onLinkActions = { links, linkId -> navigator.open(AppRoutes.LinkActions(links, linkId)) },
             onAllLinks = { navigator.open(AppRoutes.SubjectLinks(it)) },
             onAddLink = { navigator.open(AppRoutes.LinkEditor(it)) },
             onOpenTeacher = navigator::openUserProfile,
+            onWriteReview = { navigator.open(AppRoutes.ReviewEditor(it)) },
+            onConnect = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
             onOpenSheetScores = { navigator.open(AppRoutes.SheetScores(it)) },
-            onBarsLogin = barsLogin,
+            onBarsSignIn = barsLogin,
+            onOpenSport = { navigator.select(AppTab.SPORT) },
+            onOpenLesson = { target ->
+                when (target) {
+                    is LessonTarget.Lesson -> navigator.open(AppRoutes.LessonDetails(target.args))
+                    is LessonTarget.PendingSport -> navigator.open(AppRoutes.PendingSportDetails(target.args))
+                }
+            },
         )
     }
-    RecordbookSubjectRoute(key.args.semester, exits, viewModel)
+    RecordbookSubjectRoute(actions, viewModel)
 }
+
+/** The settings page of `Подключение к ITMO.Widgets` (`SettingsPage.SERVICES`). */
+private const val SERVICES_PAGE = "SERVICES"
 
 /**
  * `Мои баллы`: the sheet closes itself once the ViewModel is done and shows a failed save in a snackbar.

@@ -42,14 +42,16 @@ moderation model: decision
 
 ## Subject page
 
-`subjectLinkChips` in `core/resources` builds at most three rows
-(`SubjectHubState.LINK_ROWS`): the pinned link, the MyITMO LMS page
-(`lms_link`), then other non-chat links by `SubjectLinkRanking` (higher score
-first, then newer). Each link appears once. While the page is open the shown
-order stays (`core/presentation/StableOrder`): a vote changes a score in place
-and never changes which three are shown; a new screen or a pull ranks afresh.
-Votes go through `RecordbookSubjectViewModel.voteLink`, one at a time. Without
-the connection or under a `VOTE` restriction the pill has no arrows.
+The subject page's `Материалы` tab is the home of links and chats
+([subject page](subject-page.md)): without the connection it is only a gate.
+Chats come first, then the links by category, the pinned one first, then by
+`SubjectLinkRanking` (higher score first, then newer); the MyITMO LMS page is
+not shown. While the page is open the shown order stays
+(`core/presentation/StableOrder`): a vote changes a score in place and never
+moves a row; a new screen or a pull ranks afresh. Votes go through
+`RecordbookSubjectViewModel.voteLink`, one at a time. Own links show `моя` and
+their review state, never a vote; under a `VOTE` restriction the pill has no
+arrows.
 
 The recordbook reads the cached snapshot through `SubjectLinksRepository.peek`
 first, then refreshes the scope.

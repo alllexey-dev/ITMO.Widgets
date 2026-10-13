@@ -66,14 +66,16 @@ the action.
 
 ## On the subject page
 
-`SubjectSheetTotal` in `SubjectHero`'s sheet slot shows the stored value at once and downloads the
-tab on entry and on every pull; PE has neither the total nor the offer.
+The connected sheet sits in the hero of `Баллы` with its menu (open, `Изменить итог`, disconnect); while
+the subject is in progress its total is the hero's number (`таблица, в 16:30`). The stored value shows
+at once and the tab is downloaded on entry and on every pull. Without a connection `Мои баллы из
+таблицы` offers the subject's sheet links.
 
 ## In the recordbook list
 
-`RecordbookViewModel` only collects `SheetScoresRepository.observe()`, never downloads, and passes
-`Content.sheetTotals` by `discipline_id`. `sheetFallback` keeps a total only for a non-PE subject
-without a no-show, a final grade and My ITMO or BARS points (`RecordbookTestTags.SHEET_MARK`).
+`RecordbookViewModel` only collects `SheetScoresRepository.observe()` and never downloads. A connected
+total is the row's number with the source `таблица` while the subject is in progress and has no BARS
+journal (not for PE or a no-show); `Откуда баллы` shows it beside My ITMO and BARS.
 
 ## Background check of sheets
 

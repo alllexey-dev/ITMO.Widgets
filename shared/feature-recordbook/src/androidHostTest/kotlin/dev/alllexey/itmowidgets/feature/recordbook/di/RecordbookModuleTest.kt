@@ -60,6 +60,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepo
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import kotlin.test.AfterTest
@@ -99,6 +101,8 @@ class RecordbookModuleTest {
                 TeacherLevelsRepository::class,
                 AcademicTimeProvider::class,
                 SavedStateHandle::class,
+                RecordbookSubjectArgs::class,
+                BackendGate::class,
                 MyItmoClient::class,
                 DataStore::class,
                 MarkSourcePreferences::class,

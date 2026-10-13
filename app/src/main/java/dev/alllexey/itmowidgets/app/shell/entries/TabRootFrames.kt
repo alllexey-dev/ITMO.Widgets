@@ -43,14 +43,14 @@ object TabRootTags {
 /**
  * The frame of a tab root (docs/design.md "Shell"): the kit's root header with the tab's name and the [content] under
  * it. Сегодня adds its date, the bell and the `Пропуск` button; Расписание draws its own root header (the month and
- * the week come from its feed); the other tabs show their name until their new screens bring their own subtitle and
- * actions.
+ * the week come from its feed) and Зачётка its own with the period; the other tabs show their name until their new
+ * screens bring their own subtitle and actions.
  */
 @Composable
 internal fun TabRootFrame(tab: AppTab, navigator: Nav3AppNavigator, content: @Composable () -> Unit) {
     when (tab) {
         AppTab.HOME -> TodayFrame(navigator, content)
-        AppTab.SCHEDULE -> content()
+        AppTab.SCHEDULE, AppTab.RECORDBOOK -> content()
         else -> ItmoRootScreen(title = UiText.Res(tab.label).asString()) { padding -> Body(padding, content) }
     }
 }

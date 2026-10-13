@@ -65,12 +65,17 @@ class FakeBarsRepository : BarsRecordbookRepository {
     }
 }
 
-class FakeBarsPreference(var enabled: Boolean = false) : BarsPreferenceRepository {
+class FakeBarsPreference(var enabled: Boolean = false, var offerHidden: Boolean = false) : BarsPreferenceRepository {
     var writes = 0
     override suspend fun isEnabled() = enabled
     override suspend fun setEnabled(enabled: Boolean): AppResult<Unit> {
         this.enabled = enabled
         writes++
+        return AppResult.Success(Unit)
+    }
+    override suspend fun isOfferHidden() = offerHidden
+    override suspend fun hideOffer(): AppResult<Unit> {
+        offerHidden = true
         return AppResult.Success(Unit)
     }
 }

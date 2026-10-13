@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLessonsGateway
@@ -85,25 +86,25 @@ internal class RecordbookTestGraph(var barsEnabled: Boolean = false) {
             barsEnabled = enabled
             return AppResult.Success(Unit)
         }
+        override suspend fun isOfferHidden() = false
+        override suspend fun hideOffer(): AppResult<Unit> = AppResult.Success(Unit)
     }
     private val sportResolver = RecordbookSportResolver(FakeSportScoreRepository())
 
     fun module(): Module = module {
         viewModel {
-            RecordbookViewModel(
-                repository, barsRepository, barsPreference, get<SavedStateHandle>(), sportResolver, time, NoMarks,
-                NoSheets,
-            )
+            RecordbookViewModel(repository, barsRepository, barsPreference, sportResolver, time, NoMarks, NoSheets)
         }
-        viewModel {
+        viewModel { params ->
             RecordbookSubjectViewModel(
-                repository, barsRepository, get<SavedStateHandle>(), sportResolver, time, NoMarks,
+                params.get(), repository, barsRepository, barsPreference, sportResolver, time, NoMarks,
                 SubjectLessonsLoader(
                     FakeSubjectLessonsGateway(), FakeScheduleRefreshGateway(), NoBindings, SubjectContextResolver(), time,
                 ),
                 SubjectLinksLoader(FakeSubjectLinksRepository()),
                 SubjectSheetLoader(NoSheets, time),
                 SubjectTeacherLevelsLoader(NoLevels),
+                FakeBackendGate(optedIn = false),
             )
         }
         viewModel { SheetScoresViewModel(get<SavedStateHandle>(), NoSheets) }

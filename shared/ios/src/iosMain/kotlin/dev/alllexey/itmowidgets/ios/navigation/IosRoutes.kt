@@ -84,7 +84,6 @@ object IosRoutes {
         AppRoutes.Diagnostics::class to RouteFeature.SETTINGS,
         AppRoutes.DebugTools::class to RouteFeature.DEBUG,
         AppRoutes.RecordbookSubject::class to RouteFeature.RECORDBOOK,
-        AppRoutes.RecordbookPeriod::class to RouteFeature.RECORDBOOK,
         AppRoutes.SheetScores::class to RouteFeature.RECORDBOOK,
         AppRoutes.Friends::class to RouteFeature.SOCIAL,
         AppRoutes.UserFriends::class to RouteFeature.SOCIAL,

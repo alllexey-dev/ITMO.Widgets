@@ -3,9 +3,10 @@
 The iOS client lives in `iosApp/` and links one Kotlin umbrella framework, `Shared`, built from `shared/ios/`
 ([ADR 0023](decisions/0023-ios-client.md)). It has three bundles: the app, a WidgetKit extension and a notification
 service extension. The app is a SwiftUI shell with five tabs (today, schedule, recordbook, sport, profile). System screens
-(sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in)
-, Сегодня with the bell's sheet and the pass sheet are SwiftUI over shared ViewModels; content screens (schedule, sport, recordbook,
-social and profile, reviews, links) are still shared Compose Multiplatform screens hosted through
+(sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in),
+Сегодня with the bell's sheet, the pass sheet, the recordbook and the subject page are SwiftUI over shared ViewModels;
+content screens (schedule, sport, social and profile, reviews, links, `Мои баллы`) are still shared Compose
+Multiplatform screens hosted through
 `ComposeUIViewController`. They move to
 SwiftUI screen by screen ([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
 

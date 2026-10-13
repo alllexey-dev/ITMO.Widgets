@@ -68,6 +68,11 @@
     <string name="teacher_level_positive">Скорее положительные</string>
     <string name="teacher_level_very_positive">В основном положительные</string>
     <string name="teacher_level_description">Тон отзывов: %1$s</string>
+    <string name="teacher_tone_very_negative">в основном ругают</string>
+    <string name="teacher_tone_negative">скорее ругают</string>
+    <string name="teacher_tone_mixed">мнения расходятся</string>
+    <string name="teacher_tone_positive">скорее хвалят</string>
+    <string name="teacher_tone_very_positive">в основном хвалят</string>
     <plurals name="sport_score_remaining_status">
         <item quantity="one">Ещё %1$d балл</item>
         <item quantity="few">Ещё %1$d балла</item>
