@@ -14,8 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -38,12 +36,8 @@ import dev.alllexey.itmowidgets.designsystem.components.state.SkeletonStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeUiState
 import dev.alllexey.itmowidgets.shared.designsystem.ic_home
-import dev.alllexey.itmowidgets.shared.designsystem.ic_language
-import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
 import dev.alllexey.itmowidgets.shared.feature.home.Res
 import dev.alllexey.itmowidgets.shared.feature.home.home_empty_title
-import dev.alllexey.itmowidgets.shared.feature.home.home_open_my_itmo
-import dev.alllexey.itmowidgets.shared.feature.home.home_open_qr
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
@@ -56,8 +50,6 @@ object HomeTestTags {
     const val FEED = "home_feed"
     const val LOADING = "home_loading"
     const val EMPTY = "home_empty"
-    const val WEB_FAB = "home_web_fab"
-    const val QR_FAB = "home_qr_fab"
 
     /** The card of [kind]; one per kind, the feed's item key. */
     fun card(kind: HomeCardKind): String = "home_card_${kind.name.lowercase()}"
@@ -79,8 +71,6 @@ data class HomeActions(
     val onOpenScheduleChanges: () -> Unit = {},
     val onOpenMarks: () -> Unit = {},
     val onDismiss: (HomeCardKind) -> Unit = {},
-    val onOpenWeb: () -> Unit = {},
-    val onOpenQr: () -> Unit = {},
 ) {
     internal fun forCards() = HomeCardActions(
         onLesson = onLesson,
@@ -97,8 +87,8 @@ data class HomeActions(
 
 /**
  * The home feed: placeholder cards on the first load, then the cards in feed order under pull-to-refresh, or the
- * `Пока пусто` state; the MyITMO and QR buttons float over the bottom end, and the list keeps its last card clear of
- * them. Each card is drawn by the one of [renderers] that claims its kind (its producing feature's); a card no
+ * `Пока пусто` state. The shell's `Пропуск` button floats over the bottom end, so the list keeps its last card clear of
+ * it. Each card is drawn by the one of [renderers] that claims its kind (its producing feature's); a card no
  * renderer claims is left out. A failed refresh shows in [snackbarHostState] above the buttons. Stateless;
  * [HomeRoute] feeds it.
  */
@@ -129,10 +119,13 @@ fun HomeScreen(
                 if (cards.isEmpty()) EmptyFeed() else Feed(cards, byKind, actions, listState)
             }
         }
-        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
-            SnackbarHost(snackbarHostState, Modifier.fillMaxWidth())
-            QuickActions(actions, Modifier.align(Alignment.End))
-        }
+        SnackbarHost(
+            snackbarHostState,
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(bottom = ItmoTheme.spacing.fabClearance),
+        )
     }
 }
 
@@ -153,7 +146,7 @@ private fun Feed(
         state = listState,
         contentPadding = PaddingValues(
             top = ItmoTheme.spacing.compact,
-            bottom = ItmoTheme.spacing.fabStackClearance,
+            bottom = ItmoTheme.spacing.fabClearance,
         ),
     ) {
         items(cards, key = { it.kind.name }, contentType = { it::class.simpleName }) { card ->
@@ -162,14 +155,14 @@ private fun Feed(
     }
 }
 
-/** Scrolls, so the pull reaches the refresh box; the bottom padding keeps it centred above the buttons. */
+/** Scrolls, so the pull reaches the refresh box; the bottom padding keeps it centred above the button. */
 @Composable
 private fun EmptyFeed() {
     Column(
         Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = ItmoTheme.spacing.fabStackClearance),
+            .padding(bottom = ItmoTheme.spacing.fabClearance),
         verticalArrangement = Arrangement.Center,
     ) {
         ContentState(
@@ -180,37 +173,6 @@ private fun EmptyFeed() {
     }
 }
 
-/**
- * Two stacked FABs, `Мой ИТМО` over the QR pass, keep the pass one tap away (design.md, Expressive components), so
- * neither a FAB menu nor a floating toolbar replaces them.
- */
-@Composable
-private fun QuickActions(actions: HomeActions, modifier: Modifier) {
-    Column(
-        modifier.padding(ItmoTheme.spacing.group),
-        verticalArrangement = Arrangement.spacedBy(FabGap),
-        horizontalAlignment = Alignment.End,
-    ) {
-        FloatingActionButton(
-            onClick = actions.onOpenWeb,
-            modifier = Modifier.testTag(HomeTestTags.WEB_FAB),
-            containerColor = ItmoTheme.colorScheme.secondaryContainer,
-            contentColor = ItmoTheme.colorScheme.onSecondaryContainer,
-        ) {
-            Icon(painterResource(KitRes.drawable.ic_language), stringResource(Res.string.home_open_my_itmo))
-        }
-        FloatingActionButton(
-            onClick = actions.onOpenQr,
-            modifier = Modifier.testTag(HomeTestTags.QR_FAB),
-        ) {
-            Icon(painterResource(KitRes.drawable.ic_qr_code), stringResource(Res.string.home_open_qr))
-        }
-    }
-}
-
 /** `fragment_home.xml`'s placeholder: three 150 dp cards. */
 private const val SKELETON_ROWS = 3
 private val SkeletonRowHeight = 150.dp
-
-/** The 12 dp between the two buttons of `fragment_home.xml`. */
-private val FabGap = 12.dp

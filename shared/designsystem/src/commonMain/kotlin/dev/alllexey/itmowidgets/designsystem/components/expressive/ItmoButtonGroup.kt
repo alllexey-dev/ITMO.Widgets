@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.designsystem.components.expressive
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -14,14 +13,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -31,12 +26,10 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.kit.SegmentedChoice
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoHapticEvent
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.platform.rememberItmoHaptics
@@ -46,8 +39,8 @@ import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 
 /**
  * A single choice of two to four short [options] with a selection always made, side by side at equal widths: the
- * friend picker's scope, the sport tabs, a single-select chip set. With [ItmoTheme.expressive] it is the connected
- * button group of toggle buttons; otherwise today's segmented buttons. Under the iOS style it is `UISegmentedControl`:
+ * friend picker's scope, the sport tabs, a single-select chip set. With [ItmoTheme.expressive] it is the kit's
+ * [SegmentedChoice]; otherwise today's segmented buttons. Under the iOS style it is `UISegmentedControl`:
  * one track with a thumb that slides to the chosen segment and a selection haptic. [onSelect] gets the index of a
  * newly chosen option; tapping the selected one does nothing.
  */
@@ -63,40 +56,9 @@ fun ItmoButtonGroup(
     val choose = { index: Int -> if (index != selectedIndex) onSelect(index) }
     when {
         ItmoTheme.platformStyle == ItmoPlatformStyle.Ios -> IosSegmentedControl(options, selectedIndex, choose, modifier)
-        ItmoTheme.expressive -> ConnectedGroup(options, selectedIndex, choose, modifier)
+        ItmoTheme.expressive -> SegmentedChoice(options, selectedIndex, choose, modifier)
         else -> SegmentedGroup(options, selectedIndex, choose, modifier)
     }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun ConnectedGroup(options: List<String>, selectedIndex: Int, choose: (Int) -> Unit, modifier: Modifier) {
-    Row(
-        modifier.fillMaxWidth().selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-    ) {
-        options.forEachIndexed { index, label ->
-            val checked = index == selectedIndex
-            ToggleButton(
-                checked = checked,
-                onCheckedChange = { choose(index) },
-                // A single choice: TalkBack reads a radio button and its selection, as for the other two styles.
-                modifier = Modifier.weight(1f).semantics {
-                    role = Role.RadioButton
-                    selected = checked
-                },
-                shapes = connectedShapes(index, options.lastIndex),
-            ) { OptionLabel(label) }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun connectedShapes(index: Int, lastIndex: Int): ToggleButtonShapes = when (index) {
-    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-    lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
 }
 
 @Composable

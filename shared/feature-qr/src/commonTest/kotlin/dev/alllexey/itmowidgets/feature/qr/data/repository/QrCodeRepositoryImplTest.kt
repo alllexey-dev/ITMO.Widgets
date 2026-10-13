@@ -28,7 +28,8 @@ class QrCodeRepositoryImplTest {
         val result = repository.refreshQrHex(force = false)
 
         assertEquals(AppResult.Success(Unit), result)
-        assertEquals(QrCodeSnapshot("cached", 3_600_000L), repository.currentQr())
+        assertEquals(QrCodeSnapshot("cached", 0L), repository.currentQr())
+        assertEquals(QrCodeSnapshot("cached", 0L), repository.lastQr())
         assertEquals(0, remote.requestCount)
         assertEquals(emptyList(), local.savedValues)
     }
@@ -104,7 +105,7 @@ class QrCodeRepositoryImplTest {
 
         val savedValues = mutableListOf<String>()
 
-        override fun snapshot() = get(false)?.let { QrCodeSnapshot(it, 3_600_000L) }
+        override fun snapshot(allowExpired: Boolean) = get(allowExpired)?.let { QrCodeSnapshot(it, 0L) }
 
         override fun observe(): Flow<String> = flowOf(cached.orEmpty())
 

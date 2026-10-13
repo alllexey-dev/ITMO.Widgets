@@ -41,7 +41,7 @@ class DesignTokensExportTest {
         val color = json.getValue("color").jsonObject
         listOf("light", "dark").forEach { mode ->
             assertEquals(48, color.getValue("scheme").jsonObject.getValue(mode).jsonObject.size)
-            assertEquals(20, color.getValue("extended").jsonObject.getValue(mode).jsonObject.size)
+            assertEquals(26, color.getValue("extended").jsonObject.getValue(mode).jsonObject.size)
         }
         val type = json.getValue("type").jsonObject
         assertEquals(15, type.getValue("roles").jsonObject.size)

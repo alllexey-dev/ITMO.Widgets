@@ -52,7 +52,7 @@ import kotlin.time.Duration.Companion.days
 
 /**
  * Every case of the deleted `SportDetailsSheetVisualTest` on the Compose sheet, at 320 dp and font scale 1.3 in the
- * sheet's 802 dp: the teacher, the action sent once and not again after recreation, busy and read-only, a deadline
+ * sheet's 867 dp: the teacher, the action sent once and not again after recreation, busy and read-only, a deadline
  * that changed while the sheet was open, sharing, the free-place plurals, the queue, the prediction and the
  * conditions. Its looks live in the `SportDetailsSheetContent_*` goldens.
  */
@@ -333,7 +333,7 @@ class SportDetailsSheetTest {
     private companion object {
         const val NARROW_FONT_SCALE = 1.3f
         val NARROW_WIDTH = 320.dp
-        val SHEET_HEIGHT = 802.dp
+        val SHEET_HEIGHT = 867.dp
         const val LONG_SECTION = "Фитнес (функциональная тренировка с элементами кроссфита и растяжкой)"
     }
 }

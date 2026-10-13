@@ -11,7 +11,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getBoundsInRoot
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -46,10 +45,10 @@ class ItmoNavigationBarTest {
             }
         }
 
-        onNodeWithContentDescription(SPORT).performClick()
+        onNodeWithText(SPORT).performClick()
 
-        onNodeWithContentDescription(SPORT).assertIsSelected()
-        onNodeWithContentDescription(HOME).assertIsNotSelected()
+        onNodeWithText(SPORT).assertIsSelected()
+        onNodeWithText(HOME).assertIsNotSelected()
         onNodeWithText(SPORT, useUnmergedTree = true).assertExists()
         onNodeWithText(HOME, useUnmergedTree = true).assertExists()
         assertTouchTargets()
@@ -58,8 +57,8 @@ class ItmoNavigationBarTest {
 
     private companion object {
         const val BAR = "bar"
-        const val HOME = "Главная"
+        const val HOME = "Сегодня"
         const val SPORT = "Спорт"
-        val LABELS = listOf("Зачётка", "Расписание", HOME, SPORT, "Профиль")
+        val LABELS = listOf(HOME, "Расписание", "Зачётка", SPORT, "Профиль")
     }
 }

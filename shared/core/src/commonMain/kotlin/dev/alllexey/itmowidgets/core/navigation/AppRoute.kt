@@ -47,12 +47,16 @@ data class SheetPolicy(
     val dismissal: Dismissal = Dismissal.FREE,
     val textInput: Boolean = false,
 ) {
+    /** The three sheet sizes (docs/design.md "Sheets"); no sheet ever goes under the status bar. */
     enum class Height {
-        /** As tall as the content, up to the kit's cap. */
+        /** As tall as the content, up to the whole height below the status bar; longer content scrolls. */
         FIT_CONTENT,
 
-        /** Always the kit's tall height: the details sheets and the friend selector. */
+        /** [TALL_FRACTION] of the window, iOS's `.fraction(0.82)` detent. */
         TALL,
+
+        /** The whole height below the status bar, also with short content: the details sheets and the friend selector. */
+        FULL,
     }
 
     enum class Dismissal {
@@ -61,5 +65,10 @@ data class SheetPolicy(
 
         /** A form that must not lose input: no drag, no tap outside, Back goes to the sheet's own question. */
         FORM,
+    }
+
+    companion object {
+        /** The share of the window a [Height.TALL] sheet takes. */
+        const val TALL_FRACTION: Float = 0.82f
     }
 }

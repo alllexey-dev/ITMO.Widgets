@@ -112,8 +112,8 @@ class TabSwipeHandoverTest {
 
         swipe(ROW)
 
-        assertEquals(AppTab.SPORT, navigator.tab)
-        compose.onNodeWithTag("root:SPORT").assertExists()
+        assertEquals(AppTab.SCHEDULE, navigator.tab)
+        compose.onNodeWithTag("root:SCHEDULE").assertExists()
     }
 
     @Test
@@ -126,7 +126,7 @@ class TabSwipeHandoverTest {
 
         swipe(SEGMENTS)
 
-        assertEquals(AppTab.SPORT, navigator.tab)
+        assertEquals(AppTab.SCHEDULE, navigator.tab)
     }
 
     @Test

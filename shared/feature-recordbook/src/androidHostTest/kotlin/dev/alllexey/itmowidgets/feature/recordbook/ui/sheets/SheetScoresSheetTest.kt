@@ -48,7 +48,7 @@ import kotlin.test.assertTrue
 
 /**
  * Every case of the deleted `SheetScoresVisualTest` on the Compose sheet, at 320 dp and font scale 1.3 in at most the
- * sheet's 802 dp: loading and every failure in one area with the retry only for the network, the own row among
+ * sheet's 867 dp: loading and every failure in one area with the retry only for the network, the own row among
  * several, the tab and its rows, the name search over a long roster, the total among many cells by tab. Its looks live
  * in the `SheetScoresSheet_*` goldens; closing on `Done` and the save snackbar stay in the shell's sheet entry.
  */
@@ -212,6 +212,6 @@ class SheetScoresSheetTest {
         const val SHEET = "sheet"
         const val NARROW_FONT_SCALE = 1.3f
         val NARROW_WIDTH = 320.dp
-        val SHEET_MAX_HEIGHT = 802.dp
+        val SHEET_MAX_HEIGHT = 867.dp
     }
 }

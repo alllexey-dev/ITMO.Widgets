@@ -3,8 +3,9 @@
 Product behaviour: [Как это работает: расписание](../how-it-works/schedule.md)
 (home feed), [QR-пропуск](../how-it-works/qr.md) (tile and shortcuts).
 
-The home tab is a feed of cards built from what the app already knows, plus
-two FABs (QR pass, `My ITMO`).
+The Сегодня tab hosts, until its new screen, the feed of cards built from what
+the app already knows, under the tab's root header (the date and the bell) with
+the `Пропуск` button ([design](../design.md#shell)).
 
 ## Feed
 
@@ -47,15 +48,15 @@ two FABs (QR pass, `My ITMO`).
   `revalidate`. Sources refresh in parallel; a failure keeps cached cards and
   shows one snackbar with retry. Only a pull sets `Content.refreshing`.
 - `Loading` lasts only until every source answered from cache; an empty list
-  is content. The list ends with `fabStackClearance` (152 dp) so the last card
-  clears the FABs.
+  is content. The list ends with `fabClearance` (96 dp) so the last card
+  clears the `Пропуск` button.
 - Tests: goldens in `shared/feature-home/screenshots/` and each feature's
   `screenshots/`; `HomeScreenTest`; `HomeEntriesTest` (`app/src/test`) never
   touches MyITMO or Backend.
 
 ## QR pass
 
-The home QR button opens the pass above the feed; see [QR pass](qr.md).
+The `Пропуск` button of Сегодня opens the pass sheet above the feed; see [QR pass](qr.md).
 
 ## Quick-settings tile and app shortcuts
 
@@ -76,14 +77,14 @@ The home QR button opens the pass above the feed; see [QR pass](qr.md).
   `qr_pass` (`ACTION_OPEN_QR_PASS`) and `today` (`ACTION_OPEN_TODAY`, the own
   schedule on today, also when a friend is selected). Routes report usage
   with `ShortcutManagerCompat.reportShortcutUsed` (the tile too, the in-app
-  QR button not). Launchers start shortcuts with `NEW_TASK | CLEAR_TASK`, so
+  `Пропуск` button not). Launchers start shortcuts with `NEW_TASK | CLEAR_TASK`, so
   `MainActivity` is recreated and tab state is lost; the tile keeps it.
 - Tests: JVM in `app/src/test` and `QrTileFlowTest` on the emulator.
 
 ## MyITMO web
 
-The second FAB opens `https://my.itmo.ru/` as `AppRoutes.MyItmoWeb` above the
-feed. Security rules (`MyItmoWebPolicy` in `:shared:feature-account`):
+The `My ITMO` row of Профиль (the app group) opens `https://my.itmo.ru/` as
+`AppRoutes.MyItmoWeb`. Security rules (`MyItmoWebPolicy` in `:shared:feature-account`):
 
 - Only the exact HTTPS origins `my.itmo.ru` and `id.itmo.ru` stay embedded;
   no credentials in the URL, no non-standard ports.

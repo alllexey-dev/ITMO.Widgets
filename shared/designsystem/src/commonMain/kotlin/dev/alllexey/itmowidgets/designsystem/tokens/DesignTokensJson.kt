@@ -74,6 +74,7 @@ internal fun designTokensJson(): String = PrettyJson.encodeToString(
                 dp("cardPadding", cardPadding)
                 dp("summaryPadding", summaryPadding)
                 dp("touchTarget", touchTarget)
+                dp("fabClearance", fabClearance)
                 dp("fabStackClearance", fabStackClearance)
                 dp("statePadding", statePadding)
                 dp("stateIcon", stateIcon)
@@ -149,6 +150,12 @@ private fun ExtendedColorTokens.slots() = buildJsonObject {
         put("teacherLevelMixed", teacherLevelMixed.hex())
         put("teacherLevelPositive", teacherLevelPositive.hex())
         put("teacherLevelVeryPositive", teacherLevelVeryPositive.hex())
+        put("success", success.hex())
+        put("successContainer", successContainer.hex())
+        put("onSuccessContainer", onSuccessContainer.hex())
+        put("warning", warning.hex())
+        put("warningContainer", warningContainer.hex())
+        put("onWarningContainer", onWarningContainer.hex())
     }
 }
 

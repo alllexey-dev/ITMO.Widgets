@@ -33,6 +33,8 @@ class PreviewSuite private constructor(testClass: Class<*>) {
 
     private val narrowTouchTargetExemptions: List<String> = settings?.narrowTouchTargetExemptions?.toList().orEmpty()
 
+    private val materialOnlyTrees: List<String> = settings?.materialOnlyPackageTrees?.toList().orEmpty()
+
     val directory = BaselineDirectory(File(System.getProperty(OUTPUT_DIR_PROPERTY) ?: DEFAULT_OUTPUT_DIR))
 
     private val size = settings?.let { CaptureSize(it.widthDp, it.heightDp, it.density) } ?: CaptureSize()
@@ -53,9 +55,12 @@ class PreviewSuite private constructor(testClass: Class<*>) {
     val cases: List<PreviewCase> = previews.flatMap { (base, preview) ->
         val window = size.forPreview(preview.previewInfo)
         val full = settings?.allAppearances == true || ShotsRun.fullMatrix
-        val ios = settings?.iosAppearances == true || ShotsRun.iosMatrix
+        val ios = (settings?.iosAppearances == true || ShotsRun.iosMatrix) && !preview.isMaterialOnly()
         directory.appearances(base, full, ios).map { PreviewCase(base, it, preview, window) }
     }
+
+    private fun ComposablePreview<AndroidPreviewInfo>.isMaterialOnly(): Boolean =
+        materialOnlyTrees.any { declaringClass == it || declaringClass.startsWith("$it.") }
 
     init {
         narrowTouchTargetExemptions.forEach { prefix ->

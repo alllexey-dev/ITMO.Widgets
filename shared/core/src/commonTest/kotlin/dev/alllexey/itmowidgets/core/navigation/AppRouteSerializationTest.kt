@@ -79,11 +79,11 @@ class AppRouteSerializationTest {
                 AppRoutes.PendingSportDetails::class
             ),
             RouteSamples.ofKind(RouteKind.SHEET)
-                .filter { it.sheetPolicy?.height == SheetPolicy.Height.TALL }
+                .filter { it.sheetPolicy?.height == SheetPolicy.Height.FULL }
                 .map { it::class }
         )
         assertEquals(
-            listOf(14, 11, 4, 2),
+            listOf(13, 12, 4, 2),
             listOf(RouteKind.SCREEN, RouteKind.SHEET, RouteKind.DIALOG, RouteKind.GATE)
                 .map { RouteSamples.ofKind(it).size }
         )

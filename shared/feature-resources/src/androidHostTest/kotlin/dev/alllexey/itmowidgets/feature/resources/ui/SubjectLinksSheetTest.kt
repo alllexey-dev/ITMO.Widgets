@@ -359,6 +359,6 @@ class SubjectLinksSheetTest {
         val NARROW_WIDTH = 320.dp
         const val NARROW_FONT_SCALE = 1.3f
         val TALL_HEIGHT = 4000.dp
-        val SHEET_HEIGHT = 802.dp
+        val SHEET_HEIGHT = 867.dp
     }
 }

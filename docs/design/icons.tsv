@@ -7,10 +7,14 @@ arrow_drop_down	arrow_drop_down	0	shared	arrowtriangle.down.fill	-
 arrow_drop_up	arrow_drop_up	0	shared	arrowtriangle.up.fill	-
 assignment	assignment	0	shared	doc.text	-
 auto_awesome	auto_awesome	0	shared	sparkles	-
+book_2	book_2	0	shared	book.closed	Bottom navigation tab
+book_2_filled	book_2	1	shared	book.closed.fill	Selected bottom navigation tab
 brand_github	-	0	custom	custom.brand_github	GitHub mark; Material Symbols has no brand marks
 brand_telegram	-	0	custom	custom.brand_telegram	Simple Icons Telegram mark; Material Symbols has no brand marks
 brand_vk	-	0	custom	custom.brand_vk	Simple Icons VK mark; Material Symbols has no brand marks
 calendar_add	calendar_add_on	0	shared	calendar.badge.plus	id differs from the symbol name
+calendar_month	calendar_month	0	shared	calendar	Bottom navigation tab
+calendar_month_filled	calendar_month	1	shared	calendar	Selected bottom navigation tab; SF Symbols has no filled calendar
 chat	chat	0	shared	bubble.left	-
 check	check	0	shared	checkmark	-
 check_circle	check_circle	0	shared	checkmark.circle	-
@@ -18,6 +22,7 @@ chevron_left	chevron_left	0	shared	chevron.left	-
 chevron_right	chevron_right	0	shared	chevron.right	-
 clock	-	1	custom	clock.fill	Filled clock on a 400 viewport, drawn for the in-app widget preview view_widget_preview_schedule.xml
 close	close	0	shared	xmark	-
+cloud_off	cloud_off	0	shared	icloud.slash	-
 code_blocks	code_blocks	0	shared	chevron.left.forwardslash.chevron.right	-
 computer	computer	0	shared	desktopcomputer	-
 content_copy	content_copy	0	shared	doc.on.doc	-
@@ -56,6 +61,7 @@ more_vert	more_vert	0	shared	ellipsis	iOS shows the overflow menu horizontally
 notification	notifications	0	shared	bell	id differs from the symbol name
 open_in_new	open_in_new	0	shared	arrow.up.right.square	-
 person	person	0	shared	person	-
+person_filled	person	1	shared	person.fill	Selected bottom navigation tab
 pin	push_pin	0	shared	pin	id differs from the symbol name; pins a widget to the home screen
 qr_code	qr_code	0	shared	qrcode	-
 qr_code_scanner	qr_code_scanner	0	shared	qrcode.viewfinder	-
@@ -71,12 +77,16 @@ shortcut_qr	qr_code	0	android	-	Adaptive launcher shortcut wrapper of shortcut_q
 shortcut_qr_foreground	qr_code	0	android	-	Launcher shortcut foreground in the adaptive safe zone
 shortcut_today	schedule	0	android	-	Adaptive launcher shortcut wrapper of shortcut_today_foreground
 shortcut_today_foreground	schedule	0	android	-	Launcher shortcut foreground in the adaptive safe zone
+sprint	sprint	0	shared	figure.run	Bottom navigation tab
+sprint_filled	sprint	1	shared	figure.run	Selected bottom navigation tab; SF Symbols has no filled figure
 star_shine	star_shine	0	shared	sparkle	-
 stat_notifications	notifications	0	android	-	Monochrome notification mask; SystemUI tints it
 summary_collapse	expand_less	0	shared	chevron.up	id differs from the symbol name
 summary_expand	expand_more	0	shared	chevron.down	id differs from the symbol name; same glyph as expand_more
 table	table	0	shared	tablecells	-
 tile_qr	qr_code	0	android	-	Quick Settings tile; SystemUI tints it
+today	today	0	shared	sun.max	Bottom navigation tab
+today_filled	today	1	shared	sun.max.fill	Selected bottom navigation tab
 videocam	videocam	0	shared	video	-
 widgets	widgets	0	shared	square.grid.2x2	-
 work	work	0	shared	briefcase	-

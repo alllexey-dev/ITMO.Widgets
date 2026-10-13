@@ -83,6 +83,4 @@ private fun homeActions(
     },
     onOpenScheduleChanges = { open(AppRoutes.ScheduleChanges) },
     onOpenMarks = { open(AppRoutes.TabRoot(AppTab.RECORDBOOK)) },
-    onOpenWeb = { open(AppRoutes.MyItmoWeb) },
-    onOpenQr = { open(AppRoutes.QrPass) },
 )

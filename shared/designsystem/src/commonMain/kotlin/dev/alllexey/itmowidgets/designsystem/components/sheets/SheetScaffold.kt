@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.kit.LocalOnSheet
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
@@ -83,13 +85,16 @@ fun SheetScaffold(
             }
         },
         body = {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = ItmoTheme.spacing.compact)
-                    .heightIn(min = contentMinHeight),
-                content = content,
-            )
+            // The kit's cards and groups step one surface up inside a sheet.
+            CompositionLocalProvider(LocalOnSheet provides true) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = ItmoTheme.spacing.compact)
+                        .heightIn(min = contentMinHeight),
+                    content = content,
+                )
+            }
         },
         bottom = {
             Column(Modifier.fillMaxWidth().padding(bottom = ItmoTheme.spacing.group)) {

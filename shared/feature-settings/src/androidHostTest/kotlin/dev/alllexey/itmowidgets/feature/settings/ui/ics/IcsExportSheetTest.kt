@@ -148,7 +148,7 @@ class IcsExportSheetTest {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, LARGE_FONT)) {
                 ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
-                    Box(Modifier.width(320.dp).heightIn(max = 802.dp)) {
+                    Box(Modifier.width(320.dp).heightIn(max = 867.dp)) {
                         IcsExportSheetContent(state, actions, canOpen = { openable })
                     }
                 }

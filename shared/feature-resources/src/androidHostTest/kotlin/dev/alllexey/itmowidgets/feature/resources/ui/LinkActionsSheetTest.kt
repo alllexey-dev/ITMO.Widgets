@@ -350,6 +350,6 @@ class LinkActionsSheetTest {
         val WIDE_WIDTH = 411.dp
         val NARROW_WIDTH = 320.dp
         const val NARROW_FONT_SCALE = 1.3f
-        val SHEET_HEIGHT = 802.dp
+        val SHEET_HEIGHT = 867.dp
     }
 }

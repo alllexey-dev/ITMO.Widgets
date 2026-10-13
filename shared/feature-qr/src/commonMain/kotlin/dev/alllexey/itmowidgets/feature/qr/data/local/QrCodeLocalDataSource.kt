@@ -5,7 +5,8 @@ import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 
 interface QrCodeLocalDataSource {
 
-    fun snapshot(): QrCodeSnapshot?
+    /** The cached pass; an expired one only with [allowExpired]. */
+    fun snapshot(allowExpired: Boolean = false): QrCodeSnapshot?
 
     fun observe(): Flow<String>
 

@@ -72,26 +72,26 @@ class TabSwipeTest {
         assertTrue(ShellProbe.current().swipeEnabled)
 
         // On sport the first swipe moves its own pager (`Мой спорт` -> `Запись`, and back), the next one the tab.
-        listOf(AppTab.SPORT, AppTab.SPORT, AppTab.ME, AppTab.ME).forEach { tab ->
+        listOf(AppTab.SCHEDULE, AppTab.RECORDBOOK, AppTab.SPORT, AppTab.SPORT, AppTab.ME, AppTab.ME).forEach { tab ->
             swipe(towardsNext = true)
             awaitTab(tab)
             TestUi.settle(SETTLE_MILLIS)
         }
-        listOf(AppTab.SPORT, AppTab.SPORT, AppTab.HOME, AppTab.SCHEDULE, AppTab.RECORDBOOK, AppTab.RECORDBOOK).forEach { tab ->
+        listOf(AppTab.SPORT, AppTab.SPORT, AppTab.RECORDBOOK, AppTab.SCHEDULE, AppTab.HOME, AppTab.HOME).forEach { tab ->
             swipe(towardsNext = false)
             awaitTab(tab)
             TestUi.settle(SETTLE_MILLIS)
         }
         swipe(towardsNext = true)
-        swipe(towardsNext = true)
+        awaitTab(AppTab.SCHEDULE)
+        swipe(towardsNext = false)
         awaitTab(AppTab.HOME)
     }
 
     @Test
     fun backFromSportAfterSwipesLeadsHome() = onComposeShell {
         awaitTab(AppTab.HOME)
-        swipe(towardsNext = true)
-        awaitTab(AppTab.SPORT)
+        walkTo(AppTab.SPORT)
         // The first swipe on sport moves its own pager to `Запись`; the next one reaches Me.
         swipe(towardsNext = true)
         TestUi.settle(SETTLE_MILLIS)
@@ -108,9 +108,7 @@ class TabSwipeTest {
     @Test
     fun aProfileLinkWhileOnTheRecordbookOpensTheProfileAboveItsTab() = onComposeShell {
         awaitTab(AppTab.HOME)
-        swipe(towardsNext = false)
-        swipe(towardsNext = false)
-        awaitTab(AppTab.RECORDBOOK)
+        walkTo(AppTab.RECORDBOOK)
 
         // What a browser sends to the running task: the same instance gets onNewIntent.
         context.startActivity(
@@ -133,8 +131,7 @@ class TabSwipeTest {
     @Test
     fun aSwipeOnMySportStaysInSportAndTheNextOneAtTheEdgeSwitchesTheTab() = onComposeShell {
         awaitTab(AppTab.HOME)
-        swipe(towardsNext = true)
-        awaitTab(AppTab.SPORT)
+        walkTo(AppTab.SPORT)
         TestUi.settle(SETTLE_MILLIS)
         assumeTrue("the sport root is registered in the Compose shell", showsText(MY_SPORT))
 
@@ -145,6 +142,15 @@ class TabSwipeTest {
 
         swipe(towardsNext = true)
         awaitTab(AppTab.ME)
+    }
+
+    /** Swipes from Сегодня towards the next tabs until [tab], one tab per swipe. */
+    private fun walkTo(tab: AppTab) {
+        repeat(tab.ordinal - AppTab.HOME.ordinal) { step ->
+            swipe(towardsNext = true)
+            awaitTab(AppTab.entries[step + 1])
+            TestUi.settle(SETTLE_MILLIS)
+        }
     }
 
     /** Starts `MainActivity` and runs [body]; the activity finishes itself after. */

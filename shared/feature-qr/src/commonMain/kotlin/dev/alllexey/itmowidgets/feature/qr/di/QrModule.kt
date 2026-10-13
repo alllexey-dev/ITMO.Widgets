@@ -14,11 +14,11 @@ import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrTilePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
-import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassViewModel
 import kotlin.time.Clock
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -39,5 +39,5 @@ val qrModule = module {
     singleOf(::QrWidgetStateStoreImpl) { bind<QrWidgetStateStore>() }
     singleOf(::QrAppearancePreferencesImpl) { bind<QrAppearancePreferences>() }
     singleOf(::QrTilePreferencesImpl) { bind<QrTilePreferences>() }
-    viewModelOf(::QrCodeViewModel)
+    viewModel { QrPassViewModel(get(), get(), get(), get(), get()) }
 }

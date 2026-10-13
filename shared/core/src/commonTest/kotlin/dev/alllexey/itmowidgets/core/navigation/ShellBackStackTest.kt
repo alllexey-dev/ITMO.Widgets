@@ -201,7 +201,7 @@ class ShellBackStackTest {
             busy.apply(EntryRouteParser.parse(action, isu = isu, link = link)!!)
 
         assertEquals(
-            ShellBackStack(tab = AppTab.HOME, overlays = listOf(AppRoutes.QrPass)),
+            ShellBackStack(tab = AppTab.HOME, floating = listOf(AppRoutes.QrPass)),
             run(AppEntryIntents.ACTION_OPEN_QR_PASS)
         )
         assertEquals(

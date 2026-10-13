@@ -97,9 +97,11 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** The pass sheet over Сегодня; the Сегодня button, widgets, the tile and the shortcuts open it. */
     @Serializable
     data object QrPass : AppRoute {
-        override val kind get() = RouteKind.SCREEN
+        override val kind get() = RouteKind.SHEET
+        override val sheetPolicy get() = SheetPolicy()
     }
 
     /** Refused in the demo session ([ShellGate.check]). */
@@ -129,7 +131,7 @@ object AppRoutes {
     @Serializable
     data class FriendSelector(val selectedIsu: Int = FriendSelectionContract.NO_USER_ISU) : AppRoute {
         override val kind get() = RouteKind.SHEET
-        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.TALL)
+        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
     }
 
     @Serializable
@@ -192,14 +194,14 @@ object AppRoutes {
     @Serializable
     data class LessonDetails(val args: LessonDetailsArgs) : AppRoute {
         override val kind get() = RouteKind.SHEET
-        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.TALL)
+        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
     }
 
     /** The schedule's own sheet for a queue the sport data does not know yet; exclusive with the sport tab's sheet. */
     @Serializable
     data class PendingSportDetails(val args: PendingSportDetailsArgs) : AppRoute {
         override val kind get() = RouteKind.SHEET
-        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.TALL)
+        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
         override val exclusiveGroup get() = SPORT_DETAILS_GROUP
     }
 

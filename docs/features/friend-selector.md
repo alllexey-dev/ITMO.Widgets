@@ -13,7 +13,7 @@ The schedule side (FAB, selected user, header) is in
 
 - Sheet key `AppRoutes.FriendSelector(selectedIsu)`, opened by the schedule FAB
   with the shown user's ISU or `FriendSelectionContract.NO_USER_ISU` for the own
-  schedule. Policy `SheetPolicy.Height.TALL`.
+  schedule. Policy `SheetPolicy.Height.FULL`.
 - `shell/entries/SocialEntries.kt` registers it with `FriendSelectorSheetRoute`
   (`:shared:feature-social`), which takes `FriendSelectorViewModel` (reads
   `ARG_SELECTED_ISU`) and renders the stateless `FriendSelectorSheetContent`

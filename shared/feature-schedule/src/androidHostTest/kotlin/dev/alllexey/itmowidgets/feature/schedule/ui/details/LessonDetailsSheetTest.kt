@@ -41,7 +41,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * The lesson details sheet at 320 dp and font scale 1.3 in the sheet's 802 dp: what the header shows, the teacher's
+ * The lesson details sheet at 320 dp and font scale 1.3 in the sheet's 867 dp: what the header shows, the teacher's
  * profile, the reserved tone dot, the change block, the meeting link, the map and every state of `Друзья на паре`. The
  * host's own effects (closing before the profile, the intents, the snackbars) stay in the shell's lesson entry and its
  * instrumented test; the looks live in the `LessonDetailsContent_*` goldens.
@@ -230,6 +230,6 @@ class LessonDetailsSheetTest {
     private companion object {
         const val NARROW_FONT_SCALE = 1.3f
         val NARROW_WIDTH = 320.dp
-        val SHEET_HEIGHT = 802.dp
+        val SHEET_HEIGHT = 867.dp
     }
 }

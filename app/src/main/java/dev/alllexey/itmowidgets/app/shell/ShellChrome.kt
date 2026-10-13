@@ -51,24 +51,15 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.navigation.ItmoNavigationBar
 import dev.alllexey.itmowidgets.designsystem.components.navigation.ItmoNavigationBarItem
+import dev.alllexey.itmowidgets.designsystem.icons.drawable
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
-import dev.alllexey.itmowidgets.shared.designsystem.Res
-import dev.alllexey.itmowidgets.shared.designsystem.ic_account_circle
-import dev.alllexey.itmowidgets.shared.designsystem.ic_account_circle_filled
-import dev.alllexey.itmowidgets.shared.designsystem.ic_exercise
-import dev.alllexey.itmowidgets.shared.designsystem.ic_exercise_filled
-import dev.alllexey.itmowidgets.shared.designsystem.ic_home
-import dev.alllexey.itmowidgets.shared.designsystem.ic_home_filled
-import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
-import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book_filled
-import dev.alllexey.itmowidgets.shared.designsystem.ic_schedule
-import dev.alllexey.itmowidgets.shared.designsystem.ic_schedule_filled
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 /** Test tags of the shell's chrome, for the shell's tests and probes. */
@@ -195,37 +186,17 @@ private fun TabLayer(
 internal fun ShellNavigationBar(selected: AppTab, onSelect: (AppTab) -> Unit, modifier: Modifier = Modifier) {
     ItmoNavigationBar(modifier.testTag(ShellTags.BAR)) {
         AppTab.entries.forEach { tab ->
-            val icons = tab.icons
             ItmoNavigationBarItem(
                 selected = tab == selected,
                 onClick = { onSelect(tab) },
-                label = stringResource(tab.label),
-                icon = painterResource(icons.first),
-                selectedIcon = painterResource(icons.second),
+                label = UiText.Res(tab.label).asString(),
+                icon = painterResource(tab.icon.drawable),
+                selectedIcon = painterResource(tab.selectedIcon.drawable),
                 modifier = Modifier.testTag(ShellTags.tab(tab)),
             )
         }
     }
 }
-
-private val AppTab.label: Int
-    get() = when (this) {
-        AppTab.RECORDBOOK -> R.string.title_recordbook
-        AppTab.SCHEDULE -> R.string.title_schedule
-        AppTab.HOME -> R.string.title_home
-        AppTab.SPORT -> R.string.title_sport
-        AppTab.ME -> R.string.title_me
-    }
-
-/** The outlined icon and the FILL 1 one of the selected tab. */
-private val AppTab.icons: Pair<DrawableResource, DrawableResource>
-    get() = when (this) {
-        AppTab.RECORDBOOK -> Res.drawable.ic_menu_book to Res.drawable.ic_menu_book_filled
-        AppTab.SCHEDULE -> Res.drawable.ic_schedule to Res.drawable.ic_schedule_filled
-        AppTab.HOME -> Res.drawable.ic_home to Res.drawable.ic_home_filled
-        AppTab.SPORT -> Res.drawable.ic_exercise to Res.drawable.ic_exercise_filled
-        AppTab.ME -> Res.drawable.ic_account_circle to Res.drawable.ic_account_circle_filled
-    }
 
 /** The demo banner above the bar: the text and the sign-in action on `secondaryContainer`. */
 @Composable

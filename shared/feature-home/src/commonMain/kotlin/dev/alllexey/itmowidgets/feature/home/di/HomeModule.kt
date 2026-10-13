@@ -8,10 +8,12 @@ import dev.alllexey.itmowidgets.feature.home.data.HintHomeCardSource
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
+import dev.alllexey.itmowidgets.feature.home.presentation.TodayHeaderViewModel
 import dev.alllexey.itmowidgets.feature.home.ui.HintHomeCardRenderer
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.Qualifier
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -37,5 +39,6 @@ val homeModule = module {
     singleOf(::HintHomeCardSource)
     single<HomeCardSource>(qualifier = hintCardsQualifier) { get<HintHomeCardSource>() }
     viewModel<HomeViewModel> { HomeViewModel(getAll(), get(), get(), get()) }
+    viewModelOf(::TodayHeaderViewModel)
     single<HomeCardRenderer>(hintCardsQualifier) { HintHomeCardRenderer }
 }
