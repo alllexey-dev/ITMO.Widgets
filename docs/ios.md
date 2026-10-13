@@ -2,7 +2,7 @@
 
 The iOS client lives in `iosApp/` and links one Kotlin umbrella framework, `Shared`, built from `shared/ios/`
 ([ADR 0023](decisions/0023-ios-client.md)). It has three bundles: the app, a WidgetKit extension and a notification
-service extension. The app is a SwiftUI shell with five tabs (today, schedule, recordbook, sport, profile). System screens
+service extension. The app is a SwiftUI shell with five tabs (recordbook, schedule, today, sport, profile). System screens
 (sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in),
 Сегодня with the bell's sheet, the pass sheet, the recordbook, the subject page and the sport tab with `Мои секции` and
 `Откуда баллы` are SwiftUI over shared ViewModels; content screens (schedule, another user's sport, social and profile,
@@ -66,10 +66,10 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
 - Session gate. `ShellSession` maps the shared `SessionRepository.state` and the first-run flag onto the loading gate,
   the sign-in screen (`AuthScreen`), the first-run flow (`OnboardingScreen`) or the tabs. The demo session shows the
   tabs with `ItmoDemoBanner` below each tab's stack.
-- Tabs. `ShellTabs` is the glass `TabView` of iOS 26 in the bar order of the shared `AppTab` (today, schedule,
-  recordbook, sport, profile), with its names and icons; a tab shows only while `PlatformCapabilities` offers its
+- Tabs. `ShellTabs` is the glass `TabView` of iOS 26 in the bar order of the shared `AppTab` (recordbook, schedule,
+  today, sport, profile), with its names and icons; a tab shows only while `PlatformCapabilities` offers its
   feature. `ShellTab`'s raw values are the frozen route ids, so today is `home` and profile is `me`. Tabs switch by
-  the tab bar only, no swipe ([Tab swipe](design.md#tab-swipe)); a pushed screen keeps the bar.
+  the tab bar only, no swipe ([Tab switching](design.md#tab-switching-and-back)); a pushed screen keeps the bar.
 - Pass accessory. While today is selected, `tabViewBottomAccessory` shows `QR-пропуск` (`ShellPassAccessory`), which
   opens the pass sheet (`AppRoutes.QrPass`), the same sheet widgets, the Control and shortcuts open. `QrPassSheet`
   (`Features/Qr/`) is a content-height `ItmoSheet` over `QrPassViewModel`: holder, the code from `QrCodeGenerator`

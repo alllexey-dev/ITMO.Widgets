@@ -12,11 +12,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
@@ -37,10 +36,10 @@ import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /**
- * The Navigation 3 shell: the [surface] the session allows and, on the tabs, the [navigator]'s
- * `ShellBackStack` in one `NavDisplay`. Sheets and dialogs are overlay scenes above everything; the tab root and the
- * overlay screens are the shell's own layers ([ShellLayers]). Everything sits in [ItmoTheme] inside the host-level
- * composition locals ([ItmoComposeHost]), plus the Navigation 3 result bus and the activity's [AndroidPlatformActions].
+ * The Navigation 3 shell: the [surface] the session allows and, on the tabs, the [navigator]'s `ShellBackStack` in one
+ * `NavDisplay`, which animates every change, runs the predictive Back and steps the entries' lifecycles. Everything
+ * sits in [ItmoTheme] inside the host-level composition locals ([ItmoComposeHost]), plus the Navigation 3 result bus
+ * and the activity's [AndroidPlatformActions].
  */
 @Composable
 fun AppShell(
@@ -59,10 +58,13 @@ fun AppShell(
 
 /**
  * [AppShell] without the theme and the host locals, for tests and captures that bring their own. It provides
- * [LocalPlatformActions] itself, so no host can leave the entries' links and system pages on a no-op. Each tab and the
- * contextual stack (overlays, sheets, dialogs) has its own decorator set, computed on every composition: a hidden
- * tab's root stays in its own stack, so its decorators never see a pop and its saveable state and ViewModels
- * survive the switch.
+ * [LocalPlatformActions] itself, so no host can leave the entries' links and system pages on a no-op.
+ *
+ * Per-tab stacks as in the Navigation 3 `multiplestacks` recipe and Now in Android: each tab's stack (its root) is
+ * decorated on its own, every composition, so a hidden tab's decorators never see a pop and its saveable state and
+ * ViewModels survive the switch; the contextual stack (pushed screens, sheets, dialogs) has its own decorators. The
+ * display gets the start tab's root, the selected tab's root above it and the contextual stack on top, so Back from
+ * another tab's root pops to the start tab like any other screen.
  */
 @Composable
 internal fun ShellContent(
@@ -74,7 +76,7 @@ internal fun ShellContent(
 ) {
     val state = navigator.state
     val tabRoots = AppTab.entries.associateWith { tab ->
-        key(tab) { decoratedStack(listOf(AppRoutes.TabRoot(tab)), registry, navigator).single() }
+        key(tab) { decoratedStack(state.tabStack(tab), registry, navigator).single() }
     }
     val contextual = decoratedStack(state.overlays + state.floating, registry, navigator)
     val gate = decoratedStack(listOfNotNull(surface.gateRoute), registry, navigator)
@@ -95,12 +97,17 @@ internal fun ShellContent(
                 ShellSurface.Progress -> GateProgress()
                 ShellSurface.Auth, ShellSurface.Onboarding -> gate.single().Content()
                 is ShellSurface.Tabs -> ShellDisplay(
-                    tabRoots = tabRoots,
-                    selected = state.tab,
-                    contextual = contextual,
-                    navigator = navigator,
-                    demoBanner = surface.demoBanner,
-                    onDemoSignIn = onDemoSignIn,
+                    entries = state.shownTabs.map(tabRoots::getValue) + contextual,
+                    chrome = {
+                        TabChrome(
+                            selected = state.tab,
+                            covered = state.coversBar,
+                            demoBanner = surface.demoBanner,
+                            onSelect = navigator::select,
+                            onDemoSignIn = onDemoSignIn,
+                        )
+                    },
+                    onBack = { navigator.back() },
                     modifier = modifier,
                 )
             }
@@ -111,7 +118,7 @@ internal fun ShellContent(
 /**
  * What the shell pads around every surface, as the legacy `MainActivity` padded its root: the status bar on top, the
  * system bars and a display cutout at the sides. Entries draw no window insets of their own there (`AppTopBar`). The
- * bottom stays edge to edge: the bar pads the navigation bar, a gate or overlay screen its own end. Sheets and dialogs
+ * bottom stays edge to edge: the bar pads the navigation bar, a gate or pushed screen its own end. Sheets and dialogs
  * are windows of their own with their own insets.
  */
 internal val shellInsets: WindowInsets
@@ -119,38 +126,43 @@ internal val shellInsets: WindowInsets
         .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
 
 /**
- * The selected tab's root and the contextual stack in one `NavDisplay`. The shell's own scene is the tab-root scene:
- * it shows every tab's root, each decorated in its own stack above, in the [TabPager], and the overlay screens above
- * them.
+ * The [chrome] (the demo banner and the bar) at the bottom and the `NavDisplay` above it, laid out as M3's `Scaffold`
+ * does: the chrome is measured first and its height reaches the tab roots ([LocalTabChromeHeight]), which end above
+ * it. The chrome is drawn under the display, so a pushed screen covers it, slides over it and uncovers it in the
+ * predictive Back like any screen; the tab roots draw nothing over it.
  */
 @Composable
 private fun ShellDisplay(
-    tabRoots: Map<AppTab, NavEntry<AppRoute>>,
-    selected: AppTab,
-    contextual: List<NavEntry<AppRoute>>,
-    navigator: Nav3AppNavigator,
-    demoBanner: Boolean,
-    onDemoSignIn: () -> Unit,
+    entries: List<NavEntry<AppRoute>>,
+    chrome: @Composable () -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier,
 ) {
-    val roots by rememberUpdatedState(tabRoots)
-    val banner by rememberUpdatedState(demoBanner)
-    val signIn by rememberUpdatedState(onDemoSignIn)
-    val shellScenes = remember(navigator) {
-        ShellSceneStrategy<AppRoute> { entries ->
-            ShellLayers({ tab -> roots.getValue(tab) }, entries.drop(1), navigator, banner, signIn)
+    val sceneStrategies = remember { listOf(DialogSceneStrategy<AppRoute>(), BottomSheetSceneStrategy()) }
+    SubcomposeLayout(modifier.fillMaxSize()) { constraints ->
+        val chromePlaceables = subcompose(ShellSlot.CHROME, chrome)
+            .map { it.measure(constraints.copy(minHeight = 0)) }
+        val chromeHeight = chromePlaceables.maxOfOrNull { it.height } ?: 0
+        val displayPlaceables = subcompose(ShellSlot.DISPLAY) {
+            CompositionLocalProvider(LocalTabChromeHeight provides chromeHeight.toDp()) {
+                NavDisplay(
+                    entries = entries,
+                    sceneStrategies = sceneStrategies,
+                    transitionSpec = ShellMotion.push,
+                    popTransitionSpec = ShellMotion.pop,
+                    predictivePopTransitionSpec = ShellMotion.predictivePop,
+                    onBack = onBack,
+                )
+            }
+        }.map { it.measure(constraints) }
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            chromePlaceables.forEach { it.place(0, constraints.maxHeight - it.height) }
+            displayPlaceables.forEach { it.place(0, 0) }
         }
     }
-    val sceneStrategies = remember(shellScenes) {
-        listOf(DialogSceneStrategy<AppRoute>(), BottomSheetSceneStrategy(), shellScenes)
-    }
-    NavDisplay(
-        entries = listOf(tabRoots.getValue(selected)) + contextual,
-        modifier = modifier,
-        sceneStrategies = sceneStrategies,
-        onBack = { navigator.back() },
-    )
 }
+
+private enum class ShellSlot { CHROME, DISPLAY }
 
 /** One back stack decorated with its own saveable state, ViewModel stores and route arguments. */
 @Composable
@@ -169,7 +181,8 @@ private fun decoratedStack(
 }
 
 /**
- * The undecorated entries of one stack, reused while their key stays, so scenes compare equal across compositions.
+ * The undecorated entries of one stack in their shell layer ([inShellLayer]), reused while their key stays, so scenes
+ * compare equal across compositions.
  * Equal routes in one stack (a profile opened again from a friend list) get distinct content keys by occurrence.
  */
 private class EntryCache(private val registry: EntryRegistry, private val navigator: Nav3AppNavigator) {
@@ -180,7 +193,7 @@ private class EntryCache(private val registry: EntryRegistry, private val naviga
         val entries = routes.map { route ->
             val occurrence = seen.merge(route, 1, Int::plus)!! - 1
             val contentKey = if (occurrence == 0) route.toString() else "$route#$occurrence"
-            cached[contentKey] ?: registry.entry(route, contentKey, navigator)
+            cached[contentKey] ?: registry.entry(route, contentKey, navigator).inShellLayer(route.kind)
         }
         cached = entries.associateBy { it.contentKey }
         return entries

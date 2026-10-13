@@ -1,12 +1,12 @@
 import Shared
 
-/// A root of the tab bar, in the bar's order (DECISIONS.md, Shell and navigation): today, schedule, recordbook, sport,
-/// profile. The raw value is the tab's frozen route id (`itmowidgets://route/<id>`, `StableIdentifiersTests`), which
+/// A root of the tab bar, in the bar's order (DECISIONS.md, Shell and navigation): recordbook, schedule, today in the
+/// centre, sport, profile, as `AppTab`. The raw value is the tab's frozen route id (`itmowidgets://route/<id>`, `StableIdentifiersTests`), which
 /// predates the today and profile names.
 enum ShellTab: String, CaseIterable, Identifiable, Hashable {
-    case today = "home"
-    case schedule
     case recordbook
+    case schedule
+    case today = "home"
     case sport
     case profile = "me"
 

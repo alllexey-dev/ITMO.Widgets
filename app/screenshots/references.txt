@@ -7,8 +7,8 @@ ShellDemoBanner
 ShellFullSheet
 ShellOverlay
 ShellPassSheet
+ShellPredictiveBack
 ShellSheet
-ShellTabSwipe
 WidgetTheme_compact-off
 WidgetTheme_compact-teal
 WidgetTheme_full-off
