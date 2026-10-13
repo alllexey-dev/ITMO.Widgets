@@ -338,8 +338,8 @@ class WebLoginSheetTest {
         const val NARROW_FONT_SCALE = 1.3f
         val NARROW_WIDTH = 320.dp
 
-        /** 90 % of the 891 dp window, the most a fitted sheet takes. */
-        val SHEET_HEIGHT = 802.dp
+        /** The 891 dp window below a 24 dp status bar, the most a fitted sheet takes. */
+        val SHEET_HEIGHT = 867.dp
 
         val States = with(WebLoginSamples) {
             listOf(input, invalid, notFound, scannerUnavailable, checking, confirm, longAgent, approving, done,

@@ -10,19 +10,21 @@ import dev.alllexey.itmowidgets.core.navigation.AppTab
 /**
  * Every key the Compose shell can show. Each tab's keys live in a `<Tab>Entries.kt` beside this file as an
  * `EntryRegistry.Builder.<tab>Entries()` extension with one call to it here, plus its tab's branch of the one
- * [AppRoutes.TabRoot] registration; a key without a registration shows the shell's
+ * [AppRoutes.TabRoot] registration inside the tab's [TabRootFrame]; a key without a registration shows the shell's
  * placeholder.
  * [debugTools] registers the debug tools; only a debug build does, and a release build's registry has no such key.
  */
 fun shellEntries(debugTools: Boolean = BuildConfig.DEBUG): EntryRegistry = entryRegistry {
     shellHostEntries()
     entry<AppRoutes.TabRoot> { key, navigator ->
-        when (key.tab) {
-            AppTab.HOME -> HomeTabRoot(navigator)
-            AppTab.SCHEDULE -> ScheduleTabRoot(navigator)
-            AppTab.SPORT -> SportTabRoot(navigator)
-            AppTab.ME -> MeTabRoot(navigator)
-            AppTab.RECORDBOOK -> RecordbookTabRoot(navigator)
+        TabRootFrame(key.tab, navigator) {
+            when (key.tab) {
+                AppTab.HOME -> HomeTabRoot(navigator)
+                AppTab.SCHEDULE -> ScheduleTabRoot(navigator)
+                AppTab.RECORDBOOK -> RecordbookTabRoot(navigator)
+                AppTab.SPORT -> SportTabRoot(navigator)
+                AppTab.ME -> MeTabRoot(navigator)
+            }
         }
     }
     homeEntries()

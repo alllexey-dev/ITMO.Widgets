@@ -136,6 +136,7 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenPrivacy = { navigator.open(AppRoutes.Settings(PRIVACY_PAGE)) },
     onOpenServices = { navigator.open(AppRoutes.Settings()) },
     onOpenWebLogin = { navigator.open(AppRoutes.WebLogin()) },
+    onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },
     onOpenDebugTools = { navigator.open(AppRoutes.DebugTools) },
     onShareProfile = { name, isu ->

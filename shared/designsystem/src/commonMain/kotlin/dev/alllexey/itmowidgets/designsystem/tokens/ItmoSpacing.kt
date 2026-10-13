@@ -29,6 +29,8 @@ data class ItmoSpacing(
     val summaryPadding: Dp,
     /** The minimum touch target; compactness never shrinks it. */
     val touchTarget: Dp,
+    /** Bottom padding of a list under one FAB, so its last item scrolls clear of it. */
+    val fabClearance: Dp,
     /** Bottom padding of a list under a stack of two FABs, so its last item scrolls clear of them. */
     val fabStackClearance: Dp,
     /** The padding of a full-screen loading, empty or error state. */
@@ -49,6 +51,7 @@ data class ItmoSpacing(
             cardPadding = 16.dp,
             summaryPadding = 20.dp,
             touchTarget = 48.dp,
+            fabClearance = 96.dp,
             fabStackClearance = 152.dp,
             statePadding = 32.dp,
             stateIcon = 64.dp,

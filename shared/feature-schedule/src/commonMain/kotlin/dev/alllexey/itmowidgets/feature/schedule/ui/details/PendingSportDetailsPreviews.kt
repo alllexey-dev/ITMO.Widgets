@@ -15,7 +15,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `PendingSportDetailsContent_<state>`. Each state therefore is a function called `PendingSportDetailsContent` in a
- * holder class of its own. Every preview is the sheet at its 90 % of the 891 dp capture window, on the sheet's
+ * holder class of its own. Every preview is the sheet at its full height below a 24 dp status bar in the 891 dp capture window, on the sheet's
  * colour, as the Android shell opens it.
  */
 
@@ -57,5 +57,5 @@ private fun PendingPreview(booking: PendingSportDetailsArgs) = ItmoPreview {
     }
 }
 
-/** 90 % of the 891 dp capture window, the sheet's `SheetPolicy.Height.TALL`. */
-private const val PENDING_SHEET_HEIGHT = 802
+/** The 891 dp capture window below a 24 dp status bar, the sheet's `SheetPolicy.Height.FULL`. */
+private const val PENDING_SHEET_HEIGHT = 867

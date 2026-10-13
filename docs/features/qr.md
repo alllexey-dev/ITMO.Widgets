@@ -9,23 +9,28 @@ tile and the `qr_pass` launcher shortcut. The widget is in
 no second API client.
 
 Domain, data, presentation and screen live in `:shared:feature-qr`
-`commonMain`; `QrModule.kt` registers `QrCodeViewModel`. `:app` keeps the
+`commonMain`; `QrModule.kt` registers `QrPassViewModel`. `:app` keeps the
 widget (`ui/widget`), bitmap rendering and cache (`ui/rendering`), the worker
 (`work`), `QrTileService`, `QrTileClick` and `QrTileController`.
 
-## Screen
+## Pass sheet
 
-- Key `AppRoutes.QrPass` in `HomeEntries.kt`, route `QrPassRoute`, screen
-  `QrPassScreen`. The tile and the shortcut send `ACTION_OPEN_QR_PASS`, which
-  `EntryRouteParser` turns into the home tab with the pass above it.
-- `QrCodeViewModel` runs only while the screen is started (`start()`/`stop()`
-  from `LifecycleStartEffect`). A fresh one reads the cache before publishing
-  `Loading`, so a valid cached pass draws in the first frame.
-- At `QrCodeSnapshot.expiresAtMillis` the code is hidden even while a forced
-  refresh is pending. A failed refresh over a valid code keeps the code
-  (`QrCodeEvent.RefreshFailed` snackbar).
-- Time is the injected wall `kotlin.time.Clock`, never the debug academic
-  date; Konsist `QrRulesTest` forbids `AcademicTimeProvider` in `feature.qr`.
+- Key `AppRoutes.QrPass`, a sheet of content height (`SheetPolicy.Height.FIT_CONTENT`) over Сегодня, registered in
+  `HomeEntries.kt`; route `QrPassRoute`, content `QrPassSheetContent`. The `Пропуск` button of Сегодня
+  (`TabRootFrames.kt`), the tile, the shortcut and the widgets open the same sheet: `ACTION_OPEN_QR_PASS` becomes
+  Сегодня with the sheet above it (`EntryRouteParser`).
+- The sheet shows who the pass belongs to (the session's name and ISU, the group from Backend when connected), the
+  code, `Покажите код считывателю на входе в корпус` and one line: `Обновлён в 11:44`, `Обновляется...` while a new code
+  loads over the dimmed old one, or `Нет сети, показан код от 11:44`. `Обновить` (offline `Повторить`) is at the end
+  of the line. No validity or countdown: how long ITMO accepts a code is not known. Without any code the area shows
+  the empty state or the error with `Повторить`.
+- `QrPassViewModel` (`QrPassUiState`: `holder`, `code`, `status`; `QrPassStatus.line` is the text under the code)
+  runs only while the sheet is started (`start()`/`stop()` from `LifecycleStartEffect`). It shows the last code at
+  once whatever its age (`QrCodeRepository.lastQr()`), asks My ITMO when that code is older than
+  `QrCodeSnapshot.FRESH_MILLIS` or on `Обновить`, and keeps the last code when the request fails: offline as
+  `QrPassStatus.Offline`, any other failure as a `QrPassEvent.RefreshFailed` snackbar.
+- Times are the injected wall `kotlin.time.Clock` in the phone's zone, never the debug academic date; Konsist
+  `QrRulesTest` forbids `AcademicTimeProvider` in `feature.qr`.
 
 ## Data
 
@@ -41,7 +46,9 @@ All in `commonMain`, one Koin `single` per binding
   `MyItmoClient.qr.getQrCode()`; an answer without a code gets one forced token
   refresh and one retry; a server error fails at once.
 - `QrCodeLocalDataSourceImpl` keeps `<epochMillis>|<hex>` in `cache/qr_hex`
-  (`AtomicTextFile`), valid for 60 minutes of wall-clock time. A payload-only
+  (`AtomicTextFile`), fresh for 60 minutes of wall-clock time
+  (`QrCodeSnapshot.FRESH_MILLIS`, a cache rule, not the pass's validity); the
+  widgets read only a fresh code, the sheet also an older one. A payload-only
   file (at least six characters) reads as fresh.
 - `QrWidgetStateStoreImpl` keeps `qr_widget_state_<appWidgetId>` in
   `app_preferences`; an unknown value reads as `HIDDEN`.
@@ -68,8 +75,9 @@ Sign-out: the repository is a `SessionDataCleaner` `named("qr")`, beside
 ## iOS
 
 - `QrPassScreen` (`iosApp/Sources/Features/Qr/`) hosts the shared
-  `QrPassRoute`; unlike Android it raises brightness while shown and restores
-  it on leave or background.
+  `QrPassRoute` (the sheet's content) until the SwiftUI pass sheet over
+  `QrPassViewModel` replaces it; unlike Android it raises brightness while shown
+  and restores it on leave or background.
 - QR widget (`dev.alllexey.itmowidgets.widget.qr`) is Swift only: it draws
   from `qr-pass-v1.json`, which the app writes from `QrCodeGenerator` on every
   new valid pass, and never fetches itself

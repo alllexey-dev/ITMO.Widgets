@@ -132,30 +132,6 @@
           }
         }
       }
-    },
-    "home_open_my_itmo" : {
-      "comment" : "Generated from strings_home.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Открыть My ITMO"
-          }
-        }
-      }
-    },
-    "home_open_qr" : {
-      "comment" : "Generated from strings_home.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Открыть QR-пропуск"
-          }
-        }
-      }
     }
   },
   "version" : "1.0"

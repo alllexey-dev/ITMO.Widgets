@@ -73,7 +73,8 @@ import org.robolectric.annotation.Config
  * saved-state restore, and another user's schedule never takes it.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = PreviewHostApplication::class)
+// A phone window: the default 470 dp leaves the tall picker sheet no room for its list.
+@Config(application = PreviewHostApplication::class, qualifiers = "w411dp-h891dp")
 class ScheduleEntriesTest {
 
     @get:Rule(order = 0)

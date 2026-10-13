@@ -102,7 +102,7 @@ fun SportDetailsSheet(
  * kit's [DetailsHeader], the registration card (status, occupancy ring, queue and its history), the booking
  * conditions, the lesson's comment, the friends on it, and the booking action pinned under the scrolling content.
  * Stateless: [SportDetailsSheet] evaluates the state and guards the action. The host owns the sheet's container
- * (`colorSurfaceContainerLowest`, 90 % of the screen) and every effect.
+ * (`colorSurfaceContainerLowest`, the screen below the status bar) and every effect.
  */
 @Composable
 fun SportDetailsSheetContent(

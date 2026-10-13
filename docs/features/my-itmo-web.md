@@ -8,7 +8,7 @@ bridge and logs no console output. App sign-in is a separate WebView ([Sign-in](
 
 ## Screen
 
-- Key `AppRoutes.MyItmoWeb` (home tab). The demo session refuses it before it opens (`ShellGate`).
+- Key `AppRoutes.MyItmoWeb`, opened from the `My ITMO` row of Профиль. The demo session refuses it before it opens (`ShellGate`).
   No ViewModel: the WebView is the state.
 - `MyItmoWebScreen` (`:shared:feature-account`, `feature/web/ui/`) is stateless with the browser as a
   slot; `AccountEntries.kt` registers one `MyItmoBrowser` (`:app`, `feature/web/ui/MyItmoBrowser.kt`)

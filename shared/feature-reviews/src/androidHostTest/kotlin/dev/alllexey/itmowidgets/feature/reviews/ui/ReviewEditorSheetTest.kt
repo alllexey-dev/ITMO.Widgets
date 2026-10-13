@@ -303,7 +303,7 @@ class ReviewEditorSheetTest {
     private companion object {
         const val NARROW_FONT_SCALE = 1.3f
         val NARROW_WIDTH = 320.dp
-        val SHEET_HEIGHT = 802.dp
+        val SHEET_HEIGHT = 867.dp
         val ABOVE_KEYBOARD = 360.dp
         const val TEACHER_ISU = 100001
         const val TEACHER_NAME = "Константинопольская Александра Константиновна"

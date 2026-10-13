@@ -238,7 +238,8 @@ class MainActivityDeepLinkTest {
         val shown = ShellProbe.current()
         assertEquals(TABS, shown.surface)
         assertEquals(tab, shown.tab)
-        assertEquals(listOfNotNull(overlay), shown.overlays)
+        // The route above the tab: an overlay screen or a sheet such as the pass.
+        assertEquals(listOfNotNull(overlay), shown.overlays + listOfNotNull(shown.floating))
     }
 
     private fun awaitSurface(surface: ShellSurface) = eventually { assertEquals(surface, ShellProbe.current().surface) }

@@ -32,8 +32,8 @@ object SportRoutes {
     ) : AppRoute {
         override val kind get() = RouteKind.SHEET
 
-        /** 90 % of the window however short the content. */
-        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.TALL)
+        /** The whole height below the status bar however short the content. */
+        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
         override val exclusiveGroup get() = AppRoutes.SPORT_DETAILS_GROUP
     }
 

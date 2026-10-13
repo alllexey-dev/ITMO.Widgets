@@ -32,6 +32,14 @@ data class ExtendedColorTokens(
     val teacherLevelMixed: Color,
     val teacherLevelPositive: Color,
     val teacherLevelVeryPositive: Color,
+    /** A good outcome (`записаны`, `зачёт`): the accent, its container and the text on it. */
+    val success: Color,
+    val successContainer: Color,
+    val onSuccessContainer: Color,
+    /** A caution (`изменена`, a queue, a stale source): the accent, its container and the text on it. */
+    val warning: Color,
+    val warningContainer: Color,
+    val onWarningContainer: Color,
 ) {
     companion object {
         val Light = ExtendedColorTokens(
@@ -55,6 +63,12 @@ data class ExtendedColorTokens(
             teacherLevelMixed = Color(0xFFB58900),
             teacherLevelPositive = Color(0xFF689F38),
             teacherLevelVeryPositive = Color(0xFF2E7D32),
+            success = Color(0xFF2E7D32),
+            successContainer = Color(0xFFC8F0C8),
+            onSuccessContainer = Color(0xFF0B3D10),
+            warning = Color(0xFF9A6400),
+            warningContainer = Color(0xFFFFDDB0),
+            onWarningContainer = Color(0xFF4A2800),
         )
 
         /** The lesson types keep their light values in dark. */
@@ -71,6 +85,12 @@ data class ExtendedColorTokens(
             teacherLevelMixed = Color(0xFFFFD54F),
             teacherLevelPositive = Color(0xFFAED581),
             teacherLevelVeryPositive = Color(0xFF4CAF50),
+            success = Color(0xFF8BD88E),
+            successContainer = Color(0xFF1F5323),
+            onSuccessContainer = Color(0xFFC8F0C8),
+            warning = Color(0xFFFFB951),
+            warningContainer = Color(0xFF5C3B00),
+            onWarningContainer = Color(0xFFFFDDB0),
         )
 
         fun of(dark: Boolean): ExtendedColorTokens = if (dark) Dark else Light
@@ -80,7 +100,7 @@ data class ExtendedColorTokens(
 /**
  * [ExtendedColorTokens] as a screen uses them under a scheme. Sport condition accents keep their meaning in every
  * palette and get containers mixed 12 % over `surfaceContainerLowest`; teacher levels keep red to green but are
- * harmonized towards the primary colour.
+ * harmonized towards the primary colour; the success and warning roles of the kit's tones stay as they are.
  */
 @Immutable
 data class ItmoExtendedColors(
@@ -108,6 +128,12 @@ data class ItmoExtendedColors(
     val teacherLevelMixed: Color,
     val teacherLevelPositive: Color,
     val teacherLevelVeryPositive: Color,
+    val success: Color,
+    val successContainer: Color,
+    val onSuccessContainer: Color,
+    val warning: Color,
+    val warningContainer: Color,
+    val onWarningContainer: Color,
 )
 
 /** `ConditionTone.container`: the accent mixed 12 % over the lowest surface container. */
@@ -141,6 +167,12 @@ internal fun ExtendedColorTokens.resolve(scheme: ColorScheme): ItmoExtendedColor
         teacherLevelMixed = level(teacherLevelMixed),
         teacherLevelPositive = level(teacherLevelPositive),
         teacherLevelVeryPositive = level(teacherLevelVeryPositive),
+        success = success,
+        successContainer = successContainer,
+        onSuccessContainer = onSuccessContainer,
+        warning = warning,
+        warningContainer = warningContainer,
+        onWarningContainer = onWarningContainer,
     )
 }
 

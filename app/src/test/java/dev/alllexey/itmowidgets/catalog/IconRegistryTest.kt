@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.catalog
 
+import dev.alllexey.itmowidgets.core.navigation.AppTab
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -99,13 +100,11 @@ class IconRegistryTest {
 
     @Test
     fun `the navigation bar fills the selected tab only`() {
-        val pairs = BAR_ICONS.findAll(File(root, SHELL_CHROME).readText())
-            .map { it.groupValues[1] to it.groupValues[2] }
-            .toList()
-        assertEquals(5, pairs.size)
-        pairs.forEach { (outlined, selected) -> assertEquals(outlined, "$outlined$FILLED", selected) }
-        val filledRows = rows.filter { it[KIND] == "shared" && it[FILL] == "1" }.map { it[ID] }
-        assertEquals(filledRows.sorted(), pairs.map { it.second.removePrefix("ic_") }.sorted())
+        AppTab.entries.forEach { tab ->
+            assertEquals("$tab", "${tab.icon.id}$FILLED", tab.selectedIcon.id)
+            val selected = rows.single { it[ID] == tab.selectedIcon.id }
+            assertEquals("$tab", "1", selected[FILL])
+        }
     }
 
     private fun drawable(row: List<String>) =
@@ -123,14 +122,12 @@ class IconRegistryTest {
         const val REGISTRY = "docs/design/icons.tsv"
         const val APP_DRAWABLES = "app/src/main/res/drawable"
         const val SHARED_DRAWABLES = "shared/designsystem/src/commonMain/composeResources/drawable"
-        const val SHELL_CHROME = "app/src/main/java/dev/alllexey/itmowidgets/app/shell/ShellChrome.kt"
         const val SYMBOLS_URL = "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsrounded"
         const val HOUSE_VECTOR = """android:width="24dp" android:height="24dp" """ +
             """android:viewportWidth="960" android:viewportHeight="960">"""
         const val FILLED = "_filled"
         val UNTINTED = listOf("android:tint", "?attr", "?color", "@android:color", "@color/")
         val FILL_COLOR = Regex("""android:fillColor="([^"]*)"""")
-        val BAR_ICONS = Regex("""Res\.drawable\.(\w+) to Res\.drawable\.(\w+)""")
         val COLUMNS = listOf("id", "symbol", "fill", "kind", "sf_symbol", "note")
         const val ID = 0
         const val SYMBOL = 1

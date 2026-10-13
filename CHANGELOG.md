@@ -68,6 +68,10 @@ new iOS app.
 
 ### Appearance
 
+- Android gets the new shell of the redesign: five tabs Сегодня, Расписание, Зачётка, Спорт, Профиль in the
+  Material 3 Expressive bar, a collapsing header with the tab's name (Сегодня shows the date and the bell), the
+  `Пропуск` button on Сегодня that opens the pass in a sheet (code, name, group and ISU, when it was loaded, the last
+  code offline), sheets of three sizes, and `My ITMO` as a row of Профиль.
 - New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
   обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
   палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep

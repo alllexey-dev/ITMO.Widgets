@@ -47,7 +47,7 @@ class MeScreenTest {
             assertTouchTargets()
             // Each row merges its icon, texts and badge into one target: share, the rows and three buttons.
             val rows = if (value.friends == MeFriendsSummary.Disabled) 1 else 3
-            val appRows = 2 + if (value.webLoginAvailable) 1 else 0
+            val appRows = 3 + if (value.webLoginAvailable) 1 else 0
             assertEquals(1 + rows + appRows + 3, onAllNodes(hasClickAction()).fetchSemanticsNodes().size)
         }
     }
@@ -78,16 +78,16 @@ class MeScreenTest {
         setContent { ItmoTheme { MeScreen(state, showDebugTools = false, actions = MeActions()) } }
 
         val web = onNodeWithTag(MeTestTags.WEB_LOGIN_ROW).getUnclippedBoundsInRoot()
-        val settingsWithWeb = onNodeWithTag(MeTestTags.SETTINGS_ROW).getUnclippedBoundsInRoot()
+        val nextWithWeb = onNodeWithTag(MeTestTags.MY_ITMO_ROW).getUnclippedBoundsInRoot()
         // The 1 dp divider separates the two rows.
-        assertEquals(1.dp, settingsWithWeb.top - web.bottom)
+        assertEquals(1.dp, nextWithWeb.top - web.bottom)
 
         state = Signed.copy(webLoginAvailable = false)
         waitForIdle()
 
         onNodeWithTag(MeTestTags.WEB_LOGIN_ROW).assertDoesNotExist()
-        // The settings row takes the web row's place: neither the row nor its divider is left behind.
-        assertEquals(web.top, onNodeWithTag(MeTestTags.SETTINGS_ROW).getUnclippedBoundsInRoot().top)
+        // The next row takes the web row's place: neither the row nor its divider is left behind.
+        assertEquals(web.top, onNodeWithTag(MeTestTags.MY_ITMO_ROW).getUnclippedBoundsInRoot().top)
     }
 
     @Test
@@ -125,6 +125,7 @@ class MeScreenTest {
             onFindPeople = { calls += "search" },
             onOpenPrivacy = { calls += "privacy" },
             onOpenWebLogin = { calls += "web" },
+            onOpenMyItmo = { calls += "my itmo" },
             onOpenSettings = { calls += "settings" },
             onOpenDebugTools = { calls += "debug" },
             onShareProfile = { name, isu -> calls += "share $name $isu" },
@@ -134,7 +135,7 @@ class MeScreenTest {
 
         for (tag in listOf(
             MeTestTags.SHARE, MeTestTags.FRIENDS_ROW, MeTestTags.FIND_PEOPLE_ROW, MeTestTags.PRIVACY_ROW,
-            MeTestTags.WEB_LOGIN_ROW, MeTestTags.SETTINGS_ROW, MeTestTags.DEBUG_TOOLS_ROW, MeTestTags.GITHUB,
+            MeTestTags.WEB_LOGIN_ROW, MeTestTags.MY_ITMO_ROW, MeTestTags.SETTINGS_ROW, MeTestTags.DEBUG_TOOLS_ROW, MeTestTags.GITHUB,
             MeTestTags.TELEGRAM,
         )) {
             onNodeWithTag(tag).performScrollTo().performClick()
@@ -142,7 +143,7 @@ class MeScreenTest {
 
         assertEquals(
             listOf(
-                "share $NAME $ISU", "friends", "search", "privacy", "web", "settings", "debug", "GITHUB", "TELEGRAM",
+                "share $NAME $ISU", "friends", "search", "privacy", "web", "my itmo", "settings", "debug", "GITHUB", "TELEGRAM",
             ),
             calls,
         )

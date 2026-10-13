@@ -19,7 +19,7 @@ parser, data, view model and sheet. Backend contract:
   `MeUiState.webLoginAvailable`), so there is never a row that can only fail.
 - It opens the sheet key `AppRoutes.WebLogin` (`SheetPolicy(textInput =
   true)`) once; the demo session refuses it (`ShellGate`). The sheet scene
-  (`ShellScenes.kt`) opens it expanded to content, up to 90 % of the window,
+  (`ShellScenes.kt`) opens it expanded to content, up to the height below the status bar,
   and resizes for the keyboard.
 - Body: `WebLoginSheetRoute` (`:shared:feature-account`,
   `feature/weblogin/ui/`). `AccountEntries.kt` registers the key and keeps the
