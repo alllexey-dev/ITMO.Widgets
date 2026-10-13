@@ -54,19 +54,19 @@ final class RouterTests: XCTestCase {
 
     // MARK: Entry routes
 
-    func testQrPassOpensOverHomeOnce() {
+    func testQrPassOpensThePassSheetOverTodayOnce() {
         let router = readyRouter()
         router.selectedTab = .sport
 
         XCTAssertTrue(router.open(id: "qr_pass"))
 
-        XCTAssertEqual(router.selectedTab, .home)
-        XCTAssertEqual(router.path(of: .home), [qrPass])
-        XCTAssertEqual(router.path(of: .home).first?.chrome, .compose)
-        router.setPath([], of: .home)
+        XCTAssertEqual(router.selectedTab, .today)
+        XCTAssertEqual(router.sheet, .route(qrPass))
+        XCTAssertEqual(router.path(of: .today), [])
+        router.sheet = nil
         router.sessionChanged(signedIn, onboarding: .passed)
         router.shellMounted(true)
-        XCTAssertEqual(router.path(of: .home), [], "a route that ran never runs again")
+        XCTAssertNil(router.sheet, "a route that ran never runs again")
     }
 
     func testTodayOpensScheduleRootOnToday() {
@@ -89,8 +89,8 @@ final class RouterTests: XCTestCase {
         router.open(id: "sport")
         router.open(id: "home")
 
-        XCTAssertEqual(router.selectedTab, .home)
-        XCTAssertEqual(router.path(of: .home), [qrPass])
+        XCTAssertEqual(router.selectedTab, .today)
+        XCTAssertEqual(router.sheet, .route(qrPass))
     }
 
     func testRouteWaitsForReadySessionThenRuns() {
@@ -99,12 +99,12 @@ final class RouterTests: XCTestCase {
         router.open(id: "qr_pass")
 
         XCTAssertEqual(router.pendingRoute, qrPassEntry)
-        XCTAssertEqual(router.path(of: .home), [])
+        XCTAssertNil(router.sheet)
 
         router.sessionChanged(signedIn, onboarding: .passed)
 
         XCTAssertNil(router.pendingRoute)
-        XCTAssertEqual(router.path(of: .home), [qrPass])
+        XCTAssertEqual(router.sheet, .route(qrPass))
     }
 
     func testRouteWaitsForFirstRunFlow() {
@@ -138,7 +138,7 @@ final class RouterTests: XCTestCase {
         router.open(id: "today")
 
         XCTAssertEqual(router.pendingRoute, todayEntry)
-        XCTAssertEqual(router.selectedTab, .home)
+        XCTAssertEqual(router.selectedTab, .today)
 
         router.shellMounted(true)
 
@@ -155,7 +155,7 @@ final class RouterTests: XCTestCase {
         router.sessionChanged(signedIn, onboarding: .passed)
 
         XCTAssertEqual(router.selectedTab, .sport)
-        XCTAssertEqual(router.path(of: .home), [])
+        XCTAssertNil(router.sheet)
     }
 
     func testLeavingSessionResetsStacks() throws {
@@ -166,19 +166,19 @@ final class RouterTests: XCTestCase {
 
         router.sessionChanged(ShellSessionState.signedOut.sessionState, onboarding: .passed)
 
-        XCTAssertEqual(router.path(of: .home), [])
+        XCTAssertEqual(router.path(of: .today), [])
         XCTAssertNil(router.sheet)
         XCTAssertNil(router.consumeRequest(of: .sport))
-        XCTAssertEqual(router.selectedTab, .home)
+        XCTAssertEqual(router.selectedTab, .today)
     }
 
     func testUnknownLinkShowsSheetOverHome() throws {
         let router = readyRouter()
-        router.selectedTab = .me
+        router.selectedTab = .profile
 
         XCTAssertTrue(router.open(url: try XCTUnwrap(URL(string: "itmowidgets://route/nowhere"))))
 
-        XCTAssertEqual(router.selectedTab, .home)
+        XCTAssertEqual(router.selectedTab, .today)
         XCTAssertEqual(router.sheet, .linkUnavailable)
     }
 
@@ -204,11 +204,11 @@ final class RouterTests: XCTestCase {
         XCTAssertNil(router.consumeRequest(of: .sport), "a request is handed out once")
 
         XCTAssertTrue(router.open(url: try XCTUnwrap(URL(string: "https://dev.widgets.alllexey.dev/u/100001"))))
-        XCTAssertEqual(router.selectedTab, .me)
-        XCTAssertEqual(router.path(of: .me), [ShellDestination(AppRoutes.UserProfile(isu: 100_001))])
+        XCTAssertEqual(router.selectedTab, .profile)
+        XCTAssertEqual(router.path(of: .profile), [ShellDestination(AppRoutes.UserProfile(isu: 100_001))])
 
         XCTAssertTrue(router.open(url: try XCTUnwrap(URL(string: "https://widgets.alllexey.dev/u/abc"))))
-        XCTAssertEqual(router.selectedTab, .home)
+        XCTAssertEqual(router.selectedTab, .today)
         XCTAssertEqual(router.sheet, .linkUnavailable)
     }
 
@@ -251,9 +251,12 @@ final class RouterTests: XCTestCase {
         router.selectedTab = .sport
         router.sheet = .linkUnavailable
 
-        XCTAssertEqual(router.open(AppRoutes.QrPass.shared), .opened)
+        let profile = ShellDestination(AppRoutes.UserProfile(isu: 100_001))
 
-        XCTAssertEqual(router.path(of: .sport), [qrPass])
+        XCTAssertEqual(router.open(profile.route), .opened)
+
+        XCTAssertEqual(router.path(of: .sport), [profile])
+        XCTAssertEqual(router.path(of: .sport).first?.chrome, .compose)
         XCTAssertNil(router.sheet, "a screen closes the sheet it was opened from")
     }
 
@@ -300,7 +303,7 @@ final class RouterTests: XCTestCase {
         let export = AppRoutes.IcsExport.shared
         XCTAssertEqual(router.open(export) { (_: Int) in XCTFail("no screen, no callback") }, .notOnIOS)
         router.deliver(1, from: export)
-        XCTAssertEqual(router.path(of: .home), [])
+        XCTAssertEqual(router.path(of: .today), [])
         XCTAssertNil(router.sheet)
     }
 
@@ -350,24 +353,26 @@ final class RouterTests: XCTestCase {
 
     func testResultReturnsToItsOpenerOnce() {
         let router = readyRouter()
+        let profile = AppRoutes.UserProfile(isu: 100_001)
         var answers: [Int] = []
 
-        XCTAssertEqual(router.open(AppRoutes.QrPass.shared) { (isu: Int) in answers.append(isu) }, .opened)
-        router.deliver("not an ISU", from: AppRoutes.QrPass.shared)
-        router.open(AppRoutes.QrPass.shared) { (isu: Int) in answers.append(isu * 10) }
-        router.deliver(7, from: AppRoutes.QrPass.shared)
-        router.deliver(8, from: AppRoutes.QrPass.shared)
+        XCTAssertEqual(router.open(profile) { (isu: Int) in answers.append(isu) }, .opened)
+        router.deliver("not an ISU", from: profile)
+        router.open(profile) { (isu: Int) in answers.append(isu * 10) }
+        router.deliver(7, from: profile)
+        router.deliver(8, from: profile)
 
         XCTAssertEqual(answers, [70], "a newer open replaces the callback; an answer runs it once")
     }
 
     func testLeavingSessionDropsResultCallbacks() {
         let router = readyRouter()
+        let profile = AppRoutes.UserProfile(isu: 100_001)
         var answered = false
-        router.open(AppRoutes.QrPass.shared) { (_: Int) in answered = true }
+        router.open(profile) { (_: Int) in answered = true }
 
         router.sessionChanged(ShellSessionState.loading.sessionState, onboarding: .passed)
-        router.deliver(1, from: AppRoutes.QrPass.shared)
+        router.deliver(1, from: profile)
 
         XCTAssertFalse(answered)
     }
@@ -422,11 +427,11 @@ final class RouterTests: XCTestCase {
         }
     }
 
-    func testTabsFollowAndroidOrder() {
-        XCTAssertEqual(ShellTab.allCases, [.recordbook, .schedule, .home, .sport, .me])
+    func testTabsFollowTheBarOrder() {
+        XCTAssertEqual(ShellTab.allCases, [.today, .schedule, .recordbook, .sport, .profile])
         XCTAssertEqual(ShellTab.visible, ShellTab.allCases, "every tab has its screen")
-        XCTAssertEqual(ShellTab.launch, .home)
-        XCTAssertEqual(ShellTab.allCases.map(\.appTab), [.recordbook, .schedule, .home, .sport, .me])
+        XCTAssertEqual(ShellTab.launch, .today)
+        XCTAssertEqual(ShellTab.allCases.map(\.appTab), [.home, .schedule, .recordbook, .sport, .me])
         XCTAssertEqual(ShellTab.allCases.map { ShellTab($0.appTab) }, ShellTab.allCases)
     }
 
@@ -518,7 +523,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.UserSchedule(isu: 100_001, name: ""), .compose),
             (AppRoutes.UserSport(isu: 100_001, name: ""), .compose),
             (AppRoutes.ScheduleChanges.shared, .compose),
-            (AppRoutes.QrPass.shared, .compose),
+            (AppRoutes.QrPass.shared, .composeSheet),
             (AppRoutes.MyItmoWeb.shared, .swiftUI),
             (period, .composeSheet),
             (AppRoutes.FriendSelector(selectedIsu: 0), .composeSheet),

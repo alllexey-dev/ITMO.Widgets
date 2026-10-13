@@ -97,7 +97,9 @@ feed. Security rules (`MyItmoWebPolicy` in `:shared:feature-account`):
 
 ## iOS
 
-Same shared feed ([iOS app](../ios.md)): `HomeRoute` hosted by `HomeScreen`
+Same shared feed ([iOS app](../ios.md)) as the today tab's root until its
+SwiftUI screen lands: `TodayScreen` puts the root header (today's academic
+date, the bell) over `HomeRoute`, hosted by `HomeScreen`
 (`iosApp/Sources/Features/Home/`) through `homeViewController`
 (`shared/ios`, `screens/HomeScreens.kt`); `homeModule`, `homeIosModule`.
 

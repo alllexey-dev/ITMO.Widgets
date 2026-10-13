@@ -2,8 +2,8 @@ import Shared
 import SwiftUI
 
 extension Routes {
-    /// The QR pass above home: the Compose route of `:shared:feature-qr`.
+    /// The pass sheet: the today accessory, widgets, the Control and shortcuts all open it.
     static func qr(_ route: any AppRoute) -> RouteTarget {
-        route is AppRoutes.QrPass ? .compose { AnyView(QrPassScreen()) } : .notOnIOS
+        route is AppRoutes.QrPass ? .composeSheet { AnyView(QrPassScreen()) } : .notOnIOS
     }
 }

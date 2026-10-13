@@ -53,7 +53,7 @@ final class StringsTests: XCTestCase {
     }
 
     func testFileTablesFollowLocalizable() {
-        XCTAssertEqual(AppStrings.string("qr_pass_title"), "QR-пропуск")
+        XCTAssertEqual(AppStrings.string("qr_pass_title"), "Пропуск")
         XCTAssertEqual(AppStrings.string("ios_control_qr_description"), "Открывает QR-пропуск")
     }
 

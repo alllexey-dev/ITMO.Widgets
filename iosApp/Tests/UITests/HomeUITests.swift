@@ -1,6 +1,6 @@
 import XCTest
 
-/// The home tab on the shared demo session: the Compose feed as the root of the home stack, its hints
+/// The today tab on the shared demo session: the Compose feed under the today root header, its hints
 /// (the widget hint's instruction sheet, a closed hint that stays closed across a relaunch), the new-marks card,
 /// the QR and My ITMO buttons, and the feed at the accessibility text size AX1. Compose maps `testTag` to the accessibility identifier
 /// (`HomeTestTags`, `HomeCardTestTags`); the texts are Russian on an English iPhone. A launch with
@@ -24,7 +24,7 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(scrollTo(element(app, "home_card_hint_widgets"), in: app))
         XCTAssertTrue(element(app, "home_qr_fab").isHittable)
         XCTAssertTrue(element(app, "home_web_fab").isHittable)
-        XCTAssertFalse(app.navigationBars.firstMatch.exists, "the feed has no top bar, as on Android")
+        XCTAssertTrue(app.navigationBars.firstMatch.exists, "the today root header sits over the feed")
         attachScreenshot(named: "demo-feed")
     }
 
@@ -88,7 +88,8 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(hint.exists, "the instruction does not close the hint")
     }
 
-    func testQrButtonOpensThePassAndBackReturnsHome() {
+    /// The feed's own QR button opens the same pass sheet as the accessory.
+    func testQrButtonOpensThePassSheetAndCloseReturnsHome() {
         let app = XCUIApplication.itmo()
         app.launch()
         waitForFeed(app)
@@ -97,7 +98,7 @@ final class HomeUITests: XCTestCase {
 
         XCTAssertTrue(element(app, "qr.pass").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "qr_pass_image").waitForExistence(timeout: stepTimeout))
-        app.buttons[QrPassUITests.backLabel].tap()
+        app.buttons[QrPassUITests.closeLabel].tap()
         XCTAssertTrue(element(app, "qr.pass").waitForNonExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "home_qr_fab").exists)
     }

@@ -4,22 +4,115 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// The shell on fixtures in all four appearances: the signed-out gate and the damaged-link sheet. The tab bar
-/// is system chrome drawn with materials a layer render misses, so it is left to `ShellUITests` screenshots; so are the
-/// tab stacks, whose roots are all Compose screens a snapshot misses (Metal): the recordbook (`RecordbookUITests`), the
-/// schedule (`ScheduleUITests`), the home feed (`HomeUITests`), the sport tab (`SportUITests`), the Me tab
-/// (`SocialUITests`) and the QR pass (`QrPassUITests`). The demo banner is `DesignSystemSnapshotTests`'.
+/// The shell in all four appearances, drawn in a window with its system chrome: the glass tab bar with the pass
+/// accessory on today only, the root header (title and subtitle with the bell in one row, `.inline` once scrolled),
+/// a pushed screen that keeps the tab bar, the three sheet heights, the signed-out gate and the damaged-link sheet.
+/// The tab roots are kit fixtures: the roots of the app are still Compose screens a snapshot misses (Metal), checked
+/// by the UITests (`ShellUITests`, `HomeUITests` and the tab classes).
 @MainActor
 final class ShellSnapshotTests: XCTestCase {
-    /// A full screen at the matrix width: the banner sits at the bottom.
-    private let screenHeight: CGFloat = 640
+    func testTodayTab() {
+        assertScreenAppearances(of: tabs(.today), named: "today")
+    }
+
+    /// The header collapses to `.inline` once the content leaves the top.
+    func testTodayScrolled() {
+        assertScreenAppearances(of: tabs(.today, scrolled: true), named: "scrolled")
+    }
+
+    /// The pass accessory and the bell belong to today only.
+    func testOtherTab() {
+        assertScreenAppearances(of: tabs(.schedule), named: "schedule")
+    }
+
+    func testPushedScreenKeepsTheTabBar() {
+        let shell = ShellTabs(selection: .constant(.recordbook), openPass: {}) { tab in
+            NavigationStack(path: .constant(["subject"])) {
+                ShellFixtureRoot(tab: tab)
+                    .navigationDestination(for: String.self) { _ in
+                        ItmoScreenStack {
+                            ItmoSegmentedChoice(
+                                label: "Раздел", options: ["Баллы", "Пары", "Материалы"], selection: .constant("Баллы")
+                            ) { $0 }
+                            ItmoLessonCard(lesson: KitFixtures.day(at: 12 * 60 + 22)[2])
+                        }
+                        .navigationTitle(Text(verbatim: "Программирование"))
+                        .navigationBarTitleDisplayMode(.inline)
+                    }
+            }
+        }
+        assertScreenAppearances(of: shell, named: "pushed")
+    }
+
+    func testSheetContentHeight() {
+        assertScreenAppearances(of: sheet(.content), named: "content", settle: 2.5)
+    }
+
+    func testSheetTall() {
+        assertScreenAppearances(of: sheet(.tall), named: "tall", settle: 2.5)
+    }
+
+    func testSheetFull() {
+        assertScreenAppearances(of: sheet(.full), named: "full", settle: 2.5)
+    }
 
     func testSignedOutGate() {
         let shell = ShellView(router: AppRouter(), session: ShellSession(state: .signedOut))
-        assertAppearances(of: shell, named: "gate", height: screenHeight)
+        assertScreenAppearances(of: shell, named: "gate")
     }
 
     func testLinkUnavailableSheet() {
-        assertAppearances(of: ShellSheetView(sheet: .linkUnavailable), named: "sheet", height: 400)
+        let shell = tabs(.today).sheet(isPresented: .constant(true)) { ShellSheetView(sheet: .linkUnavailable) }
+        assertScreenAppearances(of: shell, named: "sheet", settle: 2.5)
+    }
+
+    // MARK: Fixtures
+
+    private func tabs(_ selection: ShellTab, scrolled: Bool = false) -> some View {
+        ShellTabs(selection: .constant(selection), openPass: {}) { tab in
+            NavigationStack {
+                ShellFixtureRoot(tab: tab, scrolled: scrolled)
+            }
+        }
+    }
+
+    private func sheet(_ height: ItmoSheetHeight) -> some View {
+        tabs(.today).sheet(isPresented: .constant(true)) {
+            ItmoSheet(title: "Пропуск", height: height) {
+                ItmoSectionHeader(title: "Пары", count: "2 пары")
+                ItmoLessonCard(lesson: KitFixtures.day(at: 8 * 60)[0])
+                ItmoLessonCard(lesson: KitFixtures.day(at: 8 * 60)[1])
+            }
+        }
+    }
+}
+
+/// A tab root drawn from the kit: today has the root header with the bell over the day's timeline, the other tabs
+/// their title over an empty state.
+private struct ShellFixtureRoot: View {
+    let tab: ShellTab
+    var scrolled = false
+
+    var body: some View {
+        if tab == .today {
+            ItmoScreenStack {
+                ItmoSectionHeader(title: "Пары", count: "5 пар")
+                ItmoLessonTimeline(
+                    lessons: KitFixtures.day(at: 12 * 60 + 22), now: 12 * 60 + 22, gapLabel: KitFixtures.gap
+                )
+            }
+            .defaultScrollAnchor(scrolled ? .bottom : .top)
+            .itmoRootHeader(title: tab.title, subtitle: "понедельник, 7 сентября")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ItmoBellButton(label: "Уведомления") {}
+                }
+            }
+        } else {
+            ItmoScreenStack {
+                ItmoEmptyView(symbol: tab.symbol, title: tab.title)
+            }
+            .itmoRootHeader(title: tab.title, subtitle: nil)
+        }
     }
 }

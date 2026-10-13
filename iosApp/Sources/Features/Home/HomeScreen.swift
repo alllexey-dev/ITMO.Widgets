@@ -3,6 +3,47 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
+/// The today tab's root until its SwiftUI screen lands (ux-overhaul phase 2): the root header (the tab's title, today's
+/// academic date, the bell) over the Compose home feed. The bell leads to the notification switches of settings until
+/// the bell sheet exists.
+struct TodayScreen: View {
+    let router: AppRouter
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var date = AcademicDay.today()
+
+    var body: some View {
+        HomeScreen(router: router)
+            .itmoRootHeader(title: ShellTab.today.title, subtitle: date)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ItmoBellButton(label: AppStrings.string("today_notifications")) {
+                        router.open(AppRoutes.Settings(page: AppRoutes.Settings.companion.ROOT_PAGE))
+                    }
+                }
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { date = AcademicDay.today() }
+            }
+    }
+}
+
+/// Today's academic date for a header, the weekday, day and month in Russian: the shared `AcademicTimeProvider`, never the
+/// device clock, so the debug date override and the Moscow time zone apply.
+// shortcut: formats in Swift what the shared TodayHeaderViewModel already says; replace with that view model once
+// :shared:ios exports :shared:feature-home.
+enum AcademicDay {
+    static func today() -> String {
+        guard let time = IosKoin.shared.get(protocol: AcademicTimeProvider.self) as? AcademicTimeProvider else {
+            preconditionFailure("Koin resolved no AcademicTimeProvider")
+        }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.timeZone = TimeZone(identifier: time.timeZone.id)
+        formatter.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
+        return formatter.string(from: Date(timeIntervalSince1970: Double(time.now().toEpochMilliseconds()) / 1000))
+    }
+}
+
 /// The home tab's root: the Compose feed (`homeViewController`) with the router behind its cards and
 /// buttons. What only iOS does stays here: the widget hint opens `WidgetHowToSheet` (iOS lets no app place a widget),
 /// the notification hint asks iOS once and then opens the app's notification settings, and a key the demo refuses

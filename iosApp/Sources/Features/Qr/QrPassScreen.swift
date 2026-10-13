@@ -1,9 +1,9 @@
 import Shared
 import SwiftUI
 
-/// The QR pass above home: the Compose route (`qrPassViewController`) with the screen at full brightness while it
-/// is on screen and the app is active, so a turnstile reads the code (Android's pass keeps the user's
-/// brightness).
+/// The pass sheet over today: the Compose pass route (`qrPassViewController`) until the shared pass sheet model lands,
+/// at full brightness while it is on screen and the app is active, so a turnstile reads the code (Android's pass keeps
+/// the user's brightness). The route's back button closes the sheet.
 struct QrPassScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -16,6 +16,8 @@ struct QrPassScreen: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("qr.pass")
+        .presentationDetents([.fraction(ItmoSheetHeight.tallFraction), .large])
+        .presentationDragIndicator(.visible)
         .onAppear {
             isVisible = true
             if scenePhase == .active { brightness.raise() }

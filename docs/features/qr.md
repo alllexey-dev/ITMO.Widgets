@@ -67,9 +67,12 @@ Sign-out: the repository is a `SessionDataCleaner` `named("qr")`, beside
 
 ## iOS
 
-- `QrPassScreen` (`iosApp/Sources/Features/Qr/`) hosts the shared
-  `QrPassRoute`; unlike Android it raises brightness while shown and restores
-  it on leave or background.
+- The pass is a sheet over today (0.82 of the screen, draggable to full):
+  `QrPassScreen` (`iosApp/Sources/Features/Qr/`) hosts the shared
+  `QrPassRoute` in a SwiftUI sheet; the `QR-пропуск` tab bar accessory over
+  today, the Control, the shortcuts and `itmowidgets://route/qr_pass` open it.
+  Unlike Android it raises brightness while shown and restores it on leave or
+  background.
 - QR widget (`dev.alllexey.itmowidgets.widget.qr`) is Swift only: it draws
   from `qr-pass-v1.json`, which the app writes from `QrCodeGenerator` on every
   new valid pass, and never fetches itself

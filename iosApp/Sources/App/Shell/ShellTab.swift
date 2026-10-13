@@ -1,15 +1,17 @@
 import Shared
 
-/// A root of the tab bar, in the order of Android's `res/menu/bottom_nav.xml`.
+/// A root of the tab bar, in the bar's order (DECISIONS.md, Shell and navigation): today, schedule, recordbook, sport,
+/// profile. The raw value is the tab's frozen route id (`itmowidgets://route/<id>`, `StableIdentifiersTests`), which
+/// predates the today and profile names.
 enum ShellTab: String, CaseIterable, Identifiable, Hashable {
-    case recordbook
+    case today = "home"
     case schedule
-    case home
+    case recordbook
     case sport
-    case me
+    case profile = "me"
 
-    /// The tab selected at launch, as on Android.
-    static let launch: ShellTab = .home
+    /// The tab selected at launch.
+    static let launch: ShellTab = .today
 
     /// The tabs the bar shows, in order.
     static var visible: [ShellTab] { allCases.filter(\.isAvailable) }
@@ -20,27 +22,9 @@ enum ShellTab: String, CaseIterable, Identifiable, Hashable {
     /// tab without its screen never shows as a placeholder (App Review 2.1).
     var isAvailable: Bool { self != .recordbook || IosPlatformCapabilitiesKt.IosPlatformCapabilities.recordbook }
 
-    var title: String { AppStrings.string(titleKey) }
+    /// The shared tab model's name (`AppTab.label`).
+    var title: String { AppStrings.string(appTab.label) }
 
-    var symbol: AppSymbol {
-        switch self {
-        case .recordbook: .menuBook
-        case .schedule: .schedule
-        case .home: .home
-        case .sport: .exercise
-        case .me: .accountCircle
-        }
-    }
-
-    var selectedSymbol: AppSymbol {
-        switch self {
-        case .recordbook: .menuBookFilled
-        case .schedule: .scheduleFilled
-        case .home: .homeFilled
-        case .sport: .exerciseFilled
-        case .me: .accountCircleFilled
-        }
-    }
-
-    private var titleKey: String { "title_\(rawValue)" }
+    /// The shared tab model's icon; the bar fills the selected tab's symbol itself.
+    var symbol: AppSymbol { appTab.icon.symbol }
 }

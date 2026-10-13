@@ -42,6 +42,10 @@ new iOS app.
   `Журнал ошибок`.
 - The app icon is Android's launcher icon, with iOS 18 dark and tinted
   variants.
+- New shell for iOS 26.1 and later: a Liquid Glass tab bar `Сегодня`,
+  `Расписание`, `Зачётка`, `Спорт`, `Профиль`; a `QR-пропуск` accessory over
+  `Сегодня` opens the pass sheet; `Сегодня` has a header with the date and the
+  bell; sheets open at the content's height, 0.82 of the screen or full.
 
 ### Android screens on Compose Multiplatform
 

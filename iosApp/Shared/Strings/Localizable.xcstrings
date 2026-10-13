@@ -205,6 +205,18 @@
         }
       }
     },
+    "ios_pass_accessory" : {
+      "comment" : "Generated from strings_ios.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-пропуск"
+          }
+        }
+      }
+    },
     "ios_settings_notifications_allowed" : {
       "comment" : "Generated from strings_ios_settings.xml",
       "extractionState" : "manual",

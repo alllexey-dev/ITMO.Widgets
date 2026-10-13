@@ -1,8 +1,8 @@
 import XCTest
 
-/// The shell: tabs in Android's order, `itmowidgets://route/<id>` URLs, the session gate and the demo banner
-/// on fixtures and on the shared session, and the edge swipe back from a screen that hides the navigation bar
-/// (the Compose QR pass).
+/// The shell: tabs in the bar's order, the pass accessory on today only, `itmowidgets://route/<id>` URLs, the session
+/// gate and the demo banner on fixtures and on the shared session, and the edge swipe back from a screen that hides
+/// the navigation bar (the Compose people search).
 final class ShellUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
@@ -11,7 +11,7 @@ final class ShellUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testTabsFollowAndroidOrder() {
+    func testTabsFollowTheBarOrder() {
         let app = XCUIApplication.itmo()
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
@@ -25,7 +25,21 @@ final class ShellUITests: XCTestCase {
         attachScreenshot(named: "me")
     }
 
-    func testQrPassUrlOpensThePassOverHome() throws {
+    func testPassAccessoryShowsOnTodayOnly() {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
+        XCTAssertTrue(element(app, "shell.passAccessory").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "shell.bell").exists, "the bell sits in the today header")
+        attachScreenshot(named: "today")
+
+        app.selectTab("schedule")
+        XCTAssertTrue(element(app, "shell.root.schedule").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "shell.passAccessory").waitForNonExistence(timeout: stepTimeout))
+        XCTAssertFalse(element(app, "shell.bell").exists)
+    }
+
+    func testQrPassUrlOpensThePassSheetOverToday() throws {
         let app = XCUIApplication.itmo()
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
@@ -36,8 +50,9 @@ final class ShellUITests: XCTestCase {
 
         XCTAssertTrue(element(app, "qr.pass").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "qr-pass")
-        app.buttons[QrPassUITests.backLabel].tap()
-        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: stepTimeout))
+        app.buttons[QrPassUITests.closeLabel].tap()
+        XCTAssertTrue(element(app, "qr.pass").waitForNonExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "shell.root.home").exists)
     }
 
     func testTodayUrlOpensScheduleOnToday() throws {
@@ -69,16 +84,18 @@ final class ShellUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
 
-        element(app, "home_qr_fab").tap()
-        let pass = element(app, "qr.pass")
-        XCTAssertTrue(pass.waitForExistence(timeout: stepTimeout))
+        app.selectTab("me")
+        XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
+        element(app, "find_people_row").tap()
+        let search = element(app, "social.search")
+        XCTAssertTrue(search.waitForExistence(timeout: stepTimeout))
         XCTAssertFalse(app.navigationBars.firstMatch.exists, "a compose route hides the navigation bar")
 
         let edge = app.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
         edge.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
 
-        XCTAssertTrue(pass.waitForNonExistence(timeout: stepTimeout), "the edge swipe did not go back")
-        XCTAssertTrue(element(app, "shell.root.home").exists)
+        XCTAssertTrue(search.waitForNonExistence(timeout: stepTimeout), "the edge swipe did not go back")
+        XCTAssertTrue(element(app, "shell.root.me").exists)
     }
 
     func testRouteWaitsForSignIn() throws {
