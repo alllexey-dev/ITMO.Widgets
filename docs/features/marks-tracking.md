@@ -104,7 +104,7 @@ the cycle `BarsClient -> repository -> BARS read -> BarsClient`:
 ## BARS in the background
 
 `BarsMarkReader.read(half)` runs inside `BarsClient.backgroundAccount`
-([session](recordbook.md#bars-overlay)):
+([session](recordbook.md#bars)):
 
 - No saved BARS session for the current ISU: `NoSession`, no requests.
 - It selects the half-year on the server, reads via `journalReferences` (shared with the overlay),
@@ -130,7 +130,7 @@ the cycle `BarsClient -> repository -> BARS read -> BarsClient`:
 - Pending records count as delivered after the attempt, even without the notification permission.
 - `AndroidMarksNotifier`: channel `marks`, up to three names (`MarkSubjects.split`), never the marks;
   the lock screen shows the title only. The tap target is `MarkNewsRules.target` (a single subject's
-  page, else the recordbook); the tap never changes the BARS chip. Ids and routes:
+  page, else the recordbook); the tap never connects BARS. Ids and routes:
   [notifications](notifications.md#marks).
 
 ## In the recordbook

@@ -194,8 +194,8 @@ background:
   (the kit's `VotePill`: a 32 dp pill inside 48 dp arrow targets).
 - Captions put a second fact on a second line or join facts with a comma; no
   « · ». The last row that leads further (`Все ссылки, N`, `Все пары, N`,
-  `Добавить ссылку`) is the kit's `GroupActionRow` or, on the subject page,
-  `SubjectActionRow` (`ui/subject/SubjectLinks.kt` of `:shared:feature-recordbook`).
+  `Добавить ссылку`) is the kit's `GroupActionRow` or, on the redesigned
+  screens, a `ListRow` with a chevron.
 
 Chips, date tiles and avatars have their own geometry. Vertical padding is
 symmetric; height grows with content and font scale. Clipped text is fixed
@@ -491,6 +491,8 @@ screens that have not moved yet.
 | `GateCard`, `ActionCard`, `LockNote`, `StaleContent` | Gated (what, why, one fix), worth doing, locked without a fix, old data dimmed under its date; empty and error stay `ContentState` |
 | `LessonView`, `LessonCard` | One lesson outside a day list: subject; `тип, преподаватель`; `аудитория, корпус` (none online); note; pills; friends |
 | `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary`, the `сейчас` marker, `Окно 2 ч 10 мин` rows, a change note under a lesson |
+| `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
+| `VotePill` | The votes of a link: ▲ N ▼, the viewer's own vote in `primary`, only the score when voting is not allowed |
 
 ## Platform styles
 
@@ -605,6 +607,9 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   gap rows for an hour or more, the change note under the lesson. A single
   lesson is `ItmoLessonCard`. Both say subject; type, teacher; room, building
   (no line when online); the note; pills.
+- Numbers (`ItmoScores.swift`): `ItmoValueWithSource` (a number over its quiet source), `ItmoPointsMeter`,
+  `ItmoSportRing`, `ItmoGradeScale` (the hero's 100-point bar with the grade ticks) and `ItmoVotePill`, the same
+  pieces as Android's kit.
 - States. Content; empty and error are the system's unavailable view with one
   glass button (`Повторить` for errors); a gate (`ItmoGateCard`) says what,
   why and one fix in place of the content; `ItmoActionCard` is something to
@@ -639,10 +644,8 @@ wrappers only; a new screen follows the rules below.
     no progress;
   - the sport score card: the ring keeps its 700 ms fill, the status chip grows
     in on the hero springs (`SportScoreCard`);
-  - the subject result card, the subject page's one hero: the points in
-    emphasized `headlineMedium`, and a score that arrives while the page is
-    open fills the grade scale on the hero springs (`rememberSubjectHeroFill`,
-    held outside the list);
+  - the subject page's hero card: the points in `displayMedium` over the
+    grade scale;
   - the person profile hero: `ItmoHeroAvatar` under the nine-sided cookie and
     the name in emphasized `titleLarge`, revealed when the person arrives
     while the screen is open (`ProfileHeroReveal`).
@@ -671,7 +674,7 @@ wrappers only; a new screen follows the rules below.
   are secondary tabs over their pager. A segmented toggle becomes
   `ItmoButtonGroup`, single-select with a selection required (the friend
   picker's scope); so may a single-select chip set of up to four options.
-  Filter chips stay chips (the BARS chip, link categories, review subjects),
+  Filter chips stay chips (link categories, review subjects),
   and a choice in a dialog or with second lines stays radios. Detail screens
   get no tabs.
 - **Buttons and toolbars.** A split button only where a primary action has a
@@ -748,38 +751,13 @@ in [Shared components](#shared-components).
   `:shared:feature-account`, on the kit's `SettingsGroup` and `SettingsRow`.
 - QR pass: the pass sheet `QrPassSheetContent` in `:shared:feature-qr`
   (`feature/qr/ui/`), the hero reveal of [Expressive components](#expressive-components).
-- Recordbook row: `SubjectRow` in `feature/recordbook/ui/RecordbookScreen.kt` of
-  `:shared:feature-recordbook` (name, metadata, a number with a thin bar or a
-  grade badge). The name and the new-mark dot for unread marks share a
-  horizontal row centred vertically: the name takes the remaining width and
-  wraps, the dot (8 dp, `primary`, `compact` spacing before it) follows it like
-  the new-change dot of the schedule changes history and adds `Новое` at the
-  start of the row's TalkBack description.
-  A total from a connected sheet stands where the points would be while the
-  official points are empty: the table mark (`RecordbookTestTags.SHEET_MARK`,
-  `ic_table`, 16 dp, `onSurfaceVariant`, 4 dp before the value) and the value
-  (`titleMedium`, one line, at most 96 dp) in the row's score group (at least
-  64 dp wide), without the bar; TalkBack reads `Из таблицы: …`.
-- Subject page: `RecordbookSubjectScreen` of `:shared:feature-recordbook`
-  (`ui/subject/RecordbookSubjectScreen.kt`): a header with the back button, the
-  subject name in up to two lines (`titleMedium`) and the assessment with the
-  semester, then one `LazyColumn` of the result card (`SubjectHero` with the
-  kit's `GradeScale` and the sheet total), `SectionHeading`s over connected
-  groups of links, chats, controls (`SubjectControlRow`,
-  `SubjectControlGroupHeading`), teachers and lessons, in the files of
-  `ui/subject/`.
-- Connected groups: the kit's `Modifier.connectedGroupItem` and
-  `SectionHeading` (`components/groups/` of `:shared:designsystem`); link rows
-  are the kit's `LinkRow` with its `VotePill` (`components/rows/LinkRow.kt`,
-  `components/rows/VotePill.kt`).
-- Sheet total on the subject page: `SubjectSheetTotal`
-  (`ui/subject/SubjectSheetTotal.kt` of `:shared:feature-recordbook`) at the
-  bottom of the result card under a hairline (`ic_table`, the
-  value in `titleMedium`, `путь, лист «Лист»` and a status line in
-  `bodySmall`, the status under the 48 dp `⋮` so it never wraps beside it, the
-  glyph in line with the card's content edge; failures in `error`), or the
-  text button `Мои баллы из таблицы` with `ic_table` in its place; several
-  sheet links ask `Какая таблица?` in the kit's `ChoiceDialog`.
+- Recordbook: `RecordbookScreen` in `feature/recordbook/ui/` of `:shared:feature-recordbook` on the M3 Expressive
+  kit: the root header with the period menu, `SegmentedChoice` of the moment, the session's hero, sections of
+  `ListGroup` rows (name and reason or kind, the 8 dp new-mark dot, the number in `ValueWithSource`, a chevron), the
+  quiet BARS row; `RecordbookSourcesSheetContent` on `SheetScaffold`.
+- Subject page: `RecordbookSubjectScreen` (`ui/subject/`) on `ItmoDetailScreen`: the tabs as `SegmentedChoice`, the
+  hero card with the kit's `GradeScale` and the connected sheet, checkpoint groups of `ListGroup` rows with a thin bar,
+  teacher rows with an `Avatar`, link rows with the kit's `VotePill`, the gates as `GateCard`.
 - The «Мои баллы» sheet: `SheetScoresSheet` of `:shared:feature-recordbook`
   (`ui/sheets/SheetScoresSheet.kt`) on the kit's `SheetScaffold` (handle, title,
   subject, one bounded area of at least 288 dp for loading, failures and the
@@ -820,9 +798,8 @@ in [Shared components](#shared-components).
   collapsed behind the text button `Подробнее`/`Свернуть` whose 48 dp target
   reaches into the card padding).
 - Tone dot: the kit's `ToneDot`, in the teacher row of the kit's
-  `DetailsHeader` (`DetailsTeacher.tone`) in the lesson sheet and in
-  the subject page's teacher rows (`SubjectTeacherRow` of
-  `:shared:feature-recordbook`); its place is reserved (`reserveTone`) where a
+  `DetailsHeader` (`DetailsTeacher.tone`) in the lesson sheet (the subject
+  page says the tone in words instead); its place is reserved (`reserveTone`) where a
   late dot would otherwise move the row.
 - Review editor: Compose in `:shared:feature-reviews` (`feature/reviews/ui/ReviewEditorSheet.kt`),
   hosted by `app/shell/entries/ReviewsEntries.kt`. A form sheet without a handle
