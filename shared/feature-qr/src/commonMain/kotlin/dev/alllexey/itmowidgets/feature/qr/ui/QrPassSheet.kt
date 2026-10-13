@@ -66,7 +66,7 @@ import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_empty_description
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_empty_title
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_image_description
 import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_refresh
-import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_title
+import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_sheet_title
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
@@ -107,7 +107,7 @@ fun QrPassSheetContent(
 ) {
     Box(modifier) {
         SheetScaffold(
-            title = stringResource(Res.string.qr_pass_title),
+            title = stringResource(Res.string.qr_pass_sheet_title),
             close = SheetClose(stringResource(CoreRes.string.common_close), onClose),
         ) {
             Column(

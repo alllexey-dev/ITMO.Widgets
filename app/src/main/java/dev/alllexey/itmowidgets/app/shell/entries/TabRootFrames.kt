@@ -26,7 +26,7 @@ import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.home.presentation.TodayHeaderUiState
 import dev.alllexey.itmowidgets.feature.home.presentation.TodayHeaderViewModel
 import dev.alllexey.itmowidgets.shared.compose.strings.Res
-import dev.alllexey.itmowidgets.shared.compose.strings.qr_pass_title
+import dev.alllexey.itmowidgets.shared.compose.strings.qr_pass_sheet_title
 import dev.alllexey.itmowidgets.shared.compose.strings.today_notifications
 import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
@@ -99,7 +99,7 @@ internal fun TodayRootScreen(
                 onClick = onOpenPass,
                 modifier = Modifier.testTag(TabRootTags.PASS_FAB),
                 icon = { Icon(painterResource(KitRes.drawable.ic_qr_code), contentDescription = null) },
-                text = { Text(stringResource(Res.string.qr_pass_title)) },
+                text = { Text(stringResource(Res.string.qr_pass_sheet_title)) },
             )
         },
     ) { padding -> Body(padding, content) }
