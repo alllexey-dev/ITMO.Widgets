@@ -47,7 +47,7 @@ final class StableIdentifiersTests: XCTestCase {
         XCTAssertEqual(RouteURL.scheme, "itmowidgets")
         XCTAssertEqual(
             RouteURL.ids.compactMap { RouteURL.url(id: $0)?.absoluteString },
-            ["home", "schedule", "recordbook", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
+            ["recordbook", "schedule", "home", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
         )
     }
 

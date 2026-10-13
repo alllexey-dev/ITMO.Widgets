@@ -129,8 +129,8 @@ Routes are shared: `@Serializable` keys in
 `shared/core/src/commonMain/kotlin/dev/alllexey/itmowidgets/core/navigation/AppRoutes.kt`.
 Each key has a kind (tab root, screen, sheet, dialog, gate); a sheet's `SheetPolicy` names one of the three sizes
 (content height, `SheetPolicy.TALL_FRACTION` of the window, the whole height below the status bar), which iOS maps
-to detents. `AppTab` is the tab model of both platforms: the five tabs in bar order (Сегодня, Расписание, Зачётка,
-Спорт, Профиль; `HOME` is Сегодня, `ME` Профиль) with each tab's label key and icons.
+to detents. `AppTab` is the tab model of both platforms: the five tabs in bar order (Зачётка, Расписание, Сегодня,
+Спорт, Профиль; `HOME` is Сегодня and the start tab, `ME` Профиль) with each tab's label key and icons.
 `EntryRouteParser` turns widget, shortcut, notification and App Link intents
 into routes; `RouteQueue` holds one until the session and the first-run flow
 allow it.
@@ -144,10 +144,18 @@ allow it.
   root renders inside its frame (`entries/TabRootFrames.kt`): the kit's
   `ItmoRootScreen` with the static root header, and on Сегодня the date
   (`TodayHeaderViewModel`), the bell and the `Пропуск` button that opens the
-  `QrPass` sheet ([design](design.md#shell)). Tab roots sit in a pager
-  (`TabPager.kt`) with swipe between tabs under the `ShortNavigationBar`;
-  overlay screens cover the bar; sheets and dialogs are overlay scenes
-  (`ShellScenes.kt` sizes a sheet by its `SheetPolicy`). Only `LoginActivity`, `BarsLoginActivity` and
+  `QrPass` sheet ([design](design.md#shell)). `NavDisplay` shows
+  `ShellBackStack.entries`: the start tab's root, the selected tab's root above
+  it, the pushed screens and the sheets and dialogs, and does every transition,
+  the predictive Back and the entries' lifecycles itself (`ShellMotion.kt`: fade
+  through between tab roots, shared axis X for pushed screens, the predictive
+  Back spec). Per-tab state follows the Navigation 3 `multiplestacks` recipe:
+  each tab's stack and the contextual stack are decorated on their own
+  (saveable state, `ViewModelStore`, route arguments), so a hidden tab keeps its
+  state and view models. The `ShortNavigationBar` and the demo banner are laid
+  out under `NavDisplay` (`AppShell.kt`); tab roots end above them, pushed
+  screens cover them. Sheets and dialogs are overlay scenes (`ShellScenes.kt`
+  sizes a sheet by its `SheetPolicy`). Only `LoginActivity`, `BarsLoginActivity` and
   `SpoilerCropActivity` remain separate activities (`app/shell/ActivityRoutes.kt`).
 - **iOS.** `iosApp/Sources/App/Router/AppRouter.swift` keeps a SwiftUI
   `NavigationStack` per tab and the sheets; `Routes+<Area>.swift` map each

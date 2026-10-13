@@ -91,7 +91,8 @@ ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui @platform   # app/src/androidT
   a suite member that fails once and passes later still fails the run.
 - `ShellSuite` (`app/src/androidTest/java/dev/alllexey/itmowidgets/app/shell/ShellSuite.kt`)
   groups the navigation tests: entry intents, App Links, session routing,
-  the demo flow, shortcuts, the QR tile, notifications, tab swipe and insets.
+  the demo flow, shortcuts, the QR tile, notifications, insets, and Back and the
+  predictive Back through pushed screens, sheets and tabs (`ShellNavigationTest`).
 - `UpgradeFrom22Test` reads the 2.2 data captured in
   `app/src/androidTest/assets/upgrade-2.2/`. A change that moves or reformats
   stored data updates its checker in `upgrade/stores/`, never the assets.

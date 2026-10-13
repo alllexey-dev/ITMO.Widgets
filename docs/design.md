@@ -297,9 +297,9 @@ description and optional action: the kit's `ContentState` and
 
 ## Screen behaviour
 
-- Five bottom tabs, contextual screens in the overlay ([Shell](#shell)).
+- Five bottom tabs, pushed screens above them ([Shell](#shell)).
   Ordinary state changes do not recreate the screen or lose scroll position.
-  Root selection or reselection closes the whole overlay stack.
+  Root selection or reselection closes every pushed screen, sheet and dialog.
 - Motion explains a change and honours the system animator scale (scale 0
   shows the end state at once). Components move with springs from
   `MotionScheme.standard()` (`ItmoTheme.motion.scheme`), hero moments with
@@ -309,8 +309,8 @@ description and optional action: the kit's `ContentState` and
   `Color.Transparent`, which is transparent black and greys the colour half
   way. Do not animate unchanged text or flash the screen on refresh. `Моё` and
   `Запись` of sport switch by their `SegmentedChoice` only; the sport week
-  strip pages by weeks under `tabSwipeHandover` ([Tab swipe](#tab-swipe), rule
-  3).
+  strip pages by weeks (`tabSwipeHandover` is
+  left over from the tab swipe).
 - Past schedule days fade their card content once to 0.72 (`ScheduleDayCard`);
   today and future days 1.0; inner lesson rows get no second alpha layer.
 - Schedule timeline markers: a hollow neutral circle for a lesson not yet
@@ -337,45 +337,36 @@ description and optional action: the kit's `ContentState` and
   of FABs (the schedule) with `fabStackClearance`, so its last item scrolls
   clear of them. `My ITMO` is a row of Профиль.
 
-### Tab swipe
+### Tab switching and Back
 
-Android only. The kit's `designsystem/gesture/` package holds the pieces:
-`TabSwipeDefaults` (the numbers below), `tabSwipeHandover`, `tabSwipeBlocked`
-and `TabSwipeRegistry`; `GestureRulesTest` enforces rules 3 and 5.
+Android only; iOS has its native tab bar and `NavigationStack`s ([iOS app](ios.md#design-system)).
 
-iOS has no tab swipe: paging between tab bar tabs
-is not an iOS convention, so the tabs switch by the native tab bar only, inner
-horizontal content just scrolls, and the leading edge belongs to the back
-swipe. Shared screens keep `tabSwipeHandover` and `tabSwipeBlocked` (rule 3);
-with no tab pager around them they change nothing. `TabSwipeRegistry` and
-`TabSwipeDefaults.edgeDeadZone` stay in the kit, unused on iOS for now.
+1. The five bottom tabs switch by a tap on the bar only. There is no swipe
+   between tabs on either platform (owner, 2026-10-13); horizontal content in a
+   screen (the sport pager, chip rows) just scrolls.
+2. A tab switch is an M3 fade through: the old root fades out in 90 ms, the new
+   one fades in over 210 ms after it, growing from 92 % (`ShellMotion`). Each
+   tab keeps its scroll, saveable state and view models across switches.
+3. A pushed screen comes and goes on the shared X axis: both screens move a
+   tenth of the width and fade through, on the standard scheme's spatial spring.
+   It covers the bar, which stays in place under it.
+4. Back is the platform's predictive Back from `NavDisplay`: the top screen
+   shrinks to 90 % away from the swipe edge and rounds its corners, the screen
+   under it (the previous pushed screen, or the tab root with its bar) is
+   already composed, grows from 95 % and drifts in from the edge; on release it
+   is in place and nothing pops in. Back on another tab's root goes to Сегодня
+   the same way; Back on Сегодня's root leaves the app.
+5. Sheets and dialogs are their own windows with the system's predictive Back.
+6. System gestures win: no gesture exclusion, the back edges stay the system's
+   (`GestureRulesTest`).
+7. Entry points land on screens: widgets, links, notifications and shortcuts
+   open a route with its tab, never a page index.
+8. The system animator scale applies: with animations off every switch is
+   instant.
 
-1. The five bottom tabs switch by a tap and by a horizontal swipe on a tab
-   root, in bar order, one tab per swipe, no wrap-around.
-2. The swipe exists only on tab roots: never on overlays, pushed screens,
-   sheets, dialogs, sign-in, onboarding, or while one of them is open; not where
-   the navigation rail shows (medium and expanded widths).
-3. Inner horizontal content wins: every horizontal scroller on a tab root uses
-   `tabSwipeHandover`; it scrolls first, never flies over into the next tab,
-   and a new swipe at its edge switches the tab. The sport week strip pages by
-   weeks under this rule.
-4. Days never move by a horizontal swipe on content: day lists scroll
-   vertically; a week strip changes the day by a tap and the week by its arrows
-   and is `tabSwipeBlocked`.
-5. System gestures win: no gesture exclusion; the back edges stay the
-   system's.
-6. Diagonal drags belong to vertical lists (2x slop for the tab pager).
-7. Feedback: the bar's indicator moves to the target tab when the drag passes
-   the commit threshold, with one threshold haptic; no hint, coach mark, peek
-   animation or new text.
-8. Accessibility: the tabs stay bar buttons and nothing needs the swipe; the
-   tab pager exposes no page semantics and is off under TalkBack and Switch
-   Access.
-9. Reduced motion: the drag still follows the finger; the settle and tap
-   switches are instant.
-10. Entry points land on screens: widgets, links, notifications and shortcuts
-    open a route with its tab, never a page index; a switch by a route, a tap
-    or Back never slides through the tabs in between.
+The kit's `designsystem/gesture/` modifiers (`tabSwipeHandover`,
+`tabSwipeBlocked`) are left over from the tab swipe and change nothing without
+a tab pager; they go once no screen calls them.
 
 ## Shared components
 
@@ -447,9 +438,10 @@ universal renderer.
 
 The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is the frame every screen sits in.
 
-- Five tabs in this order: Сегодня, Расписание, Зачётка, Спорт, Профиль (`AppTab`, which also names each tab's
-  label key and its outlined and FILL 1 icons: `today`, `calendar_month`, `book_2`, `sprint`, `person`). The bar is
-  `ItmoNavigationBar` (M3E `ShortNavigationBar`) with labels.
+- Five tabs in this order, close to My ITMO: Зачётка, Расписание, Сегодня (the centre and the start tab), Спорт,
+  Профиль (`AppTab`, which also names each tab's label key and its outlined and FILL 1 icons: `book_2`,
+  `calendar_month`, `today`, `sprint`, `person`). The bar is `ItmoNavigationBar` (M3E `ShortNavigationBar`) with
+  labels.
 - Every tab root has the root header (`ItmoRootScreen`, `app/shell/entries/TabRootFrames.kt`), one line (owner,
   2026-10-13, header lab variant 7): the title (`titleLarge`) and its subtitle (`bodyMedium`) on one baseline on the
   left, the actions in the same row, centred on the title block; 56 dp. When the subtitle does not fit next to the
@@ -460,12 +452,14 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
   content.
 - The `Пропуск` extended FAB is on Сегодня only and opens the pass sheet; the widgets, the tile and the shortcut open
   the same sheet.
-- Pushed screens cover the bar: back, a title, no navigation bar. The title and its subtitle flow as one paragraph
+- Pushed screens cover the bar: back, a title, no navigation bar. The bar stays in place under them, so the
+  predictive Back uncovers the root with its bar. The title and its subtitle flow as one paragraph
   (`ItmoDetailScreen`, 64 dp in one line) and a long title wraps in full, never truncated.
 - Sheets come in three sizes (`SheetPolicy.Height`): content height (`FIT_CONTENT`, the pass, the links), 82 % of the
   window (`TALL`, the bell's sheet) or the whole height below the status bar (`FULL`, the details sheets and
   the friend picker); none goes under the status bar.
-- Tabs switch by a swipe on Android only ([Tab swipe](#tab-swipe)).
+- Tabs switch by a tap on the bar only, with a fade through; Back is the platform's predictive Back
+  ([Tab switching and Back](#tab-switching-and-back)).
 
 ## The M3 Expressive kit
 
@@ -589,8 +583,8 @@ target look is the design lab's (`vibe/design-lab/ux-native/DECISIONS.md`,
 https://design.widgets.alllexey.dev). The Compose screens draw the kit's iOS
 style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
 
-- Shell. A glass tab bar with five labelled tabs (Сегодня, Расписание,
-  Зачётка, Спорт, Профиль); pushed screens keep it and show the parent as
+- Shell. A glass tab bar with five labelled tabs (Зачётка, Расписание,
+  Сегодня, Спорт, Профиль); pushed screens keep it and show the parent as
   back. The `QR-пропуск` accessory sits above the bar only while Сегодня is
   selected and opens the pass sheet.
 - Root header. One line: the title (Title 2 weight) and the subtitle on one
@@ -643,7 +637,7 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   ([ADR 0028](decisions/0028-strings-and-icons.md)).
 - Chrome rule: a Compose route draws its own top bar and hides the navigation
   bar (edge swipe back stays on); a SwiftUI screen keeps the native bar.
-- Tabs switch by the native tab bar only ([Tab swipe](#tab-swipe)).
+- Tabs switch by the native tab bar only, no swipe.
 
 Details: [iOS app](ios.md#design-system).
 
