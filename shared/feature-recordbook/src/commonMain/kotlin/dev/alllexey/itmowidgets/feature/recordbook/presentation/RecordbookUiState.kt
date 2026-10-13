@@ -11,9 +11,6 @@ data class RecordbookSelection(val program: RecordbookProgram, val period: Recor
 /** The colour of a reason, a bar or a pill; the words carry the meaning, the tone only helps scanning. */
 enum class RecordbookTone { NEUTRAL, PRIMARY, OK, WARN, BAD }
 
-/** The moment the list is read for: the term, or the session with its results and the average. */
-enum class RecordbookView { SEMESTER, SESSION }
-
 /** Where a number comes from: BARS, My ITMO, the teacher's sheet or the sport points. */
 enum class RecordbookSource { BARS, MY_ITMO, SHEET, SPORT }
 
@@ -53,11 +50,11 @@ sealed interface RecordbookBody {
     data object Empty : RecordbookBody
 
     /**
-     * The list in the chosen [view]: the session's [summary], a BARS [barsNotice] over the [sections], the quiet
-     * [barsOffer] line under them, and the open [sources] sheet. [refreshError] is a failed pull over cached rows.
+     * The list: the session's [summary] near the end of the semester and in the session, a BARS [barsNotice] over the
+     * [sections], the quiet [barsOffer] line under them, and the open [sources] sheet. [refreshError] is a failed pull
+     * over cached rows.
      */
     data class Content(
-        val view: RecordbookView,
         val summary: RecordbookSummary?,
         val barsNotice: RecordbookBarsNotice?,
         val sections: List<RecordbookSection>,
@@ -78,7 +75,7 @@ sealed interface RecordbookBarsNotice {
     data class Failed(val error: AppError) : RecordbookBarsNotice
 }
 
-/** `Требуют внимания`, `Дисциплины`, `Экзамены впереди`, `Сдано`. */
+/** `Требуют внимания`, `Дисциплины`. */
 data class RecordbookSection(val title: UiText, val rows: List<RecordbookRow>)
 
 /**

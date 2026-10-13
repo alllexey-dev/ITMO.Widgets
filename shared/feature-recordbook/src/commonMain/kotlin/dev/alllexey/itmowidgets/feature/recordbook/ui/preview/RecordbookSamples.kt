@@ -31,7 +31,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelect
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSheetTotal
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookView
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonList
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessons
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectPresenter
@@ -129,7 +128,6 @@ object RecordbookSamples {
                 attention = attention,
                 unread = setOf("математический анализ (продвинутый уровень)"),
                 sheets = sheets,
-                view = if (moment == "session") RecordbookView.SESSION else RecordbookView.SEMESTER,
                 offerHidden = false,
                 sourcesId = sources,
                 today = today,
@@ -255,8 +253,8 @@ object RecordbookSamples {
             tab = tab,
             scores = SubjectPresenter.scores(
                 SubjectScoresInput(
+                    official = if (fromBars) ppris else subject,
                     subject = subject,
-                    fromBars = fromBars,
                     barsEnabled = fromBars,
                     barsError = null,
                     controls = if (fromBars) controls else emptyList(),

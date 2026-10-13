@@ -254,36 +254,28 @@ class RecordbookViewModelTest {
         assertEquals(RecordbookValue.Result(UiText.Dynamic("4C"), RecordbookTone.OK), state.row(3).value)
     }
 
-    // --- moments
+    // --- one list and the session
 
-    @Test fun `the session shows once a final result exists, with the passed count and the average`() = runTest {
+    @Test fun `near the end of the semester the one list adds the session with the passed count and the average`() = runTest {
         repository.subjects = AppResult.Success(listOf(
             recordbookSubject(id = 1).copy(rate = "4/C", score = 79.0),
             recordbookSubject(id = 2).copy(rate = "5/A", score = 92.0),
             recordbookSubject(id = 3).copy(rate = null, score = 55.0),
         ))
-        val vm = loaded(); advanceUntilIdle()
+        val vm = loaded(model(date = "2026-12-07")); advanceUntilIdle()
         val content = vm.uiState.value.content
-        assertEquals(RecordbookView.SESSION, content.view)
         val summary = content.summary!!
         assertEquals(UiText.Res(RecordbookStrings.recordbook_session_passed, listOf(2)), summary.passed)
         assertEquals(UiText.Res(RecordbookStrings.recordbook_session_average, listOf("85,5")), summary.average)
-        assertEquals(
-            listOf(RecordbookStrings.recordbook_section_ahead, RecordbookStrings.recordbook_section_passed),
-            content.sections.map { (it.title as UiText.Res).key },
-        )
+        assertEquals(listOf(RecordbookStrings.recordbook_disciplines_section), content.sections.map { (it.title as UiText.Res).key })
     }
 
-    @Test fun `the term has no average and the choice of moment holds until the period changes`() = runTest {
-        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null)))
+    @Test fun `mid-semester the same list has no session even with a final result`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = "4/C")))
         val vm = loaded(); advanceUntilIdle()
-        assertEquals(RecordbookView.SEMESTER, vm.uiState.value.content.view)
-        assertNull(vm.uiState.value.content.summary)
-
-        vm.selectView(RecordbookView.SESSION)
-        assertEquals(RecordbookView.SESSION, vm.uiState.value.content.view)
-        vm.selectPeriod(1, 2); advanceUntilIdle()
-        assertEquals(RecordbookView.SEMESTER, vm.uiState.value.content.view)
+        val content = vm.uiState.value.content
+        assertNull(content.summary)
+        assertEquals(listOf(RecordbookStrings.recordbook_disciplines_section), content.sections.map { (it.title as UiText.Res).key })
     }
 
     // --- marks

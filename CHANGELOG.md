@@ -96,8 +96,8 @@ new iOS app.
   still shows `Новые оценки` only.
 - Зачётка is rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one view model): what needs
   action first, each number over a quiet source (`БАРС`, `My ITMO`, `таблица`, `Спорт`) with a 0-100 bar in the tone
-  of its reason, passed subjects as a result pill, `Семестр` / `Сессия` with `Сдано N из M` and the average only in
-  the session, the period in the header (`3 семестр`). BARS is optional: without it the list is complete from My ITMO
+  of its reason, passed subjects as a result pill, one list with `Сдано N из M` and the average only near the end of
+  the semester and in the session, the period in the header (`3 семестр`). BARS is optional: without it the list is complete from My ITMO
   with one quiet `Подключить` line that can be hidden; an ended BARS session keeps its numbers dimmed with their date
   and offers `Войти`. Физкультура shows the sport points in a ring and opens Спорт. A tap on a source opens `Откуда
   баллы` with every source side by side. The BARS chip and the period sheet are gone.
@@ -126,6 +126,9 @@ new iOS app.
 
 ### Fixes
 
+- Зачётка and the subject page show a connected sheet's total again when the subject has an empty BARS journal: the
+  most current source with a value wins (the sheet, then BARS, then a sheet that failed to update, then My ITMO),
+  and a source without points never hides one with points.
 - The schedule widgets show lessons again on Android 8-11; the day-list
   widget no longer shows an older list after a refresh; on Android 12+ both
   schedule widgets follow the launcher's corner radius.

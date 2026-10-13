@@ -50,7 +50,6 @@ import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
 import dev.alllexey.itmowidgets.designsystem.kit.PointsMeter
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
-import dev.alllexey.itmowidgets.designsystem.kit.SegmentedChoice
 import dev.alllexey.itmowidgets.designsystem.kit.SportRing
 import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
@@ -67,7 +66,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookTarget
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookTone
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookValue
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookView
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_down
@@ -92,8 +90,6 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_score_pendi
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_session_title
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_sources_action
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_subject_new
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_view_semester
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_view_session
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
@@ -125,7 +121,6 @@ data class RecordbookActions(
     val onRefresh: () -> Unit = {},
     val onRetry: () -> Unit = {},
     val onSelectPeriod: (programId: Long, semester: Int) -> Unit = { _, _ -> },
-    val onSelectView: (RecordbookView) -> Unit = {},
     val onHideOffer: () -> Unit = {},
     val onOpenSources: (id: Long) -> Unit = {},
     val onCloseSources: () -> Unit = {},
@@ -133,8 +128,8 @@ data class RecordbookActions(
 
 /**
  * Зачётка (docs/features/recordbook.md): the root header with [title], the period's subtitle and the period action,
- * `Семестр` / `Сессия`, the session's hero, then what needs action first and the rest, each number over its quiet
- * source. A source opens `Откуда баллы`. Stateless; [RecordbookRoute] feeds it.
+ * one list: the session's hero near the end of the semester, then what needs action first and the rest, each number
+ * over its quiet source. A source opens `Откуда баллы`. Stateless; [RecordbookRoute] feeds it.
  */
 @Composable
 fun RecordbookScreen(
@@ -237,14 +232,6 @@ private fun Content(body: RecordbookBody.Content, actions: RecordbookActions, li
         ),
         verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
     ) {
-        item(key = "view") {
-            val views = RecordbookView.entries
-            SegmentedChoice(
-                options = listOf(stringResource(Res.string.recordbook_view_semester), stringResource(Res.string.recordbook_view_session)),
-                selectedIndex = views.indexOf(body.view),
-                onSelect = { actions.onSelectView(views[it]) },
-            )
-        }
         body.refreshError?.let { error ->
             item(key = "refresh-error") {
                 ListGroupNote(stringResource(Res.string.recordbook_refresh_error, error.toUiText().asString()))
