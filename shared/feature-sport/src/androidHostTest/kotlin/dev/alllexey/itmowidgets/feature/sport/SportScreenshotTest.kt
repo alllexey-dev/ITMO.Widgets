@@ -6,8 +6,8 @@ import java.util.Locale
 import org.junit.Rule
 import org.junit.rules.ExternalResource
 
-// The week strip keeps 45 dp days at 320 dp, exempt from ATF 48 dp targets.
-@PreviewScreenshots(narrowTouchTargetExemptions = ["SportWeekStrip", "SportSignScreen_", "SportScreen_sign"])
+// The week strip keeps its days under 48 dp wide at 320 dp, exempt from ATF 48 dp targets.
+@PreviewScreenshots(narrowTouchTargetExemptions = ["SportScreen_sign"])
 class SportScreenshotTest : PreviewScreenshotTest() {
 
     /**

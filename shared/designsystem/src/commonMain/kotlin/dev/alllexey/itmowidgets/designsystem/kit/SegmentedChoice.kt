@@ -15,6 +15,7 @@ import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -29,8 +30,8 @@ import org.jetbrains.compose.resources.painterResource
  * The one choice pattern for two to four short [options] and in-screen tabs (`Моё` / `Запись`, `Баллы` / `Пары` /
  * `Материалы`): Material 3 Expressive's connected button group of toggle buttons at equal widths, a check on the
  * selected one while up to three options leave room for it. A selection is always made; [onSelect] gets the index of
- * a newly chosen option. [enabled] false shows a choice that cannot change now. Filters are chips, longer choices a
- * list or a sheet.
+ * a newly chosen option. [enabled] false shows a choice that cannot change now; [testTags] tag the options in order.
+ * Filters are chips, longer choices a list or a sheet.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -40,6 +41,7 @@ fun SegmentedChoice(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    testTags: List<String> = emptyList(),
 ) {
     require(options.size in 2..MAX_OPTIONS) { "A segmented choice holds 2..$MAX_OPTIONS options, got ${options.size}" }
     require(selectedIndex in options.indices) { "selectedIndex $selectedIndex is outside ${options.indices}" }
@@ -53,7 +55,7 @@ fun SegmentedChoice(
                 checked = checked,
                 onCheckedChange = { if (!checked) onSelect(index) },
                 // A single choice: TalkBack reads a radio button and its selection.
-                modifier = Modifier.weight(1f).semantics {
+                modifier = Modifier.weight(1f).then(testTags.getOrNull(index)?.let { Modifier.testTag(it) } ?: Modifier).semantics {
                     role = Role.RadioButton
                     selected = checked
                 },

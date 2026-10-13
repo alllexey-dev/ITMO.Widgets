@@ -24,7 +24,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.session.SessionRepository
-import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportWeekStripTestTags
+import dev.alllexey.itmowidgets.feature.sport.ui.SportTestTags
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestGraph
 import dev.alllexey.itmowidgets.testing.TestSession
@@ -42,7 +42,7 @@ import org.junit.runner.RunWith
 
 /**
  * The tab swipe on the real `MainActivity` in the demo session (design.md "Tab swipe"): through all five roots and
- * back, Back after swipes, an App Link while on another tab, and the sport segments handing the swipe over. Swipes
+ * back, Back after swipes, an App Link while on another tab, and «Моё» of sport passing the swipe on. Swipes
  * start inside the tab content, away from the system's back edges, at a height read from the screen's geometry, so no
  * status bar or cutout height moves them onto content that keeps drags from the tabs.
  */
@@ -71,13 +71,13 @@ class TabSwipeTest {
         awaitTab(AppTab.HOME)
         assertTrue(ShellProbe.current().swipeEnabled)
 
-        // On sport the first swipe moves its own pager (`Мой спорт` -> `Запись`, and back), the next one the tab.
-        listOf(AppTab.SCHEDULE, AppTab.RECORDBOOK, AppTab.SPORT, AppTab.SPORT, AppTab.ME, AppTab.ME).forEach { tab ->
+        // «Моё» and «Запись» of sport switch by their segmented choice only: a swipe moves the tab.
+        listOf(AppTab.SCHEDULE, AppTab.RECORDBOOK, AppTab.SPORT, AppTab.ME, AppTab.ME).forEach { tab ->
             swipe(towardsNext = true)
             awaitTab(tab)
             TestUi.settle(SETTLE_MILLIS)
         }
-        listOf(AppTab.SPORT, AppTab.SPORT, AppTab.RECORDBOOK, AppTab.SCHEDULE, AppTab.HOME, AppTab.HOME).forEach { tab ->
+        listOf(AppTab.SPORT, AppTab.RECORDBOOK, AppTab.SCHEDULE, AppTab.HOME, AppTab.HOME).forEach { tab ->
             swipe(towardsNext = false)
             awaitTab(tab)
             TestUi.settle(SETTLE_MILLIS)
@@ -92,9 +92,6 @@ class TabSwipeTest {
     fun backFromSportAfterSwipesLeadsHome() = onComposeShell {
         awaitTab(AppTab.HOME)
         walkTo(AppTab.SPORT)
-        // The first swipe on sport moves its own pager to `Запись`; the next one reaches Me.
-        swipe(towardsNext = true)
-        TestUi.settle(SETTLE_MILLIS)
         swipe(towardsNext = true)
         awaitTab(AppTab.ME)
         swipe(towardsNext = false)
@@ -129,16 +126,11 @@ class TabSwipeTest {
     }
 
     @Test
-    fun aSwipeOnMySportStaysInSportAndTheNextOneAtTheEdgeSwitchesTheTab() = onComposeShell {
+    fun aSwipeOnMySportSwitchesTheTab() = onComposeShell {
         awaitTab(AppTab.HOME)
         walkTo(AppTab.SPORT)
         TestUi.settle(SETTLE_MILLIS)
         assumeTrue("the sport root is registered in the Compose shell", showsText(MY_SPORT))
-
-        swipe(towardsNext = true)
-        TestUi.settle(SETTLE_MILLIS)
-        assertEquals(AppTab.SPORT, ShellProbe.current().tab)
-        eventually { assertTrue("the sign-up page shows", showsText(SIGN_UP)) }
 
         swipe(towardsNext = true)
         awaitTab(AppTab.ME)
@@ -182,7 +174,7 @@ class TabSwipeTest {
 
     /**
      * The height in the window a swipe runs at: the middle of the shown tab content, or below the sport week strip
-     * when that reaches lower, since the strip keeps every drag from the tabs (design.md "Tab swipe", rule 4). Under
+     * when that reaches lower, since the strip takes horizontal drags first (design.md "Tab swipe", rule 3). Under
      * an overlay the tab content has no semantics and the swipe runs at [SWIPE_HEIGHT] of the window.
      */
     private fun swipeY(): Float {
@@ -197,7 +189,7 @@ class TabSwipeTest {
                 return@onActivity
             }
             val margin = SWIPE_MARGIN_DP * activity.resources.displayMetrics.density
-            val strip = shown.filter { it.tag == SportWeekStripTestTags.STRIP }.maxOfOrNull { it.boundsInWindow.bottom }
+            val strip = shown.filter { it.tag == SportTestTags.STRIP }.maxOfOrNull { it.boundsInWindow.bottom }
             y = maxOf(content.center.y, strip?.plus(margin) ?: 0f)
             check(y < content.bottom - margin) { "no room for a swipe between $y and the tab content's end $content" }
         }
@@ -257,8 +249,7 @@ class TabSwipeTest {
         /** Clear of the strip's blocked bottom padding (8 dp) and of the content's end. */
         const val SWIPE_MARGIN_DP = 24
 
-        /** The sport pager's two segments (`title_sport_my`, `title_sport_sign`). */
-        const val MY_SPORT = "Мой спорт"
-        const val SIGN_UP = "Запись"
+        /** «Моё» of the sport tab's segmented choice (`sport_tab_my`). */
+        const val MY_SPORT = "Моё"
     }
 }

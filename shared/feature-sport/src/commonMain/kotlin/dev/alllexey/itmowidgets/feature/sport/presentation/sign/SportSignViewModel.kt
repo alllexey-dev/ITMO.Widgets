@@ -2,25 +2,34 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.alllexey.itmowidgets.core.presentation.BusyKeys
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
+import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSignDisplayOptions
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonActions
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -29,145 +38,226 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.format
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
+/**
+ * «Запись» on both platforms: the merged catalog with the viewer's queues and friends, filtered by the search, the
+ * chips and the more-filters sheet, one day at a time on a six-week strip, and the booking actions of its rows and of
+ * the lesson sheet ([SportLessonActions]).
+ */
 class SportSignViewModel(
-    private val sportScheduleRepository: SportScheduleRepository,
-    private val sportDataRepository: SportDataRepository,
-    private val filterController: SportSignFilterController,
-    private val stateFactory: SportSignStateFactory,
-    private val bookingDelegate: SportBookingDelegate,
-    private val autoSignFlow: SportAutoSignFlow,
+    private val scheduleRepository: SportScheduleRepository,
+    private val dataRepository: SportDataRepository,
+    private val preferences: SportSignPreferencesRepository,
+    timetable: DayLessonsGateway,
     private val sharedLessons: SportSharedLessonResolver,
-    preferencesRepository: SportSignPreferencesRepository,
-    private val timeProvider: AcademicTimeProvider
+    private val time: AcademicTimeProvider,
+    delegate: SportBookingDelegate,
+    autoSignFlow: SportAutoSignFlow,
 ) : ViewModel() {
 
+    private val actions = SportLessonActions(viewModelScope, delegate, autoSignFlow, time)
     private val refreshes = RefreshTracker(viewModelScope)
-    private val busyLessons = BusyKeys<Long>(viewModelScope)
-    private val autoSignCommands = BusyKeys<Unit>(viewModelScope)
+    private val operations = MutableStateFlow(0)
+    private val filters = MutableStateFlow(SportSignFilters(selectedDate = time.today()))
+    private val filtersOpen = MutableStateFlow(false)
     private val eventQueue = EventQueue<SportSignEvent>()
 
-    /** Refreshes in flight, silent ones included: the calendar shows over a placeholder until the catalog answers. */
-    private val operations = MutableStateFlow(0)
-    private var autoSignJob: Job? = null
-    private var lastContent: SportSignUiState.Content? = null
+    /** The last catalog answer, kept while a refresh runs or fails. */
+    private var lessons: List<SportLesson>? = null
+    private var input: SportSignInput? = null
 
-    /** Every merged lesson of the last catalog answer, before filters. */
-    private var catalogLessons: List<SportLesson> = emptyList()
-
-    // Every source starts as "not answered yet", so the header renders before the catalogue.
-    private val contentState: Flow<SportSignUiState> = combine(
-        sportScheduleRepository.observeSportFilters().unansweredFirst(),
-        sportScheduleRepository.observeSportTimeSlots().unansweredFirst(),
-        sportScheduleRepository.observeSportSchedule().unansweredFirst(),
+    private val sources: Flow<Sources> = combine(
+        scheduleRepository.observeSportSchedule().answered(),
+        scheduleRepository.observeSportFilters().map { it.valueOrNull() }.onStart { emit(null) },
+        timetable.observe(time.today(), time.today().plus(MAX_WEEKS_FORWARD + 1, DateTimeUnit.WEEK)).onStart { emit(emptyList()) },
+        combine(preferences.observePinnedSections(), preferences.observeDisplayOptions(), ::Prefs),
         combine(operations, refreshes.refreshing) { count, byUser -> (count > 0) to byUser },
-        filterController.filters
-    ) { filters, timeSlots, schedule, (refreshing, byUser), userFilters ->
-        toContentState(filters, timeSlots, schedule, refreshing, byUser, userFilters)
-    }
+    ) { schedule, catalog, days, prefs, (running, byUser) -> Sources(schedule, catalog, days, prefs, running, byUser) }
 
     val uiState: StateFlow<SportSignUiState> = combine(
-        contentState,
-        preferencesRepository.observeDisplayOptions(),
-        busyLessons.busy
-    ) { state, displayOptions, busyLessonIds ->
-        if (state !is SportSignUiState.Content) return@combine state
-        state.copy(
-            hideTeacherSelector = displayOptions.hideTeacherSelector,
-            hideTimeSelector = displayOptions.hideTimeSelector,
-            busyLessonIds = busyLessonIds
-        )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, SportSignUiState.Loading)
+        sources,
+        filters,
+        filtersOpen,
+        actions.busy,
+        actions.prompt,
+    ) { sources, filters, open, busy, prompt -> state(sources, filters, open, busy).copy(prompt = prompt) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SportSignUiState())
 
-    val events: Flow<SportSignEvent> = eventQueue.events
+    val events: Flow<SportSignEvent> = merge(eventQueue.events, actions.notices.map { SportSignEvent.Notice(it) })
 
     init {
         refresh(RefreshMode.Silent)
+        // A source that failed behind the shown day says so once, until it recovers.
+        viewModelScope.launch {
+            uiState.map { (it.body as? SportSignBody.Day)?.partialError == true }.distinctUntilChanged().collect { partial ->
+                if (partial) eventQueue.send(SportSignEvent.Notice(UiText.Res(CoreStrings.common_partial_load_error)))
+            }
+        }
     }
 
-    /** A pull or a retry shows the indicator; the first load stays silent under the calendar. */
+    /** A pull or a retry shows the indicator; the first load stays silent under the strip. */
     fun refresh(mode: RefreshMode) {
         refreshes.launch(mode) { tracked { refreshAll() } }
     }
 
-    fun selectDate(date: LocalDate) = filterController.selectDate(date)
+    fun setQuery(query: String) = filters.update { it.copy(query = query) }
 
-    /** Opens the card of a lesson from a shared link and selects its day, once the merged catalog answers. */
-    fun openSharedLesson(lessonId: Long, predicted: Boolean = false) {
+    fun toggle(chip: SportQuickFilter) = filters.update {
+        when (chip) {
+            SportQuickFilter.FREE -> it.copy(onlyFree = !it.onlyFree)
+            SportQuickFilter.MORNING -> it.copy(dayPart = if (it.dayPart == SportDayPart.MORNING) SportDayPart.ANY else SportDayPart.MORNING)
+            SportQuickFilter.EVENING -> it.copy(dayPart = if (it.dayPart == SportDayPart.EVENING) SportDayPart.ANY else SportDayPart.EVENING)
+            SportQuickFilter.PINNED -> it.copy(onlyPinned = !it.onlyPinned)
+            SportQuickFilter.FRIENDS -> it.copy(onlyFriends = !it.onlyFriends)
+        }
+    }
+
+    fun selectDate(date: LocalDate) = filters.update { it.copy(selectedDate = date) }
+
+    /** A swipe to the week [index] of the strip: today in the current week, its Monday in another. */
+    fun showWeek(index: Int) {
+        val today = time.today()
+        val week = index.coerceIn(0, MAX_WEEKS_FORWARD)
+        if (today.weeksUntil(filters.value.selectedDate) == week) return
+        selectDate(if (week == 0) today else today.weekMonday().plus(week, DateTimeUnit.WEEK))
+    }
+
+    fun openFilters() {
+        filtersOpen.value = true
+    }
+
+    fun closeFilters() {
+        filtersOpen.value = false
+    }
+
+    fun toggleSection(name: String) = filters.update {
+        val section = SectionName(name)
+        it.copy(sections = if (section in it.sections) it.sections - section else it.sections + section)
+    }
+
+    fun selectBuilding(name: String?) = filters.update { it.copy(building = name) }
+
+    fun selectTeacher(name: String?) = filters.update { it.copy(teacher = name) }
+
+    fun selectDayPart(part: SportDayPart) = filters.update { it.copy(dayPart = part) }
+
+    fun setOnlyFree(on: Boolean) = filters.update { it.copy(onlyFree = on) }
+
+    fun setOnlyPinned(on: Boolean) = filters.update { it.copy(onlyPinned = on) }
+
+    fun setOnlyFriends(on: Boolean) = filters.update { it.copy(onlyFriends = on) }
+
+    /** Every filter off; the search and the day stay. */
+    fun resetFilters() = filters.update { it.cleared() }
+
+    /** The way out of an empty day. */
+    fun onEmptyAction(action: SportEmptyAction) = when (action) {
+        is SportEmptyAction.ShowDay -> selectDate(action.date)
+        is SportEmptyAction.ResetFilters -> resetFilters()
+    }
+
+    /** The row's own button: `Записаться` or `В очередь`, while the lesson still offers it. */
+    fun act(lessonId: Long) {
+        val lesson = lesson(lessonId) ?: return
+        val action = lesson.bookingConditions().evaluate(time.now()).action
+        if (action == SportBookingAction.SIGN || action == SportBookingAction.AUTO) actions.run(lesson, action)
+    }
+
+    /** The sheet of [lessonId] as the catalog has it now, also when the filters hide it after a link opened it. */
+    fun details(lessonId: Long): SportCommonDetailsArgs? {
+        val lesson = lesson(lessonId) ?: return null
+        val clash = SportSignPresenter.clashingLesson(lesson, input?.timetable.orEmpty(), time.timeZone)
+        return lesson.toDetailsArgs().copy(clashSubject = clash?.subject?.trim(), clashStart = clash?.start?.format(DateTexts.TIME))
+    }
+
+    /** The lesson sheet asked for [action] on [lessonId]; see [SportLessonActions.runOffered]. */
+    fun onSheetAction(lessonId: Long, action: SportBookingAction) {
+        lesson(lessonId)?.let { actions.runOffered(it, action) }
+    }
+
+    /** `Встать в очередь` or `Выйти` in the prompt; [lateSign] is the switch of a real lesson's queue. */
+    /** Whether a request for [lessonId] is in flight: its sheet opens with the action disabled. */
+    fun isBusy(lessonId: Long): Boolean = lessonId in actions.busy.value
+
+    fun confirmPrompt(lateSign: Boolean) = actions.confirm(lateSign)
+
+    fun dismissPrompt() = actions.dismiss()
+
+    /** A shared link: its day is selected and its sheet opens once the catalog answers. */
+    fun openSharedLesson(lessonId: Long, predicted: Boolean) {
         viewModelScope.launch {
-            val event = sharedLessons.resolve(lessonId, predicted)
-            if (event is SportSignEvent.OpenLessonDetails) {
-                selectDate(event.lesson.start.toLocalDateTime(timeProvider.timeZone).date)
+            val event = when (val found = sharedLessons.resolve(lessonId, predicted)) {
+                is SportLinkedLesson.Found -> {
+                    selectDate(found.lesson.start.toLocalDateTime(time.timeZone).date)
+                    SportSignEvent.OpenLesson(found.lesson.lessonId)
+                }
+                SportLinkedLesson.Unavailable -> SportSignEvent.Notice(UiText.Res(SportStrings.sport_link_unavailable_text))
+                is SportLinkedLesson.Failed -> SportSignEvent.Notice(found.error.toUiText())
             }
             eventQueue.send(event)
         }
     }
 
-    /** The current state of the lesson a link opened, also when filters hide it from the list. */
-    fun linkedLesson(lessonId: Long): SportLesson? = sharedLessons.linkedLesson(lessonId, catalogLessons)
-
-    fun resetFilters() = filterController.reset()
-
-    fun nextWeek() = filterController.nextWeek()
-
-    fun prevWeek() = filterController.previousWeek()
-
-    fun showOnlyAvailable(show: Boolean) = filterController.showOnlyAvailable(show)
-
-    fun showOnlyFriends(show: Boolean) = filterController.showOnlyFriends(show)
-
-    fun showAutoSign(show: Boolean) = filterController.showAutoSign(show)
-
-    fun selectSports(names: Set<SectionName>) = filterController.selectSports(names)
-
-    fun selectBuilding(name: String?) = filterController.selectBuilding(name)
-
-    fun selectTeacher(name: String?) = filterController.selectTeacher(name)
-
-    fun selectTime(time: String?) = filterController.selectTime(time)
-
-    fun signUpForLesson(lesson: SportLesson) {
-        performLessonAction(lesson.lessonId, UiText.Res(SportStrings.sport_sign_success)) {
-            bookingDelegate.signIn(lesson)
-        }
+    /**
+     * The lesson [lessonId] names now. A prediction keeps its prototype's id, two weeks apart: the shown day's comes
+     * first, then the one a link opened, then any.
+     */
+    private fun lesson(lessonId: Long): SportLesson? {
+        val all = lessons.orEmpty()
+        val candidates = all.filter { it.lessonId == lessonId && it.end > time.now() }
+        return candidates.firstOrNull { it.start.toLocalDateTime(time.timeZone).date == filters.value.selectedDate }
+            ?: sharedLessons.linkedLesson(lessonId, all)
+            ?: candidates.firstOrNull()
     }
 
-    fun unSignForLesson(lesson: SportLesson) {
-        performLessonAction(lesson.lessonId, UiText.Res(SportStrings.sport_unsign_success)) {
-            bookingDelegate.signOut(lesson)
+    private fun state(sources: Sources, filters: SportSignFilters, open: Boolean, busy: Set<Long>): SportSignUiState {
+        val schedule = sources.schedule
+        schedule?.valueOrNull()?.let { lessons = it }
+        val loaded = lessons
+        val input = SportSignInput(
+            lessons = loaded.orEmpty(),
+            catalog = sources.catalog ?: EMPTY_CATALOG,
+            filters = filters,
+            pinned = sources.prefs.pinned,
+            busy = busy,
+            timetable = sources.days,
+            showTeacher = !sources.prefs.display.hideTeacherSelector,
+            showDayPart = !sources.prefs.display.hideTimeSelector,
+            now = time.now(),
+            today = time.today(),
+            zone = time.timeZone,
+        ).also { input = it }
+        val state = SportSignPresenter.present(input, open)
+        val error: AppError? = schedule?.errorOrNull()
+        val body = when {
+            loaded == null && error != null && !sources.running -> SportSignBody.Failed(error)
+            loaded == null -> SportSignBody.Loading
+            else -> (state.body as SportSignBody.Day).copy(refreshing = sources.byUser, partialError = error != null)
         }
-    }
-
-    /** A newer tap replaces a decision still waiting for the auto-sign limits. */
-    fun handleAutoSignClick(lesson: SportLesson) {
-        autoSignJob?.cancel()
-        autoSignJob = viewModelScope.launch { eventQueue.send(autoSignFlow.onClick(lesson).toEvent()) }
-    }
-
-    /** A confirmation while a command is in flight is ignored. */
-    fun executeAutoSignCommand(command: SportSignCommand, forceSign: Boolean = false) {
-        autoSignCommands.launch(Unit) {
-            val result = autoSignFlow.execute(command, forceSign)
-            if (result is AppResult.Failure) eventQueue.send(SportSignEvent.ShowError(result.error))
-        }
+        return state.copy(body = body)
     }
 
     private suspend fun refreshAll() {
         coroutineScope {
             awaitAll(
-                async { sportScheduleRepository.refreshSportFilters() },
-                async { sportScheduleRepository.refreshSportTimeSlots() },
-                async { sportScheduleRepository.refreshSportSchedule() },
-                async { sportDataRepository.refreshSportQueueEntries() },
-                async { sportDataRepository.refreshSportQueues() },
-                async { sportDataRepository.refreshFriendsBookings() }
+                async { scheduleRepository.refreshSportFilters() },
+                async { scheduleRepository.refreshSportTimeSlots() },
+                async { scheduleRepository.refreshSportSchedule() },
+                async { dataRepository.refreshSportQueueEntries() },
+                async { dataRepository.refreshSportQueues() },
+                async { dataRepository.refreshFriendsBookings() },
             )
         }
     }
@@ -181,93 +271,19 @@ class SportSignViewModel(
         }
     }
 
-    /**
-     * Booking actions mark only their own lesson as busy instead of refreshing: a screen-wide loading state would
-     * hide the list the user is working with and still leave the tapped button clickable. A second tap on a busy
-     * lesson sends nothing.
-     */
-    private fun performLessonAction(lessonId: Long, successMessage: UiText, action: suspend () -> AppResult<Unit>) {
-        busyLessons.launch(lessonId) {
-            val event = when (val result = action()) {
-                is AppResult.Success -> SportSignEvent.ShowToast(successMessage)
-                is AppResult.Failure -> SportSignEvent.ShowError(result.error)
-            }
-            eventQueue.send(event)
-        }
-    }
-
-    private fun SportAutoSignDecision.toEvent(): SportSignEvent = when (this) {
-        SportAutoSignDecision.ServicesDisabled ->
-            SportSignEvent.ShowInfoDialog(message = UiText.Res(SportStrings.sport_community_services_disabled))
-        is SportAutoSignDecision.LeaveQueue -> SportSignEvent.ShowAutoSignDeleteDialog(
-            message = UiText.Res(SportStrings.sport_auto_sign_existing_entry, listOf(position, total)),
-            command = command
-        )
-        is SportAutoSignDecision.ConfirmFreeSign -> SportSignEvent.ShowAutoSignConfirmDialog(
-            title = UiText.Res(SportStrings.sport_auto_sign_title),
-            message = UiText.Res(SportStrings.sport_auto_sign_free_description),
-            showForceSignButton = true,
-            command = command
-        )
-        is SportAutoSignDecision.ConfirmAutoSign -> SportSignEvent.ShowAutoSignConfirmDialog(
-            title = UiText.Res(SportStrings.sport_auto_sign_title),
-            message = UiText.Res(SportStrings.sport_auto_sign_future_description),
-            showForceSignButton = false,
-            command = command
-        )
-        is SportAutoSignDecision.DayTaken -> SportSignEvent.ShowInfoDialog(
-            message = UiText.Res(SportStrings.sport_auto_sign_existing_day, listOf(section, teacher))
-        )
-        is SportAutoSignDecision.LimitReached -> SportSignEvent.ShowInfoDialog(
-            message = UiText.Res(SportStrings.sport_auto_sign_limit_reached, listOf(nextAvailable))
-        )
-        is SportAutoSignDecision.Failed -> SportSignEvent.ShowError(error)
-    }
-
-    private fun toContentState(
-        filtersState: AppResult<SportFilterCatalog>?,
-        timeSlotsState: AppResult<List<SportTimeSlot>>?,
-        scheduleState: LoadState<List<SportLesson>>?,
-        refreshing: Boolean,
-        byUser: Boolean,
-        userFilters: SportSignFilters
-    ): SportSignUiState {
-        val filters = filtersState?.valueOrNull()
-        val timeSlots = timeSlotsState?.valueOrNull()
-        val lessons = scheduleState?.valueOrNull()
-        lessons?.let { catalogLessons = it }
-        val errors = listOfNotNull(
-            filtersState?.errorOrNull(),
-            timeSlotsState?.errorOrNull(),
-            scheduleState?.errorOrNull()
-        )
-
-        if (lessons != null && filters != null && timeSlots != null) {
-            return stateFactory.create(lessons, filters, timeSlots, userFilters, hasPartialError = errors.isNotEmpty())
-                .copy(refreshing = byUser)
-                .also { lastContent = it }
-        }
-        val previous = lastContent
-        return when {
-            // Sources that failed keep the last content on screen with a snackbar.
-            refreshing && previous != null -> previous.copy(refreshing = byUser)
-            // The calendar is deterministic: it shows at once over a placeholder list.
-            refreshing -> stateFactory.create(
-                lessons = emptyList(),
-                catalog = filters ?: EMPTY_CATALOG,
-                timeSlots = timeSlots.orEmpty(),
-                userFilters = userFilters,
-                hasPartialError = false
-            ).copy(initialLoading = true)
-            previous != null -> previous.copy(hasPartialError = true, refreshing = false)
-            errors.isNotEmpty() -> SportSignUiState.Error(errors.first())
-            // Nothing answered and nothing running: the screen has not started loading yet.
-            else -> SportSignUiState.Loading
-        }
-    }
-
     /** Null until the source answers for the first time. */
-    private fun <T> Flow<T>.unansweredFirst(): Flow<T?> = map<T, T?> { it }.onStart { emit(null) }
+    private fun <T> Flow<LoadState<T>>.answered(): Flow<LoadState<T>?> = map<LoadState<T>, LoadState<T>?> { it }.onStart { emit(null) }
+
+    private class Prefs(val pinned: Set<SectionName>, val display: SportSignDisplayOptions)
+
+    private class Sources(
+        val schedule: LoadState<List<SportLesson>>?,
+        val catalog: SportFilterCatalog?,
+        val days: List<LessonDay>,
+        val prefs: Prefs,
+        val running: Boolean,
+        val byUser: Boolean,
+    )
 
     private companion object {
         val EMPTY_CATALOG = SportFilterCatalog(emptyList(), emptyList(), emptyList(), emptyList())

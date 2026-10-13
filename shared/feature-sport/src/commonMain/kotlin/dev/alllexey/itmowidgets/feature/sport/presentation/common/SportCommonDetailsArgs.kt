@@ -34,7 +34,14 @@ data class SportCommonDetailsArgs(
     val mapAddress: String?,
     val registrationStatus: SportRegistrationStatus,
     /** For a predicted lesson, the catalog lesson it repeats; a shared link names the prediction by it. */
-    val prototypeLessonId: Long? = null
+    val prototypeLessonId: Long? = null,
+    /** The own lesson this one clashes with (`Алгоритмы`) and its start (`08:20`), when the timetable cache has it. */
+    val clashSubject: String? = null,
+    val clashStart: String? = null,
+    /** How many are waiting in the lesson's free or forecast queue; null when unknown. */
+    val queueTotal: Int? = null,
+    /** MyITMO's lesson type id and level, which name the kind (`Свободное`). */
+    val lessonLevel: Int = 0,
 ) {
     fun toJson(): String = DetailsJson.encodeToString(serializer(), this)
 
@@ -105,7 +112,9 @@ fun SportCommon.toDetailsArgs(): SportCommonDetailsArgs {
         limit = lesson?.limit,
         mapAddress = extractBuildingAddress(),
         registrationStatus = SportRegistrationStatus.from(signed, signEntry),
-        prototypeLessonId = prototypeLessonId()
+        prototypeLessonId = prototypeLessonId(),
+        queueTotal = lesson?.signQueue?.total,
+        lessonLevel = lessonLevel,
     )
 }
 

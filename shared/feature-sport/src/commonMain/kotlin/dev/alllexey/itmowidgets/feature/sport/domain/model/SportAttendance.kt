@@ -14,5 +14,9 @@ data class SportAttendance(
     val score: Int,
     val dateTime: Instant,
     // can be false even if type = "competition", lol
-    val isCompetition: Boolean
+    val isCompetition: Boolean,
+    /** The competition's name; absent for ordinary lessons. */
+    val competitionName: String? = null,
+    /** The competition's result or place (`2 место`); absent for ordinary lessons. */
+    val place: String? = null
 )

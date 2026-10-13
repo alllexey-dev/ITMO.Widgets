@@ -92,6 +92,18 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** «Мои секции» of the Спорт tab: the pinned sections, their next lessons and the queue limit. */
+    @Serializable
+    data object SportSections : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
+    /** «Откуда баллы»: the sport points' formula, the bonus cap and My ITMO's history of awards. */
+    @Serializable
+    data object SportPoints : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
     /** The bell's sheet over Сегодня: scores, schedule changes, queue results and friend requests. */
     @Serializable
     data object Bell : AppRoute {
@@ -227,6 +239,8 @@ object AppRoutes {
         subclass(UserProfile::class)
         subclass(UserSchedule::class)
         subclass(UserSport::class)
+        subclass(SportSections::class)
+        subclass(SportPoints::class)
         subclass(Bell::class)
         subclass(QrPass::class)
         subclass(MyItmoWeb::class)

@@ -44,17 +44,19 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
+import dev.alllexey.itmowidgets.feature.sport.ui.SportDetailsSubmission
 import dev.alllexey.itmowidgets.feature.sport.ui.SportHostActions
+import dev.alllexey.itmowidgets.feature.sport.ui.SportLessonSheet
+import dev.alllexey.itmowidgets.feature.sport.ui.SportLessonSheetActions
+import dev.alllexey.itmowidgets.feature.sport.ui.SportPointsRoute
 import dev.alllexey.itmowidgets.feature.sport.ui.SportRoute
+import dev.alllexey.itmowidgets.feature.sport.ui.SportSectionsRoute
 import dev.alllexey.itmowidgets.feature.sport.ui.SportSharedLesson
+import dev.alllexey.itmowidgets.feature.sport.ui.SportSheetAction
+import dev.alllexey.itmowidgets.feature.sport.ui.SportTab
 import dev.alllexey.itmowidgets.feature.sport.ui.common.openSportMap
 import dev.alllexey.itmowidgets.feature.sport.ui.common.openSportMapOrSay
 import dev.alllexey.itmowidgets.feature.sport.ui.common.shareSportLesson
-import dev.alllexey.itmowidgets.feature.sport.ui.common.showTemplateLessonNotice
-import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsActions
-import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsSheet
-import dev.alllexey.itmowidgets.feature.sport.ui.details.SportDetailsSubmission
-import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportSheetAction
 import dev.alllexey.itmowidgets.feature.sport.ui.user.UserSportRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -65,10 +67,10 @@ import kotlinx.datetime.LocalTime
 import org.koin.core.parameter.parametersOf
 
 /**
- * The sport keys: another user's sport, the details sheet of a
- * lesson or a booking and the question before a cancellation the shell asks. The sheet's booking action goes where
- * its [SportRoutes.SportCommonDetails.replyTo] says: to the sport page that opened it on the result bus, or, for a
- * sheet the [SportDetailsRedirect] opened from the feed or the schedule, to the shell's own question.
+ * The sport keys: «Мои секции», «Откуда баллы», another user's sport, the lesson sheet of a lesson or a booking and
+ * the question before a cancellation the shell asks. The sheet's booking action goes where its
+ * [SportRoutes.SportCommonDetails.replyTo] says: to the part of the tab or «Мои секции» that opened it on the result
+ * bus, or, for a sheet the [SportDetailsRedirect] opened from the feed or the schedule, to the shell's own question.
  */
 internal fun EntryRegistry.Builder.sportEntries() {
     entry<AppRoutes.UserSport>(
@@ -76,20 +78,19 @@ internal fun EntryRegistry.Builder.sportEntries() {
     ) { key, navigator ->
         UserSportEntry(onBack = { navigator.close(key) })
     }
+    entry<AppRoutes.SportSections> { key, navigator -> SportSectionsEntry(navigator, onBack = { navigator.close(key) }) }
+    entry<AppRoutes.SportPoints> { key, navigator -> SportPointsRoute(entryViewModel(), onBack = { navigator.close(key) }) }
     entry<SportRoutes.SportCommonDetails> { key, navigator -> SportDetailsEntry(key, navigator) }
     entry<AppRoutes.CancelBookingConfirm> { key, navigator -> CancelBookingEntry(key, onClose = { navigator.close(key) }) }
 }
 
 /**
- * The sport tab's root: `SportRoute` with both page ViewModels in the root's own store, so `Запись`
- * keeps its week and filters across tab switches. A [TabRequest.SportLesson] (a shared link, a sport notification)
- * opens its lesson on `Запись` once; the pages' details sheets reply on their own result keys, so a sheet's result
- * reaches the page that opened it.
+ * The sport tab's root: `SportRoute` with both ViewModels in the root's own store, so «Запись» keeps its week and
+ * filters across tab switches. A [TabRequest.SportLesson] (a shared link, a sport notification) opens its lesson on
+ * «Запись» once; the lesson sheets reply on the result key of the part that opened them.
  */
 @Composable
 internal fun SportTabRoot(navigator: Nav3AppNavigator) {
-    val context = LocalContext.current
-    val time = remember(context) { KoinStarter.ensureStarted(context).get<AcademicTimeProvider>() }
     val myViewModel: SportMyViewModel = entryViewModel()
     val signViewModel: SportSignViewModel = entryViewModel()
     val sharedLessons = remember { Channel<SportSharedLesson>(Channel.UNLIMITED) }
@@ -105,22 +106,38 @@ internal fun SportTabRoot(navigator: Nav3AppNavigator) {
     ResultEffect<SportSheetAction>(SportDetailsOpener.MY.resultKey) { mySheetActions.trySend(it) }
     ResultEffect<SportSheetAction>(SportDetailsOpener.SIGN.resultKey) { signSheetActions.trySend(it) }
 
-    val host = remember(navigator, context) {
+    val host = remember(navigator) {
         SportHostActions(
-            onOpenBooking = { booking -> navigator.open(SportRoutes.details(booking, SportDetailsOpener.MY)) },
-            onOpenLesson = { lesson, busy -> navigator.open(SportRoutes.details(lesson, SportDetailsOpener.SIGN, busy)) },
-            onOpenMap = { booking -> booking.extractBuildingAddress()?.let { context.openSportMap(it) } },
-            onTemplateLesson = { context.showTemplateLessonNotice() },
+            onOpenLesson = { details, from, busy ->
+                val opener = if (from == SportTab.MY) SportDetailsOpener.MY else SportDetailsOpener.SIGN
+                navigator.open(SportRoutes.details(details, opener, busy))
+            },
+            onOpenSections = { navigator.open(AppRoutes.SportSections) },
+            onOpenPoints = { navigator.open(AppRoutes.SportPoints) },
         )
     }
     SportRoute(
-        time = time,
+        title = stringResource(R.string.title_sport),
+        myViewModel = myViewModel,
+        signViewModel = signViewModel,
         host = host,
         sharedLessons = remember(sharedLessons) { sharedLessons.receiveAsFlow() },
         mySheetActions = remember(mySheetActions) { mySheetActions.receiveAsFlow() },
         signSheetActions = remember(signSheetActions) { signSheetActions.receiveAsFlow() },
-        myViewModel = myViewModel,
-        signViewModel = signViewModel,
+    )
+}
+
+/** «Мои секции»: its lessons' sheets reply on its own result key; `Мои записи` of the limit gate goes back to Спорт. */
+@Composable
+private fun SportSectionsEntry(navigator: Nav3AppNavigator, onBack: () -> Unit) {
+    val sheetActions = remember { Channel<SportSheetAction>(Channel.UNLIMITED) }
+    ResultEffect<SportSheetAction>(SportDetailsOpener.SECTIONS.resultKey) { sheetActions.trySend(it) }
+    SportSectionsRoute(
+        viewModel = entryViewModel(),
+        onBack = onBack,
+        onOpenLesson = { details, busy -> navigator.open(SportRoutes.details(details, SportDetailsOpener.SECTIONS, busy)) },
+        onOpenBookings = onBack,
+        sheetActions = remember(sheetActions) { sheetActions.receiveAsFlow() },
     )
 }
 
@@ -205,9 +222,9 @@ private fun UserSportEntry(onBack: () -> Unit) {
 }
 
 /**
- * The details sheet, its body on a `surfaceContainerLowest`
- * background: whether its action was sent survives recreation, the action goes to the opener and closes the sheet,
- * a profile opens in the sheet's place, sharing and the map stay on this activity.
+ * The lesson sheet, its body on a `surfaceContainerLow` background: whether its action was sent survives recreation,
+ * the action goes to the opener and closes the sheet, a profile opens in the sheet's place, sharing and the map stay
+ * on this activity.
  */
 @Composable
 private fun SportDetailsEntry(key: SportRoutes.SportCommonDetails, navigator: Nav3AppNavigator) {
@@ -219,7 +236,7 @@ private fun SportDetailsEntry(key: SportRoutes.SportCommonDetails, navigator: Na
     val submission = rememberSaveable(saver = SubmissionSaver) { SportDetailsSubmission() }
     val item = key.item
     val actions = remember(key, navigator, results, redirect) {
-        SportDetailsActions(
+        SportLessonSheetActions(
             onAction = { action ->
                 when (key.replyTo) {
                     SportDetailsOpener.SHELL -> redirect.onAction(navigator, item.lessonId, action.name)
@@ -236,9 +253,9 @@ private fun SportDetailsEntry(key: SportRoutes.SportCommonDetails, navigator: Na
     Box(
         Modifier
             .fillMaxSize()
-            .background(ItmoTheme.colorScheme.surfaceContainerLowest),
+            .background(ItmoTheme.colorScheme.surfaceContainerLow),
     ) {
-        SportDetailsSheet(
+        SportLessonSheet(
             item = item,
             time = time,
             submission = submission,

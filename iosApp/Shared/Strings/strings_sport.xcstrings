@@ -97,6 +97,54 @@
         }
       }
     },
+    "sport_action_cancel" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить запись"
+          }
+        }
+      }
+    },
+    "sport_action_leave_queue" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти из очереди"
+          }
+        }
+      }
+    },
+    "sport_action_queue" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встать в очередь"
+          }
+        }
+      }
+    },
+    "sport_action_sign" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записаться"
+          }
+        }
+      }
+    },
     "sport_any_building" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -416,7 +464,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Занятия можно выбрать в расписании спорта."
+            "value" : "Запишитесь на занятие, а если мест нет — встаньте в очередь"
           }
         }
       }
@@ -428,7 +476,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Записей пока нет"
+            "value" : "Записей нет"
           }
         }
       }
@@ -440,7 +488,19 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Открыть расписание"
+            "value" : "Найти занятие"
+          }
+        }
+      }
+    },
+    "sport_bookings_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мои записи"
           }
         }
       }
@@ -489,6 +549,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, сегодня"
+          }
+        }
+      }
+    },
+    "sport_cancel_queue_action" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти из очереди"
+          }
+        }
+      }
+    },
+    "sport_cancel_queue_question" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти из очереди на это занятие?"
           }
         }
       }
@@ -647,6 +731,126 @@
         }
       }
     },
+    "sport_check_clash_allowed" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пересечение с парой записи не мешает"
+          }
+        }
+      }
+    },
+    "sport_check_no_clash" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет пересечений с парами"
+          }
+        }
+      }
+    },
+    "sport_check_prediction" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запишем, когда занятие опубликуют"
+          }
+        }
+      }
+    },
+    "sport_check_queue_closes" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очередь закроется в %1$@"
+          }
+        }
+      }
+    },
+    "sport_check_queue_late" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очередь закрылась за час до начала"
+          }
+        }
+      }
+    },
+    "sport_chip_evening" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вечер"
+          }
+        }
+      }
+    },
+    "sport_chip_free" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Есть места"
+          }
+        }
+      }
+    },
+    "sport_chip_friends" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья"
+          }
+        }
+      }
+    },
+    "sport_chip_morning" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утро"
+          }
+        }
+      }
+    },
+    "sport_chip_pinned" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мои секции"
+          }
+        }
+      }
+    },
     "sport_community_services_disabled" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -683,6 +887,126 @@
         }
       }
     },
+    "sport_day_count_filtered" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "sport_day_empty_next" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ближайшие — %1$@"
+          }
+        }
+      }
+    },
+    "sport_day_empty_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В этот день занятий нет"
+          }
+        }
+      }
+    },
+    "sport_day_filtered_text" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "В этот день %1$lld занятия, но фильтры их скрыли"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "В этот день %1$lld занятий, но фильтры их скрыли"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "В этот день %1$lld занятие, но фильтры его скрыли"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "В этот день %1$lld занятия, но фильтры их скрыли"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sport_day_filtered_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По фильтрам занятий нет"
+          }
+        }
+      }
+    },
+    "sport_day_show" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать ближайшие"
+          }
+        }
+      }
+    },
+    "sport_day_today" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сегодня, %1$@"
+          }
+        }
+      }
+    },
+    "sport_day_tomorrow" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завтра, %1$@"
+          }
+        }
+      }
+    },
     "sport_details_comment_title" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -691,6 +1015,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "О занятии"
+          }
+        }
+      }
+    },
+    "sport_filter_all" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все"
+          }
+        }
+      }
+    },
+    "sport_filter_any_teacher" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Любой"
           }
         }
       }
@@ -739,6 +1087,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Друзья"
+          }
+        }
+      }
+    },
+    "sport_filter_only_free" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Только где есть места"
+          }
+        }
+      }
+    },
+    "sport_filter_only_friends" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Где записаны друзья"
+          }
+        }
+      }
+    },
+    "sport_filter_only_pinned" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Только мои секции"
           }
         }
       }
@@ -803,6 +1187,102 @@
         }
       }
     },
+    "sport_filters_hidden" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Фильтры скрыли %1$lld занятия"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Фильтры скрыли %1$lld занятий"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Фильтры скрыли %1$lld занятие"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Фильтры скрыли %1$lld занятия"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sport_filters_reset_all" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить фильтры"
+          }
+        }
+      }
+    },
+    "sport_filters_show" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Показать %1$lld занятия"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Показать %1$lld занятий"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Показать %1$lld занятие"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Показать %1$lld занятия"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sport_filters_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фильтры"
+          }
+        }
+      }
+    },
     "sport_free_sign_switch" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -827,6 +1307,18 @@
         }
       }
     },
+    "sport_friend_queued" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в очереди %1$lld из %2$lld"
+          }
+        }
+      }
+    },
     "sport_friend_signed" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -835,6 +1327,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Записан"
+          }
+        }
+      }
+    },
+    "sport_friend_signed_short" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "записан"
           }
         }
       }
@@ -859,6 +1363,138 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пересекается с другим занятием"
+          }
+        }
+      }
+    },
+    "sport_join_full_step_1" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сейчас мест нет: занято %1$lld из %2$lld."
+          }
+        }
+      }
+    },
+    "sport_join_full_step_1_plain" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сейчас мест нет."
+          }
+        }
+      }
+    },
+    "sport_join_full_step_2" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кто-то отпишется — приложение само запишет вас в My ITMO."
+          }
+        }
+      }
+    },
+    "sport_join_full_step_3" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Придёт уведомление. Не вышло до %1$@ — очередь закроется."
+          }
+        }
+      }
+    },
+    "sport_join_future_step_1" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Занятия ещё нет в My ITMO: его публикуют примерно за неделю."
+          }
+        }
+      }
+    },
+    "sport_join_future_step_2" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как только появится — запишем вас первыми, если есть места."
+          }
+        }
+      }
+    },
+    "sport_join_future_step_3" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мест не хватит — останетесь в очереди, как на полное занятие."
+          }
+        }
+      }
+    },
+    "sport_join_late" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пытаться до самого начала"
+          }
+        }
+      }
+    },
+    "sport_join_late_hint" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До %1$@, а не до %2$@"
+          }
+        }
+      }
+    },
+    "sport_join_later" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сейчас"
+          }
+        }
+      }
+    },
+    "sport_join_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встать в очередь?"
           }
         }
       }
@@ -959,6 +1595,18 @@
         }
       }
     },
+    "sport_lesson_gone" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Занятие уже недоступно"
+          }
+        }
+      }
+    },
     "sport_lesson_intermediate_section" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -991,6 +1639,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Прогноз"
+          }
+        }
+      }
+    },
+    "sport_lesson_sheet_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Занятие"
           }
         }
       }
@@ -1079,6 +1739,42 @@
         }
       }
     },
+    "sport_lessons_count" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld занятия"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld занятий"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld занятие"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld занятия"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "sport_lessons_empty_description" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -1147,6 +1843,294 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Следующая неделя"
+          }
+        }
+      }
+    },
+    "sport_occupancy" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "sport_part_any" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Любое"
+          }
+        }
+      }
+    },
+    "sport_part_day" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "День"
+          }
+        }
+      }
+    },
+    "sport_part_evening" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вечер"
+          }
+        }
+      }
+    },
+    "sport_part_morning" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утро"
+          }
+        }
+      }
+    },
+    "sport_pill_booked" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "записаны"
+          }
+        }
+      }
+    },
+    "sport_place_online" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "онлайн"
+          }
+        }
+      }
+    },
+    "sport_points_all" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все"
+          }
+        }
+      }
+    },
+    "sport_points_bonus_chip" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бонусы"
+          }
+        }
+      }
+    },
+    "sport_points_cap_text" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Соревнования и нормативы дают бонусы, но в зачёт идут не больше 40. Посещения не ограничены."
+          }
+        }
+      }
+    },
+    "sport_points_cap_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бонусы в зачёт"
+          }
+        }
+      }
+    },
+    "sport_points_cap_value" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "sport_points_done_text" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дальше можно ходить для себя: баллы сверх 100 в зачёт не нужны"
+          }
+        }
+      }
+    },
+    "sport_points_done_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зачёт набран %1$@"
+          }
+        }
+      }
+    },
+    "sport_points_empty" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наград пока нет"
+          }
+        }
+      }
+    },
+    "sport_points_history" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История"
+          }
+        }
+      }
+    },
+    "sport_points_status_done" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "зачёт"
+          }
+        }
+      }
+    },
+    "sport_points_status_left" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ещё %1$lld"
+          }
+        }
+      }
+    },
+    "sport_points_subtitle" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "из My ITMO"
+          }
+        }
+      }
+    },
+    "sport_points_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откуда баллы"
+          }
+        }
+      }
+    },
+    "sport_points_visits" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld посещения"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld посещений"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld посещение"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld посещения"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sport_points_visits_chip" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Посещения"
           }
         }
       }
@@ -1235,6 +2219,18 @@
         }
       }
     },
+    "sport_queue_joined" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы в очереди"
+          }
+        }
+      }
+    },
     "sport_queue_last_request" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -1247,6 +2243,54 @@
         }
       }
     },
+    "sport_queue_leave_message" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы в очереди: %1$lld из %2$lld. Выйти из неё?"
+          }
+        }
+      }
+    },
+    "sport_queue_left" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы вышли из очереди"
+          }
+        }
+      }
+    },
+    "sport_queue_limit_left" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Осталось очередей: %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "sport_queue_pill" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "очередь"
+          }
+        }
+      }
+    },
     "sport_queue_place" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -1255,6 +2299,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Место в очереди"
+          }
+        }
+      }
+    },
+    "sport_queue_position" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "очередь %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "sport_queue_unpublished" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ждём расписание"
           }
         }
       }
@@ -1303,6 +2371,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Отправили запрос на запись"
+          }
+        }
+      }
+    },
+    "sport_repeat_clash" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "С %1$@ в это время у вас %2$@"
+          }
+        }
+      }
+    },
+    "sport_repeat_clash_until" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "С %1$@ в это время у вас %2$@ — повторим до %3$@"
+          }
+        }
+      }
+    },
+    "sport_repeat_next" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дальше встанем в очередь сами"
+          }
+        }
+      }
+    },
+    "sport_repeat_off" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@"
+          }
+        }
+      }
+    },
+    "sport_repeat_on" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, раз в две недели"
+          }
+        }
+      }
+    },
+    "sport_repeat_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очередь через неделю"
+          }
+        }
+      }
+    },
+    "sport_row_clash" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пара: %1$@"
+          }
+        }
+      }
+    },
+    "sport_row_clash_unknown" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пересекается с парой"
+          }
+        }
+      }
+    },
+    "sport_row_queue" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В очередь"
           }
         }
       }
@@ -1487,6 +2663,42 @@
         }
       }
     },
+    "sport_score_done" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "зачёт набран"
+          }
+        }
+      }
+    },
+    "sport_score_formula" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "посещения %1$lld, бонусы %2$lld"
+          }
+        }
+      }
+    },
+    "sport_score_of" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "из 100"
+          }
+        }
+      }
+    },
     "sport_score_passed_status" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -1499,6 +2711,18 @@
         }
       }
     },
+    "sport_score_remaining" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "до зачёта ещё %1$lld"
+          }
+        }
+      }
+    },
     "sport_score_title" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -1507,6 +2731,376 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Баллы за семестр"
+          }
+        }
+      }
+    },
+    "sport_search_clear" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить поиск"
+          }
+        }
+      }
+    },
+    "sport_search_hint" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вид спорта или преподаватель"
+          }
+        }
+      }
+    },
+    "sport_seats_free" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "места свободны"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "мест свободно"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "место свободно"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "места свободны"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sport_seats_none" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "мест нет"
+          }
+        }
+      }
+    },
+    "sport_seats_taken" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "занято %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "sport_sections_add" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрепить секцию"
+          }
+        }
+      }
+    },
+    "sport_sections_empty_text" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрепите секции, куда ходите: здесь будут их ближайшие занятия"
+          }
+        }
+      }
+    },
+    "sport_sections_empty_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секции не закреплены"
+          }
+        }
+      }
+    },
+    "sport_sections_entry_empty" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрепите свои секции"
+          }
+        }
+      }
+    },
+    "sport_sections_limit" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "очереди за 30 дней: %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "sport_sections_limit_fix" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мои записи"
+          }
+        }
+      }
+    },
+    "sport_sections_limit_reason" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заняты все %1$lld очереди. Лимит обновится %2$@, или выйдите из другой очереди."
+          }
+        }
+      }
+    },
+    "sport_sections_limit_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новая очередь не включится"
+          }
+        }
+      }
+    },
+    "sport_sections_note" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание пар повторяется раз в две недели, поэтому очередь встаёт на то же занятие через неделю, как только оно появится в My ITMO. Каждая дата — одна очередь из лимита."
+          }
+        }
+      }
+    },
+    "sport_sections_pick" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать секции"
+          }
+        }
+      }
+    },
+    "sport_sections_picker_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секции"
+          }
+        }
+      }
+    },
+    "sport_sections_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мои секции"
+          }
+        }
+      }
+    },
+    "sport_sections_unpin" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открепить"
+          }
+        }
+      }
+    },
+    "sport_sheet_booked_note" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Занятие уже в вашем расписании"
+          }
+        }
+      }
+    },
+    "sport_sheet_clash" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пересекается с парой %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "sport_sheet_clash_unknown" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пересекается с парой"
+          }
+        }
+      }
+    },
+    "sport_sheet_comment" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Комментарий преподавателя"
+          }
+        }
+      }
+    },
+    "sport_sheet_conditions" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Условия"
+          }
+        }
+      }
+    },
+    "sport_sheet_future_note" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Занятие появится в My ITMO примерно за неделю — запишем сами"
+          }
+        }
+      }
+    },
+    "sport_sheet_queue_note" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место освободится — запишем сами"
+          }
+        }
+      }
+    },
+    "sport_sheet_queue_note_waiting" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В очереди уже %1$lld. Место освободится — запишем сами"
+          }
+        }
+      }
+    },
+    "sport_sheet_share" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться"
+          }
+        }
+      }
+    },
+    "sport_sheet_where" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Где и с кем"
           }
         }
       }
@@ -1571,6 +3165,30 @@
         }
       }
     },
+    "sport_tab_my" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Моё"
+          }
+        }
+      }
+    },
+    "sport_tab_sign" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запись"
+          }
+        }
+      }
+    },
     "sport_unsign_success" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -1579,6 +3197,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Запись отменена"
+          }
+        }
+      }
+    },
+    "sport_week_day_description" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
           }
         }
       }
