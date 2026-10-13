@@ -360,28 +360,30 @@ private struct SubjectLinkRowView: View {
 
     var body: some View {
         HStack(spacing: ItmoSpacing.content) {
-            Button { actions.openLink(row.url) } label: {
-                HStack(spacing: ItmoSpacing.content) {
-                    ItmoIconTile(symbol: row.icon.symbol, tone: chat ? .primary : .neutral, size: 30)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: row.title).font(.itmo(.bodyLarge)).foregroundStyle(Color.primary).lineLimit(1)
-                        Text(verbatim: row.line.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary).lineLimit(1)
-                        if row.own {
-                            HStack(spacing: 6) {
-                                ItmoStatusPill(pill: ItmoPill(text: AppStrings.string("subject_link_mine")))
-                                if let status = row.status {
-                                    ItmoStatusPill(pill: ItmoPill(text: status.resolved, tone: row.statusTone.kit))
-                                }
+            HStack(spacing: ItmoSpacing.content) {
+                ItmoIconTile(symbol: row.icon.symbol, tone: chat ? .primary : .neutral, size: 30)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: row.title).font(.itmo(.bodyLarge)).foregroundStyle(Color.primary).lineLimit(1)
+                    Text(verbatim: row.line.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary).lineLimit(1)
+                    if row.own {
+                        HStack(spacing: 6) {
+                            ItmoStatusPill(pill: ItmoPill(text: AppStrings.string("subject_link_mine")))
+                            if let status = row.status {
+                                ItmoStatusPill(pill: ItmoPill(text: status.resolved, tone: row.statusTone.kit))
                             }
-                            .padding(.top, 2)
                         }
+                        .padding(.top, 2)
                     }
-                    Spacer(minLength: 0)
                 }
-                .contentShape(.rect)
+                Spacer(minLength: 0)
             }
-            .buttonStyle(.plain)
-            .simultaneousGesture(LongPressGesture().onEnded { _ in actions.linkActions(links, row.id) })
+            .contentShape(.rect)
+            // A long press opens the actions without also opening the link.
+            .onTapGesture { actions.openLink(row.url) }
+            .onLongPressGesture { actions.linkActions(links, row.id) }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { actions.openLink(row.url) }
             .accessibilityAction(named: Text(verbatim: AppStrings.string("subject_link_more"))) {
                 actions.linkActions(links, row.id)
             }

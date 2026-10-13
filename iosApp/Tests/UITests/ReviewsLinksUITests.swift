@@ -45,7 +45,7 @@ final class ReviewsLinksUITests: XCTestCase {
 
         // An own link: its actions on a long press, then the editor in their place.
         let own = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", Self.ownLink)).firstMatch
-        for _ in 0..<4 where !own.isHittable { element(app, "subject.list").swipeUp(velocity: .slow) }
+        for _ in 0..<4 where !own.isHittable { element(app, "recordbook.subject").swipeUp(velocity: .slow) }
         XCTAssertTrue(own.waitForExistence(timeout: stepTimeout))
         own.press(forDuration: 1.2)
         let actions = element(app, "resources.linkActions")
@@ -190,10 +190,12 @@ final class ReviewsLinksUITests: XCTestCase {
     private func openAlgorithms(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
         app.selectTab("recordbook")
-        XCTAssertTrue(element(app, "recordbook.list").waitForExistence(timeout: rootTimeout), "the list never loaded")
-        let row = element(app, "recordbook.row.\(Self.algorithms)")
+        XCTAssertTrue(element(app, "shell.root.recordbook").waitForExistence(timeout: rootTimeout), "the list never loaded")
+        let row = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "recordbook.row.\(Self.algorithms)")
+        ).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
-        if !row.isHittable { element(app, "recordbook.list").swipeUp() }
+        if !row.isHittable { element(app, "shell.root.recordbook").swipeUp() }
         row.tap()
         XCTAssertTrue(element(app, "recordbook.subject").waitForExistence(timeout: stepTimeout))
         app.buttons[Self.materialsTab].firstMatch.tap()

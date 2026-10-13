@@ -37,7 +37,7 @@ final class RecordbookUITests: XCTestCase {
         openRecordbook(app)
         let row = subjectRow(app, Self.algorithms)
         XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
-        if !row.isHittable { element(app, "recordbook.list").swipeUp() }
+        if !row.isHittable { element(app, "shell.root.recordbook").swipeUp() }
         row.tap()
 
         XCTAssertTrue(element(app, "recordbook.subject").waitForExistence(timeout: stepTimeout))
@@ -62,7 +62,7 @@ final class RecordbookUITests: XCTestCase {
 
         app.navigationBars.buttons.element(boundBy: 0).tap()
         XCTAssertTrue(waitForAbsence(element(app, "recordbook.subject")), "back to the list")
-        XCTAssertTrue(element(app, "recordbook.list").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "shell.root.recordbook").waitForExistence(timeout: stepTimeout))
     }
 
     func testTheListAtAccessibilityTextSize() {
@@ -70,7 +70,7 @@ final class RecordbookUITests: XCTestCase {
         let app = XCUIApplication.itmo(arguments: ax1)
         app.launch()
         openRecordbook(app)
-        let list = element(app, "recordbook.list")
+        let list = element(app, "shell.root.recordbook")
         XCTAssertTrue(subjectRow(app, Self.algorithms).waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "list-ax1")
 
@@ -88,7 +88,7 @@ final class RecordbookUITests: XCTestCase {
     // MARK: Helpers
 
     /// `DemoStudy.ALGORITHMS` (the current semester, with the connected sheet) and the first semester's programming
-    /// (`DemoRecordbook.FIRST_SEMESTER`); a row's id is the discipline's tenfold plus the semester.
+    /// (`DemoRecordbook.FIRST_SEMESTER`); a row's id begins with the discipline's tenfold plus the semester.
     private static let algorithms = 990_203
     private static let programming = 990_401
     private static let subjectRowPrefix = "recordbook.row.99"
@@ -106,12 +106,13 @@ final class RecordbookUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
         app.selectTab("recordbook")
         XCTAssertTrue(element(app, "shell.root.recordbook").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, "recordbook.list").waitForExistence(timeout: rootTimeout), "the list never loaded")
+        XCTAssertTrue(element(app, "shell.root.recordbook").waitForExistence(timeout: rootTimeout), "the list never loaded")
     }
 
     /// The list row of the discipline `id` in whichever semester the demo shows.
     private func subjectRow(_ app: XCUIApplication, _ id: Int) -> XCUIElement {
-        element(app, "recordbook.row.\(id)")
+        app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "recordbook.row.\(id)"))
+            .firstMatch
     }
 
     private func labelled(_ app: XCUIApplication, _ text: String) -> XCUIElement {
