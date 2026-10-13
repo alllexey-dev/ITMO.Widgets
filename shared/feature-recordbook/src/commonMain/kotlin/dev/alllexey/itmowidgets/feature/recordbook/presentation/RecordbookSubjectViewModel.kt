@@ -311,8 +311,8 @@ class RecordbookSubjectViewModel(
             tab = tab,
             scores = SubjectPresenter.scores(
                 SubjectScoresInput(
+                    official = base,
                     subject = subject,
-                    fromBars = subject.barsJournal != null,
                     barsEnabled = barsEnabled,
                     barsError = barsError,
                     controls = controls,

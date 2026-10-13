@@ -19,7 +19,7 @@ and keep their numbers.
 - [0011 AI summaries of teacher reviews through Gemini behind a proxy](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0011-ai-review-summaries.md) - Backend
 - [0012 BARS is renewed in the background by replaying ITMO.ID with cookies](0012-bars-background-renewal.md) - accepted
 - [0013 Schedule changes are detected on the device](0013-schedule-changes-on-device.md) - accepted
-- [0014 Own totals from public Google Sheets are read on the device](0014-sheet-scores-on-device.md) - accepted
+- [0014 Own totals from public Google Sheets are read on the device](0014-sheet-scores-on-device.md) - amended by 0032
 - [0015 A hidden demo session gated in the repositories](0015-demo-mode.md) - accepted
 - [0016 Stable identifiers keep their values](0016-parity-rewrite.md) - historical; the stable identifier rule holds
 - [0017 Compose Multiplatform screens in `commonMain` of shared modules](0017-cmp-ui-in-common-main.md) - amended by 0031
@@ -37,3 +37,4 @@ and keep their numbers.
 - 0029 Lanes and integrator - process, deleted
 - [0030 Release lines, version codes and data continuity](0030-release-lines-and-data-continuity.md) - accepted
 - [0031 iOS screens are native SwiftUI over shared Kotlin](0031-swiftui-ios-screens.md) - accepted
+- [0032 The most current score source with a value wins](0032-score-source-priority.md) - accepted

@@ -17,7 +17,6 @@ struct RecordbookScreen: View {
                 open: open,
                 barsSignIn: { showsBarsLogin = true },
                 retry: { model.viewModel.refresh(mode: .force) },
-                selectView: { model.viewModel.selectView(selected: $0) },
                 hideOffer: { model.viewModel.hideBarsOffer() },
                 openSources: { model.viewModel.openSources(id: $0) }
             )
@@ -75,13 +74,12 @@ struct RecordbookContentActions {
     var open: (RecordbookTarget) -> Void = { _ in }
     var barsSignIn: () -> Void = {}
     var retry: () -> Void = {}
-    var selectView: (RecordbookView) -> Void = { _ in }
     var hideOffer: () -> Void = {}
     var openSources: (Int64) -> Void = { _ in }
 }
 
-/// The list without the ViewModel: the term or the session, the session's hero, a BARS notice, the sections with each
-/// number over its quiet source, the quiet BARS offer; or loading, empty and the error with retry.
+/// The list without the ViewModel: one list with the session's hero near the end of the semester, a BARS notice, the
+/// sections with each number over its quiet source, the quiet BARS offer; or loading, empty and the error with retry.
 struct RecordbookContent: View {
     let state: RecordbookUiState
     var actions = RecordbookContentActions()
@@ -117,14 +115,6 @@ struct RecordbookContent: View {
 
     @ViewBuilder
     private func list(_ content: RecordbookBodyContent) -> some View {
-        ItmoSegmentedChoice(
-            label: AppStrings.string("recordbook_view_label"),
-            options: [RecordbookView.semester, RecordbookView.session],
-            selection: Binding(get: { content.view }, set: { actions.selectView($0) })
-        ) { view in
-            AppStrings.string(view == .session ? "recordbook_view_session" : "recordbook_view_semester")
-        }
-        .accessibilityIdentifier("recordbook.view")
         if let error = content.refreshError {
             ItmoGroupNote(text: AppStrings.string("recordbook_refresh_error", [AppErrorTextsKt.toUiText(error).resolved]))
         }
