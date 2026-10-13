@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.designsystem.kit
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -59,16 +61,28 @@ sealed interface TimelineRow {
  * The lessons of one day on a time rail, the app's one day list: the time column, a rail with a dot per lesson in
  * its type's colour, the elapsed part of the day in `primary`, and the lesson's lines without a card around them;
  * done lessons are dimmed, the current one sits on `primaryContainer`. With [showNow] the `сейчас` marker stands where
- * the elapsed part ends inside the current lesson or gap (today); without it another day shows no marker.
+ * the elapsed part ends inside the current lesson or gap (today); without it another day shows no marker. With
+ * [onLessonClick] each lesson is a target that reports its index in [rows] (the lesson sheet).
  */
 @Composable
-fun LessonTimeline(rows: List<TimelineRow>, modifier: Modifier = Modifier, showNow: Boolean = false) {
+fun LessonTimeline(
+    rows: List<TimelineRow>,
+    modifier: Modifier = Modifier,
+    showNow: Boolean = false,
+    onLessonClick: ((index: Int) -> Unit)? = null,
+) {
     val firstLesson = rows.indexOfFirst { it is TimelineRow.Lesson }
     val lastLesson = rows.indexOfLast { it is TimelineRow.Lesson }
     Column(modifier.fillMaxWidth()) {
         rows.forEachIndexed { index, row ->
             when (row) {
-                is TimelineRow.Lesson -> LessonRow(row, index == firstLesson, index == lastLesson, showNow)
+                is TimelineRow.Lesson -> LessonRow(
+                    row,
+                    index == firstLesson,
+                    index == lastLesson,
+                    showNow,
+                    onLessonClick?.let { click -> { click(index) } },
+                )
                 is TimelineRow.Gap -> GapRow(row, showNow)
             }
         }
@@ -76,7 +90,7 @@ fun LessonTimeline(rows: List<TimelineRow>, modifier: Modifier = Modifier, showN
 }
 
 @Composable
-private fun LessonRow(row: TimelineRow.Lesson, first: Boolean, last: Boolean, showNow: Boolean) {
+private fun LessonRow(row: TimelineRow.Lesson, first: Boolean, last: Boolean, showNow: Boolean, onClick: (() -> Unit)?) {
     val lesson = row.lesson
     val now = lesson.state == LessonState.Now
     val done = lesson.state == LessonState.Done
@@ -131,7 +145,8 @@ private fun LessonRow(row: TimelineRow.Lesson, first: Boolean, last: Boolean, sh
             Modifier
                 .weight(1f)
                 .padding(start = ItmoTheme.spacing.related, top = LessonTopGap, bottom = LessonBottomGap)
-                .alpha(if (done) DONE_ALPHA else 1f),
+                .alpha(if (done) DONE_ALPHA else 1f)
+                .then(if (onClick != null) Modifier.clip(ItmoTheme.shapes.cardContent).clickable(onClick = onClick) else Modifier),
             shape = ItmoTheme.shapes.cardContent,
             color = if (now) ItmoTheme.colorScheme.primaryContainer else Color.Transparent,
             contentColor = if (now) ItmoTheme.colorScheme.onPrimaryContainer else ItmoTheme.colorScheme.onSurface,

@@ -14,7 +14,7 @@ subjects in one notification.
   changes (decision [0013](../decisions/0013-schedule-changes-on-device.md)).
 - Code: `:shared:feature-recordbook` `commonMain` (`MarksCheck`, `MarkDiff`, `MarkNewsRules`,
   `MarkDigests`, `MarksFileStore`, `MarkTrackingRepositoryImpl`, `DefaultMarkTracking`,
-  `BarsMarksActivation`, `MarksHomeCardSource`), Koin `recordbookModule`; Android work in
+  `BarsMarksActivation`, `MarksBellSource`, `BarsTodoSource`), Koin `recordbookModule`; Android work in
   `feature/recordbook/work`, bound in `di/RecordbookModule.kt`. Wall clock is the injected
   `kotlin.time.Clock`, the date comes from `AcademicTimeProvider`.
 
@@ -66,9 +66,13 @@ whether it was a first look.
 - `withoutEchoes`: a My ITMO event is dropped when the previous BARS snapshot has exactly one plan of
   that name with the same points and grade (marks reach BARS first).
 - A background check re-arms the record for notification; the open list records it as delivered.
-- `markRead` (subject page opens) / `markAllRead` (home card close) remove records. Retention: 30
-  days by detection, at most 100 newest (`MAX_NEWS`).
-- A BARS subject with no My ITMO row is notified and on the card but gets no dot.
+- Each record keeps the value of its latest check (`MarkValue`, the most telling event first: a final grade,
+  then a BARS checkpoint): the checkpoint's name, its mark out of the maximum or an absence, the change of the
+  points, the total, the grade. BARS snapshots keep each checkpoint's name and maximum for it.
+- `markRead` (subject page opens) / `markAllRead` (opening the bell) mark records read; `observeNews` is the
+  unread ones (the dots, the digest), `observeHistory` every record (the bell). A new event makes a read record
+  unread again. Retention: 30 days by detection, at most 100 newest (`MAX_NEWS`).
+- A BARS subject with no My ITMO row is notified and in the bell but gets no dot.
 
 ## Storage
 
@@ -128,8 +132,9 @@ the cycle `BarsClient -> repository -> BARS read -> BarsClient`:
   `single`.
 - A `PENDING` prompt is shown once and becomes `SHOWN`.
 - Pending records count as delivered after the attempt, even without the notification permission.
-- `AndroidMarksNotifier`: channel `marks`, up to three names (`MarkSubjects.split`), never the marks;
-  the lock screen shows the title only. The tap target is `MarkNewsRules.target` (a single subject's
+- `AndroidMarksNotifier`: channel `marks`. One subject with numbers says them in the title
+  (`MarkNewsTexts.notificationTitle`: `Матанализ: 9 из 10`) and the details under it; otherwise `Новые оценки`
+  with up to three names (`MarkSubjects.split`). The lock screen shows `Новые оценки` only. The tap target is `MarkNewsRules.target` (a single subject's
   page, else the recordbook); the tap never connects BARS. Ids and routes:
   [notifications](notifications.md#marks).
 
@@ -140,7 +145,10 @@ the cycle `BarsClient -> repository -> BARS read -> BarsClient`:
 - The open list advances snapshots: `readStarted()` before requests, then `recordMyItmoSeen` /
   `recordBarsSeen` for the current half-year only, never after an error. What it finds gets a dot,
   never a notification. A source without a snapshot of that half-year is left alone.
-- Home card: [home](home.md#feed).
+- The bell: `MarksBellSource` shows every record with its value (`Матанализ: контрольная работа 2`,
+  `9 из 10, итого 74`, `+9`) and leads to the subject page ([the bell](home.md#the-bell)).
+- Сегодня: `BarsTodoSource` asks to sign in to BARS again while the prompt is not `NONE`
+  ([Сегодня](home.md#сегодня)).
 
 ## Debug tools
 

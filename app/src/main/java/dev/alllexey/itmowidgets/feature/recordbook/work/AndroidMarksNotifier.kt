@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.work
 
 import android.content.Context
-import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
@@ -12,11 +11,14 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigest
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigests
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNewsTexts
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.toSubjectArgs
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 
 /**
- * "Новые оценки" with subject names only, never the marks; the lock screen shows the title alone.
- * One subject with a page opens it, anything else opens the recordbook.
+ * One subject with numbers says them in the title (`Матанализ: 9 из 10`) and the details under it; several are
+ * "Новые оценки" with the subject names. The lock screen shows "Новые оценки" alone. One subject with a page opens
+ * it, anything else opens the recordbook.
  */
 class AndroidMarksNotifier(
     private val context: Context,
@@ -25,12 +27,14 @@ class AndroidMarksNotifier(
 
     override fun showDigest(digest: MarkDigest, target: MarkSubjectTarget?) {
         val title = UiText.Res(CoreStrings.marks_new_title)
+        val single = digest.single
         notifier.show(AppNotification(
             channel = AppNotificationChannels.MARKS,
             id = MarkDigests.DIGEST_ID,
-            title = title,
-            text = UiText.Dynamic(markSubjectList(context, digest.subjects)),
-            destination = target?.toArgs()?.let(NotificationDestination::RecordbookSubject)
+            title = single?.let(MarkNewsTexts::notificationTitle) ?: title,
+            text = single?.takeIf { it.value != null }?.let(MarkNewsTexts::details)
+                ?: UiText.Dynamic(markSubjectList(context, digest.subjects)),
+            destination = target?.toSubjectArgs()?.let(NotificationDestination::RecordbookSubject)
                 ?: NotificationDestination.Recordbook,
             publicTitle = title
         ))
@@ -48,13 +52,3 @@ class AndroidMarksNotifier(
         ))
     }
 }
-
-private fun MarkSubjectTarget.toArgs(): RecordbookSubjectArgs? = RecordbookSubjectArgs(
-    entryId = entryId,
-    programId = programId,
-    semester = semester,
-    studyYear = studyYear,
-    barsPlan = bars?.planId,
-    barsType = bars?.type,
-    barsIdentifier = bars?.identifier
-).validOrNull()

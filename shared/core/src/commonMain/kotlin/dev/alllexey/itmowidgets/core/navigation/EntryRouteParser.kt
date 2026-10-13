@@ -23,7 +23,7 @@ object EntryRouteParser {
         ACTION_VIEW -> linkRoute(AppLinks.parse(link))
         AppEntryIntents.ACTION_OPEN_SCHEDULE -> EntryRoute(AppTab.SCHEDULE)
         AppEntryIntents.ACTION_OPEN_SPORT -> EntryRoute(AppTab.SPORT)
-        AppEntryIntents.ACTION_OPEN_SCHEDULE_CHANGES -> EntryRoute(AppTab.SCHEDULE, overlay = AppRoutes.ScheduleChanges)
+        AppEntryIntents.ACTION_OPEN_SCHEDULE_CHANGES -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Bell)
         AppEntryIntents.ACTION_OPEN_USER_PROFILE -> isu?.takeIf { it > 0 }?.let(::profileRoute)
         AppEntryIntents.ACTION_OPEN_RECORDBOOK -> EntryRoute(AppTab.RECORDBOOK)
         // Arguments that do not describe a page still open the recordbook, where the subject is one tap away.

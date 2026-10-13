@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
@@ -70,7 +71,7 @@ object SubjectTestTags {
 
 /**
  * What the subject page asks of its host and its ViewModel: the host opens links, the link sheets, a teacher, the
- * review editor, `Подключение к ITMO.Widgets`, `Мои баллы`, the BARS sign-in and the Спорт tab;
+ * review editor, `Подключение к ITMO.Widgets`, `Мои баллы`, the BARS sign-in, the Спорт tab and a lesson's sheet;
  * [RecordbookSubjectRoute] wires the rest to the ViewModel.
  */
 data class RecordbookSubjectActions(
@@ -85,6 +86,7 @@ data class RecordbookSubjectActions(
     val onOpenSheetScores: (SheetScoresArgs) -> Unit = {},
     val onBarsSignIn: () -> Unit = {},
     val onOpenSport: () -> Unit = {},
+    val onOpenLesson: (LessonTarget) -> Unit = {},
     val onRefresh: () -> Unit = {},
     val onRetry: () -> Unit = {},
     val onSelectTab: (SubjectTab) -> Unit = {},

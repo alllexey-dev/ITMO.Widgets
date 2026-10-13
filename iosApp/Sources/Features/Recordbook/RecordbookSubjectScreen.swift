@@ -81,6 +81,12 @@ struct RecordbookSubjectScreen: View {
             sheetScores: { opened(router.open(AppRoutes.SheetScores(args: $0))) },
             barsSignIn: { showsBarsLogin = true },
             openSport: { router.selectedTab = .sport },
+            openLesson: { target in
+                switch onEnum(of: target) {
+                case let .lesson(lesson): opened(router.open(AppRoutes.LessonDetails(args: lesson.args)))
+                case let .pendingSport(sport): opened(router.open(AppRoutes.PendingSportDetails(args: sport.args)))
+                }
+            },
             retry: { viewModel.refresh(mode: .force) },
             selectTab: { viewModel.selectTab(selected: $0) },
             showAllLessons: { viewModel.showAllLessons() },
@@ -114,6 +120,7 @@ struct RecordbookSubjectContentActions {
     var sheetScores: (SheetScoresArgs) -> Void = { _ in }
     var barsSignIn: () -> Void = {}
     var openSport: () -> Void = {}
+    var openLesson: (LessonTarget) -> Void = { _ in }
     var retry: () -> Void = {}
     var selectTab: (SubjectTab) -> Void = { _ in }
     var showAllLessons: () -> Void = {}

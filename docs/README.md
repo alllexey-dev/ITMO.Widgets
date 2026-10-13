@@ -40,12 +40,12 @@ limits. Start there; the documents below are the developer reference.
   refresh-token dialog, the session lifecycle and sign-out.
 - [First-run flow](features/onboarding.md) - the steps after sign-in and the
   replay from settings.
-- [Home and quick actions](features/home.md) - the home feed, the QR pass
+- [Сегодня and quick actions](features/home.md) - Сегодня, the bell, the QR pass
   entry, the tile, the app shortcuts.
 - [Schedule](features/schedule.md) - own and friends' schedules, pending sport
   rows, lesson details.
 - [Schedule changes](features/schedule-changes.md) - the background check of
-  the own schedule, the notification and the history.
+  the own schedule, the notification, the marks on lessons and in the bell.
 - [Calendar](features/calendar.md) - sync into the phone's calendar and the
   `.ics` export.
 - [Friend selector](features/friend-selector.md) - the sheet that picks whose

@@ -40,7 +40,6 @@ object KoinModules {
         locationModule,
         linksModule,
         webModule,
-        androidHomeModule,
         androidQrModule,
         androidRecordbookModule,
         androidScheduleModule,

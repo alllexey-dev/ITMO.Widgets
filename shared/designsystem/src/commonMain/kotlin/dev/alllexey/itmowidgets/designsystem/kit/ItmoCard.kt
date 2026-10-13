@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -65,6 +66,24 @@ fun IconTile(icon: Painter, tone: Tone, modifier: Modifier = Modifier, size: Dp 
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, contentDescription = null, Modifier.size(size * ICON_SHARE), tint = tone.onContainer())
+    }
+}
+
+/** A rounded square with a short text in a tone (a mark's `+9`), the same size as an [IconTile]. */
+@Composable
+fun TextTile(text: String, tone: Tone, modifier: Modifier = Modifier, size: Dp = IconTileSize) {
+    Box(
+        modifier.size(size).clip(ItmoTheme.shapes.medium).background(tone.container()),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text,
+            color = tone.onContainer(),
+            style = ItmoTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            softWrap = false,
+        )
     }
 }
 

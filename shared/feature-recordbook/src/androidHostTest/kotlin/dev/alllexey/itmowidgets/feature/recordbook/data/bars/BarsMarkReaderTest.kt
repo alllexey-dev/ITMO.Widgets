@@ -65,7 +65,7 @@ class BarsMarkReaderTest {
         assertEquals("Тестовый предмет 1", first.name)
         assertEquals("flow", first.type)
         assertEquals("7", first.identifier)
-        assertEquals(listOf(BarsCheckpointMark(10, 7.5, false)), first.marks)
+        assertEquals(listOf(BarsCheckpointMark(10, 7.5, false, "Работа", 10.0)), first.marks)
         assertEquals(7.5, first.score!!, 0.0)
         assertEquals(emptyList<String>(), server.settings)
     }

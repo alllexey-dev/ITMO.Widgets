@@ -120,8 +120,8 @@ private fun LazyListScope.lessonList(list: SubjectLessonList, actions: Recordboo
             ListGroupNote(stringResource(Res.string.subject_lessons_unmatched))
         }
         is SubjectLessonList.Content -> {
-            list.items.forEachIndexed { index, item ->
-                item(key = "lesson-$index") { SubjectLessonCard(item) }
+            list.items.forEach { item ->
+                item(key = "lesson-${item.pairId}") { SubjectLessonCard(item, actions.onOpenLesson) }
             }
             if (list.more > 0) {
                 item(key = "lessons-all") {

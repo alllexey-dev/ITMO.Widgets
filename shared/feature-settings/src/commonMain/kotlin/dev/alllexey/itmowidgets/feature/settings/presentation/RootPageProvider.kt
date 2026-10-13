@@ -98,7 +98,6 @@ class RootPageProvider(
             title = UiText.Res(CoreStrings.me_group_app),
             items = listOfNotNull(
                 SettingRows.navigation(SettingsPage.APPEARANCE),
-                SettingRows.navigation(SettingsPage.HOME),
                 SettingRows.navigation(SettingsPage.SCHEDULE),
                 SettingRows.navigation(SettingsPage.RECORDBOOK).takeIf { capabilities.marks },
                 SettingRows.navigation(SettingsPage.SPORT),

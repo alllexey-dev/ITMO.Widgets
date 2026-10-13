@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
-import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
+import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
@@ -21,7 +21,7 @@ class PreferenceStores(dataStore: DataStore<Preferences> = InMemoryPreferencesDa
     val qrSettings = QrSettingsPreferences(dataStore)
     val sportSignSelectors = SportSignSelectorPreferences(dataStore)
     val markSources = MarkSourcePreferences(dataStore)
-    val homeLayout = HomeLayoutPreferences(dataStore)
+    val bell = BellPreferences(dataStore)
     val deviceHints = DeviceHintPreferences(dataStore)
     val appearance = AppearancePreferences(dataStore)
     val demoPreferences = DemoPreferences(dataStore)

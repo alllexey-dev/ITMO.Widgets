@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.settings.domain
 
-import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -20,7 +19,6 @@ data class LocalSettings(
     /** Null until the account's first BARS answer: the switch is hidden then. */
     val barsMarksEnabled: Boolean? = null,
     val sheetMarksEnabled: Boolean = true,
-    val hiddenHomeCards: Set<HomeCardKind> = emptySet(),
     /** The one-time dialog about background work was offered on this device. */
     val backgroundWorkHintShown: Boolean = false,
     /** The QR pass tile is in the quick settings, as far as the app saw; a flag of the device. */
@@ -73,8 +71,6 @@ interface SettingsRepository {
     suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit>
 
     suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean)
-
-    suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean)
 
     suspend fun setBackgroundWorkHintShown()
 

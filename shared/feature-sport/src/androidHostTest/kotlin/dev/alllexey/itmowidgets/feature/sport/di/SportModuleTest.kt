@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.di
 
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import okio.Path.Companion.toPath
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.sport.SportApi
@@ -7,7 +9,7 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
-import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
@@ -27,7 +29,7 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.Core2Harness
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportScoreOverrideSource
-import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
+import dev.alllexey.itmowidgets.feature.sport.data.bell.SportResultLog
 import dev.alllexey.itmowidgets.feature.sport.data.repository.PendingSportBookingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
@@ -73,6 +75,7 @@ class SportModuleTest {
                 DemoMode::class,
                 AppDispatchers::class,
                 AppDiagnostics::class,
+                AppDirectories::class,
                 CoroutineScope::class,
                 ScheduleRefreshGateway::class,
                 ScheduleWidgetRefreshRequester::class,
@@ -94,10 +97,9 @@ class SportModuleTest {
         val cleaners = koin.getAll<SessionDataCleaner>()
         assertEquals(1, cleaners.count { it === data })
         assertEquals(1, cleaners.count { it === bookings })
-        assertEquals(2, cleaners.size)
-        val source = koin.get<SportHomeCardSource>()
-        assertSame(source, koin.get<HomeCardSource>(sportCardsQualifier))
-        assertEquals(listOf<HomeCardSource>(source), koin.getAll<HomeCardSource>())
+        assertEquals(1, cleaners.count { it === koin.get<SportResultLog>() })
+        assertEquals(3, cleaners.size)
+        assertEquals(1, koin.getAll<BellSource>().size)
     }
 
     /** Synthetic stand-ins for what the platform bridges; nothing here is called. */
@@ -119,6 +121,14 @@ class SportModuleTest {
         single<AppDispatchers> { StandardTestDispatcher().let { AppDispatchers(io = it, default = it, main = it) } }
         single<AppDiagnostics> { RecordingDiagnostics() }
         single<CoroutineScope> { TestScope() }
+        single<Clock> { Clock.System }
+        single<AppDirectories> {
+            object : AppDirectories {
+                override val files = "/files".toPath()
+                override val cache = "/cache".toPath()
+                override val noBackup = "/no_backup".toPath()
+            }
+        }
     }
 
     private object NoFriends : FriendRepository {

@@ -23,13 +23,10 @@ struct RecordbookScreen: View {
             )
         )
         .refreshable { model.viewModel.refresh(mode: .pull) }
-        .itmoRootHeader(title: ShellTab.recordbook.title, subtitle: model.state.subtitle?.resolved)
-        .toolbar {
+        .itmoRootHeader(title: ShellTab.recordbook.title, subtitle: model.state.subtitle?.resolved) {
             if let periods = model.state.periods {
-                ToolbarItem(placement: .topBarTrailing) {
-                    RecordbookPeriodMenu(periods: periods) { programId, semester in
-                        model.viewModel.selectPeriod(programId: programId, semester: semester)
-                    }
+                RecordbookPeriodMenu(periods: periods) { programId, semester in
+                    model.viewModel.selectPeriod(programId: programId, semester: semester)
                 }
             }
         }
@@ -186,6 +183,8 @@ struct RecordbookPeriodMenu: View {
                 AppSymbol.expandMore.image.font(.itmo(.labelSmall, emphasized: true))
             }
         }
+        .buttonStyle(.glass)
+        .itmoTint()
         .accessibilityLabel(Text(verbatim: AppStrings.string("recordbook_period_label")))
         .accessibilityValue(Text(verbatim: periods.label.resolved))
         .accessibilityIdentifier("recordbook.period")

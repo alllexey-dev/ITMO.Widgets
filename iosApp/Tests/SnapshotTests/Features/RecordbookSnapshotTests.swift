@@ -65,11 +65,8 @@ final class RecordbookSnapshotTests: XCTestCase {
             NavigationStack {
                 RecordbookContent(state: state)
                     .defaultScrollAnchor(scrolled ? .bottom : .top)
-                    .itmoRootHeader(title: ShellTab.recordbook.title, subtitle: state.subtitle?.resolved)
-                    .toolbar {
-                        if let periods = state.periods {
-                            ToolbarItem(placement: .topBarTrailing) { RecordbookPeriodMenu(periods: periods) { _, _ in } }
-                        }
+                    .itmoRootHeader(title: ShellTab.recordbook.title, subtitle: state.subtitle?.resolved) {
+                        if let periods = state.periods { RecordbookPeriodMenu(periods: periods) { _, _ in } }
                     }
             }
         }

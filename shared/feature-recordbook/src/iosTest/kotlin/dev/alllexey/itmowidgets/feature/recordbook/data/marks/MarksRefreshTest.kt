@@ -172,6 +172,10 @@ class MarksRefreshTest {
 
         override fun observeNews(): Flow<List<MarkNews>> = news
 
+        override fun observeHistory(): Flow<List<MarkNews>> = news
+
+        override fun observeBarsCheckedAt(): Flow<Instant?> = MutableStateFlow(null)
+
         override suspend fun checkMyItmo(): AppResult<MarkCheckResult> {
             checks++
             return AppResult.Success(MarkCheckResult.Compared(0))

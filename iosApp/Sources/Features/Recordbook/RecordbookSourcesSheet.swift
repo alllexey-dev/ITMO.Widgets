@@ -21,7 +21,9 @@ struct RecordbookSourcesSheet: View {
             ItmoGroupNote(text: sources.note.resolved)
             VStack(spacing: ItmoSpacing.compact) {
                 Button { dismiss() } label: {
-                    Text(verbatim: AppStrings.string("common_got_it")).frame(maxWidth: .infinity)
+                    // onPrimary: the system's white label is unreadable on the dark scheme's light primary.
+                    Text(verbatim: AppStrings.string("common_got_it")).foregroundStyle(ItmoColor.onPrimary)
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)
                 Button(action: openSubject) {

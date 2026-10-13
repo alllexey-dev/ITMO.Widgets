@@ -1,76 +1,53 @@
 import SwiftUI
 
+/// One row of an `ItmoLessonTimeline`, computed by the shared presentation (`core/lesson/LessonTimelines`): a lesson
+/// with the elapsed share of the rail under its dot (the lesson and the short break after it) and whether the rail
+/// above it is reached, or a gap of an hour or more with its label ("a 2 h 10 min window") and its elapsed share.
+enum ItmoTimelineRow: Identifiable {
+    case lesson(ItmoLesson, progress: CGFloat, reached: Bool)
+    case gap(id: String, label: String, progress: CGFloat)
+
+    var id: String {
+        switch self {
+        case let .lesson(lesson, _, _): lesson.id
+        case let .gap(id, _, _): id
+        }
+    }
+}
+
 /// The lessons of one day on a time rail, the app's only day list (a single lesson is an `ItmoLessonCard`): the time
 /// column, a rail with a dot per lesson in its type colour and the lesson's details without a card; done lessons are
-/// dimmed, the current one tinted.
-///
-/// `now` (minutes since midnight) draws the elapsed part of the day in the accent colour and puts the now marker in
-/// the current lesson or gap; without it (another day) done lessons count as elapsed and there is no marker. Gaps of
-/// `gapMinutes` or more get a row with `gapLabel(minutes)` ("a 2 h 10 min window").
+/// dimmed, the current one tinted. The rows arrive computed (`ItmoTimelineRow`); `showsNow` puts the now marker where
+/// the elapsed part ends inside the current lesson or gap (today), another day shows none. With `onLesson` every
+/// lesson is a button that reports its index in `rows` (the lesson sheet).
 struct ItmoLessonTimeline: View {
-    let lessons: [ItmoLesson]
-    var now: Int?
-    var gapMinutes = 60
-    let gapLabel: (Int) -> String
+    let rows: [ItmoTimelineRow]
+    var showsNow = false
+    var onLesson: ((Int) -> Void)?
 
     var body: some View {
+        let lessons = rows.indices.filter { if case .lesson = rows[$0] { true } else { false } }
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(rows) { row in
-                switch row.kind {
-                case let .gap(minutes, progress):
-                    TimelineGap(text: gapLabel(minutes), progress: progress, marker: now != nil)
-                case let .lesson(lesson, first, last, reached, progress):
-                    TimelineLessonRow(
-                        lesson: lesson, first: first, last: last, reached: reached, progress: progress,
-                        marker: now != nil
+            ForEach(rows.indices, id: \.self) { index in
+                switch rows[index] {
+                case let .gap(_, label, progress):
+                    TimelineGap(text: label, progress: progress, marker: showsNow)
+                case let .lesson(lesson, progress, reached):
+                    let row = TimelineLessonRow(
+                        lesson: lesson, first: index == lessons.first, last: index == lessons.last, reached: reached,
+                        progress: progress, marker: showsNow
                     )
+                    if let onLesson {
+                        Button { onLesson(index) } label: { row.contentShape(.rect) }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("timeline.lesson.\(lesson.id)")
+                    } else {
+                        row
+                    }
                 }
             }
         }
     }
-
-    private var rows: [TimelineRow] {
-        var rows: [TimelineRow] = []
-        for (index, lesson) in lessons.enumerated() {
-            if index > 0 {
-                let from = lessons[index - 1].end
-                if lesson.start - from >= gapMinutes {
-                    let progress = now.map { share($0, from, lesson.start) } ?? (lesson.elapsed ? 1 : 0)
-                    rows.append(TimelineRow(id: "gap-\(lesson.id)", kind: .gap(lesson.start - from, progress)))
-                }
-            }
-            let next = index + 1 < lessons.count ? lessons[index + 1].start : nil
-            // The rail under a dot spans the lesson and the short break after it, up to the next dot.
-            let until = next.map { $0 - lesson.end < gapMinutes ? $0 : lesson.end } ?? lesson.end
-            let progress = now.map { share($0, lesson.start, until) } ?? (lesson.phase == .done ? 1 : 0)
-            let reached = now.map { $0 >= lesson.start } ?? lesson.elapsed
-            rows.append(TimelineRow(
-                id: lesson.id,
-                kind: .lesson(lesson, first: index == 0, last: next == nil, reached: reached, progress: progress)
-            ))
-        }
-        return rows
-    }
-}
-
-private struct TimelineRow: Identifiable {
-    enum Kind {
-        case gap(Int, CGFloat)
-        case lesson(ItmoLesson, first: Bool, last: Bool, reached: Bool, progress: CGFloat)
-    }
-
-    let id: String
-    let kind: Kind
-}
-
-private extension ItmoLesson {
-    var elapsed: Bool { phase == .done || phase == .now }
-}
-
-/// Where `time` is inside [from, to), 0...1.
-private func share(_ time: Int, _ from: Int, _ to: Int) -> CGFloat {
-    guard to > from else { return time >= to ? 1 : 0 }
-    return min(max(CGFloat(time - from) / CGFloat(to - from), 0), 1)
 }
 
 private enum Rail {

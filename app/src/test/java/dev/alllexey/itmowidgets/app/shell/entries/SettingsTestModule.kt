@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.View
 import android.widget.Space
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
@@ -34,7 +33,6 @@ import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
-import dev.alllexey.itmowidgets.feature.settings.presentation.HomePageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.RecordbookPageProvider
@@ -66,7 +64,6 @@ internal fun settingsTestModule(spoilers: CustomSpoilerRepository = FakeCustomSp
         root = RootPageProvider(repository),
         services = ServicesPageProvider(repository, FakeCustomServicesRepository(), refresher),
         widgets = WidgetsPageProvider(repository, NoQuickSettingsTile),
-        home = HomePageProvider(repository),
         schedule = SchedulePageProvider(repository, FakeScheduleChangeTracking(), FakeCalendarSync()),
         recordbook = RecordbookPageProvider(FakeMarkTracking()),
         sport = SportPageProvider(repository),
@@ -117,7 +114,6 @@ private class MemorySettings : SettingsRepository {
     override suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit> =
         AppResult.Success(Unit)
     override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) = Unit
-    override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) = Unit
     override suspend fun setBackgroundWorkHintShown() = Unit
     override suspend fun setQrTileAdded(added: Boolean) = Unit
     override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {

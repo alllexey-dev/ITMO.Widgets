@@ -60,7 +60,10 @@ class MarkDiffTest {
         assertEquals(setOf(1L, 2L, 3L), short.snapshot.subjects.map { it.entryId }.toSet())
 
         val back = MarkDiff.myItmo(short.snapshot, myItmo(subject(2, "Химия", score = 25.0)))
-        assertEquals(listOf(MarkEvent(MarkSource.MY_ITMO, HALF, "Химия", MARK_CHANGED)), back.events)
+        assertEquals(
+            listOf(MarkEvent(MarkSource.MY_ITMO, HALF, "Химия", MARK_CHANGED, MarkValue(delta = 5.0, total = 25.0))),
+            back.events
+        )
     }
 
     @Test
@@ -123,6 +126,22 @@ class MarkDiffTest {
         val shuffled = barsOf(plan(2, mark(20, 1.0)), plan(1, mark(11, 3.0), mark(10, 5.0)))
 
         assertEquals(emptyList<MarkEvent>(), MarkDiff.bars(previous, shuffled).events)
+    }
+
+    @Test
+    fun `a BARS event carries the checkpoint, its mark out of the maximum and the change of points`() {
+        val previous = barsOf(plan(1, BarsCheckpointMark(10, 4.0, false, "Контрольная 1", 10.0)))
+        val current = plan(1, BarsCheckpointMark(10, 7.0, false, "Контрольная 1", 10.0), BarsCheckpointMark(11, 9.0, false, "Контрольная 2", 10.0))
+
+        val values = MarkDiff.bars(previous, barsOf(current)).events.map { it.value }
+
+        assertEquals(
+            setOf(
+                MarkValue(checkpoint = "Контрольная 1", mark = 7.0, max = 10.0, delta = 3.0),
+                MarkValue(checkpoint = "Контрольная 2", mark = 9.0, max = 10.0, delta = 9.0),
+            ),
+            values.toSet(),
+        )
     }
 
     @Test

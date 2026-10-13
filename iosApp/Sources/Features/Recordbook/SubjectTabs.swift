@@ -238,8 +238,8 @@ struct SubjectLessonsTab: View {
         case .unmatched:
             ItmoGroupNote(text: AppStrings.string("subject_lessons_unmatched"))
         case let .content(content):
-            ForEach(content.items.indices, id: \.self) { index in
-                SubjectLessonCardView(item: content.items[index])
+            ForEach(content.items, id: \.pairId) { item in
+                SubjectLessonCardView(item: item, open: actions.openLesson)
             }
             if content.more > 0 {
                 ItmoListGroup {
@@ -253,9 +253,10 @@ struct SubjectLessonsTab: View {
     }
 }
 
-/// A lesson ahead under its day.
+/// A lesson ahead under its day: the schedule's lesson card; a tap opens the lesson sheet.
 private struct SubjectLessonCardView: View {
     let item: SubjectLessonItem
+    let open: (LessonTarget) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.related) {
@@ -263,7 +264,10 @@ private struct SubjectLessonCardView: View {
                 .font(.itmo(.labelLarge, emphasized: true))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, ItmoSpacing.related)
-            Text(verbatim: item.lesson.subjectName)
+            Button { open(item.lesson.target) } label: {
+                ItmoLessonCard(lesson: item.lesson.kitLesson(id: "\(item.pairId)")).contentShape(.rect)
+            }
+            .buttonStyle(.plain)
         }
     }
 }
@@ -278,8 +282,9 @@ private struct SubjectBindingCard: View {
             if binding.candidates.count == 1, let single = binding.candidates.first {
                 Text(verbatim: AppStrings.string("subject_binding_proposal", [single.name])).font(.itmo(.bodyLarge))
                 HStack {
-                    Button(AppStrings.string("subject_binding_confirm")) { actions.confirmBinding(single.subjectId) }
-                        .buttonStyle(.glassProminent)
+                    ItmoProminentButton(title: AppStrings.string("subject_binding_confirm")) {
+                        actions.confirmBinding(single.subjectId)
+                    }
                     Button(AppStrings.string("subject_binding_reject"), action: actions.rejectBinding).buttonStyle(.glass)
                 }
                 .itmoTint()

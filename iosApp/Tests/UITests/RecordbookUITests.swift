@@ -17,7 +17,7 @@ final class RecordbookUITests: XCTestCase {
         app.launch()
         openRecordbook(app)
         XCTAssertTrue(subjectRow(app, Self.algorithms).waitForExistence(timeout: stepTimeout), "the current semester")
-        XCTAssertTrue(app.navigationBars.firstMatch.exists, "the root header is the native bar")
+        XCTAssertTrue(element(app, "kit.rootHeader").exists, "the static root header")
         attachScreenshot(named: "list")
 
         element(app, "recordbook.period").tap()

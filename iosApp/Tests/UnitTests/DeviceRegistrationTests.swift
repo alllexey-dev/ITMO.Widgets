@@ -89,11 +89,11 @@ final class DeviceRegistrationTests: XCTestCase {
 
     // MARK: Local notification taps
 
-    func testAScheduleChangeTapOpensTheChangesOverTheSchedule() throws {
+    func testAScheduleChangeTapOpensTheBellOverToday() throws {
         let router = try open(NotificationDestinationScheduleChanges.shared)
 
-        XCTAssertEqual(router.selectedTab, .schedule)
-        XCTAssertEqual(router.path(of: .schedule), [ShellDestination(AppRoutes.ScheduleChanges.shared)])
+        XCTAssertEqual(router.selectedTab, .today)
+        XCTAssertEqual(router.sheet, .route(ShellDestination(AppRoutes.Bell.shared)))
     }
 
     func testAMarksDigestTapOpensTheRecordbook() throws {

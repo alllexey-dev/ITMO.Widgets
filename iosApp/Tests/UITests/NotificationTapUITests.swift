@@ -24,7 +24,7 @@ final class NotificationTapUITests: XCTestCase {
     }
 
     func testAScheduleChangeTapOpensTheChanges() {
-        tapFixture("schedule-changes", title: Self.scheduleChangesTitle, opens: "schedule.changes")
+        tapFixture("schedule-changes", title: Self.scheduleChangesTitle, opens: "bell.sheet")
     }
 
     func testAMarksDigestTapOpensTheRecordbook() {

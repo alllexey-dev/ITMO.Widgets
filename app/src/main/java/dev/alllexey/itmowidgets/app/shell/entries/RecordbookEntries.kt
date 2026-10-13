@@ -25,6 +25,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.ActivityRoutes
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
+import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
@@ -118,6 +119,12 @@ private fun RecordbookSubjectEntry(key: AppRoutes.RecordbookSubject, navigator: 
             onOpenSheetScores = { navigator.open(AppRoutes.SheetScores(it)) },
             onBarsSignIn = barsLogin,
             onOpenSport = { navigator.select(AppTab.SPORT) },
+            onOpenLesson = { target ->
+                when (target) {
+                    is LessonTarget.Lesson -> navigator.open(AppRoutes.LessonDetails(target.args))
+                    is LessonTarget.PendingSport -> navigator.open(AppRoutes.PendingSportDetails(target.args))
+                }
+            },
         )
     }
     RecordbookSubjectRoute(actions, viewModel)

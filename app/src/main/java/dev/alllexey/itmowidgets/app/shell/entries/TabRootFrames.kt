@@ -66,15 +66,15 @@ private fun TodayFrame(navigator: Nav3AppNavigator, content: @Composable () -> U
     }
     TodayRootScreen(
         header = state,
-        onOpenNotifications = { navigator.open(AppRoutes.ScheduleChanges) },
+        onOpenNotifications = { navigator.open(AppRoutes.Bell) },
         onOpenPass = { navigator.open(AppRoutes.QrPass) },
         content = content,
     )
 }
 
 /**
- * Сегодня's root: the date under the title, the bell (the schedule changes until the bell's own sheet arrives) and
- * the `Пропуск` button that opens the pass sheet; the button and the bell are on this tab only.
+ * Сегодня's root: the date under the title, the bell with the count of unseen events, which opens its sheet, and the
+ * `Пропуск` button that opens the pass sheet; the button and the bell are on this tab only.
  */
 @Composable
 internal fun TodayRootScreen(
@@ -92,6 +92,7 @@ internal fun TodayRootScreen(
                 stringResource(Res.string.today_notifications),
                 onClick = onOpenNotifications,
                 modifier = Modifier.testTag(TabRootTags.BELL),
+                badge = header.badge,
             )
         },
         floatingActionButton = {

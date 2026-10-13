@@ -18,7 +18,8 @@ Product behaviour: [Как это работает: оценки](../how-it-work
   The source of the hero's number follows the list: BARS, a sheet's total while in progress, My ITMO.
 - `Пары`: the schedule question (below), the teachers as rows (`Ершов Н. А.`, `Лабораторные, в основном хвалят`)
   that open the person, `Отзывы недоступны` with `Подключить` without the connection, `Отзывов пока мало` with
-  `Написать отзыв` when no teacher has a summary, then the three nearest lessons with `Все пары, N`.
+  `Написать отзыв` when no teacher has a summary, then the three nearest lessons with `Все пары, N`, each the
+  schedule's lesson card (`LessonTimelines.lesson` of `core/lesson`) under its day; a tap opens the lesson sheet.
 - `Материалы`: without `Подключение к ITMO.Widgets` only a gate with `Подключить` (the connection settings). With it:
   `Чаты`, then the links by category (the pinned one first, then by rank in the order the page first showed them),
   votes on the right, own links with `моя` and their review state (`на проверке`, `отклонена`, `скрыта`, `только у

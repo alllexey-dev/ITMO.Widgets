@@ -90,7 +90,7 @@ object IosRoutes {
         AppRoutes.UserSearch::class to RouteFeature.SOCIAL,
         AppRoutes.UserProfile::class to RouteFeature.SOCIAL,
         AppRoutes.UserSchedule::class to RouteFeature.SCHEDULE,
-        AppRoutes.ScheduleChanges::class to RouteFeature.SCHEDULE,
+        AppRoutes.Bell::class to RouteFeature.HOME,
         AppRoutes.FriendSelector::class to RouteFeature.SCHEDULE,
         AppRoutes.LessonDetails::class to RouteFeature.SCHEDULE,
         AppRoutes.PendingSportDetails::class to RouteFeature.SCHEDULE,

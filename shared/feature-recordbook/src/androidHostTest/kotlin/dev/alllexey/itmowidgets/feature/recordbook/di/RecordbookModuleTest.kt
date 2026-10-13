@@ -10,7 +10,8 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.bell.BellSource
+import dev.alllexey.itmowidgets.core.today.TodayTodoSource
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
@@ -46,7 +47,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
-import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
@@ -158,13 +158,11 @@ class RecordbookModuleTest {
         assertEquals(1, cleaners.count { it === koin.get<SheetScoresRepositoryImpl>() })
     }
 
-    /** The home feed reads every `HomeCardSource` once; the marks card is its own single under its own qualifier. */
+    /** Сегодня reads every `BellSource` and `TodayTodoSource` once: the marks and the BARS sign-in. */
     @Test
-    fun theMarksCardIsOneQualifiedHomeCardSource() {
-        val marks = koin.get<MarksHomeCardSource>()
-
-        assertSame(marks, koin.get<HomeCardSource>(marksCardsQualifier))
-        assertEquals(listOf<HomeCardSource>(marks), koin.getAll<HomeCardSource>())
+    fun theMarksAreOneBellSourceAndTheBarsSignInOneTodoSource() {
+        assertEquals(1, koin.getAll<BellSource>().size)
+        assertEquals(1, koin.getAll<TodayTodoSource>().size)
     }
 
     /** What the app's bridges supply, as fakes; no request leaves the test. */

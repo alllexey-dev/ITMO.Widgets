@@ -70,10 +70,8 @@ private struct ItmoUnavailable: View {
             if let description { Text(verbatim: description) }
         } actions: {
             if let action {
-                Button(action: action.run) { Text(verbatim: action.title) }
-                    .buttonStyle(.glassProminent)
+                ItmoProminentButton(title: action.title, action: action.run)
                     .controlSize(.large)
-                    .itmoTint()
                     .accessibilityIdentifier("kit.action")
             }
         }
@@ -153,7 +151,7 @@ private struct ItmoNoticeCard: View {
     @ViewBuilder
     private func button(_ action: (title: String, run: () -> Void)) -> some View {
         if prominent {
-            Button(action: action.run) { Text(verbatim: action.title) }.buttonStyle(.glassProminent)
+            ItmoProminentButton(title: action.title, action: action.run)
         } else {
             Button(action: action.run) { Text(verbatim: action.title) }.buttonStyle(.bordered)
         }

@@ -158,8 +158,8 @@ group takes 26 pt ([Platform styles](#platform-styles)).
 
 | Variant | Shape | Use |
 |---|---|---|
-| `Card.Content` | `cardContent` 20 dp, `surfaceContainerLow`, no stroke | Subject, control and user rows; home feed cards (the kit's `FeedCard`) |
-| `Card.Content.Outlined` | 20 dp, 1 dp `outlineVariant` | Sport lesson and booking cards, home hints (`FeedCard(outlined = true)`), debug cards |
+| `Card.Content` | `cardContent` 20 dp, `surfaceContainerLow`, no stroke | Subject, control and user rows |
+| `Card.Content.Outlined` | 20 dp, 1 dp `outlineVariant` | Sport lesson and booking cards, debug cards |
 | `Card.Content.Tonal` | 20 dp, `surfaceContainerLow`, no stroke | The AI summary of a teacher's reviews above the reviews |
 | `Card.CompactSummary` | `cardContent` 20 dp | The recordbook summary row |
 | `Card.Summary` | `cardSummary` 28 dp, 20 dp padding | The PE sport score card (`SportScoreCard`) |
@@ -330,13 +330,10 @@ description and optional action: the kit's `ContentState` and
 - Settings and the profile use quiet group cards with stable row updates.
 - Widgets and the QR pass keep their own launcher-adapted palette and readability
   rules; sign-in branding is a separate exception.
-- The home feed shows only cards with something to say, in a fixed order, each
-  on `Card.Content` with rows of at least 48 dp; hints use `Card.Content.Outlined`
-  and close with a trailing icon button. The lesson in progress is told
-  by its time in `primary`, a filled badge and a thin progress line under
-  the row (the wavy hero bar, [Expressive components](#expressive-components)),
-  never by a filled row. Pull-to-refresh keeps the cards; one snackbar reports
-  a partial failure. A list under the `Пропуск` button ends with
+- Сегодня is the hero, the day's timeline and `Нужно сделать` only when there is
+  something ([Сегодня](features/home.md#сегодня)); the lesson in progress is
+  the hero with the wavy bar ([Expressive components](#expressive-components))
+  and sits on `primaryContainer` in the timeline. A list under the `Пропуск` button ends with
   `ItmoTheme.spacing.fabClearance` of bottom content padding, one under a stack
   of FABs (the schedule) with `fabStackClearance`, so its last item scrolls
   clear of them. `My ITMO` is a row of Профиль.
@@ -401,7 +398,6 @@ both platforms.
 | `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | The action is a button capsule; loading is the large activity indicator |
 | `Skeleton` | First load without a cache, list or cards | Shapes in `systemFill`, cards with the inset group's corners; geometry and pulse stay |
 | `AppRefreshBox` | Pull-to-refresh that the user asked for | Behaves as `UIRefreshControl`: the content follows the pull, the spinner's spokes above it, the refresh haptic at the threshold |
-| `FeedCard`, `ClosableFeedCard`, `FeedCardHeader`, `FeedRowBadge`, `FeedCloseButton` | A home feed card (`Card.Content`, outlined for hints): its header, a row's label and the trailing close button | Same, on the iOS tokens |
 | `ProgressButton` | A button with its own progress, same size, second tap ignored | A `UIButton` capsule: filled is prominent, tonal and outlined are bordered, text is plain; a press dims it |
 | `ItmoSwitch` | An on/off switch; with no callback it only shows the state and the row carries the toggle | A `UISwitch` in the accent with the toggle haptic |
 | `ItmoActivityIndicator` | A small inline wait that must not change its slot (a switch's slot, a row) | `UIActivityIndicatorView`, medium or large |
@@ -457,15 +453,15 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
   `ItmoNavigationBar` (M3E `ShortNavigationBar`) with labels.
 - Every tab root has the root header (`ItmoRootScreen`, `app/shell/entries/TabRootFrames.kt`): the title and its
   one-line subtitle on the left, the actions in the same row, centred on the title block; 112 dp (96 without a
-  subtitle) collapsing to a 64 dp `surfaceContainer` bar while the content scrolls. Сегодня shows the date
-  (`понедельник, 7 сентября`, `TodayHeaderViewModel`) and the bell, which is in this header only (until the bell's own
-  sheet arrives it opens the schedule changes). Tabs whose new screens come later show their name over their current
+  subtitle). It is static (owner, 2026-10-13): it never collapses, the content scrolls under it. Сегодня shows the date
+  (`понедельник, 7 сентября`, `TodayHeaderViewModel`) and the bell with the count of unseen events, which is in this
+  header only and opens the bell's sheet ([the bell](features/home.md#the-bell)). Tabs whose new screens come later show their name over their current
   content.
 - The `Пропуск` extended FAB is on Сегодня only and opens the pass sheet; the widgets, the tile and the shortcut open
   the same sheet.
 - Pushed screens cover the bar: back, a title, no navigation bar.
 - Sheets come in three sizes (`SheetPolicy.Height`): content height (`FIT_CONTENT`, the pass, the links), 82 % of the
-  window (`TALL`, the bell's sheet to come) or the whole height below the status bar (`FULL`, the details sheets and
+  window (`TALL`, the bell's sheet) or the whole height below the status bar (`FULL`, the details sheets and
   the friend picker); none goes under the status bar.
 - Tabs switch by a swipe on Android only ([Tab swipe](#tab-swipe)).
 
@@ -475,14 +471,17 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
 design lab: Material 3 Expressive, Android's only, so its previews are captured in the four Material appearances and
 never in the iOS ones (`materialOnlyPackageTrees` of the kit's screenshot test); iOS draws the same screens in
 SwiftUI ([ADR 0031](decisions/0031-swiftui-ios-screens.md)). Its components take formatted text, icons and colours;
-what a lesson says and which pills it gets is decided by shared presentation. The older components above serve the
+what a lesson says and which pills it gets is decided by shared presentation: `core/lesson/LessonTimelines` builds
+`LessonUi` and `TimelineItem` (states, pills, gaps of an hour or more, progress, change notes) for every lesson list;
+a lesson is online by MyITMO's remote format or by a placeholder room (`дистант`, `онлайн`, `DayLesson.isOnline`),
+and the kit's `LessonMapping.kt` draws them. The older components above serve the
 screens that have not moved yet.
 
 | Component | Use |
 |---|---|
 | `Tone`, `container()`, `onContainer()` | The semantic colour of a pill, tile or card: `Neutral`, `Primary`, `Tertiary`, `Success`, `Warning`, `Error`. The word carries the meaning |
 | `LocalOnSheet`, `cardSurface()` | True inside a `SheetScaffold`: cards and groups step one surface up |
-| `ItmoRootScreen`, `HeaderAction` | A tab root with the collapsing root header and an optional FAB; an icon action with an optional badge |
+| `ItmoRootScreen`, `HeaderAction` | A tab root with the static root header and an optional FAB; an icon action with an optional badge |
 | `ItmoDetailScreen` | A pushed screen: back, `MediumFlexibleTopAppBar` title over a subtitle, actions |
 | `ItmoCard`, `IconTile` | One topic per card (`cardContent`), a tonal card, the one hero (`cardHero`); an icon in a tone's tile |
 | `StatusPill`, `PillSpec` | `идёт`, `далее`, `изменена`, `отменена`, `очередь 2 из 5`, `записаны`, `онлайн`; `solid` for `идёт` |
@@ -490,7 +489,9 @@ screens that have not moved yet.
 | `ListGroup`, `ListRow`, `SwitchListRow`, `ListGroupNote` | Connected groups of rows: icon tile or avatar, title, subtitle, count, value, accessory, chevron, destructive; a switch row; a caption |
 | `GateCard`, `ActionCard`, `LockNote`, `StaleContent` | Gated (what, why, one fix), worth doing, locked without a fix, old data dimmed under its date; empty and error stay `ContentState` |
 | `LessonView`, `LessonCard` | One lesson outside a day list: subject; `тип, преподаватель`; `аудитория, корпус` (none online); note; pills; friends |
-| `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary`, the `сейчас` marker, `Окно 2 ч 10 мин` rows, a change note under a lesson |
+| `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary`, the `сейчас` marker, `Окно 2 ч 10 мин` rows, a change note under a lesson; with `onLessonClick` each lesson is a target |
+| `toLessonView`, `toTimelineRows`, `lessonTypeAccent` | The shared lesson presentation (`core/lesson`) drawn by the kit: texts resolved, pills toned (`идёт` solid `Primary`, `далее` `Neutral`, `изменена` and `очередь` `Warning`, `отменена` `Error`, `записаны` `Success`, `онлайн` `Neutral` with the camera), lesson types coloured |
+| `SectionHeader`, `TextTile` | A section's title with a neutral count at the end; a short text (`+9`) in a tone's tile, the size of an `IconTile` |
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
 | `VotePill` | The votes of a link: ▲ N ▼, the viewer's own vote in `primary`, only the score when voting is not allowed |
 
@@ -586,8 +587,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   back. The `QR-пропуск` accessory sits above the bar only while Сегодня is
   selected and opens the pass sheet.
 - Root header. Title and a one-line subtitle on the leading side, the actions
-  (the bell on Сегодня only) in the same row, `.inlineLarge`; once the content
-  scrolls, `.inline`. `.itmoRootHeader(title:subtitle:)`.
+  (the bell on Сегодня only) in the same row. Static: it never collapses, the
+  content scrolls under it. `.itmoRootHeader(title:subtitle:actions:)`.
 - Sheets. A SwiftUI `.sheet` with the grabber, an inline title and the close
   button; content scrolls. Three heights (`ItmoSheetHeight`): the content's
   (short content is never cut), 0.82 of the screen draggable to full, or full
@@ -600,8 +601,9 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   Cards and groups use iOS 26's inset grouped corner, 26 pt.
 - Choices. `ItmoSegmentedChoice` (the native segmented picker) for two to
   four options and in-screen tabs; filters are chips; more options a list or a
-  sheet. One `.glassProminent` button per area, others `.glass` or
-  `.bordered`.
+  sheet. One prominent button per area (`ItmoProminentButton`: `.glassProminent`
+  in the primary role with an `onPrimary` label, readable in light and dark),
+  others `.glass` or `.bordered`.
 - Lessons. A day's list is `ItmoLessonTimeline`: a rail with a dot per lesson
   in its type colour, the elapsed part in the accent colour, the now marker,
   gap rows for an hour or more, the change note under the lesson. A single
@@ -818,22 +820,24 @@ in [Shared components](#shared-components).
   with `onOpen` (a closed schedule ends in a lock and opens the profile, a long
   press opens it from any row); the chosen row lies on `secondaryContainer`;
   the scope is `ItmoButtonGroup`.
-- Home feed: Compose in `:shared:feature-home`
-  (`feature/home/ui/HomeScreen.kt`, each card in its feature's `ui/home`), see
-  [Home and quick actions](features/home.md#feed). The schedule changes and
-  new marks cards are `Card.Content` cards that close: a header with
-  `ic_edit_calendar` (`ic_menu_book`) in `primary`, the title, the count
-  `Pill` and a trailing 48 dp close button, then the headline (the subject
-  names) wrapping without truncation; the whole card opens the history (the
-  recordbook).
-- Schedule changes: Compose in `:shared:feature-schedule`
-  (`feature/schedule/ui/changes/ScheduleChangesScreen.kt`). A history row is a
-  `Card.Content` card, not clickable: the subject with an 8 dp `primary` dot for
-  a new change (centred on the subject's first line), the main line, one text
-  per changed field so a wrapped field never runs into the next, `вид · поток`;
-  one TalkBack node. Day titles are `titleSmall` in `onSurfaceVariant` headings
-  above their rows; an empty history is the kit's `ContentState` with
-  `ic_history`. On lesson cards the
+- Сегодня: Compose in `:shared:feature-home` (`feature/home/ui/TodayScreen.kt`) on
+  the M3 Expressive kit: the hero `ItmoCard(tone = Primary, hero = true)` (the
+  label and the countdown in `labelLarge`, the subject in emphasized
+  `headlineSmall`, the room in emphasized `displayMedium` beside the full
+  address in `titleMedium`, `ItmoWavyProgress` for the lesson in progress, or
+  emphasized `displaySmall` `Онлайн` with a filled `Подключиться`), a
+  `SectionHeader` with the count over the `LessonTimeline`, `ActionCard`s in
+  `Tone.Warning` under `Нужно сделать`; see [Сегодня](features/home.md#сегодня).
+- The bell's sheet: `BellSheetContent` (`feature/home/ui/BellSheet.kt`) on the
+  `SheetScaffold`: `SectionHeader`s `Новое` (with the count) and `Раньше` over
+  `ListGroup`s of event rows (a 40 dp lead: a mark's `TextTile` `+9` in
+  `Success`, an `IconTile` of the change in `Warning` or of the queue in
+  `Success`/`Error`, the person's `Avatar`; the title in `bodyLarge`, semibold
+  with an 8 dp `primary` dot when new; the details in `bodyMedium`; `было`
+  struck through in `onSurfaceVariant` over `стало` in `warning`; small
+  `Принять` and outlined `Отклонить`), `Ничего нового` with `ic_check_circle`
+  in `success` when nothing is new, and the `Настройки уведомлений` row last.
+- Schedule changes in the schedule: on lesson cards the
   mark `change_indicator` (`ic_edit_calendar`, 16 dp, `primary`) after the
   video-call mark in `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule`; in the lesson sheet
   the `Изменения` block (divider, heading, `было → стало` lines) in

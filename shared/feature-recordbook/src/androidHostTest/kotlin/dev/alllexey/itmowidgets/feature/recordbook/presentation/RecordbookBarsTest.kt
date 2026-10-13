@@ -135,7 +135,7 @@ class RecordbookBarsTest {
         bars.cachedControls = mapOf(barsJournal() to controls)
         loaded(); advanceUntilIdle()
         assertEquals(listOf(TEST_HALF to listOf(BarsPlanMarks.of(barsSubject(), controls)!!)), marks.seenBars)
-        assertEquals(listOf(BarsCheckpointMark(1, 10.0, false)), marks.seenBars.single().second.single().marks)
+        assertEquals(listOf(BarsCheckpointMark(1, 10.0, false, "Контрольная 1", 20.0)), marks.seenBars.single().second.single().marks)
     }
 
     @Test fun `a failed BARS answer advances nothing of BARS`() = runTest {

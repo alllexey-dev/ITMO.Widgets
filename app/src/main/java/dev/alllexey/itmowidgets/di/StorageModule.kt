@@ -17,7 +17,7 @@ import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
-import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
+import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
@@ -61,7 +61,7 @@ val storageModule = module {
     singleOf(::QrSettingsPreferences)
     singleOf(::SportSignSelectorPreferences)
     singleOf(::MarkSourcePreferences)
-    singleOf(::HomeLayoutPreferences)
+    singleOf(::BellPreferences)
     singleOf(::DeviceHintPreferences)
     singleOf(::AppearancePreferences)
     singleOf(::DemoPreferences)

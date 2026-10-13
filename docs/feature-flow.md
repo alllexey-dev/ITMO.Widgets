@@ -52,7 +52,7 @@ demo mode or the opt-in: the callers do.
 - Exceptions become `AppError` here (`data/ScheduleErrors.kt`).
 
 Koin wiring is `di/ScheduleDataModule.kt` (`scheduleDataModule`): one
-repository instance for the screens, the home card, the widget and sign-out.
+repository instance for the screens, Сегодня (`DayLessonsGateway`), the widget and sign-out.
 
 ## 4. View model
 
@@ -82,7 +82,7 @@ the wall clock directly. `di/ScheduleModule.kt` registers it with
   (`entryViewModel()`) and maps its actions to `Nav3AppNavigator`: a
   lesson opens `AppRoutes.LessonDetails` (a sheet), the friends button opens
   `AppRoutes.FriendSelector`, whose answer comes back through the result bus.
-- The same file registers `AppRoutes.UserSchedule`, `AppRoutes.ScheduleChanges`
+- The same file registers `AppRoutes.UserSchedule`
   and the two sheets with `EntryRegistry`.
 - Android-only pieces (widget refresh, change notifications, schedulers) are
   bound in `app/src/main/java/dev/alllexey/itmowidgets/di/ScheduleModule.kt`

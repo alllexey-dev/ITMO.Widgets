@@ -18,9 +18,9 @@ class EntryRouteParserTest {
     }
 
     @Test
-    fun scheduleChangesOpenTheHistoryAboveTheScheduleAndTabRoutesOpenNoScreen() {
+    fun scheduleChangesOpenTheBellOverTodayAndTabRoutesOpenNoScreen() {
         assertEquals(
-            EntryRoute(AppTab.SCHEDULE, overlay = AppRoutes.ScheduleChanges),
+            EntryRoute(AppTab.HOME, overlay = AppRoutes.Bell),
             parse(AppEntryIntents.ACTION_OPEN_SCHEDULE_CHANGES)
         )
         listOf(AppEntryIntents.ACTION_OPEN_SCHEDULE, AppEntryIntents.ACTION_OPEN_SPORT).forEach { action ->

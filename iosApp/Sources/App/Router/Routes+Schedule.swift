@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 
 extension Routes {
-    /// The schedule root (`ScheduleScreen`); another user's schedule and the changes are Compose routes pushed on the
+    /// The schedule root (`ScheduleScreen`); another user's schedule is a Compose route pushed on the
     /// selected tab's stack, the lesson sheet, the pending sport sheet and the friend picker Compose sheets above the
     /// shell.
     static func schedule(_ route: any AppRoute) -> RouteTarget {
@@ -11,8 +11,6 @@ extension Routes {
             let isu = user.isu
             let name = user.name
             return .compose { AnyView(UserScheduleScreen(isu: isu, name: name)) }
-        case is AppRoutes.ScheduleChanges:
-            return .compose { AnyView(ScheduleChangesScreen()) }
         case let details as AppRoutes.LessonDetails:
             let lesson = details.args
             return .composeSheet { AnyView(LessonDetailsSheet(lesson: lesson)) }

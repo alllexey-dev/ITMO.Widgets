@@ -6,10 +6,33 @@ enum class MarkSource { MY_ITMO, BARS, SHEETS }
 
 enum class MarkEventKind { MARK_ADDED, MARK_CHANGED, FINAL_CHANGED }
 
-/** A new or changed mark of one subject; [nameKey] is what joins the sources and the unread list. */
-data class MarkEvent(val source: MarkSource, val half: StudyHalf, val subjectName: String, val kind: MarkEventKind) {
+/**
+ * A new or changed mark of one subject; [nameKey] is what joins the sources and the unread list. [value] is what the
+ * bell and the notification say about it, when the source knows.
+ */
+data class MarkEvent(
+    val source: MarkSource,
+    val half: StudyHalf,
+    val subjectName: String,
+    val kind: MarkEventKind,
+    val value: MarkValue? = null
+) {
     val nameKey: String get() = subjectNameKey(subjectName)
 }
+
+/**
+ * The numbers of one event: a BARS checkpoint's [checkpoint] name, its [mark] out of [max] or [absent]; the change
+ * [delta] of the points; the subject's [total] afterwards; a final [grade].
+ */
+data class MarkValue(
+    val checkpoint: String? = null,
+    val mark: Double? = null,
+    val max: Double? = null,
+    val absent: Boolean = false,
+    val delta: Double? = null,
+    val total: Double? = null,
+    val grade: String? = null
+)
 
 /** The snapshot to store, what changed against the previous one, and whether this was only a first look. */
 data class Compared<S>(val snapshot: S, val events: List<MarkEvent>, val baseline: Boolean)
@@ -60,11 +83,13 @@ object MarkDiff {
         buildList {
             if (!sameScore(old.score, new.score) && !isEmptyScore(new.score)) {
                 val kind = if (isEmptyScore(old.score)) MarkEventKind.MARK_ADDED else MarkEventKind.MARK_CHANGED
-                add(MarkEvent(MarkSource.MY_ITMO, half, new.name, kind))
+                val delta = (new.score ?: 0.0) - (old.score ?: 0.0)
+                add(MarkEvent(MarkSource.MY_ITMO, half, new.name, kind, MarkValue(delta = delta, total = new.score)))
             }
             val rate = rateKey(new.rate)
             if (rate != null && rate != rateKey(old.rate)) {
-                add(MarkEvent(MarkSource.MY_ITMO, half, new.name, MarkEventKind.FINAL_CHANGED))
+                val value = MarkValue(total = new.score, grade = new.rate?.trim())
+                add(MarkEvent(MarkSource.MY_ITMO, half, new.name, MarkEventKind.FINAL_CHANGED, value))
             }
         }
 
@@ -72,16 +97,26 @@ object MarkDiff {
         val oldMarks = old.marks.associateBy { it.id }
         new.marks.forEach { mark ->
             val before = oldMarks[mark.id]
-            when {
-                before == null -> add(MarkEvent(MarkSource.BARS, half, new.name, MarkEventKind.MARK_ADDED))
-                !sameScore(before.mark, mark.mark) || before.absent != mark.absent ->
-                    add(MarkEvent(MarkSource.BARS, half, new.name, MarkEventKind.MARK_CHANGED))
+            val kind = when {
+                before == null -> MarkEventKind.MARK_ADDED
+                !sameScore(before.mark, mark.mark) || before.absent != mark.absent -> MarkEventKind.MARK_CHANGED
+                else -> return@forEach
             }
+            val value = MarkValue(
+                checkpoint = mark.name,
+                mark = mark.mark,
+                max = mark.max,
+                absent = mark.absent,
+                delta = mark.mark?.let { it - (before?.mark ?: 0.0) },
+                total = new.score
+            )
+            add(MarkEvent(MarkSource.BARS, half, new.name, kind, value))
         }
         val statement = Triple(rateKey(new.rate), new.attempt, new.absent)
         val statementChanged = statement != Triple(rateKey(old.rate), old.attempt, old.absent)
         if (statementChanged && (statement.first != null || new.absent)) {
-            add(MarkEvent(MarkSource.BARS, half, new.name, MarkEventKind.FINAL_CHANGED))
+            val value = MarkValue(absent = new.absent, total = new.score, grade = new.rate?.trim())
+            add(MarkEvent(MarkSource.BARS, half, new.name, MarkEventKind.FINAL_CHANGED, value))
         }
     }
 

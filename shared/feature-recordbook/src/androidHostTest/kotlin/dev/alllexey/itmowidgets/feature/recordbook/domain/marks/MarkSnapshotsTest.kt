@@ -51,10 +51,10 @@ class MarkSnapshotsTest {
         assertEquals(journal.rate, plan.rate)
         assertEquals(
             listOf(
-                BarsCheckpointMark(1, 10.0, false),
-                BarsCheckpointMark(3, null, true),
-                BarsCheckpointMark(4, 5.0, false),
-                BarsCheckpointMark(-8, 2.0, false)
+                BarsCheckpointMark(1, 10.0, false, "Точка 1"),
+                BarsCheckpointMark(3, null, true, "Точка 3"),
+                BarsCheckpointMark(4, 5.0, false, "Точка 4"),
+                BarsCheckpointMark(-8, 2.0, false, "Точка -8")
             ),
             plan.marks
         )

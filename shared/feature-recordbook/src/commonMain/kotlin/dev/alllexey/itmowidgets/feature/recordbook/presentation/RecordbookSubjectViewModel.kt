@@ -349,7 +349,7 @@ class RecordbookSubjectViewModel(
         is SubjectLessonsState.Content -> {
             val visible = if (lessonsExpanded) current.lessons else current.lessons.take(COLLAPSED_LESSONS)
             SubjectLessonList.Content(
-                items = visible.map { SubjectLessonItem(SubjectPresenter.lessonDay(it.date), it) },
+                items = visible.map(SubjectPresenter::lessonItem),
                 more = current.lessons.size - visible.size,
             )
         }

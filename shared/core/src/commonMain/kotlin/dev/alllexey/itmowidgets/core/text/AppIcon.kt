@@ -20,6 +20,7 @@ enum class AppIcon(val id: String) {
     FOLDER("folder"),
     FORMAT_LIST_NUMBERED("format_list_numbered"),
     LINK("link"),
+    LOGIN("login"),
     OPEN_IN_NEW("open_in_new"),
     PERSON("person"),
     PERSON_FILLED("person_filled"),

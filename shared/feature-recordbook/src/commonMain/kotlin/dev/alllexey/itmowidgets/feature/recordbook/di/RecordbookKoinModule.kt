@@ -2,8 +2,8 @@ package dev.alllexey.itmowidgets.feature.recordbook.di
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.home.HomeCardRenderer
-import dev.alllexey.itmowidgets.core.home.HomeCardSource
+import dev.alllexey.itmowidgets.core.bell.BellSource
+import dev.alllexey.itmowidgets.core.today.TodayTodoSource
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
@@ -21,7 +21,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRenewal
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
-import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
+import dev.alllexey.itmowidgets.feature.recordbook.data.bell.MarksBellSource
+import dev.alllexey.itmowidgets.feature.recordbook.data.today.BarsTodoSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
@@ -47,7 +48,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLinksLoad
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetLoader
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacherLevelsLoader
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
-import dev.alllexey.itmowidgets.feature.recordbook.ui.home.MarksHomeCardRenderer
 import io.ktor.client.engine.HttpClientEngine
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -64,8 +64,8 @@ import org.koin.dsl.module
  */
 val barsEngineQualifier: Qualifier = named("bars")
 
-/** The marks card's place in the open set of `HomeCardSource`s the home feed reads. */
-val marksCardsQualifier: Qualifier = named("marks")
+/** The marks' place in the open sets of `BellSource`s and `TodayTodoSource`s (the BARS sign-in) Сегодня reads. */
+val marksQualifier: Qualifier = named("marks")
 
 /**
  * The recordbook: the screens (four ViewModels, the subject page's loaders, two resolvers) and all of its data:
@@ -92,7 +92,6 @@ val recordbookModule = module {
     viewModelOf(::RecordbookSubjectViewModel)
     viewModelOf(::SheetScoresViewModel)
     viewModelOf(::BarsLoginViewModel)
-    single<HomeCardRenderer>(named("recordbook")) { MarksHomeCardRenderer }
 
     // MyITMO: one memory cache for the screens, the marks check and sign-out. Cleaner contributions are qualified
     // (an open set that sign-out reads).
@@ -135,7 +134,7 @@ val recordbookModule = module {
     singleOf(::DefaultMarkTracking) { bind<MarkTracking>() }
     // One background run; stateless.
     factoryOf(::MarksCheck)
-    // The marks card: one source under its own qualifier in the open set the feed reads.
-    singleOf(::MarksHomeCardSource)
-    single<HomeCardSource>(marksCardsQualifier) { get<MarksHomeCardSource>() }
+    // The bell's marks and the BARS sign-in under the day, each under its qualifier in the open sets Сегодня reads.
+    single<BellSource>(marksQualifier) { MarksBellSource(get(), get()) }
+    single<TodayTodoSource>(marksQualifier) { BarsTodoSource(get(), get(), get()) }
 }

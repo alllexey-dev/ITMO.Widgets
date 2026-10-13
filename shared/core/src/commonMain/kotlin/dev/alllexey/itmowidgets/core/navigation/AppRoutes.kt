@@ -92,9 +92,11 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** The bell's sheet over Сегодня: scores, schedule changes, queue results and friend requests. */
     @Serializable
-    data object ScheduleChanges : AppRoute {
-        override val kind get() = RouteKind.SCREEN
+    data object Bell : AppRoute {
+        override val kind get() = RouteKind.SHEET
+        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.TALL)
     }
 
     /** The pass sheet over Сегодня; the Сегодня button, widgets, the tile and the shortcuts open it. */
@@ -225,7 +227,7 @@ object AppRoutes {
         subclass(UserProfile::class)
         subclass(UserSchedule::class)
         subclass(UserSport::class)
-        subclass(ScheduleChanges::class)
+        subclass(Bell::class)
         subclass(QrPass::class)
         subclass(MyItmoWeb::class)
         subclass(FriendSelector::class)

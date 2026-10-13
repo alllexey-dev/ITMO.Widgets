@@ -308,7 +308,13 @@ class RecordbookSubjectViewModelTest {
         )
         val vm = currentPeriodModel(); advanceUntilIdle()
         val tab = vm.lessonsTab
-        assertEquals(listOf(1L, 2L, 3L), (tab.list as SubjectLessonList.Content).items.map { it.lesson.pairId })
+        val items = (tab.list as SubjectLessonList.Content).items
+        assertEquals(listOf(1L, 2L, 3L), items.map { it.pairId })
+        // The schedule's lesson card: the same time, place and target as a lesson of the day.
+        val first = items.first().lesson
+        assertEquals("09:30" to "11:00", first.start to first.end)
+        assertTrue(first.place != null)
+        assertEquals(1L, ((first.target as dev.alllexey.itmowidgets.core.lesson.LessonTarget.Lesson).args.pairId))
         assertEquals(listOf("Лекторов Л. Л.", "Практиков П. П."), tab.teachers.map { it.name })
         assertEquals(listOf(100001, 100002), tab.teachers.map { it.isu })
         assertEquals(UiText.Joined(listOf(UiText.Res(RecordbookStrings.subject_role_lectures)), ", "), tab.teachers.first().detail)
@@ -354,7 +360,7 @@ class RecordbookSubjectViewModelTest {
 
         vm.confirmBinding(555L); advanceUntilIdle()
         assertEquals(mapOf(1L to 555L), bindingStore.bindings)
-        assertEquals(listOf(1L), (vm.lessonsTab.list as SubjectLessonList.Content).items.map { it.lesson.pairId })
+        assertEquals(listOf(1L), (vm.lessonsTab.list as SubjectLessonList.Content).items.map { it.pairId })
     }
 
     @Test fun `a failed schedule refresh is an error only when the cache is empty`() = runTest {
@@ -379,12 +385,12 @@ class RecordbookSubjectViewModelTest {
         lessons.lessons.value = (1L..5L).map { subjectLesson(it, "2026-09-${(7 + it).toString().padStart(2, '0')}", subjectId = 1L) }
         val vm = currentPeriodModel(); advanceUntilIdle()
         val first = vm.lessonsTab.list as SubjectLessonList.Content
-        assertEquals(listOf(1L, 2L, 3L), first.items.map { it.lesson.pairId })
+        assertEquals(listOf(1L, 2L, 3L), first.items.map { it.pairId })
         assertEquals(2, first.more)
 
         vm.showAllLessons()
         val all = vm.lessonsTab.list as SubjectLessonList.Content
-        assertEquals((1L..5L).toList(), all.items.map { it.lesson.pairId })
+        assertEquals((1L..5L).toList(), all.items.map { it.pairId })
         assertEquals(0, all.more)
     }
 

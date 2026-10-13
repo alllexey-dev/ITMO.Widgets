@@ -14,7 +14,6 @@ enum class SettingsPage(val title: UiText) {
     FULL_SCHEDULE_WIDGET(UiText.Res(SettingsStrings.settings_full_schedule_widget_title)),
     QR_WIDGET(UiText.Res(SettingsStrings.settings_group_qr_widget)),
     APPEARANCE(UiText.Res(SettingsStrings.settings_appearance_title)),
-    HOME(UiText.Res(SettingsStrings.settings_group_home)),
     SCHEDULE(UiText.Res(SettingsStrings.settings_group_schedule)),
     RECORDBOOK(UiText.Res(CoreStrings.title_recordbook)),
     SPORT(UiText.Res(SettingsStrings.settings_group_sport)),

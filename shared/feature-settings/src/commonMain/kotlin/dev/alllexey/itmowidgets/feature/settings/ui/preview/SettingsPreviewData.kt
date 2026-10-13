@@ -83,11 +83,6 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_friends_sharing
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_access
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_spoiler
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_widgets
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_friends_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_marks_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_changes_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_sport_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_footer
@@ -176,7 +171,6 @@ internal object SettingsPreviewData {
             title = res(CoreRes.string.me_group_app),
             items = listOf(
                 navigation(SettingsPage.APPEARANCE),
-                navigation(SettingsPage.HOME),
                 navigation(SettingsPage.SCHEDULE),
                 navigation(SettingsPage.RECORDBOOK),
                 navigation(SettingsPage.SPORT),
@@ -375,20 +369,6 @@ internal object SettingsPreviewData {
             )
         ),
         preview = WidgetPreviewSettings.Qr(QrWidgetSettings())
-    )
-
-    val Home = state(
-        SettingsPage.HOME,
-        SettingSection(
-            title = null,
-            items = listOf(
-                SettingRowId.HOME_CARD_SCHEDULE to Res.string.settings_home_card_schedule_title,
-                SettingRowId.HOME_CARD_SCHEDULE_CHANGES to Res.string.settings_home_card_schedule_changes_title,
-                SettingRowId.HOME_CARD_MARKS to Res.string.settings_home_card_marks_title,
-                SettingRowId.HOME_CARD_SPORT to Res.string.settings_home_card_sport_title,
-                SettingRowId.HOME_CARD_FRIENDS to Res.string.settings_home_card_friends_title
-            ).map { (id, title) -> SettingItem.Toggle(id, res(title), checked = true) }
-        )
     )
 
     val Schedule = state(

@@ -7,7 +7,6 @@ import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.client.users.SharingVisibility as ApiSharingVisibility
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.network.asAppError
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -22,7 +21,6 @@ import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
-import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.safeEnumOf
@@ -49,7 +47,6 @@ class SettingsRepositoryImpl(
     private val qrSettings: QrSettingsPreferences,
     private val sportSignSelectors: SportSignSelectorPreferences,
     private val markSources: MarkSourcePreferences,
-    private val homeLayout: HomeLayoutPreferences,
     private val deviceHints: DeviceHintPreferences,
     private val appearance: AppearancePreferences,
     private val backend: BackendGate,
@@ -86,14 +83,12 @@ class SettingsRepositoryImpl(
         }
 
         val device = combine(
-            homeLayout.observeHiddenHomeCards(),
             deviceHints.observeBackgroundWorkHintShown(),
             deviceHints.observeQrTileAdded(),
             appearance.observeTheme(),
             appearance.observeWidgetsFollowTheme()
-        ) { hiddenHomeCards, backgroundWorkHintShown, qrTileAdded, theme, widgetsFollowTheme ->
+        ) { backgroundWorkHintShown, qrTileAdded, theme, widgetsFollowTheme ->
             DeviceLocalSettings(
-                hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet(),
                 backgroundWorkHintShown = backgroundWorkHintShown,
                 qrTileAdded = qrTileAdded,
                 theme = theme,
@@ -138,7 +133,6 @@ class SettingsRepositoryImpl(
                 myItmoMarksEnabled = appSettings.marks.myItmo,
                 barsMarksEnabled = appSettings.marks.bars,
                 sheetMarksEnabled = appSettings.marks.sheets,
-                hiddenHomeCards = appSettings.device.hiddenHomeCards,
                 backgroundWorkHintShown = appSettings.device.backgroundWorkHintShown,
                 qrTileAdded = appSettings.device.qrTileAdded,
                 theme = appSettings.device.theme,
@@ -193,10 +187,6 @@ class SettingsRepositoryImpl(
 
     override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
         scheduleChecks.setScheduleSportAutoSignEnabled(enabled)
-    }
-
-    override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
-        homeLayout.setHomeCardHidden(kind.name, hidden = !visible)
     }
 
     override suspend fun setBackgroundWorkHintShown() {
@@ -348,7 +338,6 @@ private data class MarkLocalSettings(
 )
 
 private data class DeviceLocalSettings(
-    val hiddenHomeCards: Set<HomeCardKind>,
     val backgroundWorkHintShown: Boolean,
     val qrTileAdded: Boolean,
     val theme: ThemeSpec,

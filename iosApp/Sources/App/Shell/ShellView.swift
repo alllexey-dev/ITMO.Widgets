@@ -94,7 +94,7 @@ struct ShellStack: View {
         }
     }
 
-    /// The tab's root: today over the Compose home feed, the Compose schedule, the SwiftUI recordbook, the Compose sport tab and profile.
+    /// The tab's root: the SwiftUI today and recordbook, the Compose schedule, sport tab and profile.
     @ViewBuilder
     private var root: some View {
         switch tab {

@@ -10,7 +10,6 @@ import dev.alllexey.itmowidgets.feature.settings.data.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
-import dev.alllexey.itmowidgets.feature.settings.presentation.HomePageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.RecordbookPageProvider
@@ -52,7 +51,6 @@ val settingsModule = module {
     factory { RootPageProvider(get(), get()) }
     factoryOf(::ServicesPageProvider)
     factory { WidgetsPageProvider(get(), get(), get()) }
-    factoryOf(::HomePageProvider)
     factory { SchedulePageProvider(get(), get(), get(), get()) }
     factoryOf(::RecordbookPageProvider)
     factoryOf(::SportPageProvider)

@@ -48,7 +48,7 @@ import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.FileCrossProcessLock
-import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
+import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.IosAppDirectories
 import dev.alllexey.itmowidgets.core.storage.KeychainSecureStore
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
@@ -133,7 +133,7 @@ fun iosCoreModule(
     singleOf(::QrSettingsPreferences)
     singleOf(::DeviceHintPreferences)
     singleOf(::AppearancePreferences)
-    singleOf(::HomeLayoutPreferences)
+    singleOf(::BellPreferences)
     singleOf(::ScheduleCheckPreferences)
     singleOf(::WidgetSettingsPreferences)
     singleOf(::SportSignSelectorPreferences)

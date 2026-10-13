@@ -5,19 +5,14 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The shell in all four appearances, drawn in a window with its system chrome: the glass tab bar with the pass
-/// accessory on today only, the root header (title and subtitle with the bell in one row, `.inline` once scrolled),
+/// accessory on today only, the static root header (title and subtitle with the bell in one row),
 /// a pushed screen that keeps the tab bar, the three sheet heights, the signed-out gate and the damaged-link sheet.
 /// The tab roots are kit fixtures: the roots of the app are still Compose screens a snapshot misses (Metal), checked
-/// by the UITests (`ShellUITests`, `HomeUITests` and the tab classes).
+/// by the UITests (`ShellUITests` and the tab classes); Сегодня has its own (`TodaySnapshotTests`).
 @MainActor
 final class ShellSnapshotTests: XCTestCase {
     func testTodayTab() {
         assertScreenAppearances(of: tabs(.today), named: "today")
-    }
-
-    /// The header collapses to `.inline` once the content leaves the top.
-    func testTodayScrolled() {
-        assertScreenAppearances(of: tabs(.today, scrolled: true), named: "scrolled")
     }
 
     /// The pass accessory and the bell belong to today only.
@@ -68,10 +63,10 @@ final class ShellSnapshotTests: XCTestCase {
 
     // MARK: Fixtures
 
-    private func tabs(_ selection: ShellTab, scrolled: Bool = false) -> some View {
+    private func tabs(_ selection: ShellTab) -> some View {
         ShellTabs(selection: .constant(selection), openPass: {}) { tab in
             NavigationStack {
-                ShellFixtureRoot(tab: tab, scrolled: scrolled)
+                ShellFixtureRoot(tab: tab)
             }
         }
     }
@@ -91,22 +86,17 @@ final class ShellSnapshotTests: XCTestCase {
 /// their title over an empty state.
 private struct ShellFixtureRoot: View {
     let tab: ShellTab
-    var scrolled = false
 
     var body: some View {
         if tab == .today {
             ItmoScreenStack {
                 ItmoSectionHeader(title: "Пары", count: "5 пар")
                 ItmoLessonTimeline(
-                    lessons: KitFixtures.day(at: 12 * 60 + 22), now: 12 * 60 + 22, gapLabel: KitFixtures.gap
+                    rows: KitFixtures.rows(KitFixtures.day(at: 12 * 60 + 22), now: 12 * 60 + 22), showsNow: true
                 )
             }
-            .defaultScrollAnchor(scrolled ? .bottom : .top)
-            .itmoRootHeader(title: tab.title, subtitle: "понедельник, 7 сентября")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ItmoBellButton(label: "Уведомления") {}
-                }
+            .itmoRootHeader(title: tab.title, subtitle: "понедельник, 7 сентября") {
+                ItmoBellButton(label: "Уведомления") {}
             }
         } else {
             ItmoScreenStack {

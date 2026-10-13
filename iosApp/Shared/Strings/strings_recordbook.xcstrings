@@ -361,6 +361,78 @@
         }
       }
     },
+    "recordbook_news_absent" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неявка"
+          }
+        }
+      }
+    },
+    "recordbook_news_grade" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оценка %1$@"
+          }
+        }
+      }
+    },
+    "recordbook_news_mark" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ из %2$@"
+          }
+        }
+      }
+    },
+    "recordbook_news_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "recordbook_news_total" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Итого %1$@"
+          }
+        }
+      }
+    },
+    "recordbook_news_without_value" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые баллы"
+          }
+        }
+      }
+    },
     "recordbook_official_pending" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1053,6 +1125,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сдано %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "recordbook_todo_bars_action" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти"
+          }
+        }
+      }
+    },
+    "recordbook_todo_bars_reason" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сессия закончилась, баллы БАРС не обновляются"
+          }
+        }
+      }
+    },
+    "recordbook_todo_bars_reason_since" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сессия закончилась, баллы БАРС не обновляются с %1$@"
+          }
+        }
+      }
+    },
+    "recordbook_todo_bars_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войдите в БАРС заново"
           }
         }
       }

@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
 sealed interface NotificationDestination {
     data object Sport : NotificationDestination
     data class UserProfile(val isu: Int) : NotificationDestination
+    /** The bell over Сегодня, where the found changes are. */
     data object ScheduleChanges : NotificationDestination
     data object Recordbook : NotificationDestination
     data class RecordbookSubject(val args: RecordbookSubjectArgs) : NotificationDestination

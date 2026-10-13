@@ -1,5 +1,10 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
+import dev.alllexey.itmowidgets.core.lesson.DayLesson
+import dev.alllexey.itmowidgets.core.lesson.LessonState
+import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.lesson.LessonTimelines
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
@@ -17,6 +22,7 @@ import dev.alllexey.itmowidgets.core.resources.title
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.tone
+import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.schedule.lessonTypeName
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -336,6 +342,32 @@ internal object SubjectPresenter {
     /** `ср, 9 сент.`. */
     fun lessonDay(date: LocalDate): UiText = UiText.Dynamic(date.format(DateTexts.SHORT_WEEKDAY_DAY_SHORT_MONTH))
 
+    /** A lesson ahead as the lesson card says it: the same rules as the schedule (`LessonTimelines`). */
+    fun lessonItem(lesson: SubjectLesson): SubjectLessonItem =
+        SubjectLessonItem(lesson.pairId, lessonDay(lesson.date), LessonTimelines.lesson(lesson.toDayLesson(), LessonState.UPCOMING))
+
+    private fun SubjectLesson.toDayLesson() = DayLesson(
+        start = start,
+        end = end,
+        subject = subjectName,
+        typeId = typeId,
+        teacher = teacherFio,
+        room = room,
+        building = building,
+        online = formatId == REMOTE_FORMAT,
+        target = LessonTarget.Lesson(details ?: fallbackDetails()),
+        note = details?.note,
+        videoUrl = details?.zoomUrl,
+    )
+
+    /** What the lesson sheet can show without the schedule's full lesson. */
+    private fun SubjectLesson.fallbackDetails() = LessonDetailsArgs(
+        pairId = pairId, date = date.toString(), subjectName = subjectName, typeId = typeId, format = "",
+        start = start.toString(), end = end.toString(), teacherFio = teacherFio, teacherIsu = teacherIsu, room = room,
+        building = building, buildingId = null, mainBuildingId = null, note = null, zoomUrl = null, zoomPassword = null,
+        zoomInfo = null,
+    )
+
     /** `11:05` today, `4 сент.` before. */
     private fun moment(at: LocalDateTime, today: LocalDate): String =
         if (at.date == today) at.time.format(DateTexts.TIME) else shortDate(at.date)
@@ -343,6 +375,8 @@ internal object SubjectPresenter {
     /** `2 сент.`. */
     private fun shortDate(date: LocalDate): String = "${date.format(DateTexts.DAY)} ${date.format(DateTexts.MONTH_SHORT)}"
 
+    /** MyITMO's `format_id` of a remote lesson. */
+    private const val REMOTE_FORMAT = 3
     private const val MAX_POINTS = 100.0
     private const val MAX_POINTS_TEXT = "100"
     private const val GOOD_SHARE = 0.6f

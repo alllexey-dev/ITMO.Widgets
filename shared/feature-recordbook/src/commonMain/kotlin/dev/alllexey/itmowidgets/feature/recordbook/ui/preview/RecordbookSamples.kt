@@ -32,7 +32,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSheetT
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookView
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonItem
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonList
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessons
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectPresenter
@@ -275,7 +274,7 @@ object RecordbookSamples {
                 reviews = SubjectPresenter.reviews(teachers, levels, connected),
                 binding = null,
                 list = SubjectLessonList.Content(
-                    lessons.map { SubjectLessonItem(SubjectPresenter.lessonDay(it.date), it) },
+                    lessons.map(SubjectPresenter::lessonItem),
                     more = 11,
                 ),
             ),

@@ -1,66 +1,86 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
-import androidx.activity.compose.LocalActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.alllexey.itmowidgets.app.shell.ActivityRoutes
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
+import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
-import dev.alllexey.itmowidgets.core.navigation.AppTab
-import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
-import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
+import dev.alllexey.itmowidgets.core.navigation.EntryRoute
+import dev.alllexey.itmowidgets.core.ui.permission.openAppNotificationSettings
 import dev.alllexey.itmowidgets.di.KoinStarter
-import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
-import dev.alllexey.itmowidgets.feature.home.ui.HomeActions
-import dev.alllexey.itmowidgets.feature.home.ui.HomeHints
-import dev.alllexey.itmowidgets.feature.home.ui.HomeRoute
-import dev.alllexey.itmowidgets.feature.home.ui.onHomeNotificationResult
+import dev.alllexey.itmowidgets.feature.home.presentation.TodayViewModel
+import dev.alllexey.itmowidgets.feature.home.ui.BellRoute
+import dev.alllexey.itmowidgets.feature.home.ui.TodayActions
+import dev.alllexey.itmowidgets.feature.home.ui.TodayRoute
 import dev.alllexey.itmowidgets.feature.qr.ui.QrPassRoute
 
-/** The home tab's overlays: the QR pass, opened by the home button, the tile and the shortcut. */
+/**
+ * Сегодня's overlays: the pass sheet (the `Пропуск` button, the widgets, the tile and the shortcut open it) and the
+ * bell's sheet, whose rows close it and open their event's home.
+ */
 internal fun EntryRegistry.Builder.homeEntries() {
     entry<AppRoutes.QrPass> { key, navigator -> QrPassRoute(onClose = { navigator.close(key) }) }
+    entry<AppRoutes.Bell> { key, navigator ->
+        val context = LocalContext.current
+        BellRoute(
+            onOpen = { route ->
+                navigator.close(key)
+                navigator.run(context, route)
+            },
+            onSettings = {
+                navigator.close(key)
+                context.openAppNotificationSettings()
+            },
+            onClose = { navigator.close(key) },
+            viewModel = viewModel { KoinStarter.ensureStarted(context).get() },
+        )
+    }
 }
 
 /**
- * The home tab's root: `HomeRoute` with its ViewModel from Koin's definition, kept in the root's own
- * store, so the hint callbacks reach the feed's instance. Cards open their sheets, overlays and tabs through
- * [navigator]; the hint actions are [HomeHints], owned by this entry's composition from its
- * start to its end.
+ * Сегодня's root: `TodayRoute` with its ViewModel from Koin, kept in the root's own store. A lesson opens the lesson
+ * sheet (a sport lesson through [SportDetailsRedirect], which opens the sport tab's sheet when it finds the booking),
+ * `Подключиться` the meeting link, a thing to do its route.
  */
 @Composable
 internal fun HomeTabRoot(navigator: Nav3AppNavigator) {
     val context = LocalContext.current
-    val viewModel: HomeViewModel = viewModel { KoinStarter.ensureStarted(context).get() }
-    val activity = LocalActivity.current
-    val notifications = rememberLauncherForActivityResult(RequestNotificationPermission()) { granted ->
-        activity?.onHomeNotificationResult(granted, viewModel)
-    }
-    val hints = remember(context, notifications) { HomeHints(context, notifications) }
+    val viewModel: TodayViewModel = viewModel { KoinStarter.ensureStarted(context).get() }
     val sport = rememberSportDetailsRedirect()
-    DisposableEffect(hints, viewModel) {
-        hints.start(viewModel::onScreenResumed)
-        onDispose { hints.stop() }
+    val actions = remember(navigator, sport, context) {
+        TodayActions(
+            onLesson = { target ->
+                when (target) {
+                    is LessonTarget.Lesson -> sport.openLesson(navigator, target.args)
+                    is LessonTarget.PendingSport -> sport.openPendingSport(navigator, target.args)
+                }
+            },
+            onJoin = { url -> context.openUrl(url) },
+            onTodo = { route -> navigator.run(context, route) },
+        )
     }
-    val actions = remember(navigator, hints, sport) { homeActions(navigator, hints, sport) }
-    HomeRoute(actions, viewModel)
+    TodayRoute(actions, viewModel)
 }
 
-/**
- * The routes of the home cards; a sport row goes through [sport],
- * which opens the sport tab's sheet when it finds the booking.
- */
-private fun homeActions(navigator: Nav3AppNavigator, hints: HomeHints, sport: SportDetailsRedirect) = HomeActions(
-    onLesson = { sport.openLesson(navigator, it) },
-    onPendingSport = { sport.openPendingSport(navigator, it) },
-    onOpenSport = { navigator.select(AppTab.SPORT) },
-    onOpenFriends = { navigator.open(AppRoutes.Friends) },
-    onOpenUser = { isu -> UserScreenArgs.profileIsu(isu.toLong())?.let { navigator.open(AppRoutes.UserProfile(it)) } },
-    onHint = { hint -> hints.act(hint) { page -> navigator.open(AppRoutes.Settings(page)) } },
-    onOpenScheduleChanges = { navigator.open(AppRoutes.ScheduleChanges) },
-    onOpenMarks = { navigator.select(AppTab.RECORDBOOK) },
-)
+/** An entry route from a screen: its tab and overlay, then its Activity above everything, as the shell runs intents. */
+private fun Nav3AppNavigator.run(context: Context, route: EntryRoute) {
+    apply(route)
+    route.activity?.let { context.startActivity(ActivityRoutes.intent(context, it)) }
+}
+
+private fun Context.openUrl(url: String) {
+    try {
+        startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    } catch (_: ActivityNotFoundException) {
+        // No browser or meeting app: nothing to open it with.
+    }
+}
+

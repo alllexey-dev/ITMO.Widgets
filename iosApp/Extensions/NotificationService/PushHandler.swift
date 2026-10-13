@@ -12,10 +12,13 @@ import UserNotifications
 ///   (`notification_sport_agent_booked`), as Android shows it; nothing is booked here.
 /// - Sport: booked as Android's handler books; a booking or MyITMO's refusal retitles the alert with
 ///   `notification_sport_success` or `_failure` over Android's text; a failure before MyITMO's answer keeps Backend's
-///   "a place is free"; a full lesson, or nothing left to book, is dropped, as Android shows nothing.
+///   "a place is free"; a full lesson, or nothing left to book, is dropped, as Android shows nothing. Every booking
+///   and refusal is also left for the bell in the App Group.
 struct PushHandler {
     let session: () -> SessionFile?
     let booker: SportPushBooker
+    /// Leaves each booking or refusal for the bell (`SportResultInbox`).
+    var record: (SportSignNotice) -> Void = { _ in }
 
     func handle(_ content: UNNotificationContent) async -> UNNotificationContent {
         guard let message = PushMessage(userInfo: content.userInfo) else { return content }
@@ -28,6 +31,7 @@ struct PushHandler {
         guard session.servicesEnabled else { return Self.dropped }
 
         let booking = await booker.book(queue, payload: message.payload)
+        booking.notices.forEach(record)
         if let notice = booking.notices.first { return Self.rewritten(content, with: notice) }
         return booking.retryLater ? content : Self.dropped
     }
@@ -85,9 +89,11 @@ extension PushHandler {
             backend: (bundle.object(forInfoDictionaryKey: "BackendBaseURL") as? String).flatMap(URL.init(string:)),
             appVersion: clientVersion(bundle)
         )
+        let inbox = SportResultInbox(container: container)
         return PushHandler(
             session: { SessionFile.read(fromContainer: container) },
-            booker: SportPushBooker(access: access, calls: calls, now: Date.init)
+            booker: SportPushBooker(access: access, calls: calls, now: Date.init),
+            record: { inbox.record($0, at: Date()) }
         )
     }
 

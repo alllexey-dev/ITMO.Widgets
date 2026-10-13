@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
+import dev.alllexey.itmowidgets.core.lesson.LessonUi
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 
@@ -144,8 +144,8 @@ sealed interface SubjectLessonList {
     data class Content(val items: List<SubjectLessonItem>, val more: Int) : SubjectLessonList
 }
 
-/** A lesson ahead under its [day] (`ср, 9 сент.`). */
-data class SubjectLessonItem(val day: UiText, val lesson: SubjectLesson)
+/** A lesson ahead under its [day] (`ср, 9 сент.`), in the one lesson presentation (`core/lesson`); [pairId] keys it. */
+data class SubjectLessonItem(val pairId: Long, val day: UiText, val lesson: LessonUi)
 
 // Материалы --------------------------------------------------------------------------------------------------------
 

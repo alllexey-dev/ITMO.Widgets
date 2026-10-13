@@ -61,6 +61,11 @@ final class StableIdentifiersTests: XCTestCase {
         )
     }
 
+    /// The notification service and the app meet in this App Group directory (`AppGroupSportResultInbox.DIRECTORY`).
+    func testSportResultInbox() {
+        XCTAssertEqual(SportResultInbox.name, "sport-results")
+    }
+
     /// Placed Controls keep their kind; quick actions are `<bundle ID>.<route id>`, Android's shortcut ids.
     func testControlAndQuickActions() throws {
         XCTAssertEqual(QrControl.kind, "dev.alllexey.itmowidgets.control.qr")

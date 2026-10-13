@@ -58,11 +58,4 @@ final class AppPlatform: NSObject, IosPlatform {
     func unlockDevice(reason: String, completion: @escaping (KotlinBoolean) -> Void) {
         DeviceUnlocker.unlock(reason: reason) { completion(KotlinBoolean(bool: $0)) }
     }
-
-    func installedWidgetKinds(completion: @escaping (Set<String>) -> Void) {
-        WidgetCenter.shared.getCurrentConfigurations { result in
-            let kinds = Set((try? result.get())?.map(\.kind) ?? [])
-            DispatchQueue.main.async { completion(kinds) }
-        }
-    }
 }

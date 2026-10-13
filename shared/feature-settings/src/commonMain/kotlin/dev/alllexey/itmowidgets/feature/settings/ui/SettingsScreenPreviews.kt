@@ -129,12 +129,6 @@ internal class SettingsScreenQrWidgetPreview {
     fun SettingsScreen() = SettingsPreview(SettingsPreviewData.QrWidget)
 }
 
-internal class SettingsScreenHomePreview {
-    @Preview(name = "home")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Home)
-}
-
 internal class SettingsScreenSchedulePreview {
     @Preview(name = "schedule")
     @Composable

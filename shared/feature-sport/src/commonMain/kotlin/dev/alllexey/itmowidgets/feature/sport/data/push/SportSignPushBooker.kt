@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking.QueueKind
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.feature.sport.data.bell.SportResultLog
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import kotlin.time.Clock
 import kotlinx.coroutines.CancellationException
@@ -27,7 +28,7 @@ import kotlinx.serialization.json.JsonObject
  *
  * Each lesson is decoded on its own and skipped when malformed, unnamed, repeated or already ended (by the wall
  * clock), then booked on MyITMO. A booking is reported, marked satisfied on Backend and refreshes the schedule widgets;
- * MyITMO's refusal is reported and cancels the queue entry; a full lesson stays queued; any other failure is retried
+ * MyITMO's refusal is reported and cancels the queue entry; both go to the bell's [SportResultLog]; a full lesson stays queued; any other failure is retried
  * by Backend later. Afterwards the bookings and the pending queues refresh. The demo session and a missing opt-in
  * book nothing.
  */
@@ -41,7 +42,8 @@ class SportSignPushBooker(
     private val clock: Clock,
     private val diagnostics: AppDiagnostics,
     private val backend: BackendGate,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val results: SportResultLog
 ) {
 
     /**
@@ -67,13 +69,17 @@ class SportSignPushBooker(
                 if (!backend.mayCallBackend()) return@safely
                 when (withContext(dispatchers.io) { myItmo.sport.signInLesson(lesson.id) }) {
                     SportSignResult.Booked -> {
+                        val notice = SportSignNotice(lesson.id, section, lesson.start, booked = true)
                         // A failed report must never turn a successful booking into a cancellation.
-                        safely { report(SportSignNotice(lesson.id, section, lesson.start, booked = true)) }
+                        safely { results.add(notice) }
+                        safely { report(notice) }
                         safely { markSatisfied(queue, lesson.id) }
                         safely { widgets.refreshScheduleWidgets() }
                     }
                     is SportSignResult.Rejected -> {
-                        safely { report(SportSignNotice(lesson.id, section, lesson.start, booked = false)) }
+                        val notice = SportSignNotice(lesson.id, section, lesson.start, booked = false)
+                        safely { results.add(notice) }
+                        safely { report(notice) }
                         safely { cancel(queue, lesson.id) }
                         safely { widgets.refreshScheduleWidgets() }
                     }

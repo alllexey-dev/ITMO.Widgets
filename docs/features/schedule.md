@@ -32,8 +32,7 @@ phone calendar and `.ics` export in [calendar](calendar.md).
   workers in `:app` under their packages.
 
 - Screens: `ScheduleTabRoot` (`app/shell/entries/ScheduleEntries.kt`) hosts
-  `ScheduleRoute` and registers `AppRoutes.UserSchedule`,
-  `AppRoutes.ScheduleChanges` and the sheets `AppRoutes.LessonDetails`,
+  `ScheduleRoute` and registers `AppRoutes.UserSchedule` and the sheets `AppRoutes.LessonDetails`,
   `AppRoutes.PendingSportDetails`. Screens take state and callbacks only; the
   entry performs effects (maps, links, profiles, picker, navigation).
 
