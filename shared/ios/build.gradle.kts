@@ -28,6 +28,10 @@ kotlin {
             export(project(":shared:feature-settings"))
             // The BARS sign-in sheet's BarsLoginViewModel and the WebKit ports AppPlatform implements.
             export(project(":shared:feature-recordbook"))
+            // The pass sheet's QrPassViewModel and QrCodeGenerator.
+            export(project(":shared:feature-qr"))
+            // The today header's TodayHeaderViewModel.
+            export(project(":shared:feature-home"))
         }
     }
 
@@ -37,8 +41,8 @@ kotlin {
             implementation(project(":shared:designsystem"))
             implementation(project(":shared:compose-strings"))
             implementation(project(":shared:backend-client"))
-            implementation(project(":shared:feature-qr"))
-            implementation(project(":shared:feature-home"))
+            api(project(":shared:feature-qr"))
+            api(project(":shared:feature-home"))
             implementation(project(":shared:feature-schedule"))
             implementation(project(":shared:feature-sport"))
             api(project(":shared:feature-recordbook"))

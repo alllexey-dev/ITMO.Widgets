@@ -3,17 +3,17 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// The today tab's root until its SwiftUI screen lands (ux-overhaul phase 2): the root header (the tab's title, today's
-/// academic date, the bell) over the Compose home feed. Until the bell sheet exists the bell opens the schedule
-/// changes, as on Android.
+/// The today tab's root until its SwiftUI screen lands (ux-overhaul phase 2): the root header of the shared
+/// `TodayHeaderViewModel` (the tab's name, today's academic date) with the bell, over the Compose home feed. Until the
+/// bell sheet exists the bell opens the schedule changes, as on Android.
 struct TodayScreen: View {
     let router: AppRouter
     @Environment(\.scenePhase) private var scenePhase
-    @State private var date = AcademicDay.today()
+    @State private var header = ObservableViewModel(TodayHeaderViewModel.self, state: \.uiState)
 
     var body: some View {
         HomeScreen(router: router)
-            .itmoRootHeader(title: ShellTab.today.title, subtitle: date)
+            .itmoRootHeader(title: header.state.title.resolved, subtitle: header.state.subtitle.resolved)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     ItmoBellButton(label: AppStrings.string("today_notifications")) {
@@ -21,26 +21,10 @@ struct TodayScreen: View {
                     }
                 }
             }
+            .observing(header)
             .onChange(of: scenePhase) { _, phase in
-                if phase == .active { date = AcademicDay.today() }
+                if phase == .active { header.viewModel.refresh() }
             }
-    }
-}
-
-/// Today's academic date for a header, the weekday, day and month in Russian: the shared `AcademicTimeProvider`, never the
-/// device clock, so the debug date override and the Moscow time zone apply.
-// shortcut: formats in Swift what the shared TodayHeaderViewModel already says; replace with that view model once
-// :shared:ios exports :shared:feature-home.
-enum AcademicDay {
-    static func today() -> String {
-        guard let time = IosKoin.shared.get(protocol: AcademicTimeProvider.self) as? AcademicTimeProvider else {
-            preconditionFailure("Koin resolved no AcademicTimeProvider")
-        }
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ru_RU")
-        formatter.timeZone = TimeZone(identifier: time.timeZone.id)
-        formatter.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
-        return formatter.string(from: Date(timeIntervalSince1970: Double(time.now().toEpochMilliseconds()) / 1000))
     }
 }
 

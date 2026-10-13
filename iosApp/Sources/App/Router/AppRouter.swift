@@ -46,7 +46,8 @@ enum ShellSheet: Hashable, Identifiable {
     case linkUnavailable
     /// The web sign-in; `code` is a Universal Link's, checked as soon as the sheet opens.
     case webLogin(code: String?)
-    /// A feature's sheet key whose `RouteTarget` is `.composeSheet`: its Compose content in a SwiftUI sheet.
+    /// A feature's sheet key whose `RouteTarget` is `.composeSheet` (Compose content in a SwiftUI sheet) or
+    /// `.swiftUISheet`.
     case route(ShellDestination)
 
     /// Also the sheet's accessibility identifier, `shell.sheet.<id>`, for the shell's own sheets; a route's content
@@ -255,7 +256,7 @@ final class AppRouter {
             guard sheet == nil else { return .ignored }
             sheet = next
             return .opened
-        case .composeSheet:
+        case .composeSheet, .swiftUISheet:
             guard sheet == nil else { return .ignored }
             sheet = .route(ShellDestination(route))
             return .opened

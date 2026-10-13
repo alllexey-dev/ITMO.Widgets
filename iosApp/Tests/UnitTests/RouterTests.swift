@@ -466,7 +466,7 @@ final class RouterTests: XCTestCase {
 
     /// `RouteTarget` without its view factories.
     private enum TargetKind: Equatable {
-        case tab(ShellTab), gate, compose, swiftUI, sheet(ShellSheet), composeSheet, notOnIOS
+        case tab(ShellTab), gate, compose, swiftUI, sheet(ShellSheet), composeSheet, swiftUISheet, notOnIOS
 
         init(_ target: RouteTarget) {
             switch target {
@@ -476,6 +476,7 @@ final class RouterTests: XCTestCase {
             case .swiftUI: self = .swiftUI
             case let .sheet(sheet): self = .sheet(sheet)
             case .composeSheet: self = .composeSheet
+            case .swiftUISheet: self = .swiftUISheet
             case .notOnIOS: self = .notOnIOS
             }
         }
@@ -523,7 +524,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.UserSchedule(isu: 100_001, name: ""), .compose),
             (AppRoutes.UserSport(isu: 100_001, name: ""), .compose),
             (AppRoutes.ScheduleChanges.shared, .compose),
-            (AppRoutes.QrPass.shared, .composeSheet),
+            (AppRoutes.QrPass.shared, .swiftUISheet),
             (AppRoutes.MyItmoWeb.shared, .swiftUI),
             (period, .composeSheet),
             (AppRoutes.FriendSelector(selectedIsu: 0), .composeSheet),

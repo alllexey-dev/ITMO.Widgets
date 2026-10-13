@@ -74,13 +74,13 @@ Sign-out: the repository is a `SessionDataCleaner` `named("qr")`, beside
 
 ## iOS
 
-- The pass is a sheet over today at 0.82 of the screen, draggable to full:
-  `QrPassScreen` (`iosApp/Sources/Features/Qr/`) hosts the shared
-  `QrPassRoute` (the sheet's content) in a SwiftUI sheet until the SwiftUI pass
-  sheet over `QrPassViewModel` replaces it; the `QR-пропуск` tab bar accessory
-  over today, the Control, the shortcuts and `itmowidgets://route/qr_pass` open
-  it. Unlike Android it raises brightness while shown and restores it on leave
-  or background.
+- The pass is a content-height sheet over today: `QrPassSheet`
+  (`iosApp/Sources/Features/Qr/`) draws `QrPassViewModel` in SwiftUI (the
+  holder, the code from `QrCodeGenerator` with the QR widget's shapes and
+  colours, the line under it with `Обновить`); the `QR-пропуск` tab bar
+  accessory over today, the Control, the shortcuts and
+  `itmowidgets://route/qr_pass` open it. Unlike Android it raises brightness
+  while shown and restores it on leave or background.
 - QR widget (`dev.alllexey.itmowidgets.widget.qr`) is Swift only: it draws
   from `qr-pass-v1.json`, which the app writes from `QrCodeGenerator` on every
   new valid pass, and never fetches itself

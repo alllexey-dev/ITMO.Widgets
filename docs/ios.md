@@ -4,8 +4,9 @@ The iOS client lives in `iosApp/` and links one Kotlin umbrella framework, `Shar
 ([ADR 0023](decisions/0023-ios-client.md)). It has three bundles: the app, a WidgetKit extension and a notification
 service extension. The app is a SwiftUI shell with five tabs (today, schedule, recordbook, sport, profile). System screens
 (sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in)
-are SwiftUI over shared ViewModels; content screens (the pass sheet's content, the home feed, schedule, sport, recordbook, social and profile,
-reviews, links) are still shared Compose Multiplatform screens hosted through `ComposeUIViewController`. They move to
+and the pass sheet are SwiftUI over shared ViewModels; content screens (the home feed, schedule, sport, recordbook,
+social and profile, reviews, links) are still shared Compose Multiplatform screens hosted through
+`ComposeUIViewController`. They move to
 SwiftUI screen by screen ([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
 
 ## Prerequisites
@@ -68,7 +69,9 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   feature. `ShellTab`'s raw values are the frozen route ids, so today is `home` and profile is `me`. Tabs switch by
   the tab bar only, no swipe ([Tab swipe](design.md#tab-swipe)); a pushed screen keeps the bar.
 - Pass accessory. While today is selected, `tabViewBottomAccessory` shows `QR-пропуск` (`ShellPassAccessory`), which
-  opens the pass sheet (`AppRoutes.QrPass`), the same sheet widgets, the Control and shortcuts open.
+  opens the pass sheet (`AppRoutes.QrPass`), the same sheet widgets, the Control and shortcuts open. `QrPassSheet`
+  (`Features/Qr/`) is a content-height `ItmoSheet` over `QrPassViewModel`: holder, the code from `QrCodeGenerator`
+  drawn as the QR widget draws it, and the line with `Обновить`; full brightness while it is on screen.
 - Root header. A SwiftUI root takes `.itmoRootHeader(title:subtitle:)`: title and subtitle with the toolbar items in
   one row (`.inlineLarge`), `.inline` once its scroll view leaves the top. Today's root (`TodayScreen`) has it with
   today's academic date and the bell (`ItmoBellButton`, today only), over the Compose home feed until its SwiftUI
@@ -82,7 +85,7 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   on screen; a tap opens an `AppRoute` key with `AppRouter.open(_:)`. Results return through `open(_:onResult:)` and
   `deliver(_:from:)`.
 - Route map. `Routes.target(for:)` switches over `RouteFeature` and delegates to the feature's `Routes+<Feature>.swift`,
-  which returns `.swiftUI` (native bar), `.compose` (the route draws its own bar), `.sheet`, `.composeSheet`, a tab,
+  which returns `.swiftUI` (native bar), `.compose` (the route draws its own bar), `.sheet`, `.swiftUISheet`, `.composeSheet`, a tab,
   the gate or `.notOnIOS`. `RouterTests` fails for a key no feature claims.
 - Debug launch arguments replace Android's debug tools: `-itmoDemo`, `-itmoSignedOut`, `-itmoShellSession <state>`,
   `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoWebLoginFixture`, `-itmoBarsLogin`.
@@ -102,8 +105,8 @@ ids are frozen (`StableIdentifiersTests.testRouteUrls`).
 Swift reaches Kotlin through `Shared` and SKIE (`shared/ios/build.gradle.kts`): a sealed type switches through
 `onEnum(of:)`, a suspend function is `async throws`, a `Flow` is an `AsyncSequence`, a `StateFlow` has `value`.
 
-- Exports. `:shared:core`, `:shared:feature-account`, `:shared:feature-settings` and `:shared:feature-recordbook` are
-  exported, so their types keep their names in Swift. A feature whose ViewModel SwiftUI owns exports its module.
+- Exports. `:shared:core`, `:shared:feature-account`, `:shared:feature-settings`, `:shared:feature-recordbook`,
+  `:shared:feature-qr` and `:shared:feature-home` are exported, so their types keep their names in Swift. A feature whose ViewModel SwiftUI owns exports its module.
 - Koin. `App.init` calls `IosStrings.installAppLocale()`, then `startKoinIos(platform: AppPlatform())`: one graph
   over `IosKoinModules.all(platform)`, `allowOverride(false)`. iOS bindings live in
   `shared/feature-<x>/src/iosMain/.../di/<Area>IosModule.kt`. Swift reads the graph with

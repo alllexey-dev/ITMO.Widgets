@@ -38,7 +38,7 @@ struct ShellPassAccessory: View {
     var body: some View {
         Button(action: action) {
             Label {
-                Text(.iosPassAccessory)
+                Text(verbatim: AppStrings.string("qr_pass_title"))
             } icon: {
                 AppSymbol.qrCode.image
             }
