@@ -133,7 +133,7 @@ fun FriendSelectorSheetRoute(
  * schedule first, with its avatar), the `Друзья / Все` scope once the friend list has loaded, the search field whose
  * hint follows the scope, then the rows or a state, and the apply button labelled by the choice, enabled once the
  * friend list has loaded. A closed schedule's row and a long press on any row lead to [FriendSelectorActions.onOpenProfile].
- * Stateless: [FriendSelectorSheetRoute] feeds it. The host owns the sheet's container (90 % of the screen) and every
+ * Stateless: [FriendSelectorSheetRoute] feeds it. The host owns the sheet's container (the screen below the status bar) and every
  * effect.
  */
 @Composable

@@ -36,7 +36,7 @@ included build with the convention plugins (`itmowidgets.kmp.library`,
 | `:app` | Android app: shell, Android-only surfaces, Koin start, Android ports |
 | `:shared:core` | Contracts and models every feature shares (`core/*` packages), common strings; no Compose |
 | `:shared:compose-strings` | The Compose side of the catalog: one CMP `Res` over a copy of every module's strings, the `UiText` resolvers |
-| `:shared:designsystem` | `ItmoTheme`, tokens, the component kit, icons, preview helpers |
+| `:shared:designsystem` | `ItmoTheme`, tokens, the component kit, the Android-only M3 Expressive kit of the redesign (`designsystem.kit`), icons, preview helpers |
 | `:shared:backend-client` | Typed Ktor client of the ITMO.Widgets Backend (`BackendClient`, one `*Api` per area) |
 | `:shared:testing` | Test kit: Robolectric and screenshot harness, semantics checks, fake clocks |
 | `:shared:feature-account` | Sign-in, first-run flow, profile tab, web sign-in, My ITMO web page, update offer |
@@ -126,7 +126,10 @@ handlers) are qualified definitions read with `getAll<T>()`.
 
 Routes are shared: `@Serializable` keys in
 `shared/core/src/commonMain/kotlin/dev/alllexey/itmowidgets/core/navigation/AppRoutes.kt`.
-Each key has a kind (tab root, screen, sheet, dialog, gate).
+Each key has a kind (tab root, screen, sheet, dialog, gate); a sheet's `SheetPolicy` names one of the three sizes
+(content height, `SheetPolicy.TALL_FRACTION` of the window, the whole height below the status bar), which iOS maps
+to detents. `AppTab` is the tab model of both platforms: the five tabs in bar order (Сегодня, Расписание, Зачётка,
+Спорт, Профиль; `HOME` is Сегодня, `ME` Профиль) with each tab's label key and icons.
 `EntryRouteParser` turns widget, shortcut, notification and App Link intents
 into routes; `RouteQueue` holds one until the session and the first-run flow
 allow it.
@@ -136,9 +139,14 @@ allow it.
   `AppShell` (one `NavDisplay`), `Nav3AppNavigator` (open and close keys,
   per-tab back stacks in `ShellBackStack`) and `EntryRegistry`. Every key is
   registered in `app/shell/entries/<Area>Entries.kt`, which renders the
-  feature's `<Name>Route` and turns its lambdas into navigator calls. Tab
-  roots sit in a pager (`TabPager.kt`) with swipe between tabs; sheets and
-  dialogs are overlay scenes. Only `LoginActivity`, `BarsLoginActivity` and
+  feature's `<Name>Route` and turns its lambdas into navigator calls. Each tab
+  root renders inside its frame (`entries/TabRootFrames.kt`): the kit's
+  `ItmoRootScreen` with the collapsing root header, and on Сегодня the date
+  (`TodayHeaderViewModel`), the bell and the `Пропуск` button that opens the
+  `QrPass` sheet ([design](design.md#shell)). Tab roots sit in a pager
+  (`TabPager.kt`) with swipe between tabs under the `ShortNavigationBar`;
+  overlay screens cover the bar; sheets and dialogs are overlay scenes
+  (`ShellScenes.kt` sizes a sheet by its `SheetPolicy`). Only `LoginActivity`, `BarsLoginActivity` and
   `SpoilerCropActivity` remain separate activities (`app/shell/ActivityRoutes.kt`).
 - **iOS.** `iosApp/Sources/App/Router/AppRouter.swift` keeps a SwiftUI
   `NavigationStack` per tab and the sheets; `Routes+<Area>.swift` map each

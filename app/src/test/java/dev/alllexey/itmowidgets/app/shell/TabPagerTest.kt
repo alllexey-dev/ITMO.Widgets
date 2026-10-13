@@ -134,9 +134,9 @@ class TabPagerTest {
 
         swipeTowardsNext()
 
-        assertEquals(AppTab.SPORT, navigator.tab)
-        assertBar(AppTab.SPORT)
-        assertEquals(setOf(AppTab.SPORT), probe.composedTabs)
+        assertEquals(AppTab.SCHEDULE, navigator.tab)
+        assertBar(AppTab.SCHEDULE)
+        assertEquals(setOf(AppTab.SCHEDULE), probe.composedTabs)
         assertEquals(listOf(HapticFeedbackType.GestureThresholdActivate), haptics.played)
 
         swipeTowardsPrevious()
@@ -162,7 +162,7 @@ class TabPagerTest {
 
         content.performTouchInput { dragBy(-width * 0.3f) }
         compose.waitForIdle()
-        assertBar(AppTab.SPORT)
+        assertBar(AppTab.SCHEDULE)
         assertEquals(AppTab.HOME, navigator.tab)
         assertEquals(1, haptics.played.size)
 
@@ -183,11 +183,11 @@ class TabPagerTest {
     @Test
     fun neitherEndWrapsAround() {
         show()
-        act { select(AppTab.RECORDBOOK) }
+        act { select(AppTab.HOME) }
 
         swipeTowardsPrevious()
-        assertEquals(AppTab.RECORDBOOK, navigator.tab)
-        assertEquals(setOf(AppTab.RECORDBOOK), probe.composedTabs)
+        assertEquals(AppTab.HOME, navigator.tab)
+        assertEquals(setOf(AppTab.HOME), probe.composedTabs)
 
         act { select(AppTab.ME) }
         swipeTowardsNext()
@@ -260,9 +260,9 @@ class TabPagerTest {
     }
 
     @Test
-    fun aRouteToSportWhileOnRecordbookLandsWithoutSlidingThroughTheTabsBetween() {
+    fun aRouteToSportWhileOnTodayLandsWithoutSlidingThroughTheTabsBetween() {
         show()
-        act { select(AppTab.RECORDBOOK) }
+        act { select(AppTab.HOME) }
         probe.compositions.clear()
         compose.mainClock.autoAdvance = false
 
@@ -302,7 +302,7 @@ class TabPagerTest {
     }
 
     @Test
-    fun aSavedStateRestoreKeepsTheSportPageAndEachRootsScroll() {
+    fun aSavedStateRestoreKeepsTheSchedulePageAndEachRootsScroll() {
         val restoration = StateRestorationTester(compose)
         lateinit var restored: Nav3AppNavigator
         restoration.setContent {
@@ -311,7 +311,7 @@ class TabPagerTest {
         }
         compose.onNodeWithTag("list:HOME").performScrollToIndex(30)
         swipeTowardsNext()
-        compose.onNodeWithTag("list:SPORT").performScrollToIndex(20)
+        compose.onNodeWithTag("list:SCHEDULE").performScrollToIndex(20)
         swipeTowardsPrevious()
         compose.onNodeWithTag("item:HOME:30").assertIsDisplayed()
         swipeTowardsNext()
@@ -319,17 +319,17 @@ class TabPagerTest {
 
         restoration.emulateSavedInstanceStateRestore()
 
-        assertEquals("the restored pages start on sport", listOf(AppTab.SPORT), probe.compositions)
-        compose.runOnIdle { assertEquals(AppTab.SPORT, restored.tab) }
-        assertBar(AppTab.SPORT)
-        compose.onNodeWithTag("item:SPORT:20").assertIsDisplayed()
+        assertEquals("the restored pages start on schedule", listOf(AppTab.SCHEDULE), probe.compositions)
+        compose.runOnIdle { assertEquals(AppTab.SCHEDULE, restored.tab) }
+        assertBar(AppTab.SCHEDULE)
+        compose.onNodeWithTag("item:SCHEDULE:20").assertIsDisplayed()
         swipeTowardsPrevious()
         compose.onNodeWithTag("item:HOME:30").assertIsDisplayed()
         compose.runOnIdle { assertEquals(AppTab.HOME, restored.tab) }
     }
 
     @Test
-    fun recreationKeepsTheSportPageAndEachRootsScroll() {
+    fun recreationKeepsTheSchedulePageAndEachRootsScroll() {
         val shell = TabPagerTestActivity.probe.apply {
             compositions.clear()
             composedTabs.clear()
@@ -344,18 +344,18 @@ class TabPagerTest {
             compose.waitForIdle()
             compose.onNodeWithTag("list:HOME").performScrollToIndex(30)
             swipeTowardsNext()
-            compose.onNodeWithTag("list:SPORT").performScrollToIndex(20)
+            compose.onNodeWithTag("list:SCHEDULE").performScrollToIndex(20)
             compose.waitForIdle()
             shell.compositions.clear()
 
             scenario.recreate()
             compose.waitForIdle()
 
-            assertEquals("the recreated pages start on sport", listOf(AppTab.SPORT), shell.compositions)
-            assertBar(AppTab.SPORT)
+            assertEquals("the recreated pages start on schedule", listOf(AppTab.SCHEDULE), shell.compositions)
+            assertBar(AppTab.SCHEDULE)
             // The recreated window is not shown under Robolectric, so the roots' scroll is read from what is composed.
-            compose.onNodeWithTag("item:SPORT:20").assertExists()
-            compose.onNodeWithTag("item:SPORT:0").assertDoesNotExist()
+            compose.onNodeWithTag("item:SCHEDULE:20").assertExists()
+            compose.onNodeWithTag("item:SCHEDULE:0").assertDoesNotExist()
             swipeTowardsPrevious()
             compose.onNodeWithTag("item:HOME:30").assertExists()
             compose.onNodeWithTag("item:HOME:0").assertDoesNotExist()
@@ -397,11 +397,11 @@ class TabPagerTest {
         content.performTouchInput { up() }
         compose.mainClock.advanceTimeByFrame()
 
-        assertEquals(0f, probe.tabBounds.getValue(AppTab.SPORT).left)
+        assertEquals(0f, probe.tabBounds.getValue(AppTab.SCHEDULE).left)
         assertFalse(AppTab.HOME in probe.composedTabs)
         compose.mainClock.autoAdvance = true
         compose.waitForIdle()
-        assertEquals(AppTab.SPORT, navigator.tab)
+        assertEquals(AppTab.SCHEDULE, navigator.tab)
     }
 
     @Test
@@ -413,9 +413,9 @@ class TabPagerTest {
             compose.onNodeWithTag(ShellTags.tab(tab))
                 .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab))
         }
-        assertBar(AppTab.SPORT)
-        compose.onNodeWithTag("sub:SPORT").assertIsDisplayed()
-        AppTab.entries.filter { it != AppTab.SPORT }.forEach { tab ->
+        assertBar(AppTab.SCHEDULE)
+        compose.onNodeWithTag("sub:SCHEDULE").assertIsDisplayed()
+        AppTab.entries.filter { it != AppTab.SCHEDULE }.forEach { tab ->
             compose.onAllNodesWithTag("sub:$tab", useUnmergedTree = true).assertCountEquals(0)
         }
     }

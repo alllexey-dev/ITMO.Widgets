@@ -79,7 +79,7 @@ import kotlin.test.assertTrue
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
-// A window that holds the whole 802 dp sheet; each test sizes the sheet itself.
+// A window that holds the whole 867 dp sheet; each test sizes the sheet itself.
 @Config(qualifiers = "w600dp-h900dp")
 class FriendSelectorSheetTest {
 
@@ -397,7 +397,7 @@ class FriendSelectorSheetTest {
     private companion object {
         val NARROW_WIDTH = 320.dp
         val WIDE = 600.dp
-        val SHEET_HEIGHT = 802.dp
+        val SHEET_HEIGHT = 867.dp
         const val LARGE_FONT = 1.3f
     }
 }

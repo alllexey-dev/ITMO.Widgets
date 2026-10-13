@@ -51,7 +51,8 @@ import org.robolectric.annotation.Config
  * choice reaches the schedule's opener once, and reselecting the schedule tab closes the picker.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = PreviewHostApplication::class)
+// A phone window: the default 470 dp leaves the tall picker sheet no room for its list.
+@Config(application = PreviewHostApplication::class, qualifiers = "w411dp-h891dp")
 class SocialEntriesTest {
 
     @get:Rule(order = 0)

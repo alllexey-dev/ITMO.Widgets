@@ -111,32 +111,25 @@ class HomeScreenTest {
     }
 
     @Test
-    fun theButtonsNeverCoverTheLastCard() = runComposeUiTest {
-        var width by mutableStateOf(NarrowWidth)
+    fun theLastCardScrollsClearOfThePassButton() = runComposeUiTest {
         setContent {
             ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
-                Box(Modifier.requiredSize(width, WindowHeight)) {
+                Box(Modifier.requiredSize(NarrowWidth, WindowHeight)) {
                     HomeScreen(HomeUiState.Content(EveryKind, refreshing = false), HomeActions(), Renderers)
                 }
             }
         }
 
-        for (window in listOf(NarrowWidth, WideWidth)) {
-            width = window
-            waitForIdle()
-            // The list cannot put its last card at the top, so it stops at its end.
-            onNodeWithTag(HomeTestTags.FEED).performScrollToIndex(EveryKind.lastIndex)
-            waitForIdle()
-            val last = onNodeWithTag(HomeTestTags.card(EveryKind.last().kind)).getBoundsInRoot()
-            val webFab = onNodeWithTag(HomeTestTags.WEB_FAB).getBoundsInRoot()
-            val qrFab = onNodeWithTag(HomeTestTags.QR_FAB).getBoundsInRoot()
-            assertTrue(last.bottom <= webFab.top, "the last card at $window ends at ${last.bottom}, the button at ${webFab.top}")
-            assertTrue(webFab.bottom <= qrFab.top, "the buttons overlap at $window")
-        }
+        // The list cannot put its last card at the top, so it stops at its end.
+        onNodeWithTag(HomeTestTags.FEED).performScrollToIndex(EveryKind.lastIndex)
+        waitForIdle()
+        val last = onNodeWithTag(HomeTestTags.card(EveryKind.last().kind)).getBoundsInRoot()
+        val clearance = WindowHeight - last.bottom
+        assertTrue(clearance >= 96.dp, "the last card ends ${clearance} above the bottom, under the shell's button")
     }
 
     @Test
-    fun theCardsGetTheHostsActionsAndTheButtonsOpenWebAndQr() = runComposeUiTest {
+    fun theCardsGetTheHostsActions() = runComposeUiTest {
         val calls = mutableListOf<String>()
         var lesson: String? = null
         var pending: PendingSportDetailsArgs? = null
@@ -153,8 +146,6 @@ class HomeScreenTest {
             onOpenScheduleChanges = { calls += "changes" },
             onOpenMarks = { calls += "marks" },
             onDismiss = { dismissed += it },
-            onOpenWeb = { calls += "web" },
-            onOpenQr = { calls += "qr" },
         )
         val cards = listOf(homeScheduleCard(), HomeCard.Hint(HomeHint.WIDGETS))
         setContent {
@@ -172,11 +163,9 @@ class HomeScreenTest {
         onNodeWithTag(HomeCardTestTags.HINT_ACTION).performClick()
         assertEquals(HomeHint.WIDGETS, hint)
         onNodeWithContentDescription("Скрыть подсказку").performClick()
-        onNodeWithContentDescription("Открыть My ITMO").performClick()
-        onNodeWithContentDescription("Открыть QR-пропуск").performClick()
 
         assertEquals(listOf(HomeCardKind.MARKS, HomeCardKind.HINT_WIDGETS), dismissed)
-        assertEquals(listOf("sport", "friends", "changes", "marks", "web", "qr"), calls)
+        assertEquals(listOf("sport", "friends", "changes", "marks"), calls)
     }
 
     @Test

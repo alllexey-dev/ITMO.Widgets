@@ -27,7 +27,9 @@ opt-in and `SocialRepository`. Social screens: [Social](social.md); web sign-in:
   opens `AppRoutes.Settings` with `page` = `PRIVACY`.
 - `Подключить устройство` ([web sign-in and pairing](web-login.md)) shows only while the opt-in is on
   (`webLoginAvailable`); the
-  demo refuses it. Developer tools only in debug builds ([Debug tools](debug.md)).
+  demo refuses it. `My ITMO` opens the official site in the app
+  ([My ITMO in the app](my-itmo-web.md)); the demo refuses it. Developer tools only in debug builds
+  ([Debug tools](debug.md)).
 - `StoreScreenshotCapture` sets `MeHost.releaseLook`, so a debug build shows the
   release screen without the developer tools row.
 

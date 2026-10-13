@@ -4,9 +4,12 @@
 # (DebugToolsScreenshotTest) does not report them as stale.
 ShellBar
 ShellDemoBanner
+ShellFullSheet
 ShellOverlay
+ShellPassSheet
 ShellSheet
 ShellTabSwipe
+ShellTodayCollapsed
 WidgetTheme_compact-off
 WidgetTheme_compact-teal
 WidgetTheme_full-off

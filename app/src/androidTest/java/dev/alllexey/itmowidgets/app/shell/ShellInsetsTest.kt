@@ -105,7 +105,8 @@ class ShellInsetsTest {
         eventually {
             val shown = ShellProbe.current()
             assertEquals(tab, shown.tab)
-            assertEquals(listOfNotNull(overlay), shown.overlays)
+            // The route above the tab: an overlay screen or a sheet such as the pass.
+            assertEquals(listOfNotNull(overlay), shown.overlays + listOfNotNull(shown.floating))
         }
         TestUi.settle(SETTLE_MILLIS)
     }

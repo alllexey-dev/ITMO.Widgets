@@ -57,6 +57,9 @@ import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassViewModel
+import androidx.compose.ui.test.assertCountEquals
+import dev.alllexey.itmowidgets.feature.home.presentation.TodayHeaderViewModel
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.qr.ui.QrPassTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.ui.home.MarksHomeCardRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.home.ScheduleHomeCardRenderer
@@ -118,6 +121,7 @@ class HomeEntriesTest {
                     viewModel {
                         HomeViewModel(listOf(FakeHomeSource), NothingHidden, NoHintDismissed, clock)
                     }
+                    viewModel { TodayHeaderViewModel(FixedAcademicTime()) }
                     viewModel {
                         QrPassViewModel(FakeQrRepository, PlainQrAppearance, signedIn, FakeSocialRepository(), clock)
                     }
@@ -153,14 +157,25 @@ class HomeEntriesTest {
     }
 
     @Test
-    fun qrPassRendersItsScreenAndBackClosesIt() {
-        act { open(AppRoutes.QrPass) }
+    fun thePassButtonOpensThePassSheetAndItsCloseButtonClosesIt() {
+        compose.onNodeWithTag(TabRootTags.PASS_FAB).performClick()
+        compose.waitForIdle()
+        assertEquals(listOf(AppRoutes.QrPass), navigator.state.floating)
 
         compose.onNodeWithTag(QrPassTestTags.AREA).assertIsDisplayed()
-        compose.onNodeWithContentDescription(BACK).performClick()
+        compose.onNodeWithContentDescription(CLOSE).performClick()
         compose.waitForIdle()
-        assertTrue(navigator.state.overlays.isEmpty())
+        assertTrue(navigator.state.floating.isEmpty())
         compose.onNodeWithTag(HomeTestTags.FEED).assertIsDisplayed()
+    }
+
+    @Test
+    fun theBellOpensTheScheduleChangesAndOnlyTodayHasTheBellAndThePass() {
+        assertOpens(listOf(AppRoutes.ScheduleChanges)) { compose.onNodeWithTag(TabRootTags.BELL).performClick() }
+
+        act { select(AppTab.SCHEDULE) }
+        compose.onAllNodesWithTag(TabRootTags.BELL).assertCountEquals(0)
+        compose.onAllNodesWithTag(TabRootTags.PASS_FAB).assertCountEquals(0)
     }
 
     @Test
@@ -190,8 +205,6 @@ class HomeEntriesTest {
             scrollTo(HomeCardTestTags.HINT_ACTION)
             compose.onNodeWithTag(HomeCardTestTags.HINT_ACTION).performClick()
         }
-        assertOpens(listOf(AppRoutes.MyItmoWeb)) { compose.onNodeWithTag(HomeTestTags.WEB_FAB).performClick() }
-        assertOpens(listOf(AppRoutes.QrPass)) { compose.onNodeWithTag(HomeTestTags.QR_FAB).performClick() }
     }
 
     @Test
@@ -265,6 +278,7 @@ class HomeEntriesTest {
 
     private companion object {
         const val BACK = "Назад"
+        const val CLOSE = "Закрыть"
         const val FRIEND_ISU = 300001
         val DATE = LocalDate(2026, 9, 7)
         val ZONE: TimeZone = TimeZone.of("Europe/Moscow")

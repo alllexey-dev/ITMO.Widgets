@@ -19,7 +19,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.preview.SheetScores
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and the baselines are `SheetScoresSheet_<state>`. Each
  * state therefore is a function called `SheetScoresSheet` in a holder class of its own. Every preview is the sheet as
- * tall as its content, at most 90 % of the 891 dp capture window, on the sheet's colour, as the Android shell opens it.
+ * tall as its content, at most the 891 dp capture window below a 24 dp status bar, on the sheet's colour, as the Android shell opens it.
  */
 
 /** Downloading the sheet: the indicator in the middle of the shared area. */
@@ -109,5 +109,5 @@ private fun SheetPreview(state: SheetScoresUiState) = ItmoPreview {
     }
 }
 
-/** 90 % of the 891 dp capture window, the most `SheetPolicy.Height.FIT_CONTENT` lets the sheet grow. */
-private const val SHEET_MAX_HEIGHT = 802
+/** The 891 dp capture window below a 24 dp status bar, the most `SheetPolicy.Height.FIT_CONTENT` lets the sheet grow. */
+private const val SHEET_MAX_HEIGHT = 867

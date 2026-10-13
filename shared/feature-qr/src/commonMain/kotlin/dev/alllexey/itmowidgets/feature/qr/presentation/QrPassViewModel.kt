@@ -35,7 +35,7 @@ import kotlinx.datetime.toLocalDateTime
 /**
  * The pass sheet, the one home of the QR pass: the Сегодня button, the widgets, the tile and the shortcuts open it.
  * It shows the last code at once, whatever its age, and asks My ITMO for a new one when the cached code is older than
- * [QrCodeSnapshot.FRESH_MILLIS] or the user taps «Обновить». Without network the last code stays with its time.
+ * [QrCodeSnapshot.FRESH_MILLIS] or the user taps `Обновить`. Without network the last code stays with its time.
  * Requests run only while the sheet is shown ([start], [stop]); the wall [clock] dates the codes in the phone's
  * [zone], never the academic time, which a debug override can move.
  */
@@ -119,7 +119,7 @@ class QrPassViewModel(
         return if (name == null && details == null) null else QrPassHolder(name, details)
     }
 
-    /** «11:44» for a code from today, «1 сент., 11:44» for an older one. */
+    /** `11:44` for a code from today, `1 сент., 11:44` for an older one. */
     private fun timeOf(code: QrCodeSnapshot): String {
         val saved = Instant.fromEpochMilliseconds(code.savedAtMillis).toLocalDateTime(zone)
         val today = clock.now().toLocalDateTime(zone).date

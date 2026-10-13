@@ -19,8 +19,8 @@ import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorSamples.
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `FriendSelectorSheetContent_<state>`. Each state therefore is a function called `FriendSelectorSheetContent` in a
- * holder class of its own; the scanner instantiates each holder by reflection. Every preview is the sheet at its 90 %
- * of the 891 dp capture window, on the sheet's colour, as the shell's sheet opens it.
+ * holder class of its own; the scanner instantiates each holder by reflection. Every preview is the sheet at its full
+ * height below a 24 dp status bar in the 891 dp capture window, on the sheet's colour, as the shell's sheet opens it.
  */
 
 /** The friend list, the own schedule chosen, the chips from the history. */
@@ -156,5 +156,5 @@ private fun PickerPreview(state: FriendSelectorUiState, query: String = "") = It
     }
 }
 
-/** 90 % of the 891 dp capture window, the sheet's `SheetPolicy.Height.TALL`. */
-private const val SHEET_HEIGHT = 802
+/** The 891 dp capture window below a 24 dp status bar, the sheet's `SheetPolicy.Height.FULL`. */
+private const val SHEET_HEIGHT = 867

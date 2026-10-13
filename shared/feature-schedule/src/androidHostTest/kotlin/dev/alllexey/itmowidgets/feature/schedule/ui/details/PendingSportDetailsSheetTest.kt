@@ -31,7 +31,7 @@ import kotlin.test.assertEquals
 import kotlinx.datetime.TimeZone
 
 /**
- * The pending sport sheet at 320 dp and font scale 1.3 in the sheet's 802 dp: what the header shows (and that it has no
+ * The pending sport sheet at 320 dp and font scale 1.3 in the sheet's 867 dp: what the header shows (and that it has no
  * flow row), the condition card of each queue kind, the teacher's profile, the map and `Открыть в спорте`. The host's
  * own effects (closing before the profile and the sport tab, the map intent, the snackbar) stay in the shell's pending
  * sport entry and its instrumented test; the looks live in the `PendingSportDetailsContent_*` goldens.
@@ -153,6 +153,6 @@ class PendingSportDetailsSheetTest {
     private companion object {
         const val NARROW_FONT_SCALE = 1.3f
         val NARROW_WIDTH = 320.dp
-        val SHEET_HEIGHT = 802.dp
+        val SHEET_HEIGHT = 867.dp
     }
 }

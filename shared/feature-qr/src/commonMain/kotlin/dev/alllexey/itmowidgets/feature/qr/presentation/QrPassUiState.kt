@@ -14,7 +14,7 @@ data class QrPassUiState(
     val status: QrPassStatus = QrPassStatus.Loading,
 )
 
-/** The signed-in student: [name] from the session, [details] «M3205, ИСУ 123456» or «ИСУ 123456». */
+/** The signed-in student: [name] from the session, [details] `M3205, ИСУ 123456` or `ИСУ 123456`. */
 data class QrPassHolder(val name: String?, val details: UiText?)
 
 /** The code to draw; [useDynamicColors] is the user's QR colour setting: theme colours instead of black on white. */
@@ -32,7 +32,7 @@ sealed interface QrPassStatus {
         override val line: UiText get() = UiText.Res(QrStrings.qr_pass_refreshing)
     }
 
-    /** The code loaded at [time] («11:44», or «1 сент., 11:44» on another day). */
+    /** The code loaded at [time] (`11:44`, or `1 сент., 11:44` on another day). */
     data class Ready(val time: String) : QrPassStatus {
         override val line: UiText get() = UiText.Res(QrStrings.qr_pass_updated_at, listOf(time))
     }

@@ -52,10 +52,10 @@ data class SheetPolicy(
         /** As tall as the content, up to the whole height below the status bar; longer content scrolls. */
         FIT_CONTENT,
 
-        /** [TALL_FRACTION] of the window, iOS's `.fraction(0.82)` detent: the details sheets and the friend selector. */
+        /** [TALL_FRACTION] of the window, iOS's `.fraction(0.82)` detent. */
         TALL,
 
-        /** The whole height below the status bar, also with short content. */
+        /** The whole height below the status bar, also with short content: the details sheets and the friend selector. */
         FULL,
     }
 

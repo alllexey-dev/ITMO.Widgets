@@ -14,8 +14,12 @@ import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassCode
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassHolder
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassStatus
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassUiState
+import dev.alllexey.itmowidgets.shared.feature.qr.QrStrings
 
-private val Holder = QrPassHolder(PreviewFixtures.LongPersonName, UiText.Dynamic("M3205, ИСУ 123456"))
+private val Holder = QrPassHolder(
+    PreviewFixtures.LongPersonName,
+    UiText.Res(QrStrings.qr_pass_group_isu, listOf("M3205", 123456)),
+)
 private val Code = QrPassCode("ITMO-TEST", useDynamicColors = false)
 
 internal class QrPassSheetReadyPreview {

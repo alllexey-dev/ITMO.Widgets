@@ -11,9 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 
-/** The Сегодня root header: the tab's name over the academic date, «понедельник, 7 сентября». */
-data class TodayHeaderUiState(val title: UiText, val subtitle: UiText)
-
 /** Owns the Сегодня header on both platforms; [refresh] re-reads the date when the tab comes back. */
 class TodayHeaderViewModel(private val time: AcademicTimeProvider) : ViewModel() {
     private val state = MutableStateFlow(stateOf(time.today()))

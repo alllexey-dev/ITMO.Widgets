@@ -66,6 +66,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
 import dev.alllexey.itmowidgets.shared.designsystem.ic_computer
 import dev.alllexey.itmowidgets.shared.designsystem.ic_globe
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
+import dev.alllexey.itmowidgets.shared.designsystem.ic_language
 import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import dev.alllexey.itmowidgets.shared.designsystem.ic_logout
 import dev.alllexey.itmowidgets.shared.designsystem.ic_search
@@ -84,6 +85,7 @@ import dev.alllexey.itmowidgets.shared.feature.account.me_github_accessibility
 import dev.alllexey.itmowidgets.shared.feature.account.me_group_format
 import dev.alllexey.itmowidgets.shared.feature.account.me_group_social
 import dev.alllexey.itmowidgets.shared.feature.account.me_isu
+import dev.alllexey.itmowidgets.shared.feature.account.me_my_itmo
 import dev.alllexey.itmowidgets.shared.feature.account.me_privacy_description
 import dev.alllexey.itmowidgets.shared.feature.account.me_privacy_title
 import dev.alllexey.itmowidgets.shared.feature.account.me_requests_badge
@@ -115,6 +117,8 @@ data class MeActions(
     /** The services-off row: the settings, where the connection is switched on. */
     val onOpenServices: () -> Unit = {},
     val onOpenWebLogin: () -> Unit = {},
+    /** The official site in the app's web view. */
+    val onOpenMyItmo: () -> Unit = {},
     val onOpenSettings: () -> Unit = {},
     val onOpenDebugTools: () -> Unit = {},
     /** Shares the profile under the [name] the header shows. */
@@ -133,6 +137,7 @@ object MeTestTags {
     const val FRIENDS_ROW = "friends_row"
     const val REQUESTS_BADGE = "requests_badge"
     const val FIND_PEOPLE_ROW = "find_people_row"
+    const val MY_ITMO_ROW = "my_itmo_row"
     const val PRIVACY_ROW = "privacy_row"
     const val SERVICES_DISABLED_ROW = "services_disabled_row"
     const val WEB_LOGIN_ROW = "web_login_row"
@@ -312,12 +317,15 @@ private fun AppGroup(webLoginAvailable: Boolean, showDebugTools: Boolean, action
     val computerIcon = painterResource(KitRes.drawable.ic_computer)
     val settingsIcon = painterResource(KitRes.drawable.ic_settings)
     val codeIcon = painterResource(KitRes.drawable.ic_code_blocks)
+    val myItmo = stringResource(Res.string.me_my_itmo)
+    val languageIcon = painterResource(KitRes.drawable.ic_language)
     SettingsGroup(modifier, title = stringResource(CoreRes.string.me_group_app)) {
         if (webLoginAvailable) {
             row(MeTestTags.WEB_LOGIN_ROW) {
                 MeRow(computerIcon, webLogin, MeTestTags.WEB_LOGIN_ROW, actions.onOpenWebLogin)
             }
         }
+        row(MeTestTags.MY_ITMO_ROW) { MeRow(languageIcon, myItmo, MeTestTags.MY_ITMO_ROW, actions.onOpenMyItmo) }
         row(MeTestTags.SETTINGS_ROW) { MeRow(settingsIcon, settings, MeTestTags.SETTINGS_ROW, actions.onOpenSettings) }
         if (showDebugTools) {
             row(MeTestTags.DEBUG_TOOLS_ROW) {

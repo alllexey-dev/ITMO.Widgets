@@ -1,6 +1,4 @@
 <resources>
-    <string name="home_open_qr">Открыть QR-пропуск</string>
-    <string name="home_open_my_itmo">Открыть My ITMO</string>
     <string name="home_empty_title">Пока пусто</string>
     <string name="home_hint_dismiss">Скрыть подсказку</string>
     <string name="home_hint_widgets_title">Добавьте виджет</string>

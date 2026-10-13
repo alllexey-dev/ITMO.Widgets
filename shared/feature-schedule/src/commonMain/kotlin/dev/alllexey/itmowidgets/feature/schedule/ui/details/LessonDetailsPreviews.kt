@@ -19,7 +19,7 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonFrie
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
  * `LessonDetailsContent_<state>`. Each state therefore is a function called `LessonDetailsContent` in a holder class
- * of its own. Every preview is the sheet at its 90 % of the 891 dp capture window, on the sheet's colour, as
+ * of its own. Every preview is the sheet at its full height below a 24 dp status bar in the 891 dp capture window, on the sheet's colour, as
  * the Android shell opens it.
  */
 
@@ -122,5 +122,5 @@ private fun DetailsPreview(
     }
 }
 
-/** 90 % of the 891 dp capture window, the sheet's `SheetPolicy.Height.TALL`. */
-private const val SHEET_HEIGHT = 802
+/** The 891 dp capture window below a 24 dp status bar, the sheet's `SheetPolicy.Height.FULL`. */
+private const val SHEET_HEIGHT = 867

@@ -91,7 +91,7 @@ object QrPassTestTags {
  * The pass sheet: the title with a close button, who the pass belongs to, a square area of at most [AreaMaxSize] with
  * the code (dimmed under the loading indicator while a new one loads), the empty or error state, the instruction
  * under the code and one line: when the code was loaded, or that it is the last one while there is no network, with
- * «Обновить» at its end. No validity or countdown. Stateless; [QrPassRoute] feeds it.
+ * `Обновить` at its end. No validity or countdown. Stateless; [QrPassRoute] feeds it.
  *
  * The code is the flow's hero: one that arrives while the sheet is open grows and fades in on
  * [ItmoTheme.heroMotionScheme]; a code already there on the first frame, and every code under reduced motion, shows at
@@ -114,7 +114,7 @@ fun QrPassSheetContent(
                 Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = ItmoTheme.spacing.section)
+                    .padding(horizontal = ItmoTheme.spacing.screenMargin)
                     .padding(bottom = ItmoTheme.spacing.compact),
                 verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
             ) {
@@ -195,7 +195,7 @@ private fun PassArea(state: QrPassUiState, onRefresh: () -> Unit) {
     }
 }
 
-/** When the code was loaded, with «Обновить» at the end; only under a code. */
+/** When the code was loaded, with `Обновить` at the end; only under a code. */
 @Composable
 private fun StatusLine(status: QrPassStatus, onRefresh: () -> Unit) {
     val line = status.line ?: return

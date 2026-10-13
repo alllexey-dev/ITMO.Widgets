@@ -45,7 +45,7 @@ class QrPassSheetTest {
         var state by mutableStateOf(QrPassUiState())
         var width by mutableStateOf(NarrowWidth)
         setContent {
-            // The sides below are Material's (24 dp sheet margin).
+            // The sides below are Material's (16 dp sheet margin).
             ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
                 Box(Modifier.requiredWidth(width)) { QrPassSheetContent(state, onRefresh = {}, onClose = {}) }
             }
@@ -153,8 +153,8 @@ class QrPassSheetTest {
         val NarrowWidth = 320.dp
         val WideWidth = 600.dp
 
-        /** 80 % of the width inside the 24 dp sheet margins. */
-        val NarrowSide = (320.dp - 48.dp) * 0.8f
+        /** 80 % of the width inside the 16 dp sheet margins. */
+        val NarrowSide = (320.dp - 32.dp) * 0.8f
 
         /** Pixel rounding of the area's side. */
         val Tolerance = 1.dp

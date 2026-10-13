@@ -63,6 +63,4 @@ private fun homeActions(navigator: Nav3AppNavigator, hints: HomeHints, sport: Sp
     onHint = { hint -> hints.act(hint) { page -> navigator.open(AppRoutes.Settings(page)) } },
     onOpenScheduleChanges = { navigator.open(AppRoutes.ScheduleChanges) },
     onOpenMarks = { navigator.select(AppTab.RECORDBOOK) },
-    onOpenWeb = { navigator.open(AppRoutes.MyItmoWeb) },
-    onOpenQr = { navigator.open(AppRoutes.QrPass) },
 )

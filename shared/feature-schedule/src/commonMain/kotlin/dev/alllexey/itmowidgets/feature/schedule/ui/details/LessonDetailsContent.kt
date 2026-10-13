@@ -55,7 +55,7 @@ fun LessonDetailsSheetRoute(
  * The body of the lesson details sheet (`fragment_lesson_details.xml`): the toolbar with close, the kit's
  * `DetailsHeader` (subject, type and format, date and time, teacher with the reserved tone dot, flow, place and the
  * map), then, each only when present, `Изменения`, the meeting info with `Открыть видеозвонок`, the note and
- * `Друзья на паре`. Stateless; the host owns the sheet's container (`colorSurfaceContainerLowest`, 90 % of the
+ * `Друзья на паре`. Stateless; the host owns the sheet's container (`colorSurfaceContainerLowest`, the screen below the status bar
  * screen) and every effect.
  */
 @Composable

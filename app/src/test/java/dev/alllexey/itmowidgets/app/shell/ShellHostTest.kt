@@ -104,7 +104,7 @@ class ShellHostTest {
     fun everyEntryIntentRunsItsRouteOnceTheTabsShow() {
         val subject = RecordbookSubjectArgs(entryId = 7, programId = 3, semester = 2, studyYear = "2025/2026")
         val rows = listOf(
-            Row(entry(AppEntryIntents.ACTION_OPEN_QR_PASS), ShellBackStack(AppTab.HOME, listOf(AppRoutes.QrPass)), EntryShortcuts.QR_PASS),
+            Row(entry(AppEntryIntents.ACTION_OPEN_QR_PASS), ShellBackStack(AppTab.HOME, floating = listOf(AppRoutes.QrPass)), EntryShortcuts.QR_PASS),
             Row(
                 entry(AppEntryIntents.ACTION_OPEN_TODAY),
                 ShellBackStack(AppTab.SCHEDULE, requests = mapOf(AppTab.SCHEDULE to TabRequest.ScheduleToday)),
@@ -191,7 +191,7 @@ class ShellHostTest {
 
             scenario.onActivity { it.deliver(entry(AppEntryIntents.ACTION_OPEN_QR_PASS)) }
             compose.waitForIdle()
-            assertEquals(ShellBackStack(AppTab.HOME, listOf(AppRoutes.QrPass)), snapshot(scenario).backStack)
+            assertEquals(ShellBackStack(AppTab.HOME, floating = listOf(AppRoutes.QrPass)), snapshot(scenario).backStack)
         }
     }
 
@@ -225,12 +225,12 @@ class ShellHostTest {
 
             onboarding.completed.value = true
             compose.waitForIdle()
-            assertEquals(ShellBackStack(AppTab.HOME, listOf(AppRoutes.QrPass)), snapshot(scenario).backStack)
+            assertEquals(ShellBackStack(AppTab.HOME, floating = listOf(AppRoutes.QrPass)), snapshot(scenario).backStack)
 
             // The route ran: neither the saved shell nor the saved queue runs it again.
             scenario.recreate()
             compose.waitForIdle()
-            assertEquals(ShellBackStack(AppTab.HOME, listOf(AppRoutes.QrPass)), snapshot(scenario).backStack)
+            assertEquals(ShellBackStack(AppTab.HOME, floating = listOf(AppRoutes.QrPass)), snapshot(scenario).backStack)
         }
     }
 

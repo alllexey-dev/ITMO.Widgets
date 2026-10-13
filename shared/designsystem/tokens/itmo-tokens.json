@@ -126,7 +126,13 @@
                 "teacherLevelNegative": "#E06C00",
                 "teacherLevelMixed": "#B58900",
                 "teacherLevelPositive": "#689F38",
-                "teacherLevelVeryPositive": "#2E7D32"
+                "teacherLevelVeryPositive": "#2E7D32",
+                "success": "#2E7D32",
+                "successContainer": "#C8F0C8",
+                "onSuccessContainer": "#0B3D10",
+                "warning": "#9A6400",
+                "warningContainer": "#FFDDB0",
+                "onWarningContainer": "#4A2800"
             },
             "dark": {
                 "lessonTypeLecture": "#4984E2",
@@ -148,7 +154,13 @@
                 "teacherLevelNegative": "#FFA24C",
                 "teacherLevelMixed": "#FFD54F",
                 "teacherLevelPositive": "#AED581",
-                "teacherLevelVeryPositive": "#4CAF50"
+                "teacherLevelVeryPositive": "#4CAF50",
+                "success": "#8BD88E",
+                "successContainer": "#1F5323",
+                "onSuccessContainer": "#C8F0C8",
+                "warning": "#FFB951",
+                "warningContainer": "#5C3B00",
+                "onWarningContainer": "#FFDDB0"
             }
         },
         "derived": {
@@ -190,6 +202,7 @@
         "cardPadding": 16.0,
         "summaryPadding": 20.0,
         "touchTarget": 48.0,
+        "fabClearance": 96.0,
         "fabStackClearance": 152.0,
         "statePadding": 32.0,
         "stateIcon": 64.0,

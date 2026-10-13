@@ -55,6 +55,7 @@ fun meViewController(open: (AppRoute) -> Unit): UIViewController {
                 onOpenPrivacy = { open(AppRoutes.Settings(SettingsPage.PRIVACY.name)) },
                 onOpenServices = { open(AppRoutes.Settings()) },
                 onOpenWebLogin = { open(AppRoutes.WebLogin()) },
+                onOpenMyItmo = { open(AppRoutes.MyItmoWeb) },
                 onOpenSettings = { open(AppRoutes.Settings()) },
                 onShareProfile = { name, isu -> scope.launch { shares.profile(name, isu) } },
                 onOpenProjectLink = { link -> actions.openLink(link.url) },

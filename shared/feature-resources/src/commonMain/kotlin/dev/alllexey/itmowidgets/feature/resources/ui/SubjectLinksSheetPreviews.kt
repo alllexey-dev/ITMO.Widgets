@@ -85,5 +85,5 @@ private fun LinksPreview(state: SubjectLinksUiState) = ItmoPreview {
     }
 }
 
-/** The references' 2000 dp window: the whole list fits under the sheet's 90 % cap. */
+/** The references' 2000 dp window: the whole list fits under the sheet's cap. */
 private const val TALL_HEIGHT = 2000

@@ -59,7 +59,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_schedule
  * from the schedule, laid out like the sport tab's own details. The toolbar with close, the kit's [DetailsHeader]
  * (section, the status as the kind line, date and time, teacher, place and the map), one `Условия записи` card, and
  * `Открыть в спорте` pinned under the scrolling content: managing the queue happens on the sport tab. Stateless; the
- * host owns the sheet's container (`colorSurfaceContainerLowest`, 90 % of the screen) and every effect.
+ * host owns the sheet's container (`colorSurfaceContainerLowest`, the screen below the status bar) and every effect.
  */
 @Composable
 fun PendingSportDetailsContent(

@@ -183,6 +183,12 @@ struct ItmoExtendedColorRoles: Sendable {
     let teacherLevelMixed: UInt32
     let teacherLevelPositive: UInt32
     let teacherLevelVeryPositive: UInt32
+    let success: UInt32
+    let successContainer: UInt32
+    let onSuccessContainer: UInt32
+    let warning: UInt32
+    let warningContainer: UInt32
+    let onWarningContainer: UInt32
 }
 
 extension ItmoExtendedColorRoles {
@@ -206,7 +212,13 @@ extension ItmoExtendedColorRoles {
         teacherLevelNegative: 0xE06C00,
         teacherLevelMixed: 0xB58900,
         teacherLevelPositive: 0x689F38,
-        teacherLevelVeryPositive: 0x2E7D32
+        teacherLevelVeryPositive: 0x2E7D32,
+        success: 0x2E7D32,
+        successContainer: 0xC8F0C8,
+        onSuccessContainer: 0x0B3D10,
+        warning: 0x9A6400,
+        warningContainer: 0xFFDDB0,
+        onWarningContainer: 0x4A2800
     )
     static let dark = ItmoExtendedColorRoles(
         lessonTypeLecture: 0x4984E2,
@@ -228,7 +240,13 @@ extension ItmoExtendedColorRoles {
         teacherLevelNegative: 0xFFA24C,
         teacherLevelMixed: 0xFFD54F,
         teacherLevelPositive: 0xAED581,
-        teacherLevelVeryPositive: 0x4CAF50
+        teacherLevelVeryPositive: 0x4CAF50,
+        success: 0x8BD88E,
+        successContainer: 0x1F5323,
+        onSuccessContainer: 0xC8F0C8,
+        warning: 0xFFB951,
+        warningContainer: 0x5C3B00,
+        onWarningContainer: 0xFFDDB0
     )
 }
 
@@ -302,6 +320,12 @@ enum ItmoColor {
     static let teacherLevelMixed = Color(itmo: \ItmoExtendedColorRoles.teacherLevelMixed)
     static let teacherLevelPositive = Color(itmo: \ItmoExtendedColorRoles.teacherLevelPositive)
     static let teacherLevelVeryPositive = Color(itmo: \ItmoExtendedColorRoles.teacherLevelVeryPositive)
+    static let success = Color(itmo: \ItmoExtendedColorRoles.success)
+    static let successContainer = Color(itmo: \ItmoExtendedColorRoles.successContainer)
+    static let onSuccessContainer = Color(itmo: \ItmoExtendedColorRoles.onSuccessContainer)
+    static let warning = Color(itmo: \ItmoExtendedColorRoles.warning)
+    static let warningContainer = Color(itmo: \ItmoExtendedColorRoles.warningContainer)
+    static let onWarningContainer = Color(itmo: \ItmoExtendedColorRoles.onWarningContainer)
 }
 
 /// The corner scale in points; `full` is a `Capsule`.
@@ -340,6 +364,7 @@ enum ItmoSpacing {
     static let cardPadding: CGFloat = 16
     static let summaryPadding: CGFloat = 20
     static let touchTarget: CGFloat = 48
+    static let fabClearance: CGFloat = 96
     static let fabStackClearance: CGFloat = 152
     static let statePadding: CGFloat = 32
     static let stateIcon: CGFloat = 64

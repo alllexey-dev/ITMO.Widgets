@@ -67,7 +67,7 @@ class QrTileFlowTest {
         eventually {
             val shown = ShellProbe.current()
             assertEquals(AppTab.HOME, shown.tab)
-            assertEquals(listOf(AppRoutes.QrPass), shown.overlays)
+            assertEquals(AppRoutes.QrPass, shown.floating)
         }
     }
 

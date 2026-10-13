@@ -145,6 +145,18 @@
         }
       }
     },
+    "me_my_itmo" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My ITMO"
+          }
+        }
+      }
+    },
     "me_privacy_description" : {
       "comment" : "Generated from strings_me.xml",
       "extractionState" : "manual",

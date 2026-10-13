@@ -140,8 +140,11 @@ class StoreScreenshotCapture {
             frame(activity, "10-me")
 
             // Not one of the ten Play frames: the landing's «QR-пропуск» section.
-            open(scenario, AppTab.ME, AppRoutes.QrPass) { it.open(AppRoutes.QrPass) }
-            frame(activity, "11-qr", minTexts = QR_MIN_TEXTS)
+            open(scenario, AppTab.HOME) { it.select(AppTab.HOME) }
+            scenario.onActivity { it.navigator().open(AppRoutes.QrPass) }
+            settle()
+            eventually { assertEquals(AppRoutes.QrPass, ShellProbe.current().floating) }
+            frame(activity, "11-qr", sheet = true, minTexts = QR_MIN_TEXTS)
         }
     }
 
