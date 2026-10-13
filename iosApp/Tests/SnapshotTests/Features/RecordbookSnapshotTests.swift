@@ -119,8 +119,8 @@ final class RecordbookSubjectSnapshotTests: XCTestCase {
         assertSubject(subject(.materials, materials: "off"), named: "materials-off")
     }
 
-    func testFailed() {
-        assertSubject(samples.SubjectFailed, named: "failed")
+    func testSubjectFailed() {
+        assertSubject(samples.SubjectFailed, named: "subject-failed")
     }
 
     private func subject(_ tab: SubjectTab, scores: String = "bars", reviews: String = "summary", materials: String = "links")
