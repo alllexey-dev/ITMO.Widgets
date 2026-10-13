@@ -182,6 +182,11 @@ new iOS app.
   checkout). The QR encoder is a Kotlin port, Google Sheets parse
   with Ksoup, avatars load with Coil 3, OkHttp is 5.5.
 - MyItmoApi 2.1.0: MyITMO's HTTP 403 means no access, not an ended session.
+- Release builds ship a baseline and a startup profile generated from the demo
+  session: startup, the tabs, sheets and pushed screens run compiled ahead of
+  time (from install on Google Play, after the first background dexopt for the
+  GitHub APK) instead of interpreted. Frame-timing benchmarks of tab taps and
+  of a push and pop run nightly.
 - `scripts/verify.sh` is the one build entry point. A PR runs the unit and
   host tests, Konsist, the debug APK and the Roborazzi screenshot baselines of
   the modules it changes (four Android appearances, plus iOS ones for the

@@ -51,6 +51,7 @@ included build with the convention plugins (`itmowidgets.kmp.library`,
 | `:shared:feature-sport` | Sport catalog, bookings, queues, score |
 | `:shared:ios` | Umbrella that builds the static framework `Shared` for Xcode, iOS Koin start, iOS screen factories |
 | `:konsist` | Architecture rules over the sources of `app/` and `shared/` |
+| `:baselineprofile` | Device-only: generates `:app`'s baseline and startup profiles and runs the nightly frame-timing benchmarks over the demo session (docs/testing.md) |
 
 Allowed edges: a feature module depends on `:shared:core`,
 `:shared:designsystem` and `:shared:compose-strings` only (`:shared:testing` in
