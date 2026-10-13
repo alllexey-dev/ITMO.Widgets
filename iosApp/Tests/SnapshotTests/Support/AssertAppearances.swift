@@ -45,6 +45,7 @@ enum SnapshotMatrix {
             .environment(\.colorScheme, appearance.colorScheme)
             .environment(\.dynamicTypeSize, appearance.dynamicTypeSize)
             .environment(\.locale, Locale(identifier: "ru_RU"))
+            .progressViewStyle(StillSpinnerStyle())
         let framed: AnyView
         let layout: SwiftUISnapshotLayout
         if let height {
@@ -66,6 +67,32 @@ enum SnapshotMatrix {
             traits: appearance.traits
         )
         return (framed, strategy)
+    }
+}
+
+/// The system spinner starts on a frame picked by the time it appears, so two renders of one screen differ in its
+/// pixels. Layer renders draw this still one instead: eight spokes of the tint, fading clockwise from the leading one.
+/// A determinate progress view stays the system's linear bar.
+private struct StillSpinnerStyle: ProgressViewStyle {
+    @Environment(\.controlSize) private var controlSize
+
+    func makeBody(configuration: Configuration) -> some View {
+        if configuration.fractionCompleted != nil {
+            ProgressView(configuration).progressViewStyle(.linear)
+        } else {
+            let side: CGFloat = controlSize == .large ? 37 : 20
+            ZStack {
+                ForEach(0..<8, id: \.self) { spoke in
+                    Capsule()
+                        .fill(.tint)
+                        .opacity(1 - Double(spoke) * 0.1)
+                        .frame(width: side * 0.09, height: side * 0.28)
+                        .offset(y: -side * 0.32)
+                        .rotationEffect(.degrees(Double(spoke) * 45 - 90))
+                }
+            }
+            .frame(width: side, height: side)
+        }
     }
 }
 
