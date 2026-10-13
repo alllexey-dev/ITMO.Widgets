@@ -55,16 +55,19 @@ Android (`RecordbookRoute`, `ui/RecordbookScreen.kt`) and SwiftUI on iOS. It loa
 (`presentation/RecordbookPresenter.kt`, pure) puts the subjects into `RecordbookUiState`: the header's subtitle
 (`2 курс, 2025/2026`) and period menu (`3 семестр`, every period of every programme, newest first), and the body.
 
-- Moment: `Семестр` shows `Требуют внимания` and `Дисциплины`; `Сессия` shows the hero `Сдано N из M` with the
-  average of the passed graded subjects, then `Требуют внимания`, `Экзамены впереди` (with the exam date) and
-  `Сдано`. The default is the session once any subject has a final result; a choice holds until the period changes.
+- One list: `Требуют внимания`, then `Дисциплины`. No `Семестр` / `Сессия` switch.
+- Session: while `RecordbookSessionWindow` (`domain/RecordbookSessionWindow.kt`) is open, the hero `Сдано N из M`
+  with the average of the passed graded subjects stands over the list. My ITMO has no session dates, so it is open
+  for a period of an earlier half; for the current one from its last weeks by the calendar (1 December in autumn,
+  15 May in spring) or once an exam is at most four weeks ahead; never for a later one. Upcoming exams carry their
+  date in the row, final results their pill, in any period.
 - `Требуют внимания` rule: `attentionReason` in `presentation/RecordbookAttention.kt`. It uses only controls an
   earlier answer brought (`RecordbookRepository.cachedControls` or `BarsRecordbookRepository.cachedControls`); the
   list never requests controls itself. A passed subject never needs attention. The reason replaces the kind, in red
   (or orange for sport points).
-- A row's number and its quiet source: BARS when the subject has a journal, else a connected sheet's total while the
-  subject is in progress ([sheet scores](sheet-scores.md)), else My ITMO. Points sit over a 0-100 bar in the tone
-  of the row's reason; a final result is a pill (`4C`, `Зачёт`, `2FX`, `Неявка`); a missing number is a dash.
+- A row's number and its quiet source: [which number is shown](#which-number-is-shown). Points sit over a 0-100 bar
+  in the tone of the row's reason; a final result is a pill (`4C`, `Зачёт`, `2FX`, `Неявка`); a missing number is a
+  dash.
 - Физкультура shows the sport total in a small ring (visits and bonus) and opens the Спорт tab; its official result
   still comes only from `rate`.
 - A tap on a source opens `Откуда баллы` (`RecordbookSources`): BARS, My ITMO and the teacher's sheet side by side,
@@ -72,6 +75,22 @@ Android (`RecordbookRoute`, `ui/RecordbookScreen.kt`) and SwiftUI on iOS. It loa
 - New-mark dot: `RecordbookTestTags.NEW_MARK` ([mark tracking](marks-tracking.md#in-the-recordbook)).
 - A subject opens `AppRoutes.RecordbookSubject` only with valid arguments (`program_id`, `semester`, `study_year`,
   `entry_id`).
+
+## Which number is shown
+
+One rule, `RecordbookPointsRule` (`presentation/RecordbookPoints.kt`), for the list, `Откуда баллы` and the
+subject page's hero (decision [0032](../decisions/0032-score-source-priority.md)). The most current source with a
+value wins:
+
+1. a connected sheet ([sheet scores](sheet-scores.md)) whose last reading succeeded and whose cell is not empty;
+2. BARS, when the subject's journal has a score (an untouched journal has none);
+3. the last value of a sheet whose last reading failed (`Нет связи`, closed, row or column not found);
+4. My ITMO's score.
+
+A source without a value never hides one with a value. With no value anywhere the dash is labelled by the first
+source present in the same order: a connected sheet, a BARS journal, else My ITMO. The sheet counts only while the
+subject is in progress; a final result or a no-show takes BARS's or My ITMO's number. `Откуда баллы` says why the
+shown one won, or that no source has points yet. Tests: `RecordbookPointsRuleTest`.
 
 ## BARS
 
@@ -147,7 +166,8 @@ scripts/ios/test.sh --only SnapshotTests/RecordbookSnapshotTests
 ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui MarksWorkTest,MarksNotificationTest
 ```
 
-View model tests (`RecordbookViewModelTest`, `RecordbookBarsTest`, `RecordbookSubjectViewModelTest`) and Roborazzi
+View model tests (`RecordbookViewModelTest`, `RecordbookBarsTest`, `RecordbookSubjectViewModelTest`), the pure rules
+(`RecordbookPointsRuleTest`, `RecordbookSessionWindowTest`) and Roborazzi
 references (`RecordbookScreen_*`, `RecordbookSourcesSheetContent_*`, `RecordbookSubjectScreen_*`) in
 `:shared:feature-recordbook` ([ADR 0022](../decisions/0022-jvm-screenshot-tests.md)), on the states `RecordbookSamples`
 builds with the real presenters; `RecordbookEntriesTest` in `:app`; the iOS references in

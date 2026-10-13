@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookBarsMerge
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSessionWindow
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
 import dev.alllexey.itmowidgets.feature.recordbook.domain.formatRecordbookNumber
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookAssessmentKind
@@ -39,9 +40,6 @@ internal sealed interface RecordbookBarsData {
     data class Failed(val error: AppError) : RecordbookBarsData
 }
 
-/** A connected sheet's total of a subject and when it was read. */
-internal data class RecordbookSheetTotal(val value: String, val updatedAt: Instant?)
-
 /** What the list has loaded; [RecordbookPresenter] puts it into words. */
 internal data class RecordbookInput(
     val selection: RecordbookSelection,
@@ -51,7 +49,6 @@ internal data class RecordbookInput(
     val attention: Map<Long, RecordbookAttentionReason>,
     val unread: Set<String>,
     val sheets: Map<Long, RecordbookSheetTotal>,
-    val view: RecordbookView?,
     val offerHidden: Boolean,
     val sourcesId: Long?,
     val today: LocalDate,
@@ -85,43 +82,25 @@ internal object RecordbookPresenter {
             },
         )
 
-    /** The session once any subject has a final result; the term before. */
-    fun defaultView(official: List<RecordbookSubject>): RecordbookView =
-        if (official.any { it.normalizedRate != RecordbookRate.InProgress && !it.absent }) RecordbookView.SESSION
-        else RecordbookView.SEMESTER
-
+    /** One list: what needs action first, then the rest; the session's hero only while [RecordbookSessionWindow] is open. */
     fun content(input: RecordbookInput): RecordbookBody.Content {
-        val view = input.view ?: defaultView(input.official)
         val journals = when (val bars = input.bars) {
             is RecordbookBarsData.Applied -> bars.journals
             is RecordbookBarsData.Expired -> bars.journals
             else -> null
         }
         val shown = journals?.let { RecordbookBarsMerge.apply(input.official, it) } ?: input.official
-        val entries = input.official.zip(shown) { official, merged -> Entry(official, merged) }
-        val rows = entries.associate { it.official.entryId to row(it, input) }
-        val sections = when (view) {
-            RecordbookView.SEMESTER -> listOfNotNull(
-                section(RecordbookStrings.recordbook_attention_section, entries.filter { it.official.entryId in input.attention }, rows),
-                section(RecordbookStrings.recordbook_disciplines_section, entries.filter { it.official.entryId !in input.attention }, rows),
-            )
-            RecordbookView.SESSION -> listOfNotNull(
-                section(RecordbookStrings.recordbook_attention_section, entries.filter { it.official.entryId in input.attention }, rows),
-                section(
-                    RecordbookStrings.recordbook_section_ahead,
-                    entries.filter { it.official.entryId !in input.attention && it.shown.status != RecordbookSubjectStatus.PASSED },
-                    rows,
-                ),
-                section(
-                    RecordbookStrings.recordbook_section_passed,
-                    entries.filter { it.official.entryId !in input.attention && it.shown.status == RecordbookSubjectStatus.PASSED },
-                    rows,
-                ),
-            )
+        val entries = input.official.zip(shown) { official, merged ->
+            Entry(official, merged, RecordbookPointsRule.pick(official, merged, input.sheets[official.disciplineId]))
         }
+        val rows = entries.associate { it.official.entryId to row(it, input) }
+        val sections = listOfNotNull(
+            section(RecordbookStrings.recordbook_attention_section, entries.filter { it.official.entryId in input.attention }, rows),
+            section(RecordbookStrings.recordbook_disciplines_section, entries.filter { it.official.entryId !in input.attention }, rows),
+        )
+        val session = RecordbookSessionWindow.isOpen(input.selection.period, input.official, input.today, input.timeZone)
         return RecordbookBody.Content(
-            view = view,
-            summary = if (view == RecordbookView.SESSION) summary(shown) else null,
+            summary = if (session) summary(entries) else null,
             barsNotice = when (val bars = input.bars) {
                 is RecordbookBarsData.Expired -> RecordbookBarsNotice.Expired
                 is RecordbookBarsData.Failed -> RecordbookBarsNotice.Failed(bars.error)
@@ -135,8 +114,8 @@ internal object RecordbookPresenter {
         )
     }
 
-    /** A subject as My ITMO lists it and as the list shows it, with BARS laid over when it has a journal. */
-    private data class Entry(val official: RecordbookSubject, val shown: RecordbookSubject) {
+    /** A subject as My ITMO lists it, as the list shows it (BARS laid over when it has a journal) and its [points]. */
+    private data class Entry(val official: RecordbookSubject, val shown: RecordbookSubject, val points: RecordbookPoints) {
         val fromBars: Boolean get() = shown.barsJournal != null
     }
 
@@ -152,8 +131,8 @@ internal object RecordbookPresenter {
             is RecordbookAttentionReason.SportShort -> RecordbookTone.WARN
             else -> RecordbookTone.BAD
         }
-        val stale = entry.fromBars && input.bars is RecordbookBarsData.Expired
-        val source = source(entry, input)
+        val stale = source(entry) == RecordbookSource.BARS && input.bars is RecordbookBarsData.Expired
+        val source = source(entry)
         return RecordbookRow(
             id = subject.entryId,
             name = subject.name,
@@ -168,17 +147,9 @@ internal object RecordbookPresenter {
         )
     }
 
-    /** BARS over a sheet over My ITMO: the fresher number of a subject still in progress. */
-    private fun source(entry: Entry, input: RecordbookInput): RecordbookSource = when {
-        entry.official.isPhysicalEducation -> RecordbookSource.SPORT
-        entry.fromBars -> RecordbookSource.BARS
-        sheetShown(entry, input) -> RecordbookSource.SHEET
-        else -> RecordbookSource.MY_ITMO
-    }
-
-    private fun sheetShown(entry: Entry, input: RecordbookInput): Boolean =
-        input.sheets[entry.official.disciplineId] != null && !entry.official.absent &&
-            entry.official.normalizedRate == RecordbookRate.InProgress
+    /** Sport for physical education, else the source [RecordbookPointsRule] picked. */
+    private fun source(entry: Entry): RecordbookSource =
+        if (entry.official.isPhysicalEducation) RecordbookSource.SPORT else entry.points.source
 
     private fun value(entry: Entry, input: RecordbookInput, tone: RecordbookTone): RecordbookValue {
         val subject = entry.shown
@@ -189,13 +160,8 @@ internal object RecordbookPresenter {
             val scale = maxOf(SPORT_SCALE, score.total).toFloat()
             return RecordbookValue.Sport(score.total.toString(), score.attendances / scale, score.creditedBonus / scale)
         }
-        if (source(entry, input) == RecordbookSource.SHEET) {
-            val text = input.sheets.getValue(subject.disciplineId).value
-            val points = text.replace(',', '.').replace(" ", "").toDoubleOrNull()
-            return RecordbookValue.Points(text, share(points), tone)
-        }
-        val score = subject.score?.takeIf { it.isFinite() && it >= 0 } ?: return RecordbookValue.None
-        return RecordbookValue.Points(formatRecordbookNumber(score), share(score), tone)
+        val text = entry.points.text ?: return RecordbookValue.None
+        return RecordbookValue.Points(text, share(entry.points.points), tone)
     }
 
     /** A final result as a pill: passed in green, failed in red. */
@@ -249,14 +215,14 @@ internal object RecordbookPresenter {
         if (at.date == today) at.time.format(DateTexts.TIME)
         else "${at.date.format(DateTexts.DAY)} ${at.date.format(DateTexts.MONTH_SHORT)}"
 
-    private fun summary(subjects: List<RecordbookSubject>): RecordbookSummary {
-        val passed = subjects.filter { it.status == RecordbookSubjectStatus.PASSED }
-        val graded = passed.filter { !it.isPhysicalEducation && it.assessmentKind != RecordbookAssessmentKind.CREDIT }
-            .mapNotNull { it.score?.takeIf(Double::isFinite) }
+    private fun summary(entries: List<Entry>): RecordbookSummary {
+        val passed = entries.filter { it.shown.status == RecordbookSubjectStatus.PASSED }
+        val graded = passed.filter { !it.official.isPhysicalEducation && it.shown.assessmentKind != RecordbookAssessmentKind.CREDIT }
+            .mapNotNull { it.points.points }
         return RecordbookSummary(
             passed = UiText.Res(RecordbookStrings.recordbook_session_passed, listOf(passed.size)),
-            of = UiText.Res(RecordbookStrings.recordbook_session_of, listOf(subjects.size)),
-            share = if (subjects.isEmpty()) 0f else passed.size.toFloat() / subjects.size,
+            of = UiText.Res(RecordbookStrings.recordbook_session_of, listOf(entries.size)),
+            share = if (entries.isEmpty()) 0f else passed.size.toFloat() / entries.size,
             average = graded.takeIf { it.isNotEmpty() }?.let {
                 UiText.Res(RecordbookStrings.recordbook_session_average, listOf(formatRecordbookNumber(it.average())))
             },
@@ -264,7 +230,7 @@ internal object RecordbookPresenter {
     }
 
     private fun sources(entry: Entry, input: RecordbookInput): RecordbookSources {
-        val shown = source(entry, input)
+        val shown = source(entry)
         val sheet = input.sheets[entry.official.disciplineId]
         val official = entry.official.score?.takeIf { it.isFinite() }?.let(::formatRecordbookNumber)
         val barsValue = entry.shown.takeIf { entry.fromBars }?.score?.takeIf { it.isFinite() }?.let(::formatRecordbookNumber)
@@ -294,6 +260,7 @@ internal object RecordbookPresenter {
             title = UiText.Res(RecordbookStrings.recordbook_sources_sheet),
             note = when {
                 sheet == null -> UiText.Res(RecordbookStrings.recordbook_sources_sheet_off)
+                !sheet.fresh -> UiText.Res(RecordbookStrings.recordbook_sources_sheet_stale)
                 sheet.updatedAt == null -> UiText.Res(RecordbookStrings.recordbook_sources_sheet_note)
                 else -> UiText.Res(
                     RecordbookStrings.recordbook_sources_sheet_updated,
@@ -311,9 +278,10 @@ internal object RecordbookPresenter {
             ),
             rows = listOf(bars, myItmo, table).sortedByDescending { it.shown },
             note = UiText.Res(
-                when (shown) {
-                    RecordbookSource.BARS -> RecordbookStrings.recordbook_sources_why_bars
-                    RecordbookSource.SHEET -> RecordbookStrings.recordbook_sources_why_sheet
+                when {
+                    entry.points.text == null -> RecordbookStrings.recordbook_sources_why_none
+                    shown == RecordbookSource.BARS -> RecordbookStrings.recordbook_sources_why_bars
+                    shown == RecordbookSource.SHEET -> RecordbookStrings.recordbook_sources_why_sheet
                     else -> RecordbookStrings.recordbook_sources_why_myitmo
                 },
             ),
