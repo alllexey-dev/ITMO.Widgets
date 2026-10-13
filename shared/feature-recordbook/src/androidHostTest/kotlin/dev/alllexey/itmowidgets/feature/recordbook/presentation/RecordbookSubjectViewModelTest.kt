@@ -54,6 +54,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -285,6 +286,17 @@ class RecordbookSubjectViewModelTest {
         assertEquals(SheetScoresArgs.Step.TOTAL, line.changeTotal.step)
         vm.disconnectSheet(); advanceUntilIdle()
         assertEquals(listOf(scopeOf()), sheets.disconnected)
+    }
+
+    @Test fun `an empty BARS journal does not hide the connected sheet in the hero`() = runTest {
+        preference.enabled = true
+        bars.details = AppResult.Success(BarsSubjectDetails(barsSubject(score = null, rate = null), emptyList()))
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = null)))
+        val sheets = FakeSheetScoresRepository(sheetScore(scope = scopeOf(), value = "41,5"))
+        val vm = model(withBars = true, sheets = sheets); advanceUntilIdle()
+
+        assertEquals("41,5", vm.scores.hero.points)
+        assertNotEquals(UiText.Res(RecordbookStrings.recordbook_source_bars), vm.scores.hero.source)
     }
 
     @Test fun `without a connection the sheet links are offered`() = runTest {

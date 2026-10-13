@@ -1,5 +1,8 @@
 # 0014 Own totals from public Google Sheets are read on the device
 
+**Amended by [0032](0032-score-source-priority.md):** a connected total is shown over BARS and My ITMO, not only
+while they have no points.
+
 **Decision (2026-10-01).** A student connects the own total of a subject from
 a teacher's public Google Sheet behind any link of the subject (`Мои баллы`).
 The application downloads the sheet, finds the own row and the total column by

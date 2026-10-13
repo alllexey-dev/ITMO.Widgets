@@ -637,30 +637,6 @@
         }
       }
     },
-    "recordbook_section_ahead" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Экзамены впереди"
-          }
-        }
-      }
-    },
-    "recordbook_section_passed" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сдано"
-          }
-        }
-      }
-    },
     "recordbook_session_average" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -913,6 +889,18 @@
         }
       }
     },
+    "recordbook_sources_sheet_stale" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не удалось обновить, прошлое значение"
+          }
+        }
+      }
+    },
     "recordbook_sources_sheet_updated" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -956,7 +944,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "БАРС обновляется раньше и показывает контрольные, поэтому берём его. Итог в зачётку всё равно ставят в My ITMO"
+            "value" : "БАРС обновляется раньше My ITMO и показывает контрольные, поэтому берём его, если в таблице преподавателя нет свежего числа. Итог в зачётку всё равно ставят в My ITMO"
           }
         }
       }
@@ -973,6 +961,18 @@
         }
       }
     },
+    "recordbook_sources_why_none" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Баллов пока нет ни в одном источнике"
+          }
+        }
+      }
+    },
     "recordbook_sources_why_sheet" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -980,7 +980,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Таблица преподавателя обновляется раньше My ITMO, поэтому берём её. Итог ставят только в My ITMO, так что разница уйдёт, когда преподаватель перенесёт баллы"
+            "value" : "Таблица преподавателя обновляется раньше БАРС и My ITMO, поэтому берём её. Итог ставят только в My ITMO, так что разница уйдёт, когда преподаватель перенесёт баллы"
           }
         }
       }
@@ -1173,42 +1173,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Войдите в БАРС заново"
-          }
-        }
-      }
-    },
-    "recordbook_view_label" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Что показать"
-          }
-        }
-      }
-    },
-    "recordbook_view_semester" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Семестр"
-          }
-        }
-      }
-    },
-    "recordbook_view_session" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сессия"
           }
         }
       }
