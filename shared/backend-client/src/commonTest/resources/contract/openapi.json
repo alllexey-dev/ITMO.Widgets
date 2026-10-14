@@ -1134,6 +1134,26 @@
         ]
       }
     },
+    "/api/agent/self": {
+      "delete": {
+        "operationId": "agent_revokeSelf",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUnit"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "agent"
+        ]
+      }
+    },
     "/api/agent/tokens": {
       "post": {
         "operationId": "agent_create",

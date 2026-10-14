@@ -872,6 +872,14 @@
     "minCore": "1.7.0"
   },
   {
+    "id": "revokeAgentSelf",
+    "kind": "http",
+    "method": "DELETE",
+    "path": "/api/agent/self",
+    "file": "http/agent/revokeAgentSelf.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "revokeConnection",
     "kind": "http",
     "method": "POST",
