@@ -139,11 +139,9 @@ struct LessonSheetContent: View {
                 symbol(action.kind).image
                     .font(.itmo(.titleLarge))
                     .frame(maxWidth: .infinity, minHeight: 52)
-                    .foregroundStyle(first ? .white : ItmoColor.primary)
-                    .background(
-                        first ? ItmoColor.primary : Color(.secondarySystemGroupedBackground),
-                        in: .rect(cornerRadius: 18)
-                    )
+                    // The rest in the primary container (Android's tonal button): a grey tile reads as disabled.
+                    .foregroundStyle(first ? ItmoColor.onPrimary : ItmoColor.onPrimaryContainer)
+                    .background(first ? ItmoColor.primary : ItmoColor.primaryContainer, in: .rect(cornerRadius: 18))
                 Text(verbatim: action.label.resolved).font(.itmo(.labelMedium)).lineLimit(1).foregroundStyle(.primary)
             }
         }
