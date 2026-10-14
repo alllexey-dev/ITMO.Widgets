@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FakeAppForeground
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
@@ -22,8 +23,14 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
-import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsViewModel
+import dev.alllexey.itmowidgets.feature.schedule.data.days.ScheduleDaysImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.local.CacheEntry
+import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
+import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleDays
+import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedViewModel
+import dev.alllexey.itmowidgets.feature.schedule.presentation.friends.FriendPickerViewModel
+import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonSheetViewModel
+import dev.alllexey.itmowidgets.feature.schedule.presentation.month.ScheduleMonthViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.LocalDate
@@ -37,24 +44,23 @@ import org.koin.dsl.module
 /**
  * The schedule keys' ViewModels and platform parts over synthetic data, for every shell test whose screens open them:
  * the academic clock stands at [ScheduleSamples.NOW], [schedules] has one lesson on that day for every user, there is
- * no change, no pending sport, no known building and nobody on a lesson; the custom services are off.
+ * no change, no pending sport, no known building, no subject source and nobody on a lesson; the custom services are
+ * off. The friend picker reads the social test module's `FriendRepository`.
  */
 internal fun scheduleTestModule(schedules: FakeScheduleRepository = ScheduleSamples.repository()): Module = module {
     single<AcademicTimeProvider> { ScheduleSamples.time }
     single { BuildingDirectory(emptyList()) }
-    viewModel {
-        ScheduleViewModel(
-            schedules,
-            get(),
-            get<SavedStateHandle>(),
-            NoAutoSign,
-            NoPendingSport,
-            FakeScheduleChangesRepository(),
-            NoCalendarSync,
-        )
+    single<ScheduleDays> {
+        ScheduleDaysImpl(schedules, NoCache, FakeScheduleChangesRepository(), NoPendingSport, NoAutoSign, ScheduleSamples.time)
     }
+    viewModel { ScheduleFeedViewModel(get<SavedStateHandle>(), get(), get(), NoCalendarSync, FakeAppForeground()) }
+    viewModel { ScheduleMonthViewModel(get<SavedStateHandle>(), get(), get()) }
+    viewModel { FriendPickerViewModel(get<SavedStateHandle>(), get(), get(), get()) }
     viewModel {
-        LessonDetailsViewModel(get<SavedStateHandle>(), NobodyOnLessons, ServicesOff, NoLevels, FakeScheduleChangesRepository())
+        LessonSheetViewModel(
+            get<SavedStateHandle>(), NobodyOnLessons, ServicesOff, NoLevels, FakeScheduleChangesRepository(), emptyList(),
+            get(), get(),
+        )
     }
 }
 
@@ -83,6 +89,16 @@ internal object ScheduleSamples {
         start = time.now(), end = time.now(), teacherFio = "Тренер Тестовый", roomName = "Бассейн",
         isPrediction = false,
     )
+}
+
+/** Nothing on disk: the days come from the fake repository alone. */
+private object NoCache : ScheduleLocalDataSource {
+    override fun observeRange(userIsu: Int?, start: LocalDate, end: LocalDate): Flow<List<DaySchedule>> = flowOf(emptyList())
+    override suspend fun save(schedule: DaySchedule, userIsu: Int?) = Unit
+    override suspend fun replaceRange(userIsu: Int?, start: LocalDate, end: LocalDate, schedules: List<DaySchedule>) = Unit
+    override suspend fun get(userIsu: Int?, date: LocalDate): CacheEntry? = null
+    override suspend fun clearUser(userIsu: Int) = Unit
+    override suspend fun clear() = Unit
 }
 
 private object NoAutoSign : SchedulePreferencesRepository {

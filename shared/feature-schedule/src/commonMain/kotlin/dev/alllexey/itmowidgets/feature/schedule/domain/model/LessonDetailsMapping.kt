@@ -7,7 +7,7 @@ fun Lesson.toDetailsArgs(date: LocalDate) = LessonDetailsArgs(
     pairId = pairId,
     date = date.toString(),
     subjectName = subjectName,
-    typeId = typeId.raw,
+    typeId = kindId,
     format = format,
     start = start.toString(),
     end = end.toString(),
@@ -21,5 +21,6 @@ fun Lesson.toDetailsArgs(date: LocalDate) = LessonDetailsArgs(
     zoomUrl = zoomUrl?.takeIf { it.isNotBlank() },
     zoomPassword = zoomPassword?.takeIf { it.isNotBlank() },
     zoomInfo = zoomInfo?.takeIf { it.isNotBlank() },
-    flowName = groupName.trim().takeIf(String::isNotEmpty)
+    flowName = groupName.trim().takeIf(String::isNotEmpty),
+    subjectId = subjectId.takeIf { it > 0 },
 )

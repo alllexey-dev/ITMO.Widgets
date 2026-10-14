@@ -57,10 +57,10 @@ class SharedTextsRussianTest {
 
         assertEquals("Формат: Дистанционный", format.summary().text())
         assertEquals("Формат: Очный → Дистанционный", format.listSummary().text())
-        assertEquals("Аудитория: Акт. зал · Ломо", place.summary().text())
-        assertEquals("Аудитория: 1506 · Кронва → Акт. зал · Ломо", place.listSummary().text())
-        assertEquals("Математический анализ — аудитория: Акт. зал · Ломо", place.headline().text())
-        assertEquals("Аудитория: 1506 · Кронва → —", noPlace.listSummary().text())
+        assertEquals("Аудитория: Акт. зал, Ломо", place.summary().text())
+        assertEquals("Аудитория: 1506, Кронва → Акт. зал, Ломо", place.listSummary().text())
+        assertEquals("Математический анализ — аудитория: Акт. зал, Ломо", place.headline().text())
+        assertEquals("Аудитория: 1506, Кронва → —", noPlace.listSummary().text())
         assertEquals("Преподаватель: —", teacher.summary().text())
         assertEquals("Математический анализ — преподаватель: —", teacher.headline().text())
     }
@@ -76,7 +76,7 @@ class SharedTextsRussianTest {
         assertEquals(
             listOf(
                 "Время: вт, 8 сентября, 08:20 → ср, 9 сентября, 08:20",
-                "Аудитория: 1506 · Кронва → 2304/1 · Биржа",
+                "Аудитория: 1506, Кронва → 2304/1, Биржа",
                 "Преподаватель: Тестовый преподаватель → Другой преподаватель"
             ),
             change.listLines().texts()

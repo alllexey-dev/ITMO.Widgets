@@ -27,9 +27,10 @@ import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSou
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
-import dev.alllexey.itmowidgets.feature.schedule.data.today.DayLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.days.ScheduleDaysImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleDays
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
@@ -46,7 +47,7 @@ val scheduleChangesBellQualifier: Qualifier = named("schedule-changes")
 
 /**
  * The schedule data. Koin is the only graph for these types: one `ScheduleRepositoryImpl` serves the screens, Сегодня
- * (`DayLessonsGateway`), the widget, the subject page (`SubjectLessonsGateway`, `ScheduleRefreshGateway`) and sign-out; one
+ * and the feed (`ScheduleDaysImpl`: `DayLessonsGateway`, `ScheduleDays`), the widget, the subject page (`SubjectLessonsGateway`, `ScheduleRefreshGateway`) and sign-out; one
  * `ScheduleChangesRepositoryImpl` the lessons' change marks, the bell, the background check and sign-out; one
  * `CalendarSyncRepositoryImpl` and one `DefaultCalendarSync` the phone calendar sync. The `.ics` export and the widget
  * snapshot file stay in `:app`.
@@ -82,7 +83,10 @@ val scheduleDataModule = module {
     // One run of the background check (iOS runs it from its own task).
     factoryOf(::ScheduleChangesCheck)
 
-    singleOf(::DayLessonsGatewayImpl) { bind<DayLessonsGateway>() }
+    singleOf(::ScheduleDaysImpl) {
+        bind<ScheduleDays>()
+        bind<DayLessonsGateway>()
+    }
     single<BellSource>(qualifier = scheduleChangesBellQualifier) { ScheduleChangesBellSource(get()) }
 
     // The phone calendar sync: the platform supplies `PhoneCalendars` and `CalendarSyncScheduler`.

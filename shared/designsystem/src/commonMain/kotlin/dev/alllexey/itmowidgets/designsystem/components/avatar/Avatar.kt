@@ -30,6 +30,7 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.LocalPlatformContext
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.SubcomposeAsyncImageContent
+import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /**
@@ -112,16 +113,7 @@ private fun Initials(name: String) {
 }
 
 /** The first letters of the first and last words, upper case; one letter for one word, `?` for none. */
-internal fun initialsOf(name: String): String {
-    val parts = name.trim().split(Whitespace).filter { it.isNotBlank() }
-    return when {
-        parts.isEmpty() -> "?"
-        parts.size == 1 -> parts.first().take(1).uppercase()
-        else -> (parts.first().take(1) + parts.last().take(1)).uppercase()
-    }
-}
-
-private val Whitespace = Regex("\\s+")
+internal fun initialsOf(name: String): String = personInitials(name)
 
 /** `item_user_row.xml`'s avatar. */
 private val DefaultSize = 48.dp

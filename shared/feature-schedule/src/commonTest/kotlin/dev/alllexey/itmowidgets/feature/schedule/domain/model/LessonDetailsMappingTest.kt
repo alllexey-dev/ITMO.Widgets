@@ -31,7 +31,7 @@ class LessonDetailsMappingTest {
         start = "08:20", end = "09:50", teacherFio = "Тестовый преподаватель", teacherIsu = 300001,
         room = "1506", building = "Кронверкский проспект, 49", buildingId = 13, mainBuildingId = 13,
         note = "Примечание", zoomUrl = "https://example.org/call", zoomPassword = "1234", zoomInfo = "Комната 1",
-        flowName = flowName
+        flowName = flowName, subjectId = 7
     )
 
     private fun lesson(groupName: String) = Lesson(

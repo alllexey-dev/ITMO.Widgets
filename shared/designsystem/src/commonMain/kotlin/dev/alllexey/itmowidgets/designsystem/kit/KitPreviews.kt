@@ -292,7 +292,7 @@ private object Lessons {
     val now = LessonView(
         "10:00", "11:30", PreviewFixtures.LongSubjectName, "Практика, Лебедев А. С.", "1506, Кронва", practice,
         LessonState.Now, pills = listOf(PillSpec("идёт", Tone.Primary, solid = true)),
-        friends = listOf("Иван Петров", "Анна Смирнова"),
+        friends = listOf("ИП", "АС"),
     )
     val next = LessonView(
         "11:40", "13:10", "Базы данных", "Лабораторная, Орлова Н. В.", "2304, Кронва", lab,

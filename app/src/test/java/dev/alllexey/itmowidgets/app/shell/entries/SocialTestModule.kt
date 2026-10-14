@@ -20,8 +20,6 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
-import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorViewModel
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
@@ -38,14 +36,14 @@ import org.koin.dsl.module
 /**
  * The ViewModels of the social keys over synthetic data, for every shell test whose screens open them: the viewer
  * has one friend, [SocialSamples.FRIEND], whose profile, friends and schedule are open; search finds nobody, the
- * directory knows nobody and nobody has reviews. [history] records the friend picker's choices.
+ * directory knows nobody and nobody has reviews. The schedule's friend picker reads the friend as a `FriendRepository`.
  */
-internal fun socialTestModule(history: FriendSelectionHistory = RecordingHistory()): Module = module {
+internal fun socialTestModule(): Module = module {
+    single<FriendRepository> { OneFriend }
     viewModel { FriendsViewModel(OneFriendSocial) }
     viewModel { UserSearchViewModel(NoPeople, OneFriendSocial) }
     viewModel { UserFriendsViewModel(get<SavedStateHandle>(), OneFriendSocial) }
     viewModel { UserProfileViewModel(get<SavedStateHandle>(), OneFriendSocial, NoPerson, NoReviews, Viewer) }
-    viewModel { FriendSelectorViewModel(OneFriend, history, NoPeople, get<SavedStateHandle>()) }
 }
 
 internal object SocialSamples {
@@ -92,14 +90,6 @@ private object OneFriend : FriendRepository {
     override fun observeCurrentUser(): Flow<UserSummary?> = flowOf(null)
     override suspend fun refreshFriendList() = Unit
     override val currentFriends: List<UserSummary> = listOf(SocialSamples.FRIEND.user)
-}
-
-internal class RecordingHistory : FriendSelectionHistory {
-    val recorded = mutableListOf<Int>()
-    override suspend fun getRecentIsu(): List<Int> = emptyList()
-    override suspend fun record(isu: Int) {
-        recorded += isu
-    }
 }
 
 private object NoPeople : PeopleSearchRepository {
