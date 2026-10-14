@@ -25,6 +25,8 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.runtime.result.rememberResultEventBus
 import androidx.navigation3.scene.DialogSceneStrategy
+import androidx.navigation3.scene.SceneStrategy
+import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.NavDisplay
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
@@ -37,7 +39,8 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /**
  * The Navigation 3 shell: the [surface] the session allows and, on the tabs, the [navigator]'s `ShellBackStack` in one
- * `NavDisplay`, which animates every change, runs the predictive Back and steps the entries' lifecycles. Everything
+ * `NavDisplay`, which animates every change and steps the entries' lifecycles; the shell draws the predictive Back
+ * ([ShellBack]). Everything
  * sits in [ItmoTheme] inside the host-level composition locals ([ItmoComposeHost]), plus the Navigation 3 result bus
  * and the activity's [AndroidPlatformActions].
  */
@@ -145,14 +148,7 @@ private fun ShellDisplay(
         val chromeHeight = chromePlaceables.maxOfOrNull { it.height } ?: 0
         val displayPlaceables = subcompose(ShellSlot.DISPLAY) {
             CompositionLocalProvider(LocalTabChromeHeight provides chromeHeight.toDp()) {
-                NavDisplay(
-                    entries = entries,
-                    sceneStrategies = sceneStrategies,
-                    transitionSpec = ShellMotion.push,
-                    popTransitionSpec = ShellMotion.pop,
-                    predictivePopTransitionSpec = ShellMotion.predictivePop,
-                    onBack = onBack,
-                )
+                ShellNavDisplay(entries, sceneStrategies, onBack)
             }
         }.map { it.measure(constraints) }
         layout(constraints.maxWidth, constraints.maxHeight) {
@@ -163,6 +159,26 @@ private fun ShellDisplay(
 }
 
 private enum class ShellSlot { CHROME, DISPLAY }
+
+/** `NavDisplay` with the shell's transitions and the shell's own Back ([rememberShellBack]). */
+@Composable
+private fun ShellNavDisplay(
+    entries: List<NavEntry<AppRoute>>,
+    sceneStrategies: List<SceneStrategy<AppRoute>>,
+    onBack: () -> Unit,
+) {
+    val sceneState = rememberSceneState(entries, sceneStrategies, onBack = onBack)
+    val back = rememberShellBack(sceneState, onBack)
+    CompositionLocalProvider(LocalShellBack provides back.back) {
+        NavDisplay(
+            sceneState = sceneState,
+            navigationEventState = back.displayState,
+            transitionSpec = ShellMotion.push,
+            popTransitionSpec = ShellMotion.pop,
+            predictivePopTransitionSpec = ShellMotion.predictivePop,
+        )
+    }
+}
 
 /** One back stack decorated with its own saveable state, ViewModel stores and route arguments. */
 @Composable

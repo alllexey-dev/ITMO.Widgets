@@ -66,6 +66,10 @@ new iOS app.
   Back from a pushed screen keeps each tab root's scroll and no longer reloads
   Профиль; Сегодня and its bell refresh when the app returns to the
   foreground, not when a sheet closes over it (2026-10-13).
+- The predictive Back on a pushed screen is Material's back preview: the
+  screen shrinks to 90 % under the finger and dissolves over 300 ms on
+  release, also after a long drag or a fling; tab roots have no preview
+  (2026-10-14).
 - Smaller changes: the `.ics` sheet buttons stand side by side when they fit;
   deleting an own link asks first; report dialogs keep their text across
   rotation; the review editor's button stays above the keyboard; another
