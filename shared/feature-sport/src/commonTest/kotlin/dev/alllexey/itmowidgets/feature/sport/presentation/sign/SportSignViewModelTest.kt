@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportActionReposi
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
+import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSectionRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSignPreferences
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
@@ -70,6 +71,7 @@ class SportSignViewModelTest {
     private val data = FakeSportDataRepository()
     private val actions = FakeSportActionRepository()
     private val preferences = FakeSportSignPreferences()
+    private val sections = FakeSportSectionRepository()
     private val timetable = FakeDayLessonsGateway()
 
     /** Tuesday, 8 September, at noon: the fixture lesson is tonight at 18:30. */
@@ -78,7 +80,7 @@ class SportSignViewModelTest {
     private fun TestScope.viewModel(): SportSignViewModel {
         val delegate = bookingDelegate(FakeSportBookingRepository(), schedule, data, this, actions)
         return SportSignViewModel(
-            schedule, data, preferences, SportSectionsHolder(FakeSportSectionRepository(), backgroundScope), timetable,
+            schedule, data, preferences, SportSectionsHolder(sections, backgroundScope), timetable,
             SportSharedLessonResolver(schedule, time), time,
             delegate, SportAutoSignFlow(delegate, time),
         )
@@ -164,7 +166,8 @@ class SportSignViewModelTest {
     @Test
     fun theQuickChipsAreFreeMorningEveningFriends() = runTest(main.dispatcher) {
         emitCatalog(SportCardFixtures.lesson(1))
-        preferences.pinned.value = setOf(SportCardFixtures.lesson(1).sectionName)
+        val lesson = sections.queueLesson(1).copy(sectionName = SportCardFixtures.lesson(1).sectionName.raw)
+        sections.sections.value = LoadState.Content(listOf(MySportSection(1, lesson, emptyList(), place = 1, subscribers = 1)))
         val viewModel = viewModel()
         advanceUntilIdle()
 
