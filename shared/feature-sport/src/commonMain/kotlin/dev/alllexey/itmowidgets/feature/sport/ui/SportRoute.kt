@@ -128,6 +128,8 @@ fun SportRoute(
             filters = SportFiltersActions(
                 onClose = signViewModel::closeFilters,
                 onSection = signViewModel::toggleSection,
+                onMoreSections = signViewModel::showAllSections,
+                onSectionQuery = signViewModel::setSectionQuery,
                 onBuilding = signViewModel::selectBuilding,
                 onTeacher = signViewModel::selectTeacher,
                 onDayPart = signViewModel::selectDayPart,

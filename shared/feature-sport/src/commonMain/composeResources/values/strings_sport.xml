@@ -77,7 +77,6 @@
     <string name="sport_chip_free">Есть места</string>
     <string name="sport_chip_morning">Утро</string>
     <string name="sport_chip_evening">Вечер</string>
-    <string name="sport_chip_pinned">Мои секции</string>
     <string name="sport_chip_friends">Друзья</string>
     <string name="sport_week_day_description">%1$s, %2$s</string>
     <plurals name="sport_lessons_count">
@@ -106,6 +105,10 @@
     </plurals>
     <string name="sport_filter_all">Все</string>
     <string name="sport_filter_any_teacher">Любой</string>
+    <string name="sport_filter_more">Ещё %1$d</string>
+    <string name="sport_filter_type_search">Найти вид спорта</string>
+    <string name="sport_building_other">Другие корпуса</string>
+    <string name="sport_building_online">Онлайн</string>
     <plurals name="sport_filters_show">
         <item quantity="one">Показать %1$d занятие</item>
         <item quantity="few">Показать %1$d занятия</item>

@@ -273,7 +273,8 @@ class AppShellTest {
 
     /**
      * The predictive Back on the second of two screens: the first one is composed under it while the gesture runs (not
-     * the tab root), the top one shrinks; a cancel restores both, a commit leaves the first one in place.
+     * the tab root) and stands still at the window's size, the top one shrinks; a cancel restores both, a commit
+     * leaves the first one in place.
      */
     @Test
     fun aPredictiveBackShowsThePreviousScreenUnderTheTopOne() {
@@ -291,6 +292,9 @@ class AppShellTest {
         assertFalse("the tab root stays out of the peek", AppTab.HOME in probe.composedTabs)
         val shrunk = top().boundsInRoot
         assertTrue("the top screen shrinks: $shrunk", shrunk.width < window.width && shrunk.width > window.width * 0.85f)
+        assertTrue("towards the far side, away from the left edge: $shrunk", shrunk.center.x > window.center.x)
+        val under = compose.onNodeWithTag(ShellTags.overlay(AppRoutes.Settings().toString())).fetchSemanticsNode()
+        assertEquals("the screen under it stands still", window, under.boundsInRoot)
 
         compose.runOnIdle { compose.activity.onBackPressedDispatcher.dispatchOnBackCancelled() }
         compose.waitForIdle()
@@ -305,6 +309,29 @@ class AppShellTest {
         assertEquals(listOf<AppRoute>(AppRoutes.Settings()), navigator.state.overlays)
         compose.onNodeWithTag("screen:friends").assertDoesNotExist()
         compose.onNodeWithTag("screen:settings:ROOT").assertIsDisplayed()
+    }
+
+    /**
+     * A commit at the end of the gesture (a long drag or a fling, progress about 1) still dissolves the top screen for
+     * the whole [ShellBack.DISSOLVE_MILLIS] from where the finger left it, instead of the rest of the gesture's timeline.
+     */
+    @Test
+    fun aBackCommittedAtTheEndOfTheGestureStillDissolves() {
+        show()
+        act { open(AppRoutes.Friends) }
+        val window = compose.onRoot().fetchSemanticsNode().boundsInRoot
+        dragBack(1f)
+        val held = compose.onNodeWithTag(ShellTags.overlay(AppRoutes.Friends.toString())).fetchSemanticsNode().boundsInRoot
+
+        val frames = framesOf(AppRoutes.Friends) { compose.activity.onBackPressedDispatcher.onBackPressed() }
+
+        val shown = frames.size * FRAME_MILLIS
+        assertTrue("the top screen dissolves for at least $MIN_DISSOLVE_MILLIS ms: $shown ms", shown >= MIN_DISSOLVE_MILLIS)
+        assertTrue("and no longer than the dissolve: $shown ms", shown <= ShellBack.DISSOLVE_MILLIS + SETTLE_FRAMES * FRAME_MILLIS)
+        assertEquals("no jump on release", held.width, frames.first().width, held.width * 0.02f)
+        assertTrue("it keeps shrinking, never back to full size: $frames", frames.all { it.width <= held.width + 0.5f })
+        assertTrue("the held screen was shrunk: $held", held.width < window.width)
+        assertEquals(emptyList<AppRoute>(), navigator.state.overlays)
     }
 
     private fun dragBack(progress: Float) {
@@ -448,5 +475,8 @@ class AppShellTest {
         const val MAX_FRAMES = 60
         const val MIN_MOVE_FRAMES = 4
         const val HALF = 0.5f
+        const val FRAME_MILLIS = 16
+        const val MIN_DISSOLVE_MILLIS = 250
+        const val SETTLE_FRAMES = 5
     }
 }

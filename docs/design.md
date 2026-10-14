@@ -349,12 +349,19 @@ Android only; iOS has its native tab bar and `NavigationStack`s ([iOS app](ios.m
 3. A pushed screen comes and goes on the shared X axis: both screens move a
    tenth of the width and fade through, on the standard scheme's spatial spring.
    It covers the bar, which stays in place under it.
-4. Back is the platform's predictive Back from `NavDisplay`: the top screen
-   shrinks to 90 % away from the swipe edge and rounds its corners, the screen
-   under it (the previous pushed screen, or the tab root with its bar) is
-   already composed, grows from 95 % and drifts in from the edge; on release it
-   is in place and nothing pops in. Back on another tab's root goes to Сегодня
-   the same way; Back on Сегодня's root leaves the app.
+4. Back on a pushed screen is Material's back preview (`ShellBack`), as
+   material3's SearchBar and MDC's main container draw it: under the finger the
+   top screen shrinks to 90 % on the predictive back curve (0.1, 0.1, 0, 1),
+   moves towards the far side until 8 dp from the edge, follows the finger by up
+   to 24 dp vertically and rounds its corners to 28 dp; the screen under it (the
+   previous pushed screen, or the tab root with its bar) is already composed and
+   stands still. On release the top screen dissolves from where the finger left
+   it: transparent over 300 ms (MDC's `hideDurationMax`) and 5 % smaller,
+   whatever the progress, so a long drag or a fling never ends in a blink. A
+   cancel follows the system's progress back to rest. Nothing fades while the
+   finger is down. Back on another tab's root has no preview: the gesture moves
+   nothing and its commit runs the tab fade through to Сегодня; Back on
+   Сегодня's root leaves the app with the system's back-to-home animation.
 5. Sheets and dialogs are their own windows with the system's predictive Back.
 6. System gestures win: no gesture exclusion, the back edges stay the system's
    (`GestureRulesTest`).
@@ -489,8 +496,8 @@ screens that have not moved yet.
 | `SectionHeader`, `TextTile` | A section's title with a neutral count at the end; a short text (`+9`) in a tone's tile, the size of an `IconTile` |
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
 | `VotePill` | The votes of a link: ▲ N ▼, the viewer's own vote in `primary`, only the score when voting is not allowed |
-| `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a short bar and `22 из 24` in a tone |
-| `WeekStrip`, `WeekStripDay` | One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on `primary`; a pager of these pages by weeks |
+| `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a bar (88 dp, down to 44 dp in a tight row; the text never wraps) and `22 из 24` in a tone |
+| `WeekStrip`, `WeekStripDay` | One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on a `primary` indicator that slides on the scheme's default spatial spring while the colours crossfade (a week gaining or losing the choice fades it in place; snaps under reduced motion); a pager of these pages by weeks |
 
 ## Platform styles
 
@@ -614,7 +621,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   (no line when online); the note; pills.
 - Filters (`ItmoFilters.swift`): `ItmoSearchField` (in the content, with a trailing action and its badge),
   `ItmoChips`, `ItmoWeekStrip` (a paging scroll view of them pages by weeks), `ItmoSwitchRow` (a group's switch row)
-  and `ItmoOccupancy`, the twins of Android's kit.
+  and `ItmoOccupancy`, the twins of Android's kit (`ItmoWeekStrip` slides its indicator with
+  `matchedGeometryEffect` on the same spring, off under Reduce Motion).
 - Numbers (`ItmoScores.swift`): `ItmoValueWithSource` (a number over its quiet source), `ItmoProgressBar` (a
   4 pt capsule in place of `ProgressView`, read as one by VoiceOver), `ItmoPointsMeter`,
   `ItmoSportRing`, `ItmoGradeScale` (the hero's 100-point bar with the grade ticks) and `ItmoVotePill`, the same

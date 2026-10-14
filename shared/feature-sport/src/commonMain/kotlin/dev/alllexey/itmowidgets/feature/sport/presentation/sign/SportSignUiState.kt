@@ -37,10 +37,10 @@ sealed interface SportSignEvent {
     data class OpenLesson(val lessonId: Long) : SportSignEvent
 }
 
-/** A quick filter chip: `Есть места`, `Утро`, `Вечер`, `Мои секции`, `Друзья`. */
+/** A quick filter chip: `Есть места`, `Утро`, `Вечер`, `Друзья`, in that order. */
 data class SportChip(val filter: SportQuickFilter, val label: UiText, val selected: Boolean)
 
-enum class SportQuickFilter { FREE, MORNING, EVENING, PINNED, FRIENDS }
+enum class SportQuickFilter { FREE, MORNING, EVENING, FRIENDS }
 
 /** A day of the strip: `пн` over `7`, a dot per visible lesson (at most five). */
 data class SportWeekDay(
@@ -133,12 +133,17 @@ sealed interface SportRowAction {
 }
 
 /**
- * The more-filters sheet: the [sections] to pick, the [buildings] (`Все` first), the part of the day ([dayPart], shown
- * when [showDayPart]), the [teachers] (null when the setting hides the row), the switches and the number of lessons
- * the filters leave ([shownCount]).
+ * The more-filters sheet: the [sections] to pick, the [buildings] (`Все` first, then the dictionary's, `Другие корпуса`
+ * and `Онлайн`), the part of the day ([dayPart], shown when [showDayPart]), the [teachers] (null when the setting hides
+ * the row), the switches and the number of lessons the filters leave ([shownCount]).
+ *
+ * [sections] are the own and the most popular types with the selected ones and [moreSections] (`Ещё 23`) after them;
+ * after `Ещё` they are every type matching [sectionQuery], the search over them (null while collapsed).
  */
 data class SportFiltersUi(
     val sections: List<SportOption>,
+    val moreSections: UiText?,
+    val sectionQuery: String?,
     val buildings: List<SportOption>,
     val dayPart: SportDayPart,
     val showDayPart: Boolean,
@@ -197,7 +202,10 @@ sealed interface SportSignCommand {
     data class CancelAutoSign(val entryId: Long) : SportSignCommand
 }
 
-/** Weeks after the current one the strip reaches: the catalog and its predictions go about that far. */
+/**
+ * The most weeks after the current one the strip may reach. It ends at the week of the catalog's last lesson: My ITMO
+ * publishes about two weeks ahead and the queue's predictions add two more.
+ */
 internal const val MAX_WEEKS_FORWARD = 5
 
 /** The Monday of this date's ISO week. */

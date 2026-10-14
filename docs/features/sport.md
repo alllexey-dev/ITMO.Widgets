@@ -14,7 +14,7 @@ limit come from Backend behind the custom-services gate.
 | Screen | View model | Android | iOS |
 |---|---|---|---|
 | `Моё`: the score ring (opens `Откуда баллы`), bookings and queues as lesson cards by day with `Сделать секцией` under the booked ones, then `Секции` with their next dates | `SportMyViewModel` | `SportScreen` (`SportTab.MY`) | `SportTabScreen`, `SportMyPart` |
-| `Запись`: search, quick chips, the six-week strip paging by weeks, the day's dense rows with one action, `Фильтры скрыли N` | `SportSignViewModel` | `SportScreen` (`SportTab.SIGN`), `SportFiltersSheetContent` | `SportSignPart`, `SportFiltersSheet` |
+| `Запись`: search, quick chips, the week strip paging by weeks, the day's dense rows with one action, `Фильтры скрыли N` | `SportSignViewModel` | `SportScreen` (`SportTab.SIGN`), `SportFiltersSheetContent` | `SportSignPart`, `SportFiltersSheet` |
 | The lesson sheet: kind, section and day, the places large and as a bar, the status, the clash, one action, the conditions, teacher, place, comment, friends, share | `SportLessonSheetPresenter` | `SportLessonSheetContent` in the `SportRoutes.SportCommonDetails` sheet | `SportLessonSheet` |
 | `Встать в очередь?`: three steps, the late-sign switch of a real lesson, the queues left | `SportPrompt.Join` | `SportJoinSheetContent` | `SportJoinSheet` |
 | `Откуда баллы` (`AppRoutes.SportPoints`): visits + bonus = total, the bonus counted up to 40, the awards by month, `Зачёт набран 22 сентября` | `SportPointsViewModel` | `SportPointsScreen` | `SportPointsScreen` |
@@ -30,10 +30,29 @@ limit come from Backend behind the custom-services gate.
   lesson (MyITMO's `intersection`) names the lesson from the timetable cache
   (`DayLessonsGateway`): `Пара: Алгоритмы` in the row, `Пересекается с парой
   Алгоритмы, 08:20` in the sheet as an orange line; it never blocks.
+- The quick chips are `Есть места`, `Утро`, `Вечер`, `Друзья`, in that order;
+  `Только мои секции` is a switch in the filters sheet.
+- The week strip runs from the current week to the week of the catalog's last
+  lesson, published or predicted, at least to the next week and at most five
+  weeks ahead (`MAX_WEEKS_FORWARD`). My ITMO publishes about two weeks ahead
+  (on Tuesday, 13 October 2026 through Wednesday, 28 October) and answers
+  `/api/sport/sign/schedule` with everything published from `date_start`,
+  ignoring `date_end`; the queue's predictions add the two weeks after that.
+- The filters sheet shows at most six sport types (sections) first: the
+  viewer's own, by bookings and queues in the catalog plus visits in the
+  semester's attendance history (`SportScore.attendancesData`), the most
+  frequent first, then the most popular, by places taken (`limit - available`)
+  over the catalog's published lessons. The selected types are always shown;
+  `Ещё N` opens every type with a search (`showAllSections`,
+  `setSectionQuery`), which closing the sheet folds back.
+- The building filter lists the buildings of My ITMO's dictionary that have
+  lessons, then `Другие корпуса` for lessons whose building is outside it (My
+  ITMO's `Другие объекты`, id 0, and buildings it does not list), then
+  `Онлайн` for online rooms (id -1), each only when it has lessons.
 - The filters sheet shows the teacher row and the part of the day only while
   the sport settings show those filters (`SportSignDisplayOptions`).
-- The `Мои секции` chip of `Запись` keeps the lessons of the user's sections
-  (`SportSectionsHolder.sectionNames`).
+- `Только мои секции` in the filters sheet of `Запись` keeps the lessons of the
+  user's sections (`SportSectionsHolder.sectionNames`).
 - `Откуда баллы` reads My ITMO's award history, `attendances` of
   `/api/sport/personal/score` (date, section, points, competition and place).
   The credit day is when visits plus the counted bonus first reach 100. There is

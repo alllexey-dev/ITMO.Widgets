@@ -217,6 +217,30 @@
         }
       }
     },
+    "sport_building_online" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Онлайн"
+          }
+        }
+      }
+    },
+    "sport_building_other" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другие корпуса"
+          }
+        }
+      }
+    },
     "sport_cancel_queue_action" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -345,18 +369,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Утро"
-          }
-        }
-      }
-    },
-    "sport_chip_pinned" : {
-      "comment" : "Generated from strings_sport.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Мои секции"
           }
         }
       }
@@ -529,6 +541,18 @@
         }
       }
     },
+    "sport_filter_more" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ещё %1$lld"
+          }
+        }
+      }
+    },
     "sport_filter_only_free" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -597,6 +621,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вид спорта"
+          }
+        }
+      }
+    },
+    "sport_filter_type_search" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найти вид спорта"
           }
         }
       }

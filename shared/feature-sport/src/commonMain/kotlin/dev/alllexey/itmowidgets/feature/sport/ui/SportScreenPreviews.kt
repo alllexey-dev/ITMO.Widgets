@@ -67,6 +67,12 @@ internal class SportScreenSignFilteredPreview {
     fun SportScreen() = SignPreview(SportSamples.sign("active", "normal"))
 }
 
+internal class SportScreenSignWeek2Preview {
+    @Preview(name = "sign-week2")
+    @Composable
+    fun SportScreen() = SignPreview(SportSamples.sign("none", "week2"))
+}
+
 internal class SportScreenSignEmptyPreview {
     @Preview(name = "sign-empty")
     @Composable
@@ -90,6 +96,14 @@ internal class SportFiltersSheetContentPreview {
     @Composable
     fun SportFiltersSheetContent() = ItmoPreview {
         SportFiltersSheetContent(checkNotNull(SportSamples.sign("sheet", "normal").filters), SportFiltersActions())
+    }
+}
+
+internal class SportFiltersSheetContentAllPreview {
+    @Preview(name = "all")
+    @Composable
+    fun SportFiltersSheetContent() = ItmoPreview {
+        SportFiltersSheetContent(checkNotNull(SportSamples.sign("sheet-all", "normal").filters), SportFiltersActions())
     }
 }
 

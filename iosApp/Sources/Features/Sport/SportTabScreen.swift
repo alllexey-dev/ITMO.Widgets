@@ -36,7 +36,7 @@ struct SportTabScreen: View {
             }
             .sheet(isPresented: filtersShown) {
                 if let filters = sign.state.filters {
-                    SportFiltersSheet(filters: filters, viewModel: sign.viewModel)
+                    SportFiltersSheet(filters: filters, actions: filterActions)
                 }
             }
             .sheet(isPresented: joinShown) {
@@ -98,6 +98,22 @@ struct SportTabScreen: View {
             openLesson: { openLesson($0, from: .sign) },
             rowAction: { sign.viewModel.act(lessonId: $0) },
             retrySign: { sign.viewModel.refresh(mode: .force) }
+        )
+    }
+
+    private var filterActions: SportFilterActions {
+        let viewModel = sign.viewModel
+        return SportFilterActions(
+            section: { viewModel.toggleSection(name: $0) },
+            moreSections: { viewModel.showAllSections() },
+            sectionQuery: { viewModel.setSectionQuery(query: $0) },
+            building: { viewModel.selectBuilding(name: $0) },
+            teacher: { viewModel.selectTeacher(name: $0) },
+            dayPart: { viewModel.selectDayPart(part: $0) },
+            onlyFree: { viewModel.setOnlyFree(on: $0) },
+            onlyPinned: { viewModel.setOnlyPinned(on: $0) },
+            onlyFriends: { viewModel.setOnlyFriends(on: $0) },
+            reset: { viewModel.resetFilters() }
         )
     }
 
@@ -442,7 +458,7 @@ struct SportSignPart: View {
     }
 }
 
-/// The six weeks of the strip, paging sideways; a page that settles on another week selects a day in it.
+/// The published weeks of the strip, paging sideways; a page that settles on another week selects a day in it.
 struct SportWeekPager: View {
     let weeks: [[SportWeekDay]]
     let selected: Int

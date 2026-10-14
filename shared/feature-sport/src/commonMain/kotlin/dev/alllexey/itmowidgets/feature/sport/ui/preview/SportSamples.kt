@@ -73,6 +73,7 @@ import kotlinx.datetime.toLocalDateTime
 object SportSamples {
     private val zone = TimeZone.of("Europe/Moscow")
     private val today = LocalDate(2026, 9, 7)
+    private const val ONLINE = -1L
     private val now: Instant = LocalDateTime(today, LocalTime(12, 0)).toInstant(zone)
 
     /** The tab's name in the header. */
@@ -132,12 +133,13 @@ object SportSamples {
         val id = nextId++
         val startAt = at(date, start)
         val endAt = at(date, end)
-        val address = catalog.buildings.first { it.id == building }.value
-        val roomName = "$address, $room"
+        // Venues outside My ITMO's dictionary (building 0) and online rooms (-1) name themselves.
+        val address = catalog.buildings.firstOrNull { it.id == building }?.value
+        val roomName = address?.let { "$it, $room" } ?: room
         return SportLesson(
             isLessonReal = real, lessonId = id, start = startAt, end = endAt, sectionId = section.hashCode().toLong(),
             sectionName = SectionName(section), sectionLevel = 1, lessonGroupId = 1, lessonLevel = level, typeId = 2,
-            buildingId = building, roomId = id, roomName = roomName, limit = limit, available = limit - taken,
+            buildingId = building, roomId = if (building == ONLINE) ONLINE else id, roomName = roomName, limit = limit, available = limit - taken,
             comment = comment, timeSlotId = 1, timeSlotStart = start, timeSlotEnd = end, intersection = clash,
             canSignIn = reasons.isEmpty() && taken < limit, unavailableReasons = reasons, signed = signed,
             teacherIsu = 200 + id.toInt(), teacherFio = teacher,
@@ -175,6 +177,15 @@ object SportSamples {
     private val swimToday = lesson(today, "17:00", "18:30", "Плавание", "Захаров Николай Иванович", 273, "бассейн", 16, 14, level = 2, signed = true)
     private val swimNext = lesson(LocalDate(2026, 9, 22), "15:20", "16:50", "Плавание", "Захаров Николай Иванович", 273, "бассейн", 16, 0, level = 2, real = false)
 
+    private val nextTuesday = LocalDate(2026, 9, 15)
+    private val nextWeek = listOf(
+        lesson(nextTuesday, "10:00", "11:30", "Йога", "Белова Ирина Сергеевна", 7, "зал", 16, 9),
+        lesson(nextTuesday, "13:30", "15:00", "Скалолазание", "Соколов Артём Ильич", 273, "скалодром", 10, 7),
+        lesson(nextTuesday, "17:00", "18:30", "Футбол", "Никитин Сергей Олегович", 0, "ул. Правды, 11, ФОК «Юность»", 30, 21),
+        lesson(nextTuesday, "18:30", "20:00", "Шахматы", "Лебедева Ольга Петровна", ONLINE, "Online", 40, 12),
+        lesson(LocalDate(2026, 9, 17), "18:30", "20:00", "Волейбол", "Тихонова Марина Юрьевна", 13, "спортивный зал", 24, 23),
+    )
+
     private val tuesdayLessons = listOf(ofp, yoga, badminton, swimming, fitness, tennis, volleyball, basketball)
     private val lessons: List<SportLesson> = tuesdayLessons + listOf(volleyThursday, volleyThursdayEvening, swimToday, swimNext) +
         (1..4).map { lesson(today, "19:00", "20:30", "Фитнес", "Кузнецова Елена Игоревна", 7, "зал", 18, it) } +
@@ -195,22 +206,32 @@ object SportSamples {
         ),
     )
 
-    private fun signInput(filters: SportSignFilters) = SportSignInput(
-        lessons = lessons, catalog = catalog, filters = filters, pinned = setOf(SectionName("Плавание"), SectionName("Волейбол")),
+    private fun signInput(filters: SportSignFilters, sectionQuery: String? = null) = SportSignInput(
+        lessons = lessons + nextWeek, catalog = catalog, filters = filters, pinned = setOf(SectionName("Плавание"), SectionName("Волейбол")),
         busy = emptySet(), timetable = timetable, showTeacher = true, showDayPart = true,
-        now = now, today = today, zone = zone,
+        now = now, today = today, zone = zone, history = listOf(SectionName("Плавание")), sectionQuery = sectionQuery,
     )
 
     /**
-     * `Запись` at the lab's axes: [filters] `none`, `active` (`Есть места`, `Вечер`) or `sheet`; [day] `normal`
-     * (Tuesday) or `empty` (Sunday).
+     * `Запись` at the lab's axes: [filters] `none`, `active` (`Есть места`, `Вечер`), `sheet` (the top types and `Ещё`)
+     * or `sheet-all` (every type with the search, `Шахматы` chosen); [day] `normal` (Tuesday), `empty` (Sunday) or
+     * `week2` (Tuesday of the next week).
      */
     fun sign(filters: String, day: String): SportSignUiState {
-        val date = if (day == "empty") LocalDate(2026, 9, 13) else tuesday
-        val chosen = SportSignFilters(selectedDate = date).let {
-            if (filters == "none") it else it.copy(onlyFree = true, dayPart = SportDayPart.EVENING)
+        val date = when (day) {
+            "empty" -> LocalDate(2026, 9, 13)
+            "week2" -> nextTuesday
+            else -> tuesday
         }
-        return SportSignPresenter.present(signInput(chosen), filtersOpen = filters == "sheet")
+        val chosen = SportSignFilters(selectedDate = date).let {
+            when (filters) {
+                "none" -> it
+                "sheet-all" -> it.copy(sections = setOf(SectionName("Шахматы")))
+                else -> it.copy(onlyFree = true, dayPart = SportDayPart.EVENING)
+            }
+        }
+        val query = "".takeIf { filters == "sheet-all" }
+        return SportSignPresenter.present(signInput(chosen, query), filtersOpen = filters.startsWith("sheet"))
     }
 
     val signLoading: SportSignUiState get() = sign("none", "normal").copy(body = SportSignBody.Loading)

@@ -66,6 +66,10 @@ new iOS app.
   Back from a pushed screen keeps each tab root's scroll and no longer reloads
   Профиль; Сегодня and its bell refresh when the app returns to the
   foreground, not when a sheet closes over it (2026-10-13).
+- The predictive Back on a pushed screen is Material's back preview: the
+  screen shrinks to 90 % under the finger and dissolves over 300 ms on
+  release, also after a long drag or a fling; tab roots have no preview
+  (2026-10-14).
 - Smaller changes: the `.ics` sheet buttons stand side by side when they fit;
   deleting an own link asks first; report dialogs keep their text across
   rotation; the review editor's button stays above the keyboard; another
@@ -124,15 +128,21 @@ new iOS app.
   and `Запись` as a segmented choice under the static header instead of the pager. `Моё` has the score ring (it
   opens `Откуда баллы`), bookings and queues as lesson cards by day (`записаны`, `очередь 2 из 5`, `ждём
   расписание`), `Сделать секцией` under booked lessons and the user's sections. `Запись` has a search by sport or teacher, chips (`Есть места`,
-  `Вечер`, `Мои секции`, `Друзья`, `Утро`), a week strip that pages by weeks and dense rows with `22 из 24`, friends,
+  `Утро`, `Вечер`, `Друзья`), a week strip that pages by weeks and dense rows with `22 из 24`, friends,
   a clash with a lesson by name and one action; more filters are in a sheet. The lesson sheet shows the places large,
   one main action, the conditions and the clash as an orange line that does not block. `Встать в очередь?` is a sheet
   with the steps, `Пытаться до самого начала` and the queues left. Sections replace the
   device-local `Мои секции`: a booked lesson becomes a section (in its card or its sheet), and Backend queues the same
   lesson every two weeks as soon as auto-sign for it opens, in subscription order and while the monthly limit has a
   free slot; `Моё` lists the sections with the place (`3-й из 7 в секции`), an off switch and the next three dates,
-  each of which can be skipped. The `Мои секции` chip of `Запись` keeps the lessons of the sections. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
+  each of which can be skipped. `Только мои секции` in the filters sheet of `Запись` keeps the lessons of the sections. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
   awards by month with the day the credit was reached; no forecast. Another user's sport shows lesson cards.
+- `Запись` filters: the sheet shows six sport types first (the ones the student books or attended, then the most
+  booked) with `Ещё` for the rest and a search over them; chosen types stay in sight. The building filter lists every
+  building with lessons, `Другие корпуса` for venues My ITMO's list lacks and `Онлайн`. The week strip runs from this
+  week to the week of the last published or predicted lesson, at least to the next week. The chosen day's
+  indicator slides to a new day on a spring and the colours crossfade (none under reduced motion), and the
+  places bar in the rows is twice as wide.
 - New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
   обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
   палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep

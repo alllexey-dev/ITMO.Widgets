@@ -13,7 +13,10 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttendance
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterOption
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeDayLessonsGateway
@@ -112,7 +115,7 @@ class SportSignViewModelTest {
         assertEquals(SportRowAction.Sign(busy = false), day.rows[0].action)
         assertEquals(SportRowAction.Queue(busy = false), day.rows[1].action)
         assertEquals(UiText.Res(SportStrings.sport_occupancy, listOf(13, 20)), day.rows[0].occupancy?.text)
-        assertEquals(6, viewModel.uiState.value.weeks.size, "the current week and five ahead")
+        assertEquals(2, viewModel.uiState.value.weeks.size, "the current week and the next one at least")
         assertEquals(1, viewModel.uiState.value.weeks[0].single { it.date == LocalDate(2026, 9, 9) }.lessons)
     }
 
@@ -142,6 +145,108 @@ class SportSignViewModelTest {
     }
 
     @Test
+    fun theStripCoversThePublishedWeeksWithTheirDotsAndThePredictionsAfterThem() = runTest(main.dispatcher) {
+        emitCatalog(SportCardFixtures.lesson(1), lessonOn(2, day = 17), lessonOn(3, day = 18))
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        val weeks = viewModel.uiState.value.weeks
+        assertEquals(2, weeks.size)
+        assertEquals(LocalDate(2026, 9, 7), weeks[0].first().date)
+        assertEquals(LocalDate(2026, 9, 20), weeks[1].last().date)
+        assertEquals(listOf(0, 0, 0, 1, 1, 0, 0), weeks[1].map { it.lessons })
+
+        emitCatalog(SportCardFixtures.lesson(1), lessonOn(2, day = 17), lessonOn(3, day = 10).predicted())
+        advanceUntilIdle()
+        assertEquals(3, viewModel.uiState.value.weeks.size, "a queue's prediction two weeks on is on the strip too")
+    }
+
+    @Test
+    fun theQuickChipsAreFreeMorningEveningFriends() = runTest(main.dispatcher) {
+        emitCatalog(SportCardFixtures.lesson(1))
+        preferences.pinned.value = setOf(SportCardFixtures.lesson(1).sectionName)
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(SportQuickFilter.FREE, SportQuickFilter.MORNING, SportQuickFilter.EVENING, SportQuickFilter.FRIENDS),
+            viewModel.uiState.value.chips.map { it.filter },
+        )
+    }
+
+    @Test
+    fun everyBuildingWithLessonsIsAChoiceWithTheOthersAndOnlineAtTheEnd() = runTest(main.dispatcher) {
+        val lomonosova = lessonOn(1, day = 8, hour = 15).copy(buildingId = 273)
+        val kronverksky = lessonOn(2, day = 8, hour = 16).copy(buildingId = 13)
+        val yunost = lessonOn(3, day = 8, hour = 17).copy(buildingId = 0)
+        val online = lessonOn(4, day = 8, hour = 19).copy(buildingId = -1, roomId = -1)
+        schedule.filters.emit(
+            AppResult.Success(emptyCatalog().copy(buildings = listOf(SportFilterOption(-1, "Online"), SportFilterOption(0, "Другие объекты"), SportFilterOption(273, "ул.Ломоносова, д.9")))),
+        )
+        schedule.timeSlots.emit(AppResult.Success(emptyList()))
+        schedule.schedule.emit(LoadState.Content(listOf(lomonosova, kronverksky, yunost, online)))
+        val viewModel = viewModel()
+        viewModel.openFilters()
+        advanceUntilIdle()
+
+        val buildings = viewModel.uiState.value.filters!!.buildings
+        assertEquals(listOf(null, "ул.Ломоносова, д.9", "#other", "#online"), buildings.map { it.value })
+        assertEquals(UiText.Res(SportStrings.sport_building_other), buildings[2].label)
+        assertEquals(UiText.Res(SportStrings.sport_building_online), buildings[3].label)
+
+        viewModel.selectBuilding(buildings[2].value)
+        advanceUntilIdle()
+        assertEquals(listOf(2L, 3L), viewModel.day().rows.map { it.lessonId })
+        viewModel.selectBuilding(buildings[3].value)
+        advanceUntilIdle()
+        assertEquals(listOf(4L), viewModel.day().rows.map { it.lessonId })
+    }
+
+    @Test
+    fun theTypesShowTheOwnThenThePopularAndTheRestBehindMoreWithASearch() = runTest(main.dispatcher) {
+        // Eight types, the more places taken the later in the alphabet; one booked, one attended.
+        val names = listOf("Бадминтон", "Волейбол", "Йога", "Плавание", "Теннис", "Фитнес", "Футбол", "Шахматы")
+        val lessons = names.mapIndexed { index, name ->
+            lessonOn(index + 10L, day = 9).copy(sectionName = SectionName(name), limit = 30, available = 30 - index)
+        }
+        schedule.filters.emit(AppResult.Success(emptyCatalog()))
+        schedule.timeSlots.emit(AppResult.Success(emptyList()))
+        schedule.schedule.emit(LoadState.Content(lessons.mapIndexed { index, lesson -> if (index == 1) lesson.copy(signed = true) else lesson }))
+        data.score.emit(LoadState.Content(SportScore(10, 0, listOf(attendance("Йога"), attendance("Йога"), attendance("Упражнение")))))
+        val viewModel = viewModel()
+        viewModel.openFilters()
+        advanceUntilIdle()
+
+        val sheet = viewModel.uiState.value.filters!!
+        assertEquals(listOf("Йога", "Волейбол", "Шахматы", "Футбол", "Фитнес", "Теннис"), sheet.sections.map { it.value })
+        assertEquals(UiText.Res(SportStrings.sport_filter_more, listOf(2)), sheet.moreSections)
+        assertNull(sheet.sectionQuery)
+
+        viewModel.toggleSection("Бадминтон")
+        advanceUntilIdle()
+        assertEquals("Бадминтон", viewModel.uiState.value.filters!!.sections.last().value, "a chosen type stays visible")
+        assertEquals(UiText.Res(SportStrings.sport_filter_more, listOf(1)), viewModel.uiState.value.filters!!.moreSections)
+
+        viewModel.showAllSections()
+        advanceUntilIdle()
+        assertEquals(names, viewModel.uiState.value.filters!!.sections.map { it.value })
+        assertNull(viewModel.uiState.value.filters!!.moreSections)
+        viewModel.setSectionQuery("фу")
+        advanceUntilIdle()
+        assertEquals(listOf("Футбол"), viewModel.uiState.value.filters!!.sections.map { it.value })
+
+        viewModel.closeFilters()
+        viewModel.openFilters()
+        advanceUntilIdle()
+        assertNull(viewModel.uiState.value.filters!!.sectionQuery, "the sheet opens with the top types again")
+    }
+
+    private fun attendance(section: String) = SportAttendance(
+        type = "lesson", name = SectionName(section), evaluationId = 1, evaluationName = null, sectionLevel = 1, score = 10,
+        dateTime = Instant.parse("2026-09-01T18:30:00+03:00"), isCompetition = false,
+    )
+
+    @Test
     fun anEmptyDayLeadsToTheNextOneAndAFilteredOneToTheReset() = runTest(main.dispatcher) {
         emitCatalog(lessonOn(4, day = 10))
         val viewModel = viewModel()
@@ -163,13 +268,13 @@ class SportSignViewModelTest {
 
     @Test
     fun aSwipeToAnotherWeekSelectsItsMondayAndBackToTheCurrentOneToday() = runTest(main.dispatcher) {
-        emitCatalog()
+        emitCatalog(SportCardFixtures.lesson(1).predicted())
         val viewModel = viewModel()
         advanceUntilIdle()
 
-        viewModel.showWeek(2)
+        viewModel.showWeek(5)
         advanceUntilIdle()
-        assertEquals(LocalDate(2026, 9, 21), viewModel.selectedDate())
+        assertEquals(LocalDate(2026, 9, 21), viewModel.selectedDate(), "the strip ends at the last lesson's week")
         assertEquals(2, viewModel.uiState.value.selectedWeek)
 
         viewModel.showWeek(0)
@@ -228,7 +333,7 @@ class SportSignViewModelTest {
         val viewModel = viewModel()
         runCurrent()
         assertEquals(SportSignBody.Loading, viewModel.uiState.value.body)
-        assertEquals(6, viewModel.uiState.value.weeks.size)
+        assertEquals(2, viewModel.uiState.value.weeks.size, "this week and the next")
         schedule.gate.complete(Unit)
         advanceUntilIdle()
     }
