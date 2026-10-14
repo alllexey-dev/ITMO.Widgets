@@ -183,7 +183,11 @@ wait_for_notification_server() {
     fi
     sleep 5
   done
-  note "SpringBoard (pid ${pid:-none}) has not loaded its notification sources; the notification tests may fail"
+  note "SpringBoard (pid ${pid:-none}, up since ${started:-?}) has not loaded its notification sources; the" \
+    "notification tests may fail. Its notification log since boot:"
+  xcrun simctl spawn "$udid" log show --style compact --last 20m \
+    --predicate "process == 'SpringBoard' AND (eventMessage CONTAINS 'BBServer startup' OR eventMessage CONTAINS 'notificationSourcesDidInstall')" \
+    2>&1 | tail -n 20 >&2
 }
 
 run_xcode() { # label
