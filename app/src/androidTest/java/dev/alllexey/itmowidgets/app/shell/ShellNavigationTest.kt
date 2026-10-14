@@ -47,10 +47,11 @@ import org.junit.runner.RunWith
 /**
  * Back and the predictive Back on the real `MainActivity` in the demo session, all through `NavDisplay`: the system
  * Back key through two pushed screens and off another tab's root, Back on a sheet, a tab switch that keeps each tab's
- * scroll, the predictive Back held half way, where the previous pushed screen (not the tab root) is already
- * composed and still under the shrunk top one, and a predictive Back released at the end of the gesture, which still
- * dissolves the top screen. With gesture navigation the last one is a real edge swipe from the system, and its
- * frame is saved with `captureScreenshots=true` (`shell/predictive-back-halfway.png`).
+ * scroll, a pop that keeps every tab root's scroll, the predictive Back held half way, where the previous pushed
+ * screen (not the tab root) is already composed and still under the shrunk top one, and a predictive Back released at
+ * the end of the gesture, which still dissolves the top screen. With gesture navigation the half-way one is also a
+ * real edge swipe from the system, and its frame is saved with `captureScreenshots=true`
+ * (`shell/predictive-back-halfway.png`).
  */
 @RunWith(AndroidJUnit4::class)
 class ShellNavigationTest {
@@ -138,6 +139,36 @@ class ShellNavigationTest {
         TestUi.settle(SETTLE_MILLIS)
 
         assertEquals("the profile root keeps its scroll", scrolled, checkNotNull(tabScroll()), 1f)
+    }
+
+    @Test
+    fun aPopKeepsTheScrollOfEveryTabRoot() = onComposeShell {
+        eventually { assertEquals(AppTab.HOME, ShellProbe.current().tab) }
+        val checked = mutableListOf<AppTab>()
+        for (tab in AppTab.entries) {
+            clickTab(tab)
+            awaitShown(tab)
+            TestUi.settle(SETTLE_MILLIS)
+            // A root that fits the window has nothing to keep: the demo's Сегодня or Зачётка at some hours and sizes.
+            if (checkNotNull(tabScrollMax()) { "the $tab root has no vertical scroller" } == 0f) continue
+            onActivity { activity -> scrollTabContent(activity, SCROLL_PX) }
+            TestUi.settle(SETTLE_MILLIS)
+            val scrolled = checkNotNull(tabScroll())
+            assertTrue("the $tab root scrolled: $scrolled", scrolled > 0f)
+            checked += tab
+
+            // NavDisplay disposes the root under the pushed screen; staying past the view models' 5 s
+            // WhileSubscribed lets their flows stop, as when the user reads the pushed screen.
+            onActivity { it.navigator().open(settings) }
+            awaitShown(tab, settings)
+            SystemClock.sleep(PUSHED_MILLIS)
+            pressBackKey()
+            awaitShown(tab)
+            TestUi.settle(SETTLE_MILLIS)
+
+            assertEquals("the $tab root keeps its scroll after a pop", scrolled, checkNotNull(tabScroll()), 1f)
+        }
+        assertTrue("no tab root could scroll", checked.isNotEmpty())
     }
 
     @Test
@@ -279,6 +310,14 @@ class ShellNavigationTest {
         return value
     }
 
+    private fun tabScrollMax(): Float? {
+        var value: Float? = null
+        onActivity { activity ->
+            value = tabScroller(activity)?.config?.get(SemanticsProperties.VerticalScrollAxisRange)?.maxValue?.invoke()
+        }
+        return value
+    }
+
     private fun tabScroller(activity: MainActivity): SemanticsNode? {
         val content = composedNodes(activity.window.decorView).firstOrNull { it.tag == ShellTags.TAB_CONTENT }
         return content?.subtree()?.firstOrNull { node ->
@@ -410,6 +449,7 @@ class ShellNavigationTest {
         const val MIN_DISSOLVE_MILLIS = 200L
         const val HALF = 0.5f
         const val SCROLL_PX = 600f
+        const val PUSHED_MILLIS = 5_500L
         const val EDGE_X = 2f
         const val MOVE_STEPS = 12
         const val MOVE_STEP_MILLIS = 16L

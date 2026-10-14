@@ -135,7 +135,7 @@ extension XCTestCase {
     /// `assertAppearances`. A layer render misses system chrome and materials (the glass tab bar and buttons, the
     /// navigation bar, the system's unavailable view, sheets with their dimming); the window draws them as the screen
     /// shows them. Without a `height` the window is as tall as the content (no scroll view at the root then).
-    /// `settle` waits for presentations and the bars' first layout.
+    /// UIKit animations are off while the window is up; `settle` waits for presentations and the bars' first layout.
     @MainActor
     func assertScreenAppearances<V: View>(
         of view: V,
@@ -187,6 +187,10 @@ extension SnapshotMatrix {
             .environment(\.locale, Locale(identifier: "ru_RU"))
             .environment(\.dynamicTypeSize, appearance.dynamicTypeSize)
             .background(Color(uiColor: .systemBackground))
+        // Presentations and sheet detents apply at once: animated, a sheet ended a fraction of a point off, with the
+        // glass under the dimming still lit, when the slow CI runner had not finished the transition within `settle`.
+        UIView.setAnimationsEnabled(false)
+        defer { UIView.setAnimationsEnabled(true) }
         let host = UIHostingController(rootView: themed)
         let window = UIWindow(windowScene: scene)
         window.windowLevel = .alert + 1

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.home.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.core.platform.AppForeground
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -23,7 +24,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.DateTimeUnit
@@ -33,13 +36,15 @@ import kotlinx.datetime.plus
 /**
  * Сегодня on both platforms: today and tomorrow from the schedule cache ([DayLessonsGateway]) and `Нужно сделать`
  * from every Koin [TodayTodoSource], re-evaluated every minute so the hero and the timeline move with the academic
- * clock. The first show refreshes once; a resume refreshes data older than five minutes.
+ * clock. The first show refreshes once; each return of the app to the foreground ([AppForeground]) refreshes data
+ * older than five minutes. Nothing else does: a tab switch or a sheet closing over Сегодня leaves the data as it is.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TodayViewModel(
     private val lessons: DayLessonsGateway,
     todoSources: List<TodayTodoSource>,
     private val time: AcademicTimeProvider,
+    foreground: AppForeground,
 ) : ViewModel() {
 
     private val tracker = RefreshTracker(viewModelScope)
@@ -68,7 +73,11 @@ class TodayViewModel(
         TodayPresenter.state(now, days, todos, result, busy, time.timeZone)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), TodayUiState.Loading)
 
-    /** The first show refreshes once; later visits go through [onScreenResumed]. */
+    init {
+        foreground.returns().onEach { refreshIfStale() }.launchIn(viewModelScope)
+    }
+
+    /** The first show refreshes once; later the app's returns to the foreground go through [refreshIfStale]. */
     fun ensureDataLoaded() {
         if (loaded) return
         loaded = true
@@ -76,7 +85,7 @@ class TodayViewModel(
     }
 
     /** Refreshes only data older than five minutes. */
-    fun onScreenResumed() {
+    private fun refreshIfStale() {
         val at = refreshedAt ?: return
         if (time.now() - at >= STALE_AFTER) refresh(RefreshMode.Silent)
     }

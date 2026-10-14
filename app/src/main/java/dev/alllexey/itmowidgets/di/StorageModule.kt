@@ -7,8 +7,10 @@ import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
+import dev.alllexey.itmowidgets.core.platform.AppForeground
 import dev.alllexey.itmowidgets.core.platform.FileSecureStore
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
+import dev.alllexey.itmowidgets.core.platform.ProcessAppForeground
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipher
@@ -39,7 +41,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.binds
 import org.koin.dsl.module
 
-/** Storage and the platform ports over it (`SecureStore`, the lock, the capabilities). */
+/** Storage and the platform ports over it (`SecureStore`, the lock, the capabilities), and the app's foreground. */
 val storageModule = module {
     singleOf(::AndroidKeystoreTokenCipher) { bind<TokenCipher>() }
     // One writer of `myitmo_tokens.enc`: MyItmoApi's token storage and the session's store are the same instance.
@@ -70,6 +72,7 @@ val storageModule = module {
     single<SecureStore> { FileSecureStore(get<AppDirectories>().noBackup, get()) }
     single<CrossProcessLock> { SingleProcessLock() }
     single<PlatformCapabilities> { AndroidPlatformCapabilities }
+    single<AppForeground> { ProcessAppForeground() }
 }
 
 private const val TOKEN_FILE_NAME = "myitmo_tokens.enc"

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.home.presentation
 
+import dev.alllexey.itmowidgets.core.testing.FakeAppForeground
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.home.FakeBellRepository
@@ -27,7 +28,7 @@ class TodayHeaderViewModelTest {
     @Test
     fun theHeaderNamesTheTabOverTheAcademicDateAndCountsTheUnseenEvents() = runTest(main.dispatcher) {
         val bell = FakeBellRepository(bellItem("a"), bellItem("b"), bellItem("c"), seen = setOf("a"))
-        val vm = TodayHeaderViewModel(FixedAcademicTime(LocalDate(2026, 9, 7)), bell)
+        val vm = TodayHeaderViewModel(FixedAcademicTime(LocalDate(2026, 9, 7)), bell, FakeAppForeground())
 
         assertEquals(
             TodayHeaderUiState(UiText.Res(CoreStrings.tab_today), UiText.Dynamic("понедельник, 7 сентября"), badge = 2),
@@ -36,13 +37,16 @@ class TodayHeaderViewModelTest {
     }
 
     @Test
-    fun aRefreshAsksTheBellsRemoteSources() = runTest(main.dispatcher) {
+    fun theBellsRemoteSourcesAreAskedOnCreationAndOnEachReturnToTheForeground() = runTest(main.dispatcher) {
         val bell = FakeBellRepository()
-        val vm = TodayHeaderViewModel(FixedAcademicTime(LocalDate(2026, 9, 7)), bell)
+        val foreground = FakeAppForeground()
+        TodayHeaderViewModel(FixedAcademicTime(LocalDate(2026, 9, 7)), bell, foreground)
+        testScheduler.advanceUntilIdle()
+        assertEquals(1, bell.refreshCalls)
 
-        vm.refresh()
+        foreground.comeBack()
         testScheduler.advanceUntilIdle()
 
-        assertEquals(1, bell.refreshCalls)
+        assertEquals(2, bell.refreshCalls)
     }
 }

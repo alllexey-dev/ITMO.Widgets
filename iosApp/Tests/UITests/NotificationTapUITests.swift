@@ -3,13 +3,14 @@ import XCTest
 /// A tapped notification routes by its `userInfo`: the Debug fixture (`-itmoNotificationFixture`)
 /// posts a local notification in the demo session, shaped like Backend's push or through the app's own notifier, the
 /// test taps its banner and the shell opens what Android opens: the tab the push names, a friendship with the actor's
-/// profile on the me tab, the found schedule changes, the recordbook, the BARS sign-in. The first run answers
-/// iOS's notification dialog. On a fresh simulator the notification daemon answers its first requests only after a
-/// minute or two, so the dialog and the banner get a long timeout.
+/// profile on the me tab, the found schedule changes, the recordbook, the BARS sign-in. The first test of the class
+/// answers iOS's notification dialog unless `FirstRunUITests` already did (`NotificationDialog`).
 final class NotificationTapUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
-    private let bannerTimeout: TimeInterval = 180
     private let stepTimeout: TimeInterval = 10
+    /// How long one launch waits for its banner, and how long all launches together may take.
+    private let bannerTimeout: TimeInterval = 20
+    private let launchesTimeout: TimeInterval = 90
 
     override func setUp() {
         continueAfterFailure = false
@@ -37,11 +38,9 @@ final class NotificationTapUITests: XCTestCase {
 
     private func tapFixture(_ fixture: String, title: String, opens root: String) {
         let app = XCUIApplication.itmo(arguments: ["-itmoNotificationFixture", fixture])
-        app.launch()
-        let banner = waitForBanner(titled: title, in: XCUIApplication(bundleIdentifier: "com.apple.springboard"))
+        let banner = launchUntilBanner(app, titled: title, opens: root)
         XCTAssertTrue(banner.exists, "no banner for \(fixture)")
-        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
-        XCTAssertFalse(element(app, root).exists)
+        // A banner leaves after a few seconds: nothing but the screenshot between finding it and the tap.
         attachScreenshot(named: "\(fixture)-banner")
         banner.tap()
 
@@ -49,19 +48,26 @@ final class NotificationTapUITests: XCTestCase {
         attachScreenshot(named: "\(fixture)-routed")
     }
 
-    /// The banner of the fixture, allowing notifications if iOS asks first (the dialog may come late).
-    private func waitForBanner(titled title: String, in springboard: XCUIApplication) -> XCUIElement {
-        let allow = springboard.alerts.buttons["Allow"]
-        let banner = springboard.descendants(matching: .any)
+    /// Launches the app on home until the fixture's banner shows, allowing notifications if iOS asks first. The app
+    /// posts on every launch, so a banner that came and went while the app launched costs a relaunch.
+    private func launchUntilBanner(_ app: XCUIApplication, titled title: String, opens root: String) -> XCUIElement {
+        let allow = NotificationDialog.allow
+        let banner = NotificationDialog.springboard.descendants(matching: .any)
             .matching(NSPredicate(format: "label CONTAINS %@", title))
             .firstMatch
-        let deadline = Date().addingTimeInterval(bannerTimeout)
+        let deadline = Date().addingTimeInterval(launchesTimeout)
         while Date() < deadline {
-            if allow.exists {
-                allow.tap()
-            }
-            if banner.waitForExistence(timeout: 1) {
-                break
+            app.launch()
+            XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
+            XCTAssertFalse(element(app, root).exists)
+            let retry = Date().addingTimeInterval(bannerTimeout)
+            while Date() < retry {
+                if allow.exists {
+                    allow.tap()
+                }
+                if banner.waitForExistence(timeout: 1) {
+                    return banner
+                }
             }
         }
         return banner

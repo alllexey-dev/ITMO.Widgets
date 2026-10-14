@@ -64,6 +64,9 @@ new iOS app.
   each tab keeps its scroll and state. Pushed screens move on the shared X
   axis over the bar, and the predictive Back shows the previous screen under
   the one being closed, already in place when the gesture ends (2026-10-13).
+  Back from a pushed screen keeps each tab root's scroll and no longer reloads
+  Профиль; Сегодня and its bell refresh when the app returns to the
+  foreground, not when a sheet closes over it (2026-10-13).
 - The predictive Back on a pushed screen is Material's back preview: the
   screen shrinks to 90 % under the finger and dissolves over 300 ms on
   release, also after a long drag or a fling; tab roots have no preview

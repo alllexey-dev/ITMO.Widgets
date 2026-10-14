@@ -41,9 +41,12 @@ session returns the app to sign-in ([Sign-in](auth.md#session)).
 
 ## Refresh
 
-Every start of `MeRoute` (`LifecycleStartEffect`) calls
-`MeViewModel.refresh(RefreshMode.Silent)` and so `SocialRepository.refresh()`;
-every opt-in change refreshes again.
+`MeViewModel` refreshes once when it is created (the tab's first show), with
+`RefreshMode.Silent` and so `SocialRepository.refresh()`; every opt-in change
+refreshes again. Coming back from a pushed screen or another tab does not:
+relationship actions fold their answers into the repository, which the summary
+follows, and Сегодня's bell refreshes the friend requests on each return of
+the app to the foreground (`FriendRequestsBellSource`).
 
 ## Tests
 

@@ -44,7 +44,6 @@ import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoSwitch
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
-import dev.alllexey.itmowidgets.designsystem.gesture.tabSwipeHandover
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorUiState
@@ -262,8 +261,6 @@ private fun Suggestions(suggestions: List<String>, current: String, onPick: (Str
             .fillMaxWidth()
             .padding(top = ItmoTheme.spacing.related)
             .testTag(ReviewEditorSheetTestTags.SUGGESTIONS)
-            // Inside a sheet the handover changes nothing; every horizontal scroller carries one (GestureRulesTest).
-            .tabSwipeHandover(scroll)
             .horizontalScroll(scroll)
             .padding(horizontal = ItmoTheme.spacing.screenMargin),
         horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
