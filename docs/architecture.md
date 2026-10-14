@@ -152,7 +152,12 @@ allow it.
   Back spec). Per-tab state follows the Navigation 3 `multiplestacks` recipe:
   each tab's stack and the contextual stack are decorated on their own
   (saveable state, `ViewModelStore`, route arguments), so a hidden tab keeps its
-  state and view models. The `ShortNavigationBar` and the demo banner are laid
+  state and view models. `NavDisplay` disposes a tab root under a pushed screen and
+  caps it at STARTED under a sheet, so a root keeps its scroll in saveable
+  state and starts no work from composition or lifecycle effects: the first
+  load runs in its view model, and revalidation waits for the app's return to
+  the foreground (`AppForeground` in core, `ProcessLifecycleOwner` on Android,
+  `UIApplicationDidBecomeActiveNotification` on iOS). The `ShortNavigationBar` and the demo banner are laid
   out under `NavDisplay` (`AppShell.kt`); tab roots end above them, pushed
   screens cover them. Sheets and dialogs are overlay scenes (`ShellScenes.kt`
   sizes a sheet by its `SheetPolicy`). Only `LoginActivity`, `BarsLoginActivity` and

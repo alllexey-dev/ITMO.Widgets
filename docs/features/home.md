@@ -52,8 +52,11 @@ The bell opens its sheet over it. The spec is the design lab's
 - States: `Loading` while nothing is cached and the first refresh runs;
   `Failed` (`Не удалось загрузить`, `Повторить`) when it failed; after a
   failed refresh over the cache the day is dimmed under `Данные на 11:44`.
-  The first show refreshes once (silent), a pull and a return after five
-  minutes refresh again; only a pull shows the indicator.
+  The first show refreshes once (silent), a pull and a return of the app to
+  the foreground (`AppForeground`) after five minutes refresh again; a tab
+  switch or a sheet closing over Сегодня does not. Only a pull shows the
+  indicator. The header (`TodayHeaderViewModel`) re-reads the date and asks
+  the bell's sources when it is created and on each return.
 - `TodayRoute` / `TodayScreen` are Compose in `commonMain`; on Android
   `HomeTabRoot` (`app/shell/entries/HomeEntries.kt`) keeps the ViewModel and
   turns lessons, `Войти` and the todo routes into navigation.

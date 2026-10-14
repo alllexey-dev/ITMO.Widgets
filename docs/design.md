@@ -309,8 +309,7 @@ description and optional action: the kit's `ContentState` and
   `Color.Transparent`, which is transparent black and greys the colour half
   way. Do not animate unchanged text or flash the screen on refresh. `Моё` and
   `Запись` of sport switch by their `SegmentedChoice` only; the sport week
-  strip pages by weeks (`tabSwipeHandover` is
-  left over from the tab swipe).
+  strip pages by weeks.
 - Past schedule days fade their card content once to 0.72 (`ScheduleDayCard`);
   today and future days 1.0; inner lesson rows get no second alpha layer.
 - Schedule timeline markers: a hollow neutral circle for a lesson not yet
@@ -363,10 +362,6 @@ Android only; iOS has its native tab bar and `NavigationStack`s ([iOS app](ios.m
    open a route with its tab, never a page index.
 8. The system animator scale applies: with animations off every switch is
    instant.
-
-The kit's `designsystem/gesture/` modifiers (`tabSwipeHandover`,
-`tabSwipeBlocked`) are left over from the tab swipe and change nothing without
-a tab pager; they go once no screen calls them.
 
 ## Shared components
 

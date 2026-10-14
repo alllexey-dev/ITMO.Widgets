@@ -64,6 +64,9 @@ new iOS app.
   each tab keeps its scroll and state. Pushed screens move on the shared X
   axis over the bar, and the predictive Back shows the previous screen under
   the one being closed, already in place when the gesture ends (2026-10-13).
+  Back from a pushed screen keeps each tab root's scroll and no longer reloads
+  Профиль; Сегодня and its bell refresh when the app returns to the
+  foreground, not when a sheet closes over it (2026-10-13).
 - Smaller changes: the `.ics` sheet buttons stand side by side when they fit;
   deleting an own link asks first; report dialogs keep their text across
   rotation; the review editor's button stays above the keyboard; another

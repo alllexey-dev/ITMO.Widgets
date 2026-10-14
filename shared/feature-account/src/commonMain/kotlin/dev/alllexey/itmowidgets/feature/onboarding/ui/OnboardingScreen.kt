@@ -24,7 +24,6 @@ import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.charts.StepsIndicator
-import dev.alllexey.itmowidgets.designsystem.gesture.tabSwipeBlocked
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingStep
@@ -123,7 +122,7 @@ fun OnboardingScreen(
             HorizontalPager(
                 state = pager,
                 // The flow moves through its footer, never by a swipe past an unanswered step.
-                modifier = Modifier.weight(1f).fillMaxWidth().tabSwipeBlocked().testTag(OnboardingTestTags.PAGER),
+                modifier = Modifier.weight(1f).fillMaxWidth().testTag(OnboardingTestTags.PAGER),
                 userScrollEnabled = false,
                 key = { page -> steps[page] },
             ) { page ->

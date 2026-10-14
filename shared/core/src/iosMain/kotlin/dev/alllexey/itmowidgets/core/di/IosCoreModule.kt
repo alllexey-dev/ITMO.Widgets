@@ -22,7 +22,9 @@ import dev.alllexey.itmowidgets.core.network.BackendOrigin
 import dev.alllexey.itmowidgets.core.network.asBackendTokenSource
 import dev.alllexey.itmowidgets.core.network.darwinHttpEngine
 import dev.alllexey.itmowidgets.core.platform.AppBundleVersion
+import dev.alllexey.itmowidgets.core.platform.AppForeground
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
+import dev.alllexey.itmowidgets.core.platform.IosAppForeground
 import dev.alllexey.itmowidgets.core.platform.IosClientVersion
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.platform.IosPlatformActions
@@ -78,7 +80,7 @@ import org.koin.dsl.module
 /**
  * The core bindings of the iOS app process, what `:app`'s Koin modules give Android: storage, the
  * session, both network clients over one Darwin engine and Core 2.0's users API, time, dispatchers, the application
- * scope, logs with the crash journal, the Backend gate, platform actions and capabilities, the share links and the
+ * scope, logs with the crash journal, the Backend gate, platform actions and capabilities, the app's foreground, the share links and the
  * session cleaners. Each type is defined here once.
  *
  * Not here (one graph per binding): `DemoMode` and `SessionRepository` come from `authDataModule`, `FcmTokenSync`
@@ -99,6 +101,7 @@ fun iosCoreModule(
     single { ShareLinkFactory(backendOrigin) }
     single<PlatformActions> { IosPlatformActions(host) }
     single<PlatformCapabilities> { IosPlatformCapabilities }
+    single<AppForeground> { IosAppForeground }
 
     single<AppLog> { OsLogAppLog() }
     // The crash journal file: the app's own, never backed up (IosCrashHook writes it as the process ends).

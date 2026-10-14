@@ -313,10 +313,10 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
   win. The system spinner starts on a frame picked by the time it appears, so layer renders draw an indeterminate
   `ProgressView` with a still stand-in (`StillSpinnerStyle` in `AssertAppearances.swift`).
 - Whole screens with system chrome (the glass tab bar, navigation bars, presented sheets) use
-  `assertScreenAppearances(of:named:)`, which draws the view in a window of its own at 375 x 667 pt; a layer render
-  misses that chrome. `ShellSnapshotTests` covers the tabs, the root header, a pushed screen and the sheet heights on
-  kit fixtures, `KitSnapshotTests` the kit components, `TodaySnapshotTests` and `BellSheetSnapshotTests` Сегодня and
-  the bell on the states the shared presenter builds from `TodaySamples`.
+  `assertScreenAppearances(of:named:)`, which draws the view in a window of its own at 375 x 667 pt with UIKit
+  animations off; a layer render misses that chrome. `ShellSnapshotTests` covers the tabs, the root header, a pushed
+  screen and the sheet heights on kit fixtures, `KitSnapshotTests` the kit components, `TodaySnapshotTests` and
+  `BellSheetSnapshotTests` Сегодня and the bell on the states the shared presenter builds from `TodaySamples`.
 - CMP-hosted routes draw into a Metal layer those snapshots miss, so they are checked by XCUITest screenshots and
   their goldens stay Roborazzi's on the JVM until their SwiftUI screens replace them
   ([ADR 0022](decisions/0022-jvm-screenshot-tests.md)).

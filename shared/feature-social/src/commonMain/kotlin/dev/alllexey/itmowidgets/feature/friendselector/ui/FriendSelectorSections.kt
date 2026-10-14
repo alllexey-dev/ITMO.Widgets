@@ -58,7 +58,6 @@ import dev.alllexey.itmowidgets.designsystem.components.settings.SelectionMode
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
-import dev.alllexey.itmowidgets.designsystem.gesture.tabSwipeHandover
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorBody
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorScope
@@ -123,7 +122,6 @@ internal fun RecentChips(state: FriendSelectorUiState, actions: FriendSelectorAc
         modifier
             .fillMaxWidth()
             .padding(top = ItmoTheme.spacing.related)
-            .tabSwipeHandover(listState)
             .selectableGroup()
             .testTag(FriendSelectorTestTags.RECENT),
         state = listState,
