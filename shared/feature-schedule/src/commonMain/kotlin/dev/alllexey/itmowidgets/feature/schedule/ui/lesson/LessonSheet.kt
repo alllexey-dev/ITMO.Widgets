@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
+import dev.alllexey.itmowidgets.designsystem.components.buttons.tonalButtonColors
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
@@ -185,9 +186,10 @@ private fun Hero(state: LessonSheetUiState) {
     }
 }
 
-/** Equal tiles, the first filled; only the actions the lesson has. */
+/** Equal tiles, the first filled, the rest in the kit's tonal colours; only the actions the lesson has. */
 @Composable
 private fun ActionTiles(actions: List<LessonAction>, onAction: (LessonAction) -> Unit) {
+    val tonal = tonalButtonColors()
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
         actions.forEachIndexed { index, action ->
             val first = index == 0
@@ -203,8 +205,8 @@ private fun ActionTiles(actions: List<LessonAction>, onAction: (LessonAction) ->
                 Surface(
                     modifier = Modifier.fillMaxWidth().heightIn(min = ItmoTheme.spacing.touchTarget),
                     shape = ItmoTheme.shapes.large,
-                    color = if (first) ItmoTheme.colorScheme.primary else ItmoTheme.colorScheme.secondaryContainer,
-                    contentColor = if (first) ItmoTheme.colorScheme.onPrimary else ItmoTheme.colorScheme.onSecondaryContainer,
+                    color = if (first) ItmoTheme.colorScheme.primary else tonal.containerColor,
+                    contentColor = if (first) ItmoTheme.colorScheme.onPrimary else tonal.contentColor,
                 ) {
                     Box(Modifier.padding(ItmoTheme.spacing.content), contentAlignment = Alignment.Center) {
                         Icon(action.kind.icon(), contentDescription = null)
