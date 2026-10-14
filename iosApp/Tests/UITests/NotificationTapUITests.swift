@@ -8,9 +8,8 @@ import XCTest
 final class NotificationTapUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
-    /// How long one launch waits for its banner, and how long all launches together may take.
+    /// How long the banner may take to come.
     private let bannerTimeout: TimeInterval = 20
-    private let launchesTimeout: TimeInterval = 90
 
     override func setUp() {
         continueAfterFailure = false
@@ -36,41 +35,49 @@ final class NotificationTapUITests: XCTestCase {
         tapFixture("bars-login", title: Self.barsTitle, opens: "bars.login")
     }
 
+    /// Launches the app on home, waits for the fixture's banner and taps where it shows. The banner leaves after a
+    /// few seconds, and on the CI runner a slow launch left it only moments: a tap that lands after it has gone opens
+    /// nothing, so the test launches again (the app posts on every launch) instead of failing on a vanished element.
     private func tapFixture(_ fixture: String, title: String, opens root: String) {
         let app = XCUIApplication.itmo(arguments: ["-itmoNotificationFixture", fixture])
-        let banner = launchUntilBanner(app, titled: title, opens: root)
-        XCTAssertTrue(banner.exists, "no banner for \(fixture)")
-        // A banner leaves after a few seconds: nothing but the screenshot between finding it and the tap.
-        attachScreenshot(named: "\(fixture)-banner")
-        banner.tap()
-
-        XCTAssertTrue(element(app, root).waitForExistence(timeout: stepTimeout), root)
-        attachScreenshot(named: "\(fixture)-routed")
-    }
-
-    /// Launches the app on home until the fixture's banner shows, allowing notifications if iOS asks first. The app
-    /// posts on every launch, so a banner that came and went while the app launched costs a relaunch.
-    private func launchUntilBanner(_ app: XCUIApplication, titled title: String, opens root: String) -> XCUIElement {
-        let allow = NotificationDialog.allow
-        let banner = NotificationDialog.springboard.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", title))
-            .firstMatch
-        let deadline = Date().addingTimeInterval(launchesTimeout)
-        while Date() < deadline {
+        for attempt in 1...3 {
             app.launch()
             XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
             XCTAssertFalse(element(app, root).exists)
-            let retry = Date().addingTimeInterval(bannerTimeout)
-            while Date() < retry {
-                if allow.exists {
-                    allow.tap()
-                }
-                if banner.waitForExistence(timeout: 1) {
-                    return banner
-                }
+            let banner = waitForBanner(titled: title)
+            XCTAssertTrue(banner.exists, "no banner for \(fixture)")
+            let frame = banner.frame
+            if attempt == 1 {
+                attachScreenshot(named: "\(fixture)-banner")
+            }
+            NotificationDialog.springboard.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: frame.midX, dy: frame.midY))
+                .tap()
+            if element(app, root).waitForExistence(timeout: stepTimeout) {
+                attachScreenshot(named: "\(fixture)-routed")
+                return
+            }
+        }
+        XCTFail("\(root) never opened from the banner")
+    }
+
+    /// The fixture's banner, allowing notifications first if iOS asks (the first test of a run on its own).
+    private func waitForBanner(titled title: String) -> XCUIElement {
+        let allow = NotificationDialog.allow
+        let banner = notifications(titled: title)
+        let deadline = Date().addingTimeInterval(bannerTimeout)
+        while Date() < deadline && !banner.waitForExistence(timeout: 1) {
+            if allow.exists {
+                allow.tap()
             }
         }
         return banner
+    }
+
+    private func notifications(titled title: String) -> XCUIElement {
+        NotificationDialog.springboard.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", title))
+            .firstMatch
     }
 
     /// `notification_sport_success`, `notification_channel_friends`, `schedule_changes_notification_title` (one
