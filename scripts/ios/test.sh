@@ -167,21 +167,23 @@ run_checks() {
 
 # SpringBoard's notification server takes in the installed apps two minutes after SpringBoard starts. An app installed
 # before that never gets the notification dialog (its request is dropped) nor its scheduled notifications ("local
-# client does not exist") while it stays installed, so a UI run installs the app only after that load, waiting up to
-# five minutes for its log line from the running SpringBoard.
+# client does not exist") while it stays installed, so a UI run installs the app only after that load: it waits up to
+# ten minutes for the load's log line from the SpringBoard running now (a first boot can restart it).
 wait_for_notification_server() {
-  local pid started deadline=$((SECONDS + 300))
-  pid=$(xcrun simctl spawn "$udid" launchctl list | awk '$3 == "com.apple.SpringBoard" { print $1 }')
-  started=$(LC_ALL=C date -j -f '%a %b %e %T %Y' "$(LC_ALL=C ps -o lstart= -p "$pid" | xargs)" '+%Y-%m-%d %H:%M:%S') ||
-    return 0
-  until xcrun simctl spawn "$udid" log show --style compact --start "$started" \
-    --predicate "processIdentifier == $pid AND eventMessage CONTAINS 'initialLoad=1'" 2> /dev/null | grep -q initialLoad; do
-    if [ "$SECONDS" -ge "$deadline" ]; then
-      note "SpringBoard has not loaded its notification sources; the notification tests may fail"
+  local pid started deadline=$((SECONDS + 600))
+  while [ "$SECONDS" -lt "$deadline" ]; do
+    pid=$(xcrun simctl spawn "$udid" launchctl list 2> /dev/null | awk '$3 == "com.apple.SpringBoard" { print $1 }')
+    if started=$(LC_ALL=C date -j -f '%a %b %e %T %Y' "$(LC_ALL=C ps -o lstart= -p "$pid" 2> /dev/null | xargs)" \
+      '+%Y-%m-%d %H:%M:%S' 2> /dev/null) &&
+      xcrun simctl spawn "$udid" log show --style compact --start "$started" \
+        --predicate "process == 'SpringBoard' AND eventMessage CONTAINS 'initialLoad=1'" 2> /dev/null |
+      grep -q initialLoad; then
+      note "SpringBoard (pid $pid, up since $started) has loaded its notification sources"
       return 0
     fi
     sleep 5
   done
+  note "SpringBoard (pid ${pid:-none}) has not loaded its notification sources; the notification tests may fail"
 }
 
 run_xcode() { # label
