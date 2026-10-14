@@ -55,6 +55,7 @@ import dev.alllexey.itmowidgets.core.storage.IosAppDirectories
 import dev.alllexey.itmowidgets.core.storage.KeychainSecureStore
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.RetiredPreferenceKeys
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -128,6 +129,7 @@ fun iosCoreModule(
     single<DataStore<Preferences>> {
         val directories = get<AppDirectories>()
         PreferenceDataStoreFactory.createWithPath(
+            migrations = listOf(RetiredPreferenceKeys),
             scope = CoroutineScope(SupervisorJob() + get<AppDispatchers>().io),
             produceFile = { directories.preferencesDataStoreFile(APP_PREFERENCES) }
         )

@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.RetiredPreferenceKeys
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -53,6 +54,7 @@ val storageModule = module {
     single<DataStore<Preferences>> {
         val directories = get<AppDirectories>()
         PreferenceDataStoreFactory.createWithPath(
+            migrations = listOf(RetiredPreferenceKeys),
             scope = CoroutineScope(SupervisorJob() + get<AppDispatchers>().io),
             produceFile = { directories.preferencesDataStoreFile(APP_PREFERENCES_FILE) }
         )

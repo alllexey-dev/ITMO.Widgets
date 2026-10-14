@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.RetiredPreferenceKeys
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -47,10 +48,11 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 
 /**
- * `files/datastore/app_preferences.preferences_pb`: all 40 keys 2.2 wrote (28 of `AppSettingsStorage`, now split
+ * `files/datastore/app_preferences.preferences_pb`: of the 40 keys 2.2 wrote (28 of `AppSettingsStorage`, now split
  * into the per-concern stores, 8 of `UtilityStorage` and one each of the subject bindings, the BARS switch, a QR
- * widget's state and the recent friends) keep their names, types and values and read through head stores. The file
- * is opened as `StorageModule` opens it: `createWithPath` on `AppDirectories`, so through okio.
+ * widget's state and the recent friends) 39 keep their names, types and values and read through head stores; the
+ * recent friends of the old friend selector are dropped once ([RetiredPreferenceKeys]). The file is opened as
+ * `StorageModule` opens it: `createWithPath` with its migrations on `AppDirectories`, so through okio.
  */
 object AppPreferencesUpgrade {
 
@@ -59,7 +61,7 @@ object AppPreferencesUpgrade {
         try {
             check(
                 fixture,
-                PreferenceDataStoreFactory.createWithPath(scope = scope, produceFile = {
+                PreferenceDataStoreFactory.createWithPath(migrations = listOf(RetiredPreferenceKeys), scope = scope, produceFile = {
                     AndroidAppDirectories(fixture.context).preferencesDataStoreFile("app_preferences")
                 })
             )
@@ -204,11 +206,10 @@ object AppPreferencesUpgrade {
         stringPreferencesKey("skipped_version") to "2.1.1",
         longPreferencesKey("version_notification_timestamp") to Captured22.AT_MS - 7_200_000,
         booleanPreferencesKey("onboarding_completed") to true,
-        // One each: subject bindings, the BARS switch, a QR widget's state, the recent friends
+        // One each: subject bindings, the BARS switch, a QR widget's state (the recent friends are retired)
         stringPreferencesKey("subject_bindings") to "1001:2001,1002:2002",
         booleanPreferencesKey("recordbook_bars") to true,
         stringPreferencesKey("qr_widget_state_42") to "VISIBLE",
-        stringPreferencesKey("recent_schedule_friends") to "100003,100002"
     )
 
     private object NoSecrets : SecureStore {
