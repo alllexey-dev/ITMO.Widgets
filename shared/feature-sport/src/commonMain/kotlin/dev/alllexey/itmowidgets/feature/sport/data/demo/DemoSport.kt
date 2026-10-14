@@ -117,6 +117,8 @@ object DemoSport {
                 end = lesson.end + shift,
                 state = SportSectionDateState.QUEUED.takeIf { period == 1 },
                 entryId = 2L.takeIf { period == 1 },
+                position = 2.takeIf { period == 1 },
+                total = 5.takeIf { period == 1 },
             )
         }
         return listOf(MySportSection(id = 1, lesson = lesson, dates = dates, place = 3, subscribers = 7))

@@ -8851,6 +8851,13 @@
             ],
             "format": "int64"
           },
+          "position": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
           "start": {
             "type": "string",
             "format": "date-time"
@@ -8865,13 +8872,22 @@
               "LIMIT",
               "SKIPPED"
             ]
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
           }
         },
         "required": [
           "end",
           "entryId",
+          "position",
           "start",
-          "state"
+          "state",
+          "total"
         ]
       },
       "SportSectionOccurrenceRequest": {

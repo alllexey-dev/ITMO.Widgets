@@ -290,6 +290,8 @@ fun MySportSectionDto.toModel(): MySportSection = MySportSection(
                 SportSectionOccurrenceStateDto.UNKNOWN, null -> null
             },
             entryId = date.entryId,
+            position = date.position,
+            total = date.total,
         )
     },
     place = place,

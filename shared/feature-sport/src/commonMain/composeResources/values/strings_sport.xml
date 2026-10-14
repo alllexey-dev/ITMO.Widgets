@@ -168,6 +168,7 @@
     <string name="sport_section_full">Мест в секции нет</string>
     <string name="sport_section_slot">%1$s, %2$s, раз в две недели</string>
     <string name="sport_section_date_queued">в очереди</string>
+    <string name="sport_section_date_queued_position">в очереди, %1$d-й из %2$d</string>
     <string name="sport_section_date_waiting">встанем в очередь, когда откроется запись</string>
     <string name="sport_section_date_limit">лимит на месяц исчерпан</string>
     <string name="sport_section_date_skipped">пропустим это занятие</string>

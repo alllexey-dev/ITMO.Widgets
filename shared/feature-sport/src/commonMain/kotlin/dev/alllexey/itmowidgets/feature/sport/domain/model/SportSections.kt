@@ -14,8 +14,18 @@ data class MySportSection(
     val subscribers: Int,
 )
 
-/** A predicted occurrence; [state] is null until auto-sign for it opens and the user did not turn it off. */
-data class SportSectionDate(val start: Instant, val end: Instant, val state: SportSectionDateState?, val entryId: Long?)
+/**
+ * A predicted occurrence; [state] is null until auto-sign for it opens and the user did not turn it off. A waiting
+ * queued date has its [position] of [total] in the lesson's auto-sign queue, which moves as manual users join.
+ */
+data class SportSectionDate(
+    val start: Instant,
+    val end: Instant,
+    val state: SportSectionDateState?,
+    val entryId: Long?,
+    val position: Int? = null,
+    val total: Int? = null,
+)
 
 enum class SportSectionDateState {
     /** In the auto-sign queue. */

@@ -274,7 +274,10 @@ object SportSamples {
                 dates = listOf(SportSectionDateState.QUEUED, SportSectionDateState.LIMIT, SportSectionDateState.SKIPPED)
                     .mapIndexed { index, state ->
                         val shift = period * (index + 1)
-                        SportSectionDate(volley.start + shift, volley.end + shift, state, 21L.takeIf { state == SportSectionDateState.QUEUED })
+                        val queued = state == SportSectionDateState.QUEUED
+                        SportSectionDate(
+                            volley.start + shift, volley.end + shift, state, 21L.takeIf { queued }, 2.takeIf { queued }, 5.takeIf { queued },
+                        )
                     },
                 place = 3,
                 subscribers = 7,

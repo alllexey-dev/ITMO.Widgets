@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.shortPersonName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDate
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDateState
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsState
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.sportDayLabel
@@ -43,12 +44,29 @@ data class SportSectionCardUi(
 )
 
 /**
- * One date of a section: [day] `Ср, 21 окт.`, [status] `в очереди`, `лимит на месяц исчерпан`, `пропустим это занятие`
+ * One date of a section: [day] `Ср, 21 окт.`, [status] `в очереди, 2-й из 5`, `лимит на месяц исчерпан`, `пропустим это занятие`
  * or `встанем в очередь, когда откроется запись`; [on] false for a skipped date, [enabled] false for one the limit skipped.
  */
 data class SportSectionDateUi(val start: Instant, val day: UiText, val status: UiText, val on: Boolean, val enabled: Boolean)
 
 object SportSectionsPresenter {
+
+    /** `в очереди, 2-й из 5` while a queued date waits, else its state. */
+    private fun status(date: SportSectionDate): UiText {
+        val position = date.position
+        val total = date.total
+        if (date.state == SportSectionDateState.QUEUED && position != null && total != null) {
+            return UiText.Res(SportStrings.sport_section_date_queued_position, listOf(position, total))
+        }
+        return UiText.Res(
+            when (date.state) {
+                SportSectionDateState.QUEUED -> SportStrings.sport_section_date_queued
+                SportSectionDateState.LIMIT -> SportStrings.sport_section_date_limit
+                SportSectionDateState.SKIPPED -> SportStrings.sport_section_date_skipped
+                null -> SportStrings.sport_section_date_waiting
+            },
+        )
+    }
 
     /** The switch of the booked [lessonId]; null until its slot is known (or it has none: no provable venue). */
     fun toggle(state: SportSectionsState, lessonId: Long): SportSectionToggleUi? {
@@ -98,14 +116,7 @@ object SportSectionsPresenter {
                 SportSectionDateUi(
                     start = date.start,
                     day = sportDayLabel(date.start.toLocalDateTime(zone).date, today),
-                    status = UiText.Res(
-                        when (date.state) {
-                            SportSectionDateState.QUEUED -> SportStrings.sport_section_date_queued
-                            SportSectionDateState.LIMIT -> SportStrings.sport_section_date_limit
-                            SportSectionDateState.SKIPPED -> SportStrings.sport_section_date_skipped
-                            null -> SportStrings.sport_section_date_waiting
-                        },
-                    ),
+                    status = status(date),
                     on = date.state == null || date.state == SportSectionDateState.QUEUED,
                     enabled = !busy && date.state != SportSectionDateState.LIMIT,
                 )

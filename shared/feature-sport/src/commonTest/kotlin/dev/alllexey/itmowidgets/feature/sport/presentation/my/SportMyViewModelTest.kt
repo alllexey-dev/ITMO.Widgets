@@ -209,6 +209,36 @@ class SportMyViewModelTest {
     }
 
     @Test
+    fun aQueuedDateShowsItsPlaceInTheLessonQueueAndARefreshMovesIt() = runTest(main.dispatcher) {
+        val lesson = sections.queueLesson(7)
+        fun section(position: Int, total: Int) = MySportSection(
+            31, lesson,
+            listOf(SportSectionDate(lesson.start + 14.days, lesson.end + 14.days, SportSectionDateState.QUEUED, 21, position, total)),
+            place = 1, subscribers = 2,
+        )
+        sections.sections.value = LoadState.Content(listOf(section(1, 3)))
+        emitSnapshot()
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        assertEquals(
+            UiText.Res(SportStrings.sport_section_date_queued_position, listOf(1, 3)),
+            viewModel.uiState.value.sections.single().dates.single().status,
+        )
+
+        val refreshes = sections.refreshCount
+        viewModel.refresh(RefreshMode.Pull)
+        advanceUntilIdle()
+        assertTrue(sections.refreshCount > refreshes, "a pull reloads the sections")
+        // A manual user joined: the date takes the next turn after them.
+        sections.sections.value = LoadState.Content(listOf(section(2, 4)))
+        advanceUntilIdle()
+        assertEquals(
+            UiText.Res(SportStrings.sport_section_date_queued_position, listOf(2, 4)),
+            viewModel.uiState.value.sections.single().dates.single().status,
+        )
+    }
+
+    @Test
     fun aRefusedSectionChangeSaysWhy() = runTest(main.dispatcher) {
         sections.slots[7] = SportSectionSlot(7, subscribers = 0, cap = 12, full = false, subscriptionId = null, place = null)
         sections.failure = AppError.CustomServicesDisabled

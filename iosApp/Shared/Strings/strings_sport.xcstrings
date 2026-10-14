@@ -1859,6 +1859,18 @@
         }
       }
     },
+    "sport_section_date_queued_position" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в очереди, %1$lld-й из %2$lld"
+          }
+        }
+      }
+    },
     "sport_section_date_skipped" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",

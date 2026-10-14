@@ -42,6 +42,9 @@ data class SportSectionDate(
     val state: SportSectionOccurrenceState?,
     /** The auto-sign entry of a queued occurrence. */
     val entryId: Long?,
+    /** The entry's place in the lesson's auto-sign queue, in the order attempts follow, while it waits. */
+    val position: Int? = null,
+    val total: Int? = null,
 )
 
 /**
