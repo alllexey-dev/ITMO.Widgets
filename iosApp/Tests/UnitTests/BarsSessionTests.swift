@@ -13,12 +13,17 @@ final class BarsSessionTests: XCTestCase {
     private let service = "dev.alllexey.itmowidgets"
     private let barsItem = "bars_tokens.enc"
     private let cookieItem = KeychainItmoIdCookies.companion.ITEM
-    private let cookieNames = ["KEYCLOAK_IDENTITY", "KEYCLOAK_SESSION", "_ym_uid"]
+    /// A UI test that opened the ITMO.ID page on the same simulator leaves its real cookies in the store, and the copy
+    /// would carry them: every test starts and ends without ITMO cookies.
+    override func setUp() async throws {
+        try await super.setUp()
+        await removeItmoCookies()
+    }
 
     override func tearDown() async throws {
         IosSecureStore.shared.keychain().delete(name: cookieItem)
         IosSecureStore.shared.keychain().delete(name: barsItem)
-        await removeSyntheticCookies()
+        await removeItmoCookies()
         try await super.tearDown()
     }
 
@@ -128,9 +133,9 @@ final class BarsSessionTests: XCTestCase {
         ]))
     }
 
-    private func removeSyntheticCookies() async {
+    private func removeItmoCookies() async {
         let store = WKWebsiteDataStore.default().httpCookieStore
-        for cookie in await store.allCookies() where cookieNames.contains(cookie.name) {
+        for cookie in await store.allCookies() where cookie.domain.hasSuffix("itmo.ru") {
             await store.deleteCookie(cookie)
         }
     }
