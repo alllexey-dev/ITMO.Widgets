@@ -1,5 +1,11 @@
 # 0020 One Navigation 3 shell with `@Serializable` routes
 
+**Amended (2026-10-14).** The predictive Back is the shell's own (`ShellBack`): `NavDisplay` 1.2 plays a predictive
+pop's release as the rest of the gesture's seek timeline, so a long drag or a fling ended in a blink. The shell takes
+the system gesture, draws Material's back preview on pushed screens only (tab roots pop with their fade through on
+release, Сегодня's root goes home, sheets keep their own), and feeds `NavDisplay` the gesture held at 0, so the
+release dissolve always runs its full 300 ms. Nav3 1.3's gesture and release handoff replaces this once stable.
+
 **Amended (2026-10-13).** `NavDisplay` owns every screen of the tabs surface: its entries are the start tab's root,
 the selected tab's root above it, the pushed screens, then the sheets and dialogs (`ShellBackStack.entries`). It does
 the transitions (fade through between tab roots from their entry metadata, M3 shared axis X for pushed screens), the

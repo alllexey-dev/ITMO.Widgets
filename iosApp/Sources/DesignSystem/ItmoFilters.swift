@@ -116,9 +116,14 @@ struct ItmoWeekDay: Hashable {
 }
 
 /// One week as seven equal targets; the selected day sits on the tint. Weeks page sideways in a paging scroll view.
+/// The tint slides to a newly selected day on a spring (M3's default spatial one) and the colours crossfade; a week
+/// that gains or loses the selection fades it in place. Reduce Motion turns the motion off.
 struct ItmoWeekStrip: View {
     let days: [ItmoWeekDay]
     let tap: (Int) -> Void
+
+    @Namespace private var indicator
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: ItmoSpacing.related) {
@@ -143,7 +148,13 @@ struct ItmoWeekStrip: View {
                     .foregroundStyle(color(day))
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .padding(.vertical, ItmoSpacing.compact)
-                    .background(day.selected ? ItmoColor.primary : .clear, in: .rect(cornerRadius: 16))
+                    .background {
+                        if day.selected {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(ItmoColor.primary)
+                                .matchedGeometryEffect(id: "selection", in: indicator)
+                        }
+                    }
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
@@ -152,6 +163,8 @@ struct ItmoWeekStrip: View {
                 .accessibilityIdentifier("kit.weekDay.\(day.id)")
             }
         }
+        // Stiffness 380 and damping 0.8 of M3's default spatial spring: response 2 pi / sqrt(380).
+        .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.8), value: days.firstIndex(where: \.selected))
     }
 
     private func dotColor(_ day: ItmoWeekDay, warn: Bool) -> Color {
@@ -196,7 +209,8 @@ struct ItmoSwitchRow: View {
     }
 }
 
-/// Places taken: a short bar and "22 of 24", both in the tone.
+/// Places taken: a bar and "22 of 24", both in the tone. The text keeps its width; the bar takes up to 88 pt of what
+/// is left, down to 44 pt in a tight row.
 struct ItmoOccupancy: View {
     let text: String
     let share: Double
@@ -208,12 +222,16 @@ struct ItmoOccupancy: View {
         HStack(spacing: 6) {
             Capsule()
                 .fill(track)
-                .frame(width: 44, height: 6)
+                .frame(minWidth: 44, maxWidth: 88)
+                .frame(height: 6)
                 .overlay(alignment: .leading) {
-                    Capsule().fill(tone.color).frame(width: 44 * min(max(share, 0), 1))
+                    GeometryReader { bar in
+                        Capsule().fill(tone.color).frame(width: bar.size.width * min(max(share, 0), 1))
+                    }
                 }
                 .accessibilityHidden(true)
             Text(verbatim: text).font(.itmo(.labelMedium, emphasized: true)).foregroundStyle(tone.color).monospacedDigit()
+                .fixedSize()
         }
     }
 }

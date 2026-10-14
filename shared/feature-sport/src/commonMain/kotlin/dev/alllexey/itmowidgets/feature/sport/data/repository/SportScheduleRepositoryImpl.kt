@@ -224,7 +224,10 @@ class SportScheduleRepositoryImpl(
     }
 
     private companion object {
-        /** Today and the three weeks after it, both ends inclusive. */
+        /**
+         * The asked end: today and three weeks after it. My ITMO publishes about two weeks ahead and answers with
+         * everything published from `date_start`, whatever `date_end` says (checked 2026-10-14).
+         */
         const val SCHEDULE_DAYS = 21
     }
 }

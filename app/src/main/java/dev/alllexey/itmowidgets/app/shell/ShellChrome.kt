@@ -1,8 +1,6 @@
 package dev.alllexey.itmowidgets.app.shell
 
 import androidx.annotation.VisibleForTesting
-import androidx.compose.animation.EnterExitState
-import androidx.compose.animation.core.animateDp
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,13 +11,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,10 +25,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
@@ -102,15 +96,11 @@ private fun TabRootLayer(content: @Composable () -> Unit) {
     ) { content() }
 }
 
-/** A leaving screen rounds its corners as it shrinks in the predictive Back (M3), square again once it settles. */
+/** A pushed screen: an opaque full-window surface that previews the Back under the finger ([backPreview]). */
 @Composable
 private fun ScreenLayer(contentKey: Any, content: @Composable () -> Unit) {
-    val corner by LocalNavAnimatedContentScope.current.transition.animateDp(label = "screenCorner") { state ->
-        if (state == EnterExitState.PostExit) LeavingCorner else 0.dp
-    }
     Surface(
-        Modifier.fillMaxSize().testTag(ShellTags.overlay(contentKey)),
-        shape = RoundedCornerShape(corner),
+        Modifier.fillMaxSize().backPreview().testTag(ShellTags.overlay(contentKey)),
         color = ItmoTheme.colorScheme.surface,
     ) { content() }
 }
@@ -193,5 +183,4 @@ internal fun GateProgress() {
 }
 
 private val TouchTarget = 48.dp
-private val LeavingCorner = 28.dp
 private val DemoBannerEndPadding = 4.dp

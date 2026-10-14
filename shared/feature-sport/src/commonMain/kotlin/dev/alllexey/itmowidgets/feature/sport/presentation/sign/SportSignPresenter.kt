@@ -41,6 +41,10 @@ class SportSignInput(
     val now: Instant,
     val today: LocalDate,
     val zone: TimeZone,
+    /** The sections of the own attendance history, one per visit, for the types shown first. */
+    val history: List<SectionName> = emptyList(),
+    /** The search over every type after `Ещё`; null while the sheet shows the top ones. */
+    val sectionQuery: String? = null,
 )
 
 object SportSignPresenter {
@@ -50,12 +54,13 @@ object SportSignPresenter {
         val upcoming = lessons.filter { it.end > now }
         val visible = upcoming.filter { matches(it, filters, input) }
         val byDate = visible.groupBy { it.date(zone) }
+        val lastWeek = lastWeek(upcoming, input)
         SportSignUiState(
             query = filters.query,
-            chips = chips(filters, pinned.isNotEmpty()),
+            chips = chips(filters),
             filterCount = filters.count,
-            weeks = weeks(byDate, filters.selectedDate, input),
-            selectedWeek = today.weeksUntil(filters.selectedDate).coerceIn(0, MAX_WEEKS_FORWARD),
+            weeks = weeks(byDate, filters.selectedDate, lastWeek, input),
+            selectedWeek = today.weeksUntil(filters.selectedDate).coerceIn(0, lastWeek),
             body = day(upcoming, byDate, input),
             filters = if (filtersOpen) filtersSheet(upcoming, visible.size, input) else null,
         )
@@ -72,7 +77,7 @@ object SportSignPresenter {
         val mine = lesson.signed || lesson.signEntry?.waiting == true
         return (query.isEmpty() || query in lesson.sectionName.raw.lowercase() || query in lesson.teacherFio.lowercase()) &&
             (filters.sections.isEmpty() || lesson.sectionName in filters.sections) &&
-            (filters.building == null || buildingName(lesson, input.catalog) == filters.building) &&
+            (filters.building == null || buildingKey(lesson, input.catalog) == filters.building) &&
             (filters.teacher == null || teacherName(lesson, input.catalog) == filters.teacher) &&
             filters.dayPart.contains(start) &&
             (!filters.onlyFree || mine || (lesson.isLessonReal && lesson.available > 0 && lesson.canSignIn)) &&
@@ -80,17 +85,30 @@ object SportSignPresenter {
             (!filters.onlyFriends || lesson.friendsBookings.isNotEmpty())
     }
 
-    private fun chips(filters: SportSignFilters, hasPinned: Boolean): List<SportChip> = buildList {
-        add(SportChip(SportQuickFilter.FREE, UiText.Res(SportStrings.sport_chip_free), filters.onlyFree))
-        add(SportChip(SportQuickFilter.EVENING, UiText.Res(SportStrings.sport_chip_evening), filters.dayPart == SportDayPart.EVENING))
-        if (hasPinned) add(SportChip(SportQuickFilter.PINNED, UiText.Res(SportStrings.sport_chip_pinned), filters.onlyPinned))
-        add(SportChip(SportQuickFilter.FRIENDS, UiText.Res(SportStrings.sport_chip_friends), filters.onlyFriends))
-        add(SportChip(SportQuickFilter.MORNING, UiText.Res(SportStrings.sport_chip_morning), filters.dayPart == SportDayPart.MORNING))
+    private fun chips(filters: SportSignFilters): List<SportChip> = listOf(
+        SportChip(SportQuickFilter.FREE, UiText.Res(SportStrings.sport_chip_free), filters.onlyFree),
+        SportChip(SportQuickFilter.MORNING, UiText.Res(SportStrings.sport_chip_morning), filters.dayPart == SportDayPart.MORNING),
+        SportChip(SportQuickFilter.EVENING, UiText.Res(SportStrings.sport_chip_evening), filters.dayPart == SportDayPart.EVENING),
+        SportChip(SportQuickFilter.FRIENDS, UiText.Res(SportStrings.sport_chip_friends), filters.onlyFriends),
+    )
+
+    /**
+     * The last week of the strip after the current one: the week of the catalog's last lesson (published or predicted)
+     * or of the chosen day, at least the next week.
+     */
+    private fun lastWeek(upcoming: List<SportLesson>, input: SportSignInput): Int {
+        val last = upcoming.maxOfOrNull { it.start }?.toLocalDateTime(input.zone)?.date ?: input.today
+        return maxOf(1, input.today.weeksUntil(last), input.today.weeksUntil(input.filters.selectedDate)).coerceAtMost(MAX_WEEKS_FORWARD)
     }
 
-    private fun weeks(byDate: Map<LocalDate, List<SportLesson>>, selected: LocalDate, input: SportSignInput): List<List<SportWeekDay>> {
+    private fun weeks(
+        byDate: Map<LocalDate, List<SportLesson>>,
+        selected: LocalDate,
+        lastWeek: Int,
+        input: SportSignInput,
+    ): List<List<SportWeekDay>> {
         val monday = input.today.weekMonday()
-        return (0..MAX_WEEKS_FORWARD).map { week ->
+        return (0..lastWeek).map { week ->
             (0 until DAYS_IN_WEEK).map { offset ->
                 val date = monday.plus(week * DAYS_IN_WEEK + offset, DateTimeUnit.DAY)
                 val count = byDate[date].orEmpty().size
@@ -202,12 +220,24 @@ object SportSignPresenter {
     private fun filtersSheet(upcoming: List<SportLesson>, shown: Int, input: SportSignInput): SportFiltersUi {
         val filters = input.filters
         val sections = upcoming.map { it.sectionName }.distinct().sortedBy { it.shorten() }
-        val buildings = upcoming.mapNotNull { buildingName(it, input.catalog) }.distinct().sorted()
+        val query = input.sectionQuery?.trim()?.lowercase()
+        val typeChips = if (query == null) {
+            val top = topSections(upcoming, input.history)
+            top + sections.filter { it in filters.sections && it !in top }
+        } else {
+            sections.filter { query in it.shorten().lowercase() || query in it.raw.lowercase() }
+        }
+        val hidden = sections.size - typeChips.size
+        val keys = upcoming.map { buildingKey(it, input.catalog) }.toSet()
+        val buildings = keys.filterNot { it == BUILDING_OTHER || it == BUILDING_ONLINE }.sorted() +
+            listOf(BUILDING_OTHER, BUILDING_ONLINE).filter { it in keys }
         val teachers = upcoming.mapNotNull { teacherName(it, input.catalog) }.distinct().sorted()
         return SportFiltersUi(
-            sections = sections.map { SportOption(it.raw, UiText.Dynamic(it.shorten()), it in filters.sections) },
+            sections = typeChips.map { SportOption(it.raw, UiText.Dynamic(it.shorten()), it in filters.sections) },
+            moreSections = UiText.Res(SportStrings.sport_filter_more, listOf(hidden)).takeIf { query == null && hidden > 0 },
+            sectionQuery = input.sectionQuery,
             buildings = listOf(SportOption(null, UiText.Res(SportStrings.sport_filter_all), filters.building == null)) +
-                buildings.map { SportOption(it, buildingShortTitle(it), it == filters.building) },
+                buildings.map { SportOption(it, buildingLabel(it), it == filters.building) },
             dayPart = filters.dayPart,
             showDayPart = input.showDayPart,
             teachers = if (input.showTeacher) {
@@ -235,7 +265,34 @@ object SportSignPresenter {
         },
     )
 
-    /** The building filter's name of a lesson; online rooms and venues outside the filter have none. */
+    /**
+     * The types shown before `Ещё`, at most [TOP_SECTIONS]: first the viewer's own (booked or queued in the catalog,
+     * attended in the history, the most often first), then the most popular, by places taken over the published weeks.
+     */
+    private fun topSections(upcoming: List<SportLesson>, history: List<SectionName>): List<SectionName> {
+        val own = (upcoming.filter { it.signed || it.signEntry?.waiting == true }.map { it.sectionName } + history)
+            .groupingBy { it }.eachCount()
+        val taken = upcoming.filter { it.isLessonReal }.groupBy { it.sectionName }
+            .mapValues { (_, lessons) -> lessons.sumOf { (it.limit - it.available).coerceAtLeast(0) } }
+        return upcoming.map { it.sectionName }.distinct()
+            .sortedWith(compareByDescending<SectionName> { own[it] ?: 0 }.thenByDescending { taken[it] ?: 0 }.thenBy { it.shorten() })
+            .take(TOP_SECTIONS)
+    }
+
+    /**
+     * The building filter's value of a lesson: the dictionary's name, [BUILDING_ONLINE], or [BUILDING_OTHER] for
+     * venues outside the dictionary (My ITMO's `Другие объекты` and buildings it does not list).
+     */
+    private fun buildingKey(lesson: SportLesson, catalog: SportFilterCatalog): String =
+        if (lesson.roomId == ONLINE_ROOM || lesson.buildingId == ONLINE_ROOM) BUILDING_ONLINE else buildingName(lesson, catalog) ?: BUILDING_OTHER
+
+    private fun buildingLabel(key: String): UiText = when (key) {
+        BUILDING_OTHER -> UiText.Res(SportStrings.sport_building_other)
+        BUILDING_ONLINE -> UiText.Res(SportStrings.sport_building_online)
+        else -> buildingShortTitle(key)
+    }
+
+    /** The dictionary's name of a lesson's building; online rooms and venues outside the dictionary have none. */
     private fun buildingName(lesson: SportLesson, catalog: SportFilterCatalog): String? =
         lesson.buildingId?.takeIf { it > 0 && lesson.roomId != ONLINE_ROOM }
             ?.let { id -> catalog.buildings.firstOrNull { it.id == id }?.value }
@@ -245,6 +302,9 @@ object SportSignPresenter {
 
     private fun SportLesson.date(zone: TimeZone): LocalDate = start.toLocalDateTime(zone).date
 
+    private const val BUILDING_OTHER = "#other"
+    private const val BUILDING_ONLINE = "#online"
+    private const val TOP_SECTIONS = 6
     private const val DAYS_IN_WEEK = 7
     private const val FEW_SEATS = 3
     private const val ONLINE_ROOM = -1L

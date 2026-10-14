@@ -43,6 +43,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.FilterChips
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.SearchField
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.SegmentedChoice
 import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
@@ -93,6 +94,8 @@ object SportSheetTags {
 data class SportFiltersActions(
     val onClose: () -> Unit = {},
     val onSection: (String) -> Unit = {},
+    val onMoreSections: () -> Unit = {},
+    val onSectionQuery: (String) -> Unit = {},
     val onBuilding: (String?) -> Unit = {},
     val onTeacher: (String?) -> Unit = {},
     val onDayPart: (SportDayPart) -> Unit = {},
@@ -140,10 +143,23 @@ fun SportFiltersSheetContent(filters: SportFiltersUi, actions: SportFiltersActio
             verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
         ) {
             SectionHeader(text(SportStrings.sport_filter_type))
-            FilterChips(filters.sections.map { ChipSpec(it.label.asString(), it.selected) }, { actions.onSection(filters.sections[it].value.orEmpty()) }, wrap = true)
+            filters.sectionQuery?.let { query ->
+                SearchField(
+                    query = query,
+                    onQueryChange = actions.onSectionQuery,
+                    placeholder = text(SportStrings.sport_filter_type_search),
+                    clearLabel = text(SportStrings.sport_search_clear),
+                )
+            }
+            val more = filters.moreSections?.asString()
+            FilterChips(
+                filters.sections.map { ChipSpec(it.label.asString(), it.selected) } + listOfNotNull(more?.let { ChipSpec(it, false) }),
+                { index -> filters.sections.getOrNull(index)?.let { actions.onSection(it.value.orEmpty()) } ?: actions.onMoreSections() },
+                wrap = true,
+            )
             if (filters.buildings.size > 1) {
                 SectionHeader(text(SportStrings.sport_filter_building))
-                FilterChips(filters.buildings.map { ChipSpec(it.label.asString(), it.selected) }, { actions.onBuilding(filters.buildings[it].value) })
+                FilterChips(filters.buildings.map { ChipSpec(it.label.asString(), it.selected) }, { actions.onBuilding(filters.buildings[it].value) }, wrap = true)
             }
             if (filters.showDayPart) {
                 SectionHeader(text(SportStrings.sport_filter_time))
