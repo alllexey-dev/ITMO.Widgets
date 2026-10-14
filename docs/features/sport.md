@@ -101,7 +101,9 @@ slot. Semantics are in Backend's sport automation contract (Sections).
   Backend's rule). The sheet's switch keeps the sheet open.
 - `Секции` in `Моё`: each section with its slot (`Четверг, 15:20, раз в две
   недели`), the teacher and the hall, the place, an off switch, and its next
-  three dates, each with its own switch: `в очереди`, `встанем в очередь, когда
+  three dates, each with its own switch: `в очереди, 2-й из 5` (the place in
+  the lesson's auto-sign queue, where section and manual entries alternate, a
+  section first; it moves as manual users join), `встанем в очередь, когда
   откроется запись`, `пропустим это занятие` (off, its queue cancelled, the
   place kept) or `лимит на месяц исчерпан` (the limit had no free slot; not
   retried). Turning a section off keeps the queues it already made.
