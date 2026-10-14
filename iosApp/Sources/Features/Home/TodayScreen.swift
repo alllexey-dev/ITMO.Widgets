@@ -42,7 +42,12 @@ struct TodayScreen: View {
         .observing(model)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("shell.root.home")
-        .onAppear { model.viewModel.ensureDataLoaded() }
+        .onAppear {
+            model.viewModel.ensureDataLoaded()
+            #if DEBUG
+            NotificationFixtures.postIfRequested()
+            #endif
+        }
     }
 
     private func open(target: LessonTarget) {

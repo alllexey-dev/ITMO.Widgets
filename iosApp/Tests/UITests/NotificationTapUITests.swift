@@ -35,9 +35,9 @@ final class NotificationTapUITests: XCTestCase {
         tapFixture("bars-login", title: Self.barsTitle, opens: "bars.login")
     }
 
-    /// Launches the app on home, waits for the fixture's banner and taps where it shows. The banner leaves after a
-    /// few seconds, and on the CI runner a slow launch left it only moments: a tap that lands after it has gone opens
-    /// nothing, so the test launches again (the app posts on every launch) instead of failing on a vanished element.
+    /// Launches the app on home, waits for the fixture's banner (posted once home shows) and taps where it shows. The
+    /// banner leaves after a few seconds; one missed, or gone before the tap landed, costs a relaunch (the app posts on
+    /// every launch) instead of failing on a vanished element.
     private func tapFixture(_ fixture: String, title: String, opens root: String) {
         let app = XCUIApplication.itmo(arguments: ["-itmoNotificationFixture", fixture])
         for attempt in 1...3 {
@@ -45,7 +45,7 @@ final class NotificationTapUITests: XCTestCase {
             XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
             XCTAssertFalse(element(app, root).exists)
             let banner = waitForBanner(titled: title)
-            XCTAssertTrue(banner.exists, "no banner for \(fixture)")
+            guard banner.exists else { continue }
             let frame = banner.frame
             if attempt == 1 {
                 attachScreenshot(named: "\(fixture)-banner")
@@ -58,7 +58,7 @@ final class NotificationTapUITests: XCTestCase {
                 return
             }
         }
-        XCTFail("\(root) never opened from the banner")
+        XCTFail("no banner for \(fixture) opened \(root)")
     }
 
     /// The fixture's banner, allowing notifications first if iOS asks (the first test of a run on its own).
