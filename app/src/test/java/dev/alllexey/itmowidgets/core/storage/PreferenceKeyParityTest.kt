@@ -18,14 +18,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 52 key names
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 51 key names
  * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The four
  * `push_registered_*` keys are written only by iOS, whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 52 key names, each declared once`() {
+    fun `the app preferences keep their 51 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules.
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -36,7 +36,7 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(52, declared.map { it.name }.toSet().size)
+        assertEquals(51, declared.map { it.name }.toSet().size)
     }
 
     @Test
@@ -115,7 +115,6 @@ class PreferenceKeyParityTest {
             Key("QrSettingsPreferences.kt", "string", "qr_spoiler_animation_type"),
             Key("SportSignSelectorPreferences.kt", "boolean", "sport_sign_teacher_selector_enabled"),
             Key("SportSignSelectorPreferences.kt", "boolean", "sport_sign_hide_time_selector_enabled"),
-            Key("SportSignSelectorPreferences.kt", "stringSet", "sport_pinned_sections"),
             Key("MarkSourcePreferences.kt", "boolean", "myitmo_marks_enabled"),
             Key("MarkSourcePreferences.kt", "boolean", "bars_marks_enabled"),
             Key("MarkSourcePreferences.kt", "boolean", "sheet_marks_enabled"),

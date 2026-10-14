@@ -6,7 +6,7 @@ import XCTest
 
 /// The sport tab in the shell (the static root header, the glass tab bar) on the shared states the real presenters
 /// build from Мария's synthetic Monday of `SportSamples`, at the design lab's axes; the lesson, filters and queue
-/// sheets; `Мои секции` and `Откуда баллы` under the native bar. Drawn in a window, 375 pt wide.
+/// sheets; `Откуда баллы` under the native bar. Drawn in a window, 375 pt wide.
 @MainActor
 final class SportSnapshotTests: XCTestCase {
     private let samples = SportSamples.shared
@@ -17,6 +17,20 @@ final class SportSnapshotTests: XCTestCase {
 
     func testMineEmpty() {
         assertSport(.my, my: samples.my(state: "none"), named: "my-none", appearances: [.light, .dark])
+    }
+
+    func testMineSections() {
+        let sections = samples.my(state: "active").sections
+        let screen = ScrollView {
+            VStack(alignment: .leading, spacing: ItmoSpacing.content) {
+                ForEach(sections, id: \.id) { SportSectionGroup(section: $0, actions: SportContentActions()) }
+                ItmoGroupNote(text: AppStrings.string("sport_section_note"))
+            }
+            .padding(.horizontal, ItmoSpacing.screenMargin)
+            .padding(.top, 60)
+        }
+        .background(Color(.systemGroupedBackground))
+        assertScreenAppearances(of: screen, named: "my-sections", appearances: [.light, .dark], settle: 1)
     }
 
     func testSignUp() {
@@ -44,7 +58,19 @@ final class SportSnapshotTests: XCTestCase {
     }
 
     func testLessonBooked() {
-        assertSheet(SportLessonSheetContent(sheet: samples.lesson(offer: "booked")), named: "lesson-booked", appearances: [.light, .dark])
+        assertSheet(
+            SportLessonSheetContent(sheet: samples.lesson(offer: "booked"), section: samples.sectionToggle(state: "on")),
+            named: "lesson-booked",
+            appearances: [.light, .dark]
+        )
+    }
+
+    func testLessonBookedInAFullSection() {
+        assertSheet(
+            SportLessonSheetContent(sheet: samples.lesson(offer: "booked"), section: samples.sectionToggle(state: "full")),
+            named: "lesson-section-full",
+            appearances: [.light, .dark]
+        )
     }
 
     func testJoinAFullLesson() {
@@ -53,34 +79,6 @@ final class SportSnapshotTests: XCTestCase {
 
     func testJoinAFutureLesson() {
         assertSheet(SportJoinSheet(join: samples.join(kind: "future")) { _ in }, named: "join-future", appearances: [.light, .dark])
-    }
-
-    func testMySectionsWithTheRepeat() {
-        assertPushed(
-            SportSectionsContent(state: samples.sections(queue: "on")),
-            title: "sport_sections_title",
-            subtitle: samples.sections(queue: "on").subtitle?.resolved ?? "",
-            named: "sections-on"
-        )
-    }
-
-    func testMySectionsAtTheLimit() {
-        assertPushed(
-            SportSectionsContent(state: samples.sections(queue: "limit")),
-            title: "sport_sections_title",
-            subtitle: samples.sections(queue: "limit").subtitle?.resolved ?? "",
-            named: "sections-limit",
-            appearances: [.light, .dark]
-        )
-    }
-
-    func testMySectionsBeforeBackend() {
-        assertPushed(
-            SportSectionsContent(state: samples.sectionsWithoutRepeat),
-            title: "sport_sections_title",
-            named: "sections-plain",
-            appearances: [.light, .dark]
-        )
     }
 
     func testPoints() {

@@ -10,7 +10,15 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
+import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDate
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDateState
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsState
+import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportSectionToggleUi
+import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportSectionsPresenter
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttendance
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
@@ -24,7 +32,6 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportRecurringRule
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetPresenter
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetUi
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportPrompt
@@ -39,10 +46,6 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportScoreUi
 import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsFilter
 import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsPresenter
 import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsUiState
-import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsBody
-import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsInput
-import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsPresenter
-import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsUiState
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportCatalogRow
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportDayPart
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignBody
@@ -53,6 +56,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignPresent
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignUiState
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import kotlin.time.Instant
+import kotlin.time.Duration.Companion.days
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -230,7 +234,40 @@ object SportSamples {
 
     private val score = SportScoreUi.of(SportScoreSummary(attendances = 15, bonus = 15))
 
-    /** `Моё` at the lab's axes: [state] `active` (bookings and a queue) or `none`. */
+    private fun queueLesson(lesson: SportLesson) = SportQueueLesson(
+        lesson.lessonId, lesson.sectionId, lesson.sectionName.raw, 1, lesson.lessonLevel.toLong(), 2, lesson.buildingId, lesson.roomName,
+        lesson.start, lesson.end, 1, lesson.teacherIsu.toLong(), lesson.teacherFio,
+    )
+
+    /**
+     * Мария's sections: Thursday's volleyball, third of seven, its next date queued, the one after skipped for the
+     * limit, the third turned off; today's swimming is not a section yet, Tuesday's queue is no booking.
+     */
+    private val sections: SportSectionsState
+        get() {
+            val period = 14.days
+            val volley = queueLesson(volleyThursday)
+            val section = MySportSection(
+                id = 1,
+                lesson = volley,
+                dates = listOf(SportSectionDateState.QUEUED, SportSectionDateState.LIMIT, SportSectionDateState.SKIPPED)
+                    .mapIndexed { index, state ->
+                        val shift = period * (index + 1)
+                        SportSectionDate(volley.start + shift, volley.end + shift, state, 21L.takeIf { state == SportSectionDateState.QUEUED })
+                    },
+                place = 3,
+                subscribers = 7,
+            )
+            return SportSectionsState(
+                sections = LoadState.Content(listOf(section)),
+                slots = mapOf(
+                    volleyThursday.lessonId to SportSectionSlot(volleyThursday.lessonId, 7, 12, false, 1, 3),
+                    swimToday.lessonId to SportSectionSlot(swimToday.lessonId, 4, 8, false, null, null),
+                ),
+            )
+        }
+
+    /** `Моё` at the lab's axes: [state] `active` (bookings, a queue and a section) or `none`. */
     fun my(state: String): SportMyUiState = SportMyUiState(
         score = score,
         body = SportMyBody.Content(
@@ -238,12 +275,28 @@ object SportSamples {
                 emptyList()
             } else {
                 myBookings.groupBy { it.start.toLocalDateTimeIn() }.map { (date, items) ->
-                    SportBookingDay(sportDayLabel(date, today), items.map { SportBookingItem(it.lessonId, it.toLessonUi(time)) })
+                    SportBookingDay(
+                        sportDayLabel(date, today),
+                        items.map { SportBookingItem(it.lessonId, it.toLessonUi(time), section(it)) },
+                    )
                 }
             },
         ),
-        sections = UiText.Dynamic("Волейбол, Плавание"),
+        sections = if (state == "none") emptyList() else SportSectionsPresenter.cards(sections, today, zone),
     )
+
+    private fun section(booking: SportBooking): SportSectionToggleUi? =
+        if (booking.signed) SportSectionsPresenter.toggle(sections, booking.lessonId) else null
+
+    /** The `Сделать секцией` switch of a lesson sheet: [state] `on`, `off` or `full`. */
+    fun sectionToggle(state: String): SportSectionToggleUi {
+        val slot = when (state) {
+            "on" -> SportSectionSlot(volleyThursday.lessonId, 7, 12, false, 1, 3)
+            "full" -> SportSectionSlot(volleyThursday.lessonId, 12, 12, true, null, null)
+            else -> SportSectionSlot(volleyThursday.lessonId, 4, 12, false, null, null)
+        }
+        return SportSectionsPresenter.toggle(SportSectionsState(slots = mapOf(slot.lessonId to slot)), slot.lessonId)!!
+    }
 
     val myLoading = SportMyUiState(score = null, body = SportMyBody.Loading)
 
@@ -294,38 +347,6 @@ object SportSamples {
             command = SportSignCommand.CreateFreeSign(fitness.lessonId),
         )
     }
-
-    /**
-     * `Мои секции` at the lab's axes: [queue] `on`, `off` or `limit`. The repeat needs Backend; the app hides it, the
-     * samples show it with rules of their own.
-     */
-    fun sections(queue: String): SportSectionsUiState {
-        val limits = SportAutoSignLimits(limit = 3, available = if (queue == "limit") 0 else 2, nextAvailableAt = at(LocalDate(2026, 10, 1), "00:00"))
-        val pinned = setOf(SectionName("Плавание"), SectionName("Волейбол"))
-        val rules = if (queue == "on") listOf(SportSectionsPresenter.rule(swimToday, zone)) else emptyList<SportRecurringRule>()
-        val input = SportSectionsInput(lessons, pinned, limits, rules, timetable, emptySet(), now, today, zone)
-        return SportSectionsUiState(
-            subtitle = SportSectionsPresenter.subtitle(limits),
-            body = SportSectionsBody.Content(SportSectionsPresenter.cards(input), UiText.Res(SportStrings.sport_sections_note)),
-            limitGate = SportSectionsPresenter.limitGate(input),
-        )
-    }
-
-    /** `Мои секции` as the app shows it today: without the repeat, which waits for Backend. */
-    val sectionsWithoutRepeat: SportSectionsUiState
-        get() {
-            val pinned = setOf(SectionName("Плавание"), SectionName("Волейбол"))
-            val limits = SportAutoSignLimits(limit = 3, available = 2, nextAvailableAt = at(LocalDate(2026, 10, 1), "00:00"))
-            val input = SportSectionsInput(lessons, pinned, limits, null, timetable, emptySet(), now, today, zone)
-            return SportSectionsUiState(
-                subtitle = SportSectionsPresenter.subtitle(limits),
-                body = SportSectionsBody.Content(SportSectionsPresenter.cards(input), null),
-            )
-        }
-
-    val sectionsEmpty = SportSectionsUiState(body = SportSectionsBody.Empty)
-
-    val sectionsPicker = sectionsEmpty.copy(picker = SportSectionsPresenter.picker(lessons, setOf(SectionName("Плавание"))))
 
     private fun award(type: String, name: String, score: Int, date: LocalDate, competition: String? = null, place: String? = null) =
         SportAttendance(

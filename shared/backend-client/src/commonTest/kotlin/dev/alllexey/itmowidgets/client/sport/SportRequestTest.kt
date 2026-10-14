@@ -19,7 +19,7 @@ class SportRequestTest {
 
     @Test
     fun everyPublicFunctionHasOneCase() {
-        assertEquals(16, SportRouteCases.all.size)
+        assertEquals(21, SportRouteCases.all.size)
         assertEquals(SportRouteCases.all.size, SportRouteCases.all.map { it.name }.toSet().size)
     }
 
@@ -125,6 +125,43 @@ class SportRequestTest {
             HttpMethod.Post,
             "/api/sport/auto-sign/lesson/2147483648/mark-satisfied",
         )
+    }
+
+    @Test
+    fun mySportSections() = runSuspend {
+        SportRouteCases.mySportSections.assertRequest(HttpMethod.Get, "/api/sport/sections/my")
+    }
+
+    @Test
+    fun sportSectionSlotsRepeatsTheQuery() = runSuspend {
+        SportRouteCases.sportSectionSlots.assertRequest(
+            HttpMethod.Get,
+            "/api/sport/sections/slots",
+            query = listOf("lessonIds" to "9001", "lessonIds" to "9002"),
+        )
+    }
+
+    @Test
+    fun createSportSection() = runSuspend {
+        SportRouteCases.createSportSection.assertRequest(
+            HttpMethod.Post,
+            "/api/sport/sections/create",
+            body = VendoredContract.read("requests/SportSectionRequest.json"),
+        )
+    }
+
+    @Test
+    fun updateSportSectionOccurrence() = runSuspend {
+        SportRouteCases.updateSportSectionOccurrence.assertRequest(
+            HttpMethod.Post,
+            "/api/sport/sections/31/occurrence",
+            body = VendoredContract.read("requests/SportSectionOccurrenceRequest.json"),
+        )
+    }
+
+    @Test
+    fun stopSportSection() = runSuspend {
+        SportRouteCases.stopSportSection.assertRequest(HttpMethod.Post, "/api/sport/sections/31/stop")
     }
 
     @Test

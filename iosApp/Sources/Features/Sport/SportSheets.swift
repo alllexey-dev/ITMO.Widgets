@@ -9,6 +9,9 @@ struct SportLessonSheet: View {
     let present: (Bool) -> SportLessonSheetUi
     let act: (SportBookingAction) -> Void
     let openProfile: (Int32) -> Void
+    /// "Make it a section" of a booked lesson as it is now; nil for any other lesson.
+    var section: () -> SportSectionToggleUi? = { nil }
+    var toggleSection: (Int64) -> Void = { _ in }
 
     @State private var submitted = false
 
@@ -21,7 +24,9 @@ struct SportLessonSheet: View {
                 act(action)
             },
             openProfile: openProfile,
-            share: share
+            share: share,
+            section: section(),
+            toggleSection: toggleSection
         )
     }
 
@@ -40,6 +45,8 @@ struct SportLessonSheetContent: View {
     var act: (SportBookingAction) -> Void = { _ in }
     var openProfile: (Int32) -> Void = { _ in }
     var share: (SportShareTarget) -> Void = { _ in }
+    var section: SportSectionToggleUi?
+    var toggleSection: (Int64) -> Void = { _ in }
 
     var body: some View {
         ItmoSheet(title: AppStrings.string("sport_lesson_sheet_title"), height: .tall) {
@@ -69,6 +76,18 @@ struct SportLessonSheetContent: View {
             }
             if let note = sheet.actionNote {
                 ItmoGroupNote(text: note.resolved)
+            }
+            if let section {
+                ItmoListGroup {
+                    ItmoSwitchRow(
+                        title: section.label.resolved,
+                        subtitle: section.detail?.resolved,
+                        symbol: .eventRepeat,
+                        enabled: section.enabled,
+                        isOn: Binding(get: { section.on }, set: { _ in toggleSection(section.lessonId) })
+                    )
+                }
+                .accessibilityIdentifier("sport.sheet.section")
             }
             if !sheet.conditions.isEmpty {
                 ItmoSectionHeader(title: AppStrings.string("sport_sheet_conditions"))

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.app.shell.entries
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
@@ -29,9 +30,10 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportReposit
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsViewModel
-import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsViewModel
-import dev.alllexey.itmowidgets.feature.sport.data.repository.UnavailableSportRecurringQueueRepository
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
+import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSectionRepository
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import kotlinx.datetime.LocalDate
@@ -50,8 +52,8 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 /**
- * The sport data of the shell tests on synthetic fakes: the bookings holder, the sport tab's two ViewModels, `Мои
- * секции`, `Откуда баллы` and another user's sport, all over the same repositories, so a test sets [bookings] and every screen and the
+ * The sport data of the shell tests on synthetic fakes: the bookings and sections holders, the sport tab's two
+ * ViewModels, `Откуда баллы` and another user's sport, all over the same repositories, so a test sets [bookings] and every screen and the
  * redirect see them. Every source answers at once (an empty list) unless a test sets it to `Loading`; the holder and
  * the cancellation follow-ups run in [scope]. [cancelled] records the lessons whose booking was signed out.
  */
@@ -89,28 +91,30 @@ internal class SportTestGraph(scope: CoroutineScope) {
         followUpScope = scope,
     )
     val holder = SportBookingsHolder(bookingRepository, SportData, delegate, time, scope)
+    /** The slots a test gives lessons; a lesson without one offers no `Сделать секцией`. */
+    val sectionSlots = mutableMapOf<Long, SportSectionSlot>()
+    val sectionRequests = mutableListOf<Long>()
+    val sections = SportSectionsHolder(Sections(), scope)
 
     /**
      * Only [holder], for a graph whose academic clock comes from another test module: what the schedule root's sport
      * redirect reads.
      */
-    fun holderModule(): Module = module { single { holder } }
+    fun holderModule(): Module = module {
+        single { holder }
+        single { sections }
+    }
 
     fun module(): Module = module {
         single { holder }
+        single { sections }
         single { time }
         single { ShareLinkFactory("https://widgets.alllexey.dev") }
-        viewModel { SportMyViewModel(bookingRepository, SportData, PlainSignOptions, holder, time) }
+        viewModel { SportMyViewModel(bookingRepository, SportData, holder, sections, time) }
         viewModel {
             SportSignViewModel(
-                NoSportSchedule, SportData, PlainSignOptions, NoTimetable, SportSharedLessonResolver(NoSportSchedule, time), time,
-                delegate, SportAutoSignFlow(delegate, time),
-            )
-        }
-        viewModel {
-            SportSectionsViewModel(
-                NoSportSchedule, SportData, PlainSignOptions, UnavailableSportRecurringQueueRepository, NoTimetable, time,
-                delegate, SportAutoSignFlow(delegate, time),
+                NoSportSchedule, SportData, PlainSignOptions, sections, NoTimetable, SportSharedLessonResolver(NoSportSchedule, time),
+                time, delegate, SportAutoSignFlow(delegate, time),
             )
         }
         viewModel { SportPointsViewModel(SportData, time) }
@@ -149,8 +153,21 @@ internal class SportTestGraph(scope: CoroutineScope) {
 
     private object PlainSignOptions : SportSignPreferencesRepository {
         override fun observeDisplayOptions(): Flow<SportSignDisplayOptions> = flowOf(SportSignDisplayOptions())
-        override fun observePinnedSections(): Flow<Set<SectionName>> = flowOf(emptySet())
-        override suspend fun setPinned(section: SectionName, pinned: Boolean) = Unit
+    }
+
+    /** No sections; the slots of [sectionSlots]; a new section is recorded in [sectionRequests] and refused. */
+    private inner class Sections : SportSectionRepository {
+        override fun observeSections(): Flow<LoadState<List<MySportSection>>> = flowOf(LoadState.Content(emptyList()))
+        override suspend fun refreshSections() = Unit
+        override suspend fun slots(lessonIds: List<Long>): AppResult<List<SportSectionSlot>> =
+            AppResult.Success(lessonIds.mapNotNull(sectionSlots::get))
+        override suspend fun create(lessonId: Long): AppResult<MySportSection> {
+            sectionRequests += lessonId
+            return AppResult.Failure(AppError.NotFound)
+        }
+        override suspend fun setSkipped(sectionId: Long, start: Instant, skipped: Boolean): AppResult<MySportSection> =
+            AppResult.Failure(AppError.NotFound)
+        override suspend fun stop(sectionId: Long): AppResult<Unit> = AppResult.Failure(AppError.NotFound)
     }
 
     private object NoTimetable : DayLessonsGateway {

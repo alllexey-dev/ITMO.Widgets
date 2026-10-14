@@ -152,6 +152,22 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "SportSectionOccurrenceRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/SportSectionOccurrenceRequest.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "SportSectionRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/SportSectionRequest.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "UnregisterDeviceRequest",
     "kind": "request",
     "method": null,
@@ -552,6 +568,14 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "createSportSection",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/sections/create",
+    "file": "http/sport-sections/createSportSection.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "currentSportAutoSignQueues",
     "kind": "http",
     "method": "POST",
@@ -736,6 +760,14 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "mySportSections",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/sport/sections/my",
+    "file": "http/sport-sections/mySportSections.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "myUserData",
     "kind": "http",
     "method": "GET",
@@ -888,6 +920,22 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "sportSectionSlots",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/sport/sections/slots",
+    "file": "http/sport-sections/sportSectionSlots.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "stopSportSection",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/sections/{id}/stop",
+    "file": "http/sport-sections/stopSportSection.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "subjectLinks",
     "kind": "http",
     "method": "GET",
@@ -966,6 +1014,14 @@
     "path": "/api/users/me/privacy",
     "file": "http/users/updateMyPrivacySettings.json",
     "minCore": "1.2.0"
+  },
+  {
+    "id": "updateSportSectionOccurrence",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/sections/{id}/occurrence",
+    "file": "http/sport-sections/updateSportSectionOccurrence.json",
+    "minCore": "1.8.0"
   },
   {
     "id": "userFriends",

@@ -95,7 +95,6 @@ object IosRoutes {
         AppRoutes.LessonDetails::class to RouteFeature.SCHEDULE,
         AppRoutes.PendingSportDetails::class to RouteFeature.SCHEDULE,
         AppRoutes.UserSport::class to RouteFeature.SPORT,
-        AppRoutes.SportSections::class to RouteFeature.SPORT,
         AppRoutes.SportPoints::class to RouteFeature.SPORT,
         AppRoutes.CancelBookingConfirm::class to RouteFeature.SPORT,
         AppRoutes.QrPass::class to RouteFeature.QR,

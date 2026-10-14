@@ -34,6 +34,8 @@ import dev.alllexey.itmowidgets.feature.sport.data.bell.SportResultLog
 import dev.alllexey.itmowidgets.feature.sport.data.repository.PendingSportBookingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.data.repository.SportSectionRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSectionRepository
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScoreRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
@@ -100,7 +102,10 @@ class SportModuleTest {
         assertEquals(1, cleaners.count { it === data })
         assertEquals(1, cleaners.count { it === bookings })
         assertEquals(1, cleaners.count { it === koin.get<SportResultLog>() })
-        assertEquals(3, cleaners.size)
+        val sections = koin.get<SportSectionRepositoryImpl>()
+        assertSame(sections, koin.get<SportSectionRepository>())
+        assertEquals(1, cleaners.count { it === sections })
+        assertEquals(4, cleaners.size)
         assertEquals(1, koin.getAll<BellSource>().size)
     }
 

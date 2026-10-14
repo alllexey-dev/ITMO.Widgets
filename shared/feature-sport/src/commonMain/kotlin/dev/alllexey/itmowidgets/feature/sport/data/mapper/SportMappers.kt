@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.mapper
 
 import dev.alllexey.itmoapi.myitmo.sport.ChosenSportSection
+import dev.alllexey.itmowidgets.client.sport.model.MySportSection as MySportSectionDto
 import dev.alllexey.itmowidgets.client.sport.model.QueueEntryStatus as QueueEntryStatusDto
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignEntry as SportAutoSignEntryDto
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignLimits as SportAutoSignLimitsDto
@@ -10,6 +11,9 @@ import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignQueue as SportFr
 import dev.alllexey.itmowidgets.client.sport.model.SportLessonDto
 import dev.alllexey.itmowidgets.client.sport.model.SportQueue as SportQueueDto
 import dev.alllexey.itmowidgets.client.sport.model.SportQueueEntry as SportQueueEntryDto
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceState as SportSectionOccurrenceStateDto
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionSlot as SportSectionSlotDto
+import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttendance
@@ -27,6 +31,9 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDate
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDateState
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import kotlin.time.Duration.Companion.days
@@ -250,7 +257,7 @@ private fun QueueEntryStatusDto.toModel(): SportQueueEntryStatus = when (this) {
     QueueEntryStatusDto.UNKNOWN -> throw IllegalStateException("Unknown sport queue entry status")
 }
 
-private fun SportLessonDto.toModel(): SportQueueLesson {
+internal fun SportLessonDto.toModel(): SportQueueLesson {
     return SportQueueLesson(
         id = id,
         sectionId = sectionId,
@@ -267,3 +274,33 @@ private fun SportLessonDto.toModel(): SportQueueLesson {
         teacherFio = teacherFio.trim()
     )
 }
+
+fun MySportSectionDto.toModel(): MySportSection = MySportSection(
+    id = id,
+    lesson = lesson.toModel(),
+    // A state a newer Backend adds says nothing this client can show: the date is left out.
+    dates = occurrences.filter { it.state != SportSectionOccurrenceStateDto.UNKNOWN }.map { date ->
+        SportSectionDate(
+            start = date.start,
+            end = date.end,
+            state = when (date.state) {
+                SportSectionOccurrenceStateDto.QUEUED -> SportSectionDateState.QUEUED
+                SportSectionOccurrenceStateDto.LIMIT -> SportSectionDateState.LIMIT
+                SportSectionOccurrenceStateDto.SKIPPED -> SportSectionDateState.SKIPPED
+                SportSectionOccurrenceStateDto.UNKNOWN, null -> null
+            },
+            entryId = date.entryId,
+        )
+    },
+    place = place,
+    subscribers = subscribers,
+)
+
+fun SportSectionSlotDto.toModel(): SportSectionSlot = SportSectionSlot(
+    lessonId = lessonId,
+    subscribers = subscribers,
+    cap = cap,
+    full = full,
+    subscriptionId = subscriptionId,
+    place = place,
+)

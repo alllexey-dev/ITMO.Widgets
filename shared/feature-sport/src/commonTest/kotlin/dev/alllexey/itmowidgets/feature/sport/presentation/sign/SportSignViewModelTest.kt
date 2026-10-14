@@ -21,7 +21,9 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportActionReposi
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
+import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSectionRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSignPreferences
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportPrompt
@@ -73,7 +75,8 @@ class SportSignViewModelTest {
     private fun TestScope.viewModel(): SportSignViewModel {
         val delegate = bookingDelegate(FakeSportBookingRepository(), schedule, data, this, actions)
         return SportSignViewModel(
-            schedule, data, preferences, timetable, SportSharedLessonResolver(schedule, time), time,
+            schedule, data, preferences, SportSectionsHolder(FakeSportSectionRepository(), backgroundScope), timetable,
+            SportSharedLessonResolver(schedule, time), time,
             delegate, SportAutoSignFlow(delegate, time),
         )
     }

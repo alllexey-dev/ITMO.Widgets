@@ -4,7 +4,7 @@ The iOS client lives in `iosApp/` and links one Kotlin umbrella framework, `Shar
 ([ADR 0023](decisions/0023-ios-client.md)). It has three bundles: the app, a WidgetKit extension and a notification
 service extension. The app is a SwiftUI shell with five tabs (recordbook, schedule, today, sport, profile). System screens
 (sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in),
-Сегодня with the bell's sheet, the pass sheet, the recordbook, the subject page and the sport tab with `Мои секции` and
+Сегодня with the bell's sheet, the pass sheet, the recordbook, the subject page and the sport tab with its sections and
 `Откуда баллы` are SwiftUI over shared ViewModels; content screens (schedule, another user's sport, social and profile,
 reviews, links, `Мои баллы`) are still shared Compose
 Multiplatform screens hosted through

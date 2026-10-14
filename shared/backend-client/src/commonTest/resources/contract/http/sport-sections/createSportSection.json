@@ -1,0 +1,45 @@
+{
+  "success": true,
+  "data": {
+    "id": 31,
+    "lesson": {
+      "id": 9001,
+      "sectionId": 41,
+      "sectionName": "Плавание",
+      "sectionLevel": 1,
+      "level": 1,
+      "typeId": 2,
+      "buildingId": 13,
+      "roomName": "Бассейн",
+      "start": "2026-10-07T10:00:00+03:00",
+      "end": "2026-10-07T11:30:00+03:00",
+      "timeSlotId": 3,
+      "teacherIsu": 200001,
+      "teacherFio": "Тренер Тестовый"
+    },
+    "occurrences": [
+      {
+        "start": "2026-10-21T10:00:00+03:00",
+        "end": "2026-10-21T11:30:00+03:00",
+        "state": "QUEUED",
+        "entryId": 21
+      },
+      {
+        "start": "2026-11-04T10:00:00+03:00",
+        "end": "2026-11-04T11:30:00+03:00",
+        "state": "SKIPPED",
+        "entryId": null
+      },
+      {
+        "start": "2026-11-18T10:00:00+03:00",
+        "end": "2026-11-18T11:30:00+03:00",
+        "state": null,
+        "entryId": null
+      }
+    ],
+    "place": 3,
+    "subscribers": 7,
+    "createdAt": "2026-10-01T08:00:00Z"
+  },
+  "error": null
+}
