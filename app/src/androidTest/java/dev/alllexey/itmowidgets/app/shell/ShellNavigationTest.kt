@@ -149,8 +149,11 @@ class ShellNavigationTest {
             clickTab(tab)
             awaitShown(tab)
             TestUi.settle(SETTLE_MILLIS)
+            // The schedule's list appears once its first load answers; until then the root has no scroller.
+            var max = 0f
+            eventually { max = checkNotNull(tabScrollMax()) { "the $tab root has no vertical scroller" } }
             // A root that fits the window has nothing to keep: the demo's Сегодня or Зачётка at some hours and sizes.
-            if (checkNotNull(tabScrollMax()) { "the $tab root has no vertical scroller" } == 0f) continue
+            if (max == 0f) continue
             onActivity { activity -> scrollTabContent(activity, SCROLL_PX) }
             TestUi.settle(SETTLE_MILLIS)
             val scrolled = checkNotNull(tabScroll())
