@@ -15,6 +15,8 @@ struct ScheduleScreen: View {
 
     var body: some View {
         ScheduleFeedView(model: model, messages: messages, host: host)
+            // A container, as the other tab roots: an identifier on a plain view replaces its header buttons' own.
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("shell.root.schedule")
             .onChange(of: router.todayRequest) { model.viewModel.openToday() }
     }
