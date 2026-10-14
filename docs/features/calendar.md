@@ -70,7 +70,7 @@ is part of the schedule feature ([modules](schedule.md#modules)).
   `CALENDAR_SYNC_SPEC`. Independent of `Изменения расписания`, no quiet hours.
   Retries through `outcomeOf` and `workResultOf`.
 - One-off `calendar-sync-now` (`ExistingWorkPolicy.REPLACE`) after turning on
-  and after a successful own-schedule pull (`ScheduleViewModel` calls
+  and after a successful own-schedule pull (`ScheduleFeedViewModel` calls
   `requestSync()`, a no-op while off).
 - `syncWork()` on start and after sign-in, `stopWork()` before a session
   change. The work stays while sync is on or a legacy cleanup is pending.

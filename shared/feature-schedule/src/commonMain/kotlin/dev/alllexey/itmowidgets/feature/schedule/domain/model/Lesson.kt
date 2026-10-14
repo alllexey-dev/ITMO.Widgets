@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.model
 
+import dev.alllexey.itmowidgets.core.schedule.ROOM_BOOKING_TYPE_ID
 import kotlin.jvm.JvmInline
 import kotlinx.datetime.LocalTime
 
@@ -56,9 +57,17 @@ data class Lesson(
 
 ) {
 
+    private companion object {
+        /** MyITMO's `flow_type_id` of room bookings. */
+        const val ROOM_BOOKING_FLOW = 5
+    }
+
     @JvmInline
     value class TypeId(val raw: Int) {
     }
+
+    /** The type the app shows: MyITMO's, or [ROOM_BOOKING_TYPE_ID] for a lesson of the room booking flow. */
+    val kindId: Int get() = if (flowTypeId == ROOM_BOOKING_FLOW) ROOM_BOOKING_TYPE_ID else typeId.raw
 
     fun hasLocation(): Boolean {
         return room != null || building != null

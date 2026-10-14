@@ -6,13 +6,20 @@ extension View {
     /// when both do not fit, and the title never truncates. It is static: the system's large title collapses to
     /// `.inline` on scroll, so the root hides the navigation bar and draws the header as a bar of its own
     /// (`safeAreaBar`, with the scroll edge effect) that the content scrolls under. The navigation title stays for the
-    /// back button of a pushed screen.
+    /// back button of a pushed screen. The bar is opaque: scrolled content never shows through it. With
+    /// `titleMenu` the title is a button with a chevron (the schedule's month sheet), `titleMenuLabel` its hint.
     func itmoRootHeader<Actions: View>(
         title: String,
         subtitle: String?,
+        titleMenu: (() -> Void)? = nil,
+        titleMenuLabel: String? = nil,
         @ViewBuilder actions: () -> Actions = { EmptyView() }
     ) -> some View {
-        modifier(ItmoRootHeader(title: title, subtitle: subtitle, actions: actions()))
+        modifier(
+            ItmoRootHeader(
+                title: title, subtitle: subtitle, titleMenu: titleMenu, titleMenuLabel: titleMenuLabel, actions: actions()
+            )
+        )
     }
 
     /// The header of a pushed screen: the system bar keeps the back button and the toolbar items, and under it the
@@ -26,6 +33,8 @@ extension View {
 private struct ItmoRootHeader<Actions: View>: ViewModifier {
     let title: String
     let subtitle: String?
+    let titleMenu: (() -> Void)?
+    let titleMenuLabel: String?
     let actions: Actions
 
     func body(content: Content) -> some View {
@@ -34,26 +43,46 @@ private struct ItmoRootHeader<Actions: View>: ViewModifier {
             .toolbarVisibility(.hidden, for: .navigationBar)
             .safeAreaBar(edge: .top) {
                 HStack(spacing: ItmoSpacing.content) {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .firstTextBaseline, spacing: ItmoSpacing.compact) { titleAndSubtitle }
-                            .fixedSize(horizontal: true, vertical: false)
-                        VStack(alignment: .leading, spacing: 0) { titleAndSubtitle }
+                    if let titleMenu {
+                        Button(action: titleMenu) { titleBlock(chevron: true).contentShape(.rect) }
+                            .buttonStyle(.plain)
+                            .accessibilityHint(Text(verbatim: titleMenuLabel ?? ""))
+                    } else {
+                        titleBlock(chevron: false)
                     }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityIdentifier("kit.rootHeader")
                     Spacer(minLength: 0)
                     actions
                 }
                 .padding(.horizontal, ItmoSpacing.screenMargin)
                 .padding(.vertical, ItmoSpacing.compact)
+                // Opaque: content scrolled under the header never shows through it.
+                .background(Color(.systemGroupedBackground).ignoresSafeArea(edges: .top))
             }
     }
 
-    @ViewBuilder private var titleAndSubtitle: some View {
-        Text(verbatim: title)
-            .font(.itmo(.titleLarge, emphasized: true))
-            .fixedSize(horizontal: false, vertical: true)
+    private func titleBlock(chevron: Bool) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: ItmoSpacing.compact) { titleAndSubtitle(chevron: chevron) }
+                .fixedSize(horizontal: true, vertical: false)
+            VStack(alignment: .leading, spacing: 0) { titleAndSubtitle(chevron: chevron) }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("kit.rootHeader")
+    }
+
+    @ViewBuilder private func titleAndSubtitle(chevron: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Text(verbatim: title)
+                .font(.itmo(.titleLarge, emphasized: true))
+                .fixedSize(horizontal: false, vertical: true)
+            if chevron {
+                AppSymbol.expandMore.image
+                    .font(.itmo(.titleSmall, emphasized: true))
+                    .foregroundStyle(ItmoColor.primary)
+                    .accessibilityHidden(true)
+            }
+        }
         if let subtitle {
             Text(verbatim: subtitle)
                 .font(.itmo(.bodyMedium))

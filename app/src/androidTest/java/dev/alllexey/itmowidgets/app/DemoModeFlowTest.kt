@@ -38,7 +38,7 @@ import dev.alllexey.itmowidgets.feature.auth.AuthSemantics
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksSheetTestTags
-import dev.alllexey.itmowidgets.feature.schedule.ui.list.ScheduleListTestTags
+import dev.alllexey.itmowidgets.feature.schedule.ui.feed.ScheduleFeedTestTags
 import dev.alllexey.itmowidgets.feature.sport.ui.SportTab
 import dev.alllexey.itmowidgets.feature.sport.ui.SportTestTags
 import dev.alllexey.itmowidgets.testing.Screenshots
@@ -128,7 +128,8 @@ class DemoModeFlowTest {
             open(scenario) { it.select(AppTab.SCHEDULE) }
             awaitShown(AppTab.SCHEDULE)
             shot(activity, "schedule")
-            scenario.onActivity(::openFirstLesson)
+            // The feed jumps to today after its first frame; the lesson rows are placed once it lands.
+            eventually { scenario.onActivity(::openFirstLesson) }
             settle()
             eventually { assertNotNull("the lesson sheet is not shown", ShellProbe.current().floating) }
             Screenshots.capture(DIRECTORY, "lesson") { settle() }
@@ -261,7 +262,7 @@ class DemoModeFlowTest {
             .flatMap { it.semanticsOwner.unmergedRootSemanticsNode.descendants() }
             .first { node ->
                 node.layoutInfo.isPlaced &&
-                    node.config.getOrNull(SemanticsProperties.TestTag)?.startsWith(ScheduleListTestTags.LESSON_PREFIX) == true
+                    node.config.getOrNull(SemanticsProperties.TestTag)?.startsWith(ScheduleFeedTestTags.LESSON_PREFIX) == true
             }
         checkNotNull(row.config[SemanticsActions.OnClick].action) { "the lesson row has no click" }.invoke()
     }

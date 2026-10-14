@@ -2,31 +2,25 @@ package dev.alllexey.itmowidgets.app.shell.entries
 
 import android.content.Context
 import android.view.View
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation3.runtime.result.LocalResultEventBus
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
-import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
-import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.di.KoinStarter
-import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorSheetRoute
 import dev.alllexey.itmowidgets.feature.social.ui.copyPersonIsu
 import dev.alllexey.itmowidgets.feature.social.ui.friends.FriendsRoute
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileExits
@@ -39,10 +33,9 @@ import dev.alllexey.itmowidgets.feature.social.ui.userfriends.UserFriendsRoute
 import org.koin.core.parameter.parametersOf
 
 /**
- * The social keys: the viewer's friends, another user's friends, people search, the
- * person profile and the schedule's friend picker. Every profile link goes through [openUserProfile], so an ISU outside
- * `1..Int.MAX_VALUE` opens nothing. The picker hands its choice to the schedule as a [FriendSelection] on the result
- * bus under its default key (one opener).
+ * The social keys: the viewer's friends, another user's friends, people search and the person profile. Every profile
+ * link goes through [openUserProfile], so an ISU outside `1..Int.MAX_VALUE` opens nothing. The schedule's friend
+ * picker is the schedule's own ([scheduleEntries]).
  */
 internal fun EntryRegistry.Builder.socialEntries() {
     entry<AppRoutes.Friends> { key, navigator ->
@@ -67,32 +60,6 @@ internal fun EntryRegistry.Builder.socialEntries() {
     entry<AppRoutes.UserSearch> { key, navigator -> UserSearchEntry(onBack = { navigator.close(key) }, navigator) }
     entry<AppRoutes.UserProfile>(args = { bundleOf(UserScreenArgs.ISU to it.isu) }) { key, navigator ->
         UserProfileEntry(onBack = { navigator.close(key) }, navigator)
-    }
-    entry<AppRoutes.FriendSelector>(
-        args = { bundleOf(FriendSelectionContract.ARG_SELECTED_ISU to it.selectedIsu) },
-    ) { key, navigator ->
-        FriendSelectorEntry(onClose = { navigator.close(key) }, navigator)
-    }
-}
-
-/**
- * The friend picker's choice for the schedule tab root, with today's [FriendSelectionContract] values: [isu] is
- * [FriendSelectionContract.NO_USER_ISU] and [name] and [pictureUrl] are empty when [useMySchedule].
- */
-internal data class FriendSelection(
-    val useMySchedule: Boolean,
-    val isu: Int,
-    val name: String,
-    val pictureUrl: String,
-) {
-    companion object {
-        /** [target] is the chosen person, or `null` for the own schedule. */
-        fun of(target: UserSummary?) = FriendSelection(
-            useMySchedule = target == null,
-            isu = target?.isu ?: FriendSelectionContract.NO_USER_ISU,
-            name = target?.name.orEmpty(),
-            pictureUrl = target?.pictureUrl.orEmpty(),
-        )
     }
 }
 
@@ -147,25 +114,6 @@ private fun userProfileExits(
     onOpenProfile = navigator::openUserProfile,
     onSource = onSource,
 )
-
-/**
- * The schedule's friend picker: the choice goes to the schedule before the sheet closes; a profile opens in the
- * sheet's place, so the sheet closes before the person shows.
- */
-@Composable
-private fun FriendSelectorEntry(onClose: () -> Unit, navigator: Nav3AppNavigator) {
-    val results = LocalResultEventBus.current
-    FriendSelectorSheetRoute(
-        onDeliver = { target ->
-            results.sendResult(FriendSelection.of(target))
-            onClose()
-        },
-        onOpenProfile = { user -> navigator.openUserProfile(user.isu) },
-        onClose = onClose,
-        modifier = Modifier.fillMaxSize(),
-        viewModel = entryViewModel(),
-    )
-}
 
 /** A review's source page outside the app; without a handler a snackbar says so. */
 private fun openSource(platform: PlatformActions, anchor: View, url: String) {

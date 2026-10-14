@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The kind of a lesson, which colours its bar or dot (the `lessonType*` tokens).
 enum ItmoLessonType: Hashable, Sendable {
-    case lecture, practice, lab, assessment, consultation, sport, free, other
+    case lecture, practice, lab, assessment, consultation, sport, free, booking, other
 
     var color: Color {
         switch self {
@@ -13,6 +13,7 @@ enum ItmoLessonType: Hashable, Sendable {
         case .consultation: ItmoColor.lessonTypeConsultation
         case .sport: ItmoColor.lessonTypeSport
         case .free: ItmoColor.lessonTypeFree
+        case .booking: ItmoColor.tertiary
         case .other: ItmoColor.lessonTypeDefault
         }
     }
@@ -42,6 +43,8 @@ struct ItmoLesson: Hashable, Identifiable {
     var note: String?
     /// A quiet line under the lesson in a day's timeline about its change (when it was changed).
     var changeNote: String?
+    /// A quiet line under the later of two lessons at the same time ("at the same time as ...").
+    var overlapNote: String?
     var cancelled = false
     var phase: Phase = .upcoming
     /// Status pills in display order: now or next, changed or cancelled, the queue, booked, online.

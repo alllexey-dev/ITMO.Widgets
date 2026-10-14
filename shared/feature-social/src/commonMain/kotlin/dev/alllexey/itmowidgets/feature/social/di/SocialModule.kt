@@ -1,9 +1,11 @@
 package dev.alllexey.itmowidgets.feature.social.di
 
 import dev.alllexey.itmowidgets.core.bell.BellSource
+import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.feature.social.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
@@ -25,12 +27,11 @@ val socialBellQualifier: Qualifier = named("social")
 
 /**
  * The social data and screens. Koin is the only graph for these types: one `SocialRepositoryImpl` serves the
- * screens, the bell, the session cleaners and the picker (through `FriendRepository`). The core types
+ * screens, the bell, the session cleaners and the schedule's friend picker (through `FriendRepository`). The core types
  * (`BackendGate`, Core 2.0's `UsersApi` and `FriendsApi`, `MyItmoClient`, the application `CoroutineScope`,
  * `DemoMode`, `AppDispatchers`, the services opt-in, the current user) come from the platform's Koin
  * modules, the teacher reviews from `reviewsModule`. The `SavedStateHandle` holds the host's arguments
- * (`user_isu`, `user_name`) under the same keys. The picker has its own module (`friendSelectorModule`): features
- * never import each other, even inside one Gradle module.
+ * (`user_isu`, `user_name`) under the same keys.
  */
 val socialModule = module {
     // One instance each; the cleaner contributions are qualified forwards (an open set).
@@ -39,6 +40,7 @@ val socialModule = module {
     singleOf(::PersonRepositoryImpl) { bind<PersonRepository>() }
     single<SessionDataCleaner>(named("person")) { get<PersonRepositoryImpl>() }
     singleOf(::PeopleSearchRepositoryImpl) { bind<PeopleSearchRepository>() }
+    singleOf(::FriendRepositoryImpl) { bind<FriendRepository>() }
     single<BellSource>(socialBellQualifier) { FriendRequestsBellSource(get(), get()) }
 
     viewModelOf(::FriendsViewModel)

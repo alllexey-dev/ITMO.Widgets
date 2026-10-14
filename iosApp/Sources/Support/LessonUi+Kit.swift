@@ -19,7 +19,8 @@ extension LessonUi {
             note: note,
             cancelled: cancelled,
             phase: ItmoLesson.Phase(state),
-            pills: pills.map(\.kitPill)
+            pills: pills.map(\.kitPill),
+            friends: withYou ? [AppStrings.string("lesson_with_you")] : []
         )
     }
 
@@ -53,6 +54,7 @@ extension Array where Element == TimelineItem {
             case let .lesson(row):
                 var lesson = row.lesson.kitLesson(id: "\(index)")
                 lesson.changeNote = row.changeNote?.resolved
+                lesson.overlapNote = row.overlapNote?.resolved
                 return .lesson(lesson, progress: CGFloat(row.progress), reached: row.reached)
             case let .gap(gap):
                 return .gap(id: "gap-\(index)", label: gap.label.resolved, progress: CGFloat(gap.progress))
@@ -77,6 +79,7 @@ extension ItmoLessonType {
     init(typeId: Int) {
         switch typeId {
         case -1: self = .free
+        case Int(LessonTypeNamesKt.ROOM_BOOKING_TYPE_ID): self = .booking
         case 1: self = .lecture
         case 2: self = .lab
         case 3: self = .practice

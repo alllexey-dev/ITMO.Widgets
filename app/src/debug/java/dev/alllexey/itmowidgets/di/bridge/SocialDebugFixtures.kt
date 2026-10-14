@@ -8,10 +8,8 @@ import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.di.KoinStarter
-import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
-import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
-import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherReviewsRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
@@ -23,7 +21,7 @@ import org.koin.dsl.module
  * The social screens' and the friend picker's fixture in Koin: a debug host replaces the repositories its screens
  * read with its own while it lives, so the shell's profile, user friends and friend picker entries obtain their
  * ViewModels exactly as in release. A host passes only the fakes it has; the other types stay the
- * release ones (`socialModule`, `friendSelectorModule` and `reviewsModule` construct the data, `sessionModule` the
+ * release ones (`socialModule` and `reviewsModule` construct the data, `sessionModule` the
  * current user).
  *
  * Koin is process-wide: a host calls [load] in `onCreate` before `super.onCreate()` and [unload] in `onDestroy`, or
@@ -32,8 +30,8 @@ import org.koin.dsl.module
 object SocialDebugFixtures {
 
     /**
-     * Each provider is called for every new ViewModel, so it reads the host's fixture at that moment (a test swaps
-     * `SettingsNavigationTestActivity.friendSelectorFixture` before it opens the picker). `null` keeps the release one.
+     * Each provider is called for every new ViewModel, so it reads the fake its host holds at that moment. `null`
+     * keeps the release one.
      */
     class Fakes(
         val social: (() -> SocialRepository)? = null,
@@ -41,7 +39,6 @@ object SocialDebugFixtures {
         val reviews: (() -> TeacherReviewsRepository)? = null,
         val currentUser: (() -> CurrentUserProvider)? = null,
         val friends: (() -> FriendRepository)? = null,
-        val history: (() -> FriendSelectionHistory)? = null,
         val search: (() -> PeopleSearchRepository)? = null,
     )
 
@@ -56,7 +53,6 @@ object SocialDebugFixtures {
             fakes.reviews?.let { fake -> factory<TeacherReviewsRepository> { fake() } }
             fakes.currentUser?.let { fake -> factory<CurrentUserProvider> { fake() } }
             fakes.friends?.let { fake -> factory<FriendRepository> { fake() } }
-            fakes.history?.let { fake -> factory<FriendSelectionHistory> { fake() } }
             fakes.search?.let { fake -> factory<PeopleSearchRepository> { fake() } }
         }
         KoinStarter.ensureStarted(context).loadModules(listOf(fixture), allowOverride = true)
@@ -68,7 +64,7 @@ object SocialDebugFixtures {
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
      * overrode. Each overridden social or picker port points back at the single its module already holds:
-     * reloading `socialModule` or `friendSelectorModule` would build a second repository beside the one the home
+     * reloading `socialModule` would build a second repository beside the one the home
      * card and the cleaners share, and so does the reviews contract (`reviewsModule`) and the current user
      * (`sessionModule`, which also holds the session's other singles). A fixture that a newer host already replaced is
      * left to that host.
@@ -81,9 +77,6 @@ object SocialDebugFixtures {
         fakes.social?.let { koin.declare<SocialRepository>(koin.get<SocialRepositoryImpl>(), allowOverride = true) }
         fakes.people?.let { koin.declare<PersonRepository>(koin.get<PersonRepositoryImpl>(), allowOverride = true) }
         fakes.friends?.let { koin.declare<FriendRepository>(koin.get<FriendRepositoryImpl>(), allowOverride = true) }
-        fakes.history?.let {
-            koin.declare<FriendSelectionHistory>(koin.get<DataStoreFriendSelectionHistory>(), allowOverride = true)
-        }
         fakes.search?.let {
             koin.declare<PeopleSearchRepository>(koin.get<PeopleSearchRepositoryImpl>(), allowOverride = true)
         }

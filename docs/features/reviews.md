@@ -120,9 +120,8 @@ implementation:
 - is a `SessionDataCleaner`; a corrupt file is deleted.
 
 The dot is decorative; its row adds the tone to its TalkBack description. It
-stands in the summary card, the lesson sheet's teacher row
-([schedule](schedule.md#lesson-details)) and the subject page's teacher rows
-([subject page](subject-page.md)).
+stands in the summary card; the teacher rows of the lesson sheet ([schedule](schedule.md#lesson-sheet)) and the
+subject page ([subject page](subject-page.md)) say the tone in words instead (`TeacherLevelTone.words`).
 
 ## The profile section
 

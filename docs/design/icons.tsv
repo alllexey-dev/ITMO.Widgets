@@ -3,6 +3,8 @@ add	add	0	shared	plus	-
 arrow_back	arrow_back	0	shared	chevron.backward	-
 arrow_drop_down	arrow_drop_down	0	shared	arrowtriangle.down.fill	-
 arrow_drop_up	arrow_drop_up	0	shared	arrowtriangle.up.fill	-
+arrow_forward	arrow_forward	0	shared	arrow.right	-
+arrow_upward	arrow_upward	0	shared	arrow.up	-
 assignment	assignment	0	shared	doc.text	-
 auto_awesome	auto_awesome	0	shared	sparkles	-
 book_2	book_2	0	shared	book.closed	Bottom navigation tab
@@ -31,6 +33,7 @@ edit_calendar	edit_calendar	0	shared	calendar	SF Symbols has no calendar with a 
 edit_note	edit_note	0	shared	square.and.pencil	-
 emoji_events	emoji_events	0	shared	trophy	A bonus award in the sport points history
 error	error	0	shared	exclamationmark.circle	-
+event_available	event_available	0	shared	calendar.badge.checkmark	-
 event_busy	event_busy	0	shared	calendar.badge.exclamationmark	A sport lesson clashes with a lesson
 event_note	event_note	0	shared	calendar.day.timeline.left	-
 event_repeat	event_repeat	0	shared	repeat	The sport queue that repeats every two weeks
@@ -86,6 +89,8 @@ tile_qr	qr_code	0	android	-	Quick Settings tile; SystemUI tints it
 today	today	0	shared	sun.max	Bottom navigation tab
 today_filled	today	1	shared	sun.max.fill	Selected bottom navigation tab
 tune	tune	0	shared	slider.horizontal.3	More filters
+undo	undo	0	shared	arrow.uturn.backward	-
 videocam	videocam	0	shared	video	-
+weekend	weekend	0	shared	sofa	-
 widgets	widgets	0	shared	square.grid.2x2	-
 work	work	0	shared	briefcase	-
