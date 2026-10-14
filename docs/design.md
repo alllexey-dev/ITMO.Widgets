@@ -496,8 +496,8 @@ screens that have not moved yet.
 | `SectionHeader`, `TextTile` | A section's title with a neutral count at the end; a short text (`+9`) in a tone's tile, the size of an `IconTile` |
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
 | `VotePill` | The votes of a link: ▲ N ▼, the viewer's own vote in `primary`, only the score when voting is not allowed |
-| `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a short bar and `22 из 24` in a tone |
-| `WeekStrip`, `WeekStripDay` | One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on `primary`; a pager of these pages by weeks |
+| `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a bar (88 dp, down to 44 dp in a tight row; the text never wraps) and `22 из 24` in a tone |
+| `WeekStrip`, `WeekStripDay` | One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on a `primary` indicator that slides on the scheme's default spatial spring while the colours crossfade (a week gaining or losing the choice fades it in place; snaps under reduced motion); a pager of these pages by weeks |
 
 ## Platform styles
 
@@ -621,7 +621,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
   (no line when online); the note; pills.
 - Filters (`ItmoFilters.swift`): `ItmoSearchField` (in the content, with a trailing action and its badge),
   `ItmoChips`, `ItmoWeekStrip` (a paging scroll view of them pages by weeks), `ItmoSwitchRow` (a group's switch row)
-  and `ItmoOccupancy`, the twins of Android's kit.
+  and `ItmoOccupancy`, the twins of Android's kit (`ItmoWeekStrip` slides its indicator with
+  `matchedGeometryEffect` on the same spring, off under Reduce Motion).
 - Numbers (`ItmoScores.swift`): `ItmoValueWithSource` (a number over its quiet source), `ItmoProgressBar` (a
   4 pt capsule in place of `ProgressView`, read as one by VoiceOver), `ItmoPointsMeter`,
   `ItmoSportRing`, `ItmoGradeScale` (the hero's 100-point bar with the grade ticks) and `ItmoVotePill`, the same

@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -153,11 +153,17 @@ fun SearchField(
     }
 }
 
-/** Places taken: a short bar filled to [share] and [text] (`22 из 24`), both in [tone]. */
+/**
+ * Places taken: a bar filled to [share] and [text] (`22 из 24`), both in [tone]. The text keeps its width; the bar
+ * takes up to [OccupancyWidth] of what is left, down to [OccupancyMinWidth] in a tight row.
+ */
 @Composable
 fun OccupancyBar(text: String, share: Float, tone: Tone, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box(Modifier.width(OccupancyWidth).heightIn(min = OccupancyHeight).background(ItmoTheme.progressTrack, ItmoTheme.shapes.full)) {
+        Box(
+            Modifier.weight(1f, fill = false).widthIn(min = OccupancyMinWidth, max = OccupancyWidth).fillMaxWidth()
+                .heightIn(min = OccupancyHeight).background(ItmoTheme.progressTrack, ItmoTheme.shapes.full),
+        ) {
             Box(Modifier.fillMaxHeight().heightIn(min = OccupancyHeight).fillMaxWidth(share.coerceIn(0f, 1f)).background(tone.ink(), ItmoTheme.shapes.full))
         }
         Text(text, color = tone.ink(), style = ItmoTheme.typography.labelMedium, maxLines = 1)
@@ -166,5 +172,6 @@ fun OccupancyBar(text: String, share: Float, tone: Tone, modifier: Modifier = Mo
 
 private val ChipIconSize = 18.dp
 private val SearchHeight = 56.dp
-private val OccupancyWidth = 44.dp
+private val OccupancyWidth = 88.dp
+private val OccupancyMinWidth = 44.dp
 private val OccupancyHeight = 6.dp
