@@ -11,7 +11,8 @@ import kotlin.time.Instant
  * One own lesson of a day as every lesson view needs it, built by the schedule feature from its cache, the found
  * changes and the sport queues. [room] and [building] are MyITMO's raw texts: rows shorten them, a hero shows the
  * building in full. [online] is MyITMO's remote format; [isOnline] also counts a placeholder room such as `дистант`,
- * and such lessons have no place line. [videoUrl] is the meeting link.
+ * and such lessons have no place line. [videoUrl] is the meeting link. [withYou] marks a lesson of someone else's
+ * schedule that the viewer attends too (`Вы`).
  */
 data class DayLesson(
     val start: LocalTime,
@@ -27,6 +28,7 @@ data class DayLesson(
     val videoUrl: String? = null,
     val change: LessonChange? = null,
     val sport: SportMark? = null,
+    val withYou: Boolean = false,
 ) {
     /** Remote by format, or with a placeholder instead of a room or a building (`дистант`, `онлайн`). */
     val isOnline: Boolean get() = online || isOnlinePlaceholder(room) || isOnlinePlaceholder(building)
@@ -65,5 +67,8 @@ sealed interface LessonTarget {
     data class PendingSport(val args: PendingSportDetailsArgs) : LessonTarget
 }
 
-/** The own lessons of [date] that the cache has; [cachedAt] is when the cache last got them. */
-data class LessonDay(val date: LocalDate, val lessons: List<DayLesson>, val cachedAt: Instant?)
+/**
+ * The lessons of [date] that the cache has; [cachedAt] is when the cache last got them, [week] MyITMO's number of the
+ * academic week (null when the cache does not say).
+ */
+data class LessonDay(val date: LocalDate, val lessons: List<DayLesson>, val cachedAt: Instant?, val week: Int? = null)

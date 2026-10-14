@@ -188,8 +188,8 @@ Android screenshots in `shared/feature-sport/screenshots/` from the previews
   (`ObservableViewModel`); the lesson sheet is drawn from
   `SportMyViewModel.sheet` or `SportSignViewModel.sheet`, its section switch
   from `SportMyViewModel.sectionToggle`. Sharing goes through `SportShares`, maps
-  through `PlatformActions`. Koin modules `sportModule`, `sportIosModule`,
-  `friendSelectorModule`. Tabs move by the native tab bar only.
+  through `PlatformActions`. Koin modules `sportModule`, `sportIosModule` and
+  social's `FriendRepository`. Tabs move by the native tab bar only.
 - `UserSportRoute` via `userSportViewController` (still a Compose host),
   arguments from
   `UserSportIosRoute`; sharing through `SportShares`, maps in Apple Maps.

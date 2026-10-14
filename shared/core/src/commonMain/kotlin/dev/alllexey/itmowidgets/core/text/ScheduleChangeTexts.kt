@@ -44,6 +44,15 @@ fun ScheduleChange.headline(): UiText {
 /** "было → стало" per changed field of an updated lesson; an added or cancelled one has only its summary. */
 fun ScheduleChange.detailLines(): List<UiText> {
     if (kind != ScheduleChangeKind.UPDATED) return listOf(summary())
+    return changeLines().map { UiText.Res(CoreStrings.schedule_change_field_line, listOf(it.field, it.from, it.to)) }
+}
+
+/** One changed field of an updated lesson: [field] `Аудитория`, [from] what it was, [to] what it is. */
+data class ScheduleChangeLine(val field: UiText, val from: UiText, val to: UiText)
+
+/** The changed fields of an updated lesson in their priority order; none for an added or cancelled one. */
+fun ScheduleChange.changeLines(): List<ScheduleChangeLine> {
+    if (kind != ScheduleChangeKind.UPDATED) return emptyList()
     val old = checkNotNull(before)
     val new = checkNotNull(after)
     return ScheduleChangeField.entries.filter { it in fields }.map { field ->
@@ -55,7 +64,7 @@ fun ScheduleChange.detailLines(): List<UiText> {
             ScheduleChangeField.PLACE -> placeText(old) to placeText(new)
             ScheduleChangeField.TEACHER -> value(old.teacherName) to value(new.teacherName)
         }
-        UiText.Res(CoreStrings.schedule_change_field_line, listOf(UiText.Res(field.title()), from, to))
+        ScheduleChangeLine(UiText.Res(field.title()), from, to)
     }
 }
 
@@ -74,12 +83,12 @@ private fun startText(slot: LessonSlot): String = slot.startsAt.format(DateTexts
 /** "08:20–09:50". */
 private fun timeRange(slot: LessonSlot): String = "${slot.start.format(DateTexts.TIME)}–${slot.end.format(DateTexts.TIME)}"
 
-/** "1506 · Кронва"; a missing half is left out, a missing place reads as "—". */
+/** "1506, Кронва"; a missing half is left out, a missing place reads as "—". */
 private fun placeText(slot: LessonSlot): UiText {
     val room = slot.room?.trim()?.takeIf(String::isNotEmpty)?.let(::roomShortTitle)
     val building = slot.building?.trim()?.takeIf(String::isNotEmpty)?.let { buildingShortTitle(it) }
     val parts = listOfNotNull(room, building)
-    return if (parts.isEmpty()) UiText.Res(CoreStrings.schedule_change_value_none) else UiText.Joined(parts, " · ")
+    return if (parts.isEmpty()) UiText.Res(CoreStrings.schedule_change_value_none) else UiText.Joined(parts, ", ")
 }
 
 private fun value(raw: String?): UiText =

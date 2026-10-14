@@ -25,10 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureScreenRoboImage
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.navigation.RouteKind
+import dev.alllexey.itmowidgets.core.navigation.SheetPolicy
 import dev.alllexey.itmowidgets.core.navigation.ShellBackStack
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
@@ -77,7 +80,7 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
         DemoBanner("ShellDemoBanner", ShellSurface.Tabs(demoBanner = true), ShellBackStack()),
         Sheet("ShellSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.IcsExport)),
         PassSheet("ShellPassSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.QrPass)),
-        FullSheet("ShellFullSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(AppRoutes.FriendSelector())),
+        FullSheet("ShellFullSheet", ShellSurface.Tabs(demoBanner = false), ShellBackStack().open(FullSheetRoute)),
         PredictiveBack(
             "ShellPredictiveBack",
             ShellSurface.Tabs(demoBanner = false),
@@ -161,12 +164,14 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
                 }
             }
             entry<AppRoutes.QrPass> { _, _ -> QrPassSheetContent(Pass, onRefresh = {}, onClose = {}) }
-            entry<AppRoutes.FriendSelector> { _, _ ->
+            entry<FullHeightSheet> { _, _ ->
                 SheetScaffold("Лист во всю высоту", close = SheetClose("Закрыть") {}) {
                     Text("Вся высота под строкой состояния", Modifier.padding(ItmoTheme.spacing.screenMargin))
                 }
             }
         }
+
+        private val FullSheetRoute: AppRoute = FullHeightSheet
 
         private val TodayHeader = TodayHeaderUiState(
             UiText.Res(AppTab.HOME.label),
@@ -216,4 +221,10 @@ class ShellChromeScreenshotTest(private val case: Case, private val appearance: 
 
         private const val ROOT_ROWS = 12
     }
+}
+
+/** A sheet of the full height below the status bar; no app key asks for it now, the shell still draws it. */
+private data object FullHeightSheet : AppRoute {
+    override val kind get() = RouteKind.SHEET
+    override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
 }

@@ -1,33 +1,55 @@
 <resources>
-    <string name="schedule_friends_action">Расписание друзей</string>
-    <string name="schedule_empty_title">Пар нет</string>
-    <string name="schedule_empty_description">На этот период расписание пустое.</string>
-    <string name="schedule_day_empty">В этот день нет пар</string>
-    <string name="schedule_scroll_to_top">Прокрутить к началу</string>
-    <string name="schedule_lesson_details_title">Пара</string>
-    <string name="schedule_lesson_details_link">Видеозвонок</string>
-    <string name="schedule_lesson_details_changes">Изменения</string>
-    <string name="schedule_lesson_changed">Изменена</string>
-    <string name="schedule_lesson_details_link_password">Пароль: %1$s</string>
-    <string name="schedule_lesson_link_indicator">Есть ссылка на занятие</string>
-    <string name="schedule_lesson_note_title">Примечание</string>
-    <string name="schedule_open_link">Открыть видеозвонок</string>
-    <string name="schedule_open_sport">Открыть в спорте</string>
-    <string name="schedule_map_unavailable">Нет приложения для карт</string>
-    <string name="schedule_lesson_friends_title">Друзья на паре</string>
-    <string name="schedule_lesson_friends_count">Друзья на паре · %1$d</string>
-    <string name="schedule_lesson_friends_none">Никого из друзей на этой паре</string>
-    <string name="schedule_break_range">Перерыв с %1$s по %2$s</string>
-    <string name="schedule_selected_friend_label">Расписание друга</string>
-    <string name="schedule_change_friend">Сменить</string>
+    <!-- The feed -->
+    <string name="schedule_friends_action">Чьё расписание</string>
+    <string name="schedule_month_action">Перейти к дате</string>
+    <string name="schedule_today">Сегодня</string>
+    <string name="schedule_today_pill">сегодня</string>
     <string name="schedule_return_to_mine">Вернуться к своему</string>
-    <string name="schedule_auto_sign_label">Автозапись</string>
-    <string name="schedule_auto_sign_waiting">Автозапись · ожидание места</string>
-    <string name="schedule_auto_sign_prediction">Автозапись · прогноз</string>
-    <string name="schedule_timeline_completed">Пара завершилась</string>
-    <string name="schedule_timeline_current">Пара идёт сейчас</string>
-    <string name="schedule_timeline_next">Следующая пара</string>
-    <string name="schedule_timeline_upcoming">Предстоящая пара</string>
+    <string name="schedule_week_even">%1$d-я неделя, чётная</string>
+    <string name="schedule_week_odd">%1$d-я неделя, нечётная</string>
+    <string name="schedule_day_free">%1$s — пар нет</string>
+    <string name="schedule_weekend">Выходные, %1$s</string>
+    <string name="schedule_empty_title">Пар нет</string>
+    <string name="schedule_empty_description">На эти недели расписание пустое</string>
+
+    <!-- The month sheet -->
+    <string name="schedule_month_title">Переход к дате</string>
+    <string name="schedule_month_open">Открыть %1$s</string>
+    <string name="schedule_month_previous">Предыдущий месяц</string>
+    <string name="schedule_month_next">Следующий месяц</string>
+
+    <!-- The friend picker -->
+    <string name="schedule_picker_title">Чьё расписание</string>
+    <string name="schedule_picker_mine">Моё</string>
+    <string name="schedule_picker_on_lesson">на паре до %1$s</string>
+    <string name="schedule_picker_gap">окно до %1$s</string>
+    <string name="schedule_picker_first">первая пара в %1$s</string>
+    <string name="schedule_picker_done">пары закончились</string>
+    <string name="schedule_picker_no_lessons">сегодня без пар</string>
+    <string name="schedule_picker_empty">Друзей пока нет</string>
+    <string name="schedule_picker_note">Друзья и заявки — в Профиле</string>
+    <string name="schedule_picker_gate_title">Расписание друзей</string>
+    <string name="schedule_picker_gate_reason">Нужно подключение к ITMO.Widgets</string>
+    <string name="schedule_picker_gate_fix">Подключить</string>
+
+    <!-- The lesson sheet -->
+    <string name="schedule_sheet_now">идёт ещё %1$s</string>
+    <string name="schedule_sheet_soon">через %1$s</string>
+    <string name="schedule_sheet_online">Онлайн</string>
+    <string name="schedule_sheet_video">Видео</string>
+    <string name="schedule_sheet_friends">Друзья %1$d</string>
+    <string name="schedule_sheet_links">Ссылки %1$d</string>
+    <string name="schedule_sheet_subject">Предмет</string>
+    <string name="schedule_sheet_changes">Изменения</string>
+    <string name="schedule_sheet_note">Примечание</string>
+    <string name="schedule_sheet_password">Пароль: %1$s</string>
+    <string name="schedule_sheet_teacher">Преподаватель</string>
+    <string name="schedule_sheet_friends_title">Друзья на паре</string>
+    <string name="schedule_sheet_queue">Очередь</string>
+    <string name="schedule_sheet_queue_waiting">Запишем сами, когда освободится место</string>
+    <string name="schedule_sheet_queue_prediction">Запишем, когда занятие откроют</string>
+    <string name="schedule_sheet_booked">Записаны</string>
+    <string name="schedule_sheet_booked_text">Запись и отмена — в Спорте</string>
 
     <string name="widget_preview_title">Пример виджета</string>
     <string name="widget_preview_time_title">Время в примере</string>
@@ -38,9 +60,6 @@
     <string name="widget_preview_time_description">Изменить время в примере</string>
     <string name="widget_preview_subject_physics">Физика</string>
     <string name="widget_preview_teacher">Иванов И. И.</string>
-
-    <!-- Another user's schedule and sport -->
-    <string name="user_schedule_title">Расписание: %1$s</string>
 
     <!-- The bell: the found changes -->
     <string name="schedule_bell_change_moved">%1$s: пара перенесена</string>

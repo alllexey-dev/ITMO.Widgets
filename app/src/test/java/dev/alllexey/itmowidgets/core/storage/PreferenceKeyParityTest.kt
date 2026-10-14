@@ -145,7 +145,6 @@ class PreferenceKeyParityTest {
             Key("DataStoreSubjectBindingStore.kt", "string", "subject_bindings"),
             Key("BarsPreferenceRepositoryImpl.kt", "boolean", "recordbook_bars"),
             Key("BarsPreferenceRepositoryImpl.kt", "boolean", "recordbook_bars_offer_hidden"),
-            Key("DataStoreFriendSelectionHistory.kt", "string", "recent_schedule_friends"),
             Key("QrWidgetStateStoreImpl.kt", "string", "qr_widget_state_\$appWidgetId")
         )
     }

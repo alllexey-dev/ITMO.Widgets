@@ -48,7 +48,7 @@ val sportBellQualifier: Qualifier = named("sport")
  * Sport, data and screens. Koin is the only graph for these types. The core contracts (`MyItmoClient`, `SportApi`,
  * the academic and wall clocks, `DemoMode`, `BackendGate`, `AppDispatchers`, `AppDiagnostics`, the sport-sign
  * preferences, the application `CoroutineScope`, the schedule refresh contracts) come from the platform's Koin
- * modules, `FriendRepository` from `friendSelectorModule`, the opt-in from `settingsDataModule`, and the debug ports
+ * modules, `FriendRepository` from `socialModule`, the opt-in from `settingsDataModule`, and the debug ports
  * (`SportLessonTemplateProvider`, `SportScoreOverrideSource`) from the platform (`androidSportModule` on Android), and
  * `DayLessonsGateway` from the schedule's module for the lessons a sport lesson clashes with.
  */

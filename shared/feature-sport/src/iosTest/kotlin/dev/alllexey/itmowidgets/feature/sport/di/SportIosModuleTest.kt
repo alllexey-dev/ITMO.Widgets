@@ -67,7 +67,7 @@ import platform.UIKit.UIViewController
 /**
  * The sport tab's graph as the iOS app starts it (`IosKoinModules`): the core module, [sportModule] and
  * [sportIosModule], with the account types, the services opt-in (`settingsDataModule` on iOS), the friend picker's
- * `FriendRepository` (`friendSelectorModule`, a feature this module cannot read), the schedule widget refresh, the
+ * `FriendRepository` (`socialModule`, a feature this module cannot read), the schedule widget refresh, the
  * schedule refresh after a booking and the timetable (`scheduleDataModule`), and the simulator test binary's device stood in, on the demo session: the screens resolve and answer from the demo set with
  * no request, and a shared lesson names the build's site.
  */

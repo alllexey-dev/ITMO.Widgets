@@ -8,9 +8,7 @@ import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
-import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
-import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
+import dev.alllexey.itmowidgets.feature.social.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
@@ -46,7 +44,6 @@ class SocialGraphTest {
         assertSame(koin.get<PersonRepositoryImpl>(), koin.get<PersonRepository>())
         assertSame(koin.get<PeopleSearchRepositoryImpl>(), koin.get<PeopleSearchRepository>())
         assertSame(koin.get<FriendRepositoryImpl>(), koin.get<FriendRepository>())
-        assertSame(koin.get<DataStoreFriendSelectionHistory>(), koin.get<FriendSelectionHistory>())
         assertSame(koin.get<SocialRepository>(), koin.get<SocialRepository>())
     }
 
@@ -58,7 +55,6 @@ class SocialGraphTest {
 
         assertEquals(1, cleaners.count { it === koin.get<SocialRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<PersonRepositoryImpl>() })
-        assertEquals(1, cleaners.count { it === koin.get<DataStoreFriendSelectionHistory>() })
         assertEquals(1, koin.getAll<BellSource>().count { it is FriendRequestsBellSource })
         assertSame(koin.get<BellSource>(socialBellQualifier), koin.getAll<BellSource>().single { it is FriendRequestsBellSource })
     }

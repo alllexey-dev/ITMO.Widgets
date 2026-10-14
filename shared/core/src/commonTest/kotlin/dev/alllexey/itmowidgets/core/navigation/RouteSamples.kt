@@ -36,6 +36,7 @@ object RouteSamples {
         AppRoutes.QrPass,
         AppRoutes.MyItmoWeb,
         AppRoutes.FriendSelector(),
+        AppRoutes.ScheduleMonth("2026-09-17"),
         AppRoutes.SheetScores(
             SheetScoresArgs(5, "Математика", "2026/2027:1", "https://example.com/s", SheetScoresArgs.Step.TOTAL)
         ),

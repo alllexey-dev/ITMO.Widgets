@@ -443,16 +443,17 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
   title (a narrow window, a large font) it goes under it; the title never truncates, the header grows instead. It is
   static (owner, 2026-10-13): it never collapses, the content scrolls under it. Сегодня shows the date
   (`понедельник, 7 сентября`, `TodayHeaderViewModel`) and the bell with the count of unseen events, which is in this
-  header only and opens the bell's sheet ([the bell](features/home.md#the-bell)). Tabs whose new screens come later show their name over their current
-  content.
+  header only and opens the bell's sheet ([the bell](features/home.md#the-bell)). Расписание and Зачётка draw their own
+  root header (`Сентябрь ▾` over the week; the period); tabs whose new screens come later show their name over their
+  current content.
 - The `Пропуск` extended FAB is on Сегодня only and opens the pass sheet; the widgets, the tile and the shortcut open
   the same sheet.
 - Pushed screens cover the bar: back, a title, no navigation bar. The bar stays in place under them, so the
   predictive Back uncovers the root with its bar. The title and its subtitle flow as one paragraph
   (`ItmoDetailScreen`, 64 dp in one line) and a long title wraps in full, never truncated.
-- Sheets come in three sizes (`SheetPolicy.Height`): content height (`FIT_CONTENT`, the pass, the links), 82 % of the
-  window (`TALL`, the bell's sheet) or the whole height below the status bar (`FULL`, the details sheets and
-  the friend picker); none goes under the status bar.
+- Sheets come in three sizes (`SheetPolicy.Height`): content height (`FIT_CONTENT`, the pass, the links, the lesson
+  sheet, the month sheet, the friend picker), 82 % of the window (`TALL`, the bell's sheet, the sport lesson sheet) or
+  the whole height below the status bar (`FULL`, no key uses it now); none goes under the status bar.
 - Tabs switch by a tap on the bar only, with a fade through; Back is the platform's predictive Back
   ([Tab switching and Back](#tab-switching-and-back)).
 
@@ -472,7 +473,7 @@ screens that have not moved yet.
 |---|---|
 | `Tone`, `container()`, `onContainer()` | The semantic colour of a pill, tile or card: `Neutral`, `Primary`, `Tertiary`, `Success`, `Warning`, `Error`. The word carries the meaning |
 | `LocalOnSheet`, `cardSurface()` | True inside a `SheetScaffold`: cards and groups step one surface up |
-| `ItmoRootScreen`, `HeaderAction` | A tab root with the static root header and an optional FAB; an icon action with an optional badge |
+| `ItmoRootScreen`, `HeaderAction` | A tab root with the static root header (optionally a title menu, `Сентябрь ▾`) and an optional FAB; the body is clipped at the header's edge, so nothing scrolled shows above it; an icon action with an optional badge |
 | `ItmoDetailScreen` | A pushed screen: back, the title (`titleMedium`) and its quiet subtitle as one paragraph that wraps in full, actions; static |
 | `TonalButton`, `tonalButtonColors()` | The kit's tonal button in the primary family (`primaryContainer`): an active secondary action in light and dark (`Записаться` in a sport row, `Повторить`, an action card's fix); `ProgressButton`'s tonal style uses the same colours. Material's `secondaryContainer` default reads as a disabled grey pill under the app's schemes |
 | `SmallButton` | An extra-small filled M3E button with a short label next to a hero's big text (`Войти` on the Сегодня hero) |
@@ -483,7 +484,7 @@ screens that have not moved yet.
 | `ListGroup`, `ListRow`, `SwitchListRow`, `ListGroupNote` | Connected groups of rows: icon tile or avatar, title, subtitle, lines below it, count, value, accessory, chevron, destructive; a switch row; a caption |
 | `GateCard`, `ActionCard`, `LockNote`, `StaleContent` | Gated (what, why, one fix), worth doing, locked without a fix, old data dimmed under its date; empty and error stay `ContentState` |
 | `LessonView`, `LessonCard` | One lesson outside a day list: subject; `тип, преподаватель`; `аудитория, корпус` (none online); note; pills; friends; with `onClick` the card opens the lesson |
-| `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary`, the `сейчас` marker, `Окно 2 ч 10 мин` rows, a change note under a lesson; with `onLessonClick` each lesson is a target |
+| `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary` (one clock: it grows monotonically, so overlapping lessons get one `сейчас` marker), `Окно 2 ч 10 мин` rows, a change note and an `одновременно с «…»` note under a lesson; with `onLessonClick` each lesson is a target |
 | `toLessonView`, `toTimelineRows`, `lessonTypeAccent` | The shared lesson presentation (`core/lesson`) drawn by the kit: texts resolved, pills toned (`идёт` solid `Primary`, `далее` `Neutral`, `изменена` and `очередь` `Warning`, `отменена` `Error`, `записаны` `Success`, `онлайн` `Neutral` with the camera), lesson types coloured |
 | `SectionHeader`, `TextTile` | A section's title with a neutral count at the end; a short text (`+9`) in a tone's tile, the size of an `IconTile` |
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
@@ -747,9 +748,8 @@ rules do not apply to them.
 Compose screens that show a rule of this guide best; the kit parts they use are
 in [Shared components](#shared-components).
 
-- Schedule day: `ScheduleDayCard` and the rows of
-  `feature/schedule/ui/list/ScheduleRows.kt` in `:shared:feature-schedule`
-  (`ui/list/`).
+- Schedule day: the feed of `ui/feed/ScheduleFeedScreen.kt` in `:shared:feature-schedule`, a sticky day header over
+  the kit's `LessonTimeline`.
 - Sport: `SportScreen` in `feature/sport/ui/` of `:shared:feature-sport` on the M3 Expressive kit: `Моё` with the
   score ring card (the flow's hero), bookings as `LessonCard`s under day labels with `Сделать секцией` under the booked ones and the `Секции` groups of `SwitchListRow`s; `Запись`
   with `SearchField`, `FilterChips`, the paging `WeekStrip` and dense `ListRow`s with `OccupancyBar` and one action;
@@ -822,11 +822,12 @@ in [Shared components](#shared-components).
 - Avatar image failure: the kit's `Avatar` shows the initials until the photo
   loads and whenever it fails; each URL is its own request, so a late failure
   of an earlier URL never replaces a newer photo.
-- Friend picker: Compose in `:shared:feature-social`
-  (`feature/friendselector/ui/FriendSelectorSheetContent.kt`) in a sheet at full height. Rows are the kit's `UserSelectionRow`
-  with `onOpen` (a closed schedule ends in a lock and opens the profile, a long
-  press opens it from any row); the chosen row lies on `secondaryContainer`;
-  the scope is `ItmoButtonGroup`.
+- Расписание: Compose in `:shared:feature-schedule` (`ui/feed/ScheduleFeedScreen.kt`) on the M3 Expressive kit:
+  `ItmoRootScreen` with the title menu (`Сентябрь ▾`), a pager of `WeekStrip`s, sticky day headers over the
+  `LessonTimeline`, quiet `пар нет` and weekend rows on `surfaceContainerLow`; the month sheet, the friend picker
+  (`ListGroup` rows with avatars, a hidden schedule at half opacity) and the lesson sheet (the big room in emphasized
+  `displayMedium` in `primary`, action tiles with the first filled, `ListGroup`s) in `SheetScaffold`; see
+  [Schedule](features/schedule.md).
 - Сегодня: Compose in `:shared:feature-home` (`feature/home/ui/TodayScreen.kt`) on
   the M3 Expressive kit: the hero `ItmoCard(tone = Primary, hero = true)` (the
   label and the countdown in `labelLarge`, the subject in emphasized
@@ -845,12 +846,10 @@ in [Shared components](#shared-components).
   struck through in `onSurfaceVariant` over `стало` in `warning`; small
   `Принять` and outlined `Отклонить`), `Ничего нового` with `ic_check_circle`
   in `success` when nothing is new, and the `Настройки уведомлений` row last.
-- Schedule changes in the schedule: on lesson cards the
-  mark `change_indicator` (`ic_edit_calendar`, 16 dp, `primary`) after the
-  video-call mark in `feature/schedule/ui/list/ScheduleRows.kt` of `:shared:feature-schedule`; in the lesson sheet
-  the `Изменения` block (divider, heading, `было → стало` lines) in
-  `feature/schedule/ui/details/LessonDetailsSections.kt` of `:shared:feature-schedule` and
-  the informational flow row between teacher and place of the kit's `DetailsHeader`.
+- Schedule changes in the schedule: on the lesson itself in the timeline (`изменена`, the old room struck through, the
+  `Изменено вчера в 20:14` note); in the lesson sheet the `Изменения` group, one `было → стало` row per field (the old
+  value struck through in `onSurfaceVariant`, the new one in `warning`), in `ui/lesson/LessonSheet.kt` of
+  `:shared:feature-schedule`.
 - Visual tests: every module's goldens under `<module>/screenshots/`, for
   example the `RecordbookScreen_*`, `RecordbookSubjectScreen_*`, `Subject*` and
   `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`.

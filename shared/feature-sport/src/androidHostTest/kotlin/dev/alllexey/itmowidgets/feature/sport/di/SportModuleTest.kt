@@ -57,7 +57,7 @@ class SportModuleTest {
 
     /**
      * The data, the push decision, the controllers, the holder and the screens resolve inside the module; the core
-     * contracts (the platform's Koin modules, the schedule's timetable, `friendSelectorModule` and `settingsDataModule`)
+     * contracts (the platform's Koin modules, the schedule's timetable, `socialModule` and `settingsDataModule`)
      * and the debug ports (`androidSportModule`) are given.
      */
     @OptIn(KoinExperimentalAPI::class)

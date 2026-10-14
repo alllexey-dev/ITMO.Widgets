@@ -100,12 +100,14 @@ struct ItmoSearchField: View {
     }
 }
 
-/// A day of `ItmoWeekStrip`: the weekday over the date, a dot per lesson (at most five).
+/// A day of `ItmoWeekStrip`: the weekday over the date, a dot per lesson (at most five), the last in the warning
+/// colour when `changed`.
 struct ItmoWeekDay: Hashable {
     let id: String
     let weekday: String
     let number: String
     let lessons: Int
+    var changed = false
     var today = false
     var past = false
     var selected = false
@@ -129,9 +131,9 @@ struct ItmoWeekStrip: View {
                             .font(.itmo(.titleLarge, emphasized: day.today || day.selected))
                             .monospacedDigit()
                         HStack(spacing: 2) {
-                            ForEach(0..<min(day.lessons, 5), id: \.self) { _ in
-                                Circle().frame(width: 4, height: 4)
-                                    .foregroundStyle(day.selected ? ItmoColor.onPrimary : ItmoColor.primary.opacity(day.past ? 0.4 : 0.8))
+                            let dots = max(min(day.lessons, 5), day.changed ? 1 : 0)
+                            ForEach(0..<dots, id: \.self) { index in
+                                Circle().frame(width: 4, height: 4).foregroundStyle(dotColor(day, warn: day.changed && index == dots - 1))
                             }
                         }
                         .frame(height: 5)
@@ -150,6 +152,11 @@ struct ItmoWeekStrip: View {
                 .accessibilityIdentifier("kit.weekDay.\(day.id)")
             }
         }
+    }
+
+    private func dotColor(_ day: ItmoWeekDay, warn: Bool) -> Color {
+        if warn { return ItmoTone.warn.color }
+        return day.selected ? ItmoColor.onPrimary : ItmoColor.primary.opacity(day.past ? 0.4 : 0.8)
     }
 
     private func color(_ day: ItmoWeekDay) -> Color {

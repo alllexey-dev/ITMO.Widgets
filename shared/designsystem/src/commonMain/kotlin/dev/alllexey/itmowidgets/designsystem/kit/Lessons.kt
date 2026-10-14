@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Surface
@@ -26,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /** Where a lesson stands in its day. */
@@ -36,7 +37,7 @@ enum class LessonState { Upcoming, Next, Now, Done }
  * What every lesson view says, in one order: [subject]; [byline] `тип, преподаватель`; [place] `аудитория, корпус`
  * (null online: an `онлайн` pill says it); the lesson's [note]; the [pills] (`идёт`, `далее`, `изменена`, `отменена`,
  * `очередь 2 из 5`, `записаны`, `онлайн`). [previousPlace] is the old room or time of a change, struck through before
- * the new one; [friends] are the names of friends who attend. [accent] is the lesson type's colour. Texts arrive
+ * the new one; [friends] are the people who attend as avatar letters (`ИК`, `Вы`). [accent] is the lesson type's colour. Texts arrive
  * formatted: the kit draws, the shared presentation decides.
  */
 @Immutable
@@ -152,11 +153,28 @@ internal fun LessonLines(lesson: LessonView, modifier: Modifier = Modifier) {
                 lesson.pills.forEach { StatusPill(it) }
                 if (lesson.friends.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(-FriendOverlap)) {
-                        lesson.friends.take(MAX_FRIENDS).forEach { Avatar(it, pictureUrl = null, size = FriendSize) }
+                        lesson.friends.take(MAX_FRIENDS).forEach { PersonLetters(it) }
                     }
                 }
             }
         }
+    }
+}
+
+/** A small round badge with a person's letters, as the lesson lines show who attends. */
+@Composable
+private fun PersonLetters(letters: String) {
+    Box(
+        Modifier.size(FriendSize).background(ItmoTheme.colorScheme.tertiaryContainer, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            letters,
+            color = ItmoTheme.colorScheme.onTertiaryContainer,
+            style = ItmoTheme.typography.labelSmall,
+            maxLines = 1,
+            softWrap = false,
+        )
     }
 }
 

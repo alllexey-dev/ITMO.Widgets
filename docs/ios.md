@@ -4,9 +4,10 @@ The iOS client lives in `iosApp/` and links one Kotlin umbrella framework, `Shar
 ([ADR 0023](decisions/0023-ios-client.md)). It has three bundles: the app, a WidgetKit extension and a notification
 service extension. The app is a SwiftUI shell with five tabs (recordbook, schedule, today, sport, profile). System screens
 (sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in),
-Сегодня with the bell's sheet, the pass sheet, the recordbook, the subject page and the sport tab with its sections and
-`Откуда баллы` are SwiftUI over shared ViewModels; content screens (schedule, another user's sport, social and profile,
-reviews, links, `Мои баллы`) are still shared Compose
+Сегодня with the bell's sheet, the pass sheet, the schedule with its sheets (the lesson sheet, the month sheet, the
+friend picker), the recordbook, the subject page and the sport tab with its sections and `Откуда баллы` are SwiftUI
+over shared ViewModels; content screens (another user's sport, social and profile, reviews, links, `Мои баллы`) are
+still shared Compose
 Multiplatform screens hosted through
 `ComposeUIViewController`. They move to
 SwiftUI screen by screen ([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
@@ -74,10 +75,11 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   opens the pass sheet (`AppRoutes.QrPass`), the same sheet widgets, the Control and shortcuts open. `QrPassSheet`
   (`Features/Qr/`) is a content-height `ItmoSheet` over `QrPassViewModel`: holder, the code from `QrCodeGenerator`
   drawn as the QR widget draws it, and the line with `Обновить`; full brightness while it is on screen.
-- Root header. A SwiftUI root takes `.itmoRootHeader(title:subtitle:actions:)`: title and subtitle with the actions in
-  one row, static (owner, 2026-10-13). The system's `.inlineLarge` title collapses to `.inline` on scroll, so the root
-  hides the navigation bar and draws the header in a `safeAreaBar` that the content scrolls under, with the scroll
-  edge effect; the navigation title stays for a pushed screen's back button. Today's root (`TodayScreen`,
+- Root header. A SwiftUI root takes `.itmoRootHeader(title:subtitle:titleMenu:titleMenuLabel:actions:)`: title and
+  subtitle with the actions in one row, static (owner, 2026-10-13); with `titleMenu` the title is a button with a
+  chevron (the schedule's month sheet). The system's `.inlineLarge` title collapses to `.inline` on scroll, so the
+  root hides the navigation bar and draws the header in a `safeAreaBar` on the grouped background that the content
+  scrolls under and never shows through; the navigation title stays for a pushed screen's back button. Today's root (`TodayScreen`,
   `Features/Home/`) has it with today's academic date and the bell (`ItmoBellButton` with the count of unseen events,
   today only) over `TodayContent` (`TodayViewModel`: the hero, the day as `ItmoLessonTimeline` from the shared
   `LessonTimelines` rows, `Support/LessonUi+Kit.swift`, the things to do); the bell opens `BellSheet`, a tall
@@ -173,7 +175,8 @@ the design lab's prototype (`proto/kit/ios`, DECISIONS.md) and described in [des
   `ItmoGroupNote`; `ItmoStatusPill` over `ItmoPill`, `ItmoAvatar`, `ItmoFlow`; `ItmoSegmentedChoice` (the native
   segmented picker) for two to four options and in-screen tabs. Tones (`ItmoTone`) colour cards, pills and tiles.
 - Lessons: `ItmoLesson` is what a lesson says, resolved by the caller; a day's list is `ItmoLessonTimeline` (rail,
-  now marker, gap rows), a single lesson `ItmoLessonCard`.
+  now marker, gap rows, change and overlap notes), a single lesson `ItmoLessonCard`; `ItmoWeekStrip` (in
+  `ItmoFilters.swift`) is one week of the schedule's and the sport tab's strip.
 - States: `ItmoLoadingView`, `ItmoEmptyView` and `ItmoErrorView` (the system's unavailable view with one glass
   button), `ItmoGateCard`, `ItmoActionCard`, `ItmoLockNote`, `ItmoStale`; settings pages keep `ItmoFormSection` and
   the form rows. `ItmoProgressButton`, `ItmoDemoBanner`.
@@ -316,7 +319,8 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
   `assertScreenAppearances(of:named:)`, which draws the view in a window of its own at 375 x 667 pt with UIKit
   animations off; a layer render misses that chrome. `ShellSnapshotTests` covers the tabs, the root header, a pushed
   screen and the sheet heights on kit fixtures, `KitSnapshotTests` the kit components, `TodaySnapshotTests` and
-  `BellSheetSnapshotTests` Сегодня and the bell on the states the shared presenter builds from `TodaySamples`.
+  `BellSheetSnapshotTests` Сегодня and the bell on the states the shared presenter builds from `TodaySamples`,
+  `ScheduleSnapshotTests` the schedule and its sheets on `ScheduleSamples`.
 - CMP-hosted routes draw into a Metal layer those snapshots miss, so they are checked by XCUITest screenshots and
   their goldens stay Roborazzi's on the JVM until their SwiftUI screens replace them
   ([ADR 0022](decisions/0022-jvm-screenshot-tests.md)).

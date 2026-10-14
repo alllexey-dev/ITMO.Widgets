@@ -56,53 +56,45 @@ repository instance for the screens, Сегодня (`DayLessonsGateway`), the w
 
 ## 4. View model
 
-`presentation/ScheduleViewModel.kt` takes the repository,
-`AcademicTimeProvider`, `SavedStateHandle` and other domain ports. It exposes
-`uiState: StateFlow<ScheduleUiState>` (`presentation/ScheduleUiState.kt`) and
-`events`, built from the repository flow plus refresh state, and never reads
-the wall clock directly. `di/ScheduleModule.kt` registers it with
-`viewModelOf(::ScheduleViewModel)`.
+`presentation/feed/ScheduleFeedViewModel.kt` takes `ScheduleDays` (the cache with the found changes and the sport
+queues, `data/days/ScheduleDaysImpl.kt`), `AcademicTimeProvider`, `SavedStateHandle` and `CalendarSync`. It exposes
+`uiState: StateFlow<ScheduleFeedUiState>` (`presentation/feed/ScheduleFeedUiState.kt`), built by the pure
+`ScheduleFeedPresenter` from the cached days, the window of weeks and the refresh state, and `events`; it never reads
+the wall clock directly and holds no Compose types, since SwiftUI reads it too. `di/ScheduleModule.kt` registers it
+with `viewModelOf(::ScheduleFeedViewModel)`.
 
-## 5. Compose screen
+## 5. Compose screen (Android)
 
-- `ui/list/ScheduleRoute.kt`: `ScheduleRoute(...)` obtains the view model
-  with `koinViewModel()`, collects state and events, and turns clicks into
-  the `ScheduleRouteActions` lambdas the host passes in.
-- `ui/list/ScheduleScreen.kt`: stateless, takes state and lambdas, built from
-  the `:shared:designsystem` kit and `ItmoTheme` tokens.
-- `ui/list/ScheduleScreenPreviews.kt`: previews with synthetic data; they are
-  the screenshot baselines in `shared/feature-schedule/screenshots/`.
+- `ui/feed/ScheduleFeedRoute.kt`: `ScheduleFeedRoute(...)` collects state and events and turns the screen's actions
+  into view model calls and the `ScheduleFeedHost` lambdas the shell passes in.
+- `ui/feed/ScheduleFeedScreen.kt`: stateless, takes state and lambdas, built from the `designsystem.kit` kit
+  (`ItmoRootScreen`, `WeekStrip`, `LessonTimeline`) and `ItmoTheme` tokens.
+- `ui/SchedulePreviews.kt`: previews over `ui/preview/ScheduleSamples.kt`; they are the screenshot baselines in
+  `shared/feature-schedule/screenshots/`, and the iOS snapshot tests use the same samples.
 - Strings: `shared/feature-schedule/src/commonMain/composeResources/values/strings_schedule.xml`.
 
 ## 6. Android host
 
 - The tab root is `ScheduleTabRoot` in
   `app/src/main/java/dev/alllexey/itmowidgets/app/shell/entries/ScheduleEntries.kt`.
-  It renders `ScheduleRoute` with a view model scoped to the entry
-  (`entryViewModel()`) and maps its actions to `Nav3AppNavigator`: a
-  lesson opens `AppRoutes.LessonDetails` (a sheet), the friends button opens
-  `AppRoutes.FriendSelector`, whose answer comes back through the result bus.
-- The same file registers `AppRoutes.UserSchedule`
-  and the two sheets with `EntryRegistry`.
+  It renders `ScheduleFeedRoute` with a view model scoped to the entry (`entryViewModel()`) and maps its host to
+  `Nav3AppNavigator`: a lesson opens `AppRoutes.LessonDetails` (a sheet), the title `AppRoutes.ScheduleMonth`, the
+  friends button `AppRoutes.FriendSelector`; their answers come back through the result bus.
+- The same file registers `AppRoutes.UserSchedule` and the sheets with `EntryRegistry`.
 - Android-only pieces (widget refresh, change notifications, schedulers) are
   bound in `app/src/main/java/dev/alllexey/itmowidgets/di/ScheduleModule.kt`
   (`androidScheduleModule`).
 
 ## 7. iOS host
 
-- `iosApp/Sources/Features/Schedule/ScheduleScreen.swift` puts a `ComposeHost`
-  in the schedule tab. Its controller comes from `scheduleRootScreen(open:pickFriend:)`
-  in `shared/ios/src/iosMain/kotlin/dev/alllexey/itmowidgets/ios/screens/ScheduleScreens.kt`,
-  which wraps the same `ScheduleRoute` and sends routes back to Swift.
-- `iosApp/Sources/App/Router/Routes+Schedule.swift` maps the schedule keys:
-  another user's schedule and the changes are Compose screens, the lesson and
-  friend picker are SwiftUI sheets around Compose content.
+- `iosApp/Sources/Features/Schedule/ScheduleScreen.swift` draws the same feed in SwiftUI over
+  `ScheduleFeedViewModel` (through `ObservableViewModel`, with the Koin parameters of
+  `shared/feature-schedule/src/iosMain/.../di/ScheduleIosParameters.kt`).
+- `iosApp/Sources/App/Router/Routes+Schedule.swift` maps the schedule keys to SwiftUI: another user's schedule is
+  pushed, the lesson sheet, the month sheet and the friend picker are sheets (`ScheduleSheets.swift`).
 - iOS-only ports (EventKit calendar, notifier, widget timeline) are in
   `shared/feature-schedule/src/iosMain` and registered in
   `shared/ios/src/iosMain/kotlin/dev/alllexey/itmowidgets/ios/di/IosKoinModules.kt`.
-
-These screens move to native SwiftUI over the same view models
-([ADR 0031](decisions/0031-swiftui-ios-screens.md)).
 
 ## 8. Widget snapshot
 
@@ -128,8 +120,8 @@ shows (`domain/widget/ScheduleWidgetSelector.kt`).
 |---|---|
 | Data source and gates | `ScheduleRemoteDataSourceImplTest` (MockEngine through the real clients), `ScheduleDemoGateTest` |
 | Repository | `ScheduleRepositoryImplTest` |
-| View model | `ScheduleViewModelTest` (`commonTest`) |
-| Screen | `ScheduleScreenTest`, `ScheduleRouteTest`, `ScheduleScreenshotTest` |
+| View model | `ScheduleFeedPresenterTest`, `ScheduleFeedViewModelTest` (`commonTest`) |
+| Screen | `ScheduleScreenshotTest`, app `ScheduleEntriesTest`, iOS `ScheduleSnapshotTests` |
 | Koin | `ScheduleModuleTest`, `ScheduleIosModuleTest`, app `ScheduleGraphTest` |
 | Widget | `ScheduleWidgetDataProviderTest`, `ScheduleTimelineWriterTest`, instrumented `ScheduleWidgetSnapshotStoreTest` and `ScheduleWidgetRenderingTest`, iOS `ScheduleTimelineTests.swift` |
 | UI on device | iOS `ScheduleUITests.swift` |

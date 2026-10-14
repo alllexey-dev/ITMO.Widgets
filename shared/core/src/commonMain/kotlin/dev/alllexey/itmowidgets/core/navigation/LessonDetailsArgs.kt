@@ -23,5 +23,7 @@ data class LessonDetailsArgs(
     val zoomPassword: String?,
     val zoomInfo: String?,
     /** The My ITMO flow the lesson belongs to, such as "ФИЗ ПИИКТ 3.2". */
-    val flowName: String? = null
+    val flowName: String? = null,
+    /** My ITMO's subject id in the schedule, for the subject page and its links. */
+    val subjectId: Long? = null,
 )

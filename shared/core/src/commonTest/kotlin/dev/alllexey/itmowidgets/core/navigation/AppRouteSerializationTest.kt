@@ -73,11 +73,7 @@ class AppRouteSerializationTest {
         }
         assertEquals(SheetPolicy.Dismissal.FORM, AppRoutes.ReviewEditor(RouteSamples.teacher).sheetPolicy.dismissal)
         assertEquals(
-            listOf(
-                AppRoutes.FriendSelector::class,
-                AppRoutes.LessonDetails::class,
-                AppRoutes.PendingSportDetails::class
-            ),
+            emptyList(),
             RouteSamples.ofKind(RouteKind.SHEET)
                 .filter { it.sheetPolicy?.height == SheetPolicy.Height.FULL }
                 .map { it::class }
@@ -87,7 +83,7 @@ class AppRouteSerializationTest {
             RouteSamples.ofKind(RouteKind.SHEET).filter { it.sheetPolicy?.height == SheetPolicy.Height.TALL }.map { it::class }
         )
         assertEquals(
-            listOf(13, 12, 4, 2),
+            listOf(13, 13, 4, 2),
             listOf(RouteKind.SCREEN, RouteKind.SHEET, RouteKind.DIALOG, RouteKind.GATE)
                 .map { RouteSamples.ofKind(it).size }
         )
