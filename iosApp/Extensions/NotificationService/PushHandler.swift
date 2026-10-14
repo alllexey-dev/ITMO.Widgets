@@ -97,18 +97,25 @@ extension PushHandler {
         )
     }
 
-    /// `IosClientVersion`'s `X-App-Version`: `<version> (<build>); ios; dev|appstore`.
+    /// `IosClientVersion`'s `X-App-Version`: `<version> (<build>); ios; dev|sideload|testflight|appstore`.
     static func clientVersion(_ bundle: Bundle) -> String {
         func part(_ key: String) -> String {
             let value = (bundle.object(forInfoDictionaryKey: key) as? String ?? "")
                 .filter { $0.isASCII && ("!"..."~").contains($0) && !"();".contains($0) }
             return value.isEmpty ? "unknown" : value
         }
+        return "\(part("CFBundleShortVersionString")) (\(part("CFBundleVersion"))); ios; \(distribution(bundle))"
+    }
+
+    /// `IosClientVersion.distribution`: the App Store and TestFlight strip the provisioning profile; TestFlight
+    /// builds have a sandbox receipt, the only synchronous signal of it (`AppTransaction` is async).
+    private static func distribution(_ bundle: Bundle) -> String {
         #if DEBUG
-        let distribution = "dev"
+        return "dev"
         #else
-        let distribution = "appstore"
+        if bundle.path(forResource: "embedded", ofType: "mobileprovision") != nil { return "sideload" }
+        if bundle.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt" { return "testflight" }
+        return "appstore"
         #endif
-        return "\(part("CFBundleShortVersionString")) (\(part("CFBundleVersion"))); ios; \(distribution)"
     }
 }

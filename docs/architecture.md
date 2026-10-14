@@ -298,7 +298,10 @@ action bound in `app/src/github` and `app/src/play` (`UpdateActionModule.kt`).
 Debug and `minifiedSmoke` builds call `https://dev.widgets.alllexey.dev`,
 release builds `https://widgets.alllexey.dev`. On iOS the Backend origin is
 `BACKEND_BASE_URL` in `iosApp/Config/Base.xcconfig` (dev for Debug,
-production for Release).
+production for Release). iOS has no build variants; `IosClientVersion` reads
+the channel from the installed bundle for `X-App-Version`: `dev` for a debug
+binary, `sideload` with an embedded provisioning profile (Xcode, a free Apple
+ID, AltStore), `testflight` with a sandbox receipt, else `appstore`.
 
 ## Enforced rules
 
