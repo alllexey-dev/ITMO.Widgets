@@ -1,9 +1,11 @@
 package dev.alllexey.itmowidgets.app.shell
 
 import android.app.Dialog
+import android.view.ViewConfiguration
 import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.ComponentDialog
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -22,6 +24,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
@@ -40,6 +45,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
+import kotlin.math.ceil
 
 /** The Compose shell with fake entries: chrome, Back, predictive Back, tab state, sheets, arguments and gates. */
 @RunWith(RobolectricTestRunner::class)
@@ -243,6 +249,50 @@ class AppShellTest {
 
         assertTrue(navigator.state.floating.isEmpty())
         assertEquals(0, shownDialogs().size)
+    }
+
+    /**
+     * A sheet as tall as the window allows carries its content along a slow drag down from just past the touch slop,
+     * also where it leaves the status bar: Material's own top inset shrank there by the sheet's offset, so the content
+     * stood still on the moving sheet while the sheet's height and anchors changed under the finger (the jitter).
+     */
+    @Test
+    fun aTallSheetCarriesItsContentFromTheFirstStepOfASlowDrag() {
+        show()
+        act { open(AppRoutes.LinkActions(ShellSamples.links, linkId = "tall")) }
+        giveEveryWindowAStatusBar()
+        val content = compose.onNodeWithTag("content:tall")
+        val top = { content.fetchSemanticsNode().boundsInRoot.top }
+        val start = top()
+        assertTrue("the sheet starts below the status bar: $start", start >= STATUS_BAR_PX)
+
+        content.performTouchInput { down(center) }
+        val tops = listOf(start) + (1..DRAG_STEPS).map {
+            content.performTouchInput { moveBy(Offset(0f, DRAG_STEP_PX)) }
+            compose.waitForIdle()
+            top()
+        }
+        content.performTouchInput { up() }
+        compose.waitForIdle()
+
+        val slopSteps = ceil(ViewConfiguration.get(compose.activity).scaledTouchSlop / DRAG_STEP_PX).toInt()
+        val firstMove = tops.indexOfFirst { it > start + 0.5f }
+        assertTrue("the content moves once the drag passes the touch slop: $tops", firstMove in 1..slopSteps + 2)
+        val backwards = tops.zipWithNext().filter { (before, after) -> after < before - 0.5f }
+        assertTrue("the content never moves against the finger: $tops", backwards.isEmpty())
+    }
+
+    /** A status bar of [STATUS_BAR_PX] on the activity's window and on every sheet's and dialog's window. */
+    private fun giveEveryWindowAStatusBar() {
+        val insets = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.statusBars(), Insets.of(0, STATUS_BAR_PX, 0, 0))
+            .build()
+        compose.runOnIdle {
+            (listOf(compose.activity.window) + shownDialogs().map { checkNotNull(it.window) }).forEach { window ->
+                ViewCompat.dispatchApplyWindowInsets(window.decorView, insets)
+            }
+        }
+        compose.waitForIdle()
     }
 
     /**
@@ -478,5 +528,8 @@ class AppShellTest {
         const val FRAME_MILLIS = 16
         const val MIN_DISSOLVE_MILLIS = 250
         const val SETTLE_FRAMES = 5
+        const val STATUS_BAR_PX = 120
+        const val DRAG_STEPS = 40
+        const val DRAG_STEP_PX = 8f
     }
 }

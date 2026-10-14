@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -59,8 +61,8 @@ object ShellSamples {
 
 /**
  * Fake entries for every layer: tab roots with a list, a saveable sub-tab and a ViewModel; plain overlay screens; an
- * arguments probe; a free and a form sheet; a dialog. [AppRoutes.Diagnostics], [AppRoutes.Auth] and every other key
- * stay unregistered.
+ * arguments probe; a free, a tall and a form sheet; a dialog. [AppRoutes.Diagnostics], [AppRoutes.Auth] and every
+ * other key stay unregistered.
  */
 fun fakeEntries(probe: ShellProbe): EntryRegistry = entryRegistry {
     entry<AppRoutes.TabRoot> { key, _ -> FakeTabRoot(key.tab, probe) }
@@ -69,6 +71,7 @@ fun fakeEntries(probe: ShellProbe): EntryRegistry = entryRegistry {
     entry<AppRoutes.UserProfile>(args = { bundleOf(UserScreenArgs.ISU to it.isu) }) { _, _ -> ArgsProbe() }
     entry<AppRoutes.SubjectLinks> { _, _ -> FakeSheet("links") }
     entry<AppRoutes.IcsExport> { _, _ -> FakeSheet("ics") }
+    entry<AppRoutes.LinkActions> { _, _ -> TallSheet() }
     entry<AppRoutes.ReviewEditor> { _, _ ->
         BackHandler { probe.formBacks++ }
         FakeSheet("review")
@@ -118,6 +121,12 @@ private fun FakeScreen(name: String) {
 @Composable
 private fun FakeSheet(name: String) {
     Column(Modifier.fillMaxWidth().height(240.dp).testTag("content:$name")) { Text(name) }
+}
+
+/** A sheet as tall as the shell's sheet lets it be, with scrolling content, as the lesson sheet. */
+@Composable
+private fun TallSheet() {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("content:tall")) { Text("tall") }
 }
 
 class ArgsViewModel(handle: SavedStateHandle) : ViewModel() {

@@ -169,6 +169,12 @@ new iOS app.
 
 ### Fixes
 
+- iOS names its channel in `X-App-Version`: `sideload`, `testflight` or
+  `appstore` (`dev` for debug builds) instead of `appstore` for every release
+  build, so the admin tells sideloaded builds from store ones.
+- Android sheets follow the finger when dragged down instead of jittering as
+  they leave the status bar, and no sheet goes under the status bar or a
+  cutout any more.
 - Connecting BARS right after signing in no longer asks for the ITMO.ID
   password again: the sign-in keeps its ITMO.ID session in the app's browser,
   and BARS signs in with it on Android and iOS.

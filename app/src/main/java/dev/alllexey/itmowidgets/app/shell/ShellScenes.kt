@@ -1,12 +1,15 @@
 package dev.alllexey.itmowidgets.app.shell
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
@@ -18,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.min
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavMetadataKey
 import androidx.navigation3.runtime.get
@@ -82,21 +84,25 @@ private class BottomSheetScene<T : Any>(
             confirmValueChange = { free || it != SheetValue.Hidden },
         )
         sheetState = state
-        // Read here: the sheet's own window may not get the activity's insets.
-        val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        // The status bar and a cutout. Read here: the sheet's own window may not get the activity's insets.
+        val topInset = WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding()
         val window = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
-        val belowStatusBar = window - statusBar
+        // The sheet's constraints already end below the status bar (the padding below): no size goes past it.
         val height = when (policy.height) {
-            SheetPolicy.Height.FIT_CONTENT -> Modifier.heightIn(max = belowStatusBar)
-            SheetPolicy.Height.TALL -> Modifier.height(min(window * SheetPolicy.TALL_FRACTION, belowStatusBar))
-            SheetPolicy.Height.FULL -> Modifier.height(belowStatusBar)
+            SheetPolicy.Height.FIT_CONTENT -> Modifier
+            SheetPolicy.Height.TALL -> Modifier.height(window * SheetPolicy.TALL_FRACTION)
+            SheetPolicy.Height.FULL -> Modifier.fillMaxHeight()
         }
         ModalBottomSheet(
             onDismissRequest = onBack,
-            modifier = Modifier.testTag(BottomSheetSceneStrategy.tag(key)),
+            // Below the status bar, with only the bottom inset inside: Material's default top inset shrinks by the
+            // sheet's offset, so a sheet that reached the status bar changed its height, and with it its anchors,
+            // under the finger, and the drag jittered.
+            modifier = Modifier.padding(top = topInset).testTag(BottomSheetSceneStrategy.tag(key)),
             sheetState = state,
             sheetGesturesEnabled = free,
             dragHandle = null,
+            contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom) },
             properties = ModalBottomSheetProperties(
                 shouldDismissOnBackPress = free,
                 shouldDismissOnClickOutside = free,
