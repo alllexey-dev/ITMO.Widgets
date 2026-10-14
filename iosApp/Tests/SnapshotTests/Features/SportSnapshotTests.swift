@@ -6,7 +6,7 @@ import XCTest
 
 /// The sport tab in the shell (the static root header, the glass tab bar) on the shared states the real presenters
 /// build from Мария's synthetic Monday of `SportSamples`, at the design lab's axes; the lesson, filters and queue
-/// sheets; `Мои секции` and `Откуда баллы` under the native bar. Drawn in a window, 375 pt wide.
+/// sheets (filters with "more" and with every type); `Мои секции` and `Откуда баллы` under the native bar. Drawn in a window, 375 pt wide.
 @MainActor
 final class SportSnapshotTests: XCTestCase {
     private let samples = SportSamples.shared
@@ -29,6 +29,22 @@ final class SportSnapshotTests: XCTestCase {
 
     func testSignUpEmptyDay() {
         assertSport(.sign, sign: samples.sign(filters: "none", day: "empty"), named: "sign-empty", appearances: [.light, .dark])
+    }
+
+    func testSignUpNextWeek() {
+        assertSport(.sign, sign: samples.sign(filters: "none", day: "week2"), named: "sign-week2", appearances: [.light, .dark])
+    }
+
+    func testFilters() {
+        assertSheet(SportFiltersSheet(filters: samples.sign(filters: "sheet", day: "normal").filters!), named: "filters")
+    }
+
+    func testFiltersWithEveryType() {
+        assertSheet(
+            SportFiltersSheet(filters: samples.sign(filters: "sheet-all", day: "normal").filters!),
+            named: "filters-all",
+            appearances: [.light, .dark]
+        )
     }
 
     func testLessonWithAClash() {

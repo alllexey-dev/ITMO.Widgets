@@ -209,29 +209,54 @@ struct SportCheckRow: View {
     }
 }
 
-/// More filters (DECISIONS.md, Sign-up): the sections, the building, the time and the teacher where the settings show
-/// them, the switches, then reset or show.
+/// What the more-filters sheet changes.
+struct SportFilterActions {
+    var section: (String) -> Void = { _ in }
+    var moreSections: () -> Void = {}
+    var sectionQuery: (String) -> Void = { _ in }
+    var building: (String?) -> Void = { _ in }
+    var teacher: (String?) -> Void = { _ in }
+    var dayPart: (SportDayPart) -> Void = { _ in }
+    var onlyFree: (Bool) -> Void = { _ in }
+    var onlyPinned: (Bool) -> Void = { _ in }
+    var onlyFriends: (Bool) -> Void = { _ in }
+    var reset: () -> Void = {}
+}
+
+/// More filters (DECISIONS.md, Sign-up): the top types with "more" (then every type with a search), the building, the
+/// time and the teacher where the settings show them, the switches, then reset or show.
 struct SportFiltersSheet: View {
     let filters: SportFiltersUi
-    let viewModel: SportSignViewModel
+    var actions = SportFilterActions()
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ItmoSheet(title: AppStrings.string("sport_filters_title"), height: .tall) {
             ItmoSectionHeader(title: AppStrings.string("sport_filter_type"))
-            ItmoChips(chips: filters.sections.map(\.kitChip), wrap: true) { index in
-                if let value = filters.sections[index].value { viewModel.toggleSection(name: value) }
+            if let query = filters.sectionQuery {
+                ItmoSearchField(
+                    placeholder: AppStrings.string("sport_filter_type_search"),
+                    query: Binding(get: { query }, set: { actions.sectionQuery($0) }),
+                    clearLabel: AppStrings.string("sport_search_clear")
+                )
+            }
+            ItmoChips(chips: sectionChips, wrap: true) { index in
+                if index < filters.sections.count {
+                    if let value = filters.sections[index].value { actions.section(value) }
+                } else {
+                    actions.moreSections()
+                }
             }
             if filters.buildings.count > 1 {
                 ItmoSectionHeader(title: AppStrings.string("sport_filter_building"))
-                ItmoChips(chips: filters.buildings.map(\.kitChip)) { viewModel.selectBuilding(name: filters.buildings[$0].value) }
+                ItmoChips(chips: filters.buildings.map(\.kitChip), wrap: true) { actions.building(filters.buildings[$0].value) }
             }
             if filters.showDayPart {
                 ItmoSectionHeader(title: AppStrings.string("sport_filter_time"))
                 ItmoSegmentedChoice(
                     label: AppStrings.string("sport_filter_time"),
                     options: [SportDayPart.anytime, .morning, .day, .evening],
-                    selection: Binding(get: { filters.dayPart }, set: { viewModel.selectDayPart(part: $0) })
+                    selection: Binding(get: { filters.dayPart }, set: { actions.dayPart($0) })
                 ) { part in
                     switch part {
                     case .anytime: AppStrings.string("sport_part_any")
@@ -243,30 +268,30 @@ struct SportFiltersSheet: View {
             }
             if let teachers = filters.teachers {
                 ItmoSectionHeader(title: AppStrings.string("sport_filter_teacher"))
-                ItmoChips(chips: teachers.map(\.kitChip), wrap: true) { viewModel.selectTeacher(name: teachers[$0].value) }
+                ItmoChips(chips: teachers.map(\.kitChip), wrap: true) { actions.teacher(teachers[$0].value) }
             }
             ItmoListGroup {
                 ItmoSwitchRow(
                     title: AppStrings.string("sport_filter_only_free"),
                     symbol: .check,
-                    isOn: Binding(get: { filters.onlyFree }, set: { viewModel.setOnlyFree(on: $0) })
+                    isOn: Binding(get: { filters.onlyFree }, set: { actions.onlyFree($0) })
                 )
                 if let pinned = filters.onlyPinned {
                     ItmoSwitchRow(
                         title: AppStrings.string("sport_filter_only_pinned"),
                         symbol: .keep,
-                        isOn: Binding(get: { pinned.boolValue }, set: { viewModel.setOnlyPinned(on: $0) })
+                        isOn: Binding(get: { pinned.boolValue }, set: { actions.onlyPinned($0) })
                     )
                 }
                 ItmoSwitchRow(
                     title: AppStrings.string("sport_filter_only_friends"),
                     symbol: .group,
-                    isOn: Binding(get: { filters.onlyFriends }, set: { viewModel.setOnlyFriends(on: $0) })
+                    isOn: Binding(get: { filters.onlyFriends }, set: { actions.onlyFriends($0) })
                 )
             }
             .padding(.top, ItmoSpacing.compact)
             HStack(spacing: ItmoSpacing.compact) {
-                Button { viewModel.resetFilters() } label: {
+                Button { actions.reset() } label: {
                     Text(verbatim: AppStrings.string("common_reset")).padding(.vertical, 6)
                 }
                 .buttonStyle(.glass)
@@ -286,6 +311,10 @@ struct SportFiltersSheet: View {
             .padding(.top, ItmoSpacing.compact)
         }
         .accessibilityIdentifier("sport.filters")
+    }
+
+    private var sectionChips: [ItmoChip] {
+        filters.sections.map(\.kitChip) + [filters.moreSections].compactMap { $0.map { ItmoChip(label: $0.resolved) } }
     }
 }
 
