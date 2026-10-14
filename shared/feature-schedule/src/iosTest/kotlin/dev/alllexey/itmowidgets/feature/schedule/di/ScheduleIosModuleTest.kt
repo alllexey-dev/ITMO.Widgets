@@ -1,15 +1,19 @@
 package dev.alllexey.itmowidgets.feature.schedule.di
 
-import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
+import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
+import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
@@ -36,8 +40,10 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
-import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
-import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsViewModel
+import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedViewModel
+import dev.alllexey.itmowidgets.feature.schedule.presentation.friends.FriendPickerViewModel
+import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonSheetViewModel
+import dev.alllexey.itmowidgets.feature.schedule.presentation.month.ScheduleMonthViewModel
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
@@ -59,7 +65,6 @@ import okio.FileSystem
 import okio.Path
 import org.koin.core.Koin
 import org.koin.core.annotation.KoinInternalApi
-import org.koin.core.module.Module
 import org.koin.core.parameter.parametersOf
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
@@ -90,15 +95,22 @@ class ScheduleIosModuleTest {
     @Test
     fun everyDefinitionOfTheScheduleRoutesResolvesWithoutARequest() {
         val koin = graph { BUILDINGS }
-        val viewModels = setOf(ScheduleViewModel::class, LessonDetailsViewModel::class)
+        val viewModels = setOf(
+            ScheduleFeedViewModel::class,
+            ScheduleMonthViewModel::class,
+            FriendPickerViewModel::class,
+            LessonSheetViewModel::class,
+        )
         val definitions = koin.instanceRegistry.instances.values.map { it.beanDefinition }.distinct()
 
         definitions.filter { it.primaryType !in viewModels }
             .forEach { definition -> koin.get<Any>(definition.primaryType, definition.qualifier) }
 
-        koin.get<ScheduleViewModel> { parametersOf(SavedStateHandle()) }
-        koin.get<ScheduleViewModel> { parametersOf(SavedStateHandle(mapOf(ScheduleViewModel.ARG_USER_ISU to USER))) }
-        koin.get<LessonDetailsViewModel> { parametersOf(SavedStateHandle(lessonArguments())) }
+        koin.get<ScheduleFeedViewModel> { parametersOf(*scheduleFeedParameters(0, "").toTypedArray()) }
+        koin.get<ScheduleFeedViewModel> { parametersOf(*scheduleFeedParameters(USER, "Тестовый Пользователь").toTypedArray()) }
+        koin.get<ScheduleMonthViewModel> { parametersOf(*scheduleMonthParameters(AppRoutes.ScheduleMonth(DATE)).toTypedArray()) }
+        koin.get<FriendPickerViewModel> { parametersOf(*friendPickerParameters(AppRoutes.FriendSelector()).toTypedArray()) }
+        koin.get<LessonSheetViewModel> { parametersOf(*lessonSheetParameters(AppRoutes.LessonDetails(LESSON)).toTypedArray()) }
         assertEquals(emptyList(), requests)
         koin.close()
     }
@@ -153,12 +165,6 @@ class ScheduleIosModuleTest {
         )
     }.koin
 
-    private fun lessonArguments(): Map<String, Any> = mapOf(
-        LessonDetailsViewModel.ARG_PAIR_ID to PAIR_ID,
-        LessonDetailsViewModel.ARG_DATE to DATE,
-        LessonDetailsViewModel.ARG_TEACHER_ISU to USER,
-    )
-
     /** What the account, settings and background modules give the app, on the demo session. */
     private fun platformTypes() = module {
         single<DemoMode> { FakeDemoMode(active = true) }
@@ -173,6 +179,8 @@ class ScheduleIosModuleTest {
         // `sportModule` and `reviewsModule` in the app, features this module cannot read.
         single<PendingSportBookingsRepository> { NoPendingSport }
         single<TeacherLevelsRepository> { FakeTeacherLevelsRepository() }
+        // social's in the app.
+        single<FriendRepository> { NoFriends }
         single { AppRefreshScheduler({ _, _ -> }, get(), get()) }
         single<RefreshStepLog> { NoStepLog }
     }
@@ -208,6 +216,16 @@ class ScheduleIosModuleTest {
             flowOf(AppResult.Success(emptyList()))
 
         override suspend fun refresh() = Unit
+    }
+
+    private object NoFriends : FriendRepository {
+        override fun observeFriendList(): Flow<LoadState<List<UserSummary>>> = flowOf(LoadState.Content(emptyList()))
+
+        override fun observeCurrentUser(): Flow<UserSummary?> = flowOf(null)
+
+        override suspend fun refreshFriendList() = Unit
+
+        override val currentFriends: List<UserSummary> = emptyList()
     }
 
     private object SilentNotifier : ScheduleChangeNotifier {
@@ -247,6 +265,10 @@ class ScheduleIosModuleTest {
         const val USER = 100_001
         const val DATE = "2026-10-08"
         const val PAIR_ID = 20_369_084L
+        val LESSON = LessonDetailsArgs(
+            PAIR_ID, DATE, "Физика", 1, "Очный", "10:00", "11:30", null, USER.toLong(), "1506", null, null, null, null,
+            null, null, null,
+        )
 
         /** One synthetic building in the shape of `itmo_buildings.json`. */
         const val BUILDINGS = """[{"id":"test","buildingIds":[7],"aliases":["тест"],"label":"Test building",

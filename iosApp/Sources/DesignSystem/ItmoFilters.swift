@@ -100,12 +100,14 @@ struct ItmoSearchField: View {
     }
 }
 
-/// A day of `ItmoWeekStrip`: the weekday over the date, a dot per lesson (at most five).
+/// A day of `ItmoWeekStrip`: the weekday over the date, a dot per lesson (at most five), the last in the warning
+/// colour when `changed`.
 struct ItmoWeekDay: Hashable {
     let id: String
     let weekday: String
     let number: String
     let lessons: Int
+    var changed = false
     var today = false
     var past = false
     var selected = false
@@ -134,9 +136,9 @@ struct ItmoWeekStrip: View {
                             .font(.itmo(.titleLarge, emphasized: day.today || day.selected))
                             .monospacedDigit()
                         HStack(spacing: 2) {
-                            ForEach(0..<min(day.lessons, 5), id: \.self) { _ in
-                                Circle().frame(width: 4, height: 4)
-                                    .foregroundStyle(day.selected ? ItmoColor.onPrimary : ItmoColor.primary.opacity(day.past ? 0.4 : 0.8))
+                            let dots = max(min(day.lessons, 5), day.changed ? 1 : 0)
+                            ForEach(0..<dots, id: \.self) { index in
+                                Circle().frame(width: 4, height: 4).foregroundStyle(dotColor(day, warn: day.changed && index == dots - 1))
                             }
                         }
                         .frame(height: 5)
@@ -163,6 +165,11 @@ struct ItmoWeekStrip: View {
         }
         // Stiffness 380 and damping 0.8 of M3's default spatial spring: response 2 pi / sqrt(380).
         .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.8), value: days.firstIndex(where: \.selected))
+    }
+
+    private func dotColor(_ day: ItmoWeekDay, warn: Bool) -> Color {
+        if warn { return ItmoTone.warn.color }
+        return day.selected ? ItmoColor.onPrimary : ItmoColor.primary.opacity(day.past ? 0.4 : 0.8)
     }
 
     private func color(_ day: ItmoWeekDay) -> Color {

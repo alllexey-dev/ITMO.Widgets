@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
-import dev.alllexey.itmowidgets.feature.friendselector.di.friendSelectorModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
@@ -77,11 +76,11 @@ object IosKoinModules {
         // The me tab, friends, search, profiles and a user's friends; the invitation names the App Store page or the
         // site.
         socialModule, socialIosModule(inviteUrl()), meModule,
-        // The schedule tab, another user's schedule, the lesson and pending sport sheets and the friend
-        // picker.
-        scheduleModule, scheduleDataModule, scheduleIosModule(), friendSelectorModule,
-        // The sport tab, its details sheet and another user's sport; the lessons' friends come through the friend
-        // picker's `FriendRepository` above.
+        // The schedule feed, another user's schedule, the lesson sheet, the month sheet and the friend picker (over
+        // social's `FriendRepository`).
+        scheduleModule, scheduleDataModule, scheduleIosModule(),
+        // The sport tab, its details sheet and another user's sport; the lessons' friends come through social's
+        // `FriendRepository`.
         sportModule, sportIosModule,
         // The calendar sync over EventKit with its refresh step and the `.ics` file.
         calendarIosModule,

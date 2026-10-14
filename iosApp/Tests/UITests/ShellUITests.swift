@@ -63,7 +63,10 @@ final class ShellUITests: XCTestCase {
         app.open(try XCTUnwrap(URL(string: "itmowidgets://route/today")))
 
         XCTAssertTrue(element(app, "shell.root.schedule").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(element(app, ScheduleUITests.todayTag).waitForExistence(timeout: stepTimeout))
+        let today = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH 'schedule.row.' AND identifier CONTAINS %@", ScheduleUITests.today)
+        ).firstMatch
+        XCTAssertTrue(today.waitForExistence(timeout: stepTimeout))
     }
 
     func testUnknownRouteExplainsTheLinkInASheet() throws {

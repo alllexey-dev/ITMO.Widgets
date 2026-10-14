@@ -13,7 +13,7 @@ The bell opens its sheet over it. The spec is the design lab's
 
 - `TodayViewModel` (`:shared:feature-home`, `homeModule`) reads today and
   tomorrow from `DayLessonsGateway` (`core/schedule`, implemented by the
-  schedule's `DayLessonsGatewayImpl`) and every Koin `TodayTodoSource`
+  schedule's `ScheduleDaysImpl`) and every Koin `TodayTodoSource`
   (`core/today`, an open set read with `getAll()`), re-evaluated every minute
   by the academic clock. `TodayPresenter` is the pure rule:
   - while today has a lesson that is not over, the hero is the current one
@@ -39,9 +39,11 @@ The bell opens its sheet over it. The spec is the design lab's
   [schedule changes](schedule-changes.md), `очередь` for an own sport queue,
   `записаны` for a booked sport lesson, `онлайн`, `Окно 2 ч 10 мин` for gaps
   of an hour or more, `Изменено вчера в 20:14` under a changed lesson. A
-  lesson opens its sheet; a sport lesson goes through `SportDetailsRedirect`,
-  as in the schedule ([lesson details](schedule.md#lesson-details)).
-- `DayLessonsGatewayImpl` joins the schedule cache, the change history (the
+  lesson, a sport lesson and an own queue too, opens the lesson sheet
+  ([Лист пары](schedule.md#lesson-sheet)). Two lessons that overlap stay separate rows in start order with no window
+  between them; the later one says `одновременно с «…»`, and the rail fills once with one `сейчас` marker (on the
+  earliest lesson going on).
+- `ScheduleDaysImpl` joins the schedule cache, the change history (the
   newest change found on each occurrence; a cancelled lesson stays on its old
   day, struck through) and the own queues while their schedule rows are on
   (`observeSportAutoSignEnabled`).

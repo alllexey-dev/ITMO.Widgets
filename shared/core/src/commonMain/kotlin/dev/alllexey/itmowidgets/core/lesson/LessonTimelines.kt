@@ -23,38 +23,51 @@ import kotlinx.datetime.minus
 object LessonTimelines {
     const val GAP_MINUTES = 60
 
-    /** [lessons] of one day on the rail, sorted by start; [today] dates the change notes. */
+    /**
+     * [lessons] of one day on the rail, sorted by start; [today] dates the change notes. The rail is one clock: each row
+     * covers a stretch of the day that starts where the row above ended (a lesson from its start, or from the end of an
+     * overlapping one above; a short break belongs to the lesson before it), so the elapsed part grows monotonically
+     * and only the stretch with the moment in it is part-way, which puts the one `сейчас` marker there. Overlapping
+     * lessons stay in start order without a window between them; the later one says `одновременно с …`.
+     */
     fun build(lessons: List<DayLesson>, moment: DayMoment, today: LocalDate): List<TimelineItem> {
         val sorted = lessons.sortedBy { it.start }
         val states = states(sorted, moment)
         val now = (moment as? DayMoment.Today)?.time?.minutes()
         val past = moment == DayMoment.Past
+        fun elapsed(from: Int, to: Int): Float = now?.let { share(it, from, to) } ?: if (past) 1f else 0f
         return buildList {
+            var railEnd = sorted.firstOrNull()?.start?.minutes() ?: 0
+            var latestEnd = railEnd
             sorted.forEachIndexed { index, lesson ->
                 val start = lesson.start.minutes()
-                val end = lesson.end.minutes()
-                val state = states[index]
-                if (index > 0) {
-                    val from = sorted[index - 1].end.minutes()
-                    if (start - from >= GAP_MINUTES) {
-                        val elapsed = now?.let { share(it, from, start) } ?: if (past) 1f else 0f
-                        add(TimelineItem.Gap(UiText.Res(CoreStrings.lesson_gap, listOf(durationText(start - from))), elapsed))
-                    }
+                if (index > 0 && start - latestEnd >= GAP_MINUTES) {
+                    add(TimelineItem.Gap(UiText.Res(CoreStrings.lesson_gap, listOf(durationText(start - latestEnd))), elapsed(latestEnd, start)))
+                    railEnd = start
                 }
-                // The rail under a dot spans the lesson and the short break after it, up to the next dot.
+                val from = maxOf(start, railEnd)
+                latestEnd = maxOf(latestEnd, lesson.end.minutes())
+                // The rail under a dot runs to the latest end so far, and on over a short break up to the next dot.
                 val next = sorted.getOrNull(index + 1)?.start?.minutes()
-                val until = if (next != null && next >= end && next - end < GAP_MINUTES) next else end
+                val until = if (next != null && next > latestEnd && next - latestEnd < GAP_MINUTES) next else latestEnd
+                railEnd = maxOf(until, from)
                 add(
                     TimelineItem.Lesson(
-                        lesson = lesson(lesson, state),
-                        progress = now?.let { share(it, start, until) } ?: if (state == LessonState.DONE) 1f else 0f,
-                        reached = now?.let { it >= start } ?: (state == LessonState.DONE),
+                        lesson = lesson(lesson, states[index]),
+                        progress = elapsed(from, railEnd),
+                        reached = now?.let { it >= from } ?: (past || states[index] == LessonState.DONE),
                         changeNote = lesson.change?.let { changeNote(it.detectedAt, today) },
+                        overlapNote = sorted.take(index).firstOrNull { it.overlaps(lesson) }
+                            ?.let { UiText.Res(CoreStrings.lesson_overlap, listOf(it.subject.trim())) },
                     ),
                 )
             }
         }
     }
+
+    /** Both take place and share some minutes. */
+    private fun DayLesson.overlaps(other: DayLesson): Boolean =
+        change?.cancelled != true && other.change?.cancelled != true && other.start < end && start < other.end
 
     /** One lesson outside a day list in [state]: the hero's neighbour, a sport booking. */
     fun lesson(lesson: DayLesson, state: LessonState): LessonUi {
@@ -74,6 +87,7 @@ object LessonTimelines {
             cancelled = cancelled,
             note = lesson.noteText,
             pills = pills(lesson, state, cancelled),
+            withYou = lesson.withYou,
         )
     }
 

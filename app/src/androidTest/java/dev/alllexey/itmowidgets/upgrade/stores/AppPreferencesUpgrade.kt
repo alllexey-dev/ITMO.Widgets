@@ -28,7 +28,6 @@ import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.preferencesDataStoreFile
-import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.qr.data.QrWidgetStateStoreImpl
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
@@ -137,7 +136,6 @@ object AppPreferencesUpgrade {
         )
         assertTrue(barsPreference.isEnabled())
         assertEquals(QrWidgetState.VISIBLE, QrWidgetStateStoreImpl(preferences).getState(42))
-        assertEquals(listOf(100003, 100002), DataStoreFriendSelectionHistory(preferences).getRecentIsu())
 
         // Without the per-format keys, the legacy shared keys 2.0 and 2.1 wrote still apply to both formats.
         preferences.edit { stored -> PER_FORMAT_FLAGS.forEach { stored.remove(it) } }

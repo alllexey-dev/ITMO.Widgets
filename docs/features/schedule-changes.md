@@ -121,7 +121,7 @@ Channel `schedule_changes`; the rest is in
 - A card whose occurrence (`pairId` and date) belongs to any change of the
   30-day history gets a mark, read or not; occurrences include the old slot of
   a cancel or move, so a stale cache is marked too. Own and friend's schedule
-  alike (`ScheduleDisplayDay.changedPairIds`); never pending sport rows.
+  alike (`ScheduleDaysImpl`); never sport queues.
 - Сегодня's timeline marks the lesson itself ([Сегодня](home.md#сегодня)):
   `изменена` with the old room struck through and `Изменено вчера в 20:14`, a
   cancelled lesson struck through on its old day with `отменена`.

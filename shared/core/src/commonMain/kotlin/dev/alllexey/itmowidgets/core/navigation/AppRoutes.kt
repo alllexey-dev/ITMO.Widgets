@@ -128,7 +128,17 @@ object AppRoutes {
     @Serializable
     data class FriendSelector(val selectedIsu: Int = FriendSelectionContract.NO_USER_ISU) : AppRoute {
         override val kind get() = RouteKind.SHEET
-        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
+        override val sheetPolicy get() = SheetPolicy()
+    }
+
+    /**
+     * The schedule's month sheet behind `Сентябрь ▾`: the month of [date] (ISO, `2026-09-17`) with a dot per lesson and
+     * `Открыть`; [userIsu] is whose lessons, [FriendSelectionContract.NO_USER_ISU] for the own schedule.
+     */
+    @Serializable
+    data class ScheduleMonth(val date: String, val userIsu: Int = FriendSelectionContract.NO_USER_ISU) : AppRoute {
+        override val kind get() = RouteKind.SHEET
+        override val sheetPolicy get() = SheetPolicy()
     }
 
     @Serializable
@@ -188,17 +198,18 @@ object AppRoutes {
         override val sheetPolicy get() = SheetPolicy()
     }
 
+    /** The lesson sheet (`Лист пары`) of one lesson occurrence, from any lesson list. */
     @Serializable
     data class LessonDetails(val args: LessonDetailsArgs) : AppRoute {
         override val kind get() = RouteKind.SHEET
-        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
+        override val sheetPolicy get() = SheetPolicy()
     }
 
-    /** The schedule's own sheet for a queue the sport data does not know yet; exclusive with the sport tab's sheet. */
+    /** The lesson sheet of an own sport queue; exclusive with the sport tab's sheet. */
     @Serializable
     data class PendingSportDetails(val args: PendingSportDetailsArgs) : AppRoute {
         override val kind get() = RouteKind.SHEET
-        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
+        override val sheetPolicy get() = SheetPolicy()
         override val exclusiveGroup get() = SPORT_DETAILS_GROUP
     }
 
@@ -245,6 +256,7 @@ object AppRoutes {
         subclass(QrPass::class)
         subclass(MyItmoWeb::class)
         subclass(FriendSelector::class)
+        subclass(ScheduleMonth::class)
         subclass(SheetScores::class)
         subclass(WebLogin::class)
         subclass(Connections::class)

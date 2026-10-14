@@ -1,42 +1,6 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
-    "schedule_auto_sign_label" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Автозапись"
-          }
-        }
-      }
-    },
-    "schedule_auto_sign_prediction" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Автозапись · прогноз"
-          }
-        }
-      }
-    },
-    "schedule_auto_sign_waiting" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Автозапись · ожидание места"
-          }
-        }
-      }
-    },
     "schedule_bell_change_added" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
@@ -109,38 +73,14 @@
         }
       }
     },
-    "schedule_break_range" : {
+    "schedule_day_free" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Перерыв с %1$@ по %2$@"
-          }
-        }
-      }
-    },
-    "schedule_change_friend" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сменить"
-          }
-        }
-      }
-    },
-    "schedule_day_empty" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "В этот день нет пар"
+            "value" : "%1$@ — пар нет"
           }
         }
       }
@@ -152,7 +92,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "На этот период расписание пустое."
+            "value" : "На эти недели расписание пустое"
           }
         }
       }
@@ -176,163 +116,211 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Чьё расписание"
+          }
+        }
+      }
+    },
+    "schedule_month_action" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейти к дате"
+          }
+        }
+      }
+    },
+    "schedule_month_next" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий месяц"
+          }
+        }
+      }
+    },
+    "schedule_month_open" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть %1$@"
+          }
+        }
+      }
+    },
+    "schedule_month_previous" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий месяц"
+          }
+        }
+      }
+    },
+    "schedule_month_title" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переход к дате"
+          }
+        }
+      }
+    },
+    "schedule_picker_done" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "пары закончились"
+          }
+        }
+      }
+    },
+    "schedule_picker_empty" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзей пока нет"
+          }
+        }
+      }
+    },
+    "schedule_picker_first" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "первая пара в %1$@"
+          }
+        }
+      }
+    },
+    "schedule_picker_gap" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "окно до %1$@"
+          }
+        }
+      }
+    },
+    "schedule_picker_gate_fix" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить"
+          }
+        }
+      }
+    },
+    "schedule_picker_gate_reason" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужно подключение к ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "schedule_picker_gate_title" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "Расписание друзей"
           }
         }
       }
     },
-    "schedule_lesson_changed" : {
+    "schedule_picker_mine" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Изменена"
+            "value" : "Моё"
           }
         }
       }
     },
-    "schedule_lesson_details_changes" : {
+    "schedule_picker_no_lessons" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Изменения"
+            "value" : "сегодня без пар"
           }
         }
       }
     },
-    "schedule_lesson_details_link" : {
+    "schedule_picker_note" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Видеозвонок"
+            "value" : "Друзья и заявки — в Профиле"
           }
         }
       }
     },
-    "schedule_lesson_details_link_password" : {
+    "schedule_picker_on_lesson" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Пароль: %1$@"
+            "value" : "на паре до %1$@"
           }
         }
       }
     },
-    "schedule_lesson_details_title" : {
+    "schedule_picker_title" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Пара"
-          }
-        }
-      }
-    },
-    "schedule_lesson_friends_count" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Друзья на паре · %1$lld"
-          }
-        }
-      }
-    },
-    "schedule_lesson_friends_none" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Никого из друзей на этой паре"
-          }
-        }
-      }
-    },
-    "schedule_lesson_friends_title" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Друзья на паре"
-          }
-        }
-      }
-    },
-    "schedule_lesson_link_indicator" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Есть ссылка на занятие"
-          }
-        }
-      }
-    },
-    "schedule_lesson_note_title" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Примечание"
-          }
-        }
-      }
-    },
-    "schedule_map_unavailable" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нет приложения для карт"
-          }
-        }
-      }
-    },
-    "schedule_open_link" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Открыть видеозвонок"
-          }
-        }
-      }
-    },
-    "schedule_open_sport" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Открыть в спорте"
+            "value" : "Чьё расписание"
           }
         }
       }
@@ -349,86 +337,266 @@
         }
       }
     },
-    "schedule_scroll_to_top" : {
+    "schedule_sheet_booked" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Прокрутить к началу"
+            "value" : "Записаны"
           }
         }
       }
     },
-    "schedule_selected_friend_label" : {
+    "schedule_sheet_booked_text" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Расписание друга"
+            "value" : "Запись и отмена — в Спорте"
           }
         }
       }
     },
-    "schedule_timeline_completed" : {
+    "schedule_sheet_changes" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Пара завершилась"
+            "value" : "Изменения"
           }
         }
       }
     },
-    "schedule_timeline_current" : {
+    "schedule_sheet_friends" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Пара идёт сейчас"
+            "value" : "Друзья %1$lld"
           }
         }
       }
     },
-    "schedule_timeline_next" : {
+    "schedule_sheet_friends_title" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Следующая пара"
+            "value" : "Друзья на паре"
           }
         }
       }
     },
-    "schedule_timeline_upcoming" : {
+    "schedule_sheet_links" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Предстоящая пара"
+            "value" : "Ссылки %1$lld"
           }
         }
       }
     },
-    "user_schedule_title" : {
+    "schedule_sheet_note" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Расписание: %1$@"
+            "value" : "Примечание"
+          }
+        }
+      }
+    },
+    "schedule_sheet_now" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "идёт ещё %1$@"
+          }
+        }
+      }
+    },
+    "schedule_sheet_online" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Онлайн"
+          }
+        }
+      }
+    },
+    "schedule_sheet_password" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль: %1$@"
+          }
+        }
+      }
+    },
+    "schedule_sheet_queue" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очередь"
+          }
+        }
+      }
+    },
+    "schedule_sheet_queue_prediction" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запишем, когда занятие откроют"
+          }
+        }
+      }
+    },
+    "schedule_sheet_queue_waiting" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запишем сами, когда освободится место"
+          }
+        }
+      }
+    },
+    "schedule_sheet_soon" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "через %1$@"
+          }
+        }
+      }
+    },
+    "schedule_sheet_subject" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предмет"
+          }
+        }
+      }
+    },
+    "schedule_sheet_teacher" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Преподаватель"
+          }
+        }
+      }
+    },
+    "schedule_sheet_video" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео"
+          }
+        }
+      }
+    },
+    "schedule_today" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сегодня"
+          }
+        }
+      }
+    },
+    "schedule_today_pill" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "сегодня"
+          }
+        }
+      }
+    },
+    "schedule_week_even" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld-я неделя, чётная"
+          }
+        }
+      }
+    },
+    "schedule_week_odd" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld-я неделя, нечётная"
+          }
+        }
+      }
+    },
+    "schedule_weekend" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выходные, %1$@"
           }
         }
       }
