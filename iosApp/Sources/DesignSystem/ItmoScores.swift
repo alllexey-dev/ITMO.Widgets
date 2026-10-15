@@ -152,7 +152,7 @@ struct ItmoGradeScale: View {
     }
 }
 
-/// The votes of a link: ▲ score ▼ in a capsule, the viewer's own vote in the tint. Without `enabled` only the score.
+/// The votes of a link: thumbs around the score in a capsule, the viewer's own vote in the tint. Without `enabled` only the score.
 struct ItmoVotePill: View {
     let score: Int
     let myVote: Int
@@ -164,19 +164,19 @@ struct ItmoVotePill: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            if enabled { arrow(.arrowDropUp, label: upLabel, chosen: myVote > 0, action: onUp) }
+            if enabled { vote(myVote > 0 ? .thumbUpFilled : .thumbUp, label: upLabel, chosen: myVote > 0, action: onUp) }
             Text(verbatim: "\(score)")
                 .font(.itmo(.labelLarge, emphasized: true))
                 .monospacedDigit()
                 .foregroundStyle(myVote != 0 ? ItmoColor.primary : Color.primary)
                 .padding(.horizontal, enabled ? 0 : ItmoSpacing.compact)
-            if enabled { arrow(.arrowDropDown, label: downLabel, chosen: myVote < 0, action: onDown) }
+            if enabled { vote(myVote < 0 ? .thumbDownFilled : .thumbDown, label: downLabel, chosen: myVote < 0, action: onDown) }
         }
         .padding(.vertical, 2)
         .background(Color(.tertiarySystemFill), in: .capsule)
     }
 
-    private func arrow(_ symbol: AppSymbol, label: String, chosen: Bool, action: @escaping () -> Void) -> some View {
+    private func vote(_ symbol: AppSymbol, label: String, chosen: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             symbol.image
                 .font(.itmo(.labelSmall))
@@ -186,5 +186,6 @@ struct ItmoVotePill: View {
         }
         .buttonStyle(.borderless)
         .accessibilityLabel(Text(verbatim: label))
+        .accessibilityAddTraits(chosen ? .isSelected : [])
     }
 }

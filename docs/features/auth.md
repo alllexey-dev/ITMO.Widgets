@@ -75,6 +75,12 @@ tokens ITMO.ID issues and never sees a password. See also
 Same shared ViewModels and `SessionRepository` under SwiftUI
 ([iOS app](../ios.md#data-sharing)).
 
+- `DefaultBackendIdentitySync` in shared core publishes the current ID token through
+  `PUT /api/users/me/id-token`, after refreshing an expiring access token. Android
+  retries failures with WorkManager; iOS retries on each `AppForeground` return
+  while signed in. Initialization, sign-in and enabling custom services sync on
+  both platforms. Demo and disabled custom services send nothing.
+
 - `AuthScreen` (`iosApp/Sources/Features/Auth/`); `ItmoSignInScreen`: `WKWebView` on the default data store with the same
   `token_refresh_interceptor.js`, accepted only from the main frame of
   `https://my.itmo.ru` on `/login/callback`. As on Android, every load (a

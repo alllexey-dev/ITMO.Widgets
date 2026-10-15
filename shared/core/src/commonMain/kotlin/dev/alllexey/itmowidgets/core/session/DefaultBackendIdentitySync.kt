@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.core.session
 
-import android.content.Context
 import dev.alllexey.itmoapi.itmoid.TokenManager
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmowidgets.client.users.IdTokenRequest
@@ -17,14 +16,14 @@ import kotlinx.coroutines.withContext
  * so the id token read back from [storage] is the one of the current access token; [tokens] stays the only writer.
  */
 class DefaultBackendIdentitySync(
-    private val context: Context,
     private val gate: BackendGate,
     private val tokens: TokenManager,
     private val storage: TokenStorage,
     private val users: UsersApi,
     private val diagnostics: AppDiagnostics,
     private val demo: DemoMode,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
+    private val retry: () -> Unit = {},
 ) : BackendIdentitySync {
 
     override suspend fun sync(scheduleRetry: Boolean): Boolean {
@@ -45,7 +44,7 @@ class DefaultBackendIdentitySync(
         } catch (error: Exception) {
             // Best effort: a stale profile must never block the application.
             diagnostics.warn(TAG, "Failed to publish identity to backend", error)
-            if (scheduleRetry) IdentitySyncWork.schedule(context)
+            if (scheduleRetry) retry()
             false
         }
     }

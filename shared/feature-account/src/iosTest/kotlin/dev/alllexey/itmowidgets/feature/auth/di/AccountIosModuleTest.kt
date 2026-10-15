@@ -1,7 +1,10 @@
 package dev.alllexey.itmowidgets.feature.auth.di
 
+import dev.alllexey.itmoapi.itmoid.TokenSet
+import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
@@ -9,6 +12,9 @@ import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.notification.PushDeviceRegistration
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
+import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
+import dev.alllexey.itmowidgets.core.session.DefaultBackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
@@ -18,12 +24,16 @@ import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
+import dev.alllexey.itmowidgets.testkit.bodyText
+import dev.alllexey.itmowidgets.testkit.respondJson
 import dev.alllexey.itmowidgets.feature.update.di.AppUpdateIosParameters
 import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
@@ -39,9 +49,13 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
 import io.ktor.http.HttpStatusCode
 import kotlin.random.Random
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -103,6 +117,7 @@ class AccountIosModuleTest {
         }
 
         assertIs<SessionRepositoryImpl>(koin.get<SessionRepository>())
+        assertIs<DefaultBackendIdentitySync>(koin.get<BackendIdentitySync>())
         // The Keychain, the App Group container and WebKit's data; features loaded later add theirs.
         assertEquals(3, koin.get<SessionDataCleaners>().current().size)
         // One push registration answers the session's token sync and device session.
@@ -111,6 +126,34 @@ class AccountIosModuleTest {
         assertSame<Any>(registration, koin.get<BackendDeviceSession>())
         assertEquals(emptyList(), requests)
         koin.close()
+    }
+
+    @Test
+    fun theIosGraphUploadsTheStoredIdentityThroughBackend() = runTest {
+        val now = Instant.parse("2026-10-15T10:00:00Z")
+        val stored = TokenSet("access", now + 1.hours, "refresh", now + 2.hours, "synthetic.id.token")
+        val engine = MockEngine { respondJson("""{"success":true,"data":"Successfully updated","error":null}""") }
+        val koin = accountGraph(module {
+            single<Clock> { object : Clock { override fun now(): Instant = now } }
+            single<TokenStorage> {
+                object : TokenStorage {
+                    override suspend fun read(): TokenSet = stored
+                    override suspend fun write(tokens: TokenSet?) = Unit
+                }
+            }
+            single<HttpClientEngine> { engine }
+            single<BackendGate> { FakeBackendGate(optedIn = true) }
+            single<DemoMode> { FakeDemoMode() }
+        })
+        try {
+            assertTrue(koin.get<BackendIdentitySync>().sync())
+            val request = engine.requestHistory.single()
+            assertEquals("/api/users/me/id-token", request.url.encodedPath)
+            assertEquals("Bearer access", request.headers["Authorization"])
+            assertEquals("""{"idToken":"synthetic.id.token"}""", request.bodyText())
+        } finally {
+            koin.close()
+        }
     }
 
     @Test
@@ -130,10 +173,10 @@ class AccountIosModuleTest {
         koin.close()
     }
 
-    private fun accountGraph(): Koin = graph(
+    private fun accountGraph(vararg overrides: Module): Koin = graph(
         iosCoreModule(FakeHost(), ORIGIN), authDataModule, accountIosModule,
         webLoginDataModule, webLoginModule, webLoginIosModule(NoPairingHost), updateModule, updateIosModule,
-        testDevice(),
+        testDevice(), *overrides,
     )
 
     /** Pairing's Swift host; resolving the graph calls none of it. */

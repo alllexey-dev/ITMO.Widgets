@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.DefaultBackendIdentitySync
+import dev.alllexey.itmowidgets.core.session.IdentitySyncWork
 import dev.alllexey.itmowidgets.core.session.IdTokenCurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
@@ -30,14 +31,14 @@ import org.koin.dsl.module
 val sessionModule = module {
     single<BackendIdentitySync> {
         DefaultBackendIdentitySync(
-            context = androidContext(),
             gate = get(),
             tokens = get<MyItmoClient>().tokens,
             storage = get(),
             users = get(),
             diagnostics = get(),
             demo = get(),
-            dispatchers = get()
+            dispatchers = get(),
+            retry = { IdentitySyncWork.schedule(androidContext()) },
         )
     }
     single {

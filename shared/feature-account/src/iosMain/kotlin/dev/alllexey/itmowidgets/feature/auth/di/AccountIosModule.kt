@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.auth.di
 
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoCurrentUserProvider
@@ -10,6 +11,8 @@ import dev.alllexey.itmowidgets.core.notification.PushForegroundRefresh
 import dev.alllexey.itmowidgets.core.notification.PushRegistrationPreferences
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
+import dev.alllexey.itmowidgets.core.session.BackendIdentityForegroundSync
+import dev.alllexey.itmowidgets.core.session.DefaultBackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.IdTokenCurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
@@ -20,8 +23,10 @@ import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.binds
 import org.koin.dsl.module
+import org.koin.dsl.onClose
 
 /**
  * The iOS ports of [authDataModule], what the platform's Koin modules give Android: the demo flag
@@ -53,7 +58,20 @@ val accountIosModule = module {
         )
     } binds arrayOf(FcmTokenSync::class, BackendDeviceSession::class)
     single { PushForegroundRefresh(get(), get(), get()) }
-    single<BackendIdentitySync> { NoBackendIdentitySync }
+    single<BackendIdentitySync> {
+        DefaultBackendIdentitySync(
+            gate = get(),
+            tokens = get<MyItmoClient>().tokens,
+            storage = get(),
+            users = get(),
+            diagnostics = get(),
+            demo = get(),
+            dispatchers = get(),
+        )
+    }
+    single(named("identity-foreground"), createdAtStart = true) {
+        BackendIdentityForegroundSync(get(), get(), get()).launchIn(get())
+    } onClose { it?.cancel() }
     single(createdAtStart = true) {
         SessionSnapshotSync(
             get(),

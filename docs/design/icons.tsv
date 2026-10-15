@@ -85,6 +85,10 @@ stat_notifications	notifications	0	android	-	Monochrome notification mask; Syste
 summary_collapse	expand_less	0	shared	chevron.up	id differs from the symbol name
 summary_expand	expand_more	0	shared	chevron.down	id differs from the symbol name; same glyph as expand_more
 table	table	0	shared	tablecells	-
+thumb_down	thumb_down	0	shared	hand.thumbsdown	Link dislike
+thumb_down_filled	thumb_down	1	shared	hand.thumbsdown.fill	Selected link dislike
+thumb_up	thumb_up	0	shared	hand.thumbsup	Link like
+thumb_up_filled	thumb_up	1	shared	hand.thumbsup.fill	Selected link like
 tile_qr	qr_code	0	android	-	Quick Settings tile; SystemUI tints it
 today	today	0	shared	sun.max	Bottom navigation tab
 today_filled	today	1	shared	sun.max.fill	Selected bottom navigation tab

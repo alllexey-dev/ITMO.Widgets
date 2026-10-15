@@ -98,7 +98,7 @@ struct LessonSheetContent: View {
                             ItmoRow(title: friend.name, subtitle: friend.groups.first?.name, chevron: true, action: {
                                 actions.profile(friend.isu)
                             }) {
-                                ItmoAvatar(initials: UserNamesKt.personInitials(name: friend.name))
+                                ItmoAvatar(initials: UserNamesKt.personInitials(name: friend.name), pictureUrl: friend.pictureUrl)
                             }
                         }
                     }
@@ -429,7 +429,7 @@ struct FriendPickerContent: View {
             title: row.title.resolved,
             subtitle: row.status?.resolved,
             action: row.selectable ? { actions.pick(row.user) } : nil,
-            leading: { ItmoAvatar(initials: row.initials, tone: row.user == nil ? .primary : .tertiary) },
+            leading: { ItmoAvatar(initials: row.initials, pictureUrl: row.avatar, tone: row.user == nil ? .primary : .tertiary) },
             accessory: {
                 if row.selected {
                     AppSymbol.checkCircle.image.foregroundStyle(ItmoColor.primary).accessibilityHidden(true)
