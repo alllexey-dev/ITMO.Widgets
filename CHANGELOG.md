@@ -15,6 +15,7 @@ new iOS app.
 - Past days in the schedule and sport week strips are dimmer; today and the selected day keep full emphasis (#424).
 - `Главный экран` settings can hide the QR pass entry on Сегодня on both platforms without hiding widgets or shortcuts (#420).
 - Sport friend rows and lesson sheets preserve avatar URLs on both platforms; iOS friend-request notifications use their photo too (#426).
+- `UserSummary` carries the optional `gender` Backend sends in `UserData` (`male`/`female` from ITMO.ID) for declension; unknown or missing values stay `null`.
 
 - Subject link votes use like/dislike thumbs on Android and iOS, filled for the selected vote (#421).
 - iOS publishes the ITMO.ID identity to Backend, including groups, with foreground retries (#422).

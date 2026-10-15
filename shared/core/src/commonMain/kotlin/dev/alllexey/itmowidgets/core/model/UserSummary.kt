@@ -5,8 +5,12 @@ data class UserSummary(
     val name: String,
     val pictureUrl: String?,
     val groups: List<UserGroup>,
-    val sharing: UserSharing
+    val sharing: UserSharing,
+    /** For declension; `null` when Backend does not know it yet. */
+    val gender: Gender? = null
 )
+
+enum class Gender { MALE, FEMALE }
 
 data class UserGroup(
     val name: String,

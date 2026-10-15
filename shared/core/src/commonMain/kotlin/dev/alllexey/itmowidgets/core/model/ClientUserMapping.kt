@@ -20,5 +20,10 @@ fun UserData.toUserSummary(): UserSummary = UserSummary(
         sport = capabilities.canViewSport,
         schedule = capabilities.canViewSchedule,
         friends = capabilities.canViewFriends
-    )
+    ),
+    gender = when (gender?.trim()?.lowercase()) {
+        "male" -> Gender.MALE
+        "female" -> Gender.FEMALE
+        else -> null
+    }
 )

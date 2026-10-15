@@ -9,7 +9,9 @@ class PendingBackendField(val schema: String, val property: String, val reason: 
     override fun toString(): String = "$schema.$property ($reason)"
 }
 
-/** Every [PendingBackendField]: none since Backend 1.9.1 shipped the `RegisterDeviceRequest` fields. */
+/** Every [PendingBackendField]. */
 object PendingBackendFields {
-    val all: List<PendingBackendField> = emptyList()
+    val all: List<PendingBackendField> = listOf(
+        PendingBackendField("UserData", "gender", "Backend 1983dd7 on dev, not pushed yet; for declension"),
+    )
 }

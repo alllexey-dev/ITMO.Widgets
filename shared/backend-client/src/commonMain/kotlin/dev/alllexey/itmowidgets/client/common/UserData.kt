@@ -13,6 +13,8 @@ data class UserData(
     val pictureUrl: String?,
     val groups: List<GroupData>,
     val capabilities: UserCapabilities,
+    /** `male` or `female` as ITMO.ID sends it, for declension; absent from older Backend builds and until the id token. */
+    val gender: String? = null,
 )
 
 /** A study group of a [UserData]. */

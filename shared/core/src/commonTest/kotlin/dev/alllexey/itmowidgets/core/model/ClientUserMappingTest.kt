@@ -46,6 +46,15 @@ class ClientUserMappingTest {
         }
     }
 
+    @Test
+    fun genderMapsFromItmoIdValuesAndUnknownStaysAbsent() {
+        val source = user(UserCapabilities(false, false, false))
+
+        assertEquals(Gender.MALE, source.copy(gender = "male").toUserSummary().gender)
+        assertEquals(Gender.FEMALE, source.copy(gender = " Female ").toUserSummary().gender)
+        for (gender in listOf(null, "", "other")) assertNull(source.copy(gender = gender).toUserSummary().gender)
+    }
+
     private fun user(capabilities: UserCapabilities) = UserData(
         isu = 123456,
         name = "  Тестовый пользователь  ",
