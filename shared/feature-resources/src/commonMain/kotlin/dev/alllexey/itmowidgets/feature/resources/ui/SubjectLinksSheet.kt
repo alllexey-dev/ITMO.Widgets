@@ -34,6 +34,7 @@ import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupIte
 import dev.alllexey.itmowidgets.designsystem.components.rows.LinkRow
 import dev.alllexey.itmowidgets.designsystem.components.rows.Vote
 import dev.alllexey.itmowidgets.designsystem.components.rows.VoteLabels
+import dev.alllexey.itmowidgets.designsystem.components.rows.VoteIcons
 import dev.alllexey.itmowidgets.designsystem.components.rows.VotePill
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
@@ -233,6 +234,7 @@ private fun LinkItem(row: LinkListRow.Item, actions: SubjectLinksActions) {
         votes = if (link.isMine) null else {
             {
                 VotePill(
+                    icons = VoteIcons.Thumbs,
                     score = link.score,
                     myVote = link.myVote.toVote(),
                     scoreDescription = stringResource(CoreRes.string.links_score, link.score),

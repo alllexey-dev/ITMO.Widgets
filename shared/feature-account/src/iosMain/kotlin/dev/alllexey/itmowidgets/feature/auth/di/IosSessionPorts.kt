@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.auth.di
 
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
-import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionSnapshot
@@ -28,13 +27,6 @@ internal object IosSessionLifecycleEffects : SessionLifecycleEffects {
     override suspend fun onSignedIn() = Unit
 
     override suspend fun onSignedOut() = Unit
-}
-
-/**
- * iOS uploads no identity to Backend; the sync reports success, as Android's sync does when nothing is due.
- */
-internal object NoBackendIdentitySync : BackendIdentitySync {
-    override suspend fun sync(scheduleRetry: Boolean): Boolean = true
 }
 
 /**

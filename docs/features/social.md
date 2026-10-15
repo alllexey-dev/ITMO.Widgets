@@ -84,9 +84,9 @@ One `SocialRepositoryImpl` serves the screens, the bell's friend requests
 ### Identity publication
 
 `BackendIdentitySync` uploads the ITMO.ID id token on cold start, after sign-in
-and when services are enabled. A failed upload is retried by `IdentitySyncWork`
-with exponential backoff, up to six attempts; every failure goes to the
-diagnostics journal. Until it lands, `UserData.name` is empty and views render
+and when services are enabled. Android retries a failed upload through `IdentitySyncWork`
+with exponential backoff, up to six attempts; iOS retries on each return to the foreground
+through `AppForeground`. Every failure goes to the diagnostics journal. Until it lands, `UserData.name` is empty and views render
 `Пользователь ИСУ N` through `userDisplayName` (`core/text/UserNames.kt`).
 
 ## Screens

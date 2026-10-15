@@ -35,6 +35,10 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_down
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_up
+import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_down
+import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_down_filled
+import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_up
+import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_up_filled
 import org.jetbrains.compose.resources.painterResource
 
 /** A vote on a rated item: a link or a teacher review. */
@@ -43,18 +47,21 @@ enum class Vote {
     Down,
 }
 
-/** What the arrows of a [VotePill] say to TalkBack and offer as its custom actions. */
+/** Links use thumbs; teacher reviews keep their existing arrows. */
+enum class VoteIcons { Arrows, Thumbs }
+
+/** What the buttons of a [VotePill] say to TalkBack and offer as its custom actions. */
 class VoteLabels(
-    /** The up arrow, such as `Полезная ссылка`. */
+    /** The positive vote, such as `Полезная ссылка`. */
     val up: String,
-    /** The down arrow, such as `Бесполезная ссылка`. */
+    /** The negative vote, such as `Бесполезная ссылка`. */
     val down: String,
 )
 
 /**
- * The compact vote pill (up arrow, score, down arrow) of others' links and reviews: a 32 dp pill inside the 48 dp row
- * of the arrow targets. The score turns `primary` once the viewer voted ([myVote]) and `error` below zero; the arrow of
- * the own vote is `primary`.
+ * The compact vote pill of others' links and reviews: a 32 dp pill inside the 48 dp row of button targets.
+ * [icons] selects arrows for reviews or thumbs for links, filled for the selected vote. The score turns `primary`
+ * once the viewer voted ([myVote]) and `error` below zero; the own vote is `primary`.
  *
  * Without [onVote] the pill shows the score alone. Tapping the arrow of the current vote takes it back upstream, so
  * [onVote] only reports which arrow was tapped. A disabled pill (a vote in flight) keeps its look and ignores taps.
@@ -73,6 +80,7 @@ fun VotePill(
     labels: VoteLabels,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    icons: VoteIcons = VoteIcons.Arrows,
 ) {
     val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
     val container = if (ios) ItmoTheme.iosColors.tertiarySystemFill else ItmoTheme.colorScheme.surfaceContainerHighest
@@ -93,7 +101,7 @@ fun VotePill(
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (onVote != null) VoteArrow(Vote.Up, myVote, labels.up, enabled, onVote)
+        if (onVote != null) VoteArrow(Vote.Up, myVote, labels.up, enabled, icons, onVote)
         Score(
             score,
             myVote,
@@ -102,7 +110,7 @@ fun VotePill(
             margin = if (onVote != null) 0.dp else insetHorizontal + ItmoTheme.spacing.content,
             actions = onVote.takeIf { enabled },
         )
-        if (onVote != null) VoteArrow(Vote.Down, myVote, labels.down, enabled, onVote)
+        if (onVote != null) VoteArrow(Vote.Down, myVote, labels.down, enabled, icons, onVote)
     }
 }
 
@@ -143,9 +151,16 @@ private fun Score(
 }
 
 @Composable
-private fun VoteArrow(vote: Vote, myVote: Vote?, label: String, enabled: Boolean, onVote: (Vote) -> Unit) {
+private fun VoteArrow(vote: Vote, myVote: Vote?, label: String, enabled: Boolean, icons: VoteIcons, onVote: (Vote) -> Unit) {
     val selected = myVote == vote
-    val icon = painterResource(if (vote == Vote.Up) Res.drawable.ic_arrow_drop_up else Res.drawable.ic_arrow_drop_down)
+    val icon = painterResource(when {
+        icons == VoteIcons.Arrows && vote == Vote.Up -> Res.drawable.ic_arrow_drop_up
+        icons == VoteIcons.Arrows -> Res.drawable.ic_arrow_drop_down
+        vote == Vote.Up && selected -> Res.drawable.ic_thumb_up_filled
+        vote == Vote.Up -> Res.drawable.ic_thumb_up
+        selected -> Res.drawable.ic_thumb_down_filled
+        else -> Res.drawable.ic_thumb_down
+    })
     val target = if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
         val interaction = remember { MutableInteractionSource() }
         val pressed by interaction.collectIsPressedAsState()

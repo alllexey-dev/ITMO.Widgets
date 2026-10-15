@@ -44,6 +44,7 @@ import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.designsystem.components.rows.Vote
 import dev.alllexey.itmowidgets.designsystem.components.rows.VoteLabels
+import dev.alllexey.itmowidgets.designsystem.components.rows.VoteIcons
 import dev.alllexey.itmowidgets.designsystem.components.rows.VotePill
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetHandle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -292,6 +293,7 @@ private fun Heading(model: LinkActionsModel, actions: LinkActionsActions) {
         }
         if (model.showsScore) {
             VotePill(
+                icons = VoteIcons.Thumbs,
                 score = link.score,
                 myVote = link.myVote.toVote(),
                 scoreDescription = stringResource(CoreRes.string.links_score, link.score),

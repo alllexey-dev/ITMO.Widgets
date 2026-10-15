@@ -29,8 +29,10 @@ import dev.alllexey.itmowidgets.designsystem.components.charts.ScoreRingSector
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
-import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_down
-import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_up
+import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_down
+import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_down_filled
+import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_up
+import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_up_filled
 import org.jetbrains.compose.resources.painterResource
 
 /** The colour of text in [this] tone on a plain surface: a reason, a broken minimum, a bar. */
@@ -105,8 +107,8 @@ fun SportRing(text: String, visits: Float, bonus: Float, modifier: Modifier = Mo
 }
 
 /**
- * The votes of a link: ▲ [score] ▼ in a pill, the viewer's own vote ([myVote] 1 or -1) in `primary`. Without [enabled]
- * only the score shows. [upLabel] and [downLabel] are what TalkBack reads for the arrows.
+ * The votes of a link: thumbs around [score] in a pill, the viewer's own vote ([myVote] 1 or -1) in `primary`. Without [enabled]
+ * only the score shows. [upLabel] and [downLabel] are what TalkBack reads for the buttons.
  */
 @Composable
 fun VotePill(
@@ -123,19 +125,25 @@ fun VotePill(
         modifier.clip(ItmoTheme.shapes.full).background(Tone.Neutral.container()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        VoteArrow(painterResource(Res.drawable.ic_arrow_drop_up), upLabel, myVote > 0, enabled, onUp)
+        VoteButton(
+            painterResource(if (myVote > 0) Res.drawable.ic_thumb_up_filled else Res.drawable.ic_thumb_up),
+            upLabel, myVote > 0, enabled, onUp,
+        )
         Text(
             score.toString(),
             style = ItmoTheme.typography.labelLarge.tabular(),
             color = if (myVote != 0) ItmoTheme.colorScheme.primary else ItmoTheme.colorScheme.onSurface,
             modifier = if (enabled) Modifier else Modifier.padding(horizontal = ItmoTheme.spacing.content, vertical = ItmoTheme.spacing.related),
         )
-        VoteArrow(painterResource(Res.drawable.ic_arrow_drop_down), downLabel, myVote < 0, enabled, onDown)
+        VoteButton(
+            painterResource(if (myVote < 0) Res.drawable.ic_thumb_down_filled else Res.drawable.ic_thumb_down),
+            downLabel, myVote < 0, enabled, onDown,
+        )
     }
 }
 
 @Composable
-private fun VoteArrow(icon: androidx.compose.ui.graphics.painter.Painter, label: String, chosen: Boolean, enabled: Boolean, onClick: () -> Unit) {
+private fun VoteButton(icon: androidx.compose.ui.graphics.painter.Painter, label: String, chosen: Boolean, enabled: Boolean, onClick: () -> Unit) {
     if (!enabled) return
     IconButton(onClick = onClick, modifier = Modifier.size(VoteTarget)) {
         Icon(

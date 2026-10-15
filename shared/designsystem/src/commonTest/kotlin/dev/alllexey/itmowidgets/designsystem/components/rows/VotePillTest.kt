@@ -50,6 +50,21 @@ class VotePillTest {
     }
 
     @Test
+    fun thumbsKeepTheSelectedVoteLabelsAndTouchTargets() = runComposeUiTest {
+        val votes = mutableListOf<Vote>()
+        setContent {
+            ItmoTheme {
+                VotePill(3, Vote.Down, SCORE, { votes += it }, Labels, icons = VoteIcons.Thumbs)
+            }
+        }
+
+        onNodeWithContentDescription(UP).assertIsNotSelected().performClick()
+        onNodeWithContentDescription(DOWN).assertIsSelected().performClick()
+        assertEquals(listOf(Vote.Up, Vote.Down), votes)
+        assertTouchTargets()
+    }
+
+    @Test
     fun theScoreOffersBothVotesAsCustomActions() = runComposeUiTest {
         val votes = mutableListOf<Vote>()
         setContent { ItmoTheme { VotePill(3, myVote = null, SCORE, onVote = { votes += it }, Labels) } }

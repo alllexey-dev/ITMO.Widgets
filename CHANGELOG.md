@@ -10,6 +10,12 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Fixes (2026-10-15)
+
+- Subject link votes use like/dislike thumbs on Android and iOS, filled for the selected vote (#421).
+- iOS publishes the ITMO.ID identity to Backend, including groups, with foreground retries (#422).
+- iOS loads avatar photos in shared Compose screens and native friend rows, with initials while loading or on failure (#425).
+
 ### iOS app
 
 - Sign-in through ITMO.ID or a refresh token, the demo session (five taps on
