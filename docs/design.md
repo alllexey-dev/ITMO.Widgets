@@ -759,10 +759,10 @@ in [Shared components](#shared-components).
 - Schedule day: the feed of `ui/feed/ScheduleFeedScreen.kt` in `:shared:feature-schedule`, a sticky day header over
   the kit's `LessonTimeline`.
 - Sport: `SportScreen` in `feature/sport/ui/` of `:shared:feature-sport` on the M3 Expressive kit: `Моё` with the
-  score ring card (the flow's hero), bookings as `LessonCard`s under day labels and the `Мои секции` row; `Запись`
+  score ring card (the flow's hero), bookings as `LessonCard`s under day labels with `Сделать секцией` under the booked ones and the `Секции` groups of `SwitchListRow`s; `Запись`
   with `SearchField`, `FilterChips`, the paging `WeekStrip` and dense `ListRow`s with `OccupancyBar` and one action;
   `SportLessonSheetContent`, `SportFiltersSheetContent` and `SportJoinSheetContent` on `SheetScaffold`;
-  `SportSectionsScreen` and `SportPointsScreen` on `ItmoDetailScreen`.
+  `SportPointsScreen` on `ItmoDetailScreen`.
 - Settings and profile groups: `SettingsScreen` in `:shared:feature-settings`
   (`feature/settings/ui/SettingsScreen.kt`) and `MeScreen` in
   `:shared:feature-account`, on the kit's `SettingsGroup` and `SettingsRow`.

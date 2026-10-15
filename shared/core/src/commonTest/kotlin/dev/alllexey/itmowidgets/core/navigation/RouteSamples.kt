@@ -31,7 +31,6 @@ object RouteSamples {
         AppRoutes.UserProfile(100001),
         AppRoutes.UserSchedule(100001, "Тестовый Пользователь"),
         AppRoutes.UserSport(100001),
-        AppRoutes.SportSections,
         AppRoutes.SportPoints,
         AppRoutes.Bell,
         AppRoutes.QrPass,

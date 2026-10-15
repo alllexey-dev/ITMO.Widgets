@@ -14,20 +14,20 @@ import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingReposi
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScheduleRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScoreRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.data.repository.SportSectionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportSignPreferencesRepositoryImpl
-import dev.alllexey.itmowidgets.feature.sport.data.repository.UnavailableSportRecurringQueueRepository
 import dev.alllexey.itmowidgets.feature.sport.data.repository.UserSportRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportRecurringQueueRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSectionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsViewModel
-import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportAutoSignFlow
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSharedLessonResolver
@@ -64,8 +64,8 @@ val sportModule = module {
     singleOf(::SportActionRepositoryImpl) { bind<SportActionRepository>() }
     singleOf(::SportSignPreferencesRepositoryImpl) { bind<SportSignPreferencesRepository>() }
     singleOf(::UserSportRepositoryImpl) { bind<UserSportRepository>() }
-    // `Очередь через неделю` waits for Backend to keep the rules (docs/features/sport.md).
-    single<SportRecurringQueueRepository> { UnavailableSportRecurringQueueRepository }
+    singleOf(::SportSectionRepositoryImpl) { bind<SportSectionRepository>() }
+    single<SessionDataCleaner>(named("sport-sections")) { get<SportSectionRepositoryImpl>() }
     singleOf(::PendingSportBookingsRepositoryImpl) { bind<PendingSportBookingsRepository>() }
     // The log has an internal test constructor beside the public one, so its reference would be ambiguous.
     single { SportResultLog(get<AppDirectories>(), get(), get()) }
@@ -79,9 +79,9 @@ val sportModule = module {
     factoryOf(::SportSharedLessonResolver)
     // One holder for the tab, the feed and the schedule; it outlives every screen.
     singleOf(::SportBookingsHolder)
+    singleOf(::SportSectionsHolder)
     viewModelOf(::SportMyViewModel)
     viewModelOf(::SportSignViewModel)
-    viewModelOf(::SportSectionsViewModel)
     viewModelOf(::SportPointsViewModel)
     viewModelOf(::UserSportViewModel)
 }

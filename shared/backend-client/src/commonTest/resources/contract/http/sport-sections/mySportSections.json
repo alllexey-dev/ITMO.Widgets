@@ -1,0 +1,100 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 31,
+      "lesson": {
+        "id": 9001,
+        "sectionId": 41,
+        "sectionName": "Плавание",
+        "sectionLevel": 1,
+        "level": 1,
+        "typeId": 2,
+        "buildingId": 13,
+        "roomName": "Бассейн",
+        "start": "2026-10-07T10:00:00+03:00",
+        "end": "2026-10-07T11:30:00+03:00",
+        "timeSlotId": 3,
+        "teacherIsu": 200001,
+        "teacherFio": "Тренер Тестовый"
+      },
+      "occurrences": [
+        {
+          "start": "2026-10-21T10:00:00+03:00",
+          "end": "2026-10-21T11:30:00+03:00",
+          "state": "QUEUED",
+          "entryId": 21,
+          "position": 2,
+          "total": 5
+        },
+        {
+          "start": "2026-11-04T10:00:00+03:00",
+          "end": "2026-11-04T11:30:00+03:00",
+          "state": "SKIPPED",
+          "entryId": null,
+          "position": null,
+          "total": null
+        },
+        {
+          "start": "2026-11-18T10:00:00+03:00",
+          "end": "2026-11-18T11:30:00+03:00",
+          "state": null,
+          "entryId": null,
+          "position": null,
+          "total": null
+        }
+      ],
+      "place": 3,
+      "subscribers": 7,
+      "createdAt": "2026-10-01T08:00:00Z"
+    },
+    {
+      "id": 32,
+      "lesson": {
+        "id": 9002,
+        "sectionId": 41,
+        "sectionName": "Плавание",
+        "sectionLevel": 1,
+        "level": 1,
+        "typeId": 2,
+        "buildingId": null,
+        "roomName": "Онлайн",
+        "start": "2026-10-08T12:00:00+03:00",
+        "end": "2026-10-08T13:30:00+03:00",
+        "timeSlotId": 3,
+        "teacherIsu": 200001,
+        "teacherFio": "Тренер Тестовый"
+      },
+      "occurrences": [
+        {
+          "start": "2026-10-22T12:00:00+03:00",
+          "end": "2026-10-22T13:30:00+03:00",
+          "state": "LIMIT",
+          "entryId": null,
+          "position": null,
+          "total": null
+        },
+        {
+          "start": "2026-11-05T12:00:00+03:00",
+          "end": "2026-11-05T13:30:00+03:00",
+          "state": "SKIPPED",
+          "entryId": null,
+          "position": null,
+          "total": null
+        },
+        {
+          "start": "2026-11-19T12:00:00+03:00",
+          "end": "2026-11-19T13:30:00+03:00",
+          "state": null,
+          "entryId": null,
+          "position": null,
+          "total": null
+        }
+      ],
+      "place": 1,
+      "subscribers": 1,
+      "createdAt": "2026-10-01T08:00:00Z"
+    }
+  ],
+  "error": null
+}

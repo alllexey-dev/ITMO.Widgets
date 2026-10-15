@@ -32,7 +32,7 @@ private fun SignPreview(state: SportSignUiState) = ItmoPreview {
 }
 
 internal class SportScreenMyActivePreview {
-    @Preview(name = "my-active")
+    @Preview(name = "my-active", heightDp = 1900)
     @Composable
     fun SportScreen() = MyPreview(SportSamples.my("active"))
 }
@@ -140,5 +140,15 @@ internal class SportLessonSheetContentClashPreview {
 internal class SportLessonSheetContentBookedPreview {
     @Preview(name = "booked", heightDp = 1200)
     @Composable
-    fun SportLessonSheetContent() = ItmoPreview { SportLessonSheetContent(SportSamples.lesson("booked"), SportLessonSheetActions()) }
+    fun SportLessonSheetContent() = ItmoPreview {
+        SportLessonSheetContent(SportSamples.lesson("booked"), SportLessonSheetActions(), section = SportSamples.sectionToggle("on"))
+    }
+}
+
+internal class SportLessonSheetContentSectionFullPreview {
+    @Preview(name = "section-full", heightDp = 1200)
+    @Composable
+    fun SportLessonSheetContent() = ItmoPreview {
+        SportLessonSheetContent(SportSamples.lesson("booked"), SportLessonSheetActions(), section = SportSamples.sectionToggle("full"))
+    }
 }

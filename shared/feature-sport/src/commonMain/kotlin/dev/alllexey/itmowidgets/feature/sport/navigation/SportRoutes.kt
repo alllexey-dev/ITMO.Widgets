@@ -60,9 +60,6 @@ enum class SportDetailsOpener {
     /** The sport tab's `Запись`. */
     SIGN,
 
-    /** `Мои секции`. */
-    SECTIONS,
-
     /** The shell, for a sport lesson or a pending sport row of the feed or the schedule: it asks before cancelling. */
     SHELL,
     ;

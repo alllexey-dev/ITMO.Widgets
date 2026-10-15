@@ -36,7 +36,7 @@ import dev.alllexey.itmowidgets.feature.sport.ui.SportShares
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsViewModel
-import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsViewModel
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import io.ktor.client.engine.HttpClientEngine
@@ -100,7 +100,7 @@ class SportIosModuleTest {
 
         koin.get<SportMyViewModel>()
         koin.get<SportSignViewModel>()
-        koin.get<SportSectionsViewModel>()
+        koin.get<SportSectionsHolder>()
         koin.get<SportPointsViewModel>()
         koin.get<UserSportViewModel> { parametersOf(arguments()) }
         assertEquals(emptyList(), requests)

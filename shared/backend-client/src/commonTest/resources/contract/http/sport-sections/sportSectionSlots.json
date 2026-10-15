@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "data": [
+    {
+      "lessonId": 9001,
+      "subscribers": 7,
+      "cap": 12,
+      "full": false,
+      "subscriptionId": 31,
+      "place": 3
+    },
+    {
+      "lessonId": 9002,
+      "subscribers": 12,
+      "cap": 12,
+      "full": true,
+      "subscriptionId": null,
+      "place": null
+    }
+  ],
+  "error": null
+}

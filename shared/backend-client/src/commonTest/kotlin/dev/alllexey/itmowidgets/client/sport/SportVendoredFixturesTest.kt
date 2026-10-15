@@ -4,11 +4,15 @@ import dev.alllexey.itmowidgets.client.contract.RequestClaim
 import dev.alllexey.itmowidgets.client.contract.ResponseClaim
 import dev.alllexey.itmowidgets.client.contract.assertAreaClaims
 import dev.alllexey.itmowidgets.client.sport.model.FriendsSportBookingsResponse
+import dev.alllexey.itmowidgets.client.sport.model.MySportSection
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportQueue
 import dev.alllexey.itmowidgets.client.sport.model.SportQueueEntry
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionSlot
 import dev.alllexey.itmowidgets.client.sport.model.UserSportBookingsResponse
 import dev.alllexey.itmowidgets.client.support.runSuspend
 import kotlinx.serialization.builtins.ListSerializer
@@ -18,7 +22,7 @@ import kotlin.test.Test
 /**
  * Backend's vendored sport fixtures (`claims/sport.txt`): every answer decodes through [SportApi] and re-encodes to
  * the fixture's `data` through the base serializers, `"type"` included; the `Unit` answers only have to succeed,
- * and the three request bodies round-trip. Arguments do not matter, the fixture is the answer.
+ * and the request bodies round-trip. Arguments do not matter, the fixture is the answer.
  */
 class SportVendoredFixturesTest {
 
@@ -69,12 +73,27 @@ class SportVendoredFixturesTest {
         ResponseClaim("http/sport-auto-sign/markSportAutoSignEntrySatisfiedByLesson.json", null) {
             sport.markSportAutoSignEntrySatisfiedByLesson(SportRouteCases.LESSON_ID)
         },
+        ResponseClaim("http/sport-sections/mySportSections.json", ListSerializer(MySportSection.serializer())) {
+            sport.mySportSections()
+        },
+        ResponseClaim("http/sport-sections/sportSectionSlots.json", ListSerializer(SportSectionSlot.serializer())) {
+            sport.sportSectionSlots(SportRouteCases.lessonIds)
+        },
+        ResponseClaim("http/sport-sections/createSportSection.json", MySportSection.serializer()) {
+            sport.createSportSection(SportRouteCases.sectionRequest)
+        },
+        ResponseClaim("http/sport-sections/updateSportSectionOccurrence.json", MySportSection.serializer()) {
+            sport.updateSportSectionOccurrence(SportRouteCases.SECTION_ID, SportRouteCases.occurrenceRequest)
+        },
+        ResponseClaim("http/sport-sections/stopSportSection.json", null) { sport.stopSportSection(SportRouteCases.SECTION_ID) },
     )
 
     private val requests = listOf(
         RequestClaim("requests/SportLessonIds.json", ListSerializer(Long.serializer())),
         RequestClaim("requests/SportFreeSignRequest.json", SportFreeSignRequest.serializer()),
         RequestClaim("requests/SportAutoSignRequest.json", SportAutoSignRequest.serializer()),
+        RequestClaim("requests/SportSectionRequest.json", SportSectionRequest.serializer()),
+        RequestClaim("requests/SportSectionOccurrenceRequest.json", SportSectionOccurrenceRequest.serializer()),
     )
 
     @Test

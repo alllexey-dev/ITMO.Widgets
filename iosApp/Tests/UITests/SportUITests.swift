@@ -62,7 +62,7 @@ final class SportUITests: XCTestCase {
         attachScreenshot(named: "filters")
     }
 
-    func testSectionsAndPointsArePushedOnTheSportStack() {
+    func testPointsArePushedAndTheDemoSectionIsInMine() {
         let app = XCUIApplication.itmo()
         app.launch()
         openSport(app)
@@ -73,10 +73,9 @@ final class SportUITests: XCTestCase {
         attachScreenshot(named: "points")
         app.navigationBars.buttons.firstMatch.tap()
 
-        let sections = element(app, "sport.sections")
-        for _ in 0..<4 where !sections.isHittable { element(app, "sport.list").swipeUp() }
-        sections.buttons.firstMatch.tap()
-        XCTAssertTrue(element(app, "sport.sections.add").waitForExistence(timeout: stepTimeout))
+        let section = element(app, "sport.section.1")
+        for _ in 0..<6 where !section.isHittable { element(app, "sport.list").swipeUp() }
+        XCTAssertTrue(section.isHittable, "Anna's volleyball is a section in the demo")
         attachScreenshot(named: "sections")
     }
 
@@ -114,7 +113,7 @@ final class SportUITests: XCTestCase {
         XCTAssertTrue(list.waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "my-ax1")
 
-        // The page scrolls: `Мои секции` at its end comes clear of the demo banner and the tab bar.
+        // The page scrolls: `Секции` near its end come clear of the demo banner and the tab bar.
         let sections = element(app, "sport.sections")
         for _ in 0..<12 where !sections.isHittable { list.swipeUp() }
         attachScreenshot(named: "my-ax1-end")

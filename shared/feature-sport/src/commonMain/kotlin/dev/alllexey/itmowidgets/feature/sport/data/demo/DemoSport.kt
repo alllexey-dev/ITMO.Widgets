@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
+import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttendance
@@ -25,6 +26,9 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDate
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDateState
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportBookings
@@ -101,6 +105,42 @@ object DemoSport {
             DemoPeople.DMITRY.isu -> UserSportBookings(emptyList(), emptyList())
             else -> null
         }
+    }
+
+    /** Anna made her volleyball a section: its next date is queued, she is third of seven in the slot. */
+    fun sections(time: AcademicTimeProvider): List<MySportSection> {
+        val lesson = annaSectionLesson(time)
+        val dates = (1..SECTION_DATES).map { period ->
+            val shift = (SECTION_PERIOD_DAYS * period).days
+            SportSectionDate(
+                start = lesson.start + shift,
+                end = lesson.end + shift,
+                state = SportSectionDateState.QUEUED.takeIf { period == 1 },
+                entryId = 2L.takeIf { period == 1 },
+                position = 2.takeIf { period == 1 },
+                total = 5.takeIf { period == 1 },
+            )
+        }
+        return listOf(MySportSection(id = 1, lesson = lesson, dates = dates, place = 3, subscribers = 7))
+    }
+
+    /** Every booked volleyball lesson is in Anna's section; other lessons have a slot nobody chose. */
+    fun sectionSlots(lessonIds: List<Long>, time: AcademicTimeProvider): List<SportSectionSlot> {
+        val volleyball = bookings(time).map { it.lessonId }.toSet()
+        return lessonIds.map { id ->
+            if (id in volleyball) {
+                SportSectionSlot(id, subscribers = 7, cap = 12, full = false, subscriptionId = 1, place = 3)
+            } else {
+                SportSectionSlot(id, subscribers = 0, cap = 12, full = false, subscriptionId = null, place = null)
+            }
+        }
+    }
+
+    private fun annaSectionLesson(time: AcademicTimeProvider): SportQueueLesson {
+        val today = time.today()
+        val next = DemoSportSlots.annaBookedDates(today).filter { it >= today }.minOrNull()
+            ?: DemoSportSlots.ANNA_WEEKLY.nextDate(today)
+        return QueuedLesson(DemoSportSlots.ANNA_WEEKLY, next).queueLesson(time)
     }
 
     fun attempts(): SportAttempts = SportAttempts(total = 3, used = 1, free = 2, canSignIn = true)
@@ -293,6 +333,8 @@ object DemoSport {
     private const val FREE_ATTENDANCE = 2
     private const val FREE_QUEUE_TOTAL = 5
     private const val AUTO_QUEUE_TOTAL = 3
+    private const val SECTION_DATES = 3
+    private const val SECTION_PERIOD_DAYS = 14
     private const val VISITS = 8
     private const val CURRENT_PERIOD = 31L
 

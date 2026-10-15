@@ -29,7 +29,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.navigation.SportDetailsOpener
 import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes
 import dev.alllexey.itmowidgets.feature.sport.ui.SportPointsTags
-import dev.alllexey.itmowidgets.feature.sport.ui.SportSectionsTags
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
 import dev.alllexey.itmowidgets.feature.sport.ui.SportSheetTags
 import dev.alllexey.itmowidgets.feature.sport.ui.SportTestTags
 import dev.alllexey.itmowidgets.feature.sport.ui.user.UserSportScreenTestTags
@@ -176,14 +176,17 @@ class SportEntriesTest {
     }
 
     @Test
-    fun mySectionsRenderAndBackClosesThem() {
-        act { open(AppRoutes.SportSections) }
-        assertEquals(listOf<AppRoute>(AppRoutes.SportSections), navigator.state.overlays)
-        compose.onNodeWithTag(SportSectionsTags.EMPTY).assertIsDisplayed()
-
-        compose.onNodeWithContentDescription(BACK).performClick()
+    fun aBookedLessonSheetMakesItASectionAndStaysOpen() {
+        sport.sectionSlots[LESSON_ID] = SportSectionSlot(LESSON_ID, 4, 12, false, null, null)
+        sport.bookings.value = LoadState.Content(listOf(UPCOMING))
+        act { open(SportRoutes.details(UPCOMING, SportDetailsOpener.SHELL)) }
         compose.waitForIdle()
-        assertEquals(emptyList<AppRoute>(), navigator.state.overlays)
+
+        compose.onNodeWithTag(SportSheetTags.SECTION).assertIsDisplayed().performClick()
+        compose.waitForIdle()
+
+        assertEquals(listOf(LESSON_ID), sport.sectionRequests)
+        assertEquals("the sheet stays open", 1, navigator.state.floating.size)
     }
 
     @Test

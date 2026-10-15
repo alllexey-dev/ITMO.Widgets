@@ -7,8 +7,13 @@ import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
+import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueLesson
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDateState
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
@@ -22,9 +27,8 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportRecurringQueueRepository
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportRecurringRule
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSectionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
 import kotlin.time.Instant
@@ -128,15 +132,10 @@ internal class FakeSportActionRepository : SportActionRepository {
     override suspend fun cancelAutoSignEntry(entryId: Long): AppResult<Unit> = result
 }
 
-internal class FakeSportSignPreferences(pinned: Set<SectionName> = emptySet()) : SportSignPreferencesRepository {
-    val pinned = MutableStateFlow(pinned)
+internal class FakeSportSignPreferences : SportSignPreferencesRepository {
     val display = MutableStateFlow(SportSignDisplayOptions())
 
     override fun observeDisplayOptions(): Flow<SportSignDisplayOptions> = display
-    override fun observePinnedSections(): Flow<Set<SectionName>> = pinned
-    override suspend fun setPinned(section: SectionName, pinned: Boolean) {
-        this.pinned.value = if (pinned) this.pinned.value + section else this.pinned.value - section
-    }
 }
 
 /** The own timetable as the schedule cache has it. */
@@ -147,20 +146,63 @@ internal class FakeDayLessonsGateway(vararg days: LessonDay) : DayLessonsGateway
     override suspend fun refresh(from: LocalDate, to: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
 }
 
-/** A Backend that keeps repeat rules, for the screens built before it exists. */
-internal class FakeRecurringQueue(override val available: Boolean = true) : SportRecurringQueueRepository {
-    val rules = MutableStateFlow<List<SportRecurringRule>>(emptyList())
-    var result: AppResult<Unit> = AppResult.Success(Unit)
+/** Backend's sections in memory: a slot per lesson, one section per subscribed slot; [failure] refuses changes. */
+internal class FakeSportSectionRepository : SportSectionRepository {
+    val sections = MutableStateFlow<LoadState<List<MySportSection>>>(LoadState.Content(emptyList()))
+    val slots = mutableMapOf<Long, SportSectionSlot>()
+    val requests = mutableListOf<String>()
+    var failure: AppError? = null
+    var refreshCount = 0
 
-    override fun observeRules(): Flow<List<SportRecurringRule>> = rules
-    override suspend fun enable(rule: SportRecurringRule): AppResult<Unit> {
-        if (result is AppResult.Success) rules.value = rules.value + rule
-        return result
+    override fun observeSections(): Flow<LoadState<List<MySportSection>>> = sections
+    override suspend fun refreshSections() {
+        refreshCount += 1
     }
-    override suspend fun disable(rule: SportRecurringRule): AppResult<Unit> {
-        if (result is AppResult.Success) rules.value = rules.value - rule
-        return result
+    override suspend fun slots(lessonIds: List<Long>): AppResult<List<SportSectionSlot>> =
+        AppResult.Success(lessonIds.mapNotNull { slots[it] })
+
+    override suspend fun create(lessonId: Long): AppResult<MySportSection> {
+        requests += "create $lessonId"
+        failure?.let { return AppResult.Failure(it) }
+        val slot = slots.getValue(lessonId)
+        val id = 100 + lessonId
+        slots[lessonId] = slot.copy(subscribers = slot.subscribers + 1, subscriptionId = id, place = slot.subscribers + 1)
+        val section = MySportSection(id, queueLesson(lessonId), emptyList(), place = slot.subscribers + 1, subscribers = slot.subscribers + 1)
+        sections.value = LoadState.Content(sections.value.valueOrNull().orEmpty() + section)
+        return AppResult.Success(section)
     }
+
+    override suspend fun setSkipped(sectionId: Long, start: Instant, skipped: Boolean): AppResult<MySportSection> {
+        requests += "date $sectionId $start ${if (skipped) "off" else "on"}"
+        failure?.let { return AppResult.Failure(it) }
+        val current = sections.value.valueOrNull().orEmpty()
+        val section = current.single { it.id == sectionId }.let { section ->
+            section.copy(
+                dates = section.dates.map { date ->
+                    if (date.start != start) date else date.copy(state = if (skipped) SportSectionDateState.SKIPPED else SportSectionDateState.QUEUED)
+                },
+            )
+        }
+        sections.value = LoadState.Content(current.map { if (it.id == sectionId) section else it })
+        return AppResult.Success(section)
+    }
+
+    override suspend fun stop(sectionId: Long): AppResult<Unit> {
+        requests += "stop $sectionId"
+        failure?.let { return AppResult.Failure(it) }
+        sections.value = LoadState.Content(sections.value.valueOrNull().orEmpty().filter { it.id != sectionId })
+        slots.replaceAll { _, slot ->
+            if (slot.subscriptionId == sectionId) slot.copy(subscribers = slot.subscribers - 1, subscriptionId = null, place = null) else slot
+        }
+        return AppResult.Success(Unit)
+    }
+
+    /** Wednesday's volleyball of [lessonId] at 18:30, the fixture lessons' slot. */
+    fun queueLesson(lessonId: Long) = SportQueueLesson(
+        id = lessonId, sectionId = 41, sectionName = "Волейбол", sectionLevel = 1, level = 1, typeId = 2, buildingId = 13,
+        roomName = "спортивный зал", start = Instant.parse("2026-09-09T18:30:00+03:00"), end = Instant.parse("2026-09-09T20:00:00+03:00"),
+        timeSlotId = 3, teacherIsu = 200001, teacherFio = "Тихонова Марина Юрьевна",
+    )
 }
 
 internal fun bookingDelegate(

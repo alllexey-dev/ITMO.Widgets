@@ -443,7 +443,8 @@ user services suppresses FCM actions and attempts to unregister this device.
 - `Показывать фильтр по времени` shows the part of the day there.
 - Sections, building, `Есть места`, `Мои секции` and friends remain ordinary
   sport-screen filters, separate from the schedule display preference above.
-  Pinned sections are kept on the device (`sport_pinned_sections`).
+  `Мои секции` keeps the lessons of the user's sections, which live on
+  Backend ([sport](features/sport.md#sections)).
 
 ## Recordbook BARS overlay
 

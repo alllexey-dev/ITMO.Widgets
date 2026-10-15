@@ -1134,6 +1134,26 @@
         ]
       }
     },
+    "/api/agent/self": {
+      "delete": {
+        "operationId": "agent_revokeSelf",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUnit"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "agent"
+        ]
+      }
+    },
     "/api/agent/tokens": {
       "post": {
         "operationId": "agent_create",
@@ -2520,6 +2540,162 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseFriendsSportBookingsResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "sport"
+        ]
+      }
+    },
+    "/api/sport/sections/create": {
+      "post": {
+        "operationId": "sportSection_createSportSection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SportSectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseMySportSection"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "sport"
+        ]
+      }
+    },
+    "/api/sport/sections/my": {
+      "get": {
+        "operationId": "sportSection_mySportSections",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListMySportSection"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "sport"
+        ]
+      }
+    },
+    "/api/sport/sections/slots": {
+      "get": {
+        "operationId": "sportSection_sportSectionSlots",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lessonIds",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListSportSectionSlot"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "sport"
+        ]
+      }
+    },
+    "/api/sport/sections/{id}/occurrence": {
+      "post": {
+        "operationId": "sportSection_updateSportSectionOccurrence",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SportSectionOccurrenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseMySportSection"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "sport"
+        ]
+      }
+    },
+    "/api/sport/sections/{id}/stop": {
+      "post": {
+        "operationId": "sportSection_stopSportSection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseString"
                 }
               }
             },
@@ -5918,6 +6094,38 @@
           "success"
         ]
       },
+      "ApiResponseListMySportSection": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MySportSection"
+            }
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
       "ApiResponseListSportAutoSignEntry": {
         "type": "object",
         "properties": {
@@ -6024,6 +6232,38 @@
             ],
             "items": {
               "$ref": "#/components/schemas/SportFreeSignQueue"
+            }
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseListSportSectionSlot": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SportSectionSlot"
             }
           },
           "error": {
@@ -6214,6 +6454,39 @@
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ModerationSettings"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseMySportSection": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MySportSection"
               },
               {
                 "type": "null"
@@ -7733,6 +8006,44 @@
           "policies"
         ]
       },
+      "MySportSection": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lesson": {
+            "$ref": "#/components/schemas/SportLessonDto"
+          },
+          "occurrences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SportSectionDate"
+            }
+          },
+          "place": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subscribers": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "createdAt",
+          "id",
+          "lesson",
+          "occurrences",
+          "place",
+          "subscribers"
+        ]
+      },
       "OwnTeacherReview": {
         "type": "object",
         "properties": {
@@ -8544,6 +8855,132 @@
           {
             "$ref": "#/components/schemas/SportAutoSignEntry"
           }
+        ]
+      },
+      "SportSectionDate": {
+        "type": "object",
+        "properties": {
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "entryId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "position": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "QUEUED",
+              "LIMIT",
+              "SKIPPED"
+            ]
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          }
+        },
+        "required": [
+          "end",
+          "entryId",
+          "position",
+          "start",
+          "state",
+          "total"
+        ]
+      },
+      "SportSectionOccurrenceRequest": {
+        "type": "object",
+        "properties": {
+          "skipped": {
+            "type": "boolean"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "skipped",
+          "start"
+        ]
+      },
+      "SportSectionRequest": {
+        "type": "object",
+        "properties": {
+          "lessonId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "lessonId"
+        ]
+      },
+      "SportSectionSlot": {
+        "type": "object",
+        "properties": {
+          "cap": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "full": {
+            "type": "boolean"
+          },
+          "lessonId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "place": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "subscribers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subscriptionId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        },
+        "required": [
+          "cap",
+          "full",
+          "lessonId",
+          "place",
+          "subscribers",
+          "subscriptionId"
         ]
       },
       "SubjectLink": {
