@@ -178,7 +178,8 @@ private struct ScheduleFeedView: View {
             nearStart: { viewModel.onNearStart() },
             nearEnd: { viewModel.onNearEnd() },
             day: { viewModel.showDate(date: $0) },
-            week: { viewModel.showWeek(index: Int32($0)) },
+            week: { viewModel.showWeek(monday: $0) },
+            pagingStarted: { viewModel.beginWeekPaging() },
             jumped: { viewModel.onJumped(id: $0) },
             retry: { viewModel.refresh(mode: .force) }
         )
@@ -192,7 +193,8 @@ struct FeedViewActions {
     var nearStart: () -> Void = {}
     var nearEnd: () -> Void = {}
     var day: (Kotlinx_datetimeLocalDate) -> Void = { _ in }
-    var week: (Int) -> Void = { _ in }
+    var week: (Kotlinx_datetimeLocalDate) -> Void = { _ in }
+    var pagingStarted: () -> Void = {}
     var jumped: (Int32) -> Void = { _ in }
     var retry: () -> Void = {}
 }
@@ -233,24 +235,95 @@ struct ScheduleFeedContent: View {
     }
 
     private var weekPager: some View {
-        TabView(selection: Binding(get: { Int(state.selectedWeek) }, set: { actions.week($0) })) {
-            ForEach(state.weeks.indices, id: \.self) { index in
-                let week = state.weeks[index]
-                ItmoWeekStrip(
-                    days: week.days.map {
-                        ItmoWeekDay(
-                            id: "\($0.date)", weekday: $0.weekday, number: $0.number, lessons: Int($0.lessons),
-                            changed: $0.changed, today: $0.today, past: $0.past,
-                            selected: "\($0.date)" == "\(state.selected)", label: "\($0.weekday) \($0.number)"
-                        )
-                    },
-                    tap: { actions.day(week.days[$0].date) }
-                )
-                .padding(.horizontal, ItmoSpacing.related)
-                .tag(index)
+        ScheduleWeekPager(state: state, actions: actions)
+    }
+
+}
+
+/// The lazy layout and scrollPosition use exactly the same String ID, not a bridged Kotlin date object.
+private struct ScheduleWeekPage: Identifiable {
+    let week: StripWeek
+    var id: String { "\(week.monday)" }
+}
+
+/// Stable Monday IDs and scroll phases keep programmatic selection and user paging from feeding each other.
+struct ScheduleWeekPager: View {
+    let state: ScheduleFeedUiState
+    let actions: FeedViewActions
+    @State private var page: String?
+    @State private var userPaging = false
+    @State private var scrollIdentity = 0
+    @State private var seenJump: Int32?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var selectedMonday: String {
+        "\(ScheduleFeedPresenter.shared.monday(date: state.selected))"
+    }
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 0) {
+                ForEach(state.weeks.map { ScheduleWeekPage(week: $0) }) { item in
+                    let week = item.week
+                    ItmoWeekStrip(
+                        days: week.days.map {
+                            ItmoWeekDay(
+                                id: "\($0.date)", weekday: $0.weekday, number: $0.number, lessons: Int($0.lessons),
+                                changed: $0.changed, today: $0.today, past: $0.past,
+                                selected: "\($0.date)" == "\(state.selected)", label: "\($0.weekday) \($0.number)"
+                            )
+                        },
+                        tap: { actions.day(week.days[$0].date) }
+                    )
+                    .padding(.horizontal, ItmoSpacing.related)
+                    .containerRelativeFrame(.horizontal)
+                    .frame(height: 84)
+                    .id(item.id)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.paging)
+        .scrollPosition(id: $page)
+        .id(scrollIdentity)
+        .onChange(of: "\(selectedMonday):\(state.jump?.id ?? -1)", initial: true) { _, _ in
+            let target = selectedMonday
+            let explicit = state.jump.map { $0.id != seenJump } ?? false
+            if let jump = state.jump { seenJump = jump.id }
+            let interrupted = explicit && userPaging
+            guard !userPaging || explicit, page != target || interrupted else { return }
+            if explicit { userPaging = false }
+            if interrupted {
+                // Recreate only an interrupted scroll: assigning its current ID would not cancel its fling.
+                scrollIdentity += 1
+            }
+            if page == nil || reduceMotion || interrupted {
+                page = target
+                return
+            }
+            withAnimation(.smooth(duration: 0.25)) { page = target }
+        }
+        .onScrollPhaseChange { _, phase in
+            switch phase {
+            case .tracking, .interacting:
+                if !userPaging { actions.pagingStarted() }
+                userPaging = true
+            case .idle:
+                guard userPaging else { return }
+                userPaging = false
+                guard let page, page != selectedMonday,
+                      let week = state.weeks.first(where: { "\($0.monday)" == page }) else { return }
+                actions.week(week.monday)
+            default: break
             }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
+        .accessibilityScrollAction { edge in
+            let current = state.weeks.firstIndex { "\($0.monday)" == selectedMonday } ?? Int(state.selectedWeek)
+            let next = current + ((edge == .leading || edge == .top) ? -1 : 1)
+            guard state.weeks.indices.contains(next) else { return }
+            actions.pagingStarted()
+            actions.week(state.weeks[next].monday)
+        }
         .frame(height: 84)
         .accessibilityIdentifier("schedule.strip")
     }
@@ -359,17 +432,19 @@ private struct ScheduleFeedList: View {
                 }
             }
             .task(id: "\(state.jump?.id ?? -1)-\(days.rows.count)-\(state.loading)") {
-                guard let jump = state.jump else { return }
+                guard !Task.isCancelled, let jump = state.jump else { return }
                 // While the day's week loads its row may still arrive; jump to it then.
                 let exact = items.contains { "\($0.date)" == "\(jump.date)" }
                 if !exact && state.loading { return }
                 let index = Int(days.indexOf(date: jump.date))
                 if index >= 0, let target = items.first(where: { "\($0.date)" == "\(days.rows[index].date)" }) {
-                    proxy.scrollTo(target.id, anchor: .top)
-                    // The lazy rows above are only estimated on the first pass; once laid out the second lands exactly.
-                    try? await Task.sleep(for: .milliseconds(100))
-                    proxy.scrollTo(target.id, anchor: .top)
+                    await ScheduleFeedScroll.settle(
+                        scroll: { proxy.scrollTo(target.id, anchor: .top) },
+                        completed: { actions.jumped(jump.id) }
+                    )
+                    return
                 }
+                guard !Task.isCancelled else { return }
                 actions.jumped(jump.id)
             }
         }

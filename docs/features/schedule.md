@@ -50,6 +50,9 @@ wrote, so 2.2 files read unchanged in both directions
 - `ScheduleDaysImpl` joins the cache of one user with the found changes (the newest on each occurrence; a cancelled
   lesson of the own schedule stays on its old day, struck through) and, for the own schedule, the sport queues while
   their rows are on; for another user it marks `Вы` on the occurrences the own cache has too.
+- Day projection reads the timestamp of an already hydrated cache entry through `peekTimestamp`, without
+  reopening its gzip file or decoding JSON for every date on changes/queue updates. The 24-hour TTL still applies.
+  Refreshing the own schedule skips sport requests while queue rows are disabled.
 - Cache: a file per user and date, 24-hour TTL. A refresh keeps the loaded
   range (including pages fetched by scrolling) and replaces it with one
   snapshot after success; partial lists are never published. Dates missing
@@ -92,7 +95,8 @@ requests, all in parallel. Keeps `flowTypeId == 2` lessons with that
 
 `ScheduleFeedViewModel` reads a window of whole weeks around the visible day from `ScheduleDays`
 (`ScheduleDaysImpl`, the same source as Сегодня's `DayLessonsGateway`) and `ScheduleFeedPresenter` draws it, re-evaluated
-every minute:
+every minute. Timelines and weeks are projected on the default dispatcher only when data, known dates,
+refresh status or academic time changes; selecting another visible day reuses that body and those weeks:
 
 - Every day of the window that a refresh answered for is a row: a day with lessons is a sticky header
   (`Понедельник, 7 сентября`, `сегодня`, `5 пар`) over the kit's timeline built by `core/lesson/LessonTimelines` (the
@@ -105,9 +109,18 @@ every minute:
 - The week strip pages by weeks with a swipe (no arrows; Android hands the tab swipe over at its ends,
   `tabSwipeHandover`): settling on a week shows its Monday (today on the current week), a tap shows that day; a dot per
   lesson that takes place, the last one in the warning colour when a lesson of the day changed.
+  Pages and settled callbacks identify a week by its Monday, never by a mutable index. Only a settled user gesture
+  selects a week; programmatic synchronization and prepending pages do not select it again or reset its weekday.
+  iOS animates programmatic week changes unless Reduce Motion is on. A new date jump wins over a stale settled
+  callback; a later user gesture explicitly takes over from the old jump.
 - The view reports the day at its top (`onVisibleDate`) and its ends (`onNearStart`, `onNearEnd`): the window grows by
   two weeks there and those weeks load. A jump (a strip day, the month sheet, `Сегодня`) brings the day's weeks in
-  (or moves the window when it is far) and asks the view to scroll there once (`FeedJump`).
+  (or moves the window when it is far) and asks the view to scroll there once (`FeedJump`). Edge observation stays
+  attached across row updates. Each direction has at most one expansion in flight, independent of refresh;
+  identical range requests share their load within one owner generation. Switching away and back starts a new
+  generation rather than reusing the old account's in-flight request.
+  On iOS a lazy list positions a jump twice after layout; cancellation stops the old jump before its second pass
+  and acknowledgement. Visible-day callbacks cannot overwrite a jump that is still pending in the ViewModel.
 - The first show loads the window once; each return of the app to the foreground (`AppForeground`) reloads it
   silently, a tab switch, a pop or a sheet closing does not. A pull reloads it and, on the own schedule, brings the
   phone's calendar up to date when it is synced. Nothing cached and a failed load: `Не удалось загрузить` with `Повторить`; a failure behind

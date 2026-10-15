@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.presentation.feed
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
@@ -18,6 +19,8 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertSame
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -43,7 +46,7 @@ class ScheduleFeedViewModelTest {
     private val foreground = FakeAppForeground()
 
     private fun viewModel(days: FakeScheduleDays, state: SavedStateHandle = SavedStateHandle()) =
-        ScheduleFeedViewModel(state, days, time, FakeCalendarSync(), foreground)
+        ScheduleFeedViewModel(state, days, time, FakeCalendarSync(), foreground, AppDispatchers(main.dispatcher, main.dispatcher, main.dispatcher))
 
     @Test
     fun theFirstShowLoadsTheWindowOnceAndJumpsToToday() = runTest(main.dispatcher) {
@@ -148,11 +151,13 @@ class ScheduleFeedViewModelTest {
     fun aSwipeToAnotherWeekShowsItsMondayAndTheCurrentWeekToday() = runTest(main.dispatcher) {
         val vm = viewModel(FakeScheduleDays())
 
-        vm.showWeek(2)
+        vm.beginWeekPaging()
+        vm.showWeek(LocalDate(2026, 9, 14))
         assertEquals(LocalDate(2026, 9, 14), vm.uiState.first { it.selected == LocalDate(2026, 9, 14) }.selected)
         assertTrue(vm.uiState.value.offWeek)
 
-        vm.showWeek(1)
+        vm.beginWeekPaging()
+        vm.showWeek(monday)
         assertEquals(monday, vm.uiState.first { it.selected == monday }.selected)
     }
 
@@ -168,6 +173,159 @@ class ScheduleFeedViewModelTest {
 
         assertEquals(false, shown.canPickFriend)
         assertEquals(listOf(window.copy(userIsu = FRIEND.isu)), days.refreshes)
+    }
+
+    @Test
+    fun aRepeatedCallbackForTheSelectedWeekDoesNotJumpBackToMonday() = runTest(main.dispatcher) {
+        val vm = viewModel(FakeScheduleDays())
+        val wednesday = LocalDate(2026, 9, 16)
+        vm.showDate(wednesday)
+        val jumped = vm.uiState.first { it.selected == wednesday }
+        vm.onJumped(jumped.jump!!.id)
+        val before = vm.uiState.first { it.jump == null }
+
+        vm.showWeek(LocalDate(2026, 9, 14))
+        runCurrent()
+
+        assertEquals(wednesday, vm.uiState.value.selected)
+        assertEquals(before.jump, vm.uiState.value.jump)
+    }
+
+    @Test
+    fun weekCallbacksKeepTheirDatesAfterPrependAndOldWindowsAreIgnored() = runTest(main.dispatcher) {
+        val vm = viewModel(FakeScheduleDays())
+        vm.onNearStart()
+        runCurrent()
+        val nextWeek = LocalDate(2026, 9, 14)
+        vm.beginWeekPaging()
+        vm.showWeek(nextWeek)
+        assertEquals(nextWeek, vm.uiState.first { it.selected == nextWeek }.selected)
+
+        val december = LocalDate(2026, 12, 2)
+        vm.showDate(december)
+        val jumped = vm.uiState.first { it.selected == december }
+        vm.onJumped(jumped.jump!!.id)
+        val moved = vm.uiState.first { it.jump == null }
+        vm.showWeek(nextWeek)
+        runCurrent()
+        assertEquals(december, vm.uiState.value.selected)
+        assertEquals(moved.jump, vm.uiState.value.jump)
+    }
+
+    @Test
+    fun aLateWeekCallbackCannotUndoANewerExplicitJumpButANewGestureCanTakeOver() = runTest(main.dispatcher) {
+        val vm = viewModel(FakeScheduleDays())
+        vm.beginWeekPaging()
+        val target = LocalDate(2026, 9, 16)
+        vm.showDate(target)
+        vm.showWeek(monday)
+        assertEquals(target, vm.uiState.first { it.jump?.date == target }.selected)
+
+        vm.beginWeekPaging()
+        vm.showWeek(monday)
+        assertEquals(monday, vm.uiState.first { it.jump?.date == monday }.selected)
+    }
+
+    @Test
+    fun aLateVisibleDayCannotUndoAPendingJump() = runTest(main.dispatcher) {
+        val vm = viewModel(FakeScheduleDays())
+        val target = LocalDate(2026, 9, 16)
+        vm.showDate(target)
+        vm.onVisibleDate(monday)
+
+        val jumped = vm.uiState.first { it.jump?.date == target }
+        assertEquals(target, jumped.selected)
+        vm.onJumped(jumped.jump!!.id)
+        vm.onVisibleDate(LocalDate(2026, 9, 17))
+        assertEquals(LocalDate(2026, 9, 17), vm.uiState.first { it.jump == null && it.selected != target }.selected)
+    }
+
+    @Test
+    fun scrollingOnlyChangesSelectionAndReusesProjectedTimelinesAndWeeks() = runTest(main.dispatcher) {
+        val vm = viewModel(FakeScheduleDays(LessonDay(monday, listOf(feedLesson("10:00", "11:30")), null)))
+        val initial = vm.uiState.first { it.body is ScheduleFeedBody.Days }
+        vm.onJumped(initial.jump!!.id)
+        val before = vm.uiState.first { it.jump == null }
+        val target = LocalDate(2026, 9, 16)
+
+        vm.onVisibleDate(target)
+
+        val after = vm.uiState.first { it.selected == target }
+        assertSame(before.body, after.body)
+        assertSame(before.weeks, after.weeks)
+        assertEquals(2, after.selectedWeek)
+        assertTrue(after.offWeek)
+    }
+
+    @Test
+    fun repeatedRefreshesOfTheSameRangeShareTheRequest() = runTest(main.dispatcher) {
+        val finish = CompletableDeferred<Unit>()
+        val days = FakeScheduleDays().apply { onRefresh = { finish.await() } }
+        val vm = viewModel(days)
+        vm.refresh(RefreshMode.Silent)
+        vm.refresh(RefreshMode.Pull)
+        runCurrent()
+        assertEquals(listOf(window), days.refreshes)
+        finish.complete(Unit)
+        assertEquals(false, vm.uiState.first { !it.loading }.refreshing)
+    }
+
+    @Test
+    fun returningToTheSameOwnerDoesNotDeduplicateAgainstAnOldGeneration() = runTest(main.dispatcher) {
+        val finish = CompletableDeferred<Unit>()
+        val days = FakeScheduleDays().apply { onRefresh = { finish.await() } }
+        val vm = viewModel(days)
+        vm.refresh(RefreshMode.Silent)
+        vm.selectUser(FRIEND)
+        vm.selectUser(null)
+        runCurrent()
+        assertEquals(listOf(null, FRIEND.isu, null), days.refreshes.map { it.userIsu })
+        finish.complete(Unit)
+        assertEquals(null, vm.uiState.first { !it.loading && it.friend == null }.friend)
+    }
+
+    @Test
+    fun repeatedEdgeCallbacksOnlyLoadOnePageInEachDirection() = runTest(main.dispatcher) {
+        val finish = CompletableDeferred<Unit>()
+        val days = FakeScheduleDays().apply { onRefresh = { finish.await() } }
+        val vm = viewModel(days)
+        vm.onNearEnd()
+        vm.onNearEnd()
+        vm.onNearStart()
+        runCurrent()
+        assertEquals(2, days.refreshes.size)
+        finish.complete(Unit)
+        vm.uiState.first { !it.loading }
+    }
+
+    @Test
+    fun reachingAnEdgeDuringRefreshStillLoadsTheNextPage() = runTest(main.dispatcher) {
+        val finish = CompletableDeferred<Unit>()
+        val days = FakeScheduleDays().apply { onRefresh = { finish.await() } }
+        val vm = viewModel(days)
+        vm.refresh(RefreshMode.Pull)
+        vm.onNearEnd()
+        runCurrent()
+        assertEquals(2, days.refreshes.size)
+        assertEquals(window, days.refreshes.first())
+        assertEquals(LocalDate(2026, 9, 28), days.refreshes.last().from)
+        finish.complete(Unit)
+        vm.uiState.first { !it.loading }
+    }
+
+    @Test
+    fun aFarJumpDoesNotKeepTheOldWindowsEdgeRequestAsAGuard() = runTest(main.dispatcher) {
+        val finish = CompletableDeferred<Unit>()
+        val days = FakeScheduleDays().apply { onRefresh = { finish.await() } }
+        val vm = viewModel(days)
+        vm.onNearEnd()
+        vm.showDate(LocalDate(2026, 12, 2))
+        vm.onNearEnd()
+        runCurrent()
+        assertEquals(3, days.refreshes.size)
+        assertEquals(LocalDate(2026, 12, 21), days.refreshes.last().from)
+        finish.complete(Unit)
+        vm.uiState.first { !it.loading }
     }
 
     private companion object {

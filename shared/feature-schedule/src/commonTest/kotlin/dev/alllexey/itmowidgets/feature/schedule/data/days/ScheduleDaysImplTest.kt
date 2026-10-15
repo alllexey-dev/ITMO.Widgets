@@ -110,6 +110,18 @@ class ScheduleDaysImplTest {
         assertEquals(0, pending.refreshes)
     }
 
+    @Test
+    fun ownRefreshSkipsSportRequestsWhileQueueRowsAreOff() = runTest {
+        val pending = FakePendingSportBookingsRepository()
+        val repository = FakeScheduleRepository()
+        gateway(repository = repository, pending = pending, queues = false).refresh(null, tuesday, wednesday)
+        assertEquals(0, pending.refreshes)
+        assertEquals(1, repository.refreshed.size)
+
+        gateway(repository = repository, pending = pending, queues = true).refresh(null, tuesday, wednesday)
+        assertEquals(1, pending.refreshes)
+    }
+
     private fun gateway(
         days: List<DaySchedule> = emptyList(),
         repository: FakeScheduleRepository = FakeScheduleRepository(days),
@@ -131,7 +143,8 @@ class ScheduleDaysImplTest {
         override fun observeRange(userIsu: Int?, start: LocalDate, end: LocalDate): Flow<List<DaySchedule>> = flowOf(emptyList())
         override suspend fun save(schedule: DaySchedule, userIsu: Int?) = Unit
         override suspend fun replaceRange(userIsu: Int?, start: LocalDate, end: LocalDate, schedules: List<DaySchedule>) = Unit
-        override suspend fun get(userIsu: Int?, date: LocalDate) = CacheEntry(userIsu, date, CACHED_AT, "")
+        override fun peekTimestamp(userIsu: Int?, date: LocalDate): Long = CACHED_AT
+        override suspend fun get(userIsu: Int?, date: LocalDate): CacheEntry? = error("Day projection must not read disk")
         override suspend fun clearUser(userIsu: Int) = Unit
         override suspend fun clear() = Unit
     }

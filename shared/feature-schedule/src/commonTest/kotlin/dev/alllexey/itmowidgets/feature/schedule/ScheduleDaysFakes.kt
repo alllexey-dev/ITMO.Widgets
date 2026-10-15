@@ -22,6 +22,7 @@ internal data class DaysRefresh(val userIsu: Int?, val from: LocalDate, val to: 
 internal class FakeScheduleDays(vararg own: LessonDay) : ScheduleDays {
     private val byUser = mutableMapOf<Int?, MutableStateFlow<List<LessonDay>>>()
     val refreshes = mutableListOf<DaysRefresh>()
+    var onRefresh: suspend (DaysRefresh) -> Unit = {}
     var result: AppResult<Unit> = AppResult.Success(Unit)
     val results = mutableMapOf<Int, AppResult<Unit>>()
 
@@ -35,7 +36,9 @@ internal class FakeScheduleDays(vararg own: LessonDay) : ScheduleDays {
         days(userIsu).map { days -> days.filter { it.date in from..to }.sortedBy { it.date } }
 
     override suspend fun refresh(userIsu: Int?, from: LocalDate, to: LocalDate): AppResult<Unit> {
-        refreshes += DaysRefresh(userIsu, from, to)
+        val request = DaysRefresh(userIsu, from, to)
+        refreshes += request
+        onRefresh(request)
         return userIsu?.let { results[it] } ?: result
     }
 }

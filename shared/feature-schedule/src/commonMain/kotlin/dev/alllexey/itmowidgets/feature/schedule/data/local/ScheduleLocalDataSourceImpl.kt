@@ -126,6 +126,9 @@ class ScheduleLocalDataSourceImpl internal constructor(
         }
     }
 
+    override fun peekTimestamp(userIsu: Int?, date: LocalDate): Long? =
+        memoryCache.value[key(userIsu, date)]?.takeUnless(::isExpired)?.timestamp
+
     override suspend fun get(userIsu: Int?, date: LocalDate): CacheEntry? {
         val key = key(userIsu, date)
         return withContext(dispatchers.io) {

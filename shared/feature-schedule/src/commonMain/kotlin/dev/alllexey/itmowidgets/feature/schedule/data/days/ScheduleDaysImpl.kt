@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toLocalDateTime
@@ -63,6 +64,7 @@ class ScheduleDaysImpl(
 
     override suspend fun refresh(userIsu: Int?, from: LocalDate, to: LocalDate): AppResult<Unit> {
         if (userIsu != null) return repository.refreshSchedule(userIsu, from, to)
+        if (!preferences.observeSportAutoSignEnabled().first()) return repository.refreshSchedule(null, from, to)
         return coroutineScope {
             val queues = async { pending.refresh() }
             val schedule = repository.refreshSchedule(null, from, to)
@@ -114,8 +116,8 @@ class ScheduleDaysImpl(
         }
     }
 
-    private suspend fun cachedAt(userIsu: Int?, date: LocalDate): Instant? =
-        local.get(userIsu, date)?.timestamp?.let(Instant::fromEpochMilliseconds)
+    private fun cachedAt(userIsu: Int?, date: LocalDate): Instant? =
+        local.peekTimestamp(userIsu, date)?.let(Instant::fromEpochMilliseconds)
 
     private fun DaySchedule.week(): Int? = weekNumber.takeIf { it > 0 }
 

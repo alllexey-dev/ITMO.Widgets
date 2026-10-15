@@ -22,6 +22,9 @@ interface ScheduleLocalDataSource {
      */
     suspend fun replaceRange(userIsu: Int?, start: LocalDate, end: LocalDate, schedules: List<DaySchedule>)
 
+    /** Timestamp of an already hydrated, unexpired day, without IO or JSON decoding. */
+    fun peekTimestamp(userIsu: Int?, date: LocalDate): Long? = null
+
     suspend fun get(userIsu: Int?, date: LocalDate): CacheEntry?
 
     /** Removes every cached date for a denied foreign user, without touching own data. */

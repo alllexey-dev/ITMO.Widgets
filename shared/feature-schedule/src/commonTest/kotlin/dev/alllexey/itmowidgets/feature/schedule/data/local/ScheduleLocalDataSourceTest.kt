@@ -50,6 +50,22 @@ class ScheduleLocalDataSourceTest {
     }
 
     @Test
+    fun timestampsOfHydratedDaysComeFromMemoryAndRespectTtlAndClear() = withCache { fixture ->
+        val writer = fixture.local()
+        writer.save(day(DATE), null)
+        val reader = fixture.local()
+        assertNull(reader.peekTimestamp(null, DATE), "peek must not hydrate from disk")
+        reader.observeRange(null, DATE, DATE).first()
+        fileSystem.delete(reader.cacheDir / "default_$DATE.json")
+
+        repeat(100) { assertEquals(clock.now().toEpochMilliseconds(), reader.peekTimestamp(null, DATE)) }
+        clock.advanceBy(24.hours + 1.milliseconds)
+        assertNull(reader.peekTimestamp(null, DATE))
+        reader.clear()
+        assertNull(reader.peekTimestamp(null, DATE))
+    }
+
+    @Test
     fun replacementPublishesOnlyTheCompleteRangeSnapshot() = withCache { fixture ->
         val old = (0L..79L).map { day(DATE.plus(it, DateTimeUnit.DAY), "old") }
         val refreshed = old.map { it.copy(note = "refreshed") }
