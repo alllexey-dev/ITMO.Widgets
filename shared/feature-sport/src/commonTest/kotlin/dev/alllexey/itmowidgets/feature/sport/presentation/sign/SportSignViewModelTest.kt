@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
+import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.model.UserSharing
+import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.core.lesson.DayLesson
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
@@ -119,6 +122,16 @@ class SportSignViewModelTest {
         assertEquals(UiText.Res(SportStrings.sport_occupancy, listOf(13, 20)), day.rows[0].occupancy?.text)
         assertEquals(2, viewModel.uiState.value.weeks.size, "the current week and the next one at least")
         assertEquals(1, viewModel.uiState.value.weeks[0].single { it.date == LocalDate(2026, 9, 9) }.lessons)
+    }
+
+    @Test
+    fun catalogRowsKeepTheFriendsIdentityAndPhoto() = runTest(main.dispatcher) {
+        val friend = UserSummary(900001, "Тестовый Друг", "https://example.invalid/photo.jpg", emptyList(), UserSharing(true, true))
+        emitCatalog(SportCardFixtures.lesson(1).copy(friendsBookings = listOf(FriendSportBooking(friend, 1, null))))
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        assertEquals(listOf(friend), viewModel.day().rows.single().friends)
     }
 
     @Test

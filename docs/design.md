@@ -497,7 +497,7 @@ screens that have not moved yet.
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
 | `VotePill` | The votes of a link: like/dislike thumbs around the score, the viewer's own vote filled and in `primary`, only the score when voting is not allowed |
 | `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a bar (88 dp, down to 44 dp in a tight row; the text never wraps) and `22 из 24` in a tone |
-| `WeekStrip`, `WeekStripDay` | One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on a `primary` indicator that slides on the scheme's default spatial spring while the colours crossfade (a week gaining or losing the choice fades it in place; snaps under reduced motion); a pager of these pages by weeks |
+| `WeekStrip`, `WeekStripDay` | Past weekday/date labels are dimmed on both platforms; today and the selected day (including a past selection) keep full emphasis. One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on a `primary` indicator that slides on the scheme's default spatial spring while the colours crossfade (a week gaining or losing the choice fades it in place; snaps under reduced motion); a pager of these pages by weeks |
 
 ## Platform styles
 

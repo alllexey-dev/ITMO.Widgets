@@ -54,6 +54,7 @@ import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.IosAppDirectories
 import dev.alllexey.itmowidgets.core.storage.KeychainSecureStore
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
+import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.RetiredPreferenceKeys
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
@@ -135,7 +136,7 @@ fun iosCoreModule(
         )
     }
     singleOf(::ServicesOptInPreferences)
-    singleOf(::QrSettingsPreferences)
+    singleOf(::QrSettingsPreferences) { bind<HomePassVisibility>() }
     singleOf(::DeviceHintPreferences)
     singleOf(::AppearancePreferences)
     singleOf(::BellPreferences)

@@ -536,7 +536,7 @@ struct SportCatalogRowView: View {
                         if let occupancy = row.occupancy {
                             ItmoOccupancy(text: occupancy.text.resolved, share: Double(occupancy.share), tone: occupancy.tone.kitTone)
                         }
-                        SportFriendStack(names: row.friends)
+                        SportFriendStack(friends: row.friends)
                     }
                 }
                 if let clash = row.clash {
@@ -613,14 +613,16 @@ struct SportKindTag: View {
     }
 }
 
-/// Friends' initials overlapping, at most three.
+/// Friends' photos or initials overlapping, at most three.
 struct SportFriendStack: View {
-    let names: [String]
+    let friends: [UserSummary]
 
     var body: some View {
-        if !names.isEmpty {
+        if !friends.isEmpty {
             HStack(spacing: -6) {
-                ForEach(names.prefix(3), id: \.self) { ItmoAvatar(initials: Self.initials($0), size: 22) }
+                ForEach(friends.prefix(3), id: \.isu) {
+                    ItmoAvatar(initials: Self.initials($0.name), pictureUrl: $0.pictureUrl, size: 22)
+                }
             }
         }
     }

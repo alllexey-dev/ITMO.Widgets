@@ -86,13 +86,15 @@ class SettingsRepositoryImpl(
             deviceHints.observeBackgroundWorkHintShown(),
             deviceHints.observeQrTileAdded(),
             appearance.observeTheme(),
-            appearance.observeWidgetsFollowTheme()
-        ) { backgroundWorkHintShown, qrTileAdded, theme, widgetsFollowTheme ->
+            appearance.observeWidgetsFollowTheme(),
+            qrSettings.observeHomePassVisible(),
+        ) { backgroundWorkHintShown, qrTileAdded, theme, widgetsFollowTheme, homePassVisible ->
             DeviceLocalSettings(
                 backgroundWorkHintShown = backgroundWorkHintShown,
                 qrTileAdded = qrTileAdded,
                 theme = theme,
-                widgetsFollowTheme = widgetsFollowTheme
+                widgetsFollowTheme = widgetsFollowTheme,
+                homePassVisible = homePassVisible,
             )
         }
         // The typed combine takes at most five flows, so the three mark switches travel together.
@@ -136,10 +138,13 @@ class SettingsRepositoryImpl(
                 backgroundWorkHintShown = appSettings.device.backgroundWorkHintShown,
                 qrTileAdded = appSettings.device.qrTileAdded,
                 theme = appSettings.device.theme,
-                widgetsFollowTheme = appSettings.device.widgetsFollowTheme
+                widgetsFollowTheme = appSettings.device.widgetsFollowTheme,
+                homePassVisible = appSettings.device.homePassVisible,
             )
         }
     }
+
+    override suspend fun setHomePassVisible(visible: Boolean) = qrSettings.setHomePassVisible(visible)
 
     override fun observeSharingSettings(): Flow<SharingSettingsState> =
         sharingState.asStateFlow()
@@ -341,5 +346,6 @@ private data class DeviceLocalSettings(
     val backgroundWorkHintShown: Boolean,
     val qrTileAdded: Boolean,
     val theme: ThemeSpec,
-    val widgetsFollowTheme: Boolean
+    val widgetsFollowTheme: Boolean,
+    val homePassVisible: Boolean,
 )

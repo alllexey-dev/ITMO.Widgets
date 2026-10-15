@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.platform.AppForeground
 import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
+import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
 import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.today.TodayTodoSource
@@ -29,6 +30,7 @@ class HomeModuleTest {
                 BellPreferences::class,
                 AcademicTimeProvider::class,
                 AppForeground::class,
+                HomePassVisibility::class,
                 SavedStateHandle::class,
                 List::class,
             )

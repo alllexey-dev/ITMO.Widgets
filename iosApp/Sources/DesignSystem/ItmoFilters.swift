@@ -175,7 +175,7 @@ struct ItmoWeekStrip: View {
     private func color(_ day: ItmoWeekDay) -> Color {
         if day.selected { return ItmoColor.onPrimary }
         if day.today { return ItmoColor.primary }
-        return day.past ? .secondary : .primary
+        return day.past ? Color.primary.opacity(0.65) : .primary
     }
 }
 

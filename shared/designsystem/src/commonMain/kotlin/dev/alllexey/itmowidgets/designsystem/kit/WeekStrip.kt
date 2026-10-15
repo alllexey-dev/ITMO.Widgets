@@ -101,7 +101,7 @@ private fun StripDayCell(day: WeekStripDay, selected: Boolean, onClick: () -> Un
         when {
             selected -> colors.onPrimary
             day.today -> colors.primary
-            day.past -> colors.onSurfaceVariant
+            day.past -> colors.onSurface.copy(alpha = PAST_LABEL_ALPHA)
             else -> colors.onSurface
         },
         fade,
@@ -141,6 +141,7 @@ private fun StripDayCell(day: WeekStripDay, selected: Boolean, onClick: () -> Un
 private const val MAX_DOTS = 5
 private const val DOT_ALPHA = 0.8f
 private const val PAST_DOT_ALPHA = 0.4f
+private const val PAST_LABEL_ALPHA = 0.65f
 private val DotSize = 5.dp
 private val DotGap = 2.dp
 private val DayGap = 4.dp

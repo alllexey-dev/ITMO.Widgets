@@ -13,6 +13,11 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(state, named: "root", height: 1060, ax1Height: 1500)
     }
 
+    func testHome() {
+        let state = SettingsFixtures.page(.home, SettingsFixtures.pageState(notificationsGranted: false))
+        assertPage(state, named: "home", height: 320, ax1Height: 440)
+    }
+
     func testScheduleWithBackgroundRefreshOff() {
         let state = SettingsFixtures.page(
             .schedule,
@@ -174,7 +179,8 @@ enum SettingsFixtures {
                 contrast: .standard,
                 pureBlack: false
             ),
-            widgetsFollowTheme: false
+            widgetsFollowTheme: false,
+            homePassVisible: true
         )
     }
 

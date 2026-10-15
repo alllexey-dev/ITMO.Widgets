@@ -33,6 +33,7 @@ enum class SettingRowId(val key: String) {
     QR_CUSTOM_IMAGE("qr_custom_image"),
     QR_RESET_IMAGE("qr_reset_image"),
     QR_TILE("qr_tile"),
+    HOME_PASS_VISIBLE("home_pass_visible"),
     SPORT_TEACHER_FILTER("sport_teacher_filter"),
     SPORT_TIME_FILTER("sport_time_filter"),
     REFRESH_WIDGETS("refresh_widgets"),
@@ -54,6 +55,7 @@ enum class SettingRowId(val key: String) {
     PAGE_COMPACT_SCHEDULE_WIDGET("page_compact_schedule_widget"),
     PAGE_FULL_SCHEDULE_WIDGET("page_full_schedule_widget"),
     PAGE_QR_WIDGET("page_qr_widget"),
+    PAGE_HOME("page_home"),
     PAGE_SCHEDULE("page_schedule"),
     PAGE_RECORDBOOK("page_recordbook"),
     PAGE_SPORT("page_sport"),
@@ -69,6 +71,7 @@ enum class SettingRowId(val key: String) {
             SettingsPage.COMPACT_SCHEDULE_WIDGET -> PAGE_COMPACT_SCHEDULE_WIDGET
             SettingsPage.FULL_SCHEDULE_WIDGET -> PAGE_FULL_SCHEDULE_WIDGET
             SettingsPage.QR_WIDGET -> PAGE_QR_WIDGET
+            SettingsPage.HOME -> PAGE_HOME
             SettingsPage.SCHEDULE -> PAGE_SCHEDULE
             SettingsPage.RECORDBOOK -> PAGE_RECORDBOOK
             SettingsPage.SPORT -> PAGE_SPORT

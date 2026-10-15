@@ -171,12 +171,26 @@ internal object SettingsPreviewData {
             title = res(CoreRes.string.me_group_app),
             items = listOf(
                 navigation(SettingsPage.APPEARANCE),
+                navigation(SettingsPage.HOME),
                 navigation(SettingsPage.SCHEDULE),
                 navigation(SettingsPage.RECORDBOOK),
                 navigation(SettingsPage.SPORT),
                 navigation(SettingsPage.MAINTENANCE)
             )
         )
+    )
+
+    val Home = state(
+        SettingsPage.HOME,
+        SettingSection(
+            title = null,
+            items = listOf(SettingItem.Toggle(
+                id = SettingRowId.HOME_PASS_VISIBLE,
+                title = UiText.Res(SettingsStrings.settings_home_pass_title),
+                checked = true,
+            )),
+            footer = UiText.Res(SettingsStrings.settings_home_pass_description),
+        ),
     )
 
     val Appearance = appearance(ThemeSpec())

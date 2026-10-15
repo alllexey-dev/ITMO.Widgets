@@ -22,6 +22,7 @@ import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
+import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.RetiredPreferenceKeys
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
@@ -62,7 +63,7 @@ val storageModule = module {
     singleOf(::ServicesOptInPreferences)
     singleOf(::ScheduleCheckPreferences)
     singleOf(::WidgetSettingsPreferences)
-    singleOf(::QrSettingsPreferences)
+    singleOf(::QrSettingsPreferences) { bind<HomePassVisibility>() }
     singleOf(::SportSignSelectorPreferences)
     singleOf(::MarkSourcePreferences)
     singleOf(::BellPreferences)

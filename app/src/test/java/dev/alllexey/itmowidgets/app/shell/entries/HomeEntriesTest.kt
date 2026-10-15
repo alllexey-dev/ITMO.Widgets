@@ -31,6 +31,8 @@ import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
+import kotlinx.coroutines.flow.flowOf
 import dev.alllexey.itmowidgets.core.testing.FakeAppForeground
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
@@ -62,7 +64,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -99,6 +100,7 @@ class HomeEntriesTest {
     private val navigator = Nav3AppNavigator()
 
     /** The sport rows go through the sport redirect, whose holder finds no booking here. */
+    private val passVisible = kotlinx.coroutines.flow.MutableStateFlow(true)
     private val sportScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     @Before
@@ -109,7 +111,7 @@ class HomeEntriesTest {
             modules(
                 module {
                     viewModel { TodayViewModel(FakeDays, listOf(TodayTodoSource { flowOf(listOf(TODO)) }), time, FakeAppForeground()) }
-                    viewModel { TodayHeaderViewModel(time, FakeBell, FakeAppForeground()) }
+                    viewModel { TodayHeaderViewModel(time, FakeBell, FakeAppForeground(), HomePassVisibility { passVisible }) }
                     viewModel { BellViewModel(FakeBell, time) }
                     viewModel {
                         QrPassViewModel(FakeQrRepository, PlainQrAppearance, signedIn, FakeSocialRepository(), clock)
@@ -140,6 +142,18 @@ class HomeEntriesTest {
         scrollTo(TodayTestTags.DAY)
         compose.onNodeWithTag(TodayTestTags.DAY).assertIsDisplayed()
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.TabRoot(AppTab.HOME))).assertDoesNotExist()
+    }
+
+    @Test
+    fun hidingThePassRemovesOnlyItsButtonAndKeepsThePassRoute() {
+        passVisible.value = false
+        compose.waitForIdle()
+        compose.onNodeWithTag(TabRootTags.PASS_FAB).assertDoesNotExist()
+        compose.onNodeWithTag(TabRootTags.BELL).assertIsDisplayed()
+
+        navigator.open(AppRoutes.QrPass)
+        compose.waitForIdle()
+        compose.onNodeWithTag(QrPassTestTags.AREA).assertIsDisplayed()
     }
 
     @Test

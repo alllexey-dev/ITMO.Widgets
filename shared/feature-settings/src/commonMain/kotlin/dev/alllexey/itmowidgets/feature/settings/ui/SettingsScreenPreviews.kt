@@ -57,6 +57,12 @@ internal class SettingsScreenRootPreview {
     fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Root)
 }
 
+internal class SettingsScreenHomePreview {
+    @Preview(name = "home")
+    @Composable
+    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Home)
+}
+
 internal class SettingsScreenAppearancePreview {
     @Preview(name = "appearance")
     @Composable

@@ -160,6 +160,7 @@ class SettingsViewModelTest {
                     SettingRowId.THEME_PALETTE,
                     SettingRowId.THEME_CONTRAST,
                     SettingRowId.DARK_BLACK,
+                    SettingRowId.HOME_PASS_VISIBLE,
                     SettingRowId.WIDGETS_FOLLOW_THEME
                 ),
                 items.map(SettingItem::id).toSet()
