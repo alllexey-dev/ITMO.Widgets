@@ -22,4 +22,12 @@ class UserNamesTest {
         assertEquals("Иванова А.", shortPersonName("Иванова Анна"))
         assertEquals("Преподаватель", shortPersonName(" Преподаватель "))
     }
+
+    @Test
+    fun avatarInitialsTakeTheFirstTwoWords() {
+        assertEquals("ИИ", personInitials("  Иванов   Иван иванович "))
+        assertEquals("ИА", personInitials("иванова Анна"))
+        assertEquals("П", personInitials(" Преподаватель "))
+        assertEquals("?", personInitials("  "))
+    }
 }

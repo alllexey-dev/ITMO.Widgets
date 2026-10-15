@@ -17,12 +17,12 @@ fun shortPersonName(name: String): String {
     return parts.first() + " " + parts.drop(1).joinToString("\u00A0") { "${it.first().uppercaseChar()}." }
 }
 
-/** The letters of an avatar without a photo: the first letters of the first and last words, `?` without a name. */
+/**
+ * The letters of an avatar without a photo: the first letters of the first two words, so «Фамилия Имя Отчество»
+ * gives ФИ, not ФО. `?` without a name.
+ */
 fun personInitials(name: String): String {
     val parts = name.trim().split(Regex("\\s+")).filter(String::isNotEmpty)
-    return when {
-        parts.isEmpty() -> "?"
-        parts.size == 1 -> parts.first().take(1).uppercase()
-        else -> (parts.first().take(1) + parts.last().take(1)).uppercase()
-    }
+    if (parts.isEmpty()) return "?"
+    return parts.take(2).joinToString("") { it.take(1) }.uppercase()
 }
