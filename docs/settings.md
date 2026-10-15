@@ -141,6 +141,14 @@ writes the palette into the widgets' App Group files and reloads them
 full colour; the tinted and clear home screens and the Lock Screen keep the
 system's rendering.
 
+## Home screen
+
+`Приложение` -> `Главный экран` contains `Показывать кнопку пропуска`, on by default
+(`home_qr_pass_visible`, boolean, kept on sign-out). Turning it off hides only the
+`Пропуск` button on Сегодня on Android and the bottom accessory on iOS; the pass
+remains available through its widgets, shortcuts and other entry routes. Both
+shells observe changes immediately. The setting works offline and without custom services.
+
 ## Account and services
 
 - `Подключение к ITMO.Widgets` enables Backend-dependent features. It is disabled

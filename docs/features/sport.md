@@ -220,3 +220,12 @@ Android screenshots in `shared/feature-sport/screenshots/` from the previews
   `SportSignPushBooker` on Android) and the sign-out cleaners.
 - Tests: `SportIosModuleTest` (`scripts/ios/test.sh kn :shared:feature-sport`),
   `SportSnapshotTests`, `SportUITests`.
+
+### Friend avatars
+
+Catalog rows and lesson sheets preserve each friend's ISU, name and `pictureUrl`
+from `UserSummary` through `SportCatalogRow` and `SportFriendUi` to the kit avatar
+on both platforms. Missing or failed photos show initials. The schedule's lesson
+friends and picker already carry those URLs; the iOS bell's friend requests also
+use the event's photo. Teacher rows whose source exposes no photo URL keep initials;
+no per-row profile requests or guessed image URLs are added.

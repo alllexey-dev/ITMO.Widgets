@@ -131,7 +131,7 @@ class SportLessonSheetPresenterTest {
 
     @Test fun theTeacherThePlaceTheCommentAndFriendsWithTheirStatus() {
         val friends = listOf(
-            FriendSportBooking(UserSummary(900001, "Первый", null, emptyList(), UserSharing(true, true)), 1, null),
+            FriendSportBooking(UserSummary(900001, "Первый", "https://example.invalid/avatar.jpg", emptyList(), UserSharing(true, true)), 1, null),
             FriendSportBooking(UserSummary(900002, "Второй", null, emptyList(), UserSharing(true, true)), 1, SportCardFixtures.entry()),
         )
         val sheet = sheet(lesson.copy(friendsBookings = friends, roomName = "Кронверкский пр., 49, спортивный зал"))
@@ -140,7 +140,7 @@ class SportLessonSheetPresenterTest {
         assertEquals("Возьмите сменную обувь и воду.", sheet.comment)
         assertEquals(
             listOf(
-                SportFriendUi("Первый", res(SportStrings.sport_friend_signed_short), 900001),
+                SportFriendUi("Первый", res(SportStrings.sport_friend_signed_short), 900001, "https://example.invalid/avatar.jpg"),
                 SportFriendUi("Второй", res(SportStrings.sport_friend_queued, 3, 12), 900002),
             ),
             sheet.friends,

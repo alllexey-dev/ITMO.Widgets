@@ -92,7 +92,7 @@ internal fun TodayRootScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            if (header.showPass) ExtendedFloatingActionButton(
                 onClick = onOpenPass,
                 modifier = Modifier.testTag(TabRootTags.PASS_FAB),
                 icon = { Icon(painterResource(KitRes.drawable.ic_qr_code), contentDescription = null) },

@@ -57,7 +57,7 @@ data class SportPersonUi(val name: String, val isu: Int?)
 data class SportPlaceUi(val title: String, val subtitle: String?, val mapAddress: String?)
 
 /** A friend who goes: their name, [status] (`записан`, `в очереди 1 из 2`), [isu] for the card. */
-data class SportFriendUi(val name: String, val status: UiText?, val isu: Int)
+data class SportFriendUi(val name: String, val status: UiText?, val isu: Int, val pictureUrl: String? = null)
 
 data class SportDetailsAction(val action: SportBookingAction, val enabled: Boolean)
 
@@ -141,6 +141,7 @@ object SportLessonSheetPresenter {
                         else -> null
                     },
                     isu = friend.isu,
+                    pictureUrl = friend.pictureUrl,
                 )
             },
             share = share(args, now),

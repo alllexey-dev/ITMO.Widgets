@@ -54,6 +54,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.kit.container
 import dev.alllexey.itmowidgets.designsystem.kit.ink
 import dev.alllexey.itmowidgets.designsystem.kit.onContainer
+import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
@@ -415,7 +416,7 @@ fun SportLessonSheetContent(
                         ListRow(
                             title = friend.name,
                             subtitle = friend.status?.asString(),
-                            leading = { FriendAvatars(listOf(friend.name)) },
+                            leading = { Avatar(friend.name, friend.pictureUrl, size = ItmoTheme.spacing.section) },
                             chevron = true,
                             onClick = { actions.onProfile(friend.isu) },
                         )

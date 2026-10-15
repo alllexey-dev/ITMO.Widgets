@@ -5,6 +5,7 @@ import SwiftUI
 /// (design.md "Tab swipe"); a pushed screen keeps the bar.
 struct ShellTabs<Root: View>: View {
     @Binding var selection: ShellTab
+    var showPass = true
     var tabs: [ShellTab] = ShellTab.visible
     /// Opens the pass sheet: the accessory's only action.
     let openPass: () -> Void
@@ -24,7 +25,7 @@ struct ShellTabs<Root: View>: View {
                 }
             }
         }
-        .tabViewBottomAccessory(isEnabled: selection == .today) {
+        .tabViewBottomAccessory(isEnabled: selection == .today && showPass) {
             ShellPassAccessory(action: openPass)
         }
         .itmoTint()

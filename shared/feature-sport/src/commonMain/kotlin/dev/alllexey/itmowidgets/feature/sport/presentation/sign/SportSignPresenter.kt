@@ -181,7 +181,7 @@ object SportSignPresenter {
             place = buildingName(lesson, input.catalog)?.let { buildingShortTitle(it) }
                 ?: lesson.roomName.takeIf { lesson.roomId == ONLINE_ROOM }?.let { UiText.Res(SportStrings.sport_place_online) },
             occupancy = occupancy?.toUi(),
-            friends = lesson.friendsBookings.map { it.friend.name },
+            friends = lesson.friendsBookings.map { it.friend },
             clash = clashingLesson(lesson, input.timetable, input.zone)?.let { UiText.Res(SportStrings.sport_row_clash, listOf(it.subject.trim())) }
                 ?: UiText.Res(SportStrings.sport_row_clash_unknown).takeIf { lesson.intersection },
             action = action(lesson, lesson.lessonId in input.busy, input.now),

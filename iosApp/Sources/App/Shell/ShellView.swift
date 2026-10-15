@@ -7,6 +7,7 @@ import SwiftUI
 struct ShellView: View {
     @Bindable var router: AppRouter
     let session: ShellSession
+    @State private var showPass = false
     @State private var updateOffer = AppUpdateOffer()
 
     var body: some View {
@@ -18,6 +19,13 @@ struct ShellView: View {
                 router.sessionChanged(session.state.sessionState, onboarding: onboarding)
             }
             .task { await session.follow() }
+            .task {
+                guard session.gateway != nil else { showPass = true; return }
+                guard let visibility = IosKoin.shared.get(protocol: HomePassVisibility.self) as? HomePassVisibility else { return }
+                for await visible in visibility.observeHomePassVisible() {
+                    showPass = visible.boolValue
+                }
+            }
             .sheet(item: $router.sheet) { sheet in
                 // Route sheets open further routes and answer their opener through the router.
                 ShellSheetView(sheet: sheet)
@@ -41,7 +49,7 @@ struct ShellView: View {
         case .onboarding:
             OnboardingScreen(finished: session.onboardingFinished)
         case let .tabs(demo):
-            ShellTabs(selection: $router.selectedTab, openPass: { router.open(AppRoutes.QrPass.shared) }) { tab in
+            ShellTabs(selection: $router.selectedTab, showPass: showPass, openPass: { router.open(AppRoutes.QrPass.shared) }) { tab in
                 ShellStack(
                     tab: tab,
                     router: router,

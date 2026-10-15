@@ -475,6 +475,10 @@ class WidgetPreviewTest {
         override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {
             local.value = local.value.copy(theme = change(local.value.theme))
         }
+        override suspend fun setHomePassVisible(visible: Boolean) {
+            local.value = local.value.copy(homePassVisible = visible)
+        }
+
         override suspend fun setWidgetsFollowTheme(enabled: Boolean) {
             local.value = local.value.copy(widgetsFollowTheme = enabled)
         }

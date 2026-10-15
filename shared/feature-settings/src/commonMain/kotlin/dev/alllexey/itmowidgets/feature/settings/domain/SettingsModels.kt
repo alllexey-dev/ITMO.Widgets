@@ -26,7 +26,8 @@ data class LocalSettings(
     /** The app's colours: accent, palette style, contrast and the black dark background. */
     val theme: ThemeSpec = ThemeSpec(),
     /** «Виджеты в цвет темы»: the widgets draw with [theme]'s scheme instead of their own colours. */
-    val widgetsFollowTheme: Boolean = false
+    val widgetsFollowTheme: Boolean = false,
+    val homePassVisible: Boolean = true
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -80,6 +81,8 @@ interface SettingsRepository {
     suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec)
 
     suspend fun setWidgetsFollowTheme(enabled: Boolean)
+
+    suspend fun setHomePassVisible(visible: Boolean)
 
     suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean)
 

@@ -36,7 +36,7 @@ class RootPageProviderTest {
 
             assertEquals(SettingsPage.ROOT, fixture.viewModel.uiState.value.page)
             assertEquals(3, fixture.viewModel.uiState.value.sections.size)
-            assertEquals(13, fixture.viewModel.allItems().size)
+            assertEquals(14, fixture.viewModel.allItems().size)
             assertEquals(
                 listOf(SettingRowId.WIDGETS_FOLLOW_THEME),
                 fixture.viewModel.allItems().filterIsInstance<SettingItem.Toggle>().map { it.id }
@@ -55,6 +55,7 @@ class RootPageProviderTest {
             assertEquals(
                 listOf(
                     SettingsPage.APPEARANCE,
+                    SettingsPage.HOME,
                     SettingsPage.SCHEDULE,
                     SettingsPage.RECORDBOOK,
                     SettingsPage.SPORT,
@@ -65,6 +66,23 @@ class RootPageProviderTest {
             assertEquals(null, fixture.viewModel.uiState.value.themePreview)
             assertEquals(0, fixture.repository.refreshSharingCount)
         }
+
+    @Test
+    fun homePassCanBeHiddenAndShownWithoutRefreshingWidgets() = runTest(main.dispatcher) {
+        val fixture = createFixture(page = SettingsPage.HOME)
+        advanceUntilIdle()
+        assertTrue(fixture.viewModel.toggle(SettingRowId.HOME_PASS_VISIBLE).checked)
+
+        fixture.viewModel.onToggleChanged(SettingRowId.HOME_PASS_VISIBLE, false)
+        advanceUntilIdle()
+        assertFalse(fixture.viewModel.toggle(SettingRowId.HOME_PASS_VISIBLE).checked)
+        assertFalse(fixture.repository.local.value.homePassVisible)
+
+        fixture.viewModel.onToggleChanged(SettingRowId.HOME_PASS_VISIBLE, true)
+        advanceUntilIdle()
+        assertTrue(fixture.viewModel.toggle(SettingRowId.HOME_PASS_VISIBLE).checked)
+        assertEquals(0, fixture.widgetRefresher.refreshCount)
+    }
 
     @Test
     fun exposesNotificationStatusAndApplicationVersion() =

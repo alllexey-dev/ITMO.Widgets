@@ -23,7 +23,7 @@ class RootPageProvider(
     private val capabilities: PlatformCapabilities = EveryPlatformCapability
 ) : SettingsPageProvider {
 
-    override val pages = setOf(SettingsPage.ROOT, SettingsPage.APPEARANCE)
+    override val pages = setOf(SettingsPage.ROOT, SettingsPage.APPEARANCE, SettingsPage.HOME)
 
     override val rows = setOf(
         SettingRowId.NOTIFICATIONS,
@@ -33,11 +33,23 @@ class RootPageProvider(
         SettingRowId.THEME_PALETTE,
         SettingRowId.THEME_CONTRAST,
         SettingRowId.DARK_BLACK,
-        SettingRowId.WIDGETS_FOLLOW_THEME
+        SettingRowId.WIDGETS_FOLLOW_THEME,
+        SettingRowId.HOME_PASS_VISIBLE,
     )
 
     override fun sections(page: SettingsPage, state: SettingsPageState) = when (page) {
         SettingsPage.APPEARANCE -> appearance(state.local.theme)
+        SettingsPage.HOME -> listOf(
+            SettingSection(
+                title = null,
+                items = listOf(SettingItem.Toggle(
+                    id = SettingRowId.HOME_PASS_VISIBLE,
+                    title = UiText.Res(SettingsStrings.settings_home_pass_title),
+                    checked = state.local.homePassVisible,
+                )),
+                footer = UiText.Res(SettingsStrings.settings_home_pass_description),
+            )
+        )
         else -> root(state)
     }
 
@@ -98,6 +110,7 @@ class RootPageProvider(
             title = UiText.Res(CoreStrings.me_group_app),
             items = listOfNotNull(
                 SettingRows.navigation(SettingsPage.APPEARANCE),
+                SettingRows.navigation(SettingsPage.HOME),
                 SettingRows.navigation(SettingsPage.SCHEDULE),
                 SettingRows.navigation(SettingsPage.RECORDBOOK).takeIf { capabilities.marks },
                 SettingRows.navigation(SettingsPage.SPORT),
@@ -163,6 +176,7 @@ class RootPageProvider(
 
     override fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) {
         when (id) {
+            SettingRowId.HOME_PASS_VISIBLE -> scope.updateLocalSetting { repository.setHomePassVisible(checked) }
             SettingRowId.DARK_BLACK -> updateTheme(scope) { it.copy(pureBlack = checked) }
             SettingRowId.WIDGETS_FOLLOW_THEME -> scope.updateWidgetSetting { repository.setWidgetsFollowTheme(checked) }
             else -> Unit
