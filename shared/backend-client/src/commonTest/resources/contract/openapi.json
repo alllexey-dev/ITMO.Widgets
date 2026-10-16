@@ -9748,6 +9748,12 @@
           "capabilities": {
             "$ref": "#/components/schemas/UserCapabilities"
           },
+          "gender": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "groups": {
             "type": "array",
             "items": {
@@ -9770,6 +9776,7 @@
         },
         "required": [
           "capabilities",
+          "gender",
           "groups",
           "isu",
           "name",

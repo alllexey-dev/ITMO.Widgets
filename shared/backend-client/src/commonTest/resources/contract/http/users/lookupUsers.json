@@ -23,7 +23,8 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female"
         },
         "relationship": "FRIENDS"
       },
@@ -48,7 +49,8 @@
             "canViewSchedule": false,
             "canViewSport": false,
             "canViewFriends": false
-          }
+          },
+          "gender": "female"
         },
         "relationship": "INCOMING"
       }

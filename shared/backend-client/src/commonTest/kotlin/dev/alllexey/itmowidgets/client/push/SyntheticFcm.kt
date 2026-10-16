@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.client.push
 /**
  * FCM `data` strings as Backend 1.7.0 writes them with Gson: declaration order, `null` fields omitted
  * and `OffsetDateTime.toString()`, which drops `:00` seconds. The values equal the vendored `fcm/` fixtures (Backend's
- * synthetic data), so both must decode to equal payloads.
+ * synthetic data), so both must decode to equal payloads; the user carries `gender` since Backend 1.12.0.
  */
 object SyntheticFcm {
 
@@ -12,7 +12,7 @@ object SyntheticFcm {
             """"name":"Друг Первый","pictureUrl":"https://example.org/avatars/100002.jpg","groups":[""" +
             """{"name":"К3240","course":2,"facultyShortName":"ФИТИП"},""" +
             """{"name":"К3240c","course":2,"facultyShortName":"ФИТИП"}],""" +
-            """"capabilities":{"canViewSchedule":true,"canViewSport":true,"canViewFriends":true}},""" +
+            """"capabilities":{"canViewSchedule":true,"canViewSport":true,"canViewFriends":true},"gender":"female"},""" +
             """"occurredAt":"2026-10-05T12:00+03:00"}}"""
 
     private const val GSON_LESSONS: String =

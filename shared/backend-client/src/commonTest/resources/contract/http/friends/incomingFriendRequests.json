@@ -22,7 +22,8 @@
           "canViewSchedule": false,
           "canViewSport": false,
           "canViewFriends": false
-        }
+        },
+        "gender": "female"
       },
       "relationship": "INCOMING"
     }

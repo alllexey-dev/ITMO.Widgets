@@ -121,7 +121,8 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female"
         },
         "updatedAt": "2026-10-01T10:00:00Z"
       },
@@ -162,7 +163,8 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female"
         },
         "updatedAt": "2026-10-02T10:00:00Z"
       },
@@ -203,7 +205,8 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female"
         },
         "updatedAt": "2026-10-03T10:00:00Z"
       }
@@ -246,7 +249,8 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female"
         },
         "updatedAt": "2026-10-04T10:00:00Z"
       },
@@ -287,7 +291,8 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female"
         },
         "updatedAt": "2026-10-01T10:00:00Z"
       }

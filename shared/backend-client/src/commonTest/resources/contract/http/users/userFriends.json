@@ -22,7 +22,8 @@
           "canViewSchedule": true,
           "canViewSport": true,
           "canViewFriends": true
-        }
+        },
+        "gender": "female"
       },
       "relationship": "FRIENDS"
     },
@@ -47,7 +48,8 @@
           "canViewSchedule": false,
           "canViewSport": false,
           "canViewFriends": false
-        }
+        },
+        "gender": "female"
       },
       "relationship": "INCOMING"
     },
@@ -72,7 +74,8 @@
           "canViewSchedule": true,
           "canViewSport": false,
           "canViewFriends": true
-        }
+        },
+        "gender": "female"
       },
       "relationship": "OUTGOING"
     },
@@ -86,7 +89,8 @@
           "canViewSchedule": true,
           "canViewSport": false,
           "canViewFriends": true
-        }
+        },
+        "gender": null
       },
       "relationship": "NONE"
     }

@@ -35,7 +35,8 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female"
         },
         "sourceTitle": null,
         "sourceLink": null

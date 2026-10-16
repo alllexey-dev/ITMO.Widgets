@@ -21,7 +21,8 @@
         "canViewSchedule": true,
         "canViewSport": true,
         "canViewFriends": true
-      }
+      },
+      "gender": "female"
     },
     "relationship": "OUTGOING"
   },
