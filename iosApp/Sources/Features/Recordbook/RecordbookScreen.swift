@@ -60,7 +60,9 @@ struct RecordbookScreen: View {
     private func open(_ target: RecordbookTarget) {
         switch onEnum(of: target) {
         case let .subject(subject):
-            if let args = subject.args.validOrNull() { router.open(AppRoutes.RecordbookSubject(args: args)) }
+            if let args = subject.args.validOrNull() {
+                router.open(AppRoutes.RecordbookSubject(args: args, materials: false))
+            }
         case .sport:
             router.selectedTab = .sport
         }
