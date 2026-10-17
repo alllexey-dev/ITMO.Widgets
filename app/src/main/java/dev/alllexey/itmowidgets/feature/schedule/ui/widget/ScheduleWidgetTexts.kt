@@ -85,9 +85,15 @@ internal class ScheduleWidgetTexts(private val context: Context) {
         }
     }
 
+    /** `очередь 2 из 5`, or `очередь` while Backend does not know the place. */
+    fun queue(lesson: WidgetLesson): String =
+        if (lesson.queuePosition > 0 && lesson.queueTotal > 0) {
+            context.getString(R.string.lesson_pill_queue_position, lesson.queuePosition, lesson.queueTotal)
+        } else context.getString(R.string.lesson_pill_queue)
+
     /** `1506, Кронва`, `онлайн` or the queue. */
     fun shortPlace(lesson: WidgetLesson): String = when {
-        lesson.queued -> context.getString(R.string.lesson_pill_queue)
+        lesson.queued -> queue(lesson)
         lesson.online -> online()
         else -> listOfNotNull(room(lesson), building(lesson)).joinToString(", ")
     }

@@ -23,6 +23,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 3,
               "date": "2026-09-07",
@@ -51,6 +53,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 4,
                 "date": "2026-09-07",
@@ -75,6 +79,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -117,6 +123,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 1,
                 "date": "2026-09-07",
@@ -144,6 +152,8 @@
               "changed": true,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 2,
                 "date": "2026-09-07",
@@ -171,6 +181,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 3,
                 "date": "2026-09-07",
@@ -196,6 +208,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 4,
                 "date": "2026-09-07",
@@ -221,6 +235,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -262,6 +278,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 3,
                 "date": "2026-09-07",
@@ -290,6 +308,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 4,
                   "date": "2026-09-07",
@@ -314,6 +334,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 5,
                   "date": "2026-09-07",
@@ -356,6 +378,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 1,
                   "date": "2026-09-07",
@@ -383,6 +407,8 @@
                 "changed": true,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 2,
                   "date": "2026-09-07",
@@ -410,6 +436,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 3,
                   "date": "2026-09-07",
@@ -435,6 +463,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 4,
                   "date": "2026-09-07",
@@ -460,6 +490,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 5,
                   "date": "2026-09-07",
@@ -547,6 +579,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 4,
               "date": "2026-09-07",
@@ -574,6 +608,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -616,6 +652,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 1,
                 "date": "2026-09-07",
@@ -643,6 +681,8 @@
               "changed": true,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 2,
                 "date": "2026-09-07",
@@ -670,6 +710,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 3,
                 "date": "2026-09-07",
@@ -695,6 +737,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 4,
                 "date": "2026-09-07",
@@ -720,6 +764,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -759,6 +805,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 4,
                 "date": "2026-09-07",
@@ -786,6 +834,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 5,
                   "date": "2026-09-07",
@@ -828,6 +878,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 1,
                   "date": "2026-09-07",
@@ -855,6 +907,8 @@
                 "changed": true,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 2,
                   "date": "2026-09-07",
@@ -882,6 +936,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 3,
                   "date": "2026-09-07",
@@ -907,6 +963,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 4,
                   "date": "2026-09-07",
@@ -932,6 +990,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 5,
                   "date": "2026-09-07",
@@ -1083,6 +1143,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 4,
               "date": "2026-09-07",
@@ -1111,6 +1173,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -1153,6 +1217,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 1,
                 "date": "2026-09-07",
@@ -1180,6 +1246,8 @@
               "changed": true,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 2,
                 "date": "2026-09-07",
@@ -1207,6 +1275,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 3,
                 "date": "2026-09-07",
@@ -1232,6 +1302,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 4,
                 "date": "2026-09-07",
@@ -1257,6 +1329,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -1296,6 +1370,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 4,
                 "date": "2026-09-07",
@@ -1324,6 +1400,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 5,
                   "date": "2026-09-07",
@@ -1366,6 +1444,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 1,
                   "date": "2026-09-07",
@@ -1393,6 +1473,8 @@
                 "changed": true,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 2,
                   "date": "2026-09-07",
@@ -1420,6 +1502,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 3,
                   "date": "2026-09-07",
@@ -1445,6 +1529,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 4,
                   "date": "2026-09-07",
@@ -1470,6 +1556,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 5,
                   "date": "2026-09-07",
@@ -1591,6 +1679,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 5,
               "date": "2026-09-07",
@@ -1635,6 +1725,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 1,
                 "date": "2026-09-07",
@@ -1662,6 +1754,8 @@
               "changed": true,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 2,
                 "date": "2026-09-07",
@@ -1689,6 +1783,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 3,
                 "date": "2026-09-07",
@@ -1714,6 +1810,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 4,
                 "date": "2026-09-07",
@@ -1739,6 +1837,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -1780,6 +1880,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -1824,6 +1926,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 1,
                   "date": "2026-09-07",
@@ -1851,6 +1955,8 @@
                 "changed": true,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 2,
                   "date": "2026-09-07",
@@ -1878,6 +1984,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 3,
                   "date": "2026-09-07",
@@ -1903,6 +2011,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 4,
                   "date": "2026-09-07",
@@ -1928,6 +2038,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 5,
                   "date": "2026-09-07",
@@ -1985,6 +2097,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 5,
               "date": "2026-09-07",
@@ -2030,6 +2144,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 1,
                 "date": "2026-09-07",
@@ -2057,6 +2173,8 @@
               "changed": true,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 2,
                 "date": "2026-09-07",
@@ -2084,6 +2202,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 3,
                 "date": "2026-09-07",
@@ -2109,6 +2229,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 4,
                 "date": "2026-09-07",
@@ -2134,6 +2256,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -2175,6 +2299,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 5,
                 "date": "2026-09-07",
@@ -2220,6 +2346,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 1,
                   "date": "2026-09-07",
@@ -2247,6 +2375,8 @@
                 "changed": true,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 2,
                   "date": "2026-09-07",
@@ -2274,6 +2404,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 3,
                   "date": "2026-09-07",
@@ -2299,6 +2431,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 4,
                   "date": "2026-09-07",
@@ -2324,6 +2458,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 5,
                   "date": "2026-09-07",
@@ -2445,6 +2581,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 6,
               "date": "2026-09-07",
@@ -2473,6 +2611,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -2499,6 +2639,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -2540,6 +2682,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -2567,6 +2711,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -2594,6 +2740,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -2634,6 +2782,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -2662,6 +2812,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -2703,6 +2855,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 6,
                   "date": "2026-09-07",
@@ -2730,6 +2884,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -2776,6 +2932,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 6,
               "date": "2026-09-07",
@@ -2805,6 +2963,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -2831,6 +2991,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -2874,6 +3036,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -2901,6 +3065,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -2928,6 +3094,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -2968,6 +3136,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -2997,6 +3167,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -3040,6 +3212,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 6,
                   "date": "2026-09-07",
@@ -3067,6 +3241,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -3113,6 +3289,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 6,
               "date": "2026-09-07",
@@ -3142,6 +3320,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -3168,6 +3348,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -3211,6 +3393,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -3238,6 +3422,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -3265,6 +3451,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -3306,6 +3494,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -3335,6 +3525,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -3378,6 +3570,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 6,
                   "date": "2026-09-07",
@@ -3405,6 +3599,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -3497,6 +3693,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 6,
               "date": "2026-09-07",
@@ -3527,6 +3725,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -3553,6 +3753,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -3595,6 +3797,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -3622,6 +3826,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -3649,6 +3855,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -3690,6 +3898,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -3720,6 +3930,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -3762,6 +3974,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 6,
                   "date": "2026-09-07",
@@ -3789,6 +4003,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -3905,6 +4121,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 7,
               "date": "2026-09-07",
@@ -3934,6 +4152,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -3976,6 +4196,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -4003,6 +4225,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -4030,6 +4254,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -4071,6 +4297,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -4115,6 +4343,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 6,
                   "date": "2026-09-07",
@@ -4142,6 +4372,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -4194,6 +4426,8 @@
             "changed": false,
             "cancelled": false,
             "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
             "lesson": {
               "pairId": 7,
               "date": "2026-09-07",
@@ -4224,6 +4458,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -4266,6 +4502,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -4293,6 +4531,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -4320,6 +4560,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",
@@ -4361,6 +4603,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -4406,6 +4650,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 6,
                   "date": "2026-09-07",
@@ -4433,6 +4679,8 @@
                 "changed": false,
                 "cancelled": false,
                 "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
                 "lesson": {
                   "pairId": 7,
                   "date": "2026-09-07",
@@ -4564,6 +4812,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 6,
                 "date": "2026-09-07",
@@ -4591,6 +4841,8 @@
               "changed": false,
               "cancelled": false,
               "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
               "lesson": {
                 "pairId": 7,
                 "date": "2026-09-07",
@@ -4618,6 +4870,8 @@
               "changed": false,
               "cancelled": false,
               "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
               "lesson": {
                 "pairId": 8,
                 "date": "2026-09-07",

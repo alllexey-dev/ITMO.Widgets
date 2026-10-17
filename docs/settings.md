@@ -9,8 +9,7 @@ listed here is not a setting. Screens are built declaratively; see the
 The settings root is a compact catalogue, not a scrolling list of every switch:
 
 - `Доступ`: `Подключение к ITMO.Widgets` (with account deletion), `Друзья и приватность`, and the Android notifications action.
-- `Виджеты`: `Компактное расписание`, `Полное расписание`, the QR widget and
-  the `Виджеты в цвет темы` switch.
+- `Виджеты`: one row to the widgets gallery (`Виджеты`, `AppRoutes.Settings("WIDGETS")`).
 - `Приложение`: `Оформление`, home screen, schedule, recordbook
   (`Зачётка`), sport, and maintenance.
 
@@ -54,7 +53,7 @@ for the permission while iOS has never asked, then opens the app's
 notification settings. The background work row is `Обновление контента`
 (Background App Refresh): it shows while a background check is on and
 Background App Refresh is off or restricted for the app, and opens the app's
-page in Settings. Widget pages show no live preview. The error journal shares
+page in Settings. The error journal shares
 the plain-text journal through the share sheet; a Kotlin crash shows on the
 next launch, Swift crashes are not recorded.
 
@@ -101,9 +100,9 @@ and every choice recolours it and every Compose screen at once.
 
 | Row | Default |
 |---|---|
-| `Виджеты в цвет темы` (root, `Виджеты`, a switch) | off: the widgets' own colours |
+| `Виджеты в цвет темы` (the widgets gallery, below the cards) | off: the widgets' own colours |
 
-- On, both schedule widgets and the QR widget draw with the scheme the stored
+- On, the next-lesson, day, sport and QR widgets draw with the scheme the stored
   `Оформление` gives (`resolveColorScheme`: accent or `Свой цвет`, `Стиль
   палитры`, `Контраст`; with `Как обои` at the default style and contrast the
   wallpaper's scheme on Android 12+, the brand scheme elsewhere), light or dark
@@ -115,8 +114,8 @@ and every choice recolours it and every Compose screen at once.
 - Stored in `widgets_follow_app_theme` (boolean; absent reads as off). The
   settings row key is `widgets_follow_theme`.
 - Turning the switch, or any change on `Оформление`, redraws installed widgets
-  at once (`WidgetRefreshRequester.refreshAll`); the widget previews in
-  settings follow both.
+  at once (`WidgetRefreshRequester.refreshAll`); the gallery's previews
+  follow both.
 - QR widget precedence: without `Динамические цвета` the code stays black on
   white whatever this switch says (it always scans); with them the code and the
   spoiler take the app's scheme while the switch is on, the system's colours
@@ -135,7 +134,7 @@ switch, and `Свой цвет` the system colour well, which reports `#RRGGBB` 
 Android's picker. There is no sample: the SwiftUI screens keep their tint,
 while the Compose screens recolour at once. iOS reads and writes the same keys
 of its own `app_preferences` file. `Виджеты в цвет темы` is the same switch of
-the SwiftUI form under `Виджеты`, stored in `widgets_follow_app_theme`; the app
+the SwiftUI gallery, stored in `widgets_follow_app_theme`; the app
 writes the palette into the widgets' App Group files and reloads them
 ([iOS widgets](ios.md#widgets)). The lesson, day and QR widgets follow it in
 full colour; the tinted and clear home screens and the Lock Screen keep the
@@ -203,56 +202,56 @@ do not incur an additional delay. Disabling services takes effect immediately.
   chooses `Анонимно` per review in the editor
   ([teacher reviews](features/reviews.md#editor)).
 
-## Schedule widgets
+## Widgets gallery
 
-Each format has its own settings page and independent persisted values, shared
-only among installed instances of that same format:
+`Виджеты` (spec C4, `SettingsPage.WIDGETS`; the names of the old pages
+`COMPACT_SCHEDULE_WIDGET`, `FULL_SCHEDULE_WIDGET`, `QR_WIDGET` and
+`SCHEDULE_WIDGETS` open it too). The subtitle counts the placed widgets
+(`2 на главном экране`, iOS `на экране «Домой»`) once there are any. A card per
+format shows the real widget on the sample Monday at 12:22
+(`SchedulePreviewScenario`, `SportWidgetSamples`; never the user's data) on a
+wallpaper, its name and what it shows, `Добавить` (Android pins it through the
+launcher, `WidgetPinRequester`) or `на экране`, and the settings button. iOS
+cannot place a widget from the app: it shows `Как добавить` and, below the
+cards, the Lock Screen widgets and the `Пропуск` Control. A format's settings
+open in a sheet with its preview again and `Пример на 12:22, настройки
+применятся ко всем таким виджетам`; every change applies at once to all placed
+widgets of the format. Below the cards: `Виджеты в цвет темы`.
 
-| Page | Controls | Defaults |
+| Format | Settings | Defaults |
 |---|---|---|
-| `Компактное расписание` | `Следующая пара заранее`, `Скрывать преподавателя`, `Размер текста` | early switch on; teacher visible; text `Обычный` |
-| `Полное расписание` | `Скрывать преподавателя`, `Скрывать прошедшие занятия`, `Показывать расписание на завтра`, `Размер текста` | teacher visible; past lessons visible; tomorrow off; text `Обычный` |
+| `Пара` (W1, next lesson) | `Следующая пара заранее`, `Размер текста` | early switch on; `Обычный` |
+| `Расписание на день` (W2) | `Скрывать прошедшие пары`, `Показывать преподавателя`, `Завтрашние пары вечером`, `Размер текста` | past lessons shown; teacher shown; tomorrow on; `Обычный` |
+| `Спорт` (W3) | none | |
+| `Пропуск` | [QR widget](#qr-widget) | |
 
-- The compact widget shows today's current/next lesson. Its optional early switch
-  advances 15 minutes before a lesson ends. It has no past-list or tomorrow-list
-  switches, since neither applies to its format.
-- The full widget keeps a lesson until its actual end when hiding past lessons,
-  regardless of the compact widget's early-switch preference. Its optional
-  tomorrow list appears only after today's lessons actually finish.
-- `Размер текста` (`Обычный`, `Крупный`, `Очень крупный`) scales every text in
-  that format's widget by 1, 1.2 or 1.4 relative to the layout's own sizes.
-  It exists because widgets cannot follow the app's typography and a widget
-  stretched over a large area keeps small fixed text; the choice is per format and stored in
-  `compact_widget_text_size` / `full_widget_text_size`. The preview follows it.
-- Teacher visibility is independent, including pending sport rows and the
-  official-only offline fallback. Format-scoped preference keys override read-only
-  unscoped fallback keys, preserving existing choices without linking later edits.
-- Each page has a pinned live preview of only its own format, using the real
-  layouts and selection rules. There is no format pager inside either page.
-  Sample time switches between 12:50 (during lessons) and 18:00 (after lessons)
-  and survives view recreation. Examples are fixed local data, not the user's
-  schedule; they never change academic time, caches or installed widgets.
-- Completed full-widget rows dim uniformly, including both time labels. Status
-  messages center their title and hint; normal rows retain their alignment.
-  The full widget centers its `Сегодня`/`Завтра` date header.
-- Smart updates and the established visual style remain fixed. Shared update
-  work chooses the earliest boundary needed by either format. Successful setting
-  writes and sport mutations refresh installed widgets without waiting for the
-  next automatic update; failed writes preserve the saved values.
-- The schedule-level `Автозапись на спорт` preference still controls the optional
-  pending projection in the app and both widgets; it is not a format setting.
+- Each format keeps its own keys: `compact_widget_next_lesson_early`,
+  `compact_widget_text_size`, `full_widget_hide_teacher` (`Показывать
+  преподавателя` is its inverse), `full_widget_hide_past`,
+  `full_widget_show_tomorrow` (absent now reads as on), `full_widget_text_size`.
+  Unscoped 2.2 keys are read only as defaults.
+- The next-lesson widget names no teacher; `compact_widget_hide_teacher` stays
+  for the first-run flow only.
+- `Следующая пара заранее` moves the next-lesson widget on 15 minutes before
+  the current lesson ends. `Завтрашние пары вечером` shows tomorrow on the day
+  widget once today's last lesson ended; off, today stays with everything past.
+- `Размер текста` (`Обычный`, `Крупный`, `Очень крупный`) scales every text of
+  the format's widget by 1, 1.2 or 1.4: widgets cannot follow the app's
+  typography.
+- The schedule-level `Автозапись на спорт` still controls the queue rows of the
+  app and both schedule widgets; it is not a format setting.
 
 ## QR widget
 
-- A live preview immediately reflects colors, spoiler, animation, and custom-image
+- The settings of the `Пропуск` card of the [gallery](#widgets-gallery). Its
+  live preview immediately reflects colors, spoiler, animation, and custom-image
   changes. Tap the preview to reveal/hide the example code; changing animation
   plays it once. Motion stops when the screen is no longer visible.
 - The preview uses the real widget's bitmap and animation renderers, but contains
   only a clearly labelled sample payload, never an active access pass. No network
   requests or widget registration are needed.
-- The preview frame is 184 × 184 dp. Sample images warm up from the settings root
-  and are reused from a bounded, palette-aware cache. The QR page enters only when
-  its first image (or error state) is ready, without a transient preview spinner.
+- Sample images warm up when the gallery opens and are reused from a bounded,
+  palette-aware cache.
 - `Динамические цвета` is enabled by default.
 - `Скрывать QR-код за спойлером` is enabled by default.
 - `Анимация открытия` offers circle, fade, and no animation. Circle is the
@@ -265,11 +264,11 @@ only among installed instances of that same format:
   A failed replacement preserves the previous image.
 - `Сбросить изображение спойлера` removes the custom image.
 - Animation and custom-image controls are disabled when the spoiler is disabled.
-- `Добавить в шторку` (`Плитка «QR-пропуск» в быстрых настройках`) is the first
-  row, in a group of its own, on Android 13+ while the device flag
+- `Добавить в шторку` (`Плитка «QR-пропуск» в быстрых настройках`) is the last
+  row of the sheet, in a group of its own, on Android 13+ while the device flag
   `qr_tile_added` is off. It shows the system dialog
   (`StatusBarManager.requestAddTileService`). Added: the flag is set and the row
-  leaves without moving the preview. Already added: the flag is set and a
+  leaves. Already added: the flag is set and a
   snackbar says `Плитка уже в шторке`. Declined or a request in progress:
   nothing. Other errors: `Не удалось добавить плитку`. The flag belongs to the
   device and survives sign-out; removing the tile from the shade clears it and
@@ -277,8 +276,8 @@ only among installed instances of that same format:
 
 ### iOS
 
-The iOS QR widget page lists `Динамические цвета` and `Скрывать QR-код за
-спойлером` without the preview, the animation and the custom image rows. The
+The iOS `Пропуск` sheet lists `Динамические цвета` and `Скрывать QR-код за
+спойлером` without the animation and the custom image rows. The
 iOS widget follows both switches, and a change reaches placed widgets at once:
 without the spoiler the code shows straight away; with dynamic colours the
 code and the spoiler take the app's colours for the widget's theme, dark on
@@ -514,14 +513,15 @@ model (`SettingItem`, `SettingSection`, `SettingsPage`, `SettingRowId`,
 `R`, Compose or a resource id (`SettingsRulesTest`). iOS renders the same
 pages and the journal as SwiftUI forms over the shared view models.
 
-Android keeps the hosts in `app/`: `SettingsFragment` (permissions, system
-pages, the widget preview in the screen's slot), `DiagnosticsFragment` (the
+Android keeps the hosts in `app/`: `SettingsEntries` (permissions, system
+pages, the gallery's widget previews and pinning), `DiagnosticsFragment` (the
 clipboard) and `IcsExportBottomSheet` (the date range picker, the share and
 view intents), plus `AndroidBackgroundWorkAccess`,
 `AndroidQuickSettingsTileAccess` and `CustomSpoilerRepositoryImpl`. Their looks
 are the `SettingsScreenshotTest` baselines of `:shared:feature-settings` in
-four appearances; `SettingsNavigationTest` and `WidgetPreviewTest` cover the
-host flows on a device.
+four appearances (the gallery's with the real widgets in `:app`'s
+`WidgetsGalleryScreenshotTest`); `SettingsNavigationTest` covers the host flows
+on a device.
 
 ## Debug-only controls
 

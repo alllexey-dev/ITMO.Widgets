@@ -12,8 +12,10 @@ new iOS app.
 
 ### Fixes (2026-10-17)
 
+- The lesson sheet shows `Предмет` and `Ссылки 3` on both platforms when the record book knows the lesson's subject (the same match as the subject page's `Пары`): `Предмет` opens the subject page, `Ссылки` its `Материалы` tab. The count comes from the links stored on the device and is 0 without the connection.
 - A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).
 - A doubtful total shows `Проверьте итог` on the subject page; the review shows the total with its reason, the row around it and the other candidates, and `Вернуть авто` undoes a hand-picked total. On iOS `Мои баллы` is a native sheet (#419).
+- An own sport queue in Сегодня and Расписание shows its place as the sport tab does, `очередь 2 из 5`, on both platforms; a predicted lesson or an unknown place keeps `очередь`.
 
 ### Fixes (2026-10-15)
 
@@ -25,7 +27,8 @@ new iOS app.
 - Past days in the schedule and sport week strips are dimmer; today and the selected day keep full emphasis (#424).
 - `Главный экран` settings can hide the QR pass entry on Сегодня on both platforms without hiding widgets or shortcuts (#420).
 - Sport friend rows and lesson sheets preserve avatar URLs on both platforms; iOS friend-request notifications use their photo too (#426).
-- Sport lessons whose MyITMO end falls on the wrong date (two days before the start) end on their own day at the time slot end, so rows, sheets, the schedule, widgets and calendar export show the right time and length.
+- Sport lessons whose MyITMO end falls on the wrong date (two days before the start) end on their own day at the time slot end, so rows, sheets, the schedule, widgets and calendar export show the right time and length (#431).
+- MyItmoApi 2.1.1: the sport lesson end comes from its `normalizedDateEnd`, which replaces the app's copy of the rule; behaviour is unchanged.
 - Avatar initials are the surname and the given name on both platforms: «Фамилия Имя Отчество» shows ФИ instead of ФО, and the own name reads «Фамилия Имя» from ITMO.ID's `family_name` and `given_name` instead of its two-word `name`, as other students' names do with Backend that stores the parts (itmo-widgets-backend#52). Avatars of other students take the initials from Backend's new `familyName` and `givenName` when it sends them (contract from Backend e475238). iOS friend requests, sport friends and recordbook teachers use the shared `personInitials`; the demo students follow the same order.
 
 - Subject link votes use like/dislike thumbs on Android and iOS, filled for the selected vote (#421).
@@ -159,6 +162,15 @@ new iOS app.
   free slot; `Моё` lists the sections with the place (`3-й из 7 в секции`), an off switch and the next three dates,
   each of which can be skipped. `Только мои секции` in the filters sheet of `Запись` keeps the lessons of the sections. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
   awards by month with the day the credit was reached; no forecast. Another user's sport shows lesson cards.
+- Widgets are rebuilt on both platforms (RemoteViews on Android, WidgetKit on iOS, one shared snapshot): `Пара`
+  (small, and medium with the next two lessons) shows the lesson to go to with its room in large type and a live
+  countdown, and tomorrow after the last lesson; `Расписание на день` is the day to scale with the `сейчас` line,
+  the current lesson highlighted, past ones dimmed and gaps labelled `окно 2 ч 10 мин`; the new `Спорт` widget has
+  the score ring (visits and bonus, green and closed once the credit is reached) and, medium, the nearest booking
+  or queue in the words of Спорт. A lesson opens its sheet, a queue or booking its sport lesson. iOS adds Lock
+  Screen widgets and the `Пропуск` Control. `Виджеты` in settings is a gallery of live previews with `Добавить`
+  (Android) or `Как добавить` (iOS) and each format's settings in a sheet; it replaces the `Компактное
+  расписание`, `Полное расписание` and QR pages, and `Завтрашние пары вечером` is now on by default.
 - `Запись` filters: the sheet shows six sport types first (the ones the student books or attended, then the most
   booked) with `Ещё` for the rest and a search over them; chosen types stay in sight. The building filter lists every
   building with lessons, `Другие корпуса` for venues My ITMO's list lacks and `Онлайн`. The week strip runs from this

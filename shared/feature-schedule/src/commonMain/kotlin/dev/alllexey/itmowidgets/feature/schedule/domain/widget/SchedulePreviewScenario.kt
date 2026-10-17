@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.lesson.DayLesson
 import dev.alllexey.itmowidgets.core.lesson.LessonChange
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.lesson.QueuePlace
 import dev.alllexey.itmowidgets.core.lesson.SportMark
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
@@ -81,7 +82,8 @@ class SchedulePreviewScenario(private val selector: ScheduleWidgetSelector) {
             listOf(
                 lesson(6, "10:00", "11:30", labels.algorithms, LECTURE, "1404", BIRZHA),
                 lesson(7, "11:40", "13:10", labels.history, PRACTICE, "311", CHAIKA),
-                lesson(8, "15:20", "16:50", labels.swimming, SPORT, SWIMMING_POOL, LOMO, sport = SportMark.QUEUED),
+                lesson(8, "15:20", "16:50", labels.swimming, SPORT, SWIMMING_POOL, LOMO, sport = SportMark.QUEUED)
+                    .copy(queue = QueuePlace(2, 5)),
             ),
             cachedAt = null,
         ),

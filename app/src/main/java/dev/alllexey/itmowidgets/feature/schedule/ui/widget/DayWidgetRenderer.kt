@@ -6,6 +6,7 @@ import android.util.SizeF
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
@@ -92,6 +93,7 @@ object DayWidgetRenderer {
     }
 
     /** API 31+: the hours, the gaps, the `сейчас` line under the lessons and its time on top, each at its minute. */
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun canvas(
         context: Context,
         views: RemoteViews,
@@ -191,12 +193,12 @@ object DayWidgetRenderer {
         row.setViewVisibility(R.id.lesson_building, if (building != null) View.VISIBLE else View.GONE)
         row.setTextViewText(R.id.lesson_building, building)
         val pill = when {
-            lesson.cancelled -> R.string.lesson_pill_cancelled
-            lesson.queued -> R.string.lesson_pill_queue
+            lesson.cancelled -> context.getString(R.string.lesson_pill_cancelled)
+            lesson.queued -> texts.queue(lesson)
             else -> null
         }
         row.setViewVisibility(R.id.lesson_pill, if (pill != null) View.VISIBLE else View.GONE)
-        pill?.let { row.setTextViewText(R.id.lesson_pill, context.getString(it)) }
+        row.setTextViewText(R.id.lesson_pill, pill)
         colors.apply(row, R.id.lesson_subject, "setTextColor", ink)
         colors.apply(row, R.id.lesson_room, "setTextColor", if (lesson.changed) R.color.widget_warn else ink)
         colors.tint(row, R.id.lesson_online_icon, ink)
@@ -222,6 +224,7 @@ object DayWidgetRenderer {
     }
 
     /** [viewId] at [top] dp of the canvas, [height] dp high (null: its own), [start] dp from its left edge. */
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun place(views: RemoteViews, viewId: Int, top: Float, height: Float?, start: Float = 0f) {
         views.setViewLayoutMargin(viewId, RemoteViews.MARGIN_TOP, top, TypedValue.COMPLEX_UNIT_DIP)
         if (start > 0f) views.setViewLayoutMargin(viewId, RemoteViews.MARGIN_START, start, TypedValue.COMPLEX_UNIT_DIP)

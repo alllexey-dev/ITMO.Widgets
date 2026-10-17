@@ -131,12 +131,12 @@ slot. Semantics are in Backend's sport automation contract (Sections).
 | `core/sport/PendingSportBookingsRepository` | read-only projection of own active queues for the schedule and widgets |
 
 - MyITMO sends some lessons with a `date_end` on the wrong date (a weekly
-  series ending two days before it starts). The MyItmoApi mappers rebuild an
-  end that is not after the start or falls on another Moscow date on the
-  start's Moscow date from the time slot end (else the raw time of day) and
-  keep it when 15 minutes to 6 hours long, otherwise the raw value stays. It is
-  the rule of MyItmoApi 2.1.1 `normalizedDateEnd`, copied until the app is on
-  2.1.1; Backend applies the same rule to its catalog.
+  series ending two days before it starts). The MyItmoApi mappers take the end
+  from MyItmoApi's `normalizedDateEnd`: an end that is not after the start or
+  falls on another Moscow date is rebuilt on the start's Moscow date from the
+  time slot end (else the raw time of day) and kept when 15 minutes to 6 hours
+  long; when it gives no sane end the raw value stays. Backend applies the same
+  rule to its catalog.
 - Sign-out runs the session cleaners of `SportDataRepositoryImpl` and
   `SportBookingRepositoryImpl`: score and attempts return to `Loading`, queue
   data to `Disabled`, bookings to an empty list, and an in-flight response of

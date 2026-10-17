@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
-import dev.alllexey.itmowidgets.core.settings.WidgetFormat
-import dev.alllexey.itmowidgets.feature.settings.ui.widgets.WidgetsGalleryTags
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -14,8 +12,10 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.app.shell.BottomSheetSceneStrategy
@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellBackStack
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropActivity
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
@@ -38,6 +39,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsTestTags
 import dev.alllexey.itmowidgets.feature.settings.ui.diagnostics.DiagnosticsTestTags
 import dev.alllexey.itmowidgets.feature.settings.ui.ics.IcsExportTestTags
+import dev.alllexey.itmowidgets.feature.settings.ui.widgets.WidgetsGalleryTags
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -141,7 +143,8 @@ class SettingsEntriesTest {
         compose.onNodeWithTag(WidgetsGalleryTags.SCROLL).performScrollToNode(hasTestTag(WidgetsGalleryTags.settings(WidgetFormat.PASS)))
         clickTop(WidgetsGalleryTags.settings(WidgetFormat.PASS))
 
-        clickTop(SettingRowId.QR_CUSTOM_IMAGE.key)
+        compose.onAllNodesWithTag(SettingRowId.QR_CUSTOM_IMAGE.key).onLast().performScrollTo().performClick()
+        compose.waitForIdle()
         val pick = shadowOf(compose.activity).nextStartedActivityForResult
         restoration.emulateSavedInstanceStateRestore()
         awaitGallery()

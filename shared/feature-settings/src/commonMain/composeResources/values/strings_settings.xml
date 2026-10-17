@@ -34,7 +34,6 @@
     <string name="settings_privacy_loading">Загружаем…</string>
     <string name="settings_privacy_load_error">Сервер не ответил.</string>
     <string name="settings_privacy_retry">Повторить</string>
-    <string name="settings_group_qr_widget">Виджет QR-кода</string>
     <string name="settings_qr_animation_title">Анимация открытия</string>
     <string name="settings_qr_animation_circle">Круг</string>
     <string name="settings_qr_animation_fade">Плавное появление</string>
@@ -81,8 +80,6 @@
     <string name="background_work_dialog_message">Чтобы проверки приходили вовремя, разрешите приложению работу без ограничений.</string>
     <string name="background_work_allow">Разрешить</string>
     <string name="background_work_later">Не сейчас</string>
-    <string name="settings_compact_schedule_widget_title">Компактное расписание</string>
-    <string name="settings_full_schedule_widget_title">Полное расписание</string>
     <string name="settings_friends_sharing_title">Кто видит список друзей</string>
     <string name="settings_qr_tile_title">Добавить в шторку</string>
     <string name="settings_qr_tile_description">Плитка «QR-пропуск» в быстрых настройках</string>

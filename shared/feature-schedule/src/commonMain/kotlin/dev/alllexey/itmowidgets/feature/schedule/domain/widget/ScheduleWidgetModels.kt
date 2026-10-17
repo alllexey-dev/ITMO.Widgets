@@ -26,7 +26,8 @@ enum class WidgetLessonState {
 /**
  * One lesson as both widgets draw it, in the lesson card's order: time, the type colour ([typeId]), [subject], [room]
  * and [building] (MyITMO's raw texts; the drawing side shortens them), [teacher] only where the format shows it.
- * [changed] is a change found on the lesson, [cancelled] a cancelled one, [queued] a sport queue (`очередь`).
+ * [changed] is a change found on the lesson, [cancelled] a cancelled one, [queued] a sport queue (`очередь`, `очередь
+ * 2 из 5` with its [queuePosition] of [queueTotal] when Backend knows them, 0 otherwise).
  * [lesson] or [sport] is what a tap opens: the lesson sheet or the queued sport lesson.
  */
 @Serializable
@@ -45,6 +46,8 @@ data class WidgetLesson(
     @SerialName("changed") val changed: Boolean = false,
     @SerialName("cancelled") val cancelled: Boolean = false,
     @SerialName("queued") val queued: Boolean = false,
+    @SerialName("queuePosition") val queuePosition: Int = 0,
+    @SerialName("queueTotal") val queueTotal: Int = 0,
     @SerialName("lesson") val lesson: LessonDetailsArgs? = null,
     @SerialName("sport") val sport: PendingSportDetailsArgs? = null,
 )
