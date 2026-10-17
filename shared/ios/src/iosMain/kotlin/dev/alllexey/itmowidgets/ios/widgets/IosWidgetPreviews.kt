@@ -44,19 +44,20 @@ object IosWidgetPreviews {
 
     private val scenario = SchedulePreviewScenario(ScheduleWidgetSelector())
 
-    /** The gallery's moment, 12:22 on the sample Monday (`SchedulePreviewMoment.LESSON`), in seconds since 1970. */
-    val lessonMoment: Double get() = moment().toEpochMilliseconds() / MILLIS_PER_SECOND
+    /** [moment] on the sample Monday in seconds since 1970; the gallery shows `SchedulePreviewMoment.LESSON`. */
+    fun seconds(moment: SchedulePreviewMoment): Double = scenario.instant(moment).toEpochMilliseconds() / MILLIS_PER_SECOND
 
-    /** `schedule-timeline-v2.json` of the whole sample (the Monday and the Tuesday) with [settings] and [theme]. */
-    suspend fun schedule(settings: ScheduleWidgetSettings, theme: ThemeSpec?): String {
-        val timeline = scenario.timeline(settings, scheduleLabels()).withShortLocations().copy(palette = theme?.widgetPalette())
+    /** `schedule-timeline-v2.json` of the sample from [moment] to the end of the Tuesday with [settings] and [theme]. */
+    suspend fun schedule(settings: ScheduleWidgetSettings, moment: SchedulePreviewMoment, theme: ThemeSpec?): String {
+        val timeline = scenario.timeline(settings, moment, scheduleLabels()).withShortLocations()
+            .copy(palette = theme?.widgetPalette())
         return envelope(ScheduleWidgetTimelineJson.VERSION, ScheduleWidgetTimeline.serializer(), timeline, ScheduleTimelineWriter.JSON)
     }
 
     /** `sport-widget-v1.json` holding [state] of the sample from the gallery's moment on, with [theme]. */
     suspend fun sport(state: SportWidgetSampleState, theme: ThemeSpec?): String {
         val labels = SportWidgetSampleLabels(
-            swimming = text(ScheduleStrings.widget_preview_subject_swimming),
+            swimming = text(SportStrings.widget_preview_sport_swimming),
             volleyball = text(SportStrings.widget_preview_sport_volleyball),
         )
         val from = moment()
@@ -88,7 +89,7 @@ object IosWidgetPreviews {
         physics = text(ScheduleStrings.widget_preview_subject_physics),
         programming = text(CoreStrings.widget_preview_subject_programming),
         english = text(ScheduleStrings.widget_preview_subject_english),
-        swimming = text(ScheduleStrings.widget_preview_subject_swimming),
+        swimming = text(SportStrings.widget_preview_sport_swimming),
         algorithms = text(ScheduleStrings.widget_preview_subject_algorithms),
         history = text(CoreStrings.widget_preview_subject_history),
         teacher = text(ScheduleStrings.widget_preview_teacher),

@@ -59,15 +59,20 @@ entry equals `select` over its interval. `ScheduleWidgetTimelineJson`, version
 "snapshot"}]}`, snapshot in `schedule_snapshot.json` keys, nulls omitted,
 defaults written, ISO-8601 UTC. `version` stays for additive fields and goes
 up for a rename or removal; readers reject a higher one. Fixture:
-`shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json`. Android
+`shared/feature-schedule/fixtures/schedule-widget-timeline-v2.json`. Android
 does not use the timeline.
 
 ### iOS
 
-The lesson and day widgets read the App Group file schedule-timeline-v1.json,
-which `ScheduleTimelineWriter` computes to the end of tomorrow; Swift makes no
-time decisions. Rewritten on sign-in/out, widget options, foreground, cache
-changes and sport actions. Details: [iOS app](../ios.md#widgets).
+The next-lesson and day widgets read the App Group file
+schedule-timeline-v2.json, which `ScheduleTimelineWriter` computes to the end of
+tomorrow; the sport widget reads sport-widget-v1.json, which `SportWidgetWriter`
+computes a week ahead (fixture
+`shared/feature-sport/fixtures/sport-widget-timeline-v1.json`). Swift makes no
+time decisions: it picks the entry of the moment and the last `nowTicks` minute,
+and countdowns are the system's live views. Rewritten on sign-in/out, widget
+options, foreground, cache changes and sport actions. Details:
+[iOS app](../ios.md#widgets).
 
 ## QR widget
 

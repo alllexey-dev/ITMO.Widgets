@@ -136,7 +136,7 @@ private struct DayTimeline: View {
                 if let now = day.now {
                     Text(verbatim: WidgetText.clock(minute: now))
                         .widgetFont(10, weight: .bold, monospacedDigits: true)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(ItmoColor.onError)
                         .padding(.horizontal, 3)
                         .padding(.vertical, 1)
                         .background(WidgetColors.nowLine, in: .capsule)

@@ -215,7 +215,7 @@ enum WidgetPlaceholder: Equatable {
     /// What a tap does, for the states where the app has something to show.
     var hint: LocalizedStringResource? {
         switch self {
-        case .unavailable, .demo, .sportError: .scheduleWidgetOpenAppHint
+        case .unavailable, .demo: .scheduleWidgetOpenAppHint
         default: nil
         }
     }
@@ -289,23 +289,40 @@ struct WidgetCountdown: View {
     }
 }
 
-/// The elapsed part of a lesson from `since` to `until`: the system's timer progress, live.
-struct WidgetLessonProgress<Style: ProgressViewStyle>: View {
+/// The elapsed part of a lesson from `since` to `until`: the system's timer progress, live; a bar or, on the Lock
+/// Screen, a ring.
+struct WidgetLessonProgress: View {
     let since: Date
     let until: Date
     let clock: WidgetClock
-    let style: Style
+    var ring = false
 
     var body: some View {
-        Group {
-            switch clock {
-            case .live:
-                ProgressView(timerInterval: since...until, countsDown: false) {} currentValueLabel: { EmptyView() }
-            case let .frozen(now):
-                ProgressView(value: min(max(now.timeIntervalSince(since) / until.timeIntervalSince(since), 0), 1))
+        switch clock {
+        case .live:
+            ProgressView(timerInterval: since...until, countsDown: false) {} currentValueLabel: { EmptyView() }
+                .progressViewStyle(ring ? AnyProgressViewStyle.circular : .linear)
+        case let .frozen(now):
+            let elapsed = min(max(now.timeIntervalSince(since) / until.timeIntervalSince(since), 0), 1)
+            if ring {
+                Gauge(value: elapsed) {}.gaugeStyle(.accessoryCircularCapacity)
+            } else {
+                ProgressView(value: elapsed).progressViewStyle(.linear)
             }
         }
-        .progressViewStyle(style)
+    }
+}
+
+/// The two system progress styles behind one type.
+enum AnyProgressViewStyle: ProgressViewStyle {
+    case linear
+    case circular
+
+    func makeBody(configuration: Configuration) -> some View {
+        switch self {
+        case .linear: ProgressView(configuration).progressViewStyle(.linear)
+        case .circular: ProgressView(configuration).progressViewStyle(.circular)
+        }
     }
 }
 

@@ -111,7 +111,6 @@ private struct NextLessonTile: View {
                             .padding(12)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(colors.hero, in: .rect(cornerRadius: 16, style: .continuous))
-                            .layoutPriority(1)
                         NextLessonRest(content: content, moment: moment)
                             .padding(.vertical, 4)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -152,7 +151,7 @@ private struct NextLessonHero: View {
                         .widgetFont(13, weight: .semibold)
                         .foregroundStyle(colors.primaryText)
                         .lineLimit(2)
-                        .minimumScaleFactor(0.85)
+                        .minimumScaleFactor(0.7)
                     Text(ScheduleWidgetText.type(of: lesson))
                         .widgetFont(11)
                         .foregroundStyle(colors.secondaryText)
@@ -220,7 +219,7 @@ private struct NextLessonFooter: View {
             switch moment {
             case .now:
                 if let since = content.since, let until = content.until, since < until {
-                    WidgetLessonProgress(since: since, until: until, clock: clock, style: .linear)
+                    WidgetLessonProgress(since: since, until: until, clock: clock)
                         .tint(colors.accent)
                     countdown({ .widgetNextLeft($0) }, until: until)
                         .widgetFont(11, weight: .bold)
@@ -242,6 +241,7 @@ private struct NextLessonFooter: View {
             }
         }
         .lineLimit(1)
+        .minimumScaleFactor(0.7)
     }
 
     /// The template around the live minutes: the template's text before and after its placeholder.
@@ -395,7 +395,7 @@ private struct NextLessonCircular: View {
             switch display {
             case let .lesson(content, moment, lesson, _):
                 if moment == .now, let since = content.since, let until = content.until, since < until {
-                    WidgetLessonProgress(since: since, until: until, clock: clock, style: .circular)
+                    WidgetLessonProgress(since: since, until: until, clock: clock, ring: true)
                         .overlay { minutes(until) }
                         .padding(2)
                 } else if moment != .tomorrow, let until = content.until {
@@ -425,10 +425,10 @@ private struct NextLessonCircular: View {
 
     private func minutes(_ until: Date) -> some View {
         WidgetCountdown(target: until, clock: clock, fields: [.minute])
-            .font(.system(.caption, design: .rounded).weight(.bold))
+            .font(.system(.caption2, design: .rounded).weight(.bold))
             .multilineTextAlignment(.center)
-            .minimumScaleFactor(0.6)
+            .minimumScaleFactor(0.5)
             .lineLimit(2)
-            .frame(maxWidth: 40)
+            .frame(maxWidth: 44)
     }
 }

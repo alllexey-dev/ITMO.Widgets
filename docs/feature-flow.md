@@ -111,8 +111,9 @@ shows (`domain/widget/ScheduleWidgetSelector.kt`).
   after actions that change the schedule.
 - **iOS.** `ScheduleTimelineWriter` (`shared/feature-schedule/src/iosMain`)
   calls `loadTimeline(until)` and writes the timeline to the App Group;
-  `iosApp/Shared/WidgetSnapshots/LessonTimeline.swift` reads it and
-  `iosApp/Extensions/Widgets/Schedule/DayScheduleWidget.swift` draws it.
+  `iosApp/Shared/WidgetSnapshots/ScheduleTimeline.swift` reads it and
+  `iosApp/Extensions/Widgets/Schedule/NextLessonWidget.swift` and
+  `DayWidget.swift` draw it.
 
 ## 9. Tests at each layer
 

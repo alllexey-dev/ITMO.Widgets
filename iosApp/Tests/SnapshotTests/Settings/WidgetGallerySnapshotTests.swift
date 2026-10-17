@@ -27,7 +27,7 @@ final class WidgetGallerySnapshotTests: XCTestCase {
                 .navigationTitle(Text(verbatim: state.page.title.resolved))
                 .navigationSubtitle(Text(verbatim: gallery.subtitle?.resolved ?? ""))
         }
-        assertScreenAppearances(of: view, named: "gallery", appearances: [.light, .dark], height: 2300)
+        assertScreenAppearances(of: view, named: "gallery", appearances: [.light, .dark], height: 1950)
         assertScreenAppearances(of: view, named: "gallery", appearances: [.lightAX1], height: 3400)
     }
 
@@ -61,6 +61,6 @@ final class WidgetGallerySnapshotTests: XCTestCase {
                 .padding(.horizontal, ItmoKit.margin)
         }
         .background(Color(.systemGroupedBackground))
-        assertScreenAppearances(of: view, named: "pass-sheet", appearances: [.light, .dark], height: 700)
+        assertScreenAppearances(of: view, named: "pass-sheet", appearances: [.light, .dark], height: 560)
     }
 }

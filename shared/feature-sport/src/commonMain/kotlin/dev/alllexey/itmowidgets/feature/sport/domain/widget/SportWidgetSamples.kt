@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.widget
 
-/** The sections of the sample, from the platform's catalog (`widget_preview_subject_swimming`, `widget_preview_sport_*`). */
+/** The sections of the sample, from the platform's catalog (`widget_preview_sport_*`). */
 data class SportWidgetSampleLabels(val swimming: String, val volleyball: String)
 
 /**

@@ -80,7 +80,7 @@ final class SettingsSnapshotTests: XCTestCase {
     }
 
     func testLoading() {
-        let state = SettingsUiState(page: .root, sections: [], loaded: false, previewSettings: nil, themePreview: nil, gallery: nil)
+        let state = SettingsUiState(page: .root, sections: [], loaded: false, themePreview: nil, gallery: nil)
         assertPage(state, named: "loading", height: 320, ax1Height: 320)
     }
 
@@ -142,7 +142,7 @@ enum SettingsFixtures {
             page: page,
             sections: provider.sections(page: page, state: state),
             loaded: true,
-            previewSettings: nil,
+           
             themePreview: nil,
             gallery: provider.gallery(page: page, state: state)
         )
@@ -227,7 +227,7 @@ enum SettingsFixtures {
             page: .maintenance,
             sections: [SettingSection(title: text(long), items: items, footer: text(person))],
             loaded: true,
-            previewSettings: nil,
+           
             themePreview: nil,
             gallery: nil
         )

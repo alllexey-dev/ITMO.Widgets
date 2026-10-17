@@ -15,11 +15,11 @@ struct WidgetGalleryPreviews: Equatable {
     @MainActor
     static func load(_ cards: [WidgetCard]) async -> WidgetGalleryPreviews {
         var previews = WidgetGalleryPreviews()
-        let moment = Date(timeIntervalSince1970: IosWidgetPreviews.shared.lessonMoment)
+        let moment = Date(timeIntervalSince1970: IosWidgetPreviews.shared.seconds(moment: .lesson))
         for card in cards {
             switch onEnum(of: card.preview) {
             case let .schedule(schedule):
-                let json = try? await IosWidgetPreviews.shared.schedule(settings: schedule.appearance, theme: schedule.theme)
+                let json = try? await IosWidgetPreviews.shared.schedule(settings: schedule.appearance, moment: .lesson, theme: schedule.theme)
                 let entry = json.flatMap { scheduleEntry(Data($0.utf8), at: moment) }
                 if card.format == .day { previews.day = entry } else { previews.next = entry }
             case let .sport(sport):

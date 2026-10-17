@@ -19,7 +19,7 @@ final class WidgetSnapshotTests: XCTestCase {
     // MARK: Next lesson
 
     func testNextNow() async throws {
-        let entry = try await schedule(at: .now)
+        let entry = try await schedule(at: .lesson)
         assertNext(entry, family: .systemSmall, named: "now", appearances: SnapshotAppearance.all)
         assertNext(entry, family: .systemMedium, named: "now-medium")
     }
@@ -43,12 +43,12 @@ final class WidgetSnapshotTests: XCTestCase {
     }
 
     func testNextInTheAppThemeWithLargeText() async throws {
-        let entry = try await schedule(at: .now, textSize: .large, theme: Self.teal)
+        let entry = try await schedule(at: .lesson, textSize: .large, theme: Self.teal)
         assertNext(entry, family: .systemMedium, named: "now-medium")
     }
 
     func testNextOnTheNarrowestPhone() async throws {
-        let entry = try await schedule(at: .now, textSize: .extraLarge)
+        let entry = try await schedule(at: .lesson, textSize: .extraLarge)
         assertNext(entry, family: .systemMedium, size: WidgetSizes.narrowMedium, named: "now-medium")
     }
 
@@ -60,7 +60,7 @@ final class WidgetSnapshotTests: XCTestCase {
     }
 
     func testNextLockScreen() async throws {
-        let now = try await schedule(at: .now)
+        let now = try await schedule(at: .lesson)
         assertNext(now, family: .accessoryRectangular, named: "rectangular")
         assertNext(now, family: .accessoryInline, named: "inline")
         assertNext(now, family: .accessoryCircular, named: "circular")
@@ -70,7 +70,7 @@ final class WidgetSnapshotTests: XCTestCase {
     // MARK: Day
 
     func testDayNow() async throws {
-        assertDay(try await schedule(at: .now), named: "now", appearances: SnapshotAppearance.all)
+        assertDay(try await schedule(at: .lesson), named: "now", appearances: SnapshotAppearance.all)
     }
 
     func testDayMorning() async throws {
@@ -83,7 +83,7 @@ final class WidgetSnapshotTests: XCTestCase {
 
     /// `settings_widget_hide_past_title` and the teacher on, in the app's theme on the narrowest phone.
     func testDayWithoutPastLessonsInTheAppTheme() async throws {
-        let entry = try await schedule(at: .now, hidePast: true, teacher: true, theme: Self.teal)
+        let entry = try await schedule(at: .lesson, hidePast: true, teacher: true, theme: Self.teal)
         assertDay(entry, size: WidgetSizes.narrowLarge, named: "hide-past")
     }
 
@@ -174,17 +174,9 @@ final class WidgetSnapshotTests: XCTestCase {
 
     // MARK: Samples
 
-    /// The design's moments on the sample Monday (UTC+3).
-    enum Moment: String {
-        case morning = "2026-09-07T05:05:00Z"
-        case now = "2026-09-07T09:22:00Z"
-        case gap = "2026-09-07T10:40:00Z"
-        case evening = "2026-09-07T16:40:00Z"
-    }
-
     /// The sample's schedule entry at `moment`, as the gallery shows it.
     private func schedule(
-        at moment: Moment,
+        at moment: SchedulePreviewMoment,
         textSize: WidgetTextSize = .normal,
         hidePast: Bool = false,
         teacher: Bool = false,
@@ -196,8 +188,8 @@ final class WidgetSnapshotTests: XCTestCase {
                 hideTeacher: !teacher, hidePastLessons: hidePast, showTomorrowWhenTodayIsOver: true, textSize: textSize
             )
         )
-        let file = try await IosWidgetPreviews.shared.schedule(settings: settings, theme: theme)
-        let instant = try XCTUnwrap(AppGroupSnapshot.parseInstant(moment.rawValue))
+        let file = try await IosWidgetPreviews.shared.schedule(settings: settings, moment: moment, theme: theme)
+        let instant = Date(timeIntervalSince1970: IosWidgetPreviews.shared.seconds(moment: moment))
         return try XCTUnwrap(WidgetGalleryPreviews.scheduleEntry(Data(file.utf8), at: instant))
     }
 
@@ -209,7 +201,7 @@ final class WidgetSnapshotTests: XCTestCase {
 
     private func sport(_ state: SportWidgetSampleState, theme: ThemeSpec? = nil) async throws -> SportWidgetEntry {
         let file = try await IosWidgetPreviews.shared.sport(state: state, theme: theme)
-        let moment = Date(timeIntervalSince1970: IosWidgetPreviews.shared.lessonMoment)
+        let moment = Date(timeIntervalSince1970: IosWidgetPreviews.shared.seconds(moment: .lesson))
         return try XCTUnwrap(WidgetGalleryPreviews.sportEntry(Data(file.utf8), at: moment))
     }
 

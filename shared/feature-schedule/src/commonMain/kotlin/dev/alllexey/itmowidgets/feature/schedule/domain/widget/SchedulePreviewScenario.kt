@@ -51,10 +51,14 @@ class SchedulePreviewScenario(private val selector: ScheduleWidgetSelector) {
 
     fun instant(moment: SchedulePreviewMoment): Instant = DATE.atTime(moment.hour, moment.minute).toInstant(ZONE)
 
-    /** The whole sample, from the Monday's midnight to the end of the Tuesday: iOS previews pick its entries. */
-    fun timeline(settings: ScheduleWidgetSettings, labels: SchedulePreviewLabels): ScheduleWidgetTimeline = selector.timeline(
+    /** The sample from [moment] to the end of the Tuesday, the timeline iOS widgets would read then. */
+    fun timeline(
+        settings: ScheduleWidgetSettings,
+        moment: SchedulePreviewMoment,
+        labels: SchedulePreviewLabels,
+    ): ScheduleWidgetTimeline = selector.timeline(
         days(labels),
-        DATE.atStartOfDayIn(ZONE),
+        instant(moment),
         TOMORROW.plus(1, DateTimeUnit.DAY).atStartOfDayIn(ZONE),
         ZONE,
         ScheduleWidgetPreferences(settings),
