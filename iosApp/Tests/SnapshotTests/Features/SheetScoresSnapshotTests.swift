@@ -51,6 +51,7 @@ final class SheetScoresSnapshotTests: XCTestCase {
             ItmoSheet(title: AppStrings.string("sheet_scores_title"), height: .tall) {
                 SheetScoresContent(subject: SheetScoresPreviewSamples.shared.SUBJECT, state: state)
             }
+            .progressViewStyle(StillSpinnerStyle())
         }
         assertScreenAppearances(
             of: screen, named: name, appearances: appearances, settle: 2.5, file: file, testName: testName, line: line
