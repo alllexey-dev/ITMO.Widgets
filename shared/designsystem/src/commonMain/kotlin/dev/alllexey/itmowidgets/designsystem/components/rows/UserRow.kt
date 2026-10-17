@@ -50,7 +50,8 @@ class UserRowAction(
  * A person in a list (home and social): a 48 dp [Avatar], the [name] in `titleMedium`
  * that wraps, a one-line [subtitle] and an optional [status] in `bodySmall`, then the row's actions: a text button
  * for [secondaryAction] and a tonal one for [primaryAction], both inert while [busy]. With [onClick] the whole row
- * opens the person; a row that opens and has no actions ends in a chevron. TalkBack reads the row once.
+ * opens the person; a row that opens and has no actions ends in a chevron. TalkBack reads the row once. [initials]
+ * go to the [Avatar].
  *
  * Under the iOS style it is a cell of an inset group: the second lines in subheadline `secondaryLabel`, the
  * disclosure indicator, the separator under it inset to the name, the pressed cell instead of a ripple; the avatar
@@ -67,13 +68,14 @@ fun UserRow(
     primaryAction: UserRowAction? = null,
     secondaryAction: UserRowAction? = null,
     busy: Boolean = false,
+    initials: String? = null,
 ) {
     val interaction = if (onClick == null) {
         Modifier.semantics(mergeDescendants = true) {}
     } else {
         Modifier.clickable(onClick = onClick)
     }
-    UserRowLayout(name, pictureUrl, subtitle, status, modifier.then(interaction)) {
+    UserRowLayout(name, pictureUrl, subtitle, status, modifier.then(interaction), initials) {
         secondaryAction?.let { ActionButton(it, ProgressButtonStyle.Text, enabled = !busy) }
         primaryAction?.let { ActionButton(it, ProgressButtonStyle.Tonal, enabled = !busy) }
         if (onClick != null && primaryAction == null && secondaryAction == null) {
@@ -109,7 +111,7 @@ fun UserSelectionRow(
         mode == SelectionMode.Single -> Modifier.selectable(selected, role = Role.RadioButton, onClick = pick)
         else -> Modifier.toggleable(selected, role = Role.Checkbox, onValueChange = { pick() })
     }
-    UserRowLayout(name, pictureUrl, subtitle, status, modifier.then(interaction)) {
+    UserRowLayout(name, pictureUrl, subtitle, status, modifier.then(interaction), initials = null) {
         when {
             onSelect != null -> TrailingIcon(Modifier.alpha(if (selected) 1f else 0f), check = true)
             onOpen != null -> LockIcon()
@@ -143,10 +145,11 @@ private fun UserRowLayout(
     subtitle: String?,
     status: String?,
     modifier: Modifier,
+    initials: String?,
     trailing: @Composable () -> Unit,
 ) {
     if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
-        IosUserRowLayout(name, pictureUrl, subtitle, status, modifier, trailing)
+        IosUserRowLayout(name, pictureUrl, subtitle, status, modifier, initials, trailing)
         return
     }
     Row(
@@ -156,7 +159,7 @@ private fun UserRowLayout(
             .padding(horizontal = ItmoTheme.spacing.group, vertical = ItmoTheme.spacing.compact),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Avatar(name, pictureUrl, size = AvatarSize)
+        Avatar(name, pictureUrl, size = AvatarSize, initials = initials)
         Column(
             Modifier
                 .weight(1f)
@@ -193,6 +196,7 @@ private fun IosUserRowLayout(
     subtitle: String?,
     status: String?,
     modifier: Modifier,
+    initials: String?,
     trailing: @Composable () -> Unit,
 ) {
     val secondary = ItmoTheme.iosColors.secondaryLabel
@@ -204,7 +208,7 @@ private fun IosUserRowLayout(
                 .padding(horizontal = IosMetrics.rowHorizontalPadding, vertical = ItmoTheme.spacing.compact),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Avatar(name, pictureUrl, size = AvatarSize)
+            Avatar(name, pictureUrl, size = AvatarSize, initials = initials)
             Column(
                 Modifier
                     .weight(1f)

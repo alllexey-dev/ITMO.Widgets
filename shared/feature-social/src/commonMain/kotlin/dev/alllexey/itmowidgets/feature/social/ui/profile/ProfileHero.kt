@@ -30,6 +30,7 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonSt
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoHeroAvatar
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.feature.social.presentation.ProfileHeadline
 import dev.alllexey.itmowidgets.feature.social.presentation.SocialBlock
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
@@ -69,7 +70,12 @@ internal fun ProfileHero(state: UserProfileUiState.Content, actions: UserProfile
             .testTag(UserProfileTestTags.HERO),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            ItmoHeroAvatar(name, state.pictureUrl, Modifier.profileHeroReveal(reveal))
+            ItmoHeroAvatar(
+                name,
+                state.pictureUrl,
+                Modifier.profileHeroReveal(reveal),
+                initials = personInitials(name, state.familyName, state.givenName),
+            )
             Column(Modifier.weight(1f).padding(start = ItmoTheme.spacing.group)) {
                 Text(
                     name,

@@ -61,6 +61,7 @@ class FriendRequestsBellSource(
             pictureUrl = user.pictureUrl,
             target = EntryRoute(AppTab.HOME, overlay = AppRoutes.UserProfile(user.isu)),
             request = user.isu,
+            initials = user.initials,
         )
     }
 }

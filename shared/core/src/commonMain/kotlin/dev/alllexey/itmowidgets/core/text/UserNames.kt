@@ -18,11 +18,32 @@ fun shortPersonName(name: String): String {
 }
 
 /**
- * The letters of an avatar without a photo: the first letters of the first two words, so «Фамилия Имя Отчество»
- * gives ФИ, not ФО. `?` without a name.
+ * «Фамилия Имя» from ITMO.ID's `family_name` and `given_name`; null unless both are there. ITMO.ID's `name` claim
+ * lacks one of the three parts and has no fixed order, so it is only the fallback.
  */
-fun personInitials(name: String): String {
-    val parts = name.trim().split(Regex("\\s+")).filter(String::isNotEmpty)
-    if (parts.isEmpty()) return "?"
-    return parts.take(2).joinToString("") { it.take(1) }.uppercase()
+fun personName(familyName: String?, givenName: String?): String? {
+    val family = familyName?.trim()?.takeIf(String::isNotEmpty) ?: return null
+    val given = givenName?.trim()?.takeIf(String::isNotEmpty) ?: return null
+    return "$family $given"
 }
+
+/**
+ * The letters of an avatar without a photo: the first letters of the surname and the given name. ITMO.ID's
+ * [familyName] and [givenName] when both are there; otherwise words 1 and 2 of [name], which the app and Backend
+ * keep as «Фамилия Имя [Отчество]» (My ITMO teachers, accounts without the parts). One letter for one word, `?`
+ * for none.
+ */
+fun personInitials(name: String, familyName: String?, givenName: String?): String {
+    val family = familyName?.trim().orEmpty()
+    val given = givenName?.trim().orEmpty()
+    val parts = if (family.isNotEmpty() && given.isNotEmpty()) {
+        listOf(family, given)
+    } else {
+        name.trim().split(Regex("\\s+")).filter(String::isNotEmpty).take(2)
+    }
+    if (parts.isEmpty()) return "?"
+    return parts.joinToString("") { it.take(1) }.uppercase()
+}
+
+/** [personInitials] of a name without ITMO.ID's parts. */
+fun personInitials(name: String): String = personInitials(name, null, null)

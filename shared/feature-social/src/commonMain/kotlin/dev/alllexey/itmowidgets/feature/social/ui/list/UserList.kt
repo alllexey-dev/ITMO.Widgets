@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.rows.UserRow
@@ -84,8 +85,9 @@ fun UserListRow(
     onAction: (UserRowUi, UserAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val name = row.displayName.asString()
     UserRow(
-        name = row.displayName.asString(),
+        name = name,
         pictureUrl = row.pictureUrl,
         modifier = modifier.testTag(UserListTestTags.row(row.isu)),
         subtitle = row.subtitle.asString(),
@@ -102,6 +104,7 @@ fun UserListRow(
             UserRowAction(stringResource(action.label())) { onAction(row, action) }
         },
         busy = row.busy,
+        initials = personInitials(name, row.familyName, row.givenName),
     )
 }
 

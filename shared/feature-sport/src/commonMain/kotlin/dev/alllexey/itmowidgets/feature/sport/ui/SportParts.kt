@@ -69,7 +69,9 @@ internal fun KindTag(kind: String?, tone: SportKindTone, place: String?, modifie
 internal fun FriendAvatars(friends: List<UserSummary>, modifier: Modifier = Modifier) {
     if (friends.isEmpty()) return
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(-ItmoTheme.spacing.compact)) {
-        friends.take(MAX_FRIENDS).forEach { Avatar(it.name, pictureUrl = it.pictureUrl, size = ItmoTheme.spacing.section) }
+        friends.take(MAX_FRIENDS).forEach {
+            Avatar(it.name, pictureUrl = it.pictureUrl, size = ItmoTheme.spacing.section, initials = it.initials)
+        }
     }
 }
 

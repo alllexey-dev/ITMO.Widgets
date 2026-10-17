@@ -120,7 +120,7 @@ struct SportLessonSheetContent: View {
                 }
                 ForEach(sheet.friends, id: \.isu) { friend in
                     ItmoRow(title: friend.name, subtitle: friend.status?.resolved, chevron: true, action: { openProfile(friend.isu) }) {
-                        ItmoAvatar(initials: UserNamesKt.personInitials(name: friend.name), pictureUrl: friend.pictureUrl, size: 30)
+                        ItmoAvatar(initials: friend.initials, pictureUrl: friend.pictureUrl, size: 30)
                     }
                 }
                 if let share = sheet.share {

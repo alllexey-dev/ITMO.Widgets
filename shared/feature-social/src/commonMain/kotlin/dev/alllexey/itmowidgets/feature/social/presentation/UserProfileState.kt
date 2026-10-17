@@ -27,7 +27,10 @@ sealed interface UserProfileUiState {
         /** Positions, rooms and education; the ISU number is in the header. */
         val facts: List<ProfileFact>,
         val social: SocialBlock?,
-        val reviews: ProfileReviews?
+        val reviews: ProfileReviews?,
+        /** ITMO.ID's name parts from Backend for the hero's initials; null without them. */
+        val familyName: String? = null,
+        val givenName: String? = null,
     ) : UserProfileUiState {
         /** [name] for the hero, the share text and the remove confirmation; an empty one becomes the placeholder. */
         val displayName: UiText get() = userDisplayName(name, isu)
@@ -64,7 +67,9 @@ fun userProfileUiState(
             headline = profileHeadline(personality, if (personality == null) group else null),
             facts = profileFacts(personality, if (personality == null) group else null),
             social = block,
-            reviews = profileReviews((reviews as? ProfilePart.Ready)?.value, personality, busyId, summaryExpanded)
+            reviews = profileReviews((reviews as? ProfilePart.Ready)?.value, personality, busyId, summaryExpanded),
+            familyName = user?.familyName,
+            givenName = user?.givenName,
         )
     }
     val error = listOfNotNull((person as? ProfilePart.Failed)?.error, (social as? ProfilePart.Failed)?.error)

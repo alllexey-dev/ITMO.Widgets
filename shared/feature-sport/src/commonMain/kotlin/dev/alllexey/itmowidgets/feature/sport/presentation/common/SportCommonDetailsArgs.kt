@@ -71,7 +71,9 @@ data class SportFriendDetailsArgs(
     val name: String,
     val pictureUrl: String?,
     val entry: SportQueueEntryArgs?,
-    val registrationStatus: SportRegistrationStatus
+    val registrationStatus: SportRegistrationStatus,
+    val familyName: String? = null,
+    val givenName: String? = null,
 )
 
 private val DetailsJson = Json { ignoreUnknownKeys = true }
@@ -94,7 +96,9 @@ fun SportCommon.toDetailsArgs(): SportCommonDetailsArgs {
                 name = booking.friend.name,
                 pictureUrl = booking.friend.pictureUrl,
                 entry = booking.entry?.toDetailsArgs(),
-                registrationStatus = SportRegistrationStatus.from(booking.entry == null, booking.entry)
+                registrationStatus = SportRegistrationStatus.from(booking.entry == null, booking.entry),
+                familyName = booking.friend.familyName,
+                givenName = booking.friend.givenName,
             )
         },
         bookingConditions = lesson?.bookingConditions(),

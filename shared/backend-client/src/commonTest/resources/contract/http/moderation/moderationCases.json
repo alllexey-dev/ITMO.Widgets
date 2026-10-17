@@ -63,7 +63,10 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female",
+          "familyName": "Друг",
+          "givenName": "Первый"
         },
         "reports": [
           {
@@ -166,7 +169,10 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female",
+          "familyName": "Друг",
+          "givenName": "Первый"
         },
         "reports": [
           {
@@ -299,7 +305,10 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female",
+          "familyName": "Друг",
+          "givenName": "Первый"
         },
         "reports": [],
         "submitterHistory": {
@@ -381,7 +390,10 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female",
+          "familyName": "Друг",
+          "givenName": "Первый"
         },
         "reports": [],
         "submitterHistory": {
@@ -473,7 +485,10 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female",
+          "familyName": "Друг",
+          "givenName": "Первый"
         },
         "reports": [],
         "submitterHistory": {
@@ -555,7 +570,10 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female",
+          "familyName": "Друг",
+          "givenName": "Первый"
         },
         "reports": [],
         "submitterHistory": {

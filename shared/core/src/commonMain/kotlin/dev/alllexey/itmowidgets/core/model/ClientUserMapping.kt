@@ -20,5 +20,7 @@ fun UserData.toUserSummary(): UserSummary = UserSummary(
         sport = capabilities.canViewSport,
         schedule = capabilities.canViewSchedule,
         friends = capabilities.canViewFriends
-    )
+    ),
+    familyName = familyName,
+    givenName = givenName,
 )

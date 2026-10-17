@@ -47,7 +47,21 @@ class IdTokenCurrentUserProviderTest {
             )
         )
 
-        assertEquals(CurrentUser(isu = 123456, name = "Иванов Иван", pictureUrl = null), provider.getCurrentUser())
+        assertEquals(
+            CurrentUser(isu = 123456, name = "Иванов Иван", pictureUrl = null, givenName = "Иван"),
+            provider.getCurrentUser(),
+        )
+    }
+
+    @Test
+    fun `the name is the family then the given name when the token has both`() = runTest {
+        val provider = provider(
+            token("""{"isu":1,"name":"Иван Иванов","family_name":" Петров ","given_name":"Иван","middle_name":"Ильич"}""")
+        )
+
+        val user = provider.getCurrentUser()
+        assertEquals("Петров Иван", user?.name)
+        assertEquals("Петров" to "Иван", user?.familyName to user?.givenName)
     }
 
     @Test

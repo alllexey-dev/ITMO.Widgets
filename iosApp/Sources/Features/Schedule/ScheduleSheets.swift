@@ -98,7 +98,7 @@ struct LessonSheetContent: View {
                             ItmoRow(title: friend.name, subtitle: friend.groups.first?.name, chevron: true, action: {
                                 actions.profile(friend.isu)
                             }) {
-                                ItmoAvatar(initials: UserNamesKt.personInitials(name: friend.name), pictureUrl: friend.pictureUrl)
+                                ItmoAvatar(initials: friend.initials, pictureUrl: friend.pictureUrl)
                             }
                         }
                     }

@@ -28,23 +28,23 @@ data class DemoPerson(
 object DemoPeople {
 
     const val ME_ISU = 999001
-    const val ME_NAME = "Анна Смирнова"
+    const val ME_NAME = "Смирнова Анна"
     const val ME_GROUP = "K3221"
     const val ME_COURSE = 2
 
     val ME = CurrentUser(isu = ME_ISU, name = ME_NAME, pictureUrl = null)
     val ME_PERSON = DemoPerson(ME_ISU, ME_NAME, ME_GROUP)
 
-    val IVAN = DemoPerson(999002, "Иван Кузнецов", ME_GROUP)
-    val MARIA = DemoPerson(999003, "Мария Волкова", ME_GROUP)
-    val DMITRY = DemoPerson(999004, "Дмитрий Орлов", "M3205")
-    val POLINA = DemoPerson(999005, "Полина Егорова", "K3220")
+    val IVAN = DemoPerson(999002, "Кузнецов Иван", ME_GROUP)
+    val MARIA = DemoPerson(999003, "Волкова Мария", ME_GROUP)
+    val DMITRY = DemoPerson(999004, "Орлов Дмитрий", "M3205")
+    val POLINA = DemoPerson(999005, "Егорова Полина", "K3220")
 
     /** Sent Anna a friend request. */
-    val SOFIA = DemoPerson(999006, "София Лебедева", "K3222")
+    val SOFIA = DemoPerson(999006, "Лебедева София", "K3222")
 
     /** Anna sent him a friend request. */
-    val ARTEM = DemoPerson(999007, "Артём Новиков", "M3205")
+    val ARTEM = DemoPerson(999007, "Новиков Артём", "M3205")
 
     val FRIENDS = listOf(IVAN, MARIA, DMITRY, POLINA)
 

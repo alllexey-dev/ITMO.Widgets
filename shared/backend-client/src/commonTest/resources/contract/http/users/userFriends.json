@@ -22,7 +22,10 @@
           "canViewSchedule": true,
           "canViewSport": true,
           "canViewFriends": true
-        }
+        },
+        "gender": "female",
+        "familyName": "Друг",
+        "givenName": "Первый"
       },
       "relationship": "FRIENDS"
     },
@@ -47,7 +50,10 @@
           "canViewSchedule": false,
           "canViewSport": false,
           "canViewFriends": false
-        }
+        },
+        "gender": "female",
+        "familyName": "Однокурсник",
+        "givenName": "Третий"
       },
       "relationship": "INCOMING"
     },
@@ -72,7 +78,10 @@
           "canViewSchedule": true,
           "canViewSport": false,
           "canViewFriends": true
-        }
+        },
+        "gender": "female",
+        "familyName": "Однокурсник",
+        "givenName": "Четвёртый"
       },
       "relationship": "OUTGOING"
     },
@@ -86,7 +95,10 @@
           "canViewSchedule": true,
           "canViewSport": false,
           "canViewFriends": true
-        }
+        },
+        "gender": null,
+        "familyName": null,
+        "givenName": null
       },
       "relationship": "NONE"
     }

@@ -197,7 +197,7 @@ struct BellEventRow: View {
         case .sport:
             ItmoIconTile(symbol: .sprint, tone: item.failed ? .bad : .ok)
         case .friendRequest:
-            ItmoAvatar(initials: UserNamesKt.personInitials(name: item.lead ?? ""), pictureUrl: item.pictureUrl)
+            ItmoAvatar(initials: item.initials ?? UserNamesKt.personInitials(name: item.lead ?? ""), pictureUrl: item.pictureUrl)
         }
     }
 }

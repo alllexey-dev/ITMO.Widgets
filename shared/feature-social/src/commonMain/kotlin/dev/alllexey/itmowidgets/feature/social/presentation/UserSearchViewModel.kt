@@ -184,7 +184,9 @@ class UserSearchViewModel(
                 status = profile.relationship.statusText(),
                 primary = profile.relationship.primaryAction(),
                 busy = isu in busy,
-                opensProfile = true
+                opensProfile = true,
+                familyName = profile.user.familyName,
+                givenName = profile.user.givenName,
             )
         } else {
             UserRowUi(

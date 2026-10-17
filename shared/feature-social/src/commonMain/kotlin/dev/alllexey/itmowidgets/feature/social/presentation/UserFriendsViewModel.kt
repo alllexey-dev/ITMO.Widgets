@@ -80,7 +80,9 @@ class UserFriendsViewModel(
             name = profile.user.name,
             pictureUrl = profile.user.pictureUrl,
             subtitle = profile.user.subtitleText(),
-            status = profile.relationship.statusText()
+            status = profile.relationship.statusText(),
+            familyName = profile.user.familyName,
+            givenName = profile.user.givenName,
         ))
     }
 

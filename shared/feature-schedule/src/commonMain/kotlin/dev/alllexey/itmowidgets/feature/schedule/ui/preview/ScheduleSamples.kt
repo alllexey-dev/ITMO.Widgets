@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.schedule.ROOM_BOOKING_TYPE_ID
 import dev.alllexey.itmowidgets.core.text.ScheduleChangeLine
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.FeedInput
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.FeedJump
@@ -239,7 +240,7 @@ object ScheduleSamples {
         user = SelectedUser(isu, name, null, group),
         title = UiText.Dynamic(name),
         person = name,
-        initials = name.split(' ').joinToString("") { it.take(1) },
+        initials = personInitials(name),
         avatar = null,
         status = status?.let(UiText::Dynamic),
         selectable = open,
