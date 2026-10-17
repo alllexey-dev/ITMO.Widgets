@@ -141,6 +141,14 @@ writes the palette into the widgets' App Group files and reloads them
 full colour; the tinted and clear home screens and the Lock Screen keep the
 system's rendering.
 
+## Home screen
+
+`Приложение` -> `Главный экран` contains `Показывать кнопку пропуска`, on by default
+(`home_qr_pass_visible`, boolean, kept on sign-out). Turning it off hides only the
+`Пропуск` button on Сегодня on Android and the bottom accessory on iOS; the pass
+remains available through its widgets, shortcuts and other entry routes. Both
+shells observe changes immediately. The setting works offline and without custom services.
+
 ## Account and services
 
 - `Подключение к ITMO.Widgets` enables Backend-dependent features. It is disabled
@@ -443,7 +451,8 @@ user services suppresses FCM actions and attempts to unregister this device.
 - `Показывать фильтр по времени` shows the part of the day there.
 - Sections, building, `Есть места`, `Мои секции` and friends remain ordinary
   sport-screen filters, separate from the schedule display preference above.
-  Pinned sections are kept on the device (`sport_pinned_sections`).
+  `Мои секции` keeps the lessons of the user's sections, which live on
+  Backend ([sport](features/sport.md#sections)).
 
 ## Recordbook BARS overlay
 

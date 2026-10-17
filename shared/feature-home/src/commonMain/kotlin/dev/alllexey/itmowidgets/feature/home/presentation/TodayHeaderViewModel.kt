@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.platform.AppForeground
+import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -29,12 +30,13 @@ class TodayHeaderViewModel(
     private val time: AcademicTimeProvider,
     private val bell: BellRepository,
     foreground: AppForeground,
+    passVisibility: HomePassVisibility,
 ) : ViewModel() {
     private val date = MutableStateFlow(time.today())
 
-    val uiState: StateFlow<TodayHeaderUiState> = combine(date, bell.observeUnseenCount()) { today, unseen ->
-        stateOf(today, unseen)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), stateOf(time.today(), 0))
+    val uiState: StateFlow<TodayHeaderUiState> = combine(date, bell.observeUnseenCount(), passVisibility.observeHomePassVisible()) { today, unseen, showPass ->
+        stateOf(today, unseen, showPass)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), stateOf(time.today(), 0, false))
 
     init {
         refresh()
@@ -46,10 +48,11 @@ class TodayHeaderViewModel(
         viewModelScope.launch { bell.refresh() }
     }
 
-    private fun stateOf(date: LocalDate, badge: Int) = TodayHeaderUiState(
+    private fun stateOf(date: LocalDate, badge: Int, showPass: Boolean) = TodayHeaderUiState(
         title = UiText.Res(AppTab.HOME.label),
         subtitle = UiText.Dynamic(date.format(DateTexts.WEEKDAY_DAY_MONTH)),
         badge = badge,
+        showPass = showPass,
     )
 
     private companion object {

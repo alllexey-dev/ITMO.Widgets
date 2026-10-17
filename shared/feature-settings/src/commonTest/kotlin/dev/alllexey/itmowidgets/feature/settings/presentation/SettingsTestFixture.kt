@@ -339,6 +339,10 @@ internal class FakeSettingsRepository(
         themeRequests += local.value.theme
     }
 
+    override suspend fun setHomePassVisible(visible: Boolean) {
+        local.value = local.value.copy(homePassVisible = visible)
+    }
+
     override suspend fun setWidgetsFollowTheme(enabled: Boolean) {
         widgetsFollowThemeRequests += enabled
         local.value = local.value.copy(widgetsFollowTheme = enabled)

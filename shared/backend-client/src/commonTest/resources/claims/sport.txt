@@ -13,9 +13,16 @@ http/sport-free-sign/createSportFreeSignEntry.json
 http/sport-free-sign/currentSportFreeSignQueues.json
 http/sport-free-sign/markSportFreeSignEntrySatisfiedByLesson.json
 http/sport-free-sign/mySportFreeSignEntries.json
+http/sport-sections/createSportSection.json
+http/sport-sections/mySportSections.json
+http/sport-sections/sportSectionSlots.json
+http/sport-sections/stopSportSection.json
+http/sport-sections/updateSportSectionOccurrence.json
 http/sport/friendsSportBookings.json
 http/sport/syncSportLessons.json
 http/sport/userSportBookings.json
 requests/SportAutoSignRequest.json
 requests/SportFreeSignRequest.json
 requests/SportLessonIds.json
+requests/SportSectionOccurrenceRequest.json
+requests/SportSectionRequest.json

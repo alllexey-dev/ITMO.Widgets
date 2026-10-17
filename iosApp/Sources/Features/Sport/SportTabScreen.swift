@@ -30,7 +30,9 @@ struct SportTabScreen: View {
                 } openProfile: { isu in
                     lesson = nil
                     router.open(AppRoutes.UserProfile(isu: isu))
-                }
+                } section: {
+                    my.viewModel.sectionToggle(lessonId: item.details.lessonId)
+                } toggleSection: { my.viewModel.toggleSection(lessonId: $0) }
             }
             .sheet(isPresented: filtersShown) {
                 if let filters = sign.state.filters {
@@ -81,8 +83,10 @@ struct SportTabScreen: View {
     private var actions: SportContentActions {
         SportContentActions(
             openPoints: { router.open(AppRoutes.SportPoints.shared) },
-            openSections: { router.open(AppRoutes.SportSections.shared) },
             openBooking: { openLesson($0, from: .my) },
+            toggleSection: { my.viewModel.toggleSection(lessonId: $0) },
+            stopSection: { my.viewModel.stopSection(sectionId: $0) },
+            sectionDate: { my.viewModel.setSectionDate(sectionId: $0, index: Int32($1), on: $2) },
             retryMy: { my.viewModel.refresh(mode: .force) },
             query: { sign.viewModel.setQuery(query: $0) },
             chip: { sign.viewModel.toggle(chip: $0) },
@@ -153,8 +157,10 @@ struct SportLessonItem: Identifiable {
 /// What the tab's parts ask their host to do.
 struct SportContentActions {
     var openPoints: () -> Void = {}
-    var openSections: () -> Void = {}
     var openBooking: (Int64) -> Void = { _ in }
+    var toggleSection: (Int64) -> Void = { _ in }
+    var stopSection: (Int64) -> Void = { _ in }
+    var sectionDate: (Int64, Int, Bool) -> Void = { _, _, _ in }
     var retryMy: () -> Void = {}
     var query: (String) -> Void = { _ in }
     var chip: (SportQuickFilter) -> Void = { _ in }
@@ -193,7 +199,8 @@ struct SportContent: View {
     }
 }
 
-/// Mine: the score ring that opens Where the points come from, the bookings by day as lesson cards, My sections.
+/// Mine: the score ring that opens Where the points come from, the bookings by day as lesson cards with "make it a
+/// section" under the booked ones, then the sections with their next dates.
 struct SportMyPart: View {
     let state: SportMyUiState
     let actions: SportContentActions
@@ -236,21 +243,76 @@ struct SportMyPart: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("sport.booking.\(booking.lessonId)")
+                    if let section = booking.section {
+                        SportBookingSection(section: section) { actions.toggleSection(section.lessonId) }
+                    }
                 }
             }
         }
-        ItmoListGroup {
-            ItmoRow(
-                title: AppStrings.string("sport_sections_title"),
-                subtitle: state.sections.resolved,
-                symbol: .keep,
-                tone: .tertiary,
-                chevron: true,
-                action: actions.openSections
-            )
+        if !state.sections.isEmpty {
+            ItmoSectionHeader(title: AppStrings.string("sport_sections_title"))
+                .padding(.top, ItmoSpacing.related)
+                .accessibilityIdentifier("sport.sections")
+            ForEach(state.sections, id: \.id) { section in
+                SportSectionGroup(section: section, actions: actions)
+            }
+            ItmoGroupNote(text: AppStrings.string("sport_section_note"))
         }
-        .padding(.top, ItmoSpacing.related)
-        .accessibilityIdentifier("sport.sections")
+    }
+}
+
+/// A section as one group: the slot with its off switch and the place, then the next dates, each with its switch.
+struct SportSectionGroup: View {
+    let section: SportSectionCardUi
+    let actions: SportContentActions
+
+    var body: some View {
+        ItmoListGroup {
+            ItmoSwitchRow(
+                title: section.title,
+                subtitle: [section.slot.resolved, section.venue, section.place.resolved].compactMap { $0 }.joined(separator: "\n"),
+                symbol: .eventRepeat,
+                enabled: !section.busy,
+                isOn: Binding(get: { true }, set: { if !$0 { actions.stopSection(section.id) } })
+            )
+            .accessibilityHint(Text(verbatim: AppStrings.string("sport_section_off")))
+            ForEach(Array(section.dates.enumerated()), id: \.offset) { index, date in
+                ItmoSwitchRow(
+                    title: date.day.resolved,
+                    subtitle: date.status.resolved,
+                    enabled: date.enabled,
+                    isOn: Binding(get: { date.on }, set: { actions.sectionDate(section.id, index, $0) })
+                )
+                .accessibilityIdentifier("sport.section.\(section.id).date.\(index)")
+            }
+        }
+        .accessibilityIdentifier("sport.section.\(section.id)")
+    }
+}
+
+/// Under a booked lesson's card: "make it a section", or the pill "section" with the place; a full slot says so.
+struct SportBookingSection: View {
+    let section: SportSectionToggleUi
+    let toggle: () -> Void
+
+    var body: some View {
+        HStack(spacing: ItmoSpacing.content) {
+            if section.on {
+                ItmoStatusPill(pill: ItmoPill(text: section.label.resolved, tone: .primary))
+            } else if section.enabled {
+                Button(action: toggle) { Text(verbatim: section.label.resolved).font(.itmo(.labelLarge, emphasized: true)) }
+                    .buttonStyle(.bordered)
+                    .tint(ItmoColor.primary)
+                    .controlSize(.small)
+                    .fixedSize()
+            }
+            if let detail = section.detail {
+                Text(verbatim: detail.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, ItmoSpacing.related)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("sport.booking.section.\(section.lessonId)")
     }
 }
 
@@ -474,7 +536,7 @@ struct SportCatalogRowView: View {
                         if let occupancy = row.occupancy {
                             ItmoOccupancy(text: occupancy.text.resolved, share: Double(occupancy.share), tone: occupancy.tone.kitTone)
                         }
-                        SportFriendStack(names: row.friends)
+                        SportFriendStack(friends: row.friends)
                     }
                 }
                 if let clash = row.clash {
@@ -551,14 +613,16 @@ struct SportKindTag: View {
     }
 }
 
-/// Friends' initials overlapping, at most three.
+/// Friends' photos or initials overlapping, at most three.
 struct SportFriendStack: View {
-    let names: [String]
+    let friends: [UserSummary]
 
     var body: some View {
-        if !names.isEmpty {
+        if !friends.isEmpty {
             HStack(spacing: -6) {
-                ForEach(names.prefix(3), id: \.self) { ItmoAvatar(initials: Self.initials($0), size: 22) }
+                ForEach(friends.prefix(3), id: \.isu) {
+                    ItmoAvatar(initials: Self.initials($0.name), pictureUrl: $0.pictureUrl, size: 22)
+                }
             }
         }
     }

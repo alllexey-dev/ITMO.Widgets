@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.ui
 
+import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportSectionToggleUi
+import dev.alllexey.itmowidgets.shared.designsystem.ic_event_repeat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +54,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.kit.container
 import dev.alllexey.itmowidgets.designsystem.kit.ink
 import dev.alllexey.itmowidgets.designsystem.kit.onContainer
+import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
@@ -88,6 +91,7 @@ object SportSheetTags {
     const val LESSON = "sport:lesson"
     const val LESSON_ACTION = "sport:lesson_action"
     const val LESSON_CLASH = "sport:lesson_clash"
+    const val SECTION = "sport:lesson_section"
 }
 
 /** What the more-filters sheet changes. */
@@ -115,6 +119,8 @@ data class SportLessonSheetActions(
     val onMap: (String) -> Unit = {},
     val onProfile: (Int) -> Unit = {},
     val onClose: () -> Unit = {},
+    /** `Сделать секцией` of a booked lesson, on or off; the sheet stays open. */
+    val onSection: (Long) -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -306,12 +312,13 @@ fun SportLessonSheet(
     modifier: Modifier = Modifier,
     actionsEnabled: Boolean = true,
     busy: Boolean = false,
+    section: SportSectionToggleUi? = null,
 ) {
     val submitted = submission.submitted
     val sheet = remember(item, submitted, busy, actionsEnabled) {
         SportLessonSheetPresenter.present(item, time.now(), time.timeZone, actionsEnabled, busy, submitted)
     }
-    SportLessonSheetContent(sheet, actions.copy(onAction = { if (submission.submit()) actions.onAction(it) }), modifier)
+    SportLessonSheetContent(sheet, actions.copy(onAction = { if (submission.submit()) actions.onAction(it) }), modifier, section)
 }
 
 /**
@@ -319,7 +326,12 @@ fun SportLessonSheet(
  * one main action and its note, the conditions; then the teacher, the place, the comment and the friends.
  */
 @Composable
-fun SportLessonSheetContent(sheet: SportLessonSheetUi, actions: SportLessonSheetActions, modifier: Modifier = Modifier) {
+fun SportLessonSheetContent(
+    sheet: SportLessonSheetUi,
+    actions: SportLessonSheetActions,
+    modifier: Modifier = Modifier,
+    section: SportSectionToggleUi? = null,
+) {
     SheetScaffold(
         title = text(SportStrings.sport_lesson_sheet_title),
         modifier = modifier.testTag(SportSheetTags.LESSON),
@@ -353,6 +365,21 @@ fun SportLessonSheetContent(sheet: SportLessonSheetUi, actions: SportLessonSheet
                 }
             }
             sheet.actionNote?.let { ListGroupNote(it.asString()) }
+            section?.let { toggle ->
+                ListGroup {
+                    item {
+                        SwitchListRow(
+                            title = toggle.label.asString(),
+                            checked = toggle.on,
+                            onCheckedChange = { actions.onSection(toggle.lessonId) },
+                            modifier = Modifier.testTag(SportSheetTags.SECTION),
+                            subtitle = toggle.detail?.asString(),
+                            icon = painterResource(Res.drawable.ic_event_repeat),
+                            enabled = toggle.enabled,
+                        )
+                    }
+                }
+            }
             if (sheet.conditions.isNotEmpty()) {
                 SectionHeader(text(SportStrings.sport_sheet_conditions))
                 sheet.conditions.forEach { Check(it.state, it.text.asString()) }
@@ -389,7 +416,7 @@ fun SportLessonSheetContent(sheet: SportLessonSheetUi, actions: SportLessonSheet
                         ListRow(
                             title = friend.name,
                             subtitle = friend.status?.asString(),
-                            leading = { FriendAvatars(listOf(friend.name)) },
+                            leading = { Avatar(friend.name, friend.pictureUrl, size = ItmoTheme.spacing.section) },
                             chevron = true,
                             onClick = { actions.onProfile(friend.isu) },
                         )

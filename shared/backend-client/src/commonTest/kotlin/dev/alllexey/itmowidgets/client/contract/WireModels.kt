@@ -64,6 +64,7 @@ import dev.alllexey.itmowidgets.client.schedule.LessonDto
 import dev.alllexey.itmowidgets.client.schedule.LessonSyncRequest
 import dev.alllexey.itmowidgets.client.sport.model.FriendSportBooking
 import dev.alllexey.itmowidgets.client.sport.model.FriendsSportBookingsResponse
+import dev.alllexey.itmowidgets.client.sport.model.MySportSection
 import dev.alllexey.itmowidgets.client.sport.model.QueueEntryStatus
 import dev.alllexey.itmowidgets.client.sport.model.QueueEntryStatusSerializer
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignEntry
@@ -76,6 +77,12 @@ import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportLessonDto
 import dev.alllexey.itmowidgets.client.sport.model.SportQueue
 import dev.alllexey.itmowidgets.client.sport.model.SportQueueEntry
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionDate
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceState
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceStateSerializer
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionSlot
 import dev.alllexey.itmowidgets.client.sport.model.UserSportBookingsResponse
 import dev.alllexey.itmowidgets.client.users.IdTokenRequest
 import dev.alllexey.itmowidgets.client.users.SharingVisibility
@@ -148,6 +155,11 @@ object WireModels {
         model<SportAutoSignRequest>(),
         model<SportAutoSignLimits>(),
         model<FriendSportBooking>(),
+        model<MySportSection>(),
+        model<SportSectionDate>(),
+        model<SportSectionSlot>(),
+        model<SportSectionRequest>(),
+        model<SportSectionOccurrenceRequest>(),
         model<FriendsSportBookingsResponse>(),
         model<UserSportBookingsResponse>(),
     )
@@ -161,6 +173,7 @@ object WireModels {
         wireEnum(DevicePlatformSerializer, DevicePlatform.entries),
         wireEnum(RestrictionCapabilitySerializer, RestrictionCapability.entries),
         wireEnum(QueueEntryStatusSerializer, QueueEntryStatus.entries),
+        wireEnum(SportSectionOccurrenceStateSerializer, SportSectionOccurrenceState.entries),
         wireEnum(LinkCategorySerializer, LinkCategory.entries),
         wireEnum(SubjectLinkStatusSerializer, SubjectLinkStatus.entries),
         wireEnum(TeacherReviewKindSerializer, TeacherReviewKind.entries),

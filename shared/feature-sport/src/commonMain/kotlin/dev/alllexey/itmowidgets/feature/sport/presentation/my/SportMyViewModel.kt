@@ -9,17 +9,17 @@ import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetPresenter
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetUi
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsState
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.sportDayLabel
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
@@ -33,18 +33,20 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.toLocalDateTime
 
 /**
  * `Моё` on both platforms over [SportBookingsHolder], which Сегодня and the schedule share: the score, the bookings and
- * queues that are still ahead, and the cancellation a lesson sheet asked for, confirmed first.
+ * queues that are still ahead, and the cancellation a lesson sheet asked for, confirmed first; and over
+ * [SportSectionsHolder], which every lesson sheet shares: `Сделать секцией` on booked lessons and the user's sections.
  */
 class SportMyViewModel(
     sportBookingRepository: SportBookingRepository,
     sportDataRepository: SportDataRepository,
-    preferences: SportSignPreferencesRepository,
     private val holder: SportBookingsHolder,
+    private val sections: SportSectionsHolder,
     private val time: AcademicTimeProvider,
 ) : ViewModel() {
 
@@ -62,29 +64,54 @@ class SportMyViewModel(
     val uiState: StateFlow<SportMyUiState> = combine(
         sportDataRepository.observeSportScore(),
         body,
-        preferences.observePinnedSections(),
+        sections.state,
         cancel,
-    ) { score, body, pinned, cancel ->
+    ) { score, body, sections, cancel ->
         SportMyUiState(
             score = score.valueOrNull()?.let { SportScoreUi.of(it.summary) },
-            body = body,
-            sections = sectionsLine(pinned),
+            body = body.withSections(sections),
+            sections = SportSectionsPresenter.cards(sections, time.today(), time.timeZone),
             cancel = cancel,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, SportMyUiState())
 
-    /** A cancellation that failed: `Не удалось отменить` with the reason. */
-    val events: Flow<UiText> = holder.events.map { event ->
-        when (event) {
-            is SportMyEvent.ShowError -> event.error.toUiText()
-        }
-    }
+    /** A cancellation that failed (`Не удалось отменить` with the reason), or a section changed or failed to. */
+    val events: Flow<UiText> = merge(
+        holder.events.map { event ->
+            when (event) {
+                is SportMyEvent.ShowError -> event.error.toUiText()
+            }
+        },
+        sections.events,
+    )
 
     /** Loads once; coming back with content starts no request. */
-    fun ensureDataLoaded() = holder.ensureDataLoaded()
+    fun ensureDataLoaded() {
+        holder.ensureDataLoaded()
+        if (sections.state.value.sections == LoadState.Loading) sections.refresh()
+    }
 
     /** A pull or a retry shows the indicator; the first load and background reloads stay silent. */
-    fun refresh(mode: RefreshMode) = holder.refresh(mode)
+    fun refresh(mode: RefreshMode) {
+        holder.refresh(mode)
+        sections.refresh()
+    }
+
+    /** `Сделать секцией` of the booked [lessonId], on its card or in its sheet; off again when it is one. */
+    fun toggleSection(lessonId: Long) = sections.toggle(lessonId)
+
+    /** The switch of [lessonId]'s sheet, as the iOS host draws it; null for a lesson that is not booked. */
+    fun sectionToggle(lessonId: Long): SportSectionToggleUi? =
+        if (bookings.any { it.lessonId == lessonId && it.signed }) SportSectionsPresenter.toggle(sections.state.value, lessonId) else null
+
+    /** The off switch of the section [sectionId]. */
+    fun stopSection(sectionId: Long) = sections.stop(sectionId)
+
+    /** The date at [index] of the section [sectionId] as shown: off skips it, on queues it again. */
+    fun setSectionDate(sectionId: Long, index: Int, on: Boolean) {
+        val date = uiState.value.sections.firstOrNull { it.id == sectionId }?.dates?.getOrNull(index) ?: return
+        sections.setDate(sectionId, date.start, on)
+    }
 
     /** The sheet of the booking [lessonId] as it is now; null once it is gone. */
     fun details(lessonId: Long): SportCommonDetailsArgs? = bookings.firstOrNull { it.lessonId == lessonId }?.toDetailsArgs()
@@ -143,6 +170,7 @@ class SportMyViewModel(
         val now = time.now()
         val today = time.today()
         bookings = loaded.filter { it.end > now && (it.signed || it.signEntry?.waiting == true) }.sortedBy { it.start }
+        sections.loadSlots(bookings.filter { it.signed }.map { it.lessonId })
         val days = bookings
             .groupBy { it.start.toLocalDateTime(time.timeZone).date }
             .map { (date, items) ->
@@ -152,10 +180,18 @@ class SportMyViewModel(
         return SportMyBody.Content(days, refreshing = byUser, partialError = errors.isNotEmpty()).also { lastBody = it }
     }
 
-    private fun sectionsLine(pinned: Set<SectionName>): UiText =
-        if (pinned.isEmpty()) {
-            UiText.Res(SportStrings.sport_sections_entry_empty)
-        } else {
-            UiText.Dynamic(pinned.map { it.shorten() }.sorted().joinToString(", "))
-        }
+    /** The booked lessons' `Сделать секцией`, from the shared slots. */
+    private fun SportMyBody.withSections(state: SportSectionsState): SportMyBody {
+        if (this !is SportMyBody.Content) return this
+        val booked = bookings.filter { it.signed }.mapTo(mutableSetOf()) { it.lessonId }
+        return copy(
+            days = days.map { day ->
+                day.copy(
+                    bookings = day.bookings.map { item ->
+                        item.copy(section = if (item.lessonId in booked) SportSectionsPresenter.toggle(state, item.lessonId) else null)
+                    },
+                )
+            },
+        )
+    }
 }

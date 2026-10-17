@@ -156,7 +156,7 @@ class DemoNetworkGateTest {
             ClientVersion("2.3.0", "20300", "android", "github")
         )
         val identity = DefaultBackendIdentitySync(
-            unusedContext(), gate, unreachableSession.tokens, unreachableTokens, backendClient.users, RecordingDiagnostics(), demo,
+            gate, unreachableSession.tokens, unreachableTokens, backendClient.users, RecordingDiagnostics(), demo,
             dispatchers
         )
 

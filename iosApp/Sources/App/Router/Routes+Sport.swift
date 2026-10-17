@@ -2,12 +2,10 @@ import Shared
 import SwiftUI
 
 extension Routes {
-    /// The sport root (`SportTabScreen`), My sections and Where the points come from pushed on its stack, and another user's
+    /// The sport root (`SportTabScreen`), Where the points come from pushed on its stack, and another user's
     /// sport, the Compose route. The lesson sheet is the screens' own sheet, not a route.
     static func sport(_ route: any AppRoute) -> RouteTarget {
         switch route {
-        case is AppRoutes.SportSections:
-            return .swiftUI { AnyView(SportSectionsScreen()) }
         case is AppRoutes.SportPoints:
             return .swiftUI { AnyView(SportPointsScreen()) }
         case let sport as AppRoutes.UserSport:

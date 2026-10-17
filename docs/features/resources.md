@@ -35,7 +35,7 @@ moderation model: decision
 - Others always see published content; the owner also sees review states and
   the moderator's reason. `С прошлых лет` holds approved `ALL` links of
   `MATERIALS`, `TASKS`, `RECORDINGS`, `NOTES` and `EXAM` from earlier periods.
-- Votes are +1/-1, tapping the current arrow takes it back. One pin per viewer
+- Votes are +1/-1, tapping the selected thumb takes it back. One pin per viewer
   and period. Any HTTPS host is accepted: the app checks scheme, host and no
   user info, Backend never fetches a URL. Links open only through
   `core/util/HttpsNavigationPolicy` (`app/shell/entries/ResourcesEntries.kt`).
@@ -51,7 +51,7 @@ not shown. While the page is open the shown order stays
 moves a row; a new screen or a pull ranks afresh. Votes go through
 `RecordbookSubjectViewModel.voteLink`, one at a time. Own links show `моя` and
 their review state, never a vote; under a `VOTE` restriction the pill has no
-arrows.
+vote buttons. Like and dislike use outlined thumbs, filled for the selected vote, on both platforms.
 
 The recordbook reads the cached snapshot through `SubjectLinksRepository.peek`
 first, then refreshes the scope.
@@ -128,7 +128,7 @@ made during the upload is sent next time.
   first `Unauthorized` and keeps the rest local; `Forbidden`, `NotFound` and
   `Unknown` skip only that link. An `Unauthorized` refresh does not mark the
   scope failed.
-- Restrictions from `GET /api/users/me/restrictions` hide vote arrows (`VOTE`)
+- Restrictions from `GET /api/users/me/restrictions` hide vote buttons (`VOTE`)
   and report (`REPORT`); an unknown capability blocks like `ALL`. Private links,
   deletion, pins and adding links stay available.
 - As a `SessionDataCleaner` the repository cancels and joins calls in flight

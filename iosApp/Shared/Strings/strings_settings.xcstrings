@@ -1045,6 +1045,42 @@
         }
       }
     },
+    "settings_home_pass_description" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На экране «Сегодня». Виджет и быстрые команды пропуска останутся доступны."
+          }
+        }
+      }
+    },
+    "settings_home_pass_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать кнопку пропуска"
+          }
+        }
+      }
+    },
+    "settings_home_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Главный экран"
+          }
+        }
+      }
+    },
     "settings_ics_export_description" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",

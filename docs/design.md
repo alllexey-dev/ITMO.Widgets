@@ -400,7 +400,7 @@ both platforms.
 | `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
 | `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | A section header in `secondaryLabel` at UIKit's insets |
 | `GroupActionRow` | The last row of a group that leads further | A cell with the icon in the tint and the disclosure indicator |
-| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | A cell; the vote arrows are 44 pt targets, the pill on `tertiarySystemFill` |
+| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | A cell; the vote buttons are 44 pt targets, the pill on `tertiarySystemFill` |
 | `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | A cell with the disclosure indicator; the selection is the checkmark accessory with the selection haptic |
 | `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
 | `DetailsHeader` | The head of every details sheet | Title 2 semibold, secondary text and icons in `secondaryLabel`, the map button a tinted capsule |
@@ -495,9 +495,9 @@ screens that have not moved yet.
 | `toLessonView`, `toTimelineRows`, `lessonTypeAccent` | The shared lesson presentation (`core/lesson`) drawn by the kit: texts resolved, pills toned (`идёт` solid `Primary`, `далее` `Neutral`, `изменена` and `очередь` `Warning`, `отменена` `Error`, `записаны` `Success`, `онлайн` `Neutral` with the camera), lesson types coloured |
 | `SectionHeader`, `TextTile` | A section's title with a neutral count at the end; a short text (`+9`) in a tone's tile, the size of an `IconTile` |
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
-| `VotePill` | The votes of a link: ▲ N ▼, the viewer's own vote in `primary`, only the score when voting is not allowed |
+| `VotePill` | The votes of a link: like/dislike thumbs around the score, the viewer's own vote filled and in `primary`, only the score when voting is not allowed |
 | `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a bar (88 dp, down to 44 dp in a tight row; the text never wraps) and `22 из 24` in a tone |
-| `WeekStrip`, `WeekStripDay` | One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on a `primary` indicator that slides on the scheme's default spatial spring while the colours crossfade (a week gaining or losing the choice fades it in place; snaps under reduced motion); a pager of these pages by weeks |
+| `WeekStrip`, `WeekStripDay` | Past weekday/date labels are dimmed on both platforms; today and the selected day (including a past selection) keep full emphasis. One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on a `primary` indicator that slides on the scheme's default spatial spring while the colours crossfade (a week gaining or losing the choice fades it in place; snaps under reduced motion); a pager of these pages by weeks |
 
 ## Platform styles
 
@@ -759,10 +759,10 @@ in [Shared components](#shared-components).
 - Schedule day: the feed of `ui/feed/ScheduleFeedScreen.kt` in `:shared:feature-schedule`, a sticky day header over
   the kit's `LessonTimeline`.
 - Sport: `SportScreen` in `feature/sport/ui/` of `:shared:feature-sport` on the M3 Expressive kit: `Моё` with the
-  score ring card (the flow's hero), bookings as `LessonCard`s under day labels and the `Мои секции` row; `Запись`
+  score ring card (the flow's hero), bookings as `LessonCard`s under day labels with `Сделать секцией` under the booked ones and the `Секции` groups of `SwitchListRow`s; `Запись`
   with `SearchField`, `FilterChips`, the paging `WeekStrip` and dense `ListRow`s with `OccupancyBar` and one action;
   `SportLessonSheetContent`, `SportFiltersSheetContent` and `SportJoinSheetContent` on `SheetScaffold`;
-  `SportSectionsScreen` and `SportPointsScreen` on `ItmoDetailScreen`.
+  `SportPointsScreen` on `ItmoDetailScreen`.
 - Settings and profile groups: `SettingsScreen` in `:shared:feature-settings`
   (`feature/settings/ui/SettingsScreen.kt`) and `MeScreen` in
   `:shared:feature-account`, on the kit's `SettingsGroup` and `SettingsRow`.

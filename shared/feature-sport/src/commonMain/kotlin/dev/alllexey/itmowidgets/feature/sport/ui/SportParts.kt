@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
+import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportKindTone
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSeatsTone
@@ -65,10 +66,10 @@ internal fun KindTag(kind: String?, tone: SportKindTone, place: String?, modifie
 
 /** Friends' avatars overlapping, at most three. */
 @Composable
-internal fun FriendAvatars(names: List<String>, modifier: Modifier = Modifier) {
-    if (names.isEmpty()) return
+internal fun FriendAvatars(friends: List<UserSummary>, modifier: Modifier = Modifier) {
+    if (friends.isEmpty()) return
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(-ItmoTheme.spacing.compact)) {
-        names.take(MAX_FRIENDS).forEach { Avatar(it, pictureUrl = null, size = ItmoTheme.spacing.section) }
+        friends.take(MAX_FRIENDS).forEach { Avatar(it.name, pictureUrl = it.pictureUrl, size = ItmoTheme.spacing.section) }
     }
 }
 

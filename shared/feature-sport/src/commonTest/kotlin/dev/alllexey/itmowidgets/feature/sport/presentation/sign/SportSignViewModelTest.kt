@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
+import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.model.UserSharing
+import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.core.lesson.DayLesson
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
@@ -24,7 +27,10 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportActionReposi
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
+import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
+import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSectionRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSignPreferences
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportPrompt
@@ -68,6 +74,7 @@ class SportSignViewModelTest {
     private val data = FakeSportDataRepository()
     private val actions = FakeSportActionRepository()
     private val preferences = FakeSportSignPreferences()
+    private val sections = FakeSportSectionRepository()
     private val timetable = FakeDayLessonsGateway()
 
     /** Tuesday, 8 September, at noon: the fixture lesson is tonight at 18:30. */
@@ -76,7 +83,8 @@ class SportSignViewModelTest {
     private fun TestScope.viewModel(): SportSignViewModel {
         val delegate = bookingDelegate(FakeSportBookingRepository(), schedule, data, this, actions)
         return SportSignViewModel(
-            schedule, data, preferences, timetable, SportSharedLessonResolver(schedule, time), time,
+            schedule, data, preferences, SportSectionsHolder(sections, backgroundScope), timetable,
+            SportSharedLessonResolver(schedule, time), time,
             delegate, SportAutoSignFlow(delegate, time),
         )
     }
@@ -114,6 +122,16 @@ class SportSignViewModelTest {
         assertEquals(UiText.Res(SportStrings.sport_occupancy, listOf(13, 20)), day.rows[0].occupancy?.text)
         assertEquals(2, viewModel.uiState.value.weeks.size, "the current week and the next one at least")
         assertEquals(1, viewModel.uiState.value.weeks[0].single { it.date == LocalDate(2026, 9, 9) }.lessons)
+    }
+
+    @Test
+    fun catalogRowsKeepTheFriendsIdentityAndPhoto() = runTest(main.dispatcher) {
+        val friend = UserSummary(900001, "Тестовый Друг", "https://example.invalid/photo.jpg", emptyList(), UserSharing(true, true))
+        emitCatalog(SportCardFixtures.lesson(1).copy(friendsBookings = listOf(FriendSportBooking(friend, 1, null))))
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        assertEquals(listOf(friend), viewModel.day().rows.single().friends)
     }
 
     @Test
@@ -161,7 +179,8 @@ class SportSignViewModelTest {
     @Test
     fun theQuickChipsAreFreeMorningEveningFriends() = runTest(main.dispatcher) {
         emitCatalog(SportCardFixtures.lesson(1))
-        preferences.pinned.value = setOf(SportCardFixtures.lesson(1).sectionName)
+        val lesson = sections.queueLesson(1).copy(sectionName = SportCardFixtures.lesson(1).sectionName.raw)
+        sections.sections.value = LoadState.Content(listOf(MySportSection(1, lesson, emptyList(), place = 1, subscribers = 1)))
         val viewModel = viewModel()
         advanceUntilIdle()
 

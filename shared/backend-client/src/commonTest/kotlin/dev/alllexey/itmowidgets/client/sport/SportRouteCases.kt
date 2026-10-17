@@ -2,8 +2,11 @@ package dev.alllexey.itmowidgets.client.sport
 
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionRequest
 import dev.alllexey.itmowidgets.client.support.RouteCase
 import dev.alllexey.itmowidgets.client.users.SyntheticUsers
+import kotlin.time.Instant
 
 /** One [RouteCase] per public function of [SportApi], with synthetic arguments; names are the fixture IDs. */
 object SportRouteCases {
@@ -15,6 +18,9 @@ object SportRouteCases {
     val lessonIds = listOf(9001L, 9002L)
     val freeRequest = SportFreeSignRequest(lessonId = 9001, forceSign = true)
     val autoRequest = SportAutoSignRequest(prototypeLessonId = 9101)
+    const val SECTION_ID = 31L
+    val sectionRequest = SportSectionRequest(lessonId = 9001)
+    val occurrenceRequest = SportSectionOccurrenceRequest(start = Instant.parse("2026-11-04T07:00:00Z"), skipped = true)
 
     val syncSportLessons = RouteCase("syncSportLessons") { sport.syncSportLessons(lessonIds) }
     val friendsSportBookings = RouteCase("friendsSportBookings") { sport.friendsSportBookings() }
@@ -47,6 +53,14 @@ object SportRouteCases {
         sport.markSportAutoSignEntrySatisfiedByLesson(LESSON_ID)
     }
 
+    val mySportSections = RouteCase("mySportSections") { sport.mySportSections() }
+    val sportSectionSlots = RouteCase("sportSectionSlots") { sport.sportSectionSlots(lessonIds) }
+    val createSportSection = RouteCase("createSportSection") { sport.createSportSection(sectionRequest) }
+    val updateSportSectionOccurrence = RouteCase("updateSportSectionOccurrence") {
+        sport.updateSportSectionOccurrence(SECTION_ID, occurrenceRequest)
+    }
+    val stopSportSection = RouteCase("stopSportSection") { sport.stopSportSection(SECTION_ID) }
+
     val all: List<RouteCase> = listOf(
         syncSportLessons,
         friendsSportBookings,
@@ -64,5 +78,10 @@ object SportRouteCases {
         cancelSportAutoSignEntryByLesson,
         currentSportAutoSignQueues,
         markSportAutoSignEntrySatisfiedByLesson,
+        mySportSections,
+        sportSectionSlots,
+        createSportSection,
+        updateSportSectionOccurrence,
+        stopSportSection,
     )
 }

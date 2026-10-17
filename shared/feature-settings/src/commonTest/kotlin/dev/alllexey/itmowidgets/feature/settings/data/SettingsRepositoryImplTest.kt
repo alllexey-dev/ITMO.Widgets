@@ -53,6 +53,15 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
+    fun homePassVisibilityIsPersistedAndObserved() = runTest {
+        val fixture = createRepository()
+        fixture.repository.setHomePassVisible(false)
+        assertFalse(fixture.repository.observeLocalSettings().first().homePassVisible)
+        fixture.repository.setHomePassVisible(true)
+        assertTrue(fixture.repository.observeLocalSettings().first().homePassVisible)
+    }
+
+    @Test
     fun aggregatesEverySupportedLocalSetting() = runTest {
         val fixture = createRepository()
 

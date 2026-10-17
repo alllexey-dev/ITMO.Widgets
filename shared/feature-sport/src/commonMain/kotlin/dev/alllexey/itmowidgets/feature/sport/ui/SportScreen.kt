@@ -79,7 +79,6 @@ import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.designsystem.ic_event_busy
 import dev.alllexey.itmowidgets.shared.designsystem.ic_hourglass_top
-import dev.alllexey.itmowidgets.shared.designsystem.ic_keep
 import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
 import dev.alllexey.itmowidgets.shared.designsystem.ic_tune
@@ -98,6 +97,10 @@ object SportTestTags {
     const val SIGN_LIST = "sport:sign"
     const val SCORE = "sport:score"
     const val SECTIONS = "sport:sections"
+
+    fun section(id: Long) = "sport:section:$id"
+    fun sectionDate(id: Long, index: Int) = "sport:section:$id:date:$index"
+    fun bookingSection(lessonId: Long) = "sport:booking_section:$lessonId"
     const val SEARCH = "sport:search"
     const val STRIP = "sport:strip"
     const val LOADING = "sport:loading"
@@ -115,8 +118,13 @@ data class SportMyActions(
     val onRefresh: () -> Unit = {},
     val onRetry: () -> Unit = {},
     val onOpenPoints: () -> Unit = {},
-    val onOpenSections: () -> Unit = {},
     val onOpenBooking: (Long) -> Unit = {},
+    /** `Сделать секцией` of a booked lesson, on or off. */
+    val onToggleSection: (Long) -> Unit = {},
+    /** The off switch of a section. */
+    val onStopSection: (Long) -> Unit = {},
+    /** One date of a section on or off. */
+    val onSectionDate: (sectionId: Long, index: Int, on: Boolean) -> Unit = { _, _, _ -> },
     val onFindLesson: () -> Unit = {},
     val onConfirmCancel: () -> Unit = {},
     val onDismissCancel: () -> Unit = {},
@@ -232,27 +240,17 @@ private fun MyPart(state: SportMyUiState, actions: SportMyActions, tabs: LazyLis
                     body.days.forEach { day ->
                         item(key = "day-${day.title}") { DayLabel(day.title.asString()) }
                         items(day.bookings, key = { "booking-${it.lessonId}" }) { booking ->
-                            Box(Modifier.testTag(SportTestTags.booking(booking.lessonId))) {
-                                LessonCard(booking.lesson.toLessonView(), onClick = { actions.onOpenBooking(booking.lessonId) })
+                            Column(verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
+                                Box(Modifier.testTag(SportTestTags.booking(booking.lessonId))) {
+                                    LessonCard(booking.lesson.toLessonView(), onClick = { actions.onOpenBooking(booking.lessonId) })
+                                }
+                                booking.section?.let { BookingSection(it, actions.onToggleSection) }
                             }
                         }
                     }
                 }
             }
-            item(key = "sections") {
-                ListGroup(Modifier.padding(top = ItmoTheme.spacing.related).testTag(SportTestTags.SECTIONS)) {
-                    item {
-                        ListRow(
-                            title = text(SportStrings.sport_sections_title),
-                            subtitle = state.sections.asString(),
-                            icon = painterResource(Res.drawable.ic_keep),
-                            iconTone = Tone.Tertiary,
-                            chevron = true,
-                            onClick = actions.onOpenSections,
-                        )
-                    }
-                }
-            }
+            sections(state.sections, actions)
         }
     }
 }

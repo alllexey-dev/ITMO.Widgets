@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.client.http.BackendHttp
 import dev.alllexey.itmowidgets.client.http.BackendRoute
 import dev.alllexey.itmowidgets.client.http.jsonBody
 import dev.alllexey.itmowidgets.client.sport.model.FriendsSportBookingsResponse
+import dev.alllexey.itmowidgets.client.sport.model.MySportSection
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignQueue
@@ -13,6 +14,9 @@ import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignQueue
 import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportQueue
 import dev.alllexey.itmowidgets.client.sport.model.SportQueueEntry
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionSlot
 import dev.alllexey.itmowidgets.client.sport.model.UserSportBookingsResponse
 import io.ktor.http.HttpMethod
 import kotlinx.serialization.builtins.ListSerializer
@@ -74,7 +78,30 @@ internal class KtorSportApi(private val http: BackendHttp) : SportApi {
     override suspend fun markSportAutoSignEntrySatisfiedByLesson(lessonId: Long) =
         http.callUnit(BackendRoute(HttpMethod.Post, auto("lesson", lessonId.toString(), "mark-satisfied")))
 
+    override suspend fun mySportSections(): List<MySportSection> =
+        http.call(BackendRoute(HttpMethod.Get, sections("my")), ListSerializer(MySportSection.serializer()))
+
+    override suspend fun sportSectionSlots(lessonIds: List<Long>): List<SportSectionSlot> =
+        http.call(
+            BackendRoute(HttpMethod.Get, sections("slots"), query = lessonIds.map { "lessonIds" to it.toString() }),
+            ListSerializer(SportSectionSlot.serializer()),
+        )
+
+    override suspend fun createSportSection(request: SportSectionRequest): MySportSection =
+        http.call(BackendRoute(HttpMethod.Post, sections("create"), body = jsonBody(request)), MySportSection.serializer())
+
+    override suspend fun updateSportSectionOccurrence(id: Long, request: SportSectionOccurrenceRequest): MySportSection =
+        http.call(
+            BackendRoute(HttpMethod.Post, sections(id.toString(), "occurrence"), body = jsonBody(request)),
+            MySportSection.serializer(),
+        )
+
+    override suspend fun stopSportSection(id: Long) =
+        http.callUnit(BackendRoute(HttpMethod.Post, sections(id.toString(), "stop")))
+
     private fun sport(vararg segments: String) = listOf("api", "sport") + segments
+
+    private fun sections(vararg segments: String) = sport("sections", *segments)
 
     private fun free(vararg segments: String) = sport("free-sign", *segments)
 

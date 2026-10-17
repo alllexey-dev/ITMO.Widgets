@@ -10,6 +10,16 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Fixes (2026-10-15)
+
+- Past days in the schedule and sport week strips are dimmer; today and the selected day keep full emphasis (#424).
+- `Главный экран` settings can hide the QR pass entry on Сегодня on both platforms without hiding widgets or shortcuts (#420).
+- Sport friend rows and lesson sheets preserve avatar URLs on both platforms; iOS friend-request notifications use their photo too (#426).
+
+- Subject link votes use like/dislike thumbs on Android and iOS, filled for the selected vote (#421).
+- iOS publishes the ITMO.ID identity to Backend, including groups, with foreground retries (#422).
+- iOS loads avatar photos in shared Compose screens and native friend rows, with initials while loading or on failure (#425).
+
 ### iOS app
 
 - Sign-in through ITMO.ID or a refresh token, the demo session (five taps on
@@ -127,12 +137,15 @@ new iOS app.
 - Спорт is rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one view model per screen): `Моё`
   and `Запись` as a segmented choice under the static header instead of the pager. `Моё` has the score ring (it
   opens `Откуда баллы`), bookings and queues as lesson cards by day (`записаны`, `очередь 2 из 5`, `ждём
-  расписание`) and the entry to `Мои секции`. `Запись` has a search by sport or teacher, chips (`Есть места`,
+  расписание`), `Сделать секцией` under booked lessons and the user's sections. `Запись` has a search by sport or teacher, chips (`Есть места`,
   `Утро`, `Вечер`, `Друзья`), a week strip that pages by weeks and dense rows with `22 из 24`, friends,
   a clash with a lesson by name and one action; more filters are in a sheet. The lesson sheet shows the places large,
   one main action, the conditions and the clash as an orange line that does not block. `Встать в очередь?` is a sheet
-  with the steps, `Пытаться до самого начала` and the queues left. `Мои секции` pins sections on the device and shows
-  their next lessons and the queue limit. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
+  with the steps, `Пытаться до самого начала` and the queues left. Sections replace the
+  device-local `Мои секции`: a booked lesson becomes a section (in its card or its sheet), and Backend queues the same
+  lesson every two weeks as soon as auto-sign for it opens, in subscription order and while the monthly limit has a
+  free slot; `Моё` lists the sections with the place (`3-й из 7 в секции`), an off switch and the next three dates,
+  each of which can be skipped. `Только мои секции` in the filters sheet of `Запись` keeps the lessons of the sections. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
   awards by month with the day the credit was reached; no forecast. Another user's sport shows lesson cards.
 - `Запись` filters: the sheet shows six sport types first (the ones the student books or attended, then the most
   booked) with `Ещё` for the rest and a search over them; chosen types stay in sight. The building filter lists every

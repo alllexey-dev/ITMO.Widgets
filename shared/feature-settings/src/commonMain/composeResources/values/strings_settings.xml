@@ -1,4 +1,7 @@
 <resources>
+    <string name="settings_home_title">Главный экран</string>
+    <string name="settings_home_pass_title">Показывать кнопку пропуска</string>
+    <string name="settings_home_pass_description">На экране «Сегодня». Виджет и быстрые команды пропуска останутся доступны.</string>
     <string name="settings_loading">Загружаем настройки</string>
     <string name="settings_group_access">Доступ</string>
     <string name="settings_group_widgets">Виджеты</string>

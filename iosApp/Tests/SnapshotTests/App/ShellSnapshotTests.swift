@@ -15,6 +15,13 @@ final class ShellSnapshotTests: XCTestCase {
         assertScreenAppearances(of: tabs(.today), named: "today")
     }
 
+    func testTodayWithoutThePassAccessory() {
+        let shell = ShellTabs(selection: .constant(.today), showPass: false, openPass: {}) { tab in
+            NavigationStack { ShellFixtureRoot(tab: tab) }
+        }
+        assertScreenAppearances(of: shell, named: "today-no-pass", appearances: [.light, .dark])
+    }
+
     /// The pass accessory and the bell belong to today only.
     func testOtherTab() {
         assertScreenAppearances(of: tabs(.schedule), named: "schedule")

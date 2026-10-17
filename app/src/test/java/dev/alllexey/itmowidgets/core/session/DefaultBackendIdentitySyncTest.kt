@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.core.session
 
-import android.content.Context
-import android.content.ContextWrapper
 import dev.alllexey.itmowidgets.core.network.Core2Harness
 import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.contractFixture
 import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.errorEnvelope
@@ -101,26 +99,32 @@ class DefaultBackendIdentitySyncTest {
         assertEquals("stored-refresh", harness.storage.tokens?.refreshToken)
     }
 
+    @Test
+    fun `a failed foreground upload schedules the platform retry but the retry itself does not`() = runTest {
+        val harness = Core2Harness(session()) { respondJson(errorEnvelope("unavailable"), HttpStatusCode.ServiceUnavailable) }
+        var retries = 0
+
+        assertFalse(sync(harness, scheduleRetry = true, retry = { retries++ }))
+        assertFalse(sync(harness, scheduleRetry = false, retry = { retries++ }))
+
+        assertEquals(1, retries)
+    }
+
     /** `scheduleRetry = false` as the worker calls it: the retry itself is WorkManager's. */
     private suspend fun sync(
         harness: Core2Harness,
         gate: FakeBackendGate = FakeBackendGate(optedIn = true),
         demo: FakeDemoMode = FakeDemoMode(),
+        scheduleRetry: Boolean = false,
+        retry: () -> Unit = {},
     ): Boolean = DefaultBackendIdentitySync(
-        context = unusedContext(),
         gate = gate,
         tokens = harness.myItmo.tokens,
         storage = harness.storage,
         users = harness.client.users,
         diagnostics = diagnostics,
         demo = demo,
-        dispatchers = mainDispatcherRule.appDispatchers
-    ).sync(scheduleRetry = false)
-
-    /** A context nobody may touch: allocated without Android's stub constructor, any call on it fails. */
-    private fun unusedContext(): Context {
-        val unsafe = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe").apply { isAccessible = true }.get(null)
-        val allocate = unsafe.javaClass.getMethod("allocateInstance", Class::class.java)
-        return allocate.invoke(unsafe, ContextWrapper::class.java) as Context
-    }
+        dispatchers = mainDispatcherRule.appDispatchers,
+        retry = retry,
+    ).sync(scheduleRetry = scheduleRetry)
 }

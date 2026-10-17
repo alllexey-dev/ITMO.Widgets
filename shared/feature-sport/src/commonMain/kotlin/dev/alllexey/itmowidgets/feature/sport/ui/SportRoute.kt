@@ -21,7 +21,6 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAc
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsViewModel
-import dev.alllexey.itmowidgets.feature.sport.presentation.sections.SportSectionsViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignEvent
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
 import kotlinx.coroutines.flow.Flow
@@ -39,12 +38,11 @@ data class SportSheetAction(val lessonId: Long, val action: String?) {
 
 /**
  * What only the platform host does for the sport screens: the lesson sheet of [SportCommonDetailsArgs] (with the part
- * that opened it, to send the sheet's action back, and whether a request for it is in flight), the pushed `Мои
- * секции` and `Откуда баллы`.
+ * that opened it, to send the sheet's action back, and whether a request for it is in flight) and the pushed
+ * `Откуда баллы`.
  */
 data class SportHostActions(
     val onOpenLesson: (details: SportCommonDetailsArgs, from: SportTab, busy: Boolean) -> Unit = { _, _, _ -> },
-    val onOpenSections: () -> Unit = {},
     val onOpenPoints: () -> Unit = {},
 )
 
@@ -103,7 +101,9 @@ fun SportRoute(
             onRefresh = { myViewModel.refresh(RefreshMode.Pull) },
             onRetry = { myViewModel.refresh(RefreshMode.Force) },
             onOpenPoints = { currentHost.onOpenPoints() },
-            onOpenSections = { currentHost.onOpenSections() },
+            onToggleSection = myViewModel::toggleSection,
+            onStopSection = myViewModel::stopSection,
+            onSectionDate = myViewModel::setSectionDate,
             onOpenBooking = { id -> myViewModel.details(id)?.let { currentHost.onOpenLesson(it, SportTab.MY, false) } },
             onFindLesson = { tab = SportTab.SIGN },
             onConfirmCancel = myViewModel::confirmCancel,
@@ -142,46 +142,6 @@ fun SportRoute(
         )
     }
     SportScreen(title, tab, { tab = it }, my, sign, myActions, signActions, modifier, snackbars)
-}
-
-/** `Мои секции` on its ViewModel; a lesson's sheet opens through [onOpenLesson], its action comes back in [sheetActions]. */
-@Composable
-fun SportSectionsRoute(
-    viewModel: SportSectionsViewModel,
-    onBack: () -> Unit,
-    onOpenLesson: (details: SportCommonDetailsArgs, busy: Boolean) -> Unit,
-    onOpenBookings: () -> Unit,
-    modifier: Modifier = Modifier,
-    sheetActions: Flow<SportSheetAction> = emptyFlow(),
-) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbars = remember { SnackbarHostState() }
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(viewModel, sheetActions) {
-        sheetActions.collect { request -> request.bookingAction?.let { viewModel.onSheetAction(request.lessonId, it) } }
-    }
-    LaunchedEffect(lifecycle, viewModel) {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            viewModel.events.collect { launch { snackbars.showSnackbar(it.resolve(), duration = SnackbarDuration.Long) } }
-        }
-    }
-    val open by rememberUpdatedState(onOpenLesson)
-    val actions = remember(viewModel, onBack, onOpenBookings) {
-        SportSectionsActions(
-            onBack = onBack,
-            onRefresh = { viewModel.refresh(RefreshMode.Pull) },
-            onRetry = { viewModel.refresh(RefreshMode.Force) },
-            onOpenPicker = viewModel::openPicker,
-            onClosePicker = viewModel::closePicker,
-            onTogglePinned = viewModel::togglePinned,
-            onToggleRepeat = viewModel::toggleRepeat,
-            onOpenLesson = { id -> viewModel.details(id)?.let { open(it, viewModel.isBusy(id)) } },
-            onRowAction = viewModel::act,
-            onOpenBookings = onOpenBookings,
-            prompt = SportPromptActions(onConfirm = viewModel::confirmPrompt, onDismiss = viewModel::dismissPrompt),
-        )
-    }
-    SportSectionsScreen(state, actions, modifier, snackbars)
 }
 
 /** `Откуда баллы` on its ViewModel. */

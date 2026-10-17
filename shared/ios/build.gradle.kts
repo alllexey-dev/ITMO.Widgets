@@ -61,6 +61,11 @@ kotlin {
             // The Swift bridge: the ViewModelStore each SwiftUI screen owns (bridge/ScreenViewModelStore.kt).
             implementation(libs.jetbrains.lifecycle.viewmodel)
         }
+        iosMain.dependencies {
+            // Compose avatars need a network fetcher too; Darwin comes from core. Photos use public URLs,
+            // never the authenticated MyITMO/Backend clients, just as Android's Coil OkHttp loader does.
+            implementation(libs.coil.network.ktor3)
+        }
         // The background runner's tests: kotlin-test, coroutines-test and FakeClock.
         iosTest.dependencies {
             implementation(project(":shared:testing"))

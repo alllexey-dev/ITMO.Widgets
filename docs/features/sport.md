@@ -3,8 +3,7 @@
 Product behaviour: [Как это работает: спорт](../how-it-works/sport.md).
 
 The Спорт tab is `Моё` and `Запись` under the static root header, switched by a
-`SegmentedChoice` (DECISIONS.md, Спорт); `Мои секции` and `Откуда баллы` are
-pushed screens. View models are shared and Compose-free (`presentation/`, texts
+`SegmentedChoice` (DECISIONS.md, Спорт); `Откуда баллы` is a pushed screen. View models are shared and Compose-free (`presentation/`, texts
 are `UiText` keys); Android draws them in Compose (`ui/`, `commonMain` until
 the screens leave it), iOS in SwiftUI (`iosApp/Sources/Features/Sport/`).
 Official data comes from MyItmoApi; queues, friends' bookings and the queue
@@ -14,11 +13,10 @@ limit come from Backend behind the custom-services gate.
 
 | Screen | View model | Android | iOS |
 |---|---|---|---|
-| `Моё`: the score ring (opens `Откуда баллы`), bookings and queues as lesson cards by day, the entry to `Мои секции` | `SportMyViewModel` | `SportScreen` (`SportTab.MY`) | `SportTabScreen`, `SportMyPart` |
+| `Моё`: the score ring (opens `Откуда баллы`), bookings and queues as lesson cards by day with `Сделать секцией` under the booked ones, then `Секции` with their next dates | `SportMyViewModel` | `SportScreen` (`SportTab.MY`) | `SportTabScreen`, `SportMyPart` |
 | `Запись`: search, quick chips, the week strip paging by weeks, the day's dense rows with one action, `Фильтры скрыли N` | `SportSignViewModel` | `SportScreen` (`SportTab.SIGN`), `SportFiltersSheetContent` | `SportSignPart`, `SportFiltersSheet` |
 | The lesson sheet: kind, section and day, the places large and as a bar, the status, the clash, one action, the conditions, teacher, place, comment, friends, share | `SportLessonSheetPresenter` | `SportLessonSheetContent` in the `SportRoutes.SportCommonDetails` sheet | `SportLessonSheet` |
 | `Встать в очередь?`: three steps, the late-sign switch of a real lesson, the queues left | `SportPrompt.Join` | `SportJoinSheetContent` | `SportJoinSheet` |
-| `Мои секции` (`AppRoutes.SportSections`): pinned sections, their next three lessons with their actions, the queue limit in the subtitle, `Очередь через неделю` | `SportSectionsViewModel` | `SportSectionsScreen` | `SportSectionsScreen` |
 | `Откуда баллы` (`AppRoutes.SportPoints`): visits + bonus = total, the bonus counted up to 40, the awards by month, `Зачёт набран 22 сентября` | `SportPointsViewModel` | `SportPointsScreen` | `SportPointsScreen` |
 
 - A booking card is the kit's lesson card built by the shared lesson rules
@@ -53,8 +51,8 @@ limit come from Backend behind the custom-services gate.
   `Онлайн` for online rooms (id -1), each only when it has lessons.
 - The filters sheet shows the teacher row and the part of the day only while
   the sport settings show those filters (`SportSignDisplayOptions`).
-- Pinned sections are kept on the device (`sport_pinned_sections` in the app
-  preferences, `SportSignPreferencesRepository`).
+- `Только мои секции` in the filters sheet of `Запись` keeps the lessons of the
+  user's sections (`SportSectionsHolder.sectionNames`).
 - `Откуда баллы` reads My ITMO's award history, `attendances` of
   `/api/sport/personal/score` (date, section, points, competition and place).
   The credit day is when visits plus the counted bonus first reach 100. There is
@@ -82,24 +80,33 @@ limit come from Backend behind the custom-services gate.
   (`SportSharedLessonResolver`). A prediction keeps its prototype's id, so a
   lookup prefers the shown day, then the linked lesson.
 
-## Очередь через неделю
+## Sections
 
-The design's repeat queue (DECISIONS.md, "Data the design needs") needs a
-Backend that does not exist yet. The screens and `SportSectionsViewModel` are
-built against `SportRecurringQueueRepository`; the app binds
-`UnavailableSportRecurringQueueRepository` (`available = false`), so the switch,
-its dates and the note stay hidden. Backend has to provide:
+A section (DECISIONS.md, Спорт, «Секция») is auto-sign for the auto-sign: the
+user makes a booked lesson a section, and Backend queues its slot, the same
+lesson every two weeks, through an ordinary auto entry for each occurrence as
+soon as auto-sign for it opens (its prototype, the lesson two weeks earlier, is
+published), in subscription order and only while the monthly limit has a free
+slot. Semantics are in Backend's sport automation contract (Sections).
 
-- a rule per user: the prototype lesson, section id, teacher ISU, weekday,
-  start time and the week parity of the timetable;
-- create, delete and list routes (`GET`, `POST`, `DELETE`
-  `/api/sport/recurring-queue`), behind the custom-services gate;
-- matching of every lesson My ITMO publishes against the rules (the same match
-  key as forecasts, without the fixed two-week offset), a queue entry per
-  matching date that spends one queue of the 30-day limit, and stopping before a
-  date the user has a lesson at (or the app reports it);
-- the rules in the queue lists the app reads, so a repeat's entries show as
-  queues in `Моё`.
+- `SportSectionRepository` (`SportSectionRepositoryImpl`) calls
+  `/api/sport/sections` behind the custom-services opt-in; the demo shows
+  `DemoSport.sections` and refuses changes, so nothing reaches Backend.
+- `SportSectionsHolder` is the one app-wide holder: the user's sections, the
+  slots of booked lessons, what is in flight, and the notices. `Моё` and every
+  lesson sheet read and change sections through it.
+- A booked lesson's card in `Моё` and its sheet show `Сделать секцией` with
+  `Секцией выбрали: 4`, `Секция` with `3-й из 7 в секции`, or `Мест в секции
+  нет` when the slot is full (the cap is a share of the lesson's places,
+  Backend's rule). The sheet's switch keeps the sheet open.
+- `Секции` in `Моё`: each section with its slot (`Четверг, 15:20, раз в две
+  недели`), the teacher and the hall, the place, an off switch, and its next
+  three dates, each with its own switch: `в очереди, 2-й из 5` (the place in
+  the lesson's auto-sign queue, where section and manual entries alternate, a
+  section first; it moves as manual users join), `встанем в очередь, когда
+  откроется запись`, `пропустим это занятие` (off, its queue cancelled, the
+  place kept) or `лимит на месяц исчерпан` (the limit had no free slot; not
+  retried). Turning a section off keeps the queues it already made.
 
 ## Loading states
 
@@ -197,11 +204,11 @@ Android screenshots in `shared/feature-sport/screenshots/` from the previews
 
 ## iOS
 
-- `SportTabScreen`, `SportSectionsScreen` and `SportPointsScreen`
+- `SportTabScreen` and `SportPointsScreen`
   (`iosApp/Sources/Features/Sport/`) are SwiftUI over the same view models
   (`ObservableViewModel`); the lesson sheet is drawn from
-  `SportMyViewModel.sheet`, `SportSignViewModel.sheet` or
-  `SportSectionsViewModel.sheet`. Sharing goes through `SportShares`, maps
+  `SportMyViewModel.sheet` or `SportSignViewModel.sheet`, its section switch
+  from `SportMyViewModel.sectionToggle`. Sharing goes through `SportShares`, maps
   through `PlatformActions`. Koin modules `sportModule`, `sportIosModule` and
   social's `FriendRepository`. Tabs move by the native tab bar only.
 - `UserSportRoute` via `userSportViewController` (still a Compose host),
@@ -213,3 +220,12 @@ Android screenshots in `shared/feature-sport/screenshots/` from the previews
   `SportSignPushBooker` on Android) and the sign-out cleaners.
 - Tests: `SportIosModuleTest` (`scripts/ios/test.sh kn :shared:feature-sport`),
   `SportSnapshotTests`, `SportUITests`.
+
+### Friend avatars
+
+Catalog rows and lesson sheets preserve each friend's ISU, name and `pictureUrl`
+from `UserSummary` through `SportCatalogRow` and `SportFriendUi` to the kit avatar
+on both platforms. Missing or failed photos show initials. The schedule's lesson
+friends and picker already carry those URLs; the iOS bell's friend requests also
+use the event's photo. Teacher rows whose source exposes no photo URL keep initials;
+no per-row profile requests or guessed image URLs are added.

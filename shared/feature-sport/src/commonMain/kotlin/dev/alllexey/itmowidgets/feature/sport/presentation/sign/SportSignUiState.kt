@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
+import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
@@ -93,7 +94,7 @@ sealed interface SportEmptyAction {
 
 /**
  * One catalog lesson as a dense row: [start] over [end], the [section], its [kind] and short [place] (`Свободное,
- * Кронва`), the [occupancy] (`22 из 24`), the friends who go ([friends], names), a [clash] with a lesson
+ * Кронва`), the [occupancy] (`22 из 24`), the friends who go ([friends], names and photos), a [clash] with a lesson
  * (`Пара: Алгоритмы`) and one [action].
  */
 data class SportCatalogRow(
@@ -105,7 +106,7 @@ data class SportCatalogRow(
     val kindTone: SportKindTone,
     val place: UiText?,
     val occupancy: SportOccupancyUi?,
-    val friends: List<String>,
+    val friends: List<UserSummary>,
     val clash: UiText?,
     val action: SportRowAction,
 )

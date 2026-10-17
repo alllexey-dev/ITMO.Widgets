@@ -4,11 +4,18 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import kotlinx.coroutines.flow.Flow
 
 /** How the QR pass looks: dynamic colors, the spoiler and its animation. */
-class QrSettingsPreferences(dataStore: DataStore<Preferences>) : DataStorePreferences(dataStore) {
+class QrSettingsPreferences(dataStore: DataStore<Preferences>) : DataStorePreferences(dataStore), HomePassVisibility {
+
+    override fun observeHomePassVisible(): Flow<Boolean> = observe { it[HOME_PASS_VISIBLE] ?: true }
+
+    suspend fun setHomePassVisible(visible: Boolean) {
+        write(HOME_PASS_VISIBLE, visible)
+    }
 
     suspend fun getQrDynamicColorsEnabled(): Boolean = read()[QR_DYNAMIC_COLORS_ENABLED] ?: true
 
@@ -38,6 +45,7 @@ class QrSettingsPreferences(dataStore: DataStore<Preferences>) : DataStorePrefer
         safeEnumOf(this[QR_SPOILER_ANIMATION_TYPE], QrAnimationType.CIRCLE)
 
     private companion object {
+        val HOME_PASS_VISIBLE = booleanPreferencesKey("home_qr_pass_visible")
         val QR_DYNAMIC_COLORS_ENABLED = booleanPreferencesKey("qr_dynamic_colors_enabled")
         val QR_SPOILER_ENABLED = booleanPreferencesKey("qr_spoiler_enabled")
         val QR_SPOILER_ANIMATION_TYPE = stringPreferencesKey("qr_spoiler_animation_type")

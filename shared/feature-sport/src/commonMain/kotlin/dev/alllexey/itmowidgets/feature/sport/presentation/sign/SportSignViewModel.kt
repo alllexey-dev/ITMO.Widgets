@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPrefere
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonActions
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetPresenter
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetUi
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
@@ -62,6 +63,7 @@ class SportSignViewModel(
     private val scheduleRepository: SportScheduleRepository,
     private val dataRepository: SportDataRepository,
     private val preferences: SportSignPreferencesRepository,
+    sections: SportSectionsHolder,
     timetable: DayLessonsGateway,
     private val sharedLessons: SportSharedLessonResolver,
     private val time: AcademicTimeProvider,
@@ -86,7 +88,7 @@ class SportSignViewModel(
         scheduleRepository.observeSportSchedule().answered(),
         scheduleRepository.observeSportFilters().map { it.valueOrNull() }.onStart { emit(null) },
         timetable.observe(time.today(), time.today().plus(MAX_WEEKS_FORWARD + 1, DateTimeUnit.WEEK)).onStart { emit(emptyList()) },
-        combine(preferences.observePinnedSections(), preferences.observeDisplayOptions(), attendedSections(), ::Prefs),
+        combine(sections.sectionNames(), preferences.observeDisplayOptions(), attendedSections(), ::Prefs),
         combine(operations, refreshes.refreshing) { count, byUser -> (count > 0) to byUser },
     ) { schedule, catalog, days, prefs, (running, byUser) -> Sources(schedule, catalog, days, prefs, running, byUser) }
 

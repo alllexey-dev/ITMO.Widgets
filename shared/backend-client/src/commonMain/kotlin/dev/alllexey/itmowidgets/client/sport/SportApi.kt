@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.client.sport
 
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.sport.model.FriendsSportBookingsResponse
+import dev.alllexey.itmowidgets.client.sport.model.MySportSection
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignQueue
@@ -9,12 +10,16 @@ import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignQueue
 import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionRequest
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionSlot
 import dev.alllexey.itmowidgets.client.sport.model.UserSportBookingsResponse
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Sport (routes under `/api/sport`): the viewer's confirmed bookings, the friends feed, and the free-sign (`free`,
- * a real lesson) and auto-sign (`auto`, a weekly prototype lesson) queues. Semantics are in Backend's
+ * Sport (routes under `/api/sport`): the viewer's confirmed bookings, the friends feed, the free-sign (`free`,
+ * a real lesson) and auto-sign (`auto`, a weekly prototype lesson) queues, and sections (a slot queued every two
+ * weeks). Semantics are in Backend's
  * `sport-automation.md` and `privacy.md` contracts. A queue entry is never a confirmed university booking: confirmed
  * lesson IDs come only from [syncSportLessons].
  *
@@ -115,4 +120,33 @@ interface SportApi {
      */
     @Throws(BackendException::class, CancellationException::class)
     suspend fun markSportAutoSignEntrySatisfiedByLesson(lessonId: Long)
+
+    /** `GET /api/sport/sections/my`: the viewer's active sections with their next three dates and place. */
+    @Throws(BackendException::class, CancellationException::class)
+    suspend fun mySportSections(): List<MySportSection>
+
+    /**
+     * `GET /api/sport/sections/slots?lessonIds=`: the slots of up to 50 lessons, counts and the viewer's own place
+     * only. A lesson without a provable venue has no slot and is left out.
+     */
+    @Throws(BackendException::class, CancellationException::class)
+    suspend fun sportSectionSlots(lessonIds: List<Long>): List<SportSectionSlot>
+
+    /**
+     * `POST /api/sport/sections/create`: makes a section of a lesson the viewer is booked on; repeating it returns the
+     * active one. `409` when the lesson is not booked, has no provable venue, or the slot is full.
+     */
+    @Throws(BackendException::class, CancellationException::class)
+    suspend fun createSportSection(request: SportSectionRequest): MySportSection
+
+    /**
+     * `POST /api/sport/sections/{id}/occurrence`: turns one future date of the section off (a queued entry is
+     * cancelled) or back on; the section and its place stay.
+     */
+    @Throws(BackendException::class, CancellationException::class)
+    suspend fun updateSportSectionOccurrence(id: Long, request: SportSectionOccurrenceRequest): MySportSection
+
+    /** `POST /api/sport/sections/{id}/stop`: ends the section; entries already queued stay. */
+    @Throws(BackendException::class, CancellationException::class)
+    suspend fun stopSportSection(id: Long)
 }
