@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookStoreJson
 import dev.alllexey.itmowidgets.feature.recordbook.data.assertSameJson
 import dev.alllexey.itmowidgets.feature.recordbook.data.copyStored22
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import java.io.File
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath

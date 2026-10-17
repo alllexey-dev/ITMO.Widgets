@@ -1,10 +1,10 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
+import dev.alllexey.itmowidgets.core.lesson.LessonUi
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.lesson.LessonUi
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 
@@ -78,7 +78,18 @@ data class SubjectScaleTick(val label: UiText, val score: Double)
  * The connected sheet in the hero: the link's [title], [caption] `Лист «ПИИКТ 2.1», столбец «Итог»` and the last
  * reading's [problem] (`Нет связи`); its menu opens [url], picks another total ([changeTotal]) or disconnects.
  */
-data class SubjectSheetLine(val title: UiText, val caption: UiText, val problem: UiText?, val url: String, val changeTotal: SheetScoresArgs)
+/**
+ * The connected sheet in the hero: its [title], the column and tab, a failed reading's [problem], and [check]
+ * («Проверьте итог», opens [changeTotal]) while an unsure automatic total waits for a look.
+ */
+data class SubjectSheetLine(
+    val title: UiText,
+    val caption: UiText,
+    val problem: UiText?,
+    val url: String,
+    val changeTotal: SheetScoresArgs,
+    val check: UiText? = null,
+)
 
 /** A sheet link `Мои баллы из таблицы` can connect. */
 data class SubjectSheetOption(val title: UiText, val args: SheetScoresArgs)

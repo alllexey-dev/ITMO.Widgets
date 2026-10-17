@@ -41,6 +41,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -168,6 +169,8 @@ internal object SubjectPresenter {
             },
             url = score.tabUrl,
             changeTotal = sheetArgs(input.scope, score.url, SheetScoresArgs.Step.TOTAL),
+            check = UiText.Res(RecordbookStrings.sheet_scores_check)
+                .takeIf { score.choice == TotalChoice.AUTO_CHECK && score.status == SheetStatus.OK },
         )
     }
 
