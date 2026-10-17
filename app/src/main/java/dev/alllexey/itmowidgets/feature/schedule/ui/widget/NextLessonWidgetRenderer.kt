@@ -53,13 +53,15 @@ object NextLessonWidgetRenderer {
     }
 
     fun layout(
-        context: Context,
+        base: Context,
         snapshot: ScheduleWidgetSnapshot,
         palette: WidgetPalette?,
         now: Instant,
         widgetId: Int?,
         medium: Boolean,
     ): RemoteViews {
+        // Russian plurals whatever the system language (AppLocale).
+        val context = base.withAppLocale()
         val content = snapshot.next
         val colors = WidgetColors(context, palette)
         val texts = ScheduleWidgetTexts(context)

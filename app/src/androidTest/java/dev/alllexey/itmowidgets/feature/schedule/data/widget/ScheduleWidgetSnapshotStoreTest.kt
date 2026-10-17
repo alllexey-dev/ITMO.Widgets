@@ -7,7 +7,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -46,18 +45,15 @@ class ScheduleWidgetSnapshotStoreTest {
         val directories = isolatedDirectories()
         enable()
         store(directories).write(snapshot())
-        assertEquals(
-            ScheduleWidgetPendingStatus.PREDICTED,
-            store(directories).read().singleLesson.lesson?.pendingStatus
-        )
+        assertEquals(true, store(directories).read().next.lesson?.queued)
         scheduleChecks.setScheduleSportAutoSignEnabled(false)
-        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(directories).read().singleLesson.kind)
+        assertEquals(WidgetContentKind.EMPTY, store(directories).read().next.kind)
         enable()
         servicesOptIn.setCustomServicesEnabled(false)
-        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(directories).read().singleLesson.kind)
+        assertEquals(WidgetContentKind.EMPTY, store(directories).read().next.kind)
         enable()
         time.value = time.value.plusMinutes(7)
-        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(directories).read().singleLesson.kind)
+        assertEquals(WidgetContentKind.EMPTY, store(directories).read().next.kind)
     }
 
     @Test
@@ -71,12 +67,12 @@ class ScheduleWidgetSnapshotStoreTest {
         // A new login has valid tokens again; the pre-cleanup ticket must still be invalid.
         tokens.signedIn = true
         assertFalse(store.writeIfCurrent(snapshot(), oldGeneration))
-        assertEquals(SingleLessonWidgetKind.LOADING, store.read().singleLesson.kind)
+        assertEquals(WidgetContentKind.LOADING, store.read().next.kind)
         val current = store.currentGeneration()
         assertTrue(store.writeIfCurrent(snapshot(), current))
-        assertEquals(ScheduleWidgetPendingStatus.PREDICTED, store.read().singleLesson.lesson?.pendingStatus)
+        assertEquals(true, store.read().next.lesson?.queued)
         store.clearSessionData()
-        assertEquals(SingleLessonWidgetKind.LOADING, store(directories).read().singleLesson.kind)
+        assertEquals(WidgetContentKind.LOADING, store(directories).read().next.kind)
     }
 
     @Test
@@ -97,7 +93,7 @@ class ScheduleWidgetSnapshotStoreTest {
             store.clearSessionData()
             tokens.signedIn = true
             resumeSettings.complete(Unit)
-            assertEquals(SingleLessonWidgetKind.LOADING, read.await().singleLesson.kind)
+            assertEquals(WidgetContentKind.LOADING, read.await().next.kind)
         }
     }
 
@@ -107,7 +103,7 @@ class ScheduleWidgetSnapshotStoreTest {
         enable()
         store(directories).write(snapshot())
         tokens.signedIn = false
-        assertEquals(SingleLessonWidgetKind.SIGNED_OUT, store(directories).read().singleLesson.kind)
+        assertEquals(WidgetContentKind.SIGNED_OUT, store(directories).read().next.kind)
     }
 
     private fun isolatedDirectories(): AppDirectories = Directories(temporaryFolder.newFolder().toOkioPath())
@@ -122,15 +118,10 @@ class ScheduleWidgetSnapshotStoreTest {
     }
 
     private fun snapshot(): ScheduleWidgetSnapshot {
-        val official = ScheduleWidgetSnapshot(
-            SingleLessonWidgetContent(SingleLessonWidgetKind.EMPTY_TODAY),
-            listOf(ScheduleListWidgetItem(ScheduleListWidgetItemKind.EMPTY_TODAY)), LessonStyle.DOT, LessonStyle.DOT
-        )
-        val pending = ScheduleWidgetLesson("Плавание", "11:00", "12:00", 11, null, "Бассейн", null,
-            ScheduleWidgetLessonState.UPCOMING, ScheduleWidgetPendingStatus.PREDICTED)
+        val official = ScheduleWidgetSnapshot(NextLessonWidgetContent(WidgetContentKind.EMPTY), DayWidgetContent(WidgetContentKind.EMPTY))
+        val pending = WidgetLesson("Плавание", "11:00", "12:00", 660, 720, 11, WidgetLessonState.UPCOMING, room = "Бассейн", queued = true)
         return official.copy(
-            singleLesson = SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, pending),
-            lessonList = listOf(ScheduleListWidgetItem(ScheduleListWidgetItemKind.LESSON, pending)),
+            next = NextLessonWidgetContent(WidgetContentKind.CONTENT, NextLessonMoment.FIRST, pending),
             officialFallback = official,
             pendingValidUntil = time.value.plusMinutes(7).toInstant().toString()
         )

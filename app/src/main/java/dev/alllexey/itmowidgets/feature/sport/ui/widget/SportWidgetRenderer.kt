@@ -50,7 +50,9 @@ object SportWidgetRenderer {
         }
     }
 
-    fun layout(context: Context, snapshot: SportWidgetSnapshot, palette: WidgetPalette?, widgetId: Int?, medium: Boolean): RemoteViews {
+    fun layout(base: Context, snapshot: SportWidgetSnapshot, palette: WidgetPalette?, widgetId: Int?, medium: Boolean): RemoteViews {
+        // Russian plurals whatever the system language (AppLocale).
+        val context = base.withAppLocale()
         val colors = WidgetColors(context, palette)
         val views = RemoteViews(context.packageName, if (medium) R.layout.widget_sport_medium else R.layout.widget_sport_small)
         colors.applyBackground(views)

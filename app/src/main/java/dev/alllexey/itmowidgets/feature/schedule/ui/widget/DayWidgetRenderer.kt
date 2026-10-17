@@ -45,7 +45,9 @@ object DayWidgetRenderer {
         }
     }
 
-    fun layout(context: Context, snapshot: ScheduleWidgetSnapshot, palette: WidgetPalette?, size: SizeF, widgetId: Int?): RemoteViews {
+    fun layout(base: Context, snapshot: ScheduleWidgetSnapshot, palette: WidgetPalette?, size: SizeF, widgetId: Int?): RemoteViews {
+        // Russian plurals whatever the system language (AppLocale).
+        val context = base.withAppLocale()
         val day = snapshot.day
         val colors = WidgetColors(context, palette)
         val texts = ScheduleWidgetTexts(context)

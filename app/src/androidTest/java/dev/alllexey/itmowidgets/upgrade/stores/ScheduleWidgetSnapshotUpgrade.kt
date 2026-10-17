@@ -2,19 +2,12 @@ package dev.alllexey.itmowidgets.upgrade.stores
 
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItem
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItemKind
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLesson
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLessonState
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetContent
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind
 import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
@@ -30,35 +23,21 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 
 /**
- * `no_backup/widgets/schedule_snapshot.json`: placed widgets keep their last content until the next refresh. Gson wrote
- * it without a version; kotlinx reads it and writes `formatVersion` 2 back.
+ * `no_backup/widgets/schedule_snapshot.json`: 2.2's Gson snapshot is of the lesson-list widgets the UX overhaul
+ * replaced, so it reads as loading and the next update writes `formatVersion` 3; placed widgets show their content
+ * again after that update.
  */
 object ScheduleWidgetSnapshotUpgrade {
 
     fun check(fixture: Upgrade22Fixture): Unit = runBlocking {
-        val lesson = ScheduleWidgetLesson(
-            Captured22.SUBJECT, "10:00", "11:30", 1, "Тестовый преподаватель", "101", "Тестовый корпус",
-            ScheduleWidgetLessonState.UPCOMING
-        )
-        val expected = ScheduleWidgetSnapshot(
-            singleLesson = SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, lesson, remainingLessons = 2),
-            lessonList = listOf(
-                ScheduleListWidgetItem(ScheduleListWidgetItemKind.HEADER, dateIso = "2026-10-05", tomorrow = true),
-                ScheduleListWidgetItem(ScheduleListWidgetItemKind.LESSON, lesson = lesson),
-                ScheduleListWidgetItem(ScheduleListWidgetItemKind.END)
-            ),
-            singleLessonStyle = LessonStyle.DOT,
-            lessonListStyle = LessonStyle.LINE,
-            compactTextSize = WidgetTextSize.LARGE,
-            fullTextSize = WidgetTextSize.EXTRA_LARGE
-        )
         val store = store(fixture)
 
-        assertEquals(expected, store.read())
-        store.write(expected)
+        assertEquals(ScheduleWidgetSnapshot.loading(), store.read())
+        val next = ScheduleWidgetSnapshot.signedOut().copy(compactTextSize = WidgetTextSize.LARGE)
+        store.write(next)
         val written = File(fixture.noBackupFilesDir, "widgets/schedule_snapshot.json").readText()
-        assertTrue(written, written.startsWith("{\"formatVersion\":2,"))
-        assertEquals(expected, store(fixture).read())
+        assertTrue(written, written.startsWith("{\"formatVersion\":3,"))
+        assertEquals(next, store(fixture).read())
     }
 
     private fun store(fixture: Upgrade22Fixture) = ScheduleWidgetSnapshotStoreImpl(
