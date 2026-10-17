@@ -26,7 +26,7 @@ final class ScheduleUITests: XCTestCase {
         openSchedule(app)
 
         let today = todayRow(app)
-        XCTAssertTrue(today.waitForExistence(timeout: stepTimeout), "the feed opens on today")
+        XCTAssertTrue(today.waitForExistence(timeout: stepTimeout), "the feed opens on \(Self.today), shows \(rowIds(app))")
         XCTAssertTrue(waitUntilHittable(today))
         XCTAssertTrue(firstLesson(app).waitForExistence(timeout: stepTimeout), "the demo week has lessons")
         XCTAssertTrue(element(app, "schedule.friends").isHittable)
@@ -254,6 +254,12 @@ final class ScheduleUITests: XCTestCase {
         app.selectTab("schedule")
         XCTAssertTrue(element(app, "shell.root.schedule").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "schedule.list").waitForExistence(timeout: rootTimeout), "the feed never loaded")
+    }
+
+    /// The feed's realized rows, for a failure message.
+    private func rowIds(_ app: XCUIApplication) -> [String] {
+        app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'schedule.row.'"))
+            .allElementsBoundByIndex.map(\.identifier)
     }
 
     /// Today's row of the feed: its day header, its `пар нет` row or its weekend.
