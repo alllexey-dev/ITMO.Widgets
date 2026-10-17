@@ -113,7 +113,7 @@ internal class SportTestGraph(scope: CoroutineScope) {
         single { sections }
         single { time }
         single { ShareLinkFactory("https://widgets.alllexey.dev") }
-        single { SportTeacherLevels(NoLevels) }
+        single { SportTeacherLevels(NoSportTeacherLevels) }
         viewModel { SportMyViewModel(bookingRepository, SportData, holder, sections, time) }
         viewModel {
             SportSignViewModel(
@@ -185,6 +185,6 @@ internal class SportTestGraph(scope: CoroutineScope) {
     }
 }
 
-private object NoLevels : TeacherLevelsRepository {
+private object NoSportTeacherLevels : TeacherLevelsRepository {
     override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = emptyMap()
 }
