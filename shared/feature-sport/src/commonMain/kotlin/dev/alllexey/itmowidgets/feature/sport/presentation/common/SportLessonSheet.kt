@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.common
 
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.reviews.tone
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.personInitials
@@ -51,8 +54,8 @@ data class SportCheck(val state: SportCheckState, val text: UiText)
 
 enum class SportCheckState { OK, WAIT, NO }
 
-/** The teacher's short name; [isu] opens the person card. */
-data class SportPersonUi(val name: String, val isu: Int?)
+/** The teacher's short name; [isu] opens the person card; [tone] is the review tone in words, else `Преподаватель`. */
+data class SportPersonUi(val name: String, val isu: Int?, val tone: UiText)
 
 /** The address and the hall; [mapAddress] opens the maps. */
 data class SportPlaceUi(val title: String, val subtitle: String?, val mapAddress: String?)
@@ -78,7 +81,8 @@ object SportLessonSheetPresenter {
 
     /**
      * The sheet of [args] at [now]: [actionsEnabled] is false where the sheet only shows, [busy] while the screen
-     * behind it runs an action for the lesson, [submitted] once this sheet has sent its action.
+     * behind it runs an action for the lesson, [submitted] once this sheet has sent its action; [teacherLevel] is the
+     * tone of the teacher's reviews ([SportTeacherLevels]) once it is known.
      */
     fun present(
         args: SportCommonDetailsArgs,
@@ -87,6 +91,7 @@ object SportLessonSheetPresenter {
         actionsEnabled: Boolean = true,
         busy: Boolean = false,
         submitted: Boolean = false,
+        teacherLevel: TeacherLevel? = null,
     ): SportLessonSheetUi {
         val start = DateTexts.parseOffsetInstant(args.start)
         val end = DateTexts.parseOffsetInstant(args.end)
@@ -134,7 +139,13 @@ object SportLessonSheetPresenter {
             },
             conditions = if (args.signed || availability == null) emptyList() else conditions(args, now, zone),
             teacher = args.teacherFio.trim().takeIf(String::isNotEmpty)
-                ?.let { SportPersonUi(shortPersonName(it), args.teacherIsu.takeIf { isu -> isu > 0 }) },
+                ?.let { name ->
+                    SportPersonUi(
+                        name = shortPersonName(name),
+                        isu = args.teacherIsu.takeIf { it > 0 },
+                        tone = teacherLevel?.tone()?.words ?: UiText.Res(SportStrings.sport_filter_teacher),
+                    )
+                },
             place = place,
             comment = args.comment?.trim()?.takeIf(String::isNotEmpty),
             friends = args.friends.map { friend ->
@@ -251,4 +262,16 @@ object SportLessonSheetPresenter {
     }
 
     private const val FEW_SEATS = 3
+}
+
+/**
+ * The tone of a sport teacher's reviews for the lesson sheet, the same one the schedule's sheet shows. The repository
+ * answers nothing without the ITMO.Widgets opt-in and demo data in the demo session.
+ */
+class SportTeacherLevels(private val levels: TeacherLevelsRepository) {
+    /** The level of [args]' teacher; null without an ISU or a summary to show. */
+    suspend fun level(args: SportCommonDetailsArgs): TeacherLevel? {
+        val isu = args.teacherIsu.takeIf { it > 0 } ?: return null
+        return levels.levels(setOf(isu))[isu]
+    }
 }

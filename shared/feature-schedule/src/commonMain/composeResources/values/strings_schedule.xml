@@ -5,8 +5,7 @@
     <string name="schedule_today">Сегодня</string>
     <string name="schedule_today_pill">сегодня</string>
     <string name="schedule_return_to_mine">Вернуться к своему</string>
-    <string name="schedule_week_even">%1$d-я неделя, чётная</string>
-    <string name="schedule_week_odd">%1$d-я неделя, нечётная</string>
+    <string name="schedule_week">%1$d-я неделя</string>
     <string name="schedule_day_free">%1$s — пар нет</string>
     <string name="schedule_weekend">Выходные, %1$s</string>
     <string name="schedule_empty_title">Пар нет</string>

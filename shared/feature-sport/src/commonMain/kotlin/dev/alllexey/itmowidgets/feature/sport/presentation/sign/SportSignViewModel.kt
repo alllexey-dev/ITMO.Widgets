@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -202,14 +203,24 @@ class SportSignViewModel(
         lesson(lessonId)?.let { actions.runOffered(it, action) }
     }
 
-    /** `Встать в очередь` or `Выйти` in the prompt; [lateSign] is the switch of a real lesson's queue. */
-    /** The lesson sheet of [details] now, as the iOS host draws it; [submitted] once it has sent its action. */
-    fun sheet(details: SportCommonDetailsArgs, submitted: Boolean): SportLessonSheetUi =
-        SportLessonSheetPresenter.present(details, time.now(), time.timeZone, busy = isBusy(details.lessonId), submitted = submitted)
+    /**
+     * The lesson sheet of [details] now, as the iOS host draws it; [submitted] once it has sent its action; the tone of
+     * [teacherLevel] from [dev.alllexey.itmowidgets.feature.sport.presentation.common.SportTeacherLevels].
+     */
+    fun sheet(details: SportCommonDetailsArgs, submitted: Boolean, teacherLevel: TeacherLevel?): SportLessonSheetUi =
+        SportLessonSheetPresenter.present(
+            details,
+            time.now(),
+            time.timeZone,
+            busy = isBusy(details.lessonId),
+            submitted = submitted,
+            teacherLevel = teacherLevel,
+        )
 
     /** Whether a request for [lessonId] is in flight: its sheet opens with the action disabled. */
     fun isBusy(lessonId: Long): Boolean = lessonId in actions.busy.value
 
+    /** `Встать в очередь` or `Выйти` in the prompt; [lateSign] is the switch of a real lesson's queue. */
     fun confirmPrompt(lateSign: Boolean) = actions.confirm(lateSign)
 
     fun dismissPrompt() = actions.dismiss()
