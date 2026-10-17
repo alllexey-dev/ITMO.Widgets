@@ -54,9 +54,9 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
-    /** Opens only with [RecordbookSubjectArgs.validOrNull] arguments. */
+    /** Opens only with [RecordbookSubjectArgs.validOrNull] arguments; on `Материалы` when [materials]. */
     @Serializable
-    data class RecordbookSubject(val args: RecordbookSubjectArgs) : AppRoute {
+    data class RecordbookSubject(val args: RecordbookSubjectArgs, val materials: Boolean = false) : AppRoute {
         override val kind get() = RouteKind.SCREEN
     }
 

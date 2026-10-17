@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.di
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.bell.BellSource
+import dev.alllexey.itmowidgets.core.lesson.LessonSubjectSource
 import dev.alllexey.itmowidgets.core.today.TodayTodoSource
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
@@ -22,6 +23,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bell.MarksBellSource
+import dev.alllexey.itmowidgets.feature.recordbook.data.lesson.RecordbookLessonSubjects
 import dev.alllexey.itmowidgets.feature.recordbook.data.today.BarsTodoSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
@@ -137,4 +139,6 @@ val recordbookModule = module {
     // The bell's marks and the BARS sign-in under the day, each under its qualifier in the open sets Сегодня reads.
     single<BellSource>(marksQualifier) { MarksBellSource(get(), get()) }
     single<TodayTodoSource>(marksQualifier) { BarsTodoSource(get(), get(), get()) }
+    // The lesson sheet's `Предмет` and `Ссылки 3`, in the open set of `LessonSubjectSource`s it reads.
+    single<LessonSubjectSource>(named("recordbook")) { RecordbookLessonSubjects(get(), get(), get(), get(), get()) }
 }

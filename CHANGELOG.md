@@ -10,10 +10,16 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Спорт lesson sheet data (2026-10-17)
+
+- The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.
+
 ### Fixes (2026-10-17)
 
+- The lesson sheet shows `Предмет` and `Ссылки 3` on both platforms when the record book knows the lesson's subject (the same match as the subject page's `Пары`): `Предмет` opens the subject page, `Ссылки` its `Материалы` tab. The count comes from the links stored on the device and is 0 without the connection.
 - A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).
 - A doubtful total shows `Проверьте итог` on the subject page; the review shows the total with its reason, the row around it and the other candidates, and `Вернуть авто` undoes a hand-picked total. On iOS `Мои баллы` is a native sheet (#419).
+- An own sport queue in Сегодня and Расписание shows its place as the sport tab does, `очередь 2 из 5`, on both platforms; a predicted lesson or an unknown place keeps `очередь`.
 
 ### Fixes (2026-10-15)
 
@@ -25,7 +31,8 @@ new iOS app.
 - Past days in the schedule and sport week strips are dimmer; today and the selected day keep full emphasis (#424).
 - `Главный экран` settings can hide the QR pass entry on Сегодня on both platforms without hiding widgets or shortcuts (#420).
 - Sport friend rows and lesson sheets preserve avatar URLs on both platforms; iOS friend-request notifications use their photo too (#426).
-- Sport lessons whose MyITMO end falls on the wrong date (two days before the start) end on their own day at the time slot end, so rows, sheets, the schedule, widgets and calendar export show the right time and length.
+- Sport lessons whose MyITMO end falls on the wrong date (two days before the start) end on their own day at the time slot end, so rows, sheets, the schedule, widgets and calendar export show the right time and length (#431).
+- MyItmoApi 2.1.1: the sport lesson end comes from its `normalizedDateEnd`, which replaces the app's copy of the rule; behaviour is unchanged.
 - Avatar initials are the surname and the given name on both platforms: «Фамилия Имя Отчество» shows ФИ instead of ФО, and the own name reads «Фамилия Имя» from ITMO.ID's `family_name` and `given_name` instead of its two-word `name`, as other students' names do with Backend that stores the parts (itmo-widgets-backend#52). Avatars of other students take the initials from Backend's new `familyName` and `givenName` when it sends them (contract from Backend e475238). iOS friend requests, sport friends and recordbook teachers use the shared `personInitials`; the demo students follow the same order.
 
 - Subject link votes use like/dislike thumbs on Android and iOS, filled for the selected vote (#421).

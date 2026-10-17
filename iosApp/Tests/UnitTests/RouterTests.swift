@@ -227,11 +227,11 @@ final class RouterTests: XCTestCase {
         let subject = AppRoutes.RecordbookSubject(args: RecordbookSubjectArgs(
             entryId: 11, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: nil, barsType: nil,
             barsIdentifier: nil
-        ))
+        ), materials: false)
         let invalid = AppRoutes.RecordbookSubject(args: RecordbookSubjectArgs(
             entryId: 0, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: nil, barsType: nil,
             barsIdentifier: nil
-        ))
+        ), materials: false)
         let scores = AppRoutes.SheetScores(args: SheetScoresArgs(
             subjectId: 5, subjectName: "Subject", periodKey: "2026/2027:1", url: "https://example.com/s", step: .total
         ))
@@ -512,7 +512,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.Settings(page: "ROOT"), .swiftUI),
             (AppRoutes.Diagnostics.shared, .swiftUI),
             (AppRoutes.DebugTools.shared, .notOnIOS),
-            (AppRoutes.RecordbookSubject(args: subject), .swiftUI),
+            (AppRoutes.RecordbookSubject(args: subject, materials: false), .swiftUI),
             (AppRoutes.Friends.shared, .swiftUI),
             (AppRoutes.UserFriends(isu: 100_001, name: ""), .swiftUI),
             (AppRoutes.UserProfile(isu: 100_001), .swiftUI),

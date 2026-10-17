@@ -517,6 +517,18 @@
         }
       }
     },
+    "lesson_pill_queue_position" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "очередь %1$lld из %2$lld"
+          }
+        }
+      }
+    },
     "lesson_with_you" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

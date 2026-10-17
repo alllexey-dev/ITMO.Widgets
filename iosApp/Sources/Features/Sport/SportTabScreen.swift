@@ -131,13 +131,13 @@ struct SportTabScreen: View {
         lesson = SportLessonItem(details: details, from: part)
     }
 
-    private func sheet(of item: SportLessonItem) -> (Bool) -> SportLessonSheetUi {
+    private func sheet(of item: SportLessonItem) -> (Bool, TeacherLevel?) -> SportLessonSheetUi {
         let my = my.viewModel
         let sign = sign.viewModel
-        return { submitted in
+        return { submitted, level in
             item.from == .my
-                ? my.sheet(details: item.details, submitted: submitted)
-                : sign.sheet(details: item.details, submitted: submitted)
+                ? my.sheet(details: item.details, submitted: submitted, teacherLevel: level)
+                : sign.sheet(details: item.details, submitted: submitted, teacherLevel: level)
         }
     }
 
