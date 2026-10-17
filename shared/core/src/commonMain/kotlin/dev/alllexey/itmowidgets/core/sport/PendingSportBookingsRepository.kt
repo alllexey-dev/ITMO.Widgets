@@ -5,7 +5,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlin.time.Instant
 
-/** Own active queues only; never represents a confirmed booking or another user's sport. */
+/**
+ * Own active queues only; never represents a confirmed booking or another user's sport. [position] of [total] is the
+ * place in the queue, 0 while Backend does not know it.
+ */
 data class PendingSportBooking(
     val queueId: Long,
     val queueKind: QueueKind,
@@ -16,7 +19,9 @@ data class PendingSportBooking(
     val teacherFio: String,
     val roomName: String,
     val isPrediction: Boolean,
-    val teacherIsu: Int? = null
+    val teacherIsu: Int? = null,
+    val position: Int = 0,
+    val total: Int = 0,
 ) {
     enum class QueueKind { FREE, AUTO }
 }

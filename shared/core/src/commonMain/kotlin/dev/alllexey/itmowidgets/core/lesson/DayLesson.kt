@@ -12,7 +12,7 @@ import kotlin.time.Instant
  * changes and the sport queues. [room] and [building] are MyITMO's raw texts: rows shorten them, a hero shows the
  * building in full. [online] is MyITMO's remote format; [isOnline] also counts a placeholder room such as `дистант`,
  * and such lessons have no place line. [videoUrl] is the meeting link. [withYou] marks a lesson of someone else's
- * schedule that the viewer attends too (`Вы`).
+ * schedule that the viewer attends too (`Вы`). [queue] is the place of a [SportMark.QUEUED] lesson when Backend knows it.
  */
 data class DayLesson(
     val start: LocalTime,
@@ -28,6 +28,7 @@ data class DayLesson(
     val videoUrl: String? = null,
     val change: LessonChange? = null,
     val sport: SportMark? = null,
+    val queue: QueuePlace? = null,
     val withYou: Boolean = false,
 ) {
     /** Remote by format, or with a placeholder instead of a room or a building (`дистант`, `онлайн`). */
@@ -59,6 +60,9 @@ enum class SportMark {
     /** Waiting in a queue (an auto-sign, a free place or a predicted lesson). */
     QUEUED,
 }
+
+/** A place in a sport queue: [position] of [total], both from 1. */
+data class QueuePlace(val position: Int, val total: Int)
 
 /** Where a tap on a lesson leads. */
 sealed interface LessonTarget {
