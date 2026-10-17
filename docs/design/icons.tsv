@@ -7,6 +7,7 @@ arrow_forward	arrow_forward	0	shared	arrow.right	-
 arrow_upward	arrow_upward	0	shared	arrow.up	-
 assignment	assignment	0	shared	doc.text	-
 auto_awesome	auto_awesome	0	shared	sparkles	-
+badge	badge	0	shared	person.text.rectangle	-
 book_2	book_2	0	shared	book.closed	Bottom navigation tab
 book_2_filled	book_2	1	shared	book.closed.fill	Selected bottom navigation tab
 brand_github	-	0	custom	custom.brand_github	GitHub mark; Material Symbols has no brand marks
@@ -22,11 +23,14 @@ chevron_left	chevron_left	0	shared	chevron.left	-
 chevron_right	chevron_right	0	shared	chevron.right	-
 clock	-	1	custom	clock.fill	Filled clock on a 400 viewport, drawn for the in-app widget preview view_widget_preview_schedule.xml
 close	close	0	shared	xmark	-
+cloud_done	cloud_done	0	shared	checkmark.icloud	-
 cloud_off	cloud_off	0	shared	icloud.slash	-
 code_blocks	code_blocks	0	shared	chevron.left.forwardslash.chevron.right	-
 computer	computer	0	shared	desktopcomputer	-
 content_copy	content_copy	0	shared	doc.on.doc	-
+content_paste	content_paste	0	shared	doc.on.clipboard	-
 delete	delete	0	shared	trash	-
+devices	devices	0	shared	laptopcomputer.and.iphone	-
 download	download	0	shared	arrow.down.to.line	-
 edit	edit	0	shared	pencil	-
 edit_calendar	edit_calendar	0	shared	calendar	SF Symbols has no calendar with a pencil
@@ -43,6 +47,7 @@ flag	flag	0	shared	flag	-
 folder	folder	0	shared	folder	-
 format_list_numbered	format_list_numbered	0	shared	list.number	-
 globe	globe	0	shared	globe	-
+grading	grading	0	shared	list.number	-
 group	group	0	shared	person.2	-
 history	history	0	shared	clock.arrow.circlepath	-
 home	home	0	shared	house	-
@@ -51,6 +56,7 @@ how_to_reg	how_to_reg	0	shared	person.crop.circle.badge.checkmark	-
 info	info	0	shared	info.circle	-
 keep	keep	0	shared	pin	Same glyph as pin (push_pin is an alias of keep); here a pinned link
 keep_off	keep_off	0	shared	pin.slash	-
+key	key	0	shared	key	-
 keyboard_arrow_up	keyboard_arrow_up	0	shared	chevron.up	-
 language	language	0	shared	network	-
 link	link	0	shared	link	-
@@ -61,8 +67,10 @@ logout	logout	0	shared	rectangle.portrait.and.arrow.right	-
 menu_book	menu_book	0	shared	book	-
 more_vert	more_vert	0	shared	ellipsis	iOS shows the overflow menu horizontally
 notification	notifications	0	shared	bell	id differs from the symbol name
+notifications_off	notifications_off	0	shared	bell.slash	-
 open_in_new	open_in_new	0	shared	arrow.up.right.square	-
 person	person	0	shared	person	-
+person_add	person_add	0	shared	person.badge.plus	-
 person_filled	person	1	shared	person.fill	Selected bottom navigation tab
 pin	push_pin	0	shared	pin	id differs from the symbol name; pins a widget to the home screen
 qr_code	qr_code	0	shared	qrcode	-
@@ -80,6 +88,7 @@ shortcut_today	schedule	0	android	-	Adaptive launcher shortcut wrapper of shortc
 shortcut_today_foreground	schedule	0	android	-	Launcher shortcut foreground in the adaptive safe zone
 sprint	sprint	0	shared	figure.run	Bottom navigation tab
 sprint_filled	sprint	1	shared	figure.run	Selected bottom navigation tab; SF Symbols has no filled figure
+star	star	0	shared	star	-
 star_shine	star_shine	0	shared	sparkle	-
 stat_notifications	notifications	0	android	-	Monochrome notification mask; SystemUI tints it
 summary_collapse	expand_less	0	shared	chevron.up	id differs from the symbol name
@@ -95,6 +104,9 @@ today_filled	today	1	shared	sun.max.fill	Selected bottom navigation tab
 tune	tune	0	shared	slider.horizontal.3	More filters
 undo	undo	0	shared	arrow.uturn.backward	-
 videocam	videocam	0	shared	video	-
+visibility	visibility	0	shared	eye	-
+visibility_off	visibility_off	0	shared	eye.slash	-
+volume_up	volume_up	0	shared	speaker.wave.2	-
 weekend	weekend	0	shared	sofa	-
 widgets	widgets	0	shared	square.grid.2x2	-
 work	work	0	shared	briefcase	-

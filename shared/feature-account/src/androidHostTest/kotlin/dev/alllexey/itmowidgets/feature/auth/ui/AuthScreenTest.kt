@@ -16,6 +16,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -119,17 +120,17 @@ class AuthScreenTest {
     }
 
     @Test
-    fun anEmptyTokenKeepsTheDialogAndATypedOneSignsInOnce() = runComposeUiTest {
+    fun anEmptyTokenKeepsTheSheetAndATypedOneSignsInOnce() = runComposeUiTest {
         val tokens = mutableListOf<String>()
         setContent { Screen(SignedOut, onSignInWithToken = { tokens += it }) }
 
         onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performClick()
-        onNodeWithText("Войти").performClick()
+        onNodeWithTag(AuthTestTags.TOKEN_SIGN_IN).performClick()
         onNodeWithText("Вставьте Refresh token").assertExists()
         assertEquals(emptyList(), tokens)
 
         onNodeWithTag(AuthTestTags.TOKEN_INPUT).performTextInput(SYNTHETIC_TOKEN)
-        onNodeWithText("Войти").performClick()
+        onNodeWithTag(AuthTestTags.TOKEN_SIGN_IN).performClick()
         waitForIdle()
 
         assertEquals(listOf(SYNTHETIC_TOKEN), tokens)
@@ -137,12 +138,12 @@ class AuthScreenTest {
     }
 
     @Test
-    fun cancelDropsTheTypedToken() = runComposeUiTest {
+    fun closingTheSheetDropsTheTypedToken() = runComposeUiTest {
         setContent { Screen(SignedOut) }
 
         onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performClick()
         onNodeWithTag(AuthTestTags.TOKEN_INPUT).performTextInput(SYNTHETIC_TOKEN)
-        onNodeWithText("Отмена").performClick()
+        onNodeWithContentDescription("Закрыть").performClick()
         waitForIdle()
         onNodeWithTag(AuthTestTags.TOKEN_INPUT).assertDoesNotExist()
 

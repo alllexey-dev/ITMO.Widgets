@@ -5,14 +5,20 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The sign-in screen in all four appearances, as Android's `AuthScreen` references: first launch, an expired
-/// session with a failed sign-in, the refresh-token sign-in running, and the session still loading. `AuthContent` is
-/// rendered directly, without the ViewModel.
+/// session with a failed sign-in, the refresh-token sign-in running, the session still loading, and the
+/// `Другие способы входа` sheet. `AuthContent` is rendered directly, without the ViewModel, in a window, so the glass
+/// button draws as on screen.
 @MainActor
 final class AuthSnapshotTests: XCTestCase {
-    private let screenHeight: CGFloat = 640
-
     func testInitial() {
-        assertAppearances(of: content(AuthFixtures.state()), named: "initial", height: screenHeight)
+        assertScreenAppearances(of: content(AuthFixtures.state()), named: "initial")
+    }
+
+    func testOtherWays() {
+        let screen = content(AuthFixtures.state()).sheet(isPresented: .constant(true)) {
+            AuthOtherWaysSheet(signIn: { _ in })
+        }
+        assertScreenAppearances(of: screen, named: "other-ways", appearances: [.light, .dark], settle: 1.5)
     }
 
     func testReauthenticationWithError() {
@@ -20,16 +26,16 @@ final class AuthSnapshotTests: XCTestCase {
             reauthenticationRequired: true,
             error: UiTextDynamic(value: AppStrings.string("auth_error_network"))
         )
-        assertAppearances(of: content(state), named: "reauthentication-error", height: screenHeight)
+        assertScreenAppearances(of: content(state), named: "reauthentication-error")
     }
 
     func testSigningIn() {
         let state = AuthFixtures.state(manualLoginInProgress: true)
-        assertAppearances(of: content(state), named: "signing-in", height: screenHeight)
+        assertScreenAppearances(of: content(state), named: "signing-in", appearances: [.light, .dark])
     }
 
     func testInitializing() {
-        assertAppearances(of: content(AuthFixtures.state(initializing: true)), named: "initializing", height: 400)
+        assertAppearances(of: content(AuthFixtures.state(initializing: true)), named: "initializing", appearances: [.light, .dark], height: 400)
     }
 
     private func content(_ state: AuthUiState) -> some View {
