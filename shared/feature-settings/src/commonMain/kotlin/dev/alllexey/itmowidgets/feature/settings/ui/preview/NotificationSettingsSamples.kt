@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.ui.preview
 
-import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.MarkSource
-import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.MarkSourceSwitch
+import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.MarkCheckSource
+import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.MarkCheckSwitch
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.MarksNotifications
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationPermission
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsUiState
@@ -29,9 +29,9 @@ object NotificationSettingsSamples {
         permission = NotificationPermission.ALLOWED,
         marks = MarksNotifications(
             listOf(
-                MarkSourceSwitch(MarkSource.MY_ITMO, true),
-                MarkSourceSwitch(MarkSource.BARS, true),
-                MarkSourceSwitch(MarkSource.SHEETS, false),
+                MarkCheckSwitch(MarkCheckSource.MY_ITMO, true),
+                MarkCheckSwitch(MarkCheckSource.BARS, true),
+                MarkCheckSwitch(MarkCheckSource.SHEETS, false),
             ),
         ),
         scheduleChanges = true,

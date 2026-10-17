@@ -35,7 +35,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.SwitchListRow
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.MarkSource
+import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.MarkCheckSource
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationPermission
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationPreview
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationPreviews
@@ -61,7 +61,7 @@ import org.jetbrains.compose.resources.painterResource
 data class NotificationSettingsActions(
     val onBack: () -> Unit = {},
     val onMarks: (Boolean) -> Unit = {},
-    val onMarkSource: (MarkSource, Boolean) -> Unit = { _, _ -> },
+    val onMarkSource: (MarkCheckSource, Boolean) -> Unit = { _, _ -> },
     val onScheduleChanges: (Boolean) -> Unit = {},
     val onPush: (PushKind) -> Unit = {},
     val onRequestPermission: () -> Unit = {},
@@ -81,7 +81,7 @@ object NotificationSettingsTags {
     const val BACKGROUND = "notifications_background"
     const val PREVIEW = "notifications_preview"
     fun push(kind: PushKind) = "notifications_push_${kind.name.lowercase()}"
-    fun source(source: MarkSource) = "notifications_marks_${source.name.lowercase()}"
+    fun source(source: MarkCheckSource) = "notifications_marks_${source.name.lowercase()}"
 }
 
 /**
@@ -153,7 +153,7 @@ fun NotificationSettingsScreen(
                                             modifier = Modifier
                                                 .padding(start = PreviewInset)
                                                 .testTag(NotificationSettingsTags.source(source.source)),
-                                            subtitle = if (source.source == MarkSource.BARS) {
+                                            subtitle = if (source.source == MarkCheckSource.BARS) {
                                                 text(SettingsStrings.notifications_marks_bars_text)
                                             } else {
                                                 null
@@ -308,10 +308,10 @@ private fun Preview(preview: NotificationPreview) {
     }
 }
 
-private fun MarkSource.title(): String = when (this) {
-    MarkSource.MY_ITMO -> SettingsStrings.notifications_marks_myitmo
-    MarkSource.BARS -> SettingsStrings.notifications_marks_bars
-    MarkSource.SHEETS -> SettingsStrings.notifications_marks_sheets
+private fun MarkCheckSource.title(): String = when (this) {
+    MarkCheckSource.MY_ITMO -> SettingsStrings.notifications_marks_myitmo
+    MarkCheckSource.BARS -> SettingsStrings.notifications_marks_bars
+    MarkCheckSource.SHEETS -> SettingsStrings.notifications_marks_sheets
 }
 
 @Composable

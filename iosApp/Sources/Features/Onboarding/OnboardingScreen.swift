@@ -3,10 +3,10 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// The first-run flow over the shared `OnboardingViewModel` (DECISIONS.md, Первый запуск), as Android's
+/// The first-run flow over the shared `OnboardingViewModel` (DECISIONS.md, first run), as Android's
 /// `OnboardingScreen`: what the app does with the user's own data, the permissions one by one (notifications through
 /// `requestAuthorization`, the calendar through `CalendarAccess`), the connection through `ServicesConsentSheet` or
-/// `Не сейчас`. Every choice is stored as it is made; `finished` runs once the flow ends, after the stored flag is
+/// `onboarding_connection_not_now`. Every choice is stored as it is made; `finished` runs once the flow ends, after the stored flag is
 /// written.
 struct OnboardingScreen: View {
     let finished: () -> Void
@@ -120,7 +120,7 @@ struct OnboardingActions {
 }
 
 /// The flow for one `OnboardingUiState`, without the ViewModel (snapshot tests render it directly): the step dots
-/// with `1 из 3` and the back button, the step's title and line over its body, and its actions pinned at the bottom.
+/// with `onboarding_step_progress` and the back button, the step's title and line over its body, and its actions pinned at the bottom.
 struct OnboardingContent: View {
     let state: OnboardingUiState
     let actions: OnboardingActions
@@ -208,7 +208,8 @@ struct OnboardingContent: View {
         }
     }
 
-    /// `Далее` on the first two steps; `Подключить` and `Не сейчас` on the last, `Готово` once connected.
+    /// `onboarding_next` on the first two steps; `onboarding_connection_connect` and `onboarding_connection_not_now` on
+    /// the last, `onboarding_done` once connected.
     private var footer: some View {
         let last = state.step == .connection
         let primary = !last ? "onboarding_next" : (state.servicesEnabled ? "onboarding_done" : "onboarding_connection_connect")
@@ -296,7 +297,7 @@ struct OnboardingValueStep: View {
     }
 }
 
-/// Step 2: each permission with its own button, or `разрешено` once granted.
+/// Step 2: each permission with its own button, or `onboarding_permission_granted` once granted.
 struct OnboardingPermissionsStep: View {
     let state: OnboardingUiState
     let actions: OnboardingActions

@@ -1,7 +1,7 @@
 import XCTest
 
 /// The first-run flow on the shared session walks its three steps, asks iOS for notifications with the permission's
-/// own button and leaves the connection off with `Не сейчас`.
+/// own button and leaves the connection off with `onboarding.notNow`.
 /// The dialog comes only while the permission is not determined, so this class must be the first to ask in a run:
 /// test classes run in alphabetical order, and it sorts before `NotificationTapUITests` (`NotificationDialog`).
 final class FirstRunUITests: XCTestCase {

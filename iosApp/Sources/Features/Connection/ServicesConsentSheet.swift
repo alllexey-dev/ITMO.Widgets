@@ -2,8 +2,8 @@ import Shared
 import SwiftUI
 
 /// The consent before connecting to ITMO.Widgets (DECISIONS.md: enabling always goes through it), the one sheet of
-/// «Подключение и данные» and the first-run step, as Android's `ServicesConsentSheet`: what the server checks, what it
-/// will keep (`ServicesStoredData`), who sees what first, `Подключить` and `Не сейчас`. `connect` is the only way the
+/// the connection page (`connection_title`) and the first-run step, as Android's `ServicesConsentSheet`: what the server checks, what it
+/// will keep (`ServicesStoredData`), who sees what first, `services_consent_connect` and `services_consent_later`. `connect` is the only way the
 /// opt-in turns on; closing the sheet leaves it off.
 struct ServicesConsentSheet: View {
     let connect: () -> Void

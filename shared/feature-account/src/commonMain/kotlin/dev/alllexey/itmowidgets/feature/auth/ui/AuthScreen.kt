@@ -181,7 +181,6 @@ private fun AuthContent(
                 .heightIn(min = MainButtonHeight)
                 .testTag(AuthTestTags.ITMO_ID_LOGIN),
             enabled = loginEnabled,
-            inProgress = state.sessionTransitionInProgress,
             icon = painterResource(KitRes.drawable.ic_login),
         )
         Row(
@@ -205,7 +204,7 @@ private fun AuthContent(
             style = ProgressButtonStyle.Text,
             enabled = loginEnabled,
         )
-        if (state.manualLoginInProgress) {
+        if (state.manualLoginInProgress || state.sessionTransitionInProgress) {
             val description = stringResource(CoreRes.string.auth_signing_in)
             ItmoLoadingIndicator(
                 Modifier

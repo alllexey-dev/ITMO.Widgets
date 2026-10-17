@@ -18,11 +18,8 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(state, named: "home", height: 320, ax1Height: 440)
     }
 
-    func testScheduleWithBackgroundRefreshOff() {
-        let state = SettingsFixtures.page(
-            .schedule,
-            SettingsFixtures.pageState(notificationsGranted: false, backgroundWorkRestricted: true)
-        )
+    func testSchedule() {
+        let state = SettingsFixtures.page(.schedule, SettingsFixtures.pageState(notificationsGranted: true))
         assertPage(state, named: "schedule", height: 920, ax1Height: 1400)
     }
 
@@ -36,27 +33,6 @@ final class SettingsSnapshotTests: XCTestCase {
             )
         )
         assertPage(state, named: "schedule-calendar", height: 760, ax1Height: 1150)
-    }
-
-    /// The mark checks after the account's first BARS answer: the three switches and the footer.
-    func testRecordbook() {
-        let state = SettingsFixtures.page(
-            .recordbook,
-            SettingsFixtures.pageState(
-                notificationsGranted: true,
-                local: SettingsFixtures.localSettings(barsMarksEnabled: KotlinBoolean(bool: true))
-            )
-        )
-        assertPage(state, named: "recordbook", height: 380, ax1Height: 500)
-    }
-
-    /// Before any BARS answer (no BARS switch), with Background App Refresh and the notifications off.
-    func testRecordbookWithNotificationsAndBackgroundRefreshOff() {
-        let state = SettingsFixtures.page(
-            .recordbook,
-            SettingsFixtures.pageState(notificationsGranted: false, backgroundWorkRestricted: true)
-        )
-        assertPage(state, named: "recordbook-off", height: 440, ax1Height: 720)
     }
 
     func testQrWidget() {
@@ -119,17 +95,14 @@ final class SettingsSnapshotTests: XCTestCase {
 enum SettingsFixtures {
     static func pageState(
         notificationsGranted: Bool,
-        backgroundWorkRestricted: Bool = false,
         calendar: CalendarSyncState = CalendarSyncState(enabled: false, problem: nil),
         local: LocalSettings = SettingsFixtures.local
     ) -> SettingsPageState {
         SettingsPageState(
             local: local,
-            sharing: SharingSettingsStateDisabled.shared,
             notificationsGranted: KotlinBoolean(bool: notificationsGranted),
             hasCustomSpoiler: false,
             imageBusy: false,
-            backgroundWorkRestricted: backgroundWorkRestricted,
             calendar: calendar,
             diagnosticsCount: 0
         )
@@ -190,7 +163,7 @@ enum SettingsFixtures {
         let person = SnapshotFixtures.longPersonName
         let items: [any SettingItem] = [
             SettingItemToggle(
-                id: .scheduleChanges, title: text(long), description: text(person),
+                id: .homePassVisible, title: text(long), description: text(person),
                 checked: true, enabled: true, stateKnown: true
             ),
             SettingItemToggle(

@@ -36,14 +36,14 @@ data class NotificationSettingsUiState(
 enum class NotificationPermission { UNKNOWN, ALLOWED, DENIED }
 
 /** `Баллы`: on while any source is checked; the sources follow under it. */
-data class MarksNotifications(val sources: List<MarkSourceSwitch>) {
+data class MarksNotifications(val sources: List<MarkCheckSwitch>) {
     val enabled: Boolean get() = sources.any { it.enabled }
 }
 
 /** BARS appears with the account's first BARS answer; before it there is nothing to check. */
-enum class MarkSource { MY_ITMO, BARS, SHEETS }
+enum class MarkCheckSource { MY_ITMO, BARS, SHEETS }
 
-data class MarkSourceSwitch(val source: MarkSource, val enabled: Boolean)
+data class MarkCheckSwitch(val source: MarkCheckSource, val enabled: Boolean)
 
 /** A kind of push Backend sends. */
 enum class PushKind(val channel: String) {

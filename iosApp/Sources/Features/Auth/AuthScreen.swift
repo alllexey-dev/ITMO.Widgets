@@ -2,9 +2,9 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// The sign-in screen over the shared `AuthViewModel` (DECISIONS.md «Вход»): the app mark, the name, one line on what
-/// the app does and one main path, `Войти через ITMO.ID` (`ItmoSignInScreen` above it), with the note that the
-/// password goes only to the ITMO.ID page. The refresh token waits under `Другие способы входа` in a sheet. Five taps
+/// The sign-in screen over the shared `AuthViewModel` (DECISIONS.md, sign-in): the app mark, the name, one line on what
+/// the app does and one main path, `auth_login_itmo_id` (`ItmoSignInScreen` above it), with the note that the
+/// password goes only to the ITMO.ID page. The refresh token waits under `auth_login_refresh_token` in a sheet. Five taps
 /// on the mark open the demo session (`DemoEntryTaps`, ADR 0015); the mark stays decorative for VoiceOver, as on
 /// Android, and nothing else names the demo.
 struct AuthScreen: View {
@@ -165,8 +165,8 @@ struct AuthContent: View {
     }
 }
 
-/// `Другие способы входа`: why it exists and the refresh token card. The token lives in this sheet's state only and
-/// leaves with it; `Войти по токену` stays off while the field is blank.
+/// `auth_login_refresh_token`: why it exists and the refresh token card. The token lives in this sheet's state only and
+/// leaves with it; `auth_manual_token_sign_in` stays off while the field is blank.
 struct AuthOtherWaysSheet: View {
     let signIn: (String) -> Void
     @State private var token = ""

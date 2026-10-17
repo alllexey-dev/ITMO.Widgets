@@ -104,11 +104,11 @@ class NotificationSettingsViewModel(
         markTracking.setSheetsEnabled(enabled)
     }
 
-    fun setMarkSource(source: MarkSource, enabled: Boolean) = updateCheck(enabled) {
+    fun setMarkSource(source: MarkCheckSource, enabled: Boolean) = updateCheck(enabled) {
         when (source) {
-            MarkSource.MY_ITMO -> markTracking.setMyItmoEnabled(enabled)
-            MarkSource.BARS -> markTracking.setBarsEnabled(enabled)
-            MarkSource.SHEETS -> markTracking.setSheetsEnabled(enabled)
+            MarkCheckSource.MY_ITMO -> markTracking.setMyItmoEnabled(enabled)
+            MarkCheckSource.BARS -> markTracking.setBarsEnabled(enabled)
+            MarkCheckSource.SHEETS -> markTracking.setSheetsEnabled(enabled)
         }
     }
 
@@ -137,9 +137,9 @@ class NotificationSettingsViewModel(
         if (!capabilities.marks) return null
         return MarksNotifications(
             listOfNotNull(
-                MarkSourceSwitch(MarkSource.MY_ITMO, stored.myItmoMarksEnabled),
-                stored.barsMarksEnabled?.let { MarkSourceSwitch(MarkSource.BARS, it) },
-                MarkSourceSwitch(MarkSource.SHEETS, stored.sheetMarksEnabled),
+                MarkCheckSwitch(MarkCheckSource.MY_ITMO, stored.myItmoMarksEnabled),
+                stored.barsMarksEnabled?.let { MarkCheckSwitch(MarkCheckSource.BARS, it) },
+                MarkCheckSwitch(MarkCheckSource.SHEETS, stored.sheetMarksEnabled),
             ),
         )
     }

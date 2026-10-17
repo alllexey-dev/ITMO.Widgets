@@ -122,9 +122,8 @@ class AuthScreenTest {
     @Test
     fun anEmptyTokenKeepsTheSheetAndATypedOneSignsInOnce() = runComposeUiTest {
         val tokens = mutableListOf<String>()
-        setContent { Screen(SignedOut, onSignInWithToken = { tokens += it }) }
+        setContent { ItmoTheme { OtherWaysSheetContent(onSignIn = { tokens += it }, onDismiss = {}) } }
 
-        onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performClick()
         onNodeWithTag(AuthTestTags.TOKEN_SIGN_IN).performClick()
         onNodeWithText("Вставьте Refresh token").assertExists()
         assertEquals(emptyList(), tokens)
@@ -134,22 +133,41 @@ class AuthScreenTest {
         waitForIdle()
 
         assertEquals(listOf(SYNTHETIC_TOKEN), tokens)
-        onNodeWithTag(AuthTestTags.TOKEN_INPUT).assertDoesNotExist()
+        val text = onNodeWithTag(AuthTestTags.TOKEN_INPUT).fetchSemanticsNode().config[SemanticsProperties.EditableText]
+        assertEquals("", text.text, "the token leaves the field once it is handed over")
     }
 
     @Test
     fun closingTheSheetDropsTheTypedToken() = runComposeUiTest {
-        setContent { Screen(SignedOut) }
+        var closed = 0
+        var shown by mutableStateOf(true)
+        setContent {
+            ItmoTheme {
+                if (shown) OtherWaysSheetContent(onSignIn = {}, onDismiss = { closed++ })
+            }
+        }
 
-        onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performClick()
         onNodeWithTag(AuthTestTags.TOKEN_INPUT).performTextInput(SYNTHETIC_TOKEN)
         onNodeWithContentDescription("Закрыть").performClick()
+        assertEquals(1, closed)
+        shown = false
         waitForIdle()
-        onNodeWithTag(AuthTestTags.TOKEN_INPUT).assertDoesNotExist()
+        shown = true
+        waitForIdle()
 
-        onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performClick()
         val text = onNodeWithTag(AuthTestTags.TOKEN_INPUT).fetchSemanticsNode().config[SemanticsProperties.EditableText]
         assertEquals("", text.text)
+    }
+
+    @Test
+    fun otherWaysOpensTheSheet() = runComposeUiTest {
+        setContent { Screen(SignedOut) }
+
+        onNodeWithTag(AuthTestTags.OTHER_WAYS).assertDoesNotExist()
+        onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performScrollTo().performClick()
+        waitForIdle()
+        onNodeWithTag(AuthTestTags.OTHER_WAYS).assertExists()
+        onNodeWithTag(AuthTestTags.TOKEN_INPUT).assertExists()
     }
 
     @Test

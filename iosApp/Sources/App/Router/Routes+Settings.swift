@@ -3,8 +3,8 @@ import SwiftUI
 
 extension Routes {
     /// Settings and the error journal are SwiftUI screens over the shared ViewModels: each `Settings` key is
-    /// one page, so a sub-page pushes another key; «Подключение и данные» (`SERVICES`,
-    /// `PRIVACY`) and «Уведомления» are screens of their own. The debug tools stay Android-only.
+    /// one page, so a sub-page pushes another key; the connection page (`connection_title`) (`SERVICES`,
+    /// `PRIVACY`) and the notifications page (`notifications_title`) are screens of their own. The debug tools stay Android-only.
     static func settings(_ route: any AppRoute) -> RouteTarget {
         if let settings = route as? AppRoutes.Settings {
             let page = settings.page

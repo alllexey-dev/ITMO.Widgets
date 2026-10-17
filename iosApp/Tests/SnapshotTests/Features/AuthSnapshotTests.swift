@@ -6,7 +6,7 @@ import XCTest
 
 /// The sign-in screen in all four appearances, as Android's `AuthScreen` references: first launch, an expired
 /// session with a failed sign-in, the refresh-token sign-in running, the session still loading, and the
-/// `Другие способы входа` sheet. `AuthContent` is rendered directly, without the ViewModel, in a window, so the glass
+/// `auth_login_refresh_token` sheet. `AuthContent` is rendered directly, without the ViewModel, in a window, so the glass
 /// button draws as on screen.
 @MainActor
 final class AuthSnapshotTests: XCTestCase {

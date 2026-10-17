@@ -56,10 +56,8 @@ internal fun createFixture(
     val onboarding = FakeOnboardingRepository(completed = true)
     val pages = SettingsPages(
         root = RootPageProvider(repository, capabilities),
-        services = ServicesPageProvider(repository, customServicesRepository, refresher),
         widgets = WidgetsPageProvider(repository, tileAccess, capabilities),
-        schedule = SchedulePageProvider(repository, tracking, calendarSync, capabilities),
-        recordbook = RecordbookPageProvider(markTracking),
+        schedule = SchedulePageProvider(repository, calendarSync, capabilities),
         sport = SportPageProvider(repository),
         maintenance = MaintenancePageProvider(refresher, onboarding, AppVersion("2.1-test"), RecordingDiagnostics())
     )
@@ -67,7 +65,6 @@ internal fun createFixture(
         pages = pages,
         repository = repository,
         widgetRefreshRequester = refresher,
-        backgroundWork = backgroundWork,
         savedStateHandle = SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
     )
     return Fixture(

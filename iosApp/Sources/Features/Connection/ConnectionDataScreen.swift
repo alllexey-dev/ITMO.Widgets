@@ -1,7 +1,7 @@
 import Shared
 import SwiftUI
 
-/// «Подключение и данные» (`AppRoutes.Settings` `SERVICES`, also `PRIVACY`) over the shared `ConnectionViewModel`, as
+/// the connection page (`connection_title`) (`AppRoutes.Settings` `SERVICES`, also `PRIVACY`) over the shared `ConnectionViewModel`, as
 /// Android's `ConnectionScreen`: the status with its switch, what the connection gives, what works without it, what
 /// the server keeps, who sees what, BARS, the devices and the account deletion. Turning it on always goes through
 /// `ServicesConsentSheet`.
@@ -82,7 +82,7 @@ struct ConnectionDataActions {
     var deleteAccount: () -> Void = {}
 }
 
-/// «Подключение и данные» for one `ConnectionUiState`, without the ViewModel.
+/// the connection page (`connection_title`) for one `ConnectionUiState`, without the ViewModel.
 struct ConnectionDataContent: View {
     let state: ConnectionUiState
     var actions = ConnectionDataActions()

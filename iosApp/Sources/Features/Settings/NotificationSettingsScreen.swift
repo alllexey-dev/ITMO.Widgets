@@ -3,10 +3,10 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// «Уведомления» (`AppRoutes.Settings` `NOTIFICATIONS`) over the shared `NotificationSettingsViewModel`, as Android's
+/// the notifications page (`notifications_title`) (`AppRoutes.Settings` `NOTIFICATIONS`) over the shared `NotificationSettingsViewModel`, as Android's
 /// `NotificationSettingsScreen`. The screen feeds the ViewModel what only iOS knows, on appear and on every return to
 /// the app: the notification permission and Background App Refresh. iOS has no switch per push type, so those rows
-/// open the app's page in Settings, or «Подключение и данные» while not connected.
+/// open the app's page in Settings, or the connection page (`connection_title`) while not connected.
 struct NotificationSettingsScreen: View {
     @State private var model = ObservableViewModel(NotificationSettingsViewModel.self, state: \.uiState)
     @State private var message: SettingsMessage?
@@ -113,7 +113,7 @@ struct NotificationSettingsScreen: View {
 /// What the page's rows do; snapshot tests pass no-ops.
 struct NotificationSettingsActions {
     var marks: (Bool) -> Void = { _ in }
-    var markSource: (MarkSource, Bool) -> Void = { _, _ in }
+    var markSource: (MarkCheckSource, Bool) -> Void = { _, _ in }
     var scheduleChanges: (Bool) -> Void = { _ in }
     var push: (PushKind) -> Void = { _ in }
     var requestPermission: () -> Void = {}
@@ -121,7 +121,7 @@ struct NotificationSettingsActions {
     var backgroundWork: () -> Void = {}
 }
 
-/// «Уведомления» for one `NotificationSettingsUiState`, without the ViewModel.
+/// the notifications page (`notifications_title`) for one `NotificationSettingsUiState`, without the ViewModel.
 struct NotificationSettingsContent: View {
     let state: NotificationSettingsUiState
     var actions = NotificationSettingsActions()
@@ -262,7 +262,7 @@ struct NotificationSettingsContent: View {
         .accessibilityIdentifier("notifications.push.\(push.kind.name.lowercased())")
     }
 
-    private static func title(_ source: MarkSource) -> String {
+    private static func title(_ source: MarkCheckSource) -> String {
         switch source {
         case .myItmo: "notifications_marks_myitmo"
         case .bars: "notifications_marks_bars"
