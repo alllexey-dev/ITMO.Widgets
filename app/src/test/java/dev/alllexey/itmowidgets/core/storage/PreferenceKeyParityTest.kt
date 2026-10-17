@@ -18,14 +18,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 50 key names
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 51 key names
  * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The four
  * `push_registered_*` keys are written only by iOS, whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 50 key names, each declared once`() {
+    fun `the app preferences keep their 51 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules.
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -36,11 +36,11 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(50, declared.map { it.name }.toSet().size)
+        assertEquals(51, declared.map { it.name }.toSet().size)
     }
 
     @Test
-    fun `the 34 settings keys read their released defaults from an empty file`() = runTest {
+    fun `the 35 settings keys read their released defaults from an empty file`() = runTest {
         val stores = PreferenceStores()
 
         assertFalse(stores.servicesOptIn.getCustomServicesEnabled())
@@ -62,6 +62,7 @@ class PreferenceKeyParityTest {
             ),
             stores.widgetSettings.getScheduleWidgetSettings()
         )
+        assertTrue(stores.qrSettings.observeHomePassVisible().first())
         assertTrue(stores.qrSettings.getQrDynamicColorsEnabled())
         assertTrue(stores.qrSettings.getQrSpoilerEnabled())
         assertEquals(QrAnimationType.CIRCLE, stores.qrSettings.getQrSpoilerAnimationType())
@@ -110,6 +111,7 @@ class PreferenceKeyParityTest {
             Key("WidgetSettingsPreferences.kt", "boolean", "widget_hide_teacher_enabled"),
             Key("WidgetSettingsPreferences.kt", "boolean", "widget_hide_previous_lessons_enabled"),
             Key("WidgetSettingsPreferences.kt", "boolean", "widget_future_schedule_enabled"),
+            Key("QrSettingsPreferences.kt", "boolean", "home_qr_pass_visible"),
             Key("QrSettingsPreferences.kt", "boolean", "qr_dynamic_colors_enabled"),
             Key("QrSettingsPreferences.kt", "boolean", "qr_spoiler_enabled"),
             Key("QrSettingsPreferences.kt", "string", "qr_spoiler_animation_type"),
