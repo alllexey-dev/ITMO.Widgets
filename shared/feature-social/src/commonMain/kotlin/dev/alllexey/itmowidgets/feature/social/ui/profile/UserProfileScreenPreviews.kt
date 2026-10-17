@@ -2,111 +2,74 @@ package dev.alllexey.itmowidgets.feature.social.ui.profile
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import dev.alllexey.itmowidgets.core.model.RelationshipState
-import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
-import dev.alllexey.itmowidgets.feature.social.ui.profile.preview.UserProfilePreviewData
+import dev.alllexey.itmowidgets.feature.social.ui.preview.SocialSamples
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
- * `UserProfileScreen_<state>`. Each state therefore is a function called `UserProfileScreen` in a holder class of its
- * own; the scanner instantiates each holder by reflection.
+ * The person card at the design lab's axes (who, relation, teaches). The harness names a baseline
+ * `<function>_<@Preview name>`, so each state is a function called `UserProfileScreen` in a holder class of its own.
  */
 
 @Composable
-private fun UserProfilePreview(state: UserProfileUiState) = ItmoPreview {
-    UserProfileScreen(state, UserProfileActions())
-}
+private fun CardPreview(state: UserProfileUiState) = ItmoPreview { UserProfileScreen(state, UserProfileActions()) }
 
-/** Tall enough for the AI summary and every review under the facts. */
-internal class UserProfileScreenTeacherSummaryPreview {
-    @Preview(name = "teacher-summary", heightDp = 1800)
+internal class UserProfileScreenStudentPreview {
+    @Preview(name = "student", heightDp = 900)
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(UserProfilePreviewData.teacherPage)
+    fun UserProfileScreen() = CardPreview(SocialSamples.card("app", "none"))
 }
 
 internal class UserProfileScreenFriendPreview {
-    @Preview(name = "friend")
+    @Preview(name = "friend", heightDp = 900)
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(UserProfilePreviewData.friendPage)
+    fun UserProfileScreen() = CardPreview(SocialSamples.card("app", "friend"))
 }
 
-internal class UserProfileScreenSelfPreview {
-    @Preview(name = "self")
+internal class UserProfileScreenNoAppPreview {
+    @Preview(name = "no-app", heightDp = 900)
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(UserProfilePreviewData.selfPage)
+    fun UserProfileScreen() = CardPreview(SocialSamples.card("noapp"))
 }
 
-internal class UserProfileScreenNoFactsPreview {
-    @Preview(name = "no-facts")
+internal class UserProfileScreenTeacherPreview {
+    @Preview(name = "teacher", heightDp = 1600)
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(UserProfilePreviewData.noFactsPage)
+    fun UserProfileScreen() = CardPreview(SocialSamples.card("teacher", teaches = "no"))
 }
 
-/** Not a friend and nothing shared: `Добавить в друзья`, locked rows and the privacy hint. */
-internal class UserProfileScreenNonePreview {
-    @Preview(name = "none")
+internal class UserProfileScreenTeachesYouPreview {
+    @Preview(name = "teaches-you", heightDp = 1600)
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(
-        UserProfilePreviewData.studentPage(RelationshipState.NONE, UserProfilePreviewData.closedSharing),
-    )
+    fun UserProfileScreen() = CardPreview(SocialSamples.card("teacher", teaches = "yes"))
 }
 
-internal class UserProfileScreenOutgoingPreview {
-    @Preview(name = "outgoing")
+internal class UserProfileScreenBothPreview {
+    @Preview(name = "both", heightDp = 1400)
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(
-        UserProfilePreviewData.studentPage(RelationshipState.OUTGOING, UserProfilePreviewData.closedSharing),
-    )
+    fun UserProfileScreen() = CardPreview(SocialSamples.card("both", "friend", "yes"))
 }
 
 internal class UserProfileScreenIncomingPreview {
-    @Preview(name = "incoming")
+    @Preview(name = "incoming", heightDp = 900)
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(
-        UserProfilePreviewData.studentPage(RelationshipState.INCOMING, UserProfilePreviewData.closedSharing),
-    )
+    fun UserProfileScreen() = CardPreview(SocialSamples.incomingCard)
 }
 
-/** A request in flight: both buttons ignore taps. */
-internal class UserProfileScreenIncomingBusyPreview {
-    @Preview(name = "incoming-busy")
+internal class UserProfileScreenSelfPreview {
+    @Preview(name = "self", heightDp = 900)
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(
-        UserProfilePreviewData.studentPage(RelationshipState.INCOMING, UserProfilePreviewData.closedSharing, busy = true),
-    )
-}
-
-internal class UserProfileScreenBlockedPreview {
-    @Preview(name = "blocked")
-    @Composable
-    fun UserProfileScreen() = UserProfilePreview(
-        UserProfilePreviewData.studentPage(RelationshipState.BLOCKED, UserProfilePreviewData.closedSharing),
-    )
-}
-
-/** Custom services off: no friendship, no `ITMO.Widgets`, no reviews. */
-internal class UserProfileScreenDisabledPreview {
-    @Preview(name = "disabled")
-    @Composable
-    fun UserProfileScreen() = UserProfilePreview(UserProfilePreviewData.disabledPage)
-}
-
-internal class UserProfileScreenSkeletonPreview {
-    @Preview(name = "skeleton")
-    @Composable
-    fun UserProfileScreen() = UserProfilePreview(UserProfileUiState.Loading)
+    fun UserProfileScreen() = CardPreview(SocialSamples.ownCard)
 }
 
 internal class UserProfileScreenNotFoundPreview {
     @Preview(name = "not-found")
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(UserProfileUiState.Error(AppError.NotFound))
+    fun UserProfileScreen() = CardPreview(SocialSamples.notFound)
 }
 
 internal class UserProfileScreenErrorPreview {
     @Preview(name = "error")
     @Composable
-    fun UserProfileScreen() = UserProfilePreview(UserProfileUiState.Error(AppError.Network))
+    fun UserProfileScreen() = CardPreview(SocialSamples.failed)
 }

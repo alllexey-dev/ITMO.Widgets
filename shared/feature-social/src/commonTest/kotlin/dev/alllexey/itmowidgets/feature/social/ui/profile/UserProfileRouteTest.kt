@@ -33,7 +33,7 @@ import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.awaitText
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import dev.alllexey.itmowidgets.feature.social.ui.profile.preview.UserProfilePreviewData as P
+import dev.alllexey.itmowidgets.feature.social.ui.profile.CardFixtures as P
 
 /** `UserProfileRoute` with the real ViewModel over fakes: its snackbars, its dialogs and the page its exits get. */
 @OptIn(ExperimentalTestApi::class)
@@ -134,8 +134,8 @@ class UserProfileRouteTest {
 
         onNodeWithTag(UserProfileTestTags.SHARE).performClick()
         onNodeWithTag(UserProfileTestTags.ISU).performClick()
-        scrollTo(UserProfileTestTags.WRITE_REVIEW)
-        onNodeWithTag(UserProfileTestTags.WRITE_REVIEW).performClick()
+        // A teacher who may be reviewed: `Написать отзыв` is the header's only button.
+        onNodeWithTag(UserProfileTestTags.PRIMARY).performClick()
 
         assertEquals(listOf("share:${P.ISU}", "copy:${P.ISU}", "editor:${P.ISU}:${P.LONG_NAME}"), opened)
     }
@@ -166,6 +166,7 @@ class UserProfileRouteTest {
             object : CurrentUserProvider {
                 override suspend fun getCurrentUser() = CurrentUser(VIEWER, "Я", null)
             },
+            P.noLessons,
         )
     }
 

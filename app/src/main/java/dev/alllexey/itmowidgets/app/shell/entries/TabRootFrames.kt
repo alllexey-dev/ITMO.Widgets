@@ -17,7 +17,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
-import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.kit.HeaderAction
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoRootScreen
@@ -41,16 +40,14 @@ object TabRootTags {
 
 /**
  * The frame of a tab root (docs/design.md "Shell"): the kit's root header with the tab's name and the [content] under
- * it. Сегодня adds its date, the bell and the `Пропуск` button; Расписание draws its own root header (the month and
- * the week come from its feed), Зачётка its own with the period and Спорт its own; the other tabs show their name
- * until their new screens bring their own subtitle and actions.
+ * it. Сегодня adds its date, the bell and the `Пропуск` button; every other tab draws its own root header (Расписание
+ * the month and the week of its feed, Зачётка the period, Спорт and Профиль their actions).
  */
 @Composable
 internal fun TabRootFrame(tab: AppTab, navigator: Nav3AppNavigator, content: @Composable () -> Unit) {
     when (tab) {
         AppTab.HOME -> TodayFrame(navigator, content)
-        AppTab.SCHEDULE, AppTab.RECORDBOOK, AppTab.SPORT -> content()
-        else -> ItmoRootScreen(title = UiText.Res(tab.label).asString()) { padding -> Body(padding, content) }
+        AppTab.SCHEDULE, AppTab.RECORDBOOK, AppTab.SPORT, AppTab.ME -> content()
     }
 }
 

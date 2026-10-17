@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,11 +19,8 @@ import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.text.toUiText
-import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewEvent
-import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewViewModel
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorEvent
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorViewModel
-import dev.alllexey.itmowidgets.feature.reviews.ui.ReportReviewForm
 import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorActions
 import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorSheet
 import platform.UIKit.UIViewController
@@ -75,39 +71,6 @@ fun reviewEditorViewController(
             ),
         )
     }
-}
-
-/**
- * The report of a review (`AppRoutes.ReportReview`), as Android's `ReportReviewEntry`, over the profile it was asked
- * from: the kit's report dialog stays until the report is accepted ([onDone]); a failure shows under the comment until
- * the next send.
- */
-@Composable
-internal fun ReportReviewHosted(args: TeacherReviewArgs, reviewId: String, onDone: () -> Unit, onDismiss: () -> Unit) {
-    val viewModel = hostedViewModel<ReportReviewViewModel>(
-        *args.handleEntries(),
-        TeacherReviewArgs.REVIEW_ID to reviewId,
-    )
-    val state by viewModel.uiState.collectAsState()
-    var failure by remember { mutableStateOf<AppError?>(null) }
-    val done by rememberUpdatedState(onDone)
-    LaunchedEffect(viewModel) {
-        viewModel.events.collect { event ->
-            when (event) {
-                ReportReviewEvent.Done -> done()
-                is ReportReviewEvent.Failed -> failure = event.error
-            }
-        }
-    }
-    ReportReviewForm(
-        sending = state.sending,
-        error = failure,
-        onSend = { reason, comment ->
-            failure = null
-            viewModel.send(reason, comment)
-        },
-        onDismiss = onDismiss,
-    )
 }
 
 /** Android's `TeacherReviewArgs.toArguments()`. */

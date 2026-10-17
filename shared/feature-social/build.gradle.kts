@@ -15,8 +15,7 @@ kotlin {
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
-            // The screens' routes: koinViewModel() and lifecycle-aware collection; the iOS shell hosts
-            // the same routes.
+            // The Android routes: koinViewModel() and lifecycle-aware collection; iOS draws the ViewModels in SwiftUI.
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.jetbrains.lifecycle.runtime.compose)
         }

@@ -24,12 +24,12 @@ import org.koin.compose.viewmodel.koinViewModel
 /**
  * Another user's friends with their Koin ViewModel, which reads the owner's ISU and name from the destination's
  * arguments. A failed refresh of a shown list offers a retry in a snackbar. Android hosts it in
- * the Compose shell; the iOS shell hosts the same route.
+ * the Compose shell; iOS draws the same ViewModel in SwiftUI.
  */
 @Composable
 fun UserFriendsRoute(
     onOpenProfile: (Int) -> Unit,
-    onOpenSettings: () -> Unit,
+    onConnect: () -> Unit,
     onBack: () -> Unit,
     viewModel: UserFriendsViewModel = koinViewModel(),
 ) {
@@ -60,7 +60,7 @@ fun UserFriendsRoute(
         onRefresh = { viewModel.refresh(RefreshMode.Pull) },
         onRetry = { viewModel.refresh(RefreshMode.Force) },
         onOpenProfile = onOpenProfile,
-        onOpenSettings = onOpenSettings,
+        onConnect = onConnect,
         onBack = onBack,
         snackbarHostState = snackbars,
     )

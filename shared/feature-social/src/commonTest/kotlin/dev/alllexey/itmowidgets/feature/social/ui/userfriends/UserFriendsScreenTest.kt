@@ -56,10 +56,10 @@ class UserFriendsScreenTest {
             assertTouchTargets()
             val shown = when {
                 value == UserFriendsUiState.Loading -> UserFriendsTestTags.LOADING
-                value is UserFriendsUiState.Content && value.items.isNotEmpty() -> UserListTestTags.LIST
+                value is UserFriendsUiState.Content && value.items.isNotEmpty() -> UserFriendsTestTags.LIST
                 else -> UserFriendsTestTags.STATE
             }
-            for (tag in listOf(UserFriendsTestTags.LOADING, UserListTestTags.LIST, UserFriendsTestTags.STATE)) {
+            for (tag in listOf(UserFriendsTestTags.LOADING, UserFriendsTestTags.LIST, UserFriendsTestTags.STATE)) {
                 if (tag == shown) onNodeWithTag(tag).assertExists() else onNodeWithTag(tag).assertDoesNotExist()
             }
             text?.let { onNodeWithText(it).assertExists() }
@@ -67,14 +67,14 @@ class UserFriendsScreenTest {
     }
 
     @Test
-    fun theDeniedListOffersNothingWhileTheOtherStatesLeadOn() = runComposeUiTest {
+    fun aHiddenListIsSimplyEmptyWhileTheOtherStatesLeadOn() = runComposeUiTest {
         var state by mutableStateOf<UserFriendsUiState>(UserFriendsUiState.Hidden)
         var retries = 0
-        var settings = 0
+        var connects = 0
         var backs = 0
         setContent {
             ItmoTheme {
-                Screen(state, onRetry = { retries++ }, onOpenSettings = { settings++ }, onBack = { backs++ })
+                Screen(state, onRetry = { retries++ }, onConnect = { connects++ }, onBack = { backs++ })
             }
         }
 
@@ -84,7 +84,7 @@ class UserFriendsScreenTest {
 
         state = UserFriendsUiState.Disabled
         waitForIdle()
-        onNodeWithText("Настройки").performClick()
+        onNodeWithText("Подключить").performClick()
 
         state = UserFriendsUiState.Error(AppError.Network)
         waitForIdle()
@@ -95,16 +95,16 @@ class UserFriendsScreenTest {
         onNodeWithText("Обновить").performClick()
 
         assertEquals(1, backs)
-        assertEquals(1, settings)
+        assertEquals(1, connects)
         assertEquals(2, retries)
     }
 
     @Test
-    fun theTitleNamesTheOwnerOrFallsBackToFriends() = runComposeUiTest {
+    fun theSubtitleNamesTheOwner() = runComposeUiTest {
         var owner by mutableStateOf("Иван")
         setContent { ItmoTheme { Screen(UserFriendsUiState.Loading, owner = owner) } }
 
-        onNodeWithText("Друзья · Иван").assertExists()
+        onNodeWithText("Друзья  Иван").assertExists()
         owner = " "
         waitForIdle()
         onNodeWithText("Друзья").assertExists()
@@ -118,7 +118,7 @@ class UserFriendsScreenTest {
         val States = listOf(
             UserFriendsUiState.Loading to null,
             UserFriendsUiState.Content(emptyList()) to "Пока нет друзей",
-            UserFriendsUiState.Hidden to "Список друзей скрыт",
+            UserFriendsUiState.Hidden to "Пока нет друзей",
             UserFriendsUiState.Disabled to "Нет подключения к ITMO.Widgets",
             UserFriendsUiState.Error(AppError.Network) to "Не удалось загрузить",
             UserFriendsUiState.Content(Friends) to LONG_NAME,
@@ -135,7 +135,7 @@ private fun Screen(
     state: UserFriendsUiState,
     owner: String = "Иван",
     onOpenProfile: (Int) -> Unit = {},
-    onOpenSettings: () -> Unit = {},
+    onConnect: () -> Unit = {},
     onRetry: () -> Unit = {},
     onBack: () -> Unit = {},
 ) = UserFriendsScreen(
@@ -144,6 +144,6 @@ private fun Screen(
     onRefresh = {},
     onRetry = onRetry,
     onOpenProfile = onOpenProfile,
-    onOpenSettings = onOpenSettings,
+    onConnect = onConnect,
     onBack = onBack,
 )

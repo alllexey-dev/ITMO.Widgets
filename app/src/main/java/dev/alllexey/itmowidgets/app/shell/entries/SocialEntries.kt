@@ -22,42 +22,34 @@ import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.social.ui.copyPersonIsu
+import dev.alllexey.itmowidgets.feature.me.ui.shareOwnProfile
+import dev.alllexey.itmowidgets.feature.social.ui.friends.FriendsExits
 import dev.alllexey.itmowidgets.feature.social.ui.friends.FriendsRoute
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileExits
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileRoute
 import dev.alllexey.itmowidgets.feature.social.ui.reviewArgs
-import dev.alllexey.itmowidgets.feature.social.ui.search.UserSearchRoute
 import dev.alllexey.itmowidgets.feature.social.ui.shareSocialInvitation
 import dev.alllexey.itmowidgets.feature.social.ui.shareUserProfile
 import dev.alllexey.itmowidgets.feature.social.ui.userfriends.UserFriendsRoute
 import org.koin.core.parameter.parametersOf
 
 /**
- * The social keys: the viewer's friends, another user's friends, people search and the person profile. Every profile
+ * The social keys: Друзья (with people search), another user's friends and the person card. Every profile
  * link goes through [openUserProfile], so an ISU outside `1..Int.MAX_VALUE` opens nothing. The schedule's friend
  * picker is the schedule's own ([scheduleEntries]).
  */
 internal fun EntryRegistry.Builder.socialEntries() {
-    entry<AppRoutes.Friends> { key, navigator ->
-        FriendsRoute(
-            onOpenProfile = navigator::openUserProfile,
-            onOpenSearch = { navigator.open(AppRoutes.UserSearch) },
-            onOpenSettings = { navigator.open(AppRoutes.Settings()) },
-            onBack = { navigator.close(key) },
-            viewModel = entryViewModel(),
-        )
-    }
+    entry<AppRoutes.Friends> { key, navigator -> FriendsEntry(onBack = { navigator.close(key) }, navigator) }
     entry<AppRoutes.UserFriends>(
         args = { bundleOf(UserScreenArgs.ISU to it.isu, UserScreenArgs.NAME to it.name) },
     ) { key, navigator ->
         UserFriendsRoute(
             onOpenProfile = navigator::openUserProfile,
-            onOpenSettings = { navigator.open(AppRoutes.Settings()) },
+            onConnect = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
             onBack = { navigator.close(key) },
             viewModel = entryViewModel(),
         )
     }
-    entry<AppRoutes.UserSearch> { key, navigator -> UserSearchEntry(onBack = { navigator.close(key) }, navigator) }
     entry<AppRoutes.UserProfile>(args = { bundleOf(UserScreenArgs.ISU to it.isu) }) { key, navigator ->
         UserProfileEntry(onBack = { navigator.close(key) }, navigator)
     }
@@ -68,16 +60,22 @@ internal fun Nav3AppNavigator.openUserProfile(isu: Int) {
     UserScreenArgs.profileIsu(isu.toLong())?.let { open(AppRoutes.UserProfile(it)) }
 }
 
-/** People search: `Пригласить` shares the invitation with this distribution's download link. */
+/** Друзья: sharing the own profile and the invitation (with this distribution's download link) stay on this activity. */
 @Composable
-private fun UserSearchEntry(onBack: () -> Unit, navigator: Nav3AppNavigator) {
+private fun FriendsEntry(onBack: () -> Unit, navigator: Nav3AppNavigator) {
     val context = LocalContext.current
-    UserSearchRoute(
-        onOpenProfile = navigator::openUserProfile,
-        onInvite = { context.shareSocialInvitation() },
-        onBack = onBack,
-        viewModel = entryViewModel(),
-    )
+    val exits = remember(navigator, context, onBack) {
+        FriendsExits(
+            onBack = onBack,
+            onOpenProfile = navigator::openUserProfile,
+            onConnect = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
+            onShareProfile = { name, isu ->
+                context.shareOwnProfile(KoinStarter.ensureStarted(context).get<ShareLinkFactory>(), name, isu)
+            },
+            onInvite = { context.shareSocialInvitation() },
+        )
+    }
+    FriendsRoute(exits, viewModel = entryViewModel())
 }
 
 /**
@@ -106,6 +104,7 @@ private fun userProfileExits(
         context.shareUserProfile(KoinStarter.ensureStarted(context).get<ShareLinkFactory>(), page)
     },
     onCopyIsu = { isu -> context.copyPersonIsu(isu) },
+    onInvite = { context.shareSocialInvitation() },
     onFriends = { page -> navigator.open(AppRoutes.UserFriends(page.isu, page.displayName.resolve(context))) },
     onSchedule = { page -> navigator.open(AppRoutes.UserSchedule(page.isu, page.displayName.resolve(context))) },
     onSport = { page -> navigator.open(AppRoutes.UserSport(page.isu, page.displayName.resolve(context))) },
@@ -129,3 +128,6 @@ private inline fun <reified VM : ViewModel> entryViewModel(): VM {
     val context = LocalContext.current
     return viewModel { KoinStarter.ensureStarted(context).get<VM> { parametersOf(createSavedStateHandle()) } }
 }
+
+/** `SettingsPage.SERVICES`: the connection to ITMO.Widgets. */
+private const val SERVICES_PAGE = "SERVICES"

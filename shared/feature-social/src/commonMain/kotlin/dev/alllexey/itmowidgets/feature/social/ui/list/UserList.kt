@@ -1,174 +1,154 @@
 package dev.alllexey.itmowidgets.feature.social.ui.list
 
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.personInitials
-import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
-import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
-import dev.alllexey.itmowidgets.designsystem.components.rows.UserRow
-import dev.alllexey.itmowidgets.designsystem.components.rows.UserRowAction
+import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
+import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
+import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
+import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.UserAction
 import dev.alllexey.itmowidgets.feature.social.presentation.UserListItem
 import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.user_action_accept
-import dev.alllexey.itmowidgets.shared.feature.social.user_action_add
-import dev.alllexey.itmowidgets.shared.feature.social.user_action_cancel
-import dev.alllexey.itmowidgets.shared.feature.social.user_action_invite
-import dev.alllexey.itmowidgets.shared.feature.social.user_action_reject
-import dev.alllexey.itmowidgets.shared.feature.social.user_action_remove
-import dev.alllexey.itmowidgets.shared.feature.social.user_search_load_more
-import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.stringResource
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 
-/** Test tags of [UserList], shared by every social list screen and its tests. */
+/** Test tags of the people rows, shared by every social list screen and its tests. */
 object UserListTestTags {
-    const val LIST = "user_list"
     const val LOAD_MORE = "user_list_load_more"
 
     fun row(isu: Int): String = "user_list_row_$isu"
+    fun action(isu: Int, action: UserAction): String = "user_list_${action.name.lowercase()}_$isu"
 }
 
 /**
- * A social people list: section headers, one [UserRow] per person with the actions the
- * viewer can take now, and a load-more button. The friends, requests, search and another user's friends screens all
- * render their [UserListItem]s through it; a row that is [UserRowUi.busy] keeps its buttons inert.
+ * One person of a list (DECISIONS.md, Друзья): the avatar, the name, the group line and a status line. A pair of
+ * actions (an incoming request) sits under the texts, the filled one first; a single action is a text button at the
+ * end; a row without actions opens the card with a chevron. A [UserRowUi.busy] row keeps its buttons inert.
  */
 @Composable
-fun UserList(
-    items: List<UserListItem>,
-    onOpen: (UserRowUi) -> Unit,
-    modifier: Modifier = Modifier,
-    onAction: (UserRowUi, UserAction) -> Unit = { _, _ -> },
-    onLoadMore: () -> Unit = {},
-    state: LazyListState = rememberLazyListState(),
-) {
-    val keys = remember(items) { items.stableKeys() }
-    LazyColumn(
-        modifier.testTag(UserListTestTags.LIST),
-        state = state,
-        contentPadding = PaddingValues(bottom = ItmoTheme.spacing.group),
-    ) {
-        itemsIndexed(
-            items,
-            key = { index, _ -> keys[index] },
-            contentType = { _, item -> item.contentType() },
-        ) { _, item ->
-            when (item) {
-                is UserListItem.Header -> UserListHeader(item.title.asString())
-                is UserListItem.User -> UserListRow(item.row, onOpen, onAction)
-                UserListItem.LoadMore -> UserListLoadMore(onLoadMore)
+fun PersonRow(row: UserRowUi, onOpen: (UserRowUi) -> Unit, onAction: (UserRowUi, UserAction) -> Unit) {
+    val name = row.displayName.asString()
+    val actions = listOfNotNull(row.primary, row.secondary)
+    ListRow(
+        title = name,
+        modifier = Modifier.testTag(UserListTestTags.row(row.isu)),
+        subtitle = listOfNotNull(row.subtitle.asString(), row.status?.asString()).joinToString("\n"),
+        leading = { Avatar(name, row.pictureUrl, size = AvatarSize, initials = personInitials(name, row.familyName, row.givenName)) },
+        accessory = actions.singleOrNull()?.let { action ->
+            {
+                TextButton(
+                    onClick = { onAction(row, action) },
+                    enabled = !row.busy,
+                    modifier = Modifier.testTag(UserListTestTags.action(row.isu, action)),
+                ) { Text(action.label().asString()) }
+            }
+        },
+        chevron = actions.isEmpty() && row.opensProfile,
+        below = if (actions.size > 1) {
+            { PairedActions(row, actions, onAction) }
+        } else {
+            null
+        },
+        onClick = if (row.opensProfile) { { onOpen(row) } } else null,
+    )
+}
+
+@Composable
+private fun PairedActions(row: UserRowUi, actions: List<UserAction>, onAction: (UserRowUi, UserAction) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
+        actions.forEachIndexed { index, action ->
+            val tagged = Modifier.testTag(UserListTestTags.action(row.isu, action))
+            val content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+                Text(action.label().asString())
+            }
+            if (index == 0) {
+                Button(
+                    onClick = { onAction(row, action) },
+                    modifier = tagged,
+                    enabled = !row.busy,
+                    contentPadding = ButtonDefaults.SmallContentPadding,
+                    content = content,
+                )
+            } else {
+                TonalButton(
+                    onClick = { onAction(row, action) },
+                    modifier = tagged,
+                    enabled = !row.busy,
+                    contentPadding = ButtonDefaults.SmallContentPadding,
+                    content = content,
+                )
             }
         }
     }
 }
 
-/** One person of a [UserList]: the kit row with this row's texts, its labelled actions and its busy state. */
-@Composable
-fun UserListRow(
-    row: UserRowUi,
+/** [rows] as one connected group under an optional [title] with its [count]; nothing for an empty list. */
+fun LazyListScope.personGroup(
+    key: String,
+    rows: List<UserRowUi>,
     onOpen: (UserRowUi) -> Unit,
     onAction: (UserRowUi, UserAction) -> Unit,
-    modifier: Modifier = Modifier,
+    title: UiText? = null,
+    count: String? = null,
 ) {
-    val name = row.displayName.asString()
-    UserRow(
-        name = name,
-        pictureUrl = row.pictureUrl,
-        modifier = modifier.testTag(UserListTestTags.row(row.isu)),
-        subtitle = row.subtitle.asString(),
-        status = row.status?.asString(),
-        onClick = if (row.opensProfile) {
-            { onOpen(row) }
-        } else {
-            null
-        },
-        primaryAction = row.primary?.let { action ->
-            UserRowAction(stringResource(action.label())) { onAction(row, action) }
-        },
-        secondaryAction = row.secondary?.let { action ->
-            UserRowAction(stringResource(action.label())) { onAction(row, action) }
-        },
-        busy = row.busy,
-        initials = personInitials(name, row.familyName, row.givenName),
-    )
-}
-
-/** `item_user_list_header.xml`: `labelLarge` in `onSurfaceVariant`, in line with the rows' avatars. */
-@Composable
-private fun UserListHeader(title: String) {
-    Text(
-        title,
-        Modifier
-            .fillMaxWidth()
-            .padding(
-                start = ItmoTheme.spacing.group,
-                end = ItmoTheme.spacing.group,
-                top = ItmoTheme.spacing.group,
-                bottom = ItmoTheme.spacing.related,
-            )
-            .semantics { heading() },
-        color = ItmoTheme.colorScheme.onSurfaceVariant,
-        style = ItmoTheme.typography.labelLarge,
-    )
-}
-
-/** `item_user_list_load_more.xml`: a full-width text button under the last row. */
-@Composable
-private fun UserListLoadMore(onLoadMore: () -> Unit) {
-    ProgressButton(
-        label = stringResource(Res.string.user_search_load_more),
-        onClick = onLoadMore,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = ItmoTheme.spacing.group, vertical = ItmoTheme.spacing.compact)
-            .testTag(UserListTestTags.LOAD_MORE),
-        style = ProgressButtonStyle.Text,
-    )
-}
-
-/** The button label of a row action. */
-fun UserAction.label(): StringResource = when (this) {
-    UserAction.ADD -> Res.string.user_action_add
-    UserAction.ACCEPT -> Res.string.user_action_accept
-    UserAction.REJECT -> Res.string.user_action_reject
-    UserAction.CANCEL -> Res.string.user_action_cancel
-    UserAction.REMOVE -> Res.string.user_action_remove
-    UserAction.INVITE -> Res.string.user_action_invite
-}
-
-/**
- * A person keeps their key while the list changes around them; a second row of the same person (not expected, but
- * Backend does not promise it) gets its position appended, since a repeated key crashes a lazy list.
- */
-private fun List<UserListItem>.stableKeys(): List<String> {
-    val seen = HashSet<String>()
-    return mapIndexed { index, item ->
-        val key = when (item) {
-            is UserListItem.Header -> "header:$index"
-            is UserListItem.User -> "user:${item.row.isu}"
-            UserListItem.LoadMore -> "load-more"
+    if (rows.isEmpty()) return
+    if (title != null) item(key = "$key:title", contentType = "title") { SectionHeader(title.asString(), count = count) }
+    item(key = key, contentType = "people") {
+        ListGroup {
+            rows.forEach { row -> item { PersonRow(row, onOpen, onAction) } }
         }
-        if (seen.add(key)) key else "$key#$index"
     }
 }
 
-private fun UserListItem.contentType(): String = when (this) {
-    is UserListItem.Header -> "header"
-    is UserListItem.User -> "user"
-    UserListItem.LoadMore -> "load-more"
+/** A [UserListItem] list (another user's friends): its headers and the runs of rows between them as groups. */
+fun LazyListScope.userList(
+    items: List<UserListItem>,
+    onOpen: (UserRowUi) -> Unit,
+    onAction: (UserRowUi, UserAction) -> Unit = { _, _ -> },
+) {
+    var title: UiText? = null
+    var run = mutableListOf<UserRowUi>()
+    var index = 0
+    fun flush() {
+        personGroup("group:${index++}", run, onOpen, onAction, title)
+        run = mutableListOf()
+        title = null
+    }
+    items.forEach { item ->
+        when (item) {
+            is UserListItem.Header -> { flush(); title = item.title }
+            is UserListItem.User -> run += item.row
+            UserListItem.LoadMore -> Unit
+        }
+    }
+    flush()
 }
+
+/** The button label of a row action. */
+fun UserAction.label(): UiText = UiText.Res(
+    when (this) {
+        UserAction.ADD -> SocialStrings.user_action_add
+        UserAction.ACCEPT -> SocialStrings.user_action_accept
+        UserAction.REJECT -> SocialStrings.user_action_reject
+        UserAction.CANCEL -> SocialStrings.user_action_cancel
+        UserAction.REMOVE -> SocialStrings.user_action_remove
+        UserAction.INVITE -> SocialStrings.user_action_invite
+    },
+)
+
+/** The avatar of a list row (`ListGroup`'s 40 dp leading). */
+private val AvatarSize = 40.dp
