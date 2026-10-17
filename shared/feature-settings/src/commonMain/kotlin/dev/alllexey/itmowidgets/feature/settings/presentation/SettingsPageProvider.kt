@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
@@ -33,6 +34,9 @@ interface SettingsPageProvider {
     /** The appearance [page] shows a sample of above its rows. */
     fun themePreview(page: SettingsPage, local: LocalSettings): ThemeSpec? = null
 
+    /** The widgets gallery [page] shows above its rows. */
+    fun gallery(page: SettingsPage, state: SettingsPageState): WidgetGallery? = null
+
     fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) = Unit
 
     fun onChoiceChanged(scope: SettingsPageScope, id: SettingRowId, optionKey: String) = Unit
@@ -54,5 +58,7 @@ data class SettingsPageState(
     /** True only once Android is known to restrict the app in the background. */
     val backgroundWorkRestricted: Boolean,
     val calendar: CalendarSyncState = CalendarSyncState(),
-    val diagnosticsCount: Int = 0
+    val diagnosticsCount: Int = 0,
+    /** How many widgets of each format the home screen holds, as the gallery screen last counted; empty until then. */
+    val placedWidgets: Map<WidgetFormat, Int> = emptyMap(),
 )

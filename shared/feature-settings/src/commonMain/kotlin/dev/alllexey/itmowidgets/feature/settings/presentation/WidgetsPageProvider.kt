@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.text.AppIcon
@@ -17,8 +18,9 @@ import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import kotlinx.coroutines.CancellationException
 
 /**
- * The compact and full schedule widgets and the QR pass widget with its tile; each page draws its widget above. The
- * tile, the spoiler animation and the custom spoiler image are listed where the platform offers them.
+ * The widgets gallery (`Виджеты`): a card per format and the settings of each format in its sheet, applied at once to
+ * every widget of the format; below the cards `Виджеты в цвет темы`. The QR tile, the spoiler animation and the custom
+ * spoiler image are listed where the platform offers them.
  */
 class WidgetsPageProvider(
     private val repository: SettingsRepository,
@@ -26,17 +28,12 @@ class WidgetsPageProvider(
     private val capabilities: PlatformCapabilities = EveryPlatformCapability
 ) : SettingsPageProvider {
 
-    override val pages = setOf(
-        SettingsPage.COMPACT_SCHEDULE_WIDGET,
-        SettingsPage.FULL_SCHEDULE_WIDGET,
-        SettingsPage.QR_WIDGET
-    )
+    override val pages = setOf(SettingsPage.WIDGETS)
 
     override val rows = setOf(
         SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
-        SettingRowId.COMPACT_WIDGET_HIDE_TEACHER,
         SettingRowId.COMPACT_WIDGET_TEXT_SIZE,
-        SettingRowId.FULL_WIDGET_HIDE_TEACHER,
+        SettingRowId.FULL_WIDGET_SHOW_TEACHER,
         SettingRowId.FULL_WIDGET_HIDE_PAST,
         SettingRowId.FULL_WIDGET_SHOW_TOMORROW,
         SettingRowId.FULL_WIDGET_TEXT_SIZE,
@@ -45,37 +42,23 @@ class WidgetsPageProvider(
         SettingRowId.QR_SPOILER,
         SettingRowId.QR_ANIMATION,
         SettingRowId.QR_CUSTOM_IMAGE,
-        SettingRowId.QR_RESET_IMAGE
+        SettingRowId.QR_RESET_IMAGE,
+        SettingRowId.WIDGETS_FOLLOW_THEME
     )
 
-    override fun sections(page: SettingsPage, state: SettingsPageState): List<SettingSection> = when (page) {
-        SettingsPage.COMPACT_SCHEDULE_WIDGET -> compactSections(state.local)
-        SettingsPage.FULL_SCHEDULE_WIDGET -> fullSections(state.local)
-        else -> qrSections(state)
-    }
+    override fun sections(page: SettingsPage, state: SettingsPageState): List<SettingSection> = rows().page(state)
 
-    override fun preview(page: SettingsPage, local: LocalSettings): WidgetPreviewSettings? {
-        val theme = local.theme.takeIf { local.widgetsFollowTheme }
-        return when (page) {
-            SettingsPage.QR_WIDGET -> WidgetPreviewSettings.Qr(local.qrWidget, theme)
-            SettingsPage.COMPACT_SCHEDULE_WIDGET ->
-                WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT, theme)
-            SettingsPage.FULL_SCHEDULE_WIDGET ->
-                WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL, theme)
-            else -> null
-        }
-    }
+    override fun gallery(page: SettingsPage, state: SettingsPageState): WidgetGallery = rows().gallery(state)
+
+    private fun rows() = WidgetGalleryRows(capabilities, canAddTile = tileAccess.canRequestAdd())
 
     override fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) {
         when (id) {
             SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY -> scope.updateWidgetSetting {
                 repository.setCompactWidgetNextLessonEarlyEnabled(checked)
             }
-            SettingRowId.COMPACT_WIDGET_HIDE_TEACHER -> scope.updateWidgetSetting {
-                repository.setCompactWidgetTeacherHidden(checked)
-            }
-            SettingRowId.FULL_WIDGET_HIDE_TEACHER -> scope.updateWidgetSetting {
-                repository.setFullWidgetTeacherHidden(checked)
+            SettingRowId.FULL_WIDGET_SHOW_TEACHER -> scope.updateWidgetSetting {
+                repository.setFullWidgetTeacherHidden(!checked)
             }
             SettingRowId.FULL_WIDGET_HIDE_PAST -> scope.updateWidgetSetting {
                 repository.setFullWidgetPastLessonsHidden(checked)
@@ -89,6 +72,7 @@ class WidgetsPageProvider(
             SettingRowId.QR_SPOILER -> scope.updateWidgetSetting {
                 repository.setQrSpoilerEnabled(checked)
             }
+            SettingRowId.WIDGETS_FOLLOW_THEME -> scope.updateWidgetSetting { repository.setWidgetsFollowTheme(checked) }
             else -> Unit
         }
     }
@@ -147,8 +131,87 @@ class WidgetsPageProvider(
             message?.let { scope.emit(SettingsEvent.ShowMessage(it)) }
         }
     }
+}
 
-    private fun compactSections(local: LocalSettings) = listOf(
+/** The gallery and its sheets' rows, built from the page state; [canAddTile] is the system's answer of the moment. */
+internal class WidgetGalleryRows(private val capabilities: PlatformCapabilities, private val canAddTile: Boolean) {
+
+    fun page(state: SettingsPageState): List<SettingSection> = listOf(
+        SettingSection(
+            title = null,
+            items = listOf(
+                SettingItem.Toggle(
+                    id = SettingRowId.WIDGETS_FOLLOW_THEME,
+                    title = UiText.Res(SettingsStrings.settings_widgets_theme_title),
+                    checked = state.local.widgetsFollowTheme
+                )
+            ),
+            footer = UiText.Res(SettingsStrings.settings_widgets_note)
+        )
+    )
+
+    fun gallery(state: SettingsPageState): WidgetGallery {
+        val local = state.local
+        val theme = local.theme.takeIf { local.widgetsFollowTheme }
+        val placed = state.placedWidgets.values.sum()
+        val sample = UiText.Res(SettingsStrings.settings_widget_sample_note)
+        return WidgetGallery(
+            subtitle = UiText.Res(
+                if (capabilities.pinWidgets) SettingsStrings.settings_widgets_placed else SettingsStrings.settings_widgets_placed_home,
+                listOf(placed)
+            ).takeIf { placed > 0 },
+            cards = listOf(
+                card(
+                    state, WidgetFormat.NEXT, SettingsStrings.settings_widget_next_title, SettingsStrings.settings_widget_next_description,
+                    WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT, theme), nextSections(local), sample
+                ),
+                card(
+                    state, WidgetFormat.DAY, SettingsStrings.settings_widget_day_title, SettingsStrings.settings_widget_day_description,
+                    WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL, theme), daySections(local), sample
+                ),
+                card(
+                    state, WidgetFormat.SPORT, SettingsStrings.settings_widget_sport_title, SettingsStrings.settings_widget_sport_description,
+                    WidgetPreviewSettings.Sport(theme), emptyList(), null
+                ),
+                card(
+                    state, WidgetFormat.PASS, SettingsStrings.settings_widget_pass_title,
+                    if (local.qrWidget.spoilerEnabled) SettingsStrings.settings_widget_pass_description
+                    else SettingsStrings.settings_widget_pass_open_description,
+                    WidgetPreviewSettings.Qr(local.qrWidget, theme), qrSections(state),
+                    UiText.Res(SettingsStrings.settings_widget_apply_note)
+                ),
+            ),
+            howToAdd = !capabilities.pinWidgets,
+            lockScreen = capabilities.lockScreenWidgets,
+        )
+    }
+
+    private fun card(
+        state: SettingsPageState,
+        format: WidgetFormat,
+        title: String,
+        description: String,
+        preview: WidgetPreviewSettings,
+        settings: List<SettingSection>,
+        note: UiText?,
+    ): WidgetCard {
+        val placed = (state.placedWidgets[format] ?: 0) > 0
+        return WidgetCard(
+            format = format,
+            title = UiText.Res(title),
+            description = UiText.Res(description),
+            preview = preview,
+            action = when {
+                placed -> WidgetCardAction.ON_SCREEN
+                capabilities.pinWidgets -> WidgetCardAction.ADD
+                else -> WidgetCardAction.NONE
+            },
+            settings = settings,
+            settingsNote = note,
+        )
+    }
+
+    private fun nextSections(local: LocalSettings) = listOf(
         SettingSection(
             title = null,
             items = listOf(
@@ -157,46 +220,40 @@ class WidgetsPageProvider(
                     title = UiText.Res(CoreStrings.settings_widget_next_early_title),
                     description = UiText.Res(CoreStrings.settings_widget_next_early_description),
                     checked = local.scheduleWidget.compact.showNextLessonEarly
-                ),
-                SettingItem.Toggle(
-                    id = SettingRowId.COMPACT_WIDGET_HIDE_TEACHER,
-                    title = UiText.Res(CoreStrings.settings_widget_hide_teacher_title),
-                    checked = local.scheduleWidget.compact.hideTeacher
-                ),
-                textSizeChoice(SettingRowId.COMPACT_WIDGET_TEXT_SIZE, local.scheduleWidget.compact.textSize)
+                )
             )
-        )
+        ),
+        textSizeSection(SettingRowId.COMPACT_WIDGET_TEXT_SIZE, local.scheduleWidget.compact.textSize)
     )
 
-    private fun fullSections(local: LocalSettings) = listOf(
+    private fun daySections(local: LocalSettings) = listOf(
         SettingSection(
             title = null,
             items = listOf(
-                SettingItem.Toggle(
-                    id = SettingRowId.FULL_WIDGET_HIDE_TEACHER,
-                    title = UiText.Res(CoreStrings.settings_widget_hide_teacher_title),
-                    checked = local.scheduleWidget.full.hideTeacher
-                ),
                 SettingItem.Toggle(
                     id = SettingRowId.FULL_WIDGET_HIDE_PAST,
                     title = UiText.Res(CoreStrings.settings_widget_hide_past_title),
                     checked = local.scheduleWidget.full.hidePastLessons
                 ),
                 SettingItem.Toggle(
+                    id = SettingRowId.FULL_WIDGET_SHOW_TEACHER,
+                    title = UiText.Res(SettingsStrings.settings_widget_show_teacher_title),
+                    checked = !local.scheduleWidget.full.hideTeacher
+                ),
+                SettingItem.Toggle(
                     id = SettingRowId.FULL_WIDGET_SHOW_TOMORROW,
                     title = UiText.Res(CoreStrings.settings_widget_tomorrow_title),
                     description = UiText.Res(CoreStrings.settings_widget_tomorrow_description),
                     checked = local.scheduleWidget.full.showTomorrowWhenTodayIsOver
-                ),
-                textSizeChoice(SettingRowId.FULL_WIDGET_TEXT_SIZE, local.scheduleWidget.full.textSize)
+                )
             )
-        )
+        ),
+        textSizeSection(SettingRowId.FULL_WIDGET_TEXT_SIZE, local.scheduleWidget.full.textSize)
     )
 
     private fun qrSections(state: SettingsPageState): List<SettingSection> {
         val qr = state.local.qrWidget
         return listOfNotNull(
-            qrTileSection(state.local),
             SettingSection(
                 title = null,
                 items = listOf(
@@ -213,7 +270,8 @@ class WidgetsPageProvider(
                     )
                 )
             ),
-            spoilerSection(state)
+            spoilerSection(state),
+            qrTileSection(state.local)
         )
     }
 
@@ -256,7 +314,7 @@ class WidgetsPageProvider(
 
     /** Android 13+ asks the system to add the tile; the row leaves once the tile is known to be added. */
     private fun qrTileSection(local: LocalSettings): SettingSection? {
-        if (!capabilities.quickSettingsTile || !tileAccess.canRequestAdd() || local.qrTileAdded) return null
+        if (!capabilities.quickSettingsTile || !canAddTile || local.qrTileAdded) return null
         return SettingSection(
             title = null,
             items = listOf(
@@ -269,12 +327,18 @@ class WidgetsPageProvider(
         )
     }
 
-    private fun textSizeChoice(id: SettingRowId, size: WidgetTextSize) = SettingItem.Choice(
-        id = id,
+    /** `Размер текста` as its own titled group: the sheet draws its options as a segmented choice. */
+    private fun textSizeSection(id: SettingRowId, size: WidgetTextSize) = SettingSection(
         title = UiText.Res(CoreStrings.settings_widget_text_size_title),
-        value = size.label(),
-        options = WidgetTextSize.entries.map { ChoiceOption(it.name, it.label()) },
-        selectedOptionKey = size.name
+        items = listOf(
+            SettingItem.Choice(
+                id = id,
+                title = UiText.Res(CoreStrings.settings_widget_text_size_title),
+                value = size.label(),
+                options = WidgetTextSize.entries.map { ChoiceOption(it.name, it.label()) },
+                selectedOptionKey = size.name
+            )
+        )
     )
 
     private fun WidgetTextSize.label() = UiText.Res(

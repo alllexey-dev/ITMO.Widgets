@@ -16,7 +16,9 @@ data class SettingsUiState(
     /** The widget the page configures, drawn above its rows; null on pages without a widget. */
     val previewSettings: WidgetPreviewSettings? = null,
     /** The appearance a sample above the rows shows; null on pages without one. */
-    val themePreview: ThemeSpec? = null
+    val themePreview: ThemeSpec? = null,
+    /** The widgets gallery above the rows of [SettingsPage.WIDGETS]; null on every other page. */
+    val gallery: WidgetGallery? = null,
 )
 
 sealed interface SettingsEvent {

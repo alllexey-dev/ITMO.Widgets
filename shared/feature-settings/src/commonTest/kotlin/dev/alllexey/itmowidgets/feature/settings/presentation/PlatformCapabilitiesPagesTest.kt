@@ -36,6 +36,8 @@ class PlatformCapabilitiesPagesTest {
         qrWidgetAnimation = false,
         qrCustomSpoiler = false,
         wallpaperColors = false,
+        pinWidgets = false,
+        lockScreenWidgets = false,
     )
 
     @BeforeTest

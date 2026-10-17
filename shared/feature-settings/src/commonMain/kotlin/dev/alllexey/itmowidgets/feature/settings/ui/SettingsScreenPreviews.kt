@@ -42,6 +42,7 @@ private fun WidgetPreviewPlaceholder(settings: WidgetPreviewSettings) {
     val height = when (settings) {
         is WidgetPreviewSettings.Qr -> 195.dp
         is WidgetPreviewSettings.Schedule -> if (settings.format == ScheduleWidgetFormat.COMPACT) 122.dp else 206.dp
+        is WidgetPreviewSettings.Sport -> 122.dp
     }
     Box(
         Modifier
@@ -115,24 +116,6 @@ internal class SettingsScreenPrivacyDisabledPreview {
     @Preview(name = "privacy-disabled")
     @Composable
     fun SettingsScreen() = SettingsPreview(SettingsPreviewData.PrivacyDisabled)
-}
-
-internal class SettingsScreenCompactScheduleWidgetPreview {
-    @Preview(name = "compact-schedule-widget")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.CompactScheduleWidget)
-}
-
-internal class SettingsScreenFullScheduleWidgetPreview {
-    @Preview(name = "full-schedule-widget")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.FullScheduleWidget)
-}
-
-internal class SettingsScreenQrWidgetPreview {
-    @Preview(name = "qr-widget")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.QrWidget)
 }
 
 internal class SettingsScreenSchedulePreview {

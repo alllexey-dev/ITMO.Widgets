@@ -18,4 +18,6 @@ internal val EveryPlatformCapability = PlatformCapabilities(
     qrWidgetAnimation = true,
     qrCustomSpoiler = true,
     wallpaperColors = true,
+    pinWidgets = true,
+    lockScreenWidgets = true,
 )
