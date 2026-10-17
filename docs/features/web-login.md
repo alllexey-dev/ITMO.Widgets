@@ -1,8 +1,9 @@
 # Web sign-in and device pairing
 
 Product behaviour: [Как это работает: веб-версия](../how-it-works/web.md).
-The profile row and the sheet are called `Подключить устройство`: the same
-sheet signs a browser in and pairs a device ([Device pairing](#device-pairing)).
+The row of «Подключение и данные» (`Устройства`) and the sheet are called
+`Подключить устройство`: the same sheet signs a browser in and pairs a device
+([Device pairing](#device-pairing)). Both need the connection to ITMO.Widgets.
 
 The web version at `https://<domain>/app/` has no password form: a browser
 signs in when the signed-in app approves its eight-character code (typed or
@@ -163,7 +164,9 @@ The link stays in the view model's memory; the saved state never holds it.
 ## Connected devices
 
 `Подключённые устройства` (`AppRoutes.Connections`, `ConnectionsViewModel`)
-opens from the sheet, from Settings (`Доступ`) and from a new-connection push.
+opens from the sheet, from «Подключение и данные» (`Устройства`) and from a
+new-connection push. Each device is a row of one group: the kind's tile, the
+name, when it connected and was last active, the badge and a tonal `Отключить`.
 `GET /api/users/me/connections` lists web sessions and agents with the kind
 icon, the name (an agent's own, a browser's description), `Подключено <date>`,
 the last activity and the `Общая сессия My ITMO` badge. `Отключить` asks first:
@@ -175,6 +178,13 @@ otherwise (which also signs the phone out).
 Backend pushes `DEVICE_CONNECTED_PAYLOAD` after every connection and
 `SPORT_AGENT_BOOKED_PAYLOAD` when an agent booked a lesson
 ([notifications](notifications.md)).
+
+## Look
+
+The sheet and the list are drawn on the kit on both platforms (the device card
+with its tile, the permissions as switch rows of one group, the verification
+code in a tinted card); the change was the look only: the code parsing, the
+screen lock before the approval, the HPKE sealing and their tests are as they were.
 
 ## iOS
 

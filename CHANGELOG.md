@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Settings and first run (2026-10-17)
+
+- New «Подключение и данные» and «Уведомления» pages, a sign-in with one main path and `Другие способы входа` in a sheet, and a three-step first run (your data, permissions one by one, the connection through a consent sheet) on Android and iOS; the old services, privacy and recordbook settings pages and the widget steps of the first run are gone.
+
 ### Fixes (2026-10-17)
 
 - A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).
