@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
+import kotlin.math.abs
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -52,8 +53,9 @@ enum class SportWidgetDay {
 }
 
 /**
- * A booking or a queue: [date] and [time] in academic time, [section] and the raw [place] (MyITMO's room text, the
- * drawing side shortens its building), the [status] with the queue [position] of [total]. [lessonId] opens its sheet.
+ * A booking or a queue: [date] and [time] in academic time, [section] and MyITMO's [building] address (the drawing side
+ * shortens it, `Ломо`), the [status] with the queue [position] of [total]. [lessonId] opens its sheet in Спорт, the
+ * catalog lesson a [predicted] one repeats.
  */
 @Serializable
 data class SportWidgetItem(
@@ -62,7 +64,7 @@ data class SportWidgetItem(
     @SerialName("day") val day: SportWidgetDay,
     @SerialName("time") val time: String,
     @SerialName("section") val section: String,
-    @SerialName("place") val place: String? = null,
+    @SerialName("building") val building: String? = null,
     @SerialName("status") val status: SportWidgetStatus,
     @SerialName("position") val position: Int = 0,
     @SerialName("total") val total: Int = 0,
@@ -143,7 +145,8 @@ class SportWidgetSelector {
         val start = start.toLocalDateTime(timeZone)
         val entry = signEntry?.takeIf { !signed }
         return SportWidgetItem(
-            lessonId = lessonId,
+            // A predicted lesson's booking carries the catalog lesson's id negated.
+            lessonId = if (isLessonReal) lessonId else abs(lessonId),
             date = start.date.toString(),
             day = when (start.date) {
                 today -> SportWidgetDay.TODAY
@@ -152,7 +155,7 @@ class SportWidgetSelector {
             },
             time = start.time.format(DateTexts.TIME),
             section = sectionName.raw.trim(),
-            place = roomName.trim().takeIf(String::isNotEmpty),
+            building = extractBuildingAddress()?.trim()?.takeIf(String::isNotEmpty),
             status = when {
                 entry == null -> SportWidgetStatus.BOOKED
                 !isLessonReal -> SportWidgetStatus.UNPUBLISHED
