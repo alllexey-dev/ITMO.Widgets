@@ -268,24 +268,27 @@ enum WidgetClock: Equatable {
     case frozen(Date)
 }
 
-/// The minutes and hours to `target`, abbreviated in Russian. Live, it is the system's offset text, which WidgetKit
+/// The minutes and hours to `target`, in Russian words. Live, it is the system's offset text, which WidgetKit
 /// redraws as the minutes pass; Swift computes nothing.
-struct WidgetCountdown: View {
-    let target: Date
-    let clock: WidgetClock
-    var fields: Set<Date.ComponentsFormatStyle.Field> = [.hour, .minute]
-
-    var body: some View {
+enum WidgetCountdown {
+    static func text(to target: Date, clock: WidgetClock, fields: Set<Date.ComponentsFormatStyle.Field> = [.hour, .minute]) -> Text {
+        let style = SystemFormatStyle.DateOffset(to: target, allowedFields: fields, maxFieldCount: 2, sign: .never)
+            .locale(WidgetText.locale)
         switch clock {
-        case .live:
-            Text(.currentDate, format: style)
-        case let .frozen(now):
-            Text(now, format: style)
+        case .live: return Text(.currentDate, format: style)
+        case let .frozen(now): return Text(now, format: style)
         }
     }
 
-    private var style: SystemFormatStyle.DateOffset {
-        SystemFormatStyle.DateOffset(to: target, allowedFields: fields, maxFieldCount: 2, sign: .never).locale(WidgetText.locale)
+    /// A one-placeholder template (`widget_next_left`) around the countdown, as one text: the live countdown cannot be
+    /// a format argument, so the template's text before and after the placeholder are interpolated around it.
+    static func text(
+        _ template: (String) -> LocalizedStringResource, to target: Date, clock: WidgetClock
+    ) -> Text {
+        let marker = "\u{1}"
+        let parts = String(localized: template(marker)).components(separatedBy: marker)
+        let prefix = Text(verbatim: parts.first ?? ""), suffix = Text(verbatim: parts.dropFirst().joined())
+        return Text("\(prefix)\(text(to: target, clock: clock))\(suffix)", tableName: "WidgetTexts", comment: "Not localized")
     }
 }
 
@@ -322,24 +325,6 @@ enum AnyProgressViewStyle: ProgressViewStyle {
         switch self {
         case .linear: ProgressView(configuration).progressViewStyle(.linear)
         case .circular: ProgressView(configuration).progressViewStyle(.circular)
-        }
-    }
-}
-
-/// A one-placeholder template (`widget_next_left`) with a view in place of its argument: the system's live countdown cannot
-/// be a format argument, so the template's text before and after the placeholder stand around it.
-struct WidgetTemplated<Argument: View>: View {
-    let template: (String) -> LocalizedStringResource
-    @ViewBuilder let argument: Argument
-
-    var body: some View {
-        let marker = "\u{1}"
-        let parts = String(localized: template(marker)).components(separatedBy: marker)
-        HStack(alignment: .firstTextBaseline, spacing: 0) {
-            if let prefix = parts.first, !prefix.isEmpty { Text(verbatim: prefix) }
-            argument
-            let suffix = parts.dropFirst().joined()
-            if !suffix.isEmpty { Text(verbatim: suffix) }
         }
     }
 }

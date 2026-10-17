@@ -241,12 +241,12 @@ private struct NextLessonFooter: View {
             }
         }
         .lineLimit(1)
-        .minimumScaleFactor(0.7)
+        .minimumScaleFactor(0.75)
     }
 
-    /// The template around the live minutes: the template's text before and after its placeholder.
-    private func countdown(_ template: @escaping (String) -> LocalizedStringResource, until: Date) -> some View {
-        WidgetTemplated(template: template) { WidgetCountdown(target: until, clock: clock) }
+    /// The template around the live minutes.
+    private func countdown(_ template: (String) -> LocalizedStringResource, until: Date) -> Text {
+        WidgetCountdown.text(template, to: until, clock: clock)
     }
 
     private func symbol(_ symbol: AppSymbol) -> some View {
@@ -424,7 +424,7 @@ private struct NextLessonCircular: View {
     }
 
     private func minutes(_ until: Date) -> some View {
-        WidgetCountdown(target: until, clock: clock, fields: [.minute])
+        WidgetCountdown.text(to: until, clock: clock, fields: [.minute])
             .font(.system(.caption2, design: .rounded).weight(.bold))
             .multilineTextAlignment(.center)
             .minimumScaleFactor(0.5)
