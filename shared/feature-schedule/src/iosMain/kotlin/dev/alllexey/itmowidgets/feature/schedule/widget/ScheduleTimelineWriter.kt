@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.feature.schedule.widget
 
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
-import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.AppGroupWidgetRefresh
 import dev.alllexey.itmowidgets.core.storage.SnapshotFile
 import dev.alllexey.itmowidgets.core.text.buildingShortTitle
 import dev.alllexey.itmowidgets.core.text.resolve
@@ -76,14 +76,14 @@ class ScheduleTimelineWriter(
     private val clock: Clock,
     private val log: AppLog,
     private val palette: suspend () -> WidgetPalette? = { null },
-) : ScheduleWidgetRefreshRequester {
+) : AppGroupWidgetRefresh {
 
     private val mutex = Mutex()
     private val requests = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val lastStartMillis = AtomicLong(Long.MIN_VALUE)
 
     /** Asks for a write after a change only the caller knows of (a sport booking); never waits for it. */
-    override fun refreshScheduleWidgets() {
+    override fun requestWrite() {
         requests.tryEmit(Unit)
     }
 

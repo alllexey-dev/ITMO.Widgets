@@ -3,7 +3,9 @@ package dev.alllexey.itmowidgets.feature.schedule.di
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.AppGroupWidgetRefresh
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -30,6 +32,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
@@ -38,8 +41,8 @@ import platform.UIKit.UIApplicationWillEnterForegroundNotification
 /**
  * The schedule widgets' App Group timeline: [ScheduleTimelineWriter] starts with the graph and writes on the main
  * queue (WidgetKit reloads are asked there) on every trigger for the life of the app process; the background runner
- * publishes it as its widget snapshot step. `shared/ios` binds the iOS `ScheduleWidgetRefreshRequester`, which sport
- * asks after a booking, to it and the sport widget's writer.
+ * publishes it as its widget snapshot step. The iOS `ScheduleWidgetRefreshRequester`, which sport asks after a
+ * booking, asks every `AppGroupWidgetRefresh` of the graph to write again: this writer and the sport widget's.
  *
  * The provider and the cached schedule are resolved at each write from the schedule data graph (`scheduleDataModule`,
  * `scheduleModule`, the pending sport rows); until that graph is loaded a write only logs why it could not load.
@@ -57,6 +60,10 @@ val scheduleWidgetIosModule = module {
         ).also { writer ->
             writer.launchIn(CoroutineScope(SupervisorJob() + get<AppDispatchers>().main), triggers())
         }
+    } bind AppGroupWidgetRefresh::class
+    single<ScheduleWidgetRefreshRequester> {
+        val scope = this
+        ScheduleWidgetRefreshRequester { scope.getAll<AppGroupWidgetRefresh>().forEach(AppGroupWidgetRefresh::requestWrite) }
     }
     // The background runner's first step: the timeline again on every wake, launch and foreground.
     single(named(RefreshStepKeys.WIDGET_SNAPSHOTS)) {

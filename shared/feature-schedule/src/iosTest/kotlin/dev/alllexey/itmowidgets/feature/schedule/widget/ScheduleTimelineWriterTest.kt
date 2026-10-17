@@ -147,7 +147,7 @@ class ScheduleTimelineWriterTest {
         triggers.session.value = "signed-out"
         triggers.settings.value = "large text"
         triggers.foregrounds.emit(Unit)
-        writer.refreshScheduleWidgets()
+        writer.requestWrite()
 
         assertEquals(5, source.untils.size)
         assertEquals(5 * 2, reloads.size)

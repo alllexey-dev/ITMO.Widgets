@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.sport.widget
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.AppGroupWidgetRefresh
 import dev.alllexey.itmowidgets.core.storage.SnapshotFile
 import dev.alllexey.itmowidgets.core.text.buildingShortTitle
 import dev.alllexey.itmowidgets.core.text.resolve
@@ -61,13 +62,13 @@ class SportWidgetWriter(
     private val timeProvider: AcademicTimeProvider,
     private val log: AppLog,
     private val palette: suspend () -> WidgetPalette? = { null },
-) {
+) : AppGroupWidgetRefresh {
 
     private val mutex = Mutex()
     private val requests = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     /** Asks for a write after a change only the caller knows of (a sport booking); never waits for it. */
-    fun refresh() {
+    override fun requestWrite() {
         requests.tryEmit(Unit)
     }
 

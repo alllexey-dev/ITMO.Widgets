@@ -118,7 +118,7 @@ class SportWidgetWriterTest {
 
         session.value = "signed-out"
         theme.value = "teal"
-        writer.refresh()
+        writer.requestWrite()
 
         assertEquals(4, source.untils.size)
     }

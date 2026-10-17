@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.AppGroupWidgetRefresh
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.RefreshStep
@@ -18,12 +19,13 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
  * The sport widget's App Group timeline: [SportWidgetWriter] starts with the graph and writes on the main queue
- * (WidgetKit reloads are asked there) on session and widget theme changes and on request (`shared/ios` asks it with
- * the schedule widgets after a booking); the background runner publishes it as its sport widget step. The provider
+ * (WidgetKit reloads are asked there) on session and widget theme changes and on request (an `AppGroupWidgetRefresh`,
+ * which the iOS `ScheduleWidgetRefreshRequester` asks after a booking); the background runner publishes it as its sport widget step. The provider
  * is resolved at each write from the sport graph (`sportModule`, `sportIosModule`).
  */
 val sportWidgetIosModule = module {
@@ -44,7 +46,7 @@ val sportWidgetIosModule = module {
                 ),
             )
         }
-    }
+    } bind AppGroupWidgetRefresh::class
     single(named(RefreshStepKeys.SPORT_WIDGET)) {
         val writer = get<SportWidgetWriter>()
         RefreshStep(RefreshStepKeys.SPORT_WIDGET, RefreshStepKeys.SPORT_WIDGET_PERIOD) {
