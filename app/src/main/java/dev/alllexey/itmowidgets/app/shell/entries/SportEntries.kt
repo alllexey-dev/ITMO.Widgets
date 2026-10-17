@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -33,6 +34,7 @@ import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.TabRequest
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialogSurface
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -43,6 +45,7 @@ import dev.alllexey.itmowidgets.feature.sport.navigation.SportRoutes
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportTeacherLevels
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportSectionsPresenter
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
@@ -212,7 +215,7 @@ private fun UserSportEntry(onBack: () -> Unit) {
  * The lesson sheet, its body on a `surfaceContainerLow` background: whether its action was sent survives recreation,
  * the action goes to the opener and closes the sheet, a profile opens in the sheet's place, sharing and the map stay
  * on this activity. A booked lesson has `Сделать секцией`, which changes through the shared [SportSectionsHolder] and
- * keeps the sheet open.
+ * keeps the sheet open; the teacher's review tone comes from [SportTeacherLevels].
  */
 @Composable
 private fun SportDetailsEntry(key: SportRoutes.SportCommonDetails, navigator: Nav3AppNavigator) {
@@ -221,6 +224,7 @@ private fun SportDetailsEntry(key: SportRoutes.SportCommonDetails, navigator: Na
     val time = remember(koin) { koin.get<AcademicTimeProvider>() }
     val sections = remember(koin) { koin.get<SportSectionsHolder>() }
     val sectionState by sections.state.collectAsStateWithLifecycle()
+    val teacherLevel by produceState<TeacherLevel?>(null, key.item) { value = koin.get<SportTeacherLevels>().level(key.item) }
     if (key.item.signed) LaunchedEffect(key.item.lessonId) { sections.loadSlots(listOf(key.item.lessonId)) }
     val results = LocalResultEventBus.current
     val redirect = rememberSportDetailsRedirect()
@@ -256,6 +260,7 @@ private fun SportDetailsEntry(key: SportRoutes.SportCommonDetails, navigator: Na
             actionsEnabled = key.actionsEnabled,
             busy = key.busy,
             section = if (item.signed) SportSectionsPresenter.toggle(sectionState, item.lessonId) else null,
+            teacherLevel = teacherLevel,
         )
     }
 }

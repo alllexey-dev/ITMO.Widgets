@@ -7,6 +7,8 @@ import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.AppLink
@@ -67,8 +69,9 @@ import platform.UIKit.UIViewController
 /**
  * The sport tab's graph as the iOS app starts it (`IosKoinModules`): the core module, [sportModule] and
  * [sportIosModule], with the account types, the services opt-in (`settingsDataModule` on iOS), the friend picker's
- * `FriendRepository` (`socialModule`, a feature this module cannot read), the schedule widget refresh, the
- * schedule refresh after a booking and the timetable (`scheduleDataModule`), and the simulator test binary's device stood in, on the demo session: the screens resolve and answer from the demo set with
+ * `FriendRepository` (`socialModule`, a feature this module cannot read), the teacher levels (`reviewsKoinModule`),
+ * the schedule widget refresh, the schedule refresh after a booking and the timetable (`scheduleDataModule`), and the
+ * simulator test binary's device stood in, on the demo session: the screens resolve and answer from the demo set with
  * no request, and a shared lesson names the build's site.
  */
 class SportIosModuleTest {
@@ -153,6 +156,7 @@ class SportIosModuleTest {
         single<DemoMode> { FakeDemoMode(active = true) }
         single<CustomServicesRepository> { FakeCustomServicesRepository(enabled = true) }
         single<FriendRepository> { NoFriends }
+        single<TeacherLevelsRepository> { FakeTeacherLevelsRepository() }
         single<ScheduleWidgetRefreshRequester> { ScheduleWidgetRefreshRequester {} }
         single<ScheduleRefreshGateway> { NoScheduleRefresh }
         single<DayLessonsGateway> { NoTimetable }

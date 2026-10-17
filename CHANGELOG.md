@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Спорт lesson sheet data (2026-10-17)
+
+- The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.
+
 ### Fixes (2026-10-17)
 
 - The lesson sheet shows `Предмет` and `Ссылки 3` on both platforms when the record book knows the lesson's subject (the same match as the subject page's `Пары`): `Предмет` opens the subject page, `Ссылки` its `Материалы` tab. The count comes from the links stored on the device and is 0 without the connection.
