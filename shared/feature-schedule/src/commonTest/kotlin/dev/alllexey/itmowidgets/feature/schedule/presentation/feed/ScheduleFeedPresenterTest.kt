@@ -46,7 +46,7 @@ class ScheduleFeedPresenterTest {
         val rows = rows(ScheduleFeedPresenter.state(input(listOf(today))))
 
         val label = rows.first() as FeedRow.WeekLabel
-        assertEquals(UiText.Res(ScheduleStrings.schedule_week_even, listOf(2)), label.text)
+        assertEquals(UiText.Res(ScheduleStrings.schedule_week, listOf(2)), label.text)
         val header = rows[1] as FeedRow.DayHeader
         assertEquals("Понедельник, 7 сентября", header.title)
         assertTrue(header.today)
@@ -54,6 +54,28 @@ class ScheduleFeedPresenterTest {
         assertTrue(lessons.showNow)
         val states = lessons.items.filterIsInstance<TimelineItem.Lesson>().map { it.lesson.state }
         assertEquals(listOf(LessonState.NOW, LessonState.NEXT), states)
+    }
+
+    @Test
+    fun onlyDayHeadersBeforeTheAcademicTodayArePastEvenWhenOneIsSelected() {
+        val days = (1..3).map { LessonDay(day(it), listOf(feedLesson("10:00", "11:30")), null) }
+
+        val state = ScheduleFeedPresenter.state(input(days, visible = day(1)).copy(now = LocalDateTime(day(2), LocalTime(12, 22))))
+
+        val headers = rows(state).filterIsInstance<FeedRow.DayHeader>()
+        assertEquals(listOf(true, false, false), headers.map { it.past })
+        assertEquals(listOf(false, true, false), headers.map { it.today })
+    }
+
+    @Test
+    fun aDayHeaderBecomesPastAtAcademicMidnightNotAfterItsLastLesson() {
+        val days = listOf(LessonDay(monday, listOf(feedLesson("10:00", "11:30")), null))
+
+        val before = ScheduleFeedPresenter.state(input(days).copy(now = LocalDateTime(monday, LocalTime(23, 59))))
+        val after = ScheduleFeedPresenter.state(input(days).copy(now = LocalDateTime(day(1), LocalTime(0, 0))))
+
+        assertFalse(rows(before).filterIsInstance<FeedRow.DayHeader>().single().past)
+        assertTrue(rows(after).filterIsInstance<FeedRow.DayHeader>().single().past)
     }
 
     @Test

@@ -63,6 +63,25 @@ final class SportUITests: XCTestCase {
         attachScreenshot(named: "filters")
     }
 
+    /// The sign-up strip's days are drawn, not only hittable, also after a tab switch back to the sport tab.
+    func testSignUpWeekStripIsDrawn() {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        openSport(app)
+        app.buttons[Self.signUpTab].firstMatch.tap()
+        let day = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'kit.weekDay.'"))
+            .firstMatch
+        XCTAssertTrue(day.waitForExistence(timeout: stepTimeout), "the sign-up strip has days")
+        attachScreenshot(named: "strip")
+        XCTAssertTrue(day.waitUntilDrawn(timeout: stepTimeout), "the sign-up strip is drawn")
+
+        app.selectTab("home")
+        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: stepTimeout))
+        openSport(app)
+        XCTAssertTrue(day.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(day.waitUntilDrawn(timeout: stepTimeout), "the sign-up strip is drawn after a tab switch")
+    }
+
     func testPointsArePushedAndTheDemoSectionIsInMine() {
         let app = XCUIApplication.itmo()
         app.launch()

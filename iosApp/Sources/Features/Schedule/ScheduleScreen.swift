@@ -258,6 +258,8 @@ struct ScheduleWeekPager: View {
     @State private var seenJump: Int32?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private static let height: CGFloat = 80
+
     private var selectedMonday: String {
         "\(ScheduleFeedPresenter.shared.monday(date: state.selected))"
     }
@@ -279,7 +281,7 @@ struct ScheduleWeekPager: View {
                     )
                     .padding(.horizontal, ItmoSpacing.related)
                     .containerRelativeFrame(.horizontal)
-                    .frame(height: 84)
+                    .frame(height: Self.height)
                     .id(item.id)
                 }
             }
@@ -326,7 +328,10 @@ struct ScheduleWeekPager: View {
             actions.pagingStarted()
             actions.week(state.weeks[next].monday)
         }
-        .frame(height: 84)
+        .frame(height: Self.height)
+        // A scroll view that touches the top bar's edge takes the bar's height as a vertical content inset, and this
+        // 80-point one then draws its days below its own clip while they still take taps: keep it off that edge.
+        .padding(.top, ItmoSpacing.related)
         .accessibilityIdentifier("schedule.strip")
     }
 }
@@ -434,7 +439,8 @@ private struct ScheduleFeedList: View {
                 }
             }
             .task(id: "\(state.jump?.id ?? -1)-\(days.rows.count)-\(state.loading)") {
-                guard !Task.isCancelled, let jump = state.jump else { return }
+                // Before the first load the feed has no rows yet: keep the jump (today on launch) for the rows to come.
+                guard !Task.isCancelled, let jump = state.jump, !days.rows.isEmpty else { return }
                 // While the day's week loads its row may still arrive; jump to it then.
                 let exact = items.contains { "\($0.date)" == "\(jump.date)" }
                 if !exact && state.loading { return }
@@ -477,6 +483,8 @@ private struct ScheduleFeedList: View {
             Text(verbatim: header.count.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary).monospacedDigit()
                 .fixedSize()
         }
+        // A past day reads as the strip's past days; the opaque background stays under the sticky header.
+        .opacity(header.past ? 0.65 : 1)
         .padding(.horizontal, ItmoKit.margin)
         .padding(.top, ItmoSpacing.content)
         .padding(.bottom, ItmoSpacing.compact)
