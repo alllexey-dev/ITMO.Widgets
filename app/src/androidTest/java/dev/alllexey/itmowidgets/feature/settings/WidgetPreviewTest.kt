@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.feature.settings
 
-import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
-import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
@@ -29,7 +27,6 @@ import dev.alllexey.itmowidgets.app.DefaultWidgetPreviewFactory
 import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -41,7 +38,6 @@ import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrColorResolver
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
-import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
@@ -50,10 +46,8 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.RecordbookPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SchedulePageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.ServicesPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
@@ -343,18 +337,8 @@ class WidgetPreviewTest {
                     SettingsViewModel(
                         SettingsPages(
                             RootPageProvider(repository),
-                            ServicesPageProvider(
-                                repository,
-                                object : CustomServicesRepository {
-                                    override fun observeEnabled() = MutableStateFlow(false)
-                                    override suspend fun isEnabled() = false
-                                    override suspend fun setEnabled(enabled: Boolean) = Unit
-                                },
-                                refresher
-                            ),
                             WidgetsPageProvider(repository, WidgetPreviewQuickSettingsTile),
-                            SchedulePageProvider(repository, WidgetPreviewScheduleChangeTracking, MemoryCalendarSync()),
-                            RecordbookPageProvider(WidgetPreviewMarkTracking),
+                            SchedulePageProvider(repository, MemoryCalendarSync()),
                             SportPageProvider(repository),
                             MaintenancePageProvider(
                                 refresher,
@@ -369,7 +353,6 @@ class WidgetPreviewTest {
                         ),
                         repository,
                         refresher,
-                        WidgetPreviewBackgroundWork,
                         SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                     )
                 } as T
@@ -490,31 +473,6 @@ class WidgetPreviewTest {
         /** Farther than any settings page scrolls. */
         const val FAR = 100_000f
     }
-}
-
-/** The switch flips in memory; nothing is scheduled. */
-private object WidgetPreviewScheduleChangeTracking : ScheduleChangeTracking {
-    private val enabled = MutableStateFlow(true)
-    override fun observeEnabled() = enabled
-    override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
-    override suspend fun syncWork() = Unit
-    override fun stopWork() = Unit
-    override fun checkNow() = Unit
-}
-
-/** Mark switches are not stored here; nothing is scheduled. */
-private object WidgetPreviewMarkTracking : MarkTracking {
-    override suspend fun setMyItmoEnabled(enabled: Boolean) = Unit
-    override suspend fun setBarsEnabled(enabled: Boolean) = Unit
-    override suspend fun setSheetsEnabled(enabled: Boolean) = Unit
-    override suspend fun syncWork() = Unit
-    override fun stopWork() = Unit
-    override fun checkNow() = Unit
-}
-
-/** Unrestricted, so the background work row stays out of these pages. */
-private object WidgetPreviewBackgroundWork : BackgroundWorkAccess {
-    override fun isUnrestricted() = true
 }
 
 /** Without the add request, so the tile row stays out of these pages. */
