@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -169,11 +168,11 @@ private fun CardAction(card: WidgetCard, actions: WidgetsGalleryActions) {
         )
         WidgetCardAction.ADD -> FilledTonalButton(
             onClick = { actions.onAdd(card.format) },
-            contentPadding = PaddingValues(horizontal = 14.dp),
+            contentPadding = PaddingValues(horizontal = ItmoTheme.spacing.content),
             modifier = Modifier.testTag(WidgetsGalleryTags.add(card.format)),
         ) {
             Icon(painterResource(Res.drawable.ic_add), contentDescription = null, Modifier.size(18.dp))
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(ItmoTheme.spacing.related))
             Text(UiText.Res(SettingsStrings.settings_widget_add).asString())
         }
         WidgetCardAction.NONE -> Unit
@@ -187,9 +186,9 @@ private fun Wallpaper(content: @Composable () -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(ItmoTheme.shapes.cardContent)
             .background(Brush.linearGradient(listOf(scheme.tertiaryContainer, scheme.primaryContainer, scheme.secondaryContainer)))
-            .padding(12.dp),
+            .padding(ItmoTheme.spacing.content),
         contentAlignment = Alignment.Center,
     ) { content() }
 }

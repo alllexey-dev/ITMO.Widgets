@@ -1,11 +1,12 @@
 package dev.alllexey.itmowidgets.app
 
-import dev.alllexey.itmowidgets.core.notification.FcmWork
-import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import android.content.Context
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
+import dev.alllexey.itmowidgets.core.notification.FcmWork
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
@@ -16,9 +17,9 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSna
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetWork
-import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetSnapshotStore
+import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshotStore
+import dev.alllexey.itmowidgets.feature.sport.ui.widget.SportWidgetProviders
 import dev.alllexey.itmowidgets.feature.sport.work.SportWidgetWork
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 
 class AndroidSessionLifecycleEffects(
     private val context: Context,
@@ -59,7 +60,7 @@ class AndroidSessionLifecycleEffects(
 
     override suspend fun onSignedOut() {
         renderSignedOutScheduleWidgets()
-        SportWidgetWork.render(context, sportWidgetStore.read(), palettes.current())
+        SportWidgetProviders.render(context, sportWidgetStore.read(), palettes.current())
         renderSignedOutQrWidgets()
     }
 

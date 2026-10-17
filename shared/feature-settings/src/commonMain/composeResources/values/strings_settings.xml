@@ -186,5 +186,4 @@
     <string name="settings_widgets_lock_title">Экран блокировки</string>
     <string name="settings_widgets_lock_text">Нажмите и удерживайте экран блокировки, затем «Настроить» → «Экран блокировки»: строка у даты, ближайшая пара и обратный отсчёт.</string>
     <string name="settings_widgets_control_text">В пункте управления и на экране блокировки — кнопка «Пропуск».</string>
-    <string name="settings_widget_pin_failed">Не удалось добавить виджет</string>
 </resources>

@@ -32,7 +32,7 @@ class SportSettingsPreview(private val context: Context) : WidgetPreview {
         const val HEIGHT_DP = 150f
 
         fun labels(context: Context) = SportWidgetSampleLabels(
-            swimming = context.getString(R.string.widget_preview_subject_swimming),
+            swimming = context.getString(R.string.widget_preview_sport_swimming),
             volleyball = context.getString(R.string.widget_preview_sport_volleyball),
         )
 

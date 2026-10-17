@@ -45,7 +45,8 @@ class ScheduleWidgetSnapshotStoreGoldenTest {
         store().write(sample)
 
         assertTrue(file.readText(), file.readText().startsWith(MARKER))
-        assertEquals(sample, store().read())
+        // The queues are off: the official twin shows.
+        assertEquals(sample.withoutPendingSport(), store().read())
     }
 
     @Test

@@ -56,7 +56,8 @@ class PreferenceKeyParityTest {
                 full = FullScheduleWidgetSettings(
                     hideTeacher = false,
                     hidePastLessons = false,
-                    showTomorrowWhenTodayIsOver = false,
+                    // The UX overhaul's day widget shows tomorrow after the last lesson unless switched off.
+                    showTomorrowWhenTodayIsOver = true,
                     textSize = WidgetTextSize.NORMAL
                 )
             ),

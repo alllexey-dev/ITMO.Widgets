@@ -7,7 +7,7 @@ import android.content.Intent
 import android.os.Bundle
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.di.KoinStarter
-import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetSnapshotStore
+import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.sport.work.SportWidgetWork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +47,7 @@ class SportWidgetProvider : AppWidgetProvider(), KoinComponent {
         val pending = goAsync()
         scope.launch {
             try {
-                SportWidgetWork.render(context, store.read(), palettes.current(), ids)
+                SportWidgetProviders.render(context, store.read(), palettes.current(), ids)
                 if (update) {
                     SportWidgetWork.ensurePeriodic(context)
                     SportWidgetWork.enqueueUpdate(context)

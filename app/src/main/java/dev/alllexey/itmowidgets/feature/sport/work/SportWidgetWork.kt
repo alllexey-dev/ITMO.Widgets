@@ -2,11 +2,10 @@ package dev.alllexey.itmowidgets.feature.sport.work
 
 import android.app.AlarmManager
 import android.app.PendingIntent
-import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.SystemClock
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
@@ -18,14 +17,9 @@ import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetDataProvider
-import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetKind
-import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshot
-import dev.alllexey.itmowidgets.feature.sport.ui.widget.SportWidgetProvider
-import dev.alllexey.itmowidgets.feature.sport.ui.widget.SportWidgetRenderer
-import dev.alllexey.itmowidgets.core.ui.widget.widgetWidth
-import dev.alllexey.itmowidgets.core.settings.WidgetPalette
-import android.os.SystemClock
+import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshotStore
+import dev.alllexey.itmowidgets.feature.sport.ui.widget.SportWidgetProviders
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CancellationException
@@ -43,8 +37,7 @@ object SportWidgetWork {
     private const val NEVER = Long.MIN_VALUE
     private val lastEnqueuedAt = AtomicLong(NEVER)
 
-    fun ids(context: Context): IntArray =
-        AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, SportWidgetProvider::class.java))
+    fun ids(context: Context): IntArray = SportWidgetProviders.ids(context)
 
     fun ensurePeriodic(context: Context) {
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -75,11 +68,6 @@ object SportWidgetWork {
         context.getSystemService(AlarmManager::class.java).cancel(refreshIntent(context))
         WorkManager.getInstance(context).cancelUniqueWork(UPDATE_WORK)
         WorkManager.getInstance(context).cancelUniqueWork(PERIODIC_WORK)
-    }
-
-    fun render(context: Context, snapshot: SportWidgetSnapshot, palette: WidgetPalette?, ids: IntArray = ids(context)) {
-        val manager = AppWidgetManager.getInstance(context)
-        ids.forEach { id -> manager.updateAppWidget(id, SportWidgetRenderer.views(context, snapshot, palette, id, manager.widgetWidth(id))) }
     }
 
     internal fun scheduleAt(context: Context, epochMillis: Long) {
@@ -122,7 +110,7 @@ class SportWidgetUpdateWorker(appContext: Context, params: WorkerParameters) : C
         val previous = store.read()
         val snapshot = load?.snapshot?.takeUnless { it.kind == SportWidgetKind.ERROR && previous.kind == SportWidgetKind.CONTENT } ?: previous
         if (!store.writeIfCurrent(snapshot, generation)) return Result.success()
-        SportWidgetWork.render(applicationContext, store.read(), koin.get<WidgetPaletteSource>().current(), ids)
+        SportWidgetProviders.render(applicationContext, store.read(), koin.get<WidgetPaletteSource>().current(), ids)
         load?.nextChange?.let { SportWidgetWork.scheduleAt(applicationContext, it.toEpochMilliseconds()) }
         return Result.success()
     }

@@ -237,7 +237,7 @@ private fun WidgetsGalleryEntry(
         galleryActions = WidgetsGalleryActions(
             onAdd = { format ->
                 if (!pins.isSupported || !pins.request(WidgetProviders.of(format))) {
-                    snackbar(view, R.string.settings_widget_pin_failed, Snackbar.LENGTH_SHORT)
+                    snackbar(view, R.string.widget_pin_failed, Snackbar.LENGTH_SHORT)
                 }
             },
         ),

@@ -39,11 +39,12 @@ class ScheduleWidgetUpdateWorker(
  * the cache.
  */
 internal class ScheduleWidgetUpdate(koin: Koin, private val context: Context) {
-    private val dataProvider: ScheduleWidgetDataProvider = koin.get()
-    private val store: ScheduleWidgetSnapshotStore = koin.get()
-    private val diagnostics: AppDiagnostics = koin.get()
-    private val palettes: WidgetPaletteSource = koin.get()
-    private val time: AcademicTimeProvider = koin.get()
+    // Resolved on first use: without placed widgets the update stops before it reads the graph.
+    private val dataProvider: ScheduleWidgetDataProvider by lazy { koin.get() }
+    private val store: ScheduleWidgetSnapshotStore by lazy { koin.get() }
+    private val diagnostics: AppDiagnostics by lazy { koin.get() }
+    private val palettes: WidgetPaletteSource by lazy { koin.get() }
+    private val time: AcademicTimeProvider by lazy { koin.get() }
 
     suspend fun run(refresh: Boolean) {
         val singleIds = ScheduleWidgetProviders.singleLessonIds(context)
