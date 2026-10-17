@@ -185,7 +185,17 @@ sheet otherwise. On iOS there is no shell route to the sport tab's sheet yet, so
   and the building's full address (`BuildingDirectory`, else MyITMO's text).
 - Actions, only the relevant ones: `Видео` (the meeting link, opened, never shown), `Друзья 2` (scrolls to the friends
   on the lesson), `Ссылки 3` and `Предмет` from the first `LessonSubjectSource` that knows the subject (an open set in
-  `core/lesson`; no feature contributes one yet, so they stay hidden). `Маршрут` waits for the map (phase 8).
+  `core/lesson`). `Маршрут` waits for the map (phase 8).
+- The recordbook's source (`RecordbookLessonSubjects`) takes the record book subject of the lesson's half-year that the
+  subject page would bind to the lesson's schedule subject (`SubjectContextResolver`: a confirmed binding or the same
+  id, else the one subject of that name not bound elsewhere). `Предмет` opens its [page](subject-page.md), `Ссылки 3`
+  the page on `Материалы` (`AppRoutes.RecordbookSubject(materials = true)`), shown only with links. Both stay hidden
+  when no record book subject matches. The count is what `Материалы` lists: the current links, 0 without the
+  connection (the tab shows its gate then).
+- The sheet opens often, so this source reads caches and may be stale: the record book list is the repository's
+  memory cache (filled by Зачётка, the subject page or the first sheet that needs it, with the same My ITMO requests),
+  and the links are the ones stored on the device as of the subject page's last refresh. The sheet never refreshes
+  either and never calls Backend; the demo session gets the demo record book and links.
 - The newest found [change](schedule-changes.md) of the occurrence: `было` struck through `→ стало` per field, or the
   summary of an added or cancelled lesson, with `Изменено вчера в 20:14`.
 - The note and the meeting's password; the teacher with the tone of the reviews in words (`в основном хвалят`, from
