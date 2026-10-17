@@ -93,4 +93,49 @@
     <string name="notification_device_connected_agent">Свой клиент «%1$s» — если это не вы, отключите его</string>
     <string name="notification_device_connected_web">Вход на сайт ITMO.Widgets — если это не вы, отключите его</string>
     <string name="notification_device_connected_other">Новое устройство — если это не вы, отключите его</string>
+    <!-- Widgets of the UX overhaul (W1 next lesson, W2 day, W3 sport), shared by Android and iOS -->
+    <string name="widget_next_now">Сейчас, до %1$s</string>
+    <string name="widget_next_first">Первая пара в %1$s</string>
+    <string name="widget_next_next">Далее в %1$s</string>
+    <string name="widget_next_tomorrow">Завтра в %1$s</string>
+    <string name="widget_next_left">ещё %1$s</string>
+    <string name="widget_next_in">через %1$s</string>
+    <string name="widget_next_window">окно ещё %1$s</string>
+    <string name="widget_next_over">на сегодня всё</string>
+    <string name="widget_next_none_today">сегодня пар нет</string>
+    <string name="widget_next_rest_next">Далее</string>
+    <string name="widget_next_rest_then">Потом</string>
+    <string name="widget_next_rest_tomorrow">Ещё завтра</string>
+    <string name="widget_next_last_until">Последняя до %1$s</string>
+    <string name="widget_day_tomorrow">Завтра, %1$s</string>
+    <string name="widget_day_remaining">ещё %1$s до %2$s</string>
+    <string name="widget_day_planned">%1$s, %2$s–%3$s</string>
+    <string name="widget_day_with_sport">%1$s и спорт</string>
+    <string name="widget_day_sport_only">спорт</string>
+    <plurals name="widget_day_lessons">
+        <item quantity="one">%1$d пара</item>
+        <item quantity="few">%1$d пары</item>
+        <item quantity="many">%1$d пар</item>
+        <item quantity="other">%1$d пары</item>
+    </plurals>
+    <string name="widget_day_window">окно %1$s</string>
+    <string name="widget_day_empty">Пар нет</string>
+    <plurals name="widget_sport_remaining">
+        <item quantity="one">Ещё %1$d балл до зачёта</item>
+        <item quantity="few">Ещё %1$d балла до зачёта</item>
+        <item quantity="many">Ещё %1$d баллов до зачёта</item>
+        <item quantity="other">Ещё %1$d балла до зачёта</item>
+    </plurals>
+    <string name="widget_sport_done">Зачёт набран</string>
+    <string name="widget_sport_visits">посещения %1$d</string>
+    <string name="widget_sport_bonus">бонусы %1$d</string>
+    <string name="widget_sport_of">из %1$d</string>
+    <string name="widget_sport_empty">Записей нет</string>
+    <string name="widget_sport_today">Сегодня %1$s</string>
+    <string name="widget_sport_tomorrow">Завтра %1$s</string>
+    <string name="widget_sport_later">%1$s %2$s</string>
+    <string name="widget_sport_loading">Загружаем баллы</string>
+    <string name="widget_sport_error">Не удалось загрузить баллы</string>
+    <string name="widget_sport_name">Спорт</string>
+    <string name="widget_sport_description">Баллы и запись</string>
 </resources>
