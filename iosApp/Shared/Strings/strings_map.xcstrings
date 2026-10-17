@@ -1,0 +1,582 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "map_close" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть"
+          }
+        }
+      }
+    },
+    "map_floor" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld этаж"
+          }
+        }
+      }
+    },
+    "map_floor_short" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld"
+          }
+        }
+      }
+    },
+    "map_floors" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этажи"
+          }
+        }
+      }
+    },
+    "map_no_plan_title" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У корпуса нет плана"
+          }
+        }
+      }
+    },
+    "map_open_in_maps" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть в Картах"
+          }
+        }
+      }
+    },
+    "map_place_atm" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Банкоматы"
+          }
+        }
+      }
+    },
+    "map_place_cloakroom" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гардероб"
+          }
+        }
+      }
+    },
+    "map_place_coworking" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коворкинги"
+          }
+        }
+      }
+    },
+    "map_place_entrances" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Входы"
+          }
+        }
+      }
+    },
+    "map_place_food" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Еда"
+          }
+        }
+      }
+    },
+    "map_place_health" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Медпункт"
+          }
+        }
+      }
+    },
+    "map_place_library" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Библиотека"
+          }
+        }
+      }
+    },
+    "map_place_restrooms" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Туалеты"
+          }
+        }
+      }
+    },
+    "map_place_students" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Студофис"
+          }
+        }
+      }
+    },
+    "map_place_water" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вода"
+          }
+        }
+      }
+    },
+    "map_room_approximate" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ нет на плане, показана %2$@"
+          }
+        }
+      }
+    },
+    "map_room_fallback" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Помещение"
+          }
+        }
+      }
+    },
+    "map_room_missing" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудитории %1$@ нет на плане"
+          }
+        }
+      }
+    },
+    "map_room_on_floor" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "map_route" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маршрут"
+          }
+        }
+      }
+    },
+    "map_route_from_entrance" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "От входа"
+          }
+        }
+      }
+    },
+    "map_route_from_room" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "От %1$@"
+          }
+        }
+      }
+    },
+    "map_route_next" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дальше"
+          }
+        }
+      }
+    },
+    "map_route_previous" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назад"
+          }
+        }
+      }
+    },
+    "map_route_step" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаг %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "map_search_empty" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ничего не нашлось"
+          }
+        }
+      }
+    },
+    "map_search_hint" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудитория или место"
+          }
+        }
+      }
+    },
+    "map_search_other_buildings" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В других корпусах"
+          }
+        }
+      }
+    },
+    "map_step_city" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До корпуса %1$@"
+          }
+        }
+      }
+    },
+    "map_step_city_title" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По городу"
+          }
+        }
+      }
+    },
+    "map_step_down" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По лестнице вниз на %1$lld этаж"
+          }
+        }
+      }
+    },
+    "map_step_down_title" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спуск"
+          }
+        }
+      }
+    },
+    "map_step_floor" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По %1$lld этажу"
+          }
+        }
+      }
+    },
+    "map_step_floor_near_target" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По %1$lld этажу к %2$@: вход на плане не отмечен"
+          }
+        }
+      }
+    },
+    "map_step_floor_title" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld этаж"
+          }
+        }
+      }
+    },
+    "map_step_floor_to_entrance" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По %1$lld этажу к выходу"
+          }
+        }
+      }
+    },
+    "map_step_floor_to_exit" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По %1$lld этажу до выхода во двор"
+          }
+        }
+      }
+    },
+    "map_step_floor_to_stairs" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По %1$lld этажу до лестницы"
+          }
+        }
+      }
+    },
+    "map_step_floor_to_target" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По %1$lld этажу до %2$@"
+          }
+        }
+      }
+    },
+    "map_step_no_path" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Путь по плану не найден: %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "map_step_same_room" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы уже здесь: %1$@"
+          }
+        }
+      }
+    },
+    "map_step_up" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По лестнице на %1$lld этаж"
+          }
+        }
+      }
+    },
+    "map_step_up_title" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подъём"
+          }
+        }
+      }
+    },
+    "map_step_yard" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Через двор"
+          }
+        }
+      }
+    },
+    "map_step_yard_title" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Двор"
+          }
+        }
+      }
+    },
+    "map_step_yard_to_entrance" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Через двор ко входу"
+          }
+        }
+      }
+    },
+    "map_title" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карта"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

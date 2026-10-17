@@ -493,6 +493,18 @@
         }
       }
     },
+    "schedule_sheet_route" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маршрут"
+          }
+        }
+      }
+    },
     "schedule_sheet_soon" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",

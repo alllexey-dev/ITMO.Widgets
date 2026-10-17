@@ -83,7 +83,7 @@ class AppRouteSerializationTest {
             RouteSamples.ofKind(RouteKind.SHEET).filter { it.sheetPolicy?.height == SheetPolicy.Height.TALL }.map { it::class }
         )
         assertEquals(
-            listOf(13, 13, 4, 2),
+            listOf(14, 13, 4, 2),
             listOf(RouteKind.SCREEN, RouteKind.SHEET, RouteKind.DIALOG, RouteKind.GATE)
                 .map { RouteSamples.ofKind(it).size }
         )
