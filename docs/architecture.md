@@ -40,6 +40,7 @@ included build with the convention plugins (`itmowidgets.kmp.library`,
 | `:shared:backend-client` | Typed Ktor client of the ITMO.Widgets Backend (`BackendClient`, one `*Api` per area) |
 | `:shared:testing` | Test kit: Robolectric and screenshot harness, semantics checks, fake clocks |
 | `:shared:feature-account` | Sign-in, first-run flow, profile tab, web sign-in, My ITMO web page, update offer |
+| `:shared:feature-map` | Campus map: plan data, room mapping, the indoor router and trip planner |
 | `:shared:feature-home` | Сегодня and the bell over every feature's `DayLessonsGateway`, `TodayTodoSource`s and `BellSource`s |
 | `:shared:feature-qr` | QR pass, its cache and widget state |
 | `:shared:feature-recordbook` | Record book, BARS overlay, subject page, marks tracking, sheet scores |

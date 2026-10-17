@@ -50,6 +50,8 @@ limits. Start there; the documents below are the developer reference.
   `.ics` export.
 - [Friend selector](features/friend-selector.md) - the sheet that picks whose
   schedule is shown.
+- [Campus map](features/map.md) - floor plans, room mapping and the router behind
+  «Маршрут».
 - [Sport](features/sport.md) - catalog, bookings, queues, cards and details.
 - [Recordbook](features/recordbook.md) - MyITMO record book, BARS overlay, the
   list of subjects.
