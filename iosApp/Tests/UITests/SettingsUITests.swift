@@ -22,6 +22,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(element(app, "notifications.screen").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "notifications.changes").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "notifications.marks").exists, "mark tracking is on iOS")
+        XCTAssertTrue(element(app, "notifications.changes").waitUntilDrawn(timeout: stepTimeout), "the type is drawn")
         attachScreenshot(named: "notifications")
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
@@ -29,6 +30,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(element(app, "connection.screen").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "connection.switch").waitForExistence(timeout: stepTimeout))
         XCTAssertFalse(element(app, "connection.switch").isEnabled, "the demo's opt-in cannot change")
+        XCTAssertTrue(element(app, "connection.switch").waitUntilDrawn(timeout: stepTimeout), "the status card is drawn")
         attachScreenshot(named: "connection")
     }
 

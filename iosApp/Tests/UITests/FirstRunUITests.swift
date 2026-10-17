@@ -22,12 +22,14 @@ final class FirstRunUITests: XCTestCase {
 
         let next = element(app, "onboarding.next")
         XCTAssertTrue(element(app, "onboarding.step.value").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(next.waitUntilDrawn(timeout: stepTimeout), "the footer button is drawn")
         attachScreenshot(named: "value")
         next.tap()
 
         XCTAssertTrue(element(app, "onboarding.step.permissions").waitForExistence(timeout: stepTimeout))
         let ask = element(app, "onboarding.notifications.button")
         XCTAssertTrue(ask.exists, "answered before: on a fresh install this test asks first")
+        XCTAssertTrue(ask.waitUntilDrawn(timeout: stepTimeout), "the permission's own button is drawn")
         ask.tap()
         let allow = NotificationDialog.allow
         XCTAssertTrue(allow.waitForExistence(timeout: stepTimeout), "iOS did not ask")

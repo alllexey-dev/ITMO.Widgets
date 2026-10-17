@@ -127,8 +127,9 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenPrivacy = { navigator.open(AppRoutes.Settings(PRIVACY_PAGE)) },
     onOpenConnection = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
     // The settings root holds the notification and widget rows until their own pages exist.
-    onOpenNotifications = { navigator.open(AppRoutes.Settings()) },
-    onOpenWidgets = { navigator.open(AppRoutes.Settings()) },
+    onOpenNotifications = { navigator.open(AppRoutes.Settings(NOTIFICATIONS_PAGE)) },
+    // The widgets gallery's key: until its page lands, an unknown key opens the settings root.
+    onOpenWidgets = { navigator.open(AppRoutes.Settings(WIDGETS_PAGE)) },
     onOpenWebLogin = { navigator.open(AppRoutes.WebLogin()) },
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },
@@ -335,8 +336,14 @@ private inline fun <reified VM : ViewModel> entryViewModel(): VM {
     return viewModel { KoinStarter.ensureStarted(context).get<VM> { parametersOf(createSavedStateHandle()) } }
 }
 
-/** The privacy page of the settings (`SettingsPage.PRIVACY`), as the Me tab opens it. */
+/** `SettingsPage.PRIVACY`: «Подключение и данные», where `Кто видит` lives. */
 private const val PRIVACY_PAGE = "PRIVACY"
 
-/** `SettingsPage.SERVICES`: the connection to ITMO.Widgets, until `Подключение и данные` has its own page. */
+/** `SettingsPage.SERVICES`: «Подключение и данные». */
 private const val SERVICES_PAGE = "SERVICES"
+
+/** `SettingsPage.NOTIFICATIONS`: «Уведомления». */
+private const val NOTIFICATIONS_PAGE = "NOTIFICATIONS"
+
+/** The widgets gallery's settings key. */
+private const val WIDGETS_PAGE = "WIDGETS"

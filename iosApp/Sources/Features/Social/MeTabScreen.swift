@@ -129,13 +129,12 @@ struct MeContent: View {
                 action: { actions.open(connection) }
             )
             .accessibilityIdentifier("connection_row")
-            // The notifications and widgets pages come with phase 7; until then both open the settings root.
             ItmoRow(
                 title: AppStrings.string("me_notifications_title"),
                 symbol: .notification,
                 tone: .warn,
                 chevron: true,
-                action: { actions.open(AppRoutes.Settings(page: "ROOT")) }
+                action: { actions.open(AppRoutes.Settings(page: "NOTIFICATIONS")) }
             )
             .accessibilityIdentifier("notifications_row")
             ItmoRow(
@@ -143,7 +142,8 @@ struct MeContent: View {
                 symbol: .widgets,
                 tone: .primary,
                 chevron: true,
-                action: { actions.open(AppRoutes.Settings(page: "ROOT")) }
+                // The widgets gallery's key: until its page lands, an unknown key opens the settings root.
+                action: { actions.open(AppRoutes.Settings(page: "WIDGETS")) }
             )
             .accessibilityIdentifier("widgets_row")
             ItmoRow(
