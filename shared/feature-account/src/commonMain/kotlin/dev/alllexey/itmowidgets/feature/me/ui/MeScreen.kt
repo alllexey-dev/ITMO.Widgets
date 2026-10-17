@@ -1,122 +1,81 @@
 package dev.alllexey.itmowidgets.feature.me.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
-import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.LineBreak
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.core.model.primaryGroup
-import dev.alllexey.itmowidgets.core.text.personInitials
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
+import dev.alllexey.itmowidgets.designsystem.kit.GateCard
+import dev.alllexey.itmowidgets.designsystem.kit.HeaderAction
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoRootScreen
+import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
+import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
+import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
-import dev.alllexey.itmowidgets.shared.compose.strings.debug_tools_title
-import dev.alllexey.itmowidgets.shared.compose.strings.me_group_app
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_title
-import dev.alllexey.itmowidgets.shared.compose.strings.share_action
-import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_github
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_telegram
-import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
+import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
+import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
 import dev.alllexey.itmowidgets.shared.designsystem.ic_computer
-import dev.alllexey.itmowidgets.shared.designsystem.ic_globe
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_language
 import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import dev.alllexey.itmowidgets.shared.designsystem.ic_logout
-import dev.alllexey.itmowidgets.shared.designsystem.ic_search
+import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
+import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
 import dev.alllexey.itmowidgets.shared.designsystem.ic_share
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.me_find_people_description
-import dev.alllexey.itmowidgets.shared.feature.account.me_find_people_title
-import dev.alllexey.itmowidgets.shared.feature.account.me_friends_count
-import dev.alllexey.itmowidgets.shared.feature.account.me_friends_error
-import dev.alllexey.itmowidgets.shared.feature.account.me_friends_loading
-import dev.alllexey.itmowidgets.shared.feature.account.me_friends_none
-import dev.alllexey.itmowidgets.shared.feature.account.me_friends_title
-import dev.alllexey.itmowidgets.shared.feature.account.me_github
-import dev.alllexey.itmowidgets.shared.feature.account.me_github_accessibility
-import dev.alllexey.itmowidgets.shared.feature.account.me_group_format
-import dev.alllexey.itmowidgets.shared.feature.account.me_group_social
-import dev.alllexey.itmowidgets.shared.feature.account.me_isu
-import dev.alllexey.itmowidgets.shared.feature.account.me_my_itmo
-import dev.alllexey.itmowidgets.shared.feature.account.me_privacy_description
-import dev.alllexey.itmowidgets.shared.feature.account.me_privacy_title
-import dev.alllexey.itmowidgets.shared.feature.account.me_requests_badge
-import dev.alllexey.itmowidgets.shared.feature.account.me_requests_badge_accessibility
-import dev.alllexey.itmowidgets.shared.feature.account.me_services_disabled_description
-import dev.alllexey.itmowidgets.shared.feature.account.me_services_disabled_title
-import dev.alllexey.itmowidgets.shared.feature.account.me_sign_out
-import dev.alllexey.itmowidgets.shared.feature.account.me_sign_out_confirm_message
-import dev.alllexey.itmowidgets.shared.feature.account.me_sign_out_confirm_title
-import dev.alllexey.itmowidgets.shared.feature.account.me_telegram
-import dev.alllexey.itmowidgets.shared.feature.account.me_telegram_accessibility
-import dev.alllexey.itmowidgets.shared.feature.account.me_unknown_user
-import dev.alllexey.itmowidgets.shared.feature.account.me_web_login_title
-import org.jetbrains.compose.resources.StringResource
+import dev.alllexey.itmowidgets.shared.designsystem.ic_widgets
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 
-/** The project pages under the Me tab's groups; the host knows their addresses. */
+/** The project pages under the app rows; the host knows their addresses. */
 enum class MeProjectLink { GITHUB, TELEGRAM }
 
 /**
- * What the Me tab asks its host to do. Navigation, sharing and links are platform work; [onOpenProjectLink] answers
- * whether any app opened the page, and the route says so when none did.
+ * What the Профиль tab asks its host to do. Navigation, sharing and links are platform work; [onOpenProjectLink]
+ * answers whether any app opened the page, and the route says so when none did. The connection, notification and
+ * widget rows name no route themselves: the host maps them (the settings pages own them).
  */
 data class MeActions(
     val onOpenFriends: () -> Unit = {},
-    val onFindPeople: () -> Unit = {},
     val onOpenPrivacy: () -> Unit = {},
-    /** The services-off row: the settings, where the connection is switched on. */
-    val onOpenServices: () -> Unit = {},
+    /** `Подключение и данные`, also the gate's `Подключить` and the web sign-in row without the connection. */
+    val onOpenConnection: () -> Unit = {},
+    val onOpenNotifications: () -> Unit = {},
+    val onOpenWidgets: () -> Unit = {},
     val onOpenWebLogin: () -> Unit = {},
     /** The official site in the app's web view. */
     val onOpenMyItmo: () -> Unit = {},
@@ -136,23 +95,25 @@ object MeTestTags {
     const val PROFILE_META = "profile_meta"
     const val SHARE = "profile_share_button"
     const val FRIENDS_ROW = "friends_row"
-    const val REQUESTS_BADGE = "requests_badge"
-    const val FIND_PEOPLE_ROW = "find_people_row"
-    const val MY_ITMO_ROW = "my_itmo_row"
     const val PRIVACY_ROW = "privacy_row"
-    const val SERVICES_DISABLED_ROW = "services_disabled_row"
+    const val GATE = "people_gate"
+    const val CONNECTION_ROW = "connection_row"
+    const val NOTIFICATIONS_ROW = "notifications_row"
+    const val WIDGETS_ROW = "widgets_row"
     const val WEB_LOGIN_ROW = "web_login_row"
+    const val MY_ITMO_ROW = "my_itmo_row"
     const val SETTINGS_ROW = "settings_row"
     const val DEBUG_TOOLS_ROW = "debug_tools_row"
-    const val GITHUB = "github_button"
-    const val TELEGRAM = "telegram_button"
+    const val TELEGRAM = "telegram_row"
+    const val GITHUB = "github_row"
     const val SIGN_OUT = "sign_out_row"
 }
 
 /**
- * The Me tab: the own identity with a share button, the friends group (or the services-off row), the application
- * group, the project links and the sign-out button behind a confirmation. [showDebugTools] adds the developer tools
- * row; the Android host passes its debug flag. Stateless; [MeRoute] feeds it.
+ * The Профиль tab (DECISIONS.md, Профиль): the one-line root header with `Поделиться`, the identity card, then
+ * groups of rows. Friends and requests are a counter here (their home is Друзья), the connection a status, the
+ * notifications and widgets links; without the connection a gate stands in place of the people rows. The sign-out
+ * asks first. [showDebugTools] adds the developer tools row (Android debug builds). Stateless; [MeRoute] feeds it.
  */
 @Composable
 fun MeScreen(
@@ -163,37 +124,62 @@ fun MeScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     var confirmingSignOut by rememberSaveable { mutableStateOf(false) }
-    Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .testTag(MeTestTags.ROOT)
-                .verticalScroll(rememberScrollState())
-                .padding(start = ItmoTheme.spacing.screenMargin, end = ItmoTheme.spacing.screenMargin)
-                .padding(bottom = ItmoTheme.spacing.group),
-        ) {
-            ProfileHeader(state, actions)
-            SocialGroup(state.friends, actions)
-            AppGroup(
-                state.webLoginAvailable,
-                showDebugTools,
-                actions,
-                Modifier.padding(top = ItmoTheme.spacing.group),
-            )
-            ProjectLinks(actions)
-            SignOutButton(
-                enabled = !state.signOutInProgress,
-                onClick = { confirmingSignOut = true },
-            )
+    val name = state.header.name.asString()
+    ItmoRootScreen(
+        title = text(CoreStrings.tab_profile),
+        modifier = modifier,
+        actions = {
+            val isu = state.header.isu
+            if (state.header.shareable && isu != null) {
+                HeaderAction(
+                    painterResource(Res.drawable.ic_share),
+                    text(CoreStrings.share_action),
+                    onClick = { actions.onShareProfile(name, isu) },
+                    modifier = Modifier.testTag(MeTestTags.SHARE),
+                )
+            }
+        },
+    ) { padding ->
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            LazyColumn(
+                Modifier.fillMaxSize().testTag(MeTestTags.ROOT),
+                contentPadding = PaddingValues(
+                    start = ItmoTheme.spacing.screenMargin,
+                    end = ItmoTheme.spacing.screenMargin,
+                    bottom = ItmoTheme.spacing.section,
+                ),
+                verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+            ) {
+                item(key = "header") { Header(state, name) }
+                item(key = "people:title") { SectionHeader(text(AccountStrings.me_group_people)) }
+                item(key = "people") { People(state, actions) }
+                item(key = "widgets:title") { SectionHeader(text(AccountStrings.me_group_widgets)) }
+                item(key = "widgets") { Service(state, actions) }
+                item(key = "app:title") { SectionHeader(text(CoreStrings.me_group_app)) }
+                item(key = "app") { App(showDebugTools, actions) }
+                item(key = "sign-out") {
+                    ListGroup(Modifier.padding(top = ItmoTheme.spacing.content)) {
+                        item {
+                            ListRow(
+                                text(AccountStrings.me_sign_out),
+                                Modifier.testTag(MeTestTags.SIGN_OUT),
+                                icon = painterResource(Res.drawable.ic_logout),
+                                danger = true,
+                                onClick = { if (!state.signOutInProgress) confirmingSignOut = true },
+                            )
+                        }
+                    }
+                }
+            }
+            SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
         }
-        SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
     }
     if (confirmingSignOut) {
         ConfirmDialog(
-            title = stringResource(Res.string.me_sign_out_confirm_title),
-            text = stringResource(Res.string.me_sign_out_confirm_message),
-            confirmLabel = stringResource(Res.string.me_sign_out),
-            dismissLabel = stringResource(CoreRes.string.common_cancel),
+            title = text(AccountStrings.me_sign_out_confirm_title),
+            text = text(AccountStrings.me_sign_out_confirm_message),
+            confirmLabel = text(AccountStrings.me_sign_out),
+            dismissLabel = text(CoreStrings.common_cancel),
             onConfirm = {
                 confirmingSignOut = false
                 actions.onSignOut()
@@ -204,302 +190,200 @@ fun MeScreen(
     }
 }
 
-/** Avatar and name from the ID token, else from Backend; the group from Backend; the ISU from either. */
+/** Avatar, the full name, the study group and the ISU. */
 @Composable
-private fun ProfileHeader(state: MeUiState, actions: MeActions) {
-    val user = state.user
-    val backendUser = state.backendUser
-    val backendName = backendUser?.name?.takeIf { it.isNotBlank() }
-    val knownName = user?.name ?: backendName
-    val name = knownName ?: stringResource(Res.string.me_unknown_user)
-    val group = backendUser?.primaryGroup()
-    val isu = user?.isu ?: backendUser?.isu
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = ItmoTheme.spacing.group),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Avatar(
-            knownName,
-            user?.pictureUrl ?: backendUser?.pictureUrl,
-            size = AvatarSize,
-            initials = knownName?.let {
-                personInitials(it, user?.familyName ?: backendUser?.familyName, user?.givenName ?: backendUser?.givenName)
-            },
+private fun Header(state: MeUiState, name: String) {
+    val header = state.header
+    ItmoCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.group)) {
+            Avatar(name, header.pictureUrl, size = AvatarSize, initials = header.initials)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
+                Text(
+                    name,
+                    Modifier.testTag(MeTestTags.PROFILE_NAME),
+                    style = ItmoTheme.typography.titleLarge.copy(hyphens = Hyphens.Auto, lineBreak = LineBreak.Paragraph),
+                )
+                header.group?.let { Quiet(it.asString(), MeTestTags.PROFILE_GROUP) }
+                header.isu?.let { Quiet(text(AccountStrings.me_isu, it), MeTestTags.PROFILE_META) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Quiet(value: String, tag: String) {
+    Text(value, Modifier.testTag(tag), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+}
+
+/** Friends with the requests as a badge, and privacy; without the connection the gate in their place. */
+@Composable
+private fun People(state: MeUiState, actions: MeActions) {
+    if (state.friends == MeFriendsSummary.Disabled) {
+        GateCard(
+            title = text(AccountStrings.me_gate_title),
+            reason = text(AccountStrings.me_gate_reason),
+            fix = text(AccountStrings.me_gate_fix),
+            onFix = actions.onOpenConnection,
+            modifier = Modifier.testTag(MeTestTags.GATE),
+            icon = painterResource(Res.drawable.ic_group),
         )
-        Column(Modifier.weight(1f).padding(start = ItmoTheme.spacing.group)) {
-            Text(
-                name,
-                Modifier.testTag(MeTestTags.PROFILE_NAME),
-                color = ItmoTheme.colorScheme.onSurface,
-                style = ItmoTheme.typography.titleMedium.copy(
-                    hyphens = Hyphens.Auto,
-                    lineBreak = LineBreak.Paragraph,
-                ),
+        return
+    }
+    val requests = state.incomingRequests
+    val badge = text(AccountStrings.me_requests_badge_accessibility, requests)
+    ListGroup {
+        item {
+            ListRow(
+                text(AccountStrings.me_friends_title),
+                Modifier.testTag(MeTestTags.FRIENDS_ROW).semantics { if (requests > 0) contentDescription = badge },
+                subtitle = state.friendsSubtitle?.asString(),
+                icon = painterResource(Res.drawable.ic_group),
+                iconTone = Tone.Primary,
+                badge = requests,
+                chevron = true,
+                onClick = actions.onOpenFriends,
             )
-            if (group != null) {
-                HeaderLine(
-                    stringResource(Res.string.me_group_format, group.name, group.course, group.facultyShortName),
-                    MeTestTags.PROFILE_GROUP,
-                )
-            }
-            if (isu != null) HeaderLine(stringResource(Res.string.me_isu, isu), MeTestTags.PROFILE_META)
         }
-        if (isu != null && isu > 0) {
-            IconButton(
-                onClick = { actions.onShareProfile(name, isu) },
-                modifier = Modifier.padding(start = ItmoTheme.spacing.compact).testTag(MeTestTags.SHARE),
-            ) {
-                Icon(
-                    painterResource(KitRes.drawable.ic_share),
-                    contentDescription = stringResource(CoreRes.string.share_action),
-                    tint = ItmoTheme.colorScheme.onSurface,
-                )
-            }
+        item {
+            ListRow(
+                text(AccountStrings.me_privacy_title),
+                Modifier.testTag(MeTestTags.PRIVACY_ROW),
+                subtitle = text(AccountStrings.me_privacy_description),
+                icon = painterResource(Res.drawable.ic_lock),
+                iconTone = Tone.Tertiary,
+                chevron = true,
+                onClick = actions.onOpenPrivacy,
+            )
+        }
+    }
+}
+
+/** The connection as a status, the notification and widget pages as links, the web sign-in. */
+@Composable
+private fun Service(state: MeUiState, actions: MeActions) {
+    ListGroup {
+        item {
+            ListRow(
+                text(AccountStrings.me_connection_title),
+                Modifier.testTag(MeTestTags.CONNECTION_ROW),
+                subtitle = state.connectionStatus.asString(),
+                icon = painterResource(if (state.connected) Res.drawable.ic_check_circle else Res.drawable.ic_cloud_off),
+                iconTone = if (state.connected) Tone.Success else Tone.Neutral,
+                chevron = true,
+                onClick = actions.onOpenConnection,
+            )
+        }
+        item {
+            ListRow(
+                text(AccountStrings.me_notifications_title),
+                Modifier.testTag(MeTestTags.NOTIFICATIONS_ROW),
+                icon = painterResource(Res.drawable.ic_notification),
+                iconTone = Tone.Warning,
+                chevron = true,
+                onClick = actions.onOpenNotifications,
+            )
+        }
+        item {
+            ListRow(
+                text(AccountStrings.me_widgets_title),
+                Modifier.testTag(MeTestTags.WIDGETS_ROW),
+                icon = painterResource(Res.drawable.ic_widgets),
+                iconTone = Tone.Primary,
+                chevron = true,
+                onClick = actions.onOpenWidgets,
+            )
+        }
+        item {
+            ListRow(
+                text(AccountStrings.me_web_login_title),
+                Modifier.testTag(MeTestTags.WEB_LOGIN_ROW),
+                subtitle = state.webLoginSubtitle.asString(),
+                icon = painterResource(Res.drawable.ic_computer),
+                iconTone = Tone.Neutral,
+                chevron = true,
+                onClick = if (state.connected) actions.onOpenWebLogin else actions.onOpenConnection,
+            )
         }
     }
 }
 
 @Composable
-private fun HeaderLine(text: String, tag: String) {
-    Text(
-        text,
-        Modifier.padding(top = ItmoTheme.spacing.related).testTag(tag),
-        color = ItmoTheme.colorScheme.onSurfaceVariant,
-        style = ItmoTheme.typography.bodyMedium,
-    )
-}
-
-@Composable
-private fun SocialGroup(friends: MeFriendsSummary, actions: MeActions) {
-    val friendsTitle = stringResource(Res.string.me_friends_title)
-    val friendsDescription = when (friends) {
-        MeFriendsSummary.Loading -> stringResource(Res.string.me_friends_loading)
-        MeFriendsSummary.Error -> stringResource(Res.string.me_friends_error)
-        is MeFriendsSummary.Content -> if (friends.friends == 0) {
-            stringResource(Res.string.me_friends_none)
-        } else {
-            stringResource(Res.string.me_friends_count, friends.friends)
+private fun App(showDebugTools: Boolean, actions: MeActions) {
+    ListGroup {
+        item {
+            ExternalRow(
+                text(AccountStrings.me_my_itmo),
+                text(AccountStrings.me_my_itmo_subtitle),
+                painterResource(Res.drawable.ic_language),
+                MeTestTags.MY_ITMO_ROW,
+                actions.onOpenMyItmo,
+            )
         }
-        MeFriendsSummary.Disabled -> ""
-    }
-    val incoming = (friends as? MeFriendsSummary.Content)?.incomingRequests ?: 0
-    val findPeople = rowTexts(Res.string.me_find_people_title, Res.string.me_find_people_description)
-    val privacy = rowTexts(Res.string.me_privacy_title, Res.string.me_privacy_description)
-    val servicesOff = rowTexts(Res.string.me_services_disabled_title, Res.string.me_services_disabled_description)
-    val groupIcon = painterResource(KitRes.drawable.ic_group)
-    val searchIcon = painterResource(KitRes.drawable.ic_search)
-    val lockIcon = painterResource(KitRes.drawable.ic_lock)
-    val globeIcon = painterResource(KitRes.drawable.ic_globe)
-    SettingsGroup(title = stringResource(Res.string.me_group_social)) {
-        if (friends == MeFriendsSummary.Disabled) {
-            row(MeTestTags.SERVICES_DISABLED_ROW) {
-                MeRow(
-                    globeIcon,
-                    servicesOff.first,
-                    MeTestTags.SERVICES_DISABLED_ROW,
-                    actions.onOpenServices,
-                    servicesOff.second,
-                )
-            }
-        } else {
-            row(MeTestTags.FRIENDS_ROW) {
-                MeRow(groupIcon, friendsTitle, MeTestTags.FRIENDS_ROW, actions.onOpenFriends, friendsDescription) {
-                    if (incoming > 0) RequestsBadge(incoming)
-                }
-            }
-            row(MeTestTags.FIND_PEOPLE_ROW) {
-                MeRow(searchIcon, findPeople.first, MeTestTags.FIND_PEOPLE_ROW, actions.onFindPeople, findPeople.second)
-            }
-            row(MeTestTags.PRIVACY_ROW) {
-                MeRow(lockIcon, privacy.first, MeTestTags.PRIVACY_ROW, actions.onOpenPrivacy, privacy.second)
-            }
+        item {
+            ListRow(
+                text(CoreStrings.settings_title),
+                Modifier.testTag(MeTestTags.SETTINGS_ROW),
+                icon = painterResource(Res.drawable.ic_settings),
+                iconTone = Tone.Neutral,
+                chevron = true,
+                onClick = actions.onOpenSettings,
+            )
         }
-    }
-}
-
-@Composable
-private fun AppGroup(webLoginAvailable: Boolean, showDebugTools: Boolean, actions: MeActions, modifier: Modifier) {
-    val webLogin = stringResource(Res.string.me_web_login_title)
-    val settings = stringResource(CoreRes.string.settings_title)
-    val debugTools = stringResource(CoreRes.string.debug_tools_title)
-    val computerIcon = painterResource(KitRes.drawable.ic_computer)
-    val settingsIcon = painterResource(KitRes.drawable.ic_settings)
-    val codeIcon = painterResource(KitRes.drawable.ic_code_blocks)
-    val myItmo = stringResource(Res.string.me_my_itmo)
-    val languageIcon = painterResource(KitRes.drawable.ic_language)
-    SettingsGroup(modifier, title = stringResource(CoreRes.string.me_group_app)) {
-        if (webLoginAvailable) {
-            row(MeTestTags.WEB_LOGIN_ROW) {
-                MeRow(computerIcon, webLogin, MeTestTags.WEB_LOGIN_ROW, actions.onOpenWebLogin)
-            }
-        }
-        row(MeTestTags.MY_ITMO_ROW) { MeRow(languageIcon, myItmo, MeTestTags.MY_ITMO_ROW, actions.onOpenMyItmo) }
-        row(MeTestTags.SETTINGS_ROW) { MeRow(settingsIcon, settings, MeTestTags.SETTINGS_ROW, actions.onOpenSettings) }
         if (showDebugTools) {
-            row(MeTestTags.DEBUG_TOOLS_ROW) {
-                MeRow(codeIcon, debugTools, MeTestTags.DEBUG_TOOLS_ROW, actions.onOpenDebugTools)
+            item {
+                ListRow(
+                    text(CoreStrings.debug_tools_title),
+                    Modifier.testTag(MeTestTags.DEBUG_TOOLS_ROW),
+                    icon = painterResource(Res.drawable.ic_code_blocks),
+                    iconTone = Tone.Neutral,
+                    chevron = true,
+                    onClick = actions.onOpenDebugTools,
+                )
             }
+        }
+        item {
+            ExternalRow(
+                text(AccountStrings.me_telegram),
+                text(AccountStrings.me_telegram_subtitle),
+                painterResource(Res.drawable.ic_brand_telegram),
+                MeTestTags.TELEGRAM,
+            ) { actions.onOpenProjectLink(MeProjectLink.TELEGRAM) }
+        }
+        item {
+            ExternalRow(
+                text(AccountStrings.me_github),
+                text(AccountStrings.me_github_subtitle),
+                painterResource(Res.drawable.ic_brand_github),
+                MeTestTags.GITHUB,
+            ) { actions.onOpenProjectLink(MeProjectLink.GITHUB) }
         }
     }
 }
 
+/** A row that leaves the app: an arrow out instead of the chevron. */
 @Composable
-private fun rowTexts(title: StringResource, description: StringResource): Pair<String, String> =
-    stringResource(title) to stringResource(description)
-
-/**
- * A row of the Me groups (`Widget.ItmoWidgets.CompactSettingsRow` with a leading icon): the decorative [icon], the
- * [title] in `bodyLarge` with an optional [description], an optional [badge] and a chevron. The whole row is one
- * target and one screen-reader stop.
- */
-@Composable
-private fun MeRow(
-    icon: Painter,
+private fun ExternalRow(
     title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.painter.Painter,
     tag: String,
     onClick: () -> Unit,
-    description: String? = null,
-    badge: @Composable () -> Unit = {},
 ) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = ItmoTheme.spacing.touchTarget)
-            .testTag(tag)
-            .clickable(onClick = onClick)
-            .padding(horizontal = ItmoTheme.spacing.group, vertical = ItmoTheme.spacing.compact),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            modifier = Modifier.padding(end = ItmoTheme.spacing.group).size(IconSize),
-            tint = ItmoTheme.colorScheme.onSurfaceVariant,
-        )
-        // A described row keeps the compact text margin; a single-line row the settings one.
-        val textEnd = if (description == null) ItmoTheme.spacing.group else ItmoTheme.spacing.content
-        Column(Modifier.weight(1f).padding(end = textEnd)) {
-            Text(title, color = ItmoTheme.colorScheme.onSurface, style = ItmoTheme.typography.bodyLarge)
-            if (description != null) {
-                Text(
-                    description,
-                    Modifier.padding(top = ItmoTheme.spacing.related),
-                    color = ItmoTheme.colorScheme.onSurfaceVariant,
-                    style = ItmoTheme.typography.bodyMedium,
-                )
-            }
-        }
-        badge()
-        Icon(
-            painterResource(KitRes.drawable.ic_chevron_right),
-            contentDescription = null,
-            modifier = Modifier.size(IconSize),
-            tint = ItmoTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-/** The incoming requests on the friends row (`bg_friend_selection_badge`), read as its accessibility text. */
-@Composable
-private fun RequestsBadge(count: Int) {
-    val description = stringResource(Res.string.me_requests_badge_accessibility, count)
-    val fill = ItmoTheme.colorScheme.primary
-    val ring = ItmoTheme.colorScheme.surface
-    Text(
-        stringResource(Res.string.me_requests_badge, count),
-        Modifier
-            .padding(end = ItmoTheme.spacing.compact)
-            // Read as the description alone, never as the bare number.
-            .clearAndSetSemantics {
-                testTag = MeTestTags.REQUESTS_BADGE
-                contentDescription = description
-            }
-            .widthIn(min = BadgeMinWidth)
-            .drawBehind {
-                val stroke = BadgeStroke.toPx()
-                drawOval(ring)
-                drawOval(fill, Offset(stroke, stroke), Size(size.width - 2 * stroke, size.height - 2 * stroke))
-            }
-            .padding(horizontal = ItmoTheme.spacing.compact, vertical = BadgeVerticalPadding),
-        color = ItmoTheme.colorScheme.onPrimary,
-        style = ItmoTheme.typography.labelMedium,
-        textAlign = TextAlign.Center,
+    ListRow(
+        title,
+        Modifier.testTag(tag),
+        subtitle = subtitle,
+        icon = icon,
+        iconTone = Tone.Neutral,
+        accessory = {
+            Icon(painterResource(Res.drawable.ic_open_in_new), null, tint = ItmoTheme.colorScheme.onSurfaceVariant)
+        },
+        onClick = onClick,
     )
 }
 
-/** Two tonal buttons, centred under the groups. */
 @Composable
-private fun ProjectLinks(actions: MeActions) {
-    Row(
-        Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.group),
-        horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact, Alignment.CenterHorizontally),
-    ) {
-        ProjectLinkButton(
-            label = stringResource(Res.string.me_github),
-            description = stringResource(Res.string.me_github_accessibility),
-            icon = painterResource(KitRes.drawable.ic_brand_github),
-            tag = MeTestTags.GITHUB,
-            onClick = { actions.onOpenProjectLink(MeProjectLink.GITHUB) },
-        )
-        ProjectLinkButton(
-            label = stringResource(Res.string.me_telegram),
-            description = stringResource(Res.string.me_telegram_accessibility),
-            icon = painterResource(KitRes.drawable.ic_brand_telegram),
-            tag = MeTestTags.TELEGRAM,
-            onClick = { actions.onOpenProjectLink(MeProjectLink.TELEGRAM) },
-        )
-    }
-}
+private fun text(key: String, vararg arguments: Any): String = UiText.Res(key, arguments.toList()).asString()
 
-/** `Widget.ItmoWidgets.ProjectLink`: a 40 dp tonal pill in a 48 dp target, an 18 dp icon, the label in `labelLarge`. */
-@Composable
-private fun ProjectLinkButton(label: String, description: String, icon: Painter, tag: String, onClick: () -> Unit) {
-    TonalButton(
-        onClick = onClick,
-        modifier = Modifier.testTag(tag).semantics { contentDescription = description },
-        contentPadding = PaddingValues(start = ItmoTheme.spacing.group, end = ItmoTheme.spacing.summaryPadding),
-    ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-        Text(label, Modifier.clearAndSetSemantics {}, style = ItmoTheme.typography.labelLarge)
-    }
-}
-
-/** Sign-out: a text button in `onSurfaceVariant` at the start, inert while a sign-out runs. */
-@Composable
-private fun SignOutButton(enabled: Boolean, onClick: () -> Unit) {
-    val color = ItmoTheme.colorScheme.onSurfaceVariant
-    TextButton(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = Modifier
-            .padding(top = ItmoTheme.spacing.content)
-            .heightIn(min = ItmoTheme.spacing.touchTarget)
-            .testTag(MeTestTags.SIGN_OUT),
-        contentPadding = ButtonDefaults.TextButtonWithIconContentPadding,
-        colors = ButtonDefaults.textButtonColors(contentColor = color),
-    ) {
-        Icon(
-            painterResource(KitRes.drawable.ic_logout),
-            contentDescription = null,
-            modifier = Modifier.size(ButtonDefaults.IconSize),
-        )
-        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-        Text(stringResource(Res.string.me_sign_out))
-    }
-}
-
-/** `fragment_me.xml`'s 72 dp avatar. */
-private val AvatarSize = 72.dp
-
-/** The 24 dp icons and chevrons of the XML rows. */
-private val IconSize = 24.dp
-
-/** `bg_friend_selection_badge`'s 2 dp ring in the surface colour. */
-private val BadgeStroke = 2.dp
-
-/** The badge's `android:minWidth`. */
-private val BadgeMinWidth = 24.dp
-
-/** The badge's `android:paddingVertical`. */
-private val BadgeVerticalPadding = 2.dp
+/** The identity card's avatar. */
+private val AvatarSize = 64.dp

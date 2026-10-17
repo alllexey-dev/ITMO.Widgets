@@ -1,30 +1,16 @@
 <resources>
-    <string name="friend_picker_my_schedule_accessibility">Моё расписание</string>
-    <string name="friend_picker_loading">Загружаем список друзей</string>
-    <string name="friend_picker_recent">Недавние</string>
-    <string name="friend_picker_search_hint">Имя, ИСУ или группа</string>
-    <string name="friend_picker_my_schedule_short">Моё</string>
-    <string name="friend_picker_apply_my">Показать моё расписание</string>
-    <string name="friend_picker_apply_friend">Показать расписание: %1$s</string>
-    <string name="friend_picker_schedule_hidden">Расписание скрыто</string>
-    <string name="friend_picker_empty_title">Ничего не нашлось</string>
-    <string name="friend_picker_disabled">Нет подключения к ITMO.Widgets</string>
-    <string name="friend_picker_no_group">Нет группы</string>
-    <string name="friend_picker_more_groups">%1$s • и ещё %2$d</string>
-    <string name="friend_picker_user_subtitle">%1$d • %2$s</string>
 
     <!-- Friends screen -->
     <string name="friends_title">Друзья</string>
     <string name="friends_tab_friends">Друзья</string>
     <string name="friends_tab_requests">Заявки</string>
-    <string name="friends_empty_title">Друзей пока нет</string>
-    <string name="friends_empty_description">Найдите знакомых по имени и отправьте заявку</string>
-    <string name="friends_requests_empty_title">Заявок нет</string>
-    <string name="friends_section_incoming">Входящие</string>
-    <string name="friends_section_outgoing">Отправленные</string>
-    <string name="friends_find_people">Найти людей</string>
+    <string name="friends_empty_title">Пока никого</string>
+    <string name="friends_empty_description">Найдите однокурсников поиском или отправьте ссылку на свой профиль</string>
+    <string name="friends_share_title">Поделиться профилем</string>
+    <string name="friends_share_subtitle">Ссылка, по которой вас добавят</string>
+    <string name="friends_connect">Подключить</string>
     <string name="friends_disabled_title">Нет подключения к ITMO.Widgets</string>
-    <string name="friends_disabled_description">Подключитесь в настройках, чтобы добавлять друзей</string>
+    <string name="friends_disabled_description">Друзья и заявки работают через сервер ITMO.Widgets</string>
     <string name="friends_action_failed">Не получилось: %1$s</string>
     <string name="friends_remove_confirm_title">Удалить из друзей?</string>
     <string name="friends_remove_confirm_message">%1$s перестанет видеть ваши данные для друзей, а вы — его.</string>
@@ -43,10 +29,7 @@
     <string name="user_subtitle_isu">ИСУ %1$d</string>
 
     <!-- People search -->
-    <string name="user_search_title">Найти людей</string>
     <string name="user_search_hint">Имя или фамилия</string>
-    <string name="user_search_idle_title">Кого ищем?</string>
-    <string name="user_search_idle_description">Поиск по всем студентам и сотрудникам ИТМО</string>
     <string name="user_search_empty_title">Никого не нашли</string>
     <string name="user_search_section_registered">В ITMO.Widgets</string>
     <string name="user_search_section_others">Остальные</string>
@@ -55,39 +38,29 @@
     <string name="user_search_invite_chooser">Пригласить</string>
 
     <!-- Public profile -->
-    <string name="user_profile_title">Профиль</string>
     <string name="user_profile_add_friend">Добавить в друзья</string>
     <string name="user_profile_cancel_request">Отменить заявку</string>
     <string name="user_profile_accept_request">Принять заявку</string>
     <string name="user_profile_reject_request">Отклонить</string>
     <string name="user_profile_remove_friend">Удалить из друзей</string>
+    <string name="user_profile_write_review">Написать отзыв</string>
+    <string name="user_profile_invite">Пригласить в ITMO.Widgets</string>
     <string name="user_profile_self">это вы</string>
     <string name="user_profile_friend_badge">в друзьях</string>
-    <string name="user_profile_widgets_title">ITMO.Widgets</string>
-    <string name="user_profile_schedule_open">Пары на ближайшие недели</string>
-    <string name="user_profile_sport_open">Записи и ожидающие занятия</string>
-    <string name="user_profile_hidden_friends_hint">Обычно открывается после добавления в друзья</string>
     <string name="user_profile_not_found_title">Профиль не найден</string>
 
-    <!-- Friend picker scope -->
-    <string name="friend_picker_scope_friends">Друзья</string>
-    <string name="friend_picker_scope_all">Все</string>
-    <string name="friend_picker_search_people_hint">Имя или фамилия</string>
-    <string name="friend_picker_people_idle_title">Кого ищем?</string>
-    <string name="friend_picker_people_idle_description">Показываем только пользователей ITMO.Widgets</string>
-    <string name="friend_picker_people_empty_title">Никого не нашли</string>
-    <string name="friend_picker_people_empty_description">Среди пользователей ITMO.Widgets нет таких</string>
-    <string name="user_profile_friends_open">Посмотреть список друзей</string>
-    <string name="user_friends_owner">Друзья · %1$s</string>
+    <!-- Another user's friends and the person card -->
     <string name="user_friends_empty_title">Пока нет друзей</string>
-    <string name="user_friends_hidden_title">Список друзей скрыт</string>
-    <string name="user_friends_hidden_description">Пользователь ограничил доступ к списку друзей</string>
     <string name="user_friends_refresh">Обновить</string>
-    <string name="person_course">%1$d курс</string>
-    <string name="person_fact_position">Должность</string>
-    <string name="person_fact_room">Аудитория</string>
-    <string name="person_fact_education">Учёба</string>
-    <string name="person_section_positions">Должности</string>
+    <string name="person_group_course">%1$s, %2$d курс</string>
+    <string name="person_role_student">Студент, %1$s</string>
+    <string name="person_room">ауд. %1$s</string>
+    <string name="person_teaches_you">Ведёт у вас</string>
+    <string name="person_section_teaching">Преподавание</string>
+    <string name="person_now_teaching">Сейчас ведёт пару до %1$s</string>
+    <string name="person_next_lesson">Сегодня ещё пара в %1$s</string>
+    <string name="person_lesson_online">Онлайн</string>
+    <string name="person_lesson_for">%1$s у %2$s</string>
     <string name="person_section_rooms">Где найти</string>
     <string name="person_section_education">Учёба</string>
     <string name="person_isu_copy">Номер ИСУ %1$d, скопировать</string>
@@ -97,7 +70,6 @@
     <string name="teacher_review_before_year">До %1$d</string>
     <string name="teacher_review_source">Источник: Reviews, %1$s</string>
     <string name="teacher_review_source_default">Reviews</string>
-    <string name="teacher_reviews_count">Отзывы, %1$d</string>
     <string name="teacher_review_write">Написать</string>
     <string name="teacher_review_mine_badge">мой</string>
     <string name="teacher_review_anonymous">Анонимный отзыв</string>
@@ -169,9 +141,6 @@
     <string name="teacher_summary_value_high">высокая</string>
     <string name="teacher_summary_value_not_enough_data">мало данных</string>
     <string name="teacher_summary_scale_description">%1$s: %2$s</string>
-
-    <!-- Home card: friend requests -->
-    <string name="home_friends_all">Все заявки</string>
     <!-- People search: the clear button of the query field (TalkBack) -->
     <string name="user_search_clear">Очистить текст</string>
     <string name="social_bell_request">%1$s хочет добавить вас в друзья</string>

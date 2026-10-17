@@ -14,10 +14,9 @@ parser, data, view model and sheet. Backend contract:
 
 ## Entry point
 
-- `Подключить устройство` on the profile tab is shown only while
-  `Подключение к ITMO.Widgets` is on (`MeViewModel` maps
-  `CustomServicesRepository.observeEnabled()` to
-  `MeUiState.webLoginAvailable`), so there is never a row that can only fail.
+- `Подключить устройство` on the profile tab is always shown (nothing hides without the connection): while
+  `Подключение к ITMO.Widgets` is off (`MeUiState.connected`, from `CustomServicesRepository.observeEnabled()`) it
+  says `Нужно подключение` and opens the connection instead, so there is never a row that can only fail.
 - It opens the sheet key `AppRoutes.WebLogin` (`SheetPolicy(textInput =
   true)`) once; the demo session refuses it (`ShellGate`). The sheet scene
   (`ShellScenes.kt`) opens it expanded to content, up to the height below the status bar,

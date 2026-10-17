@@ -18,6 +18,11 @@ final class ScheduleSnapshotTests: XCTestCase {
         assertFeed(samples.Feed, named: "today")
     }
 
+    /// Monday and Tuesday seen on Wednesday: their day headers are dimmed as past.
+    func testPastDays() {
+        assertFeed(samples.PastDays, named: "past-days", appearances: [.light, .dark])
+    }
+
     /// The next week: `Сегодня` in the header.
     func testNextWeek() {
         assertFeed(samples.NextWeek, named: "next-week", appearances: [.light, .dark])

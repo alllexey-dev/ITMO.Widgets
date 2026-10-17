@@ -401,7 +401,6 @@ both platforms.
 | `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | A section header in `secondaryLabel` at UIKit's insets |
 | `GroupActionRow` | The last row of a group that leads further | A cell with the icon in the tint and the disclosure indicator |
 | `LinkRow`, `VotePill` | A link with its own badge or the vote pill | A cell; the vote buttons are 44 pt targets, the pill on `tertiarySystemFill` |
-| `UserRow`, `UserSelectionRow` | A person with actions; a selectable person in a picker | A cell with the disclosure indicator; the selection is the checkmark accessory with the selection haptic |
 | `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
 | `DetailsHeader` | The head of every details sheet | Title 2 semibold, secondary text and icons in `secondaryLabel`, the map button a tinted capsule |
 | `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | No handle (the host's grabber); the header is the sheet's navigation bar ([Platform styles](#platform-styles)) |
@@ -425,7 +424,6 @@ one switch; heroes read `ItmoTheme.heroMotionScheme`. Where each is used:
 | `ItmoLoadingIndicator` | A wait shorter than about 5 s outside a button; `contained` in pull-to-refresh | `UIActivityIndicatorView` |
 | `ItmoButtonGroup` | A single choice of two to four short options with a selection required; under expressive the kit's `SegmentedChoice` | `UISegmentedControl` with the selection haptic |
 | `ItmoWavyProgress` | Determinate progress of a hero only, linear or circular | A plain `UIProgressView` |
-| `ItmoHeroAvatar` | The person profile hero's avatar under the `MaterialShapes` mask | The round `Avatar` |
 | `ItmoMarkTile` | The app mark's tile on the sign-in screen, the twelve-sided cookie | A large rounded square |
 | `ServicesConsentSheet`, `StoredDataGroup` | The consent before connecting to ITMO.Widgets and the list of what the server keeps (`ServicesStoredData`), shared by «Подключение и данные» and the first-run flow | SwiftUI `ServicesConsentSheet` |
 | `ItmoSplitButton` | A primary action with a menu of its variants | A capsule with a chevron half that opens `ItmoMenu` |
@@ -666,9 +664,6 @@ wrappers only; a new screen follows the rules below.
   - the sport score card of `Моё`: the ring of visits and the counted bonus;
   - the subject page's hero card: the points in `displayMedium` over the
     grade scale;
-  - the person profile hero: `ItmoHeroAvatar` under the nine-sided cookie and
-    the name in emphasized `titleLarge`, revealed when the person arrives
-    while the screen is open (`ProfileHeroReveal`).
 
   A hero that is already there on the first frame, and every hero under
   reduced motion, shows at once; scrolling it away and back never replays it.
@@ -797,14 +792,13 @@ in [Shared components](#shared-components).
 - Link sheets: `SubjectLinksSheet` (connected groups per category),
   `LinkEditorSheet` and `LinkActionsSheet` in `:shared:feature-resources`
   (`feature/resources/ui/`); rows are the kit's `LinkRow`.
-- Person profile: Compose in `:shared:feature-social`
-  (`feature/social/ui/profile/UserProfileScreen.kt`): the hero `ProfileHero.kt`
-  (`Card.Hero`: avatar, name, one short line, the ISU number with a copy symbol
-  in a 48 dp target, the friendship badge or status and buttons in the kit's
-  `ButtonRow`, side by side or stacked at full width when the labels do not
-  fit, as `Принять заявку` and `Отклонить` at 1.3 on 320 dp), and in
-  `ProfileSections.kt` the fact sections as connected groups of informational
-  rows, the `ITMO.Widgets` group with its entries, and the reviews heading.
+- Person card: Compose in `:shared:feature-social` (`feature/social/ui/profile/UserProfileScreen.kt`) under
+  `ItmoDetailScreen` with an empty title (the header carries the name, as a contact card): the centred header
+  (96 dp avatar, the name in `headlineSmall`, role pills, the ISU with a copy symbol in a 48 dp target, up to two
+  full-width buttons, the filled one first and an icon only when alone), then `Преподавание` and `Учёба` as kit
+  `ListGroup`s under `SectionHeader`s and `Удалить из друзей` as a danger row. Друзья and another user's friends use
+  `ui/list/UserList.kt`: kit rows with a 40 dp avatar, a pair of actions under the texts (filled, then tonal) or one
+  text button at the end. iOS draws the same states in SwiftUI.
 - Teacher reviews: the own review as a group of its own, the others as one
   connected group, `feature/social/ui/reviews/TeacherReviewRow.kt` (`subject, date` with
   `⋮`; the full text; a footer: on the left who wrote it in `bodyMedium`, a

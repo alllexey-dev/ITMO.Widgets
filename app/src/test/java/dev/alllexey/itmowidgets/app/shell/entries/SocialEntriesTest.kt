@@ -22,7 +22,6 @@ import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
 import dev.alllexey.itmowidgets.feature.social.ui.friends.FriendsTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.list.UserListTestTags
 import dev.alllexey.itmowidgets.feature.social.ui.profile.UserProfileTestTags
-import dev.alllexey.itmowidgets.feature.social.ui.search.UserSearchTestTags
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -68,8 +67,7 @@ class SocialEntriesTest {
     fun theSocialScreensRenderAndCloseThemselves() {
         show()
 
-        assertRendersAndCloses(AppRoutes.Friends, FriendsTestTags.TABS)
-        assertRendersAndCloses(AppRoutes.UserSearch, UserSearchTestTags.FIELD)
+        assertRendersAndCloses(AppRoutes.Friends, FriendsTestTags.SEARCH)
         assertRendersAndCloses(AppRoutes.UserFriends(FRIEND_ISU, FRIEND_NAME), UserListTestTags.row(FRIEND_ISU))
         assertRendersAndCloses(AppRoutes.UserProfile(FRIEND_ISU), UserProfileTestTags.HERO)
     }

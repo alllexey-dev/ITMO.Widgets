@@ -102,8 +102,9 @@ refresh status or academic time changes; selecting another visible day reuses th
   (`Понедельник, 7 сентября`, `сегодня`, `5 пар`) over the kit's timeline built by `core/lesson/LessonTimelines` (the
   rules of Сегодня: `идёт`, `далее`, `Окно 2 ч 10 мин`, change notes, `очередь 2 из 5`, `записаны`, `онлайн`); a weekday
   without lessons is one short `Вт, 15 сентября — пар нет` row; a free Saturday and Sunday are one `Выходные` row; a
-  week starts with `2-я неделя, чётная` (MyITMO's week number). Days no refresh answered for yet are left out, so a
-  missing day never reads as free.
+  week starts with `2-я неделя` (MyITMO's week number; its parity is never shown). Days no refresh answered for yet
+  are left out, so a missing day never reads as free. A day header before the academic today is dimmed like the
+  strip's past days; today's and later ones keep full emphasis.
 - The root header is static: `Сентябрь ▾` (the visible month) over the visible week; the title opens the month sheet,
   the friends button the picker. Off the current week `Сегодня` shows (Android: a FAB; iOS: a header button).
 - The week strip pages by weeks with a swipe (no arrows; Android hands the tab swipe over at its ends,
@@ -209,8 +210,10 @@ sheet otherwise. On iOS there is no shell route to the sport tab's sheet yet, so
 
 SwiftUI over the same view models ([iOS app](../ios.md)): `ScheduleScreen` and `UserScheduleScreen`
 (`iosApp/Sources/Features/Schedule/ScheduleScreen.swift`) draw the feed under `itmoRootHeader` (with the month menu)
-or the stack's navigation bar, the strip as a paged `TabView` of `ItmoWeekStrip`s and the days as a `LazyVStack` with
-pinned section headers; `ScheduleSheets.swift` has the lesson sheet, the month sheet and the friend picker
+or the stack's navigation bar, the strip as a paging horizontal `ScrollView` of `ItmoWeekStrip`s keyed by Monday and
+the days as a `LazyVStack` with pinned section headers. The strip stays a few points off the bar above it: a scroll
+view touching the bar's edge takes the bar's height as a vertical content inset and draws its days outside its clip
+(`ScheduleUITests.testWeekStripIsDrawnOnLaunchAndAfterATabSwitch` checks the pixels); `ScheduleSheets.swift` has the lesson sheet, the month sheet and the friend picker
 (`Routes+Schedule.swift`, all `.swiftUISheet`). The picker and the month sheet answer through `AppRouter.open(_:onResult:)`
 (`FriendPick`, `DatePick`). Snapshot references: `ScheduleSnapshotTests`. See also
 [schedule changes](schedule-changes.md#ios), [calendar](calendar.md#ios), [widgets](widgets.md#ios).

@@ -36,6 +36,12 @@ internal class ScheduleFeedTodayPreview {
     fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.Feed, actions()) }
 }
 
+internal class ScheduleFeedPastDaysPreview {
+    @Preview(name = "past-days", heightDp = SCREEN_HEIGHT)
+    @Composable
+    fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.PastDays, actions()) }
+}
+
 internal class ScheduleFeedNextWeekPreview {
     @Preview(name = "next-week", heightDp = SCREEN_HEIGHT)
     @Composable

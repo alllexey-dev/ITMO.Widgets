@@ -26,7 +26,7 @@ final class ScheduleUITests: XCTestCase {
         openSchedule(app)
 
         let today = todayRow(app)
-        XCTAssertTrue(today.waitForExistence(timeout: stepTimeout), "the feed opens on today")
+        XCTAssertTrue(today.waitForExistence(timeout: stepTimeout), "the feed opens on \(Self.today), shows \(rowIds(app))")
         XCTAssertTrue(waitUntilHittable(today))
         XCTAssertTrue(firstLesson(app).waitForExistence(timeout: stepTimeout), "the demo week has lessons")
         XCTAssertTrue(element(app, "schedule.friends").isHittable)
@@ -36,6 +36,24 @@ final class ScheduleUITests: XCTestCase {
         element(app, "schedule.list").swipeUp()
         element(app, "schedule.list").swipeUp()
         attachScreenshot(named: "days-later")
+    }
+
+    /// The strip's days are drawn, not only hittable: on launch and after a tab switch back to the schedule.
+    func testWeekStripIsDrawnOnLaunchAndAfterATabSwitch() {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        openSchedule(app)
+        let today = element(app, "kit.weekDay.\(Self.today)")
+        XCTAssertTrue(waitUntilHittable(today))
+        attachScreenshot(named: "strip-launch")
+        XCTAssertTrue(today.waitUntilDrawn(timeout: stepTimeout), "today's day of the strip is drawn on launch")
+
+        app.selectTab("home")
+        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: stepTimeout))
+        app.selectTab("schedule")
+        XCTAssertTrue(waitUntilHittable(today))
+        attachScreenshot(named: "strip-tab-switch")
+        XCTAssertTrue(today.waitUntilDrawn(timeout: stepTimeout), "today's day of the strip is drawn after a tab switch")
     }
 
     func testFastPagingDoesNotLoseTheSelectedDay() throws {
@@ -200,6 +218,9 @@ final class ScheduleUITests: XCTestCase {
         XCTAssertTrue(firstLesson(app).waitForExistence(timeout: stepTimeout), "the friend's week has lessons")
         XCTAssertFalse(element(app, "schedule.friends").exists, "no picker on another user's schedule")
         attachScreenshot(named: "user")
+        XCTAssertTrue(
+            element(app, "kit.weekDay.\(Self.today)").waitUntilDrawn(timeout: stepTimeout), "the pushed schedule's strip is drawn"
+        )
 
         _ = openLessonSheet(app)
         app.buttons[Self.close].firstMatch.tap()
@@ -233,6 +254,12 @@ final class ScheduleUITests: XCTestCase {
         app.selectTab("schedule")
         XCTAssertTrue(element(app, "shell.root.schedule").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "schedule.list").waitForExistence(timeout: rootTimeout), "the feed never loaded")
+    }
+
+    /// The feed's realized rows, for a failure message.
+    private func rowIds(_ app: XCUIApplication) -> [String] {
+        app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'schedule.row.'"))
+            .allElementsBoundByIndex.map(\.identifier)
     }
 
     /// Today's row of the feed: its day header, its `пар нет` row or its weekend.
