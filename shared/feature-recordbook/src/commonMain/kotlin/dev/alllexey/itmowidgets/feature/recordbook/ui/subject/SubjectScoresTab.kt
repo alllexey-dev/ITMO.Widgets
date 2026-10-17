@@ -3,15 +3,19 @@ package dev.alllexey.itmowidgets.feature.recordbook.ui.subject
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -23,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.asString
@@ -169,6 +174,17 @@ private fun SheetLine(sheet: SubjectSheetLine, actions: RecordbookSubjectActions
             Text(sheet.title.asString(), style = ItmoTheme.typography.titleSmall)
             Text(sheet.caption.asString(), style = ItmoTheme.typography.bodySmall)
             sheet.problem?.let { Text(it.asString(), color = Tone.Warning.ink(), style = ItmoTheme.typography.bodySmall) }
+            sheet.check?.let { check ->
+                TextButton(
+                    onClick = { actions.onOpenSheetScores(sheet.changeTotal) },
+                    modifier = Modifier.heightIn(min = ItmoTheme.spacing.touchTarget),
+                    contentPadding = PaddingValues(0.dp),
+                    // The hero's own ink: the primary colour would vanish on the primary card.
+                    colors = ButtonDefaults.textButtonColors(contentColor = LocalContentColor.current),
+                ) {
+                    Text(check.asString(), style = ItmoTheme.typography.labelLarge, textDecoration = TextDecoration.Underline)
+                }
+            }
         }
         Box {
             IconButton(onClick = { menu = true }) {

@@ -528,3 +528,11 @@ extension View {
         .animation(.default, value: messages.message?.id)
     }
 }
+
+extension ScheduleMessages {
+    /// A message whose text the shared content resolved (a failed save, a sheet's note), read aloud too.
+    func show(_ text: String) {
+        message = SettingsMessage(text: text)
+        AccessibilityNotification.Announcement(text).post()
+    }
+}

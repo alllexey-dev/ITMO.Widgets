@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
@@ -47,7 +48,13 @@ class FakeSheetScoresRepository(vararg initial: SheetScore) : SheetScoresReposit
     val checks = mutableListOf<StudyHalf>()
     var untrackCalls = 0
 
-    data class Connected(val scope: ResourceScope, val url: String, val row: SheetRowMatch, val total: SheetCell)
+    data class Connected(
+        val scope: ResourceScope,
+        val url: String,
+        val row: SheetRowMatch,
+        val total: SheetCell,
+        val choice: TotalChoice = TotalChoice.AUTO,
+    )
 
     override fun observe(): Flow<List<SheetScore>> = scores
 
@@ -61,25 +68,31 @@ class FakeSheetScoresRepository(vararg initial: SheetScore) : SheetScoresReposit
         return inspections.removeFirstOrNull() ?: SheetInspection.Failed(SheetStatus.NETWORK)
     }
 
-    override suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell): AppResult<Unit> {
-        connected += Connected(scope, url, row, total)
+    override suspend fun connect(
+        scope: ResourceScope,
+        url: String,
+        row: SheetRowMatch,
+        total: SheetCell,
+        choice: TotalChoice,
+    ): AppResult<Unit> {
+        connected += Connected(scope, url, row, total, choice)
         connectGate?.await()
         if (connectResult is AppResult.Success) {
             scores.value = scores.value.filterNot { it.scope.key == scope.key } + sheetScore(
                 scope = scope, url = url, tabGid = row.tab.gid, tabName = row.tab.name, rowKey = row.key,
                 column = SheetColumnRef(total.headerPath, total.column), value = total.value.ifEmpty { null },
-            )
+            ).copy(choice = choice)
         }
         return connectResult
     }
 
-    override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell): AppResult<Unit> {
-        totals += Connected(scope, "", row, total)
+    override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell, choice: TotalChoice): AppResult<Unit> {
+        totals += Connected(scope, "", row, total, choice)
         connectGate?.await()
         if (connectResult is AppResult.Success) {
             scores.value = scores.value.map {
                 if (it.scope.key == scope.key) {
-                    it.copy(column = SheetColumnRef(total.headerPath, total.column), value = total.value.ifEmpty { null })
+                    it.copy(column = SheetColumnRef(total.headerPath, total.column), choice = choice, value = total.value.ifEmpty { null })
                 } else {
                     it
                 }

@@ -11,7 +11,8 @@ Product behaviour: [Как это работает: оценки](../how-it-work
   (`SegmentedChoice`) under it. No `Люди` tab: teachers are rows of `Пары`.
 - `Баллы`: a BARS notice row (`Войти` or `Повторить`), the hero (the points `из 100`, the grade by points or the
   final result as a pill over its quiet source, the grade scale, `до 3D ещё 4,5` or `до зачёта ещё 8`), the
-  connected sheet in the hero with its menu (open, `Изменить итог`, disconnect), the sport points of Физкультура
+  connected sheet in the hero with its menu (open, `Изменить итог`, disconnect) and `Проверьте итог` for an unsure
+  total, the sport points of Физкультура
   (a row to Спорт), then the checkpoints by group with their sums (`28 из 30`), each `9 / 10` over a bar, `минимум 6`
   on the left (red when below) and the date on the right. Without checkpoints: the quiet BARS offer while BARS is not
   connected and `Мои баллы из таблицы` while a sheet link exists; with BARS connected, a note that there are none.
@@ -87,5 +88,5 @@ under the native bar (title, subtitle), over `RecordbookSubjectViewModel` resolv
 (`ScreenViewModelStore.resolve(type:parameters:)`).
 
 - Links open in the system; the link editor, a link's actions and `Все ссылки` are the Compose sheets of
-  [subject links](resources.md#ios); `Мои баллы` is the Compose sheet of [sheet scores](sheet-scores.md#ios).
+  [subject links](resources.md#ios); `Мои баллы` is the SwiftUI sheet of [sheet scores](sheet-scores.md#ios).
 - `Подключить` and `Войти` open `BarsLoginSheet`; a vote that fails says so in a banner.

@@ -8,6 +8,12 @@ import kotlin.time.Instant
 /** The total column: its header path, found again by text; [index] is the fallback. */
 data class SheetColumnRef(val headerPath: String, val index: Int)
 
+/**
+ * How the total column was chosen: found by [SheetTotals.decide] ([AUTO]), found but worth a look ([AUTO_CHECK], the
+ * page says «Проверьте итог»), or picked by the viewer ([MANUAL]).
+ */
+enum class TotalChoice { AUTO, AUTO_CHECK, MANUAL }
+
 /** The last reading of a connection; every status but [OK] keeps the last value. */
 enum class SheetStatus { OK, NETWORK, CLOSED, ROW_NOT_FOUND, COLUMN_NOT_FOUND, TOO_LARGE }
 
@@ -30,12 +36,13 @@ data class SheetScore(
     val status: SheetStatus,
     val updatedAt: Instant?,
     val connectedAt: Instant,
+    val choice: TotalChoice = TotalChoice.AUTO,
 ) {
     /** The connected tab in the browser. */
     val tabUrl: String get() = GoogleSheetUrl.parse(url)!!.tabUrl(tabGid)
 
     override fun toString(): String =
-        "SheetScore(scope=${scope.key}, tab=$tabGid, kind=$keyKind, status=$status, tracked=$tracked)"
+        "SheetScore(scope=${scope.key}, tab=$tabGid, kind=$keyKind, choice=$choice, status=$status, tracked=$tracked)"
 }
 
 /** What one download of the connected tab shows; [value] is null for an empty cell or a failed read. */

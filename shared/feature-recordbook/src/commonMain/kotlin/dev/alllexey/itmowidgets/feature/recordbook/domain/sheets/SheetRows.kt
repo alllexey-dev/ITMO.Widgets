@@ -30,7 +30,7 @@ object SheetRows {
             matches(workbook) { cell -> if (SheetIdentity.holds(cell, isu.toString(), KeyKind.ISU)) KeyKind.ISU else null }
         }.orEmpty()
         val found = byIsu.ifEmpty {
-            val variants = identity.name?.let(SheetIdentity::nameVariants).orEmpty()
+            val variants = SheetIdentity.nameVariants(identity)
             if (variants.isEmpty()) emptyList()
             else matches(workbook) { cell -> if (SheetText.normalize(cell) in variants) KeyKind.NAME else null }
         }

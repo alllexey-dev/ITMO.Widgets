@@ -10,6 +10,11 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Fixes (2026-10-17)
+
+- A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).
+- A doubtful total shows `Проверьте итог` on the subject page; the review shows the total with its reason, the row around it and the other candidates, and `Вернуть авто` undoes a hand-picked total. On iOS `Мои баллы` is a native sheet (#419).
+
 ### Fixes (2026-10-15)
 
 - Schedule week paging uses stable dates on both platforms and no longer treats programmatic movement as a swipe;

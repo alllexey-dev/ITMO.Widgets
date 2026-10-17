@@ -75,6 +75,20 @@
     <string name="sheet_scores_updated_time">Обновлено в %1$s</string>
     <string name="sheet_scores_updated_date">Обновлено %1$s</string>
     <string name="sheet_scores_from_table">Из таблицы: %1$s</string>
+    <!-- Why the total of the scores sheet is this column; %1$s is the column's title -->
+    <string name="sheet_scores_reason_sum">Столбец «%1$s», сумма баллов сходится</string>
+    <string name="sheet_scores_reason_header">Столбец «%1$s», найден по заголовку</string>
+    <string name="sheet_scores_reason_tabs">Столбец «%1$s», но строка есть и на других листах</string>
+    <string name="sheet_scores_reason_empty">Столбец «%1$s» пока пуст у всех</string>
+    <string name="sheet_scores_reason_weak">Столбца «Итог» нет, взят «%1$s»</string>
+    <string name="sheet_scores_reason_not_points">В столбце «%1$s» не баллы</string>
+    <string name="sheet_scores_manual">Выбрано вручную</string>
+    <string name="sheet_scores_reset_auto">Вернуть авто</string>
+    <string name="sheet_scores_other_cell">Другая ячейка</string>
+    <!-- A candidate total: the column's title and its value -->
+    <string name="sheet_scores_chip">%1$s · %2$s</string>
+    <string name="sheet_scores_empty_cell">—</string>
+    <string name="sheet_scores_check">Проверьте итог</string>
     <string name="links_all_count">Все ссылки, %1$d</string>
     <string name="recordbook_reason_failed">Пересдача</string>
     <string name="recordbook_reason_below_minimum">%1$s ниже минимума</string>

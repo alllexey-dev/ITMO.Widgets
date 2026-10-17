@@ -103,6 +103,14 @@ private struct SubjectHeroCard: View {
                         if let problem = sheet.problem {
                             Text(verbatim: problem.resolved).font(.itmo(.bodySmall)).foregroundStyle(ItmoColor.warning)
                         }
+                        if let check = sheet.check {
+                            Button { actions.sheetScores(sheet.changeTotal) } label: {
+                                Text(verbatim: check.resolved).font(.itmo(.labelLarge, emphasized: true)).underline()
+                            }
+                            .buttonStyle(.borderless)
+                            .foregroundStyle(.primary)
+                            .accessibilityIdentifier("subject.sheetCheck")
+                        }
                     }
                     Spacer(minLength: 0)
                     Menu {

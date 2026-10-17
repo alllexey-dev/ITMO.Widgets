@@ -21,8 +21,11 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepo
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotalDecision
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotals
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalConfidence
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,9 +87,18 @@ class SheetScoresViewModel(
         _state.value = SheetScoresUiState.PickTabRow(tab, SheetRows.options(grid))
     }
 
+    /** The viewer's total; the automatic one picked again is a confirmation and no longer asks to be checked. */
     fun pickTotal(cell: SheetCell) = act {
         val row = matches.firstOrNull { it.tab == cell.tab } ?: return@act
-        save(row, cell, fallback = _state.value)
+        val auto = (_state.value as? SheetScoresUiState.PickTotal)?.decision?.total
+        save(row, cell, if (cell == auto) TotalChoice.AUTO else TotalChoice.MANUAL, fallback = _state.value)
+    }
+
+    /** «Вернуть авто»: the automatic total instead of a hand-picked one. */
+    fun resetTotal() = act {
+        val decision = (_state.value as? SheetScoresUiState.PickTotal)?.decision ?: return@act
+        val row = matches.firstOrNull { it.tab == decision.total.tab } ?: return@act
+        save(row, decision.total, autoChoice(decision), fallback = _state.value)
     }
 
     private fun start() = act {
@@ -127,29 +139,33 @@ class SheetScoresViewModel(
         matches = book.tabs.mapNotNull { SheetRows.locate(it, score.rowKey, score.keyKind, score.keyColumn) }
         if (matches.isEmpty()) return fail(SheetStatus.ROW_NOT_FOUND)
         val cells = cellsOf(book, matches)
-        val selected = current(book, score, cells)
-        _state.value = SheetScoresUiState.PickTotal(cells.filter { it.value.isNotEmpty() || it == selected }, selected)
+        _state.value = SheetScoresUiState.PickTotal(cells, current(book, score, cells), decide(book, matches), score.choice)
     }
 
-    /** The cells of [rows]; a total found by its header is saved at once, otherwise the viewer picks it. */
+    /** The cells of [rows]; an automatic total is saved at once, otherwise the viewer picks it. */
     private suspend fun choose(book: SheetWorkbook, rows: List<SheetRowMatch>) {
         matches = rows
         val cells = cellsOf(book, rows)
-        val filled = cells.filter { it.value.isNotEmpty() }
-        val total = SheetTotals.detect(cells)
-        if (total == null || step == Step.TOTAL) {
-            _state.value = SheetScoresUiState.PickTotal(filled, null)
+        val decision = decide(book, rows)
+        if (decision == null || step == Step.TOTAL) {
+            _state.value = SheetScoresUiState.PickTotal(cells, null, decision)
             return
         }
-        val row = rows.first { it.tab == total.tab }
-        save(row, total, fallback = SheetScoresUiState.PickTotal(filled, total))
+        val row = rows.first { it.tab == decision.total.tab }
+        save(row, decision.total, autoChoice(decision), fallback = SheetScoresUiState.PickTotal(cells, decision.total, decision))
     }
 
+    private fun decide(book: SheetWorkbook, rows: List<SheetRowMatch>): SheetTotalDecision? =
+        SheetTotals.decide(book.tabs.filter { tab -> rows.any { it.tab == tab.tab } }, rows)
+
+    private fun autoChoice(decision: SheetTotalDecision): TotalChoice =
+        if (decision.confidence == TotalConfidence.LOW) TotalChoice.AUTO_CHECK else TotalChoice.AUTO
+
     /** A failed write keeps [fallback] on screen and says so. */
-    private suspend fun save(row: SheetRowMatch, total: SheetCell, fallback: SheetScoresUiState) {
+    private suspend fun save(row: SheetRowMatch, total: SheetCell, choice: TotalChoice, fallback: SheetScoresUiState) {
         val result = when (step) {
-            Step.CONNECT -> repository.connect(scope, url, row, total)
-            Step.TOTAL -> repository.changeTotal(scope, row, total)
+            Step.CONNECT -> repository.connect(scope, url, row, total, choice)
+            Step.TOTAL -> repository.changeTotal(scope, row, total, choice)
         }
         when (result) {
             is AppResult.Success -> _state.value = SheetScoresUiState.Done

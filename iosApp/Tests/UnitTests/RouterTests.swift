@@ -525,7 +525,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.MyItmoWeb.shared, .swiftUI),
             (AppRoutes.FriendSelector(selectedIsu: 0), .swiftUISheet),
             (AppRoutes.ScheduleMonth(date: "2026-10-06", userIsu: -1), .swiftUISheet),
-            (AppRoutes.SheetScores(args: scores), .composeSheet),
+            (AppRoutes.SheetScores(args: scores), .swiftUISheet),
             (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),
             (AppRoutes.Connections.shared, .swiftUI),
             (AppRoutes.ReviewEditor(args: teacher), .composeSheet),

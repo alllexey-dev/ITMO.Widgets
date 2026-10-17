@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import kotlin.io.encoding.Base64
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -36,7 +37,10 @@ class IdTokenCurrentUserProvider(
             CurrentUser(
                 isu = claims.isu,
                 name = claims.name?.trim()?.takeIf(String::isNotEmpty),
-                pictureUrl = claims.picture?.trim()?.takeIf(String::isNotEmpty)
+                pictureUrl = claims.picture?.trim()?.takeIf(String::isNotEmpty),
+                familyName = claims.familyName?.trim()?.takeIf(String::isNotEmpty),
+                givenName = claims.givenName?.trim()?.takeIf(String::isNotEmpty),
+                middleName = claims.middleName?.trim()?.takeIf(String::isNotEmpty),
             ).takeIf { it.isu != null || it.name != null }
         } catch (error: Exception) {
             // Never log the token or its payload.
@@ -49,7 +53,10 @@ class IdTokenCurrentUserProvider(
     private data class IdTokenClaims(
         val isu: Int? = null,
         val name: String? = null,
-        val picture: String? = null
+        val picture: String? = null,
+        @SerialName("family_name") val familyName: String? = null,
+        @SerialName("given_name") val givenName: String? = null,
+        @SerialName("middle_name") val middleName: String? = null,
     )
 
     private companion object {
@@ -60,7 +67,7 @@ class IdTokenCurrentUserProvider(
         /** JWT segments are unpadded; padding stays accepted, as the JDK URL decoder does. */
         val PAYLOAD_BASE64 = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL)
 
-        /** The token carries many more claims than these three. */
+        /** The token carries many more claims than these. */
         val CLAIMS_JSON = Json { ignoreUnknownKeys = true }
     }
 }

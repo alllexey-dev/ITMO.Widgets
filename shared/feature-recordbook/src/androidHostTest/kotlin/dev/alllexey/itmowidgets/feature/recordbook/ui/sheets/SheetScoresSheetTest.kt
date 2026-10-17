@@ -24,6 +24,7 @@ import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToKey
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
@@ -161,25 +162,79 @@ class SheetScoresSheetTest {
     }
 
     @Test
-    fun manyCellsListByTabWithTheConnectedTotalCheckedAndTheLastOneIsPicked() = runComposeUiTest {
+    fun withoutATotalHeaderEveryCellIsAGridByTabAndTheLastOneIsPicked() = runComposeUiTest {
         setContent { Sheet(SheetScoresPreviewSamples.pickManyTotals) }
 
         onNodeWithText("Выберите итог").assertExists()
-        onAllNodes(isSelected()).assertCountEquals(1)
-        onAllNodes(isSelected()).onFirst().assert(hasText(SheetScoresPreviewSamples.TOTAL_HEADER))
-        assertTouchTargets()
+        onAllNodes(isSelected()).assertCountEquals(0)
         // Values as the sheet has them; a column without a header is named by its letter.
         listOf("P3110", "66,3", "100%", "5A", "Столбец E", SheetScoresPreviewSamples.englishTab.name).forEach { text ->
             onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText(text))
             assertShown(text)
             assertNoTextOverflow()
         }
+        assertTouchTargets()
 
         val last = SheetScoresPreviewSamples.manyCells.last()
-        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToKey("cell:${last.tab.gid}:${last.column}")
-        assertTouchTargets()
-        onAllNodesWithText(last.headerPath).onLast().performClick()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToKey("cells:${last.tab.gid}")
+        onAllNodesWithText(last.headerPath).onLast().performScrollTo().performClick()
         assertEquals(listOf(last), totals)
+    }
+
+    @Test
+    fun theReviewShowsTheTotalWhyAndTheChipsAndAChipIsPicked() = runComposeUiTest {
+        setContent { Sheet(SheetScoresPreviewSamples.pickTotal) }
+
+        assertShown("66,3")
+        assertShown("Столбец «${SheetScoresPreviewSamples.TOTAL_HEADER}», сумма баллов сходится")
+        // The total is selected in the row preview and among the chips.
+        onAllNodes(isSelected()).assertCountEquals(2)
+        onAllNodesWithText("Вернуть авто").assertCountEquals(0)
+        assertTouchTargets()
+        assertNoTextOverflow()
+
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText("Итог · 37"))
+        onNodeWithText("Итог · 37").performClick()
+        assertEquals(listOf(SheetScoresPreviewSamples.ownRow.single { it.headerPath == "ЛР · Итог" }), totals)
+    }
+
+    @Test
+    fun anotherCellOpensTheGridOfTheRow() = runComposeUiTest {
+        setContent { Sheet(SheetScoresPreviewSamples.pickTotal) }
+        onAllNodesWithText(SheetScoresPreviewSamples.group.name).assertCountEquals(0)
+
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText("Другая ячейка"))
+        onNodeWithText("Другая ячейка").performClick()
+        waitForIdle()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText(SheetScoresPreviewSamples.group.name))
+        assertShown(SheetScoresPreviewSamples.group.name)
+
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText("5A"))
+        onAllNodesWithText("Оценка").onLast().performClick()
+        assertEquals(listOf(SheetScoresPreviewSamples.ownRow.last()), totals)
+    }
+
+    @Test
+    fun aHandPickedTotalSaysSoAndResetsToTheAutomaticOne() = runComposeUiTest {
+        var resets = 0
+        setContent {
+            SheetScoresSheet(
+                SheetScoresPreviewSamples.SUBJECT,
+                SheetScoresPreviewSamples.pickTotalManual,
+                SheetScoresActions(onResetTotal = { resets++ }),
+            )
+        }
+
+        assertShown("Выбрано вручную")
+        onNodeWithTag(SheetScoresSheetTestTags.RESET).performClick()
+        assertEquals(1, resets)
+    }
+
+    @Test
+    fun anUnsureTotalSaysWhy() = runComposeUiTest {
+        setContent { Sheet(SheetScoresPreviewSamples.pickTotalCheck) }
+
+        assertShown("Столбец «${SheetScoresPreviewSamples.TOTAL_HEADER}», но строка есть и на других листах")
     }
 
     @Test

@@ -70,7 +70,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.BarsLoginViewMod
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
-import dev.alllexey.itmowidgets.feature.recordbook.ui.handleEntries
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError

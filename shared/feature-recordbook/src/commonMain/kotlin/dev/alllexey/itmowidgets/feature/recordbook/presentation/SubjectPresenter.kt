@@ -41,6 +41,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.text
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -158,16 +160,11 @@ internal object SubjectPresenter {
         return SubjectSheetLine(
             title = title?.let(UiText::Dynamic) ?: UiText.Res(RecordbookStrings.sheet_scores_link_untitled),
             caption = UiText.Res(RecordbookStrings.subject_sheet_caption, listOf(score.tabName, score.column.headerPath)),
-            problem = when (score.status) {
-                SheetStatus.OK -> null
-                SheetStatus.NETWORK -> UiText.Res(RecordbookStrings.sheet_scores_offline)
-                SheetStatus.CLOSED -> UiText.Res(RecordbookStrings.sheet_scores_closed)
-                SheetStatus.ROW_NOT_FOUND -> UiText.Res(RecordbookStrings.sheet_scores_row_not_found)
-                SheetStatus.COLUMN_NOT_FOUND -> UiText.Res(RecordbookStrings.sheet_scores_column_not_found)
-                SheetStatus.TOO_LARGE -> UiText.Res(RecordbookStrings.sheet_scores_too_large)
-            },
+            problem = score.status.text(),
             url = score.tabUrl,
             changeTotal = sheetArgs(input.scope, score.url, SheetScoresArgs.Step.TOTAL),
+            check = UiText.Res(RecordbookStrings.sheet_scores_check)
+                .takeIf { score.choice == TotalChoice.AUTO_CHECK && score.status == SheetStatus.OK },
         )
     }
 
