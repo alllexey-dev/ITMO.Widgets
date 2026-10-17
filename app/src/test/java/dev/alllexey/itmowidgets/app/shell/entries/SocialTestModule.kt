@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
@@ -40,7 +41,7 @@ import org.koin.dsl.module
  */
 internal fun socialTestModule(): Module = module {
     single<FriendRepository> { OneFriend }
-    viewModel { FriendsViewModel(OneFriendSocial) }
+    viewModel { FriendsViewModel(OneFriendSocial, FixedAcademicTime()) }
     viewModel { UserSearchViewModel(NoPeople, OneFriendSocial) }
     viewModel { UserFriendsViewModel(get<SavedStateHandle>(), OneFriendSocial) }
     viewModel { UserProfileViewModel(get<SavedStateHandle>(), OneFriendSocial, NoPerson, NoReviews, Viewer) }
