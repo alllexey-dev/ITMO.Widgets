@@ -12,6 +12,11 @@ new iOS app.
 
 ### Fixes (2026-10-17)
 
+- iOS draws the schedule's week strip again, on the tab and on another user's schedule: the paging strip of #429 drew
+  its days below its own clip while they still took taps. The feed opens on today even when the first state has no
+  rows yet.
+- Past day headers in the schedule feed are dimmed like the strip's past days on Android and iOS.
+- The schedule no longer shows week parity: the header and the week rows read `7-я неделя`.
 - A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).
 - A doubtful total shows `Проверьте итог` on the subject page; the review shows the total with its reason, the row around it and the other candidates, and `Вернуть авто` undoes a hand-picked total. On iOS `Мои баллы` is a native sheet (#419).
 

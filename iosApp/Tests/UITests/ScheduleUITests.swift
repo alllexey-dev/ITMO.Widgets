@@ -38,6 +38,24 @@ final class ScheduleUITests: XCTestCase {
         attachScreenshot(named: "days-later")
     }
 
+    /// The strip's days are drawn, not only hittable: on launch and after a tab switch back to the schedule.
+    func testWeekStripIsDrawnOnLaunchAndAfterATabSwitch() {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        openSchedule(app)
+        let today = element(app, "kit.weekDay.\(Self.today)")
+        XCTAssertTrue(waitUntilHittable(today))
+        attachScreenshot(named: "strip-launch")
+        XCTAssertTrue(today.waitUntilDrawn(timeout: stepTimeout), "today's day of the strip is drawn on launch")
+
+        app.selectTab("home")
+        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: stepTimeout))
+        app.selectTab("schedule")
+        XCTAssertTrue(waitUntilHittable(today))
+        attachScreenshot(named: "strip-tab-switch")
+        XCTAssertTrue(today.waitUntilDrawn(timeout: stepTimeout), "today's day of the strip is drawn after a tab switch")
+    }
+
     func testFastPagingDoesNotLoseTheSelectedDay() throws {
         let app = XCUIApplication.itmo()
         app.launch()
@@ -200,6 +218,9 @@ final class ScheduleUITests: XCTestCase {
         XCTAssertTrue(firstLesson(app).waitForExistence(timeout: stepTimeout), "the friend's week has lessons")
         XCTAssertFalse(element(app, "schedule.friends").exists, "no picker on another user's schedule")
         attachScreenshot(named: "user")
+        XCTAssertTrue(
+            element(app, "kit.weekDay.\(Self.today)").waitUntilDrawn(timeout: stepTimeout), "the pushed schedule's strip is drawn"
+        )
 
         _ = openLessonSheet(app)
         app.buttons[Self.close].firstMatch.tap()

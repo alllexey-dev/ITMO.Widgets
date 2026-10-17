@@ -124,7 +124,7 @@ object ScheduleFeedPresenter {
                     val day = lessons(date)
                     when {
                         day.isNotEmpty() -> {
-                            add(FeedRow.DayHeader(date, dayTitle(date), date == today, count(day)))
+                            add(FeedRow.DayHeader(date, dayTitle(date), date == today, date < today, count(day)))
                             add(FeedRow.Lessons(date, timeline(day, date, input.now, nextDay), date == today))
                         }
                         date.dayOfWeek == DayOfWeek.SATURDAY && sunday != null && known(sunday) && lessons(sunday).isEmpty() -> {
@@ -192,10 +192,7 @@ object ScheduleFeedPresenter {
         return UiText.Plural(CorePlurals.schedule_lesson_count, count, listOf(count))
     }
 
-    private fun weekLabel(week: Int) = UiText.Res(
-        if (week % 2 == 0) ScheduleStrings.schedule_week_even else ScheduleStrings.schedule_week_odd,
-        listOf(week),
-    )
+    private fun weekLabel(week: Int) = UiText.Res(ScheduleStrings.schedule_week, listOf(week))
 
     private fun userLine(user: SelectedUser) =
         UiText.Dynamic(listOfNotNull(user.name, user.group?.takeIf(String::isNotBlank)).joinToString(", "))

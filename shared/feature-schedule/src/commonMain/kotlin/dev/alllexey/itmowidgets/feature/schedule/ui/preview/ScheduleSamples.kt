@@ -196,6 +196,9 @@ object ScheduleSamples {
     /** The own feed on today, Monday. */
     val Feed: ScheduleFeedUiState get() = feed()
 
+    /** Monday and Tuesday shown on Wednesday: their headers are dimmed as past, Wednesday's is today's. */
+    val PastDays: ScheduleFeedUiState get() = feed(now = LocalDateTime(Monday.plus(2, DateTimeUnit.DAY), LocalTime(12, 22)))
+
     /** The own feed on the next week: `Сегодня` shows. */
     val NextWeek: ScheduleFeedUiState get() = feed(visible = LocalDate(2026, 9, 14))
 
