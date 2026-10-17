@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.settings
 
 enum class ScheduleWidgetFormat { COMPACT, FULL }
 
+/** The next-lesson widget. It names no teacher: [hideTeacher] is read only by the first-run flow. */
 data class CompactScheduleWidgetSettings(
     val showNextLessonEarly: Boolean = true,
     val hideTeacher: Boolean = false,
@@ -11,7 +12,7 @@ data class CompactScheduleWidgetSettings(
 data class FullScheduleWidgetSettings(
     val hideTeacher: Boolean = false,
     val hidePastLessons: Boolean = false,
-    val showTomorrowWhenTodayIsOver: Boolean = false,
+    val showTomorrowWhenTodayIsOver: Boolean = true,
     val textSize: WidgetTextSize = WidgetTextSize.NORMAL
 )
 

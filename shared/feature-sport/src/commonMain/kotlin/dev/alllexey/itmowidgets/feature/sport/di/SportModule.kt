@@ -34,6 +34,8 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSharedLesso
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportViewModel
 import org.koin.core.module.dsl.bind
+import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetDataProvider
+import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSelector
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -79,6 +81,8 @@ val sportModule = module {
     factoryOf(::SportSharedLessonResolver)
     // One holder for the tab, the feed and the schedule; it outlives every screen.
     singleOf(::SportBookingsHolder)
+    factoryOf(::SportWidgetSelector)
+    factoryOf(::SportWidgetDataProvider)
     singleOf(::SportSectionsHolder)
     viewModelOf(::SportMyViewModel)
     viewModelOf(::SportSignViewModel)
