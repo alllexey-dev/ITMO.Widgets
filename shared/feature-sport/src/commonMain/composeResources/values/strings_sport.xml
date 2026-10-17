@@ -209,4 +209,6 @@
     <string name="sport_bell_booked">%1$s: вы записаны</string>
     <string name="sport_bell_refused">%1$s: не удалось записать</string>
     <string name="sport_bell_lesson">Очередь на %1$s</string>
+    <!-- The sport widget's sample (widgets gallery and screenshots) -->
+    <string name="widget_preview_sport_volleyball">Волейбол</string>
 </resources>

@@ -601,6 +601,30 @@
         }
       }
     },
+    "widget_preview_subject_algorithms" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Алгоритмы и структуры данных"
+          }
+        }
+      }
+    },
+    "widget_preview_subject_english" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Английский язык"
+          }
+        }
+      }
+    },
     "widget_preview_subject_physics" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
@@ -609,6 +633,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Физика"
+          }
+        }
+      }
+    },
+    "widget_preview_subject_swimming" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плавание"
           }
         }
       }

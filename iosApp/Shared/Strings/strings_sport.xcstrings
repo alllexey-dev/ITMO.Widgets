@@ -2242,6 +2242,18 @@
           }
         }
       }
+    },
+    "widget_preview_sport_volleyball" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Волейбол"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
