@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The day widget's `сейчас` line with its time on the axis. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/now_root"
+    android:layout_width="match_parent"
+    android:layout_height="18dp"
+    tools:ignore="UseAppTint">
+
+    <android.widget.ImageView
+        android:id="@+id/now_line"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="28dp"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_shape_bar" />
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+
+        <android.widget.ImageView
+            android:id="@+id/now_chip_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_shape_pill" />
+
+        <TextView
+            android:id="@+id/now_chip"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:paddingHorizontal="4dp"
+            android:textColor="@android:color/white"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            tools:text="12:22" />
+    </FrameLayout>
+</FrameLayout>

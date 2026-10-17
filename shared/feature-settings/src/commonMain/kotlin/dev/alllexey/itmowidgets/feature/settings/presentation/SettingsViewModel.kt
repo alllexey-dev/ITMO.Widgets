@@ -103,7 +103,6 @@ class SettingsViewModel(
                 page = page,
                 sections = provider.sections(page, state),
                 loaded = true,
-                previewSettings = provider.preview(page, state.local),
                 themePreview = provider.themePreview(page, state.local),
                 gallery = provider.gallery(page, state)
             )

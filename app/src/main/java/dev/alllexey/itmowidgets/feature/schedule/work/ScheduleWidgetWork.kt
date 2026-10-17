@@ -77,6 +77,22 @@ object ScheduleWidgetWork {
         )
     }
 
+    /**
+     * The next minute of a running countdown or `сейчас` line: a render from the cache only (no request), on a
+     * non-waking alarm, since nobody looks at a sleeping screen.
+     */
+    fun scheduleTick(context: Context, delay: Duration) {
+        alarmManager(context).setAndAllowWhileIdle(
+            AlarmManager.ELAPSED_REALTIME,
+            SystemClock.elapsedRealtime() + delay.inWholeMilliseconds.coerceAtLeast(0L),
+            tickIntent(context)
+        )
+    }
+
+    fun cancelTick(context: Context) {
+        alarmManager(context).cancel(tickIntent(context))
+    }
+
     fun cancelIfUnused(context: Context) {
         if (ScheduleWidgetProviders.hasAnyWidget(context)) return
 
@@ -85,6 +101,7 @@ object ScheduleWidgetWork {
 
     fun cancelAll(context: Context) {
         alarmManager(context).cancel(refreshIntent(context))
+        cancelTick(context)
         WorkManager.getInstance(context).cancelUniqueWork(UPDATE_WORK)
         WorkManager.getInstance(context).cancelUniqueWork(FOLLOW_UP_WORK)
         WorkManager.getInstance(context).cancelUniqueWork(PERIODIC_WORK)
@@ -94,13 +111,15 @@ object ScheduleWidgetWork {
         return context.getSystemService(AlarmManager::class.java)
     }
 
-    private fun refreshIntent(context: Context): PendingIntent {
-        val intent = Intent(context, ScheduleWidgetRefreshReceiver::class.java).apply {
-            action = ScheduleWidgetRefreshReceiver.ACTION_REFRESH
-        }
+    private fun refreshIntent(context: Context): PendingIntent = receiverIntent(context, ScheduleWidgetRefreshReceiver.ACTION_REFRESH, 0)
+
+    private fun tickIntent(context: Context): PendingIntent = receiverIntent(context, ScheduleWidgetRefreshReceiver.ACTION_TICK, 1)
+
+    private fun receiverIntent(context: Context, action: String, requestCode: Int): PendingIntent {
+        val intent = Intent(context, ScheduleWidgetRefreshReceiver::class.java).setAction(action)
         return PendingIntent.getBroadcast(
             context,
-            0,
+            requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

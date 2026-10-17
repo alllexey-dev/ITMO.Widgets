@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.app
 
-import android.appwidget.AppWidgetManager
-import dev.alllexey.itmowidgets.core.notification.FcmWork
-import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import android.content.Context
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
+import dev.alllexey.itmowidgets.core.notification.FcmWork
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
@@ -16,14 +16,18 @@ import dev.alllexey.itmowidgets.feature.qr.work.QrWidgetWork
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders
-import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetWork
+import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshotStore
+import dev.alllexey.itmowidgets.feature.sport.ui.widget.SportWidgetProviders
+import dev.alllexey.itmowidgets.feature.sport.work.SportWidgetWork
 
 class AndroidSessionLifecycleEffects(
     private val context: Context,
     private val widgetSettings: WidgetSettingsPreferences,
     private val palettes: WidgetPaletteSource,
     private val scheduleWidgetStore: ScheduleWidgetSnapshotStore,
+    private val sportWidgetStore: SportWidgetSnapshotStore,
+    private val time: AcademicTimeProvider,
     private val qrWidgetStateStore: QrWidgetStateStore,
     private val qrWidgetImages: QrWidgetImages,
     private val notifier: AppNotifier,
@@ -35,6 +39,7 @@ class AndroidSessionLifecycleEffects(
         notifier.clear()
         QrWidgetWork.cancelAll(context)
         ScheduleWidgetWork.cancelAll(context)
+        SportWidgetWork.cancelAll(context)
         backgroundChecks.forEach { it.stopWork() }
     }
 
@@ -47,40 +52,22 @@ class AndroidSessionLifecycleEffects(
             ScheduleWidgetWork.ensurePeriodic(context)
             ScheduleWidgetWork.enqueueUpdate(context, force = true)
         }
+        if (SportWidgetWork.ids(context).isNotEmpty()) {
+            SportWidgetWork.ensurePeriodic(context)
+            SportWidgetWork.enqueueUpdate(context, force = true)
+        }
     }
 
     override suspend fun onSignedOut() {
         renderSignedOutScheduleWidgets()
+        SportWidgetProviders.render(context, sportWidgetStore.read(), palettes.current())
         renderSignedOutQrWidgets()
     }
 
     private suspend fun renderSignedOutScheduleWidgets() {
-        val snapshot = ScheduleWidgetSnapshot.signedOut(
-            singleLessonStyle = widgetSettings.getSingleLessonWidgetStyle(),
-            lessonListStyle = widgetSettings.getLessonListWidgetStyle()
-        ).withTextSizes(widgetSettings.getScheduleWidgetSettings())
+        val snapshot = ScheduleWidgetSnapshot.signedOut().withTextSizes(widgetSettings.getScheduleWidgetSettings())
         scheduleWidgetStore.write(snapshot)
-
-        val palette = palettes.current()
-        val manager = AppWidgetManager.getInstance(context)
-        ScheduleWidgetProviders.singleLessonIds(context).forEach { appWidgetId ->
-            ScheduleWidgetRenderer.renderSingle(
-                context = context,
-                appWidgetManager = manager,
-                appWidgetId = appWidgetId,
-                snapshot = snapshot,
-                palette = palette
-            )
-        }
-        ScheduleWidgetProviders.dayScheduleIds(context).forEach { appWidgetId ->
-            ScheduleWidgetRenderer.renderList(
-                context = context,
-                appWidgetManager = manager,
-                appWidgetId = appWidgetId,
-                snapshot = snapshot,
-                palette = palette
-            )
-        }
+        ScheduleWidgetProviders.render(context, snapshot, palettes.current(), time.now())
     }
 
     private suspend fun renderSignedOutQrWidgets() {

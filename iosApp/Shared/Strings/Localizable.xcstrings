@@ -1448,7 +1448,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Список пар на сегодня"
+            "value" : "День с линией «сейчас»"
           }
         }
       }
@@ -1460,7 +1460,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Расписание"
+            "value" : "Расписание на день"
           }
         }
       }
@@ -1676,7 +1676,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "QR-код"
+            "value" : "Пропуск"
           }
         }
       }
@@ -1688,7 +1688,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Текущая или следующая"
+            "value" : "Сейчас и далее"
           }
         }
       }

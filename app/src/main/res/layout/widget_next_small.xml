@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- W1, small (2 x 2): the lesson to go to. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background_rounded"
+    android:clipToOutline="true">
+
+    <include layout="@layout/widget_theme_background" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="14dp">
+
+        <include layout="@layout/widget_next_body" />
+
+        <include layout="@layout/widget_message" />
+    </FrameLayout>
+</FrameLayout>

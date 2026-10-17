@@ -207,3 +207,14 @@ object SportWidgetTimelineJson {
         return json.decodeFromJsonElement(SportWidgetTimeline.serializer(), root)
     }
 }
+
+/** The sport widget's last snapshot on the device, kept per session so an old session's data never shows. */
+interface SportWidgetSnapshotStore {
+    suspend fun read(): SportWidgetSnapshot
+
+    /** Session generation captured before a fetch starts. */
+    suspend fun currentGeneration(): Long
+
+    /** Writes unless a session change came since [generation] was read. */
+    suspend fun writeIfCurrent(snapshot: SportWidgetSnapshot, generation: Long): Boolean
+}

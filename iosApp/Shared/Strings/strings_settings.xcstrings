@@ -2065,18 +2065,6 @@
         }
       }
     },
-    "settings_widget_pin_failed" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не удалось добавить виджет"
-          }
-        }
-      }
-    },
     "settings_widget_sample_note" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",

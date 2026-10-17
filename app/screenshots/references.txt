@@ -1,5 +1,5 @@
 # Baselines of app/screenshots/ that no preview of :app renders: the shell chrome (ShellChromeScreenshotTest), which
-# captures the whole screen with its sheet window, and the widgets in the app's theme (WidgetThemeScreenshotTest),
+# captures the whole screen with its sheet window, and every widget (WidgetsScreenshotTest),
 # drawn through RemoteViews. Listed so a PreviewScreenshotTest of :app
 # (DebugToolsScreenshotTest) does not report them as stale.
 ShellBar
@@ -9,9 +9,24 @@ ShellOverlay
 ShellPassSheet
 ShellPredictiveBack
 ShellSheet
-WidgetTheme_compact-off
-WidgetTheme_compact-teal
-WidgetTheme_full-off
-WidgetTheme_full-teal
-WidgetTheme_qr-off
-WidgetTheme_qr-teal
+Widget_next-small-off
+Widget_next-medium-off
+Widget_next-medium-teal
+Widget_next-morning-off
+Widget_next-gap-off
+Widget_next-evening-off
+Widget_next-signed-out-off
+Widget_day-off
+Widget_day-teal
+Widget_day-morning-off
+Widget_day-evening-off
+Widget_sport-small-off
+Widget_sport-queue-off
+Widget_sport-queue-teal
+Widget_sport-booked-off
+Widget_sport-done-off
+Widget_qr-off
+Widget_qr-teal
+WidgetsGalleryLive
+WidgetsGalleryLiveNext
+WidgetsGalleryLiveDay

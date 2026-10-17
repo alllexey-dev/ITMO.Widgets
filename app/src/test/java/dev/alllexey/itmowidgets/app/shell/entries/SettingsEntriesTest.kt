@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
+import dev.alllexey.itmowidgets.feature.settings.ui.widgets.WidgetsGalleryTags
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -131,16 +133,18 @@ class SettingsEntriesTest {
     }
 
     @Test
-    fun theSpoilerPickAndCropReachTheQrPageAfterItsStateWasRestored() {
+    fun theSpoilerPickAndCropReachThePassSheetAfterItsStateWasRestored() {
         val restoration = StateRestorationTester(compose)
         restoration.setContent { Shell() }
-        act { open(AppRoutes.Settings(SettingsPage.QR_WIDGET.name)) }
-        awaitRows()
+        act { open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) }
+        awaitGallery()
+        compose.onNodeWithTag(WidgetsGalleryTags.SCROLL).performScrollToNode(hasTestTag(WidgetsGalleryTags.settings(WidgetFormat.PASS)))
+        clickTop(WidgetsGalleryTags.settings(WidgetFormat.PASS))
 
-        clickRow(SettingRowId.QR_CUSTOM_IMAGE)
+        clickTop(SettingRowId.QR_CUSTOM_IMAGE.key)
         val pick = shadowOf(compose.activity).nextStartedActivityForResult
         restoration.emulateSavedInstanceStateRestore()
-        awaitRows()
+        awaitGallery()
 
         dispatch(pick.requestCode, Intent().setData(PICKED))
         val crop = shadowOf(compose.activity).nextStartedActivityForResult
@@ -167,6 +171,11 @@ class SettingsEntriesTest {
     private fun act(block: Nav3AppNavigator.() -> Unit) {
         compose.runOnIdle { navigator.block() }
         compose.waitForIdle()
+    }
+
+    /** The gallery shows its cards once its local settings arrive. */
+    private fun awaitGallery() {
+        compose.waitUntil(TIMEOUT_MS) { compose.onAllNodesWithTag(WidgetsGalleryTags.SCROLL).fetchSemanticsNodes().isNotEmpty() }
     }
 
     /** The top page shows its rows once its local settings arrive. */

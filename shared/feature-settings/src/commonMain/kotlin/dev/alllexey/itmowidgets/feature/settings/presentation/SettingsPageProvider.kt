@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
-import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import kotlinx.coroutines.flow.Flow
@@ -27,9 +26,6 @@ interface SettingsPageProvider {
      * waits on that source.
      */
     fun observeState(page: SettingsPage, state: Flow<SettingsPageState>): Flow<SettingsPageState> = state
-
-    /** The widget [page] configures, drawn above its rows. */
-    fun preview(page: SettingsPage, local: LocalSettings): WidgetPreviewSettings? = null
 
     /** The appearance [page] shows a sample of above its rows. */
     fun themePreview(page: SettingsPage, local: LocalSettings): ThemeSpec? = null

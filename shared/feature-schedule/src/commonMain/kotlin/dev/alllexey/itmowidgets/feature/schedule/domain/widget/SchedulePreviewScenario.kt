@@ -31,8 +31,11 @@ data class SchedulePreviewLabels(
     val teacher: String,
 )
 
-/** When a sample is seen: during the third lesson (12:22) or after the last one (19:40). */
-enum class SchedulePreviewMoment(val hour: Int, val minute: Int) { LESSON(12, 22), EVENING(19, 40) }
+/**
+ * When a sample is seen: during the third lesson (12:22, the gallery's moment), before the first (08:05), in the gap
+ * (13:40) or after the last one (19:40).
+ */
+enum class SchedulePreviewMoment(val hour: Int, val minute: Int) { LESSON(12, 22), MORNING(8, 5), GAP(13, 40), EVENING(19, 40) }
 
 /**
  * The fixed sample day of the widgets gallery, the launcher previews and the screenshot tests (the design lab's

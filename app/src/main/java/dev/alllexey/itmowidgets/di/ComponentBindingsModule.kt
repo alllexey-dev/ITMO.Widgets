@@ -12,6 +12,8 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSna
 import dev.alllexey.itmowidgets.feature.social.data.push.FriendshipPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportAgentBookedPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushHandler
+import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetSnapshotStoreImpl
+import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.weblogin.data.push.DeviceConnectedPushHandler
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -28,6 +30,8 @@ val componentBindingsModule = module {
     // The widgets, the worker and the session effects share one store; the cleaner contribution is qualified.
     singleOf(::ScheduleWidgetSnapshotStoreImpl) { bind<ScheduleWidgetSnapshotStore>() }
     single<SessionDataCleaner>(named("schedule-widget")) { get<ScheduleWidgetSnapshotStoreImpl>() }
+    singleOf(::SportWidgetSnapshotStoreImpl) { bind<SportWidgetSnapshotStore>() }
+    single<SessionDataCleaner>(named("sport-widget")) { get<SportWidgetSnapshotStoreImpl>() }
 
     factoryOf(::QrTileController)
 

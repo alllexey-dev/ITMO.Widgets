@@ -72,14 +72,18 @@ class SettingsViewModelTest {
     fun missingOrObsoletePageArgumentSafelyOpensTheCatalogue() {
         assertEquals(SettingsPage.ROOT, SettingsPage.fromArgument(null))
         assertEquals(SettingsPage.ROOT, SettingsPage.fromArgument("obsolete"))
-        assertEquals(SettingsPage.QR_WIDGET, SettingsPage.fromArgument("QR_WIDGET"))
+        assertEquals(SettingsPage.WIDGETS, SettingsPage.fromArgument("WIDGETS"))
+        // The per-widget pages the gallery replaced, which old links still name.
+        listOf("QR_WIDGET", "COMPACT_SCHEDULE_WIDGET", "FULL_SCHEDULE_WIDGET", "SCHEDULE_WIDGETS").forEach {
+            assertEquals(SettingsPage.WIDGETS, SettingsPage.fromArgument(it))
+        }
     }
 
     @Test
     fun doesNotPublishDefaultsBeforeStoredLocalSettingsArrive() =
         runTest(main.dispatcher) {
             val fixture = createFixture(
-                page = SettingsPage.FULL_SCHEDULE_WIDGET,
+                page = SettingsPage.WIDGETS,
                 local = LocalSettings(
                     customServicesEnabled = true,
                     scheduleWidget = ScheduleWidgetSettings(
@@ -100,7 +104,7 @@ class SettingsViewModelTest {
             fixture.repository.publishLocalSettings()
             advanceUntilIdle()
 
-            assertTrue(fixture.viewModel.toggle(SettingRowId.FULL_WIDGET_HIDE_TEACHER).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.FULL_WIDGET_SHOW_TEACHER).checked)
             assertTrue(fixture.viewModel.toggle(SettingRowId.FULL_WIDGET_HIDE_PAST).checked)
             assertTrue(fixture.viewModel.toggle(SettingRowId.FULL_WIDGET_SHOW_TOMORROW).checked)
         }
@@ -130,9 +134,8 @@ class SettingsViewModelTest {
                     SettingRowId.SPORT_SHARING,
                     SettingRowId.FRIENDS_SHARING,
                     SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
-                    SettingRowId.COMPACT_WIDGET_HIDE_TEACHER,
                     SettingRowId.COMPACT_WIDGET_TEXT_SIZE,
-                    SettingRowId.FULL_WIDGET_HIDE_TEACHER,
+                    SettingRowId.FULL_WIDGET_SHOW_TEACHER,
                     SettingRowId.FULL_WIDGET_HIDE_PAST,
                     SettingRowId.FULL_WIDGET_SHOW_TOMORROW,
                     SettingRowId.FULL_WIDGET_TEXT_SIZE,

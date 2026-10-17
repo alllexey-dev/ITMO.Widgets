@@ -307,7 +307,7 @@ internal object SettingsPreviewData {
             backgroundWorkRestricted = false,
             placedWidgets = placed,
         )
-        val rows = WidgetGalleryRows(capabilities, canAddTile = true)
+        val rows = WidgetGalleryRows(capabilities, canAddTile = false)
         return SettingsUiState(SettingsPage.WIDGETS, rows.page(state), loaded = true, gallery = rows.gallery(state))
     }
 
@@ -510,11 +510,8 @@ internal object SettingsPreviewData {
     private fun navigation(page: SettingsPage, title: UiText = page.title, value: UiText? = null) =
         SettingItem.Navigation(SettingRowId.navigation(page), title, value, page = page)
 
-    private fun state(
-        page: SettingsPage,
-        vararg sections: SettingSection,
-        preview: WidgetPreviewSettings? = null
-    ) = SettingsUiState(page, sections.toList(), loaded = true, previewSettings = preview)
+    private fun state(page: SettingsPage, vararg sections: SettingSection) =
+        SettingsUiState(page, sections.toList(), loaded = true)
 
     private fun res(resource: StringResource) = UiText.Res(resource.key)
 
