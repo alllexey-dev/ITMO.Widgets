@@ -76,6 +76,11 @@ class NotificationSettingsViewModel(
         permission.value = if (granted) NotificationPermission.ALLOWED else NotificationPermission.DENIED
     }
 
+    /** iOS has never asked: not a denial, so no gate; the first check turned on asks. */
+    fun onPermissionNotAsked() {
+        permission.value = NotificationPermission.UNKNOWN
+    }
+
     /** Android's channels by id, enabled or not; iOS has none per type. */
     fun onChannelsChanged(enabled: Map<String, Boolean>) {
         channels.value = enabled
@@ -151,7 +156,7 @@ class NotificationSettingsViewModel(
                 return@launch
             }
             if (!enabled) return@launch
-            if (permission.value == NotificationPermission.DENIED) eventQueue.send(NotificationSettingsEvent.RequestPermission)
+            if (permission.value != NotificationPermission.ALLOWED) eventQueue.send(NotificationSettingsEvent.RequestPermission)
             offerBackgroundWorkHint()
         }
     }

@@ -14,13 +14,13 @@ import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.EntryRoute
-import dev.alllexey.itmowidgets.core.ui.permission.openAppNotificationSettings
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.home.presentation.TodayViewModel
 import dev.alllexey.itmowidgets.feature.home.ui.BellRoute
 import dev.alllexey.itmowidgets.feature.home.ui.TodayActions
 import dev.alllexey.itmowidgets.feature.home.ui.TodayRoute
 import dev.alllexey.itmowidgets.feature.qr.ui.QrPassRoute
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 
 /**
  * Сегодня's overlays: the pass sheet (the `Пропуск` button, the widgets, the tile and the shortcut open it) and the
@@ -37,7 +37,7 @@ internal fun EntryRegistry.Builder.homeEntries() {
             },
             onSettings = {
                 navigator.close(key)
-                context.openAppNotificationSettings()
+                navigator.open(AppRoutes.Settings(SettingsPage.NOTIFICATIONS.name))
             },
             onClose = { navigator.close(key) },
             viewModel = viewModel { KoinStarter.ensureStarted(context).get() },

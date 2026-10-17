@@ -5,7 +5,7 @@ import UIKit
 /// The bell's sheet (docs/features/home.md, The bell) over the shared `BellViewModel`, one per opening: the events
 /// new at this opening under "new" with a dot and a bold title, the rest under "earlier", or "nothing new" over
 /// them; each row opens its event's home (the sheet closes first). Opening reads everything; there is no
-/// "read all". The notification settings row opens the system settings of the app until its own page.
+/// "read all". The notification settings row opens «Уведомления».
 struct BellSheet: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
@@ -21,9 +21,7 @@ struct BellSheet: View {
                     answer: { item, accept in model.viewModel.answer(item: item, accept: accept) },
                     settings: {
                         dismiss()
-                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
-                            UIApplication.shared.open(url)
-                        }
+                        router.open(AppRoutes.Settings(page: SettingsPage.notifications.name))
                     }
                 )
             )
