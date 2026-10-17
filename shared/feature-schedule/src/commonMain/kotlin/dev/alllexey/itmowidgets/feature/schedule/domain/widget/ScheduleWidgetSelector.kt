@@ -263,6 +263,8 @@ class ScheduleWidgetSelector {
         changed = change != null && !cancelled,
         cancelled = cancelled,
         queued = sport == SportMark.QUEUED,
+        queuePosition = queue?.position ?: 0,
+        queueTotal = queue?.total ?: 0,
         lesson = (target as? LessonTarget.Lesson)?.args,
         sport = (target as? LessonTarget.PendingSport)?.args,
     )

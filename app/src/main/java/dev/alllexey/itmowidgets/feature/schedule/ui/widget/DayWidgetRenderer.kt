@@ -193,12 +193,12 @@ object DayWidgetRenderer {
         row.setViewVisibility(R.id.lesson_building, if (building != null) View.VISIBLE else View.GONE)
         row.setTextViewText(R.id.lesson_building, building)
         val pill = when {
-            lesson.cancelled -> R.string.lesson_pill_cancelled
-            lesson.queued -> R.string.lesson_pill_queue
+            lesson.cancelled -> context.getString(R.string.lesson_pill_cancelled)
+            lesson.queued -> texts.queue(lesson)
             else -> null
         }
         row.setViewVisibility(R.id.lesson_pill, if (pill != null) View.VISIBLE else View.GONE)
-        pill?.let { row.setTextViewText(R.id.lesson_pill, context.getString(it)) }
+        row.setTextViewText(R.id.lesson_pill, pill)
         colors.apply(row, R.id.lesson_subject, "setTextColor", ink)
         colors.apply(row, R.id.lesson_room, "setTextColor", if (lesson.changed) R.color.widget_warn else ink)
         colors.tint(row, R.id.lesson_online_icon, ink)
