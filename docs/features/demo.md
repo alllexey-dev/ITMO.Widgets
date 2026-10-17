@@ -58,7 +58,7 @@ Non-obvious per-area rules:
   `.ics` export works on the demo schedule.
 - Sport auto-sign pushes are ignored (`SportSignPushHandler`).
 - Widgets do not show demo data on Android: without an ITMO.ID token they stay
-  signed out. Store widget images come from `WidgetPreviewImageCapture`.
+  signed out. Store widget images come from `WidgetPreviewImagesTest` (`ITMO_WRITE_WIDGET_PREVIEWS=1`).
 
 ## Data set
 

@@ -1,109 +1,126 @@
 # Widgets
 
-Product behaviour: [Как это работает: виджеты](../how-it-works/widgets.md).
+Product behaviour: [Как это работает: виджеты](../how-it-works/widgets.md). Settings: [the widgets
+gallery](../settings.md#widgets-gallery).
 
-Three home-screen widgets (single lesson, day schedule, QR pass), rendered by
-WorkManager workers; the app never registers a widget host.
+Four home-screen widgets (spec "Виджеты" of the UX overhaul): the next lesson (W1, small and medium), the day
+(W2, large), sport (W3, small and medium) and the QR pass. Android draws them as RemoteViews (ADR 0027) from
+WorkManager workers and alarms; the app never registers a widget host. iOS draws them in WidgetKit from App Group
+timelines ([iOS widgets](../ios.md#widgets)).
 
 ## Schedule widgets
 
-RemoteViews in `:app` (`feature/schedule/ui/widget`, `feature/schedule/work`:
-`ScheduleWidgetRenderer`, `ScheduleWidgetUpdateWorker`), reading Koin through
-`KoinStarter` ([schedule](schedule.md#modules)).
+Shared in `shared/feature-schedule` (`domain/widget`, `data/widget`); RemoteViews in `:app`
+(`feature/schedule/ui/widget`: `NextLessonWidgetRenderer`, `DayWidgetRenderer`, `DayTimelineLayout`;
+`feature/schedule/work`: `ScheduleWidgetUpdateWorker`, `ScheduleWidgetRefreshReceiver`).
 
-- `ScheduleWidgetDataProvider` loads only the own academic range. With
-  `Автозапись на спорт` and services enabled it also refreshes the pending
-  projection and reads its completed snapshot; no synthetic empty emission,
-  no implicit network request.
-- `ScheduleWidgetSelector` builds a widget-only timeline (never synthetic
-  academic lessons); selection, teacher visibility and refresh boundaries
-  include pending times. Pending rows carry a persisted `WAITING` or
-  `PREDICTED` marker and never become confirmed lessons.
-- Queue-enabled widgets refresh within 7 minutes (`PERIODIC_UPDATE_DELAY`)
-  or at the next lesson boundary; pending data expires the same way, the
-  snapshot keeps an official-only fallback, and reads re-check settings and
-  authentication.
-- Snapshot: kotlinx JSON in `noBackupFilesDir/widgets/schedule_snapshot.json`
-  (`ScheduleWidgetSnapshotStoreImpl`, `AtomicTextFile`), top-level
-  `formatVersion` 2 written first; no field = a 2.2 snapshot with the same
-  keys; another version reads as loading until the next refresh. Serial names
-  are a contract with the [iOS timeline](#timeline-widgetkit).
-- The snapshot store is a session cleaner: cleanup invalidates in-flight
-  worker tickets before clearing disk, so an old account's snapshot cannot
-  land in a new session. `AndroidSessionLifecycleEffects` cancels widget work
-  before a session change and renders signed-out placeholders after.
-- A tap opens the schedule through the route queue of `MainActivity`
-  ([navigation](../architecture.md#navigation)): Recents never repeats it.
-- Sport actions, preference changes and the services gate force a schedule
-  widget update through `WidgetRefreshCoordinator` (QR untouched); a sport
-  action adds a follow-up 1 s later because MyITMO may first return the old
-  schedule. Failed refreshes log a `ScheduleWidget` diagnostics warning.
-- Compact and full settings are independent models in `core/settings`
-  (`WidgetSettingsPreferences`). Text size (`WidgetTextSize`) is in the
-  snapshot and applied on every render, so a recycled view keeps nothing.
-- The day widget sends rows inline (`RemoteCollectionItems`) with stable ids,
-  so old rows never show under a newer header.
-  `ScheduleWidgetRemoteViewsService` stays for launchers holding an old
-  adapter intent.
-- Descriptors (`res/xml-v31`: `minWidth` 180 dp) never ask for more than the
-  layouts need: a launcher scales the widget down below the minimum.
+- `ScheduleWidgetDataProvider` reads the own `ScheduleDays` of today and tomorrow (the days Сегодня and the
+  schedule draw: the found changes, cancelled lessons, sport bookings and, while `Автозапись на спорт` and the
+  services are on, the sport queues). `load(refresh = true)` fetches first; `load(refresh = false)` reads the cache
+  only.
+- `ScheduleWidgetSelector.select` builds one `ScheduleWidgetSnapshot` at an instant:
+  - `next` (W1): the lesson to go to with its moment (`NOW` `Сейчас, до 13:10`, `FIRST`, `NEXT`, `TOMORROW`), the
+    countdown target `until` and the current lesson's `since`, `window` for a wait of an hour or more, up to two
+    `rest` lessons of the same day and the day's `lastEnd`. A queue never becomes the lesson to go to and a
+    cancelled lesson is skipped. After the last lesson it is tomorrow's first lesson. `Следующая пара заранее`
+    switches 15 minutes before the end.
+  - `day` (W2): the lessons of today or, once today is over and `Завтрашние пары вечером` is on, tomorrow, with
+    their state (`DONE`, `NOW`, `UPCOMING`), changed, cancelled and queued marks, the gaps of an hour or more, the
+    time axis (`axisStart`, `axisEnd` in minutes of the day) and the `сейчас` minute `now` (from an hour before
+    the first lesson to the end of the last, null on tomorrow's day), and the subtitle's counts (`DaySummary`).
+  - Each `WidgetLesson` carries the `LessonDetailsArgs` or `PendingSportDetailsArgs` its tap opens.
+  - A snapshot with a queue has an exact official-only `officialFallback` and `pendingValidUntil`; the store shows
+    the fallback once the queue rows are off or the deadline passed.
+- Android draws the snapshot at the moment of drawing: the countdown text and the progress of W1 come from
+  `until` and `since` and the clock. While `ScheduleWidgetSnapshot.isLive` (a countdown or the `сейчас` line), a
+  non-waking alarm (`ScheduleWidgetWork.scheduleTick`) redraws both widgets every minute from the cache, without a
+  request; the next boundary (a start, an end, the early switch, an hour before a first lesson, a midnight) and
+  the 7-minute queue refresh run the worker with a fetch.
+- W1 is one provider (`SingleLessonWidgetProvider`) with two layouts: from API 31 a responsive `RemoteViews(Map)`
+  (small from 110 dp, medium from 250 dp wide); below it the layout of the widget's narrowest width.
+- W2 (`DayScheduleWidgetProvider`): from API 31 one layout per launcher size (`OPTION_APPWIDGET_SIZES`), the hours,
+  the gaps, the lessons and the `сейчас` line placed at their minutes on `day_canvas` with `setViewLayoutMargin`
+  and `setViewLayoutHeight`. `DayTimelineLayout` maps minutes to dp: a lesson keeps at least two lines' height and
+  the rest of the day shares what is left in proportion. Below API 31 the lessons stack in `day_list`.
+- Snapshot: kotlinx JSON in `noBackupFilesDir/widgets/schedule_snapshot.json` (`ScheduleWidgetSnapshotStoreImpl`,
+  `AtomicTextFile`), `formatVersion` 3 written first; another version (2.2's file, version 2) reads as loading
+  until the next update. The store is a session cleaner: cleanup invalidates in-flight worker tickets before
+  clearing disk, so an old account's snapshot cannot land in a new session. `AndroidSessionLifecycleEffects`
+  cancels widget work before a session change and renders signed-out placeholders after.
+- Taps go through the route queue of `MainActivity` ([navigation](../architecture.md#navigation)), each target
+  with its own data URI (`WidgetIntents`): a lesson opens its sheet (`ACTION_OPEN_LESSON`), a queue its sport lesson
+  (`ACTION_OPEN_SPORT` with the lesson), the day header and the rest of the widget the schedule.
+- Sport actions, preference changes and the services gate force an update through `WidgetRefreshCoordinator`; a
+  sport action adds a follow-up 1 s later because MyITMO may first return the old schedule. Failed refreshes log
+  a `ScheduleWidget` diagnostics warning.
+- Text size (`WidgetTextSize`) is in the snapshot per format and applied on every render.
 
 ### Timeline (WidgetKit)
 
-`ScheduleWidgetSelector.timeline` (via
-`ScheduleWidgetDataProvider.loadTimeline`) emits an entry at the start and at
-every instant the snapshot can change (lesson starts and ends, compact early
-switch, midnights, pending sport starts), merging equal neighbours; every
-entry equals `select` over its interval. `ScheduleWidgetTimelineJson`, version
-1: `{"version", "generatedAt", "validUntil", "entries": [{"validFrom",
-"snapshot"}]}`, snapshot in `schedule_snapshot.json` keys, nulls omitted,
-defaults written, ISO-8601 UTC. `version` stays for additive fields and goes
-up for a rename or removal; readers reject a higher one. Fixture:
-`shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json`. Android
-does not use the timeline.
+`ScheduleWidgetSelector.timeline` (via `ScheduleWidgetDataProvider.loadTimeline`) emits an entry at the start and at
+every boundary, merging neighbours that differ only in the `сейчас` minute; an entry whose day shows the line
+carries `nowTicks` (every 5 minutes, `{at, minute}`), from which the reader shows the entry with that `now`.
+`ScheduleWidgetTimelineJson`, version 2: `{"version", "generatedAt", "validUntil", "palette", "entries":
+[{"validFrom", "snapshot", "nowTicks"}]}`, nulls omitted, defaults written, ISO-8601 UTC. `version` stays for
+additive fields and goes up for a rename or removal; readers accept only their own. Fixture:
+`shared/feature-schedule/fixtures/schedule-widget-timeline-v2.json`. Countdowns are system live text on iOS
+(`until`, `since`); Swift takes no time decision.
 
-### iOS
+## Sport widget
 
-The lesson and day widgets read the App Group file schedule-timeline-v1.json,
-which `ScheduleTimelineWriter` computes to the end of tomorrow; Swift makes no
-time decisions. Rewritten on sign-in/out, widget options, foreground, cache
-changes and sport actions. Details: [iOS app](../ios.md#widgets).
+Shared in `shared/feature-sport` (`domain/widget/SportWidget.kt`, `data/widget/SportWidgetDataProvider.kt`); Android
+in `feature/sport/ui/widget` (`SportWidgetProvider`, `SportWidgetRenderer`, `SportWidgetProviders`) and
+`feature/sport/work/SportWidgetWork.kt`.
+
+- `SportWidgetDataProvider` fetches as `Моё` does: the score from My ITMO, the bookings with their queues (the queues
+  only through the custom-services gate of `SportDataRepository`; demo data in a demo session). Signed out it
+  starts no request.
+- `SportWidgetSelector` makes `SportWidgetSnapshot`: `visits`, the credited `bonus` (at most 40), their `total`, and
+  up to two bookings or waiting queues that have not ended, nearest first, with their day (`TODAY`, `TOMORROW`,
+  `LATER`), time, section, MyITMO's building address and status (`BOOKED` `записаны`, `QUEUE` `очередь 2 из 5`,
+  `UNPUBLISHED` `ждём расписание`). `done` (100 or more) closes the ring in green. No score: `ERROR`; no bookings:
+  the ring alone.
+- Android: hourly periodic work, an update after every sport action, and an RTC alarm at the snapshot's next change
+  by itself (a booking ends, a midnight; `SportWidgetLoad.nextChange`). The snapshot is kept in
+  `noBackupFilesDir/widgets/sport_snapshot.json` (`formatVersion` 1, `SportWidgetSnapshotStoreImpl`, a session cleaner) for launcher
+  redraws. The ring is three white `ALPHA_8` arc bitmaps tinted per render, so it follows light and dark like the
+  text. Small and medium are one responsive provider, as W1.
+- iOS reads the App Group file sport-widget-v1.json (`SportWidgetTimeline`, entries at each booking end and midnight).
+- Taps: the widget opens Спорт, a booking row its lesson (`ACTION_OPEN_SPORT` with the lesson id).
 
 ## QR widget
 
-- Custom spoiler image (`core/qr/CustomSpoilerManager`): a bounded
-  420 x 420 PNG, saved atomically; widgets refresh only after success.
+- Custom spoiler image (`core/qr/CustomSpoilerManager`): a bounded 420 x 420 PNG, saved atomically; widgets refresh
+  only after success.
 - Expiry is passive: an expired code stops being emitted (known gap).
-- Widget, worker and renderer stay in `:app`; the pass, cache and per-widget
-  reveal state (`qr_widget_state_<appWidgetId>`) are `QrCodeRepository` and
-  `QrWidgetStateStore` of `:shared:feature-qr`, shared with the pass screen
-  ([QR pass](qr.md#data)).
+- Widget, worker and renderer stay in `:app`; the pass, cache and per-widget reveal state
+  (`qr_widget_state_<appWidgetId>`) are `QrCodeRepository` and `QrWidgetStateStore` of `:shared:feature-qr`, shared
+  with the pass screen ([QR pass](qr.md#data)).
 
 ## Theme colours
 
 `Виджеты в цвет темы` (`widgets_follow_app_theme`, off by default,
 [settings](../settings.md#widgets-in-the-apps-colours)).
 
-- One resolver: `ThemeSpec.widgetPalette(context)` (`:shared:designsystem`,
-  without `Чёрный фон`) -> `WidgetPalette`; renderers read it via
+- One resolver: `ThemeSpec.widgetPalette(context)` (`:shared:designsystem`, without `Чёрный фон`) -> `WidgetPalette`
+  (surface, containers, text, outline, primary, primary container, tertiary); renderers read it via
   `WidgetPaletteSource` (null while off).
-- Schedule widgets: `WidgetColors` sets every label colour on every render.
-  On Android 12+ colours are light/dark pairs (`RemoteViews.setColorInt`).
-  Background tint layers (`widget_theme_background.xml`) show only while on.
-  Lesson type colours stay.
-- QR: `QrColorResolver` uses the palette only while `Динамические цвета` is
-  on; otherwise black on white.
-- The switch or any `Оформление` change calls
-  `WidgetRefreshRequester.refreshAll`. iOS writes the palette into the widget
-  JSON files (`palette`).
+- `WidgetColors` sets every colour on every render: on Android 12+ light/dark pairs (`RemoteViews.setColorInt`),
+  shapes tinted through `setColorFilter`. The lesson type colours and the status tones (`очередь`, `записаны`)
+  stay the widgets' own. Background tint layers (`widget_theme_background.xml`) show only while on.
+- QR: `QrColorResolver` uses the palette only while `Динамические цвета` is on; otherwise black on white.
+- The switch or any `Оформление` change calls `WidgetRefreshRequester.refreshAll`. iOS writes the palette into the
+  widget JSON files (`palette`).
 
 ## Previews
 
-- Launcher picker: `previewLayout` (Android 12+) and `previewImage` PNGs
-  rendered by `WidgetPreviewImageCapture` (`captureScreenshots=true`).
-  Regenerate both whenever a widget layout changes.
-- Settings previews: real renderers on sample data via
-  `core/ui/widget.WidgetPreviewFactory` (`DefaultWidgetPreviewFactory`);
-  `QrPreviewBitmapCache` holds at most four bitmap pairs, off the main thread.
-  Previews never register a host, create PendingIntents, touch the network or
-  write snapshots.
+- Launcher picker: `previewImage` PNGs (`res/drawable{,-night}-420dpi/widget_*_preview.png`) are the real
+  renderers on the sample day, written by `WidgetPreviewImagesTest` with `ITMO_WRITE_WIDGET_PREVIEWS=1`; the Android
+  12+ `previewLayout`s show the same images. Regenerate them whenever a widget layout changes.
+- The gallery's previews: real renderers on sample data via `core/ui/widget.WidgetPreviewFactory`
+  (`DefaultWidgetPreviewFactory`: `ScheduleSettingsPreview`, `SportSettingsPreview`, `QrSettingsPreview`);
+  `QrPreviewBitmapCache` holds at most four bitmap pairs, off the main thread. Previews never register a host,
+  create PendingIntents, touch the network or write snapshots.
+- Checks: `WidgetsScreenshotTest` (`app/screenshots/Widget_*`) draws every widget state through RemoteViews on the
+  JVM, `WidgetsGalleryScreenshotTest` the gallery with them, the instrumented `WidgetRenderingTest` inflates every
+  layout on the device's API level.

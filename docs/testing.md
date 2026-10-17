@@ -78,7 +78,7 @@ They run only on an emulator, because they clear app data. Start one (Android
 Studio's Device Manager or `emulator -avd <name>`), then:
 
 ```bash
-ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui WidgetPreviewTest
+ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui WidgetRenderingTest
 ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui ShellSuite
 ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui all
 ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui @platform   # app/src/androidTest/platform-tests.txt under Test Orchestrator
