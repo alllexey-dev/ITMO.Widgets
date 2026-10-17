@@ -125,6 +125,7 @@
     <string name="lesson_pill_changed">изменена</string>
     <string name="lesson_pill_cancelled">отменена</string>
     <string name="lesson_pill_queue">очередь</string>
+    <string name="lesson_pill_queue_position">очередь %1$d из %2$d</string>
     <string name="lesson_pill_booked">записаны</string>
     <string name="lesson_pill_online">онлайн</string>
     <string name="lesson_with_you">Вы</string>
