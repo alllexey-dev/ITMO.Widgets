@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.data.mapper
 
+import dev.alllexey.itmoapi.core.MOSCOW
 import dev.alllexey.itmoapi.myitmo.sport.ChosenSportSection
 import dev.alllexey.itmowidgets.client.sport.model.MySportSection as MySportSectionDto
 import dev.alllexey.itmowidgets.client.sport.model.QueueEntryStatus as QueueEntryStatusDto
@@ -37,7 +38,13 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
 fun dev.alllexey.itmoapi.myitmo.sport.SportScore.toModel(): SportScore {
     return SportScore(
@@ -84,7 +91,7 @@ fun dev.alllexey.itmoapi.myitmo.sport.SportLesson.toModel(now: Instant): SportLe
         isLessonReal = true,
         lessonId = id,
         start = date,
-        end = dateEnd,
+        end = lessonEnd(date, dateEnd, timeSlotEnd),
         sectionId = sectionId,
         sectionName = SectionName(sectionName.trim()),
         sectionLevel = sectionLevel.toInt(),
@@ -112,13 +119,27 @@ fun dev.alllexey.itmoapi.myitmo.sport.SportLesson.toModel(now: Instant): SportLe
     )
 }
 
+/**
+ * My ITMO sends some lessons with a `date_end` on the wrong date (a weekly series ending two days before it starts).
+ * An end not after the start or on another Moscow date is rebuilt on the start's Moscow date from the slot end, else
+ * the raw time of day, and kept when 15 minutes to 6 hours long; with no sane end the raw value stays, as before.
+ * shortcut: copy of MyItmoApi 2.1.1 `normalizedDateEnd`, replace with it once the app is on 2.1.1.
+ */
+private fun lessonEnd(start: Instant, rawEnd: Instant, slotEnd: String): Instant {
+    val day = start.toLocalDateTime(MOSCOW).date
+    val raw = rawEnd.toLocalDateTime(MOSCOW)
+    if (rawEnd > start && raw.date == day) return rawEnd
+    val time = runCatching { LocalTime.parse(slotEnd.trim()) }.getOrNull() ?: raw.time
+    val end = LocalDateTime(day, time).toInstant(MOSCOW)
+    return end.takeIf { it - start in 15.minutes..6.hours } ?: rawEnd
+}
 
 /** A lesson without dates cannot be placed on a day; 1.x failed the whole list on one, 2.x skips it. */
 fun ChosenSportSection.toBookings(): List<SportBooking> {
     return lessonGroups.flatMap { group ->
         group.lessons.mapNotNull { lesson ->
             val start = lesson.dateStart ?: return@mapNotNull null
-            val end = lesson.dateEnd ?: return@mapNotNull null
+            val end = lessonEnd(start, lesson.dateEnd ?: return@mapNotNull null, lesson.timeEnd)
             SportBooking(
                 isLessonReal = true,
                 lessonId = lesson.id,
