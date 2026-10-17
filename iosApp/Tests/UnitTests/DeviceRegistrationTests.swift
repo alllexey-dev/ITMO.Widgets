@@ -109,7 +109,7 @@ final class DeviceRegistrationTests: XCTestCase {
             let router = try open(NotificationDestinationRecordbookSubject(args: args))
 
             XCTAssertEqual(router.selectedTab, .recordbook)
-            XCTAssertEqual(router.path(of: .recordbook), [ShellDestination(AppRoutes.RecordbookSubject(args: args))])
+            XCTAssertEqual(router.path(of: .recordbook), [ShellDestination(AppRoutes.RecordbookSubject(args: args, materials: false))])
         }
     }
 
@@ -145,7 +145,7 @@ final class DeviceRegistrationTests: XCTestCase {
         )
         XCTAssertEqual(
             NotificationTaps.entryRoute(userInfo: stored)?.overlay as? AppRoutes.RecordbookSubject,
-            AppRoutes.RecordbookSubject(args: subjectWithJournal)
+            AppRoutes.RecordbookSubject(args: subjectWithJournal, materials: false)
         )
 
         let numeric: [AnyHashable: Any] = [

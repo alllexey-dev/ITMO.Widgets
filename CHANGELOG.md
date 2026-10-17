@@ -14,8 +14,13 @@ new iOS app.
 
 - New «Подключение и данные» and «Уведомления» pages, a sign-in with one main path and `Другие способы входа` in a sheet, and a three-step first run (your data, permissions one by one, the connection through a consent sheet) on Android and iOS; the old services, privacy and recordbook settings pages and the widget steps of the first run are gone.
 
+### Спорт lesson sheet data (2026-10-17)
+
+- The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.
+
 ### Fixes (2026-10-17)
 
+- The lesson sheet shows `Предмет` and `Ссылки 3` on both platforms when the record book knows the lesson's subject (the same match as the subject page's `Пары`): `Предмет` opens the subject page, `Ссылки` its `Материалы` tab. The count comes from the links stored on the device and is 0 without the connection.
 - A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).
 - A doubtful total shows `Проверьте итог` on the subject page; the review shows the total with its reason, the row around it and the other candidates, and `Вернуть авто` undoes a hand-picked total. On iOS `Мои баллы` is a native sheet (#419).
 - An own sport queue in Сегодня and Расписание shows its place as the sport tab does, `очередь 2 из 5`, on both platforms; a predicted lesson or an unknown place keeps `очередь`.

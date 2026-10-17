@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.InfoDialog
@@ -301,7 +302,7 @@ class SportDetailsSubmission(submitted: Boolean = false) {
 
 /**
  * The lesson sheet of [item] as it is when it shows: [actionsEnabled] false where it only shows, [busy] while the
- * screen behind it runs an action for the lesson; the action is sent once ([submission]).
+ * screen behind it runs an action for the lesson; the action is sent once ([submission]); [teacherLevel] once known.
  */
 @Composable
 fun SportLessonSheet(
@@ -313,10 +314,11 @@ fun SportLessonSheet(
     actionsEnabled: Boolean = true,
     busy: Boolean = false,
     section: SportSectionToggleUi? = null,
+    teacherLevel: TeacherLevel? = null,
 ) {
     val submitted = submission.submitted
-    val sheet = remember(item, submitted, busy, actionsEnabled) {
-        SportLessonSheetPresenter.present(item, time.now(), time.timeZone, actionsEnabled, busy, submitted)
+    val sheet = remember(item, submitted, busy, actionsEnabled, teacherLevel) {
+        SportLessonSheetPresenter.present(item, time.now(), time.timeZone, actionsEnabled, busy, submitted, teacherLevel)
     }
     SportLessonSheetContent(sheet, actions.copy(onAction = { if (submission.submit()) actions.onAction(it) }), modifier, section)
 }
@@ -390,7 +392,7 @@ fun SportLessonSheetContent(
                     item {
                         ListRow(
                             title = teacher.name,
-                            subtitle = text(SportStrings.sport_filter_teacher),
+                            subtitle = teacher.tone.asString(),
                             icon = painterResource(Res.drawable.ic_person),
                             chevron = teacher.isu != null,
                             onClick = teacher.isu?.let { isu -> { actions.onProfile(isu) } },

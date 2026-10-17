@@ -15,7 +15,7 @@ import org.koin.dsl.module
  * The schedule screens and the pure selectors Koin constructs. The screens read the schedule data from
  * [scheduleDataModule], the core contracts (the academic time, the opt-in, the friends, the teacher levels, the
  * buildings, the calendar sync) from the platform's Koin modules, and the subjects of the lesson sheet from every
- * `LessonSubjectSource` (an open set, empty until a feature contributes one). The widget data provider takes the
+ * `LessonSubjectSource` (an open set; the recordbook contributes one). The widget data provider takes the
  * selectors from here; the launcher previews read the scenario back through Koin.
  */
 val scheduleModule = module {
