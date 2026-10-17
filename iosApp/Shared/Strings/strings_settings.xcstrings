@@ -769,18 +769,6 @@
         }
       }
     },
-    "settings_compact_schedule_widget_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Компактное расписание"
-          }
-        }
-      }
-    },
     "settings_connections_title" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -937,18 +925,6 @@
         }
       }
     },
-    "settings_full_schedule_widget_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Полное расписание"
-          }
-        }
-      }
-    },
     "settings_group_access" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -969,18 +945,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обслуживание"
-          }
-        }
-      }
-    },
-    "settings_group_qr_widget" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Виджет QR-кода"
           }
         }
       }
