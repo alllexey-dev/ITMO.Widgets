@@ -157,14 +157,14 @@
         }
       }
     },
-    "ios_onboarding_notifications_configure" : {
+    "ios_onboarding_value_widgets_text" : {
       "comment" : "Generated from strings_ios_onboarding.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Настроить в iOS"
+            "value" : "На экране «Домой» и блокировки"
           }
         }
       }

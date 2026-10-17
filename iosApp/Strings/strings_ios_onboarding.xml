@@ -4,6 +4,6 @@
     <!-- A widget step: iOS lets no app place a widget, so the step explains how instead of a pin button. -->
     <string name="ios_onboarding_widget_howto_title">Как добавить виджет</string>
     <string name="ios_onboarding_widget_howto_text">Удерживайте пустое место на экране «Домой», нажмите «Изменить», затем «Добавить виджет» и выберите ITMO.Widgets.</string>
-    <!-- The notifications step once allowed: opens the app's notification settings. -->
-    <string name="ios_onboarding_notifications_configure">Настроить в iOS</string>
+    <!-- The first step's widgets row: iOS has Home Screen and Lock Screen widgets. -->
+    <string name="ios_onboarding_value_widgets_text">На экране «Домой» и блокировки</string>
 </resources>
