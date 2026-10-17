@@ -36,7 +36,8 @@ The bell opens its sheet over it. The spec is the design lab's
 - The day is the kit's timeline built by the shared lesson rules
   (`core/lesson/LessonTimelines`, [design](../design.md#the-m3-expressive-kit)):
   `идёт`, `далее`, `изменена` and `отменена` from the found
-  [schedule changes](schedule-changes.md), `очередь` for an own sport queue,
+  [schedule changes](schedule-changes.md), `очередь 2 из 5` for an own sport queue (`очередь`
+  without a known place or for a predicted lesson),
   `записаны` for a booked sport lesson, `онлайн`, `Окно 2 ч 10 мин` for gaps
   of an hour or more, `Изменено вчера в 20:14` under a changed lesson. A
   lesson, a sport lesson and an own queue too, opens the lesson sheet

@@ -100,7 +100,7 @@ refresh status or academic time changes; selecting another visible day reuses th
 
 - Every day of the window that a refresh answered for is a row: a day with lessons is a sticky header
   (`Понедельник, 7 сентября`, `сегодня`, `5 пар`) over the kit's timeline built by `core/lesson/LessonTimelines` (the
-  rules of Сегодня: `идёт`, `далее`, `Окно 2 ч 10 мин`, change notes, `очередь`, `записаны`, `онлайн`); a weekday
+  rules of Сегодня: `идёт`, `далее`, `Окно 2 ч 10 мин`, change notes, `очередь 2 из 5`, `записаны`, `онлайн`); a weekday
   without lessons is one short `Вт, 15 сентября — пар нет` row; a free Saturday and Sunday are one `Выходные` row; a
   week starts with `2-я неделя, чётная` (MyITMO's week number). Days no refresh answered for yet are left out, so a
   missing day never reads as free.
@@ -152,7 +152,8 @@ offers `Подключить`.
 ## Pending sport rows
 
 `Автозапись на спорт` (`SchedulePreferencesRepository`, default off) adds the
-own active sport queues to the schedule (as lessons with `очередь`), Сегодня and both schedule widgets.
+own active sport queues to the schedule (as lessons with `очередь 2 из 5`, Backend's place in the queue; plain
+`очередь` while the place is unknown or the lesson is only predicted), Сегодня and both schedule widgets.
 
 - `PendingSportBookingsRepository` (`core/sport`) excludes cancelled,
   terminal, started and already-signed entries; queues on the same lesson
@@ -186,7 +187,17 @@ sheet otherwise. On iOS there is no shell route to the sport tab's sheet yet, so
 - Actions, only the relevant ones: `Маршрут` for an in-person lesson with a room or a building (the
   [campus map](map.md) with the route from the day's previous lesson), `Видео` (the meeting link, opened, never shown),
   `Друзья 2` (scrolls to the friends on the lesson), `Ссылки 3` and `Предмет` from the first `LessonSubjectSource` that
-  knows the subject (an open set in `core/lesson`; no feature contributes one yet, so they stay hidden).
+  knows the subject (an open set in `core/lesson`).
+- The recordbook's source (`RecordbookLessonSubjects`) takes the record book subject of the lesson's half-year that the
+  subject page would bind to the lesson's schedule subject (`SubjectContextResolver`: a confirmed binding or the same
+  id, else the one subject of that name not bound elsewhere). `Предмет` opens its [page](subject-page.md), `Ссылки 3`
+  the page on `Материалы` (`AppRoutes.RecordbookSubject(materials = true)`), shown only with links. Both stay hidden
+  when no record book subject matches. The count is what `Материалы` lists: the current links, 0 without the
+  connection (the tab shows its gate then).
+- The sheet opens often, so this source reads caches and may be stale: the record book list is the repository's
+  memory cache (filled by Зачётка, the subject page or the first sheet that needs it, with the same My ITMO requests),
+  and the links are the ones stored on the device as of the subject page's last refresh. The sheet never refreshes
+  either and never calls Backend; the demo session gets the demo record book and links.
 - The newest found [change](schedule-changes.md) of the occurrence: `было` struck through `→ стало` per field, or the
   summary of an added or cancelled lesson, with `Изменено вчера в 20:14`.
 - The note and the meeting's password; the teacher with the tone of the reviews in words (`в основном хвалят`, from

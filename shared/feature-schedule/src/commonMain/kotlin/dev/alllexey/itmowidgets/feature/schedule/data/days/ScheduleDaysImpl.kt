@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.lesson.DayLesson
 import dev.alllexey.itmowidgets.core.lesson.LessonChange
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.lesson.QueuePlace
 import dev.alllexey.itmowidgets.core.lesson.SportMark
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -185,6 +186,8 @@ class ScheduleDaysImpl(
         online = false,
         target = LessonTarget.PendingSport(toDetailsArgs(time.timeZone)),
         sport = SportMark.QUEUED,
+        // A predicted lesson is not published yet: its place is the weekly queue's, not this lesson's.
+        queue = if (!isPrediction && position > 0 && total > 0) QueuePlace(position, total) else null,
     )
 
     private companion object {

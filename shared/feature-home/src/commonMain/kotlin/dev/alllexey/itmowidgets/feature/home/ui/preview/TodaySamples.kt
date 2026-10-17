@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.lesson.DayLesson
 import dev.alllexey.itmowidgets.core.lesson.LessonChange
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.lesson.QueuePlace
 import dev.alllexey.itmowidgets.core.lesson.SportMark
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.EntryRoute
@@ -78,7 +79,7 @@ object TodaySamples {
     private val tomorrow = listOf(
         lesson("10:00", "11:30", "Алгоритмы и структуры данных", 1, "Белов Павел Игоревич", "1404", "Биржевая линия, 14"),
         lesson("11:40", "13:10", "История", 3, "Орлова Наталья Сергеевна", "311", "Чайковского ул., 11"),
-        lesson("15:20", "16:50", "Плавание", 11, "Захаров Николай Иванович", "бассейн", "Ломоносова ул., 9", sport = SportMark.QUEUED),
+        lesson("15:20", "16:50", "Плавание", 11, "Захаров Николай Иванович", "бассейн", "Ломоносова ул., 9", sport = SportMark.QUEUED).copy(queue = QueuePlace(2, 5)),
     )
 
     private val days = listOf(
