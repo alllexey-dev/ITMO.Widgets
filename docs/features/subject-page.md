@@ -9,6 +9,7 @@ Product behaviour: [Как это работает: оценки](../how-it-work
   (pure) puts each tab into words.
 - A pushed screen: the subject's name with `Дифзачёт, 3 семестр`, the tabs `Баллы`, `Пары`, `Материалы`
   (`SegmentedChoice`) under it. No `Люди` tab: teachers are rows of `Пары`.
+  It opens on `Баллы`; a key with `materials = true` (the lesson sheet's `Ссылки 3`) opens on `Материалы`.
 - `Баллы`: a BARS notice row (`Войти` or `Повторить`), the hero (the points `из 100`, the grade by points or the
   final result as a pill over its quiet source, the grade scale, `до 3D ещё 4,5` or `до зачёта ещё 8`), the
   connected sheet in the hero with its menu (open, `Изменить итог`, disconnect) and `Проверьте итог` for an unsure
