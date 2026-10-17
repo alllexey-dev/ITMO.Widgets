@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">ITMO.Widgets</string>
     <string name="widget_single_lesson_name">Пара</string>
-    <string name="widget_single_lesson_description">Текущая или следующая</string>
-    <string name="widget_lesson_list_name">Расписание</string>
-    <string name="widget_lesson_list_description">Список пар на сегодня</string>
-    <string name="widget_qr_code_name">QR-код</string>
+    <string name="widget_single_lesson_description">Сейчас и далее</string>
+    <string name="widget_lesson_list_name">Расписание на день</string>
+    <string name="widget_lesson_list_description">День с линией «сейчас»</string>
+    <string name="widget_qr_code_name">Пропуск</string>
     <string name="widget_qr_code_description">QR-пропуск в корпус</string>
     <string name="schedule_widget_loading">Обновляем расписание</string>
     <string name="schedule_widget_error">Не удалось обновить расписание</string>
