@@ -9873,12 +9873,20 @@
               "BLOCKED"
             ]
           },
+          "requestedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
           "user": {
             "$ref": "#/components/schemas/UserData"
           }
         },
         "required": [
           "relationship",
+          "requestedAt",
           "user"
         ]
       },

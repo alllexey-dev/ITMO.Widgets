@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.home.FakeBellRepository
 import dev.alllexey.itmowidgets.feature.home.bellItem
-import dev.alllexey.itmowidgets.shared.feature.home.HomeStrings
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -43,7 +43,7 @@ class BellViewModelTest {
         assertEquals(listOf("new"), state.fresh.map { it.item.id })
         assertEquals(listOf("old"), state.earlier.map { it.item.id })
         assertEquals(UiText.Dynamic("12:05"), state.fresh.single().time)
-        assertEquals(UiText.Res(HomeStrings.bell_yesterday), state.earlier.single().time)
+        assertEquals(UiText.Res(CoreStrings.event_moment_yesterday), state.earlier.single().time)
         assertEquals(setOf("new", "old"), bell.seen.value)
         assertEquals(1, bell.readAllCalls)
         assertEquals(1, bell.refreshCalls)

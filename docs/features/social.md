@@ -102,7 +102,10 @@ screens through the shared framework) are the first letters of the two parts whe
 - Profile tab: [me.md](me.md).
 - Friends (`FriendsRoute`, `FriendsViewModel`): friends and requests tabs; a row
   in flight keeps its buttons inert; removal goes through the kit's
-  `ConfirmDialog`.
+  `ConfirmDialog`. A request row says when it was sent (`UserProfile.requestedAt`,
+  Backend's `requestedAt` from f9dd1e0, through `requestStatus` and the shared
+  `eventMoment`: `12:05`, `вчера`, `28 сент.`); without the time it says
+  nothing more.
 - People search (`UserSearchRoute`, `UserSearchViewModel`): 300 ms debounce,
   clearing the field resets at once without the debounce. Actions update the row
   from the returned profile without a new search. The Android entry shares the

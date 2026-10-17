@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserAction
 import dev.alllexey.itmowidgets.feature.social.presentation.UserListItem
 import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
 import dev.alllexey.itmowidgets.feature.social.presentation.subtitleText
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 
 /** Synthetic people of the friends previews: friends and requests, as `FriendsViewModel` maps them. */
@@ -30,10 +31,10 @@ internal object FriendsPreviewData {
         items = buildList {
             add(UserListItem.Header(UiText.Res(SocialStrings.friends_section_incoming)))
             INCOMING.forEach {
-                add(UserListItem.User(it.row(UserAction.ACCEPT, UserAction.REJECT, busyIsu)))
+                add(UserListItem.User(it.row(UserAction.ACCEPT, UserAction.REJECT, busyIsu, it.sent)))
             }
             add(UserListItem.Header(UiText.Res(SocialStrings.friends_section_outgoing)))
-            OUTGOING.forEach { add(UserListItem.User(it.row(secondary = UserAction.CANCEL, busyIsu = busyIsu))) }
+            OUTGOING.forEach { add(UserListItem.User(it.row(secondary = UserAction.CANCEL, busyIsu = busyIsu, status = it.sent))) }
         },
         incomingCount = INCOMING.size,
         refreshing = false,
@@ -49,15 +50,16 @@ internal object FriendsPreviewData {
 
     const val BUSY_ISU = 200004
 
-    private class Person(val isu: Int, val name: String, val group: String) {
-        fun row(primary: UserAction? = null, secondary: UserAction? = null, busyIsu: Int? = null): UserRowUi {
+    /** [sent] is when a request was sent, as the requests tab says it. */
+    private class Person(val isu: Int, val name: String, val group: String, val sent: UiText? = null) {
+        fun row(primary: UserAction? = null, secondary: UserAction? = null, busyIsu: Int? = null, status: UiText? = null): UserRowUi {
             val summary = UserSummary(isu, name, null, listOf(UserGroup(group, 2, "ФИТиП")), UserSharing(true, true, true))
             return UserRowUi(
                 isu = isu,
                 name = name,
                 pictureUrl = null,
                 subtitle = summary.subtitleText(),
-                status = null,
+                status = status,
                 primary = primary,
                 secondary = secondary,
                 busy = isu == busyIsu,
@@ -71,8 +73,8 @@ internal object FriendsPreviewData {
         Person(200003, "Иванова Дарья Сергеевна", "M3205"),
     )
     private val INCOMING = listOf(
-        Person(200004, "Григорьев Евгений Владиславович", "R3135"),
-        Person(200005, "Преображенская Евгения Владиславовна", "M3207"),
+        Person(200004, "Григорьев Евгений Владиславович", "R3135", UiText.Dynamic("12:05")),
+        Person(200005, "Преображенская Евгения Владиславовна", "M3207", UiText.Res(CoreStrings.event_moment_yesterday)),
     )
-    private val OUTGOING = listOf(Person(200006, "Захаров Борис Константинович", "P3110"))
+    private val OUTGOING = listOf(Person(200006, "Захаров Борис Константинович", "P3110", UiText.Dynamic("28 сент.")))
 }

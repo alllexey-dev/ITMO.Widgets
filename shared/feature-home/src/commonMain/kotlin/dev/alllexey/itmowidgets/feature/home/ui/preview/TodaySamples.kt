@@ -128,7 +128,7 @@ object TodaySamples {
         title = UiText.Dynamic("Матанализ: контрольная работа 2"), text = UiText.Dynamic("9 из 10, итого 74"), lead = "+9",
     )
     private val request = BellItem(
-        id = "friend", kind = BellKind.FRIEND_REQUEST, at = null,
+        id = "friend", kind = BellKind.FRIEND_REQUEST, at = at,
         title = UiText.Dynamic("${PreviewFixtures.LongPersonName} хочет добавить вас в друзья"), text = UiText.Dynamic("M3205"),
         lead = PreviewFixtures.LongPersonName, request = 123456,
     )

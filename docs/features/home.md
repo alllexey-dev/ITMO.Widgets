@@ -77,10 +77,10 @@ The bell opens its sheet over it. The spec is the design lab's
 | New marks with their value: `Матанализ: контрольная работа 2`, `9 из 10, итого 74`, `+9` in front | `MarksBellSource` (recordbook), the subjects of [mark tracking](marks-tracking.md), read ones too | the subject page, else the recordbook |
 | A schedule change: `Физика: пара перенесена`, `было` struck through over `стало` | `ScheduleChangesBellSource` (schedule), the change history | the lesson's sheet |
 | A queue's result: `Волейбол: вы записаны`, `Плавание: не удалось записать` | `SportBellSource` over `SportResultLog` (sport), written by the queue push booker | Спорт |
-| An incoming friend request with `Принять` and `Отклонить` | `FriendRequestsBellSource` (social), behind the opt-in | the person |
+| An incoming friend request with `Принять` and `Отклонить`, with when it was sent (Backend's `requestedAt`) | `FriendRequestsBellSource` (social), behind the opt-in | the person |
 
-- `BellRepositoryImpl` (`homeModule`) joins the sources (requests first, then
-  newest first; a failing source counts as empty) and keeps the seen event ids
+- `BellRepositoryImpl` (`homeModule`) joins the sources (requests first, each
+  part newest first, an unknown moment last; a failing source counts as empty) and keeps the seen event ids
   in `BellPreferences` (`bell_seen`, cleared on sign-out). An event's id
   changes with its content, so a new mark of a subject is new again.
 - Opening reads everything (`BellViewModel`): the unseen events are marked

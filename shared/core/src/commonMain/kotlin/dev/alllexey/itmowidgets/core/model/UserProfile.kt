@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.core.model
 
+import kotlin.time.Instant
+
 /** Relationship between the signed-in viewer and another user, as Backend reports it. */
 enum class RelationshipState {
     NONE,
@@ -12,10 +14,15 @@ enum class RelationshipState {
     BLOCKED
 }
 
-/** Another user's public identity together with the viewer's relationship to them. */
+/**
+ * Another user's public identity together with the viewer's relationship to them; [requestedAt] is when the pending
+ * request between them was sent, only for [RelationshipState.INCOMING] and [RelationshipState.OUTGOING] (null from an
+ * older Backend).
+ */
 data class UserProfile(
     val user: UserSummary,
-    val relationship: RelationshipState
+    val relationship: RelationshipState,
+    val requestedAt: Instant? = null,
 ) {
     val isu: Int get() = user.isu
 }

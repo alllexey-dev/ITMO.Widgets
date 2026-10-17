@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.presentation.BusyKeys
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
@@ -22,7 +23,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class FriendsViewModel(
-    private val repository: SocialRepository
+    private val repository: SocialRepository,
+    private val time: AcademicTimeProvider,
 ) : ViewModel() {
 
     private val tab = MutableStateFlow(FriendsTab.FRIENDS)
@@ -100,13 +102,13 @@ class FriendsViewModel(
                 if (requestList.incoming.isNotEmpty()) {
                     add(UserListItem.Header(UiText.Res(SocialStrings.friends_section_incoming)))
                     requestList.incoming.forEach {
-                        add(UserListItem.User(it.toRow(busy, primary = UserAction.ACCEPT, secondary = UserAction.REJECT)))
+                        add(UserListItem.User(it.toRow(busy, primary = UserAction.ACCEPT, secondary = UserAction.REJECT, status = it.requestStatus(null, time))))
                     }
                 }
                 if (requestList.outgoing.isNotEmpty()) {
                     add(UserListItem.Header(UiText.Res(SocialStrings.friends_section_outgoing)))
                     requestList.outgoing.forEach {
-                        add(UserListItem.User(it.toRow(busy, primary = null, secondary = UserAction.CANCEL)))
+                        add(UserListItem.User(it.toRow(busy, primary = null, secondary = UserAction.CANCEL, status = it.requestStatus(null, time))))
                     }
                 }
             }
@@ -124,12 +126,12 @@ class FriendsViewModel(
         )
     }
 
-    private fun UserProfile.toRow(busy: Set<Int>, primary: UserAction?, secondary: UserAction?) = UserRowUi(
+    private fun UserProfile.toRow(busy: Set<Int>, primary: UserAction?, secondary: UserAction?, status: UiText? = null) = UserRowUi(
         isu = isu,
         name = user.name,
         pictureUrl = user.pictureUrl,
         subtitle = user.subtitleText(),
-        status = null,
+        status = status,
         primary = primary,
         secondary = secondary,
         busy = isu in busy,

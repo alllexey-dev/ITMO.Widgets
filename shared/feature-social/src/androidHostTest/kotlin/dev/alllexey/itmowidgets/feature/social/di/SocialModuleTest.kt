@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
@@ -33,6 +34,7 @@ class SocialModuleTest {
                 CustomServicesRepository::class,
                 TeacherReviewsRepository::class,
                 CurrentUserProvider::class,
+                AcademicTimeProvider::class,
                 SavedStateHandle::class,
             )
         )

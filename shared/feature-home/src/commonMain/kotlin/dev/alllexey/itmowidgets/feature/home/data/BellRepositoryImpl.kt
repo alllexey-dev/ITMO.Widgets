@@ -51,7 +51,7 @@ class BellRepositoryImpl(
         sources.firstNotNullOfOrNull { it.answer(isu, accept) }
 
     private companion object {
-        /** Requests wait for an answer, so they lead; the rest go newest first. */
-        val ORDER: Comparator<BellItem> = compareBy<BellItem> { it.at != null }.thenByDescending { it.at }
+        /** Requests wait for an answer, so they lead; within each part newest first, an unknown moment last. */
+        val ORDER: Comparator<BellItem> = compareBy<BellItem> { it.request == null }.thenByDescending { it.at }
     }
 }

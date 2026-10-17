@@ -43,6 +43,7 @@
     <string name="spoiler_crop_done">Готово</string>
     <string name="spoiler_crop_rotate">Повернуть</string>
     <string name="link_open_failed">Нет приложения, чтобы открыть ссылку</string>
+    <string name="event_moment_yesterday">вчера</string>
     <string name="user_name_placeholder">Пользователь ИСУ %1$d</string>
     <string name="common_error_restricted">Действие ограничено модерацией</string>
     <string name="links_category_scores">Таблица баллов</string>

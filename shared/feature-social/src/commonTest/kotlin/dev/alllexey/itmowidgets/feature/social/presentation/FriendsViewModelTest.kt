@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
@@ -26,11 +27,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendsViewModelTest {
 
     private val main = TestMainDispatcher()
+    private val time = FixedAcademicTime(LocalDateTime(LocalDate(2026, 10, 5), LocalTime(12, 0)))
 
     @BeforeTest
     fun setUp() = main.install()
@@ -45,12 +51,12 @@ class FriendsViewModelTest {
                 friends.value = LoadState.Content(listOf(profile(1, RelationshipState.FRIENDS)))
                 requests.value = LoadState.Content(
                     FriendRequests(
-                        incoming = listOf(profile(2, RelationshipState.INCOMING)),
-                        outgoing = listOf(profile(3, RelationshipState.OUTGOING))
+                        incoming = listOf(profile(2, RelationshipState.INCOMING).copy(requestedAt = Instant.parse("2026-10-05T09:05:00Z"))),
+                        outgoing = listOf(profile(3, RelationshipState.OUTGOING).copy(requestedAt = Instant.parse("2026-10-04T09:00:00Z")))
                     )
                 )
             }
-            val viewModel = FriendsViewModel(repository)
+            val viewModel = FriendsViewModel(repository, time)
             advanceUntilIdle()
 
             val friendsTab = viewModel.uiState.value as FriendsUiState.Content
@@ -79,7 +85,20 @@ class FriendsViewModelTest {
             assertEquals(UserAction.REJECT, incoming.secondary)
             val outgoing = (requestsTab.items[3] as UserListItem.User).row
             assertEquals(UserAction.CANCEL, outgoing.secondary)
+            assertEquals(UiText.Dynamic("12:05"), incoming.status, "sent today: the time")
+            assertEquals(UiText.Res(CoreStrings.event_moment_yesterday), outgoing.status)
+            assertEquals(null, friendRow.status)
         }
+
+    @Test
+    fun aRequestStatusJoinsItsBaseWithTheMomentAndKeepsTheBaseWithoutOne() {
+        val base = UiText.Res(SocialStrings.user_status_incoming)
+        val sent = profile(2, RelationshipState.INCOMING).copy(requestedAt = Instant.parse("2026-09-28T09:00:00Z"))
+
+        assertEquals(UiText.Joined(listOf(base, UiText.Dynamic("28 сент.")), ", "), sent.requestStatus(base, time))
+        assertEquals(base, profile(2, RelationshipState.INCOMING).requestStatus(base, time))
+        assertEquals(null, profile(2, RelationshipState.INCOMING).requestStatus(null, time))
+    }
 
     @Test
     fun acceptingMovesThePersonToFriendsAndRemovalAsksForConfirmationFirst() =
@@ -90,7 +109,7 @@ class FriendsViewModelTest {
                     FriendRequests(incoming = listOf(profile(2, RelationshipState.INCOMING)), outgoing = emptyList())
                 )
             }
-            val viewModel = FriendsViewModel(repository)
+            val viewModel = FriendsViewModel(repository, time)
             viewModel.selectTab(FriendsTab.REQUESTS)
             advanceUntilIdle()
             val incoming = ((viewModel.uiState.value as FriendsUiState.Content).items[1] as UserListItem.User).row
@@ -123,7 +142,7 @@ class FriendsViewModelTest {
             )
             actionError = AppError.Network
         }
-        val viewModel = FriendsViewModel(repository)
+        val viewModel = FriendsViewModel(repository, time)
         viewModel.selectTab(FriendsTab.REQUESTS)
         advanceUntilIdle()
         val outgoing = ((viewModel.uiState.value as FriendsUiState.Content).items[1] as UserListItem.User).row
@@ -139,7 +158,7 @@ class FriendsViewModelTest {
     fun disabledServicesAndErrorsMapToTheirStatesWhileARefreshKeepsProgress() =
         runTest(main.dispatcher) {
             val repository = FakeSocialRepository()
-            val viewModel = FriendsViewModel(repository)
+            val viewModel = FriendsViewModel(repository, time)
             advanceUntilIdle()
             assertEquals(FriendsUiState.Loading, viewModel.uiState.value)
 
@@ -160,7 +179,7 @@ class FriendsViewModelTest {
             friends.value = LoadState.Content(emptyList())
             requests.value = LoadState.Content(FriendRequests.EMPTY)
         }
-        val viewModel = FriendsViewModel(repository)
+        val viewModel = FriendsViewModel(repository, time)
         advanceUntilIdle()
         assertEquals(FriendsEmpty.NO_FRIENDS, (viewModel.uiState.value as FriendsUiState.Content).empty)
 
@@ -182,7 +201,7 @@ class FriendsViewModelTest {
             friends.value = LoadState.Content(listOf(unnamed))
             requests.value = LoadState.Content(FriendRequests.EMPTY)
         }
-        val viewModel = FriendsViewModel(repository)
+        val viewModel = FriendsViewModel(repository, time)
         advanceUntilIdle()
         val row = ((viewModel.uiState.value as FriendsUiState.Content).items.single() as UserListItem.User).row
         val placeholder = UiText.Res(CoreStrings.user_name_placeholder, listOf(7))
@@ -201,7 +220,7 @@ class FriendsViewModelTest {
                 friends.value = LoadState.Content(emptyList())
                 requests.value = LoadState.Content(FriendRequests.EMPTY)
             }
-            val viewModel = FriendsViewModel(repository)
+            val viewModel = FriendsViewModel(repository, time)
             runCurrent()
             assertEquals(1, repository.refreshes)
             assertFalse((viewModel.uiState.value as FriendsUiState.Content).refreshing)
@@ -227,7 +246,7 @@ class FriendsViewModelTest {
             friends.value = LoadState.Error(AppError.Network)
             requests.value = LoadState.Content(FriendRequests.EMPTY)
         }
-        val viewModel = FriendsViewModel(repository)
+        val viewModel = FriendsViewModel(repository, time)
         runCurrent()
         assertEquals(FriendsUiState.Error(AppError.Network), viewModel.uiState.value)
 
@@ -250,7 +269,7 @@ class FriendsViewModelTest {
                 )
                 actionError = AppError.Network
             }
-            val viewModel = FriendsViewModel(repository)
+            val viewModel = FriendsViewModel(repository, time)
             viewModel.selectTab(FriendsTab.REQUESTS)
             advanceUntilIdle()
             val outgoing = ((viewModel.uiState.value as FriendsUiState.Content).items[1] as UserListItem.User).row
