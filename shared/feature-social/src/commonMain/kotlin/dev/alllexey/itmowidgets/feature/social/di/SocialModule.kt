@@ -14,9 +14,9 @@ import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
-import dev.alllexey.itmowidgets.feature.social.presentation.UserSearchViewModel
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.Qualifier
 import org.koin.core.qualifier.named
@@ -30,7 +30,8 @@ val socialBellQualifier: Qualifier = named("social")
  * screens, the bell, the session cleaners and the schedule's friend picker (through `FriendRepository`). The core types
  * (`BackendGate`, Core 2.0's `UsersApi` and `FriendsApi`, `MyItmoClient`, the application `CoroutineScope`,
  * `DemoMode`, `AppDispatchers`, the services opt-in, the current user) come from the platform's Koin
- * modules, the teacher reviews from `reviewsModule`. The `SavedStateHandle` holds the host's arguments
+ * modules, the teacher reviews from `reviewsModule`, the viewer's lessons with a teacher (`TeacherLessonsGateway`) from
+ * the schedule's data module. The `SavedStateHandle` holds the host's arguments
  * (`user_isu`, `user_name`) under the same keys.
  */
 val socialModule = module {
@@ -44,7 +45,9 @@ val socialModule = module {
     single<BellSource>(socialBellQualifier) { FriendRequestsBellSource(get(), get()) }
 
     viewModelOf(::FriendsViewModel)
-    viewModelOf(::UserSearchViewModel)
     viewModelOf(::UserFriendsViewModel)
-    viewModelOf(::UserProfileViewModel)
+    // The teacher timetable (`TeacherNowGateway`) is optional: without its binding the card shows no "Сейчас ведёт".
+    viewModel {
+        UserProfileViewModel(get(), get(), get(), get(), get(), get(), getOrNull())
+    }
 }

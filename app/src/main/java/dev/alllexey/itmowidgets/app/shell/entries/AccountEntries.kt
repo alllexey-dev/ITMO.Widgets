@@ -132,9 +132,11 @@ internal fun MeTabRoot(navigator: Nav3AppNavigator) {
 
 private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions(
     onOpenFriends = { navigator.open(AppRoutes.Friends) },
-    onFindPeople = { navigator.open(AppRoutes.UserSearch) },
     onOpenPrivacy = { navigator.open(AppRoutes.Settings(PRIVACY_PAGE)) },
-    onOpenServices = { navigator.open(AppRoutes.Settings()) },
+    onOpenConnection = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
+    // The settings root holds the notification and widget rows until their own pages exist.
+    onOpenNotifications = { navigator.open(AppRoutes.Settings()) },
+    onOpenWidgets = { navigator.open(AppRoutes.Settings()) },
     onOpenWebLogin = { navigator.open(AppRoutes.WebLogin()) },
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },
@@ -361,3 +363,6 @@ private inline fun <reified VM : ViewModel> entryViewModel(): VM {
 
 /** The privacy page of the settings (`SettingsPage.PRIVACY`), as the Me tab opens it. */
 private const val PRIVACY_PAGE = "PRIVACY"
+
+/** `SettingsPage.SERVICES`: the connection to ITMO.Widgets, until "Подключение и данные" has its own page. */
+private const val SERVICES_PAGE = "SERVICES"

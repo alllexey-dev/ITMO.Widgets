@@ -24,6 +24,8 @@ import dev.alllexey.itmowidgets.core.testing.teacherReviews
 import dev.alllexey.itmowidgets.core.testing.teacherSummary
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
+import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
+import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
@@ -41,11 +43,20 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
+import dev.alllexey.itmowidgets.core.schedule.TeacherNowGateway
+import dev.alllexey.itmowidgets.core.schedule.TeacherNowLesson
+import kotlinx.datetime.LocalTime
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProfileViewModelTest {
 
     private val main = TestMainDispatcher()
+    /** The viewer's own lessons with the person: none, answered at once. */
+    private val lessons = TaughtBy()
 
     @BeforeTest
     fun setUp() = main.install()
@@ -104,22 +115,24 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun primaryActionFollowsTheRelationshipState() = runTest(main.dispatcher) {
+    fun theHeaderActionsFollowTheRelationshipState() = runTest(main.dispatcher) {
         val repository = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.NONE)) }
         val viewModel = viewModel(repository)
         val events = events(viewModel)
         runCurrent()
-        viewModel.onPrimaryAction()
+        assertEquals(listOf(CardAction.ADD_FRIEND), viewModel.content().actions)
+        viewModel.onAction(CardAction.ADD_FRIEND)
         runCurrent()
         assertEquals(RelationshipState.OUTGOING, viewModel.relationship())
-        viewModel.onPrimaryAction()
+        assertEquals(listOf(CardAction.CANCEL_REQUEST), viewModel.content().actions)
+        viewModel.onAction(CardAction.CANCEL_REQUEST)
         runCurrent()
         assertEquals(RelationshipState.NONE, viewModel.relationship())
         assertEquals(listOf("send:5", "cancel:5"), repository.actions)
         repository.profiles = mapOf(5 to profile(5, RelationshipState.INCOMING))
         viewModel.refresh(RefreshMode.Force)
         runCurrent()
-        viewModel.onSecondaryAction()
+        viewModel.onAction(CardAction.REJECT_REQUEST)
         runCurrent()
         assertEquals(listOf("send:5", "cancel:5", "reject:5"), repository.actions)
         assertEquals(emptyList<UserProfileEvent>(), events)
@@ -131,14 +144,14 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(repository)
         val events = events(viewModel)
         runCurrent()
-        viewModel.onPrimaryAction()
+        viewModel.requestRemoveFriend()
         runCurrent()
         assertEquals(emptyList<String>(), repository.actions)
         repository.actionError = AppError.Network
         viewModel.removeFriend()
         runCurrent()
         assertEquals(RelationshipState.FRIENDS, viewModel.relationship())
-        assertEquals(false, viewModel.content().social?.busy)
+        assertEquals(false, viewModel.content().busy)
         assertEquals(listOf(UserProfileEvent.ConfirmRemove(UiText.Dynamic("Пользователь 5")), UserProfileEvent.ActionFailed(AppError.Network)), events)
     }
 
@@ -156,7 +169,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(people = personRepository(), reviews = reviewsRepository())
         val events = events(viewModel)
         runCurrent()
-        assertEquals(personContent().copy(reviews = section()), viewModel.uiState.value)
+        assertEquals(personContent(reviews = sampleReviews()), viewModel.uiState.value)
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
 
@@ -193,7 +206,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(people = people, reviews = reviews)
         val events = events(viewModel)
         runCurrent()
-        val initial = personContent().copy(reviews = section())
+        val initial = personContent(reviews = sampleReviews())
         assertEquals(initial, viewModel.uiState.value)
         personGate.complete(Unit)
         runCurrent()
@@ -238,7 +251,7 @@ class UserProfileViewModelTest {
         val current = object : CurrentUserProvider {
             override suspend fun getCurrentUser(): CurrentUser { currentGate.await(); return CurrentUser(5, "Я", null) }
         }
-        val viewModel = UserProfileViewModel(handle(5), social, FakePersonRepository(), FakeTeacherReviewsRepository(), current)
+        val viewModel = UserProfileViewModel(handle(5), social, FakePersonRepository(), FakeTeacherReviewsRepository(), current, lessons)
         val events = events(viewModel)
         val states = states(viewModel)
         runCurrent()
@@ -302,7 +315,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(social, people, reviews)
         val events = events(viewModel)
         runCurrent()
-        val expected = personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = section())
+        val expected = personContent(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = sampleReviews())
         assertEquals(expected, viewModel.uiState.value)
         gate.complete(Unit)
         runCurrent()
@@ -322,7 +335,7 @@ class UserProfileViewModelTest {
         advanceTimeBy(1_000)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(listOf(personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = section())),
+        assertEquals(listOf(personContent(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = sampleReviews())),
             states.filterIsInstance<UserProfileUiState.Content>())
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
@@ -360,7 +373,7 @@ class UserProfileViewModelTest {
         assertEquals(personContent(), viewModel.uiState.value)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(listOf(UserProfileUiState.Loading, personContent(), personContent().copy(reviews = section())), states)
+        assertEquals(listOf(UserProfileUiState.Loading, personContent(), personContent(reviews = sampleReviews())), states)
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
 
@@ -400,7 +413,7 @@ class UserProfileViewModelTest {
         states.clear()
         viewModel.refresh(RefreshMode.Force)
         runCurrent()
-        assertEquals(listOf<UserProfileUiState>(personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false))), states)
+        assertEquals(listOf<UserProfileUiState>(personContent(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false))), states)
         retryGate.complete(Unit)
         runCurrent()
         assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
@@ -459,7 +472,7 @@ class UserProfileViewModelTest {
         states.clear()
         viewModel.refresh(RefreshMode.Force)
         runCurrent()
-        assertEquals(listOf<UserProfileUiState>(personContent().copy(social = SocialBlock(profile(5), false, false))), states)
+        assertEquals(listOf<UserProfileUiState>(personContent(social = SocialBlock(profile(5), false, false))), states)
         assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed, UserProfileEvent.LoadFailed), events)
     }
 
@@ -627,7 +640,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(people = personRepository(), reviews = reviews)
         val events = events(viewModel)
         runCurrent()
-        assertEquals(personContent().copy(reviews = section()), viewModel.uiState.value)
+        assertEquals(personContent(reviews = sampleReviews()), viewModel.uiState.value)
         assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
@@ -694,7 +707,7 @@ class UserProfileViewModelTest {
         assertEquals(emptyList<UserProfileUiState>(), states)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(personContent().copy(name = "Новое имя", reviews = section()), viewModel.uiState.value)
+        assertEquals(personContent(reviews = sampleReviews(), name = "Новое имя"), viewModel.uiState.value)
         assertTrue(states.all { it is UserProfileUiState.Content })
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
@@ -744,7 +757,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun relationshipBusyStateRejectsRapidPrimaryAndSecondaryTapsUntilActionFinishes() = runTest(main.dispatcher) {
+    fun relationshipBusyStateRejectsRapidTapsUntilTheActionFinishes() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         var calls = 0
         val base = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.INCOMING)) }
@@ -754,13 +767,13 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
         runCurrent()
-        viewModel.onPrimaryAction()
-        viewModel.onPrimaryAction()
-        viewModel.onSecondaryAction()
+        viewModel.onAction(CardAction.ACCEPT_REQUEST)
+        viewModel.onAction(CardAction.ACCEPT_REQUEST)
+        viewModel.onAction(CardAction.REJECT_REQUEST)
         runCurrent()
-        assertEquals(true, viewModel.content().social?.busy)
-        viewModel.onPrimaryAction()
-        viewModel.onSecondaryAction()
+        assertEquals(true, viewModel.content().busy)
+        viewModel.onAction(CardAction.ACCEPT_REQUEST)
+        viewModel.onAction(CardAction.REJECT_REQUEST)
         runCurrent()
         assertEquals(1, calls)
         assertEquals(emptyList<String>(), base.actions)
@@ -768,7 +781,7 @@ class UserProfileViewModelTest {
         runCurrent()
         assertEquals(listOf("accept:5"), base.actions)
         assertEquals(RelationshipState.FRIENDS, viewModel.relationship())
-        assertEquals(false, viewModel.content().social?.busy)
+        assertEquals(false, viewModel.content().busy)
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
 
@@ -778,7 +791,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
         runCurrent()
-        viewModel.onPrimaryAction()
+        viewModel.requestRemoveFriend()
         runCurrent()
         assertEquals(listOf<UserProfileEvent>(UserProfileEvent.ConfirmRemove(UiText.Dynamic("Персона 5"))), events)
         assertEquals(emptyList<String>(), social.actions)
@@ -798,7 +811,7 @@ class UserProfileViewModelTest {
         val placeholder = UiText.Res(CoreStrings.user_name_placeholder, listOf(5))
         assertEquals(placeholder, viewModel.content().displayName)
 
-        viewModel.onPrimaryAction()
+        viewModel.requestRemoveFriend()
         runCurrent()
 
         assertEquals(listOf<UserProfileEvent>(UserProfileEvent.ConfirmRemove(placeholder)), events)
@@ -824,13 +837,14 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun blockedRelationshipIgnoresPrimaryAndSecondaryActions() = runTest(main.dispatcher) {
+    fun blockedRelationshipOffersAndTakesNoFriendshipAction() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.BLOCKED)) }
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
         runCurrent()
-        viewModel.onPrimaryAction()
-        viewModel.onSecondaryAction()
+        assertEquals(emptyList(), viewModel.content().actions)
+        viewModel.requestRemoveFriend()
+        viewModel.onAction(CardAction.REJECT_REQUEST)
         runCurrent()
         assertEquals(emptyList<String>(), social.actions)
         assertEquals(emptyList<UserProfileEvent>(), events)
@@ -842,8 +856,8 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
         runCurrent()
-        viewModel.onPrimaryAction()
-        viewModel.onSecondaryAction()
+        viewModel.onAction(CardAction.ADD_FRIEND)
+        viewModel.requestRemoveFriend()
         viewModel.removeFriend()
         runCurrent()
         assertEquals(emptyList<String>(), social.actions)
@@ -893,7 +907,7 @@ class UserProfileViewModelTest {
             results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1")), summary = summary)))
         }
         val handle = handle(5)
-        val viewModel = UserProfileViewModel(handle, FakeSocialRepository(), personRepository(), reviews, currentUser(1))
+        val viewModel = UserProfileViewModel(handle, FakeSocialRepository(), personRepository(), reviews, currentUser(1), lessons)
         runCurrent()
         assertEquals(false, viewModel.content().reviews?.summaryExpanded)
 
@@ -918,7 +932,7 @@ class UserProfileViewModelTest {
             results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1")), summary = teacherSummary())))
         }
         val handle = SavedStateHandle(mapOf(UserScreenArgs.ISU to 5, UserProfileViewModel.SUMMARY_EXPANDED to true))
-        val viewModel = UserProfileViewModel(handle, FakeSocialRepository(), personRepository(), reviews, currentUser(1))
+        val viewModel = UserProfileViewModel(handle, FakeSocialRepository(), personRepository(), reviews, currentUser(1), lessons)
         runCurrent()
 
         assertEquals(true, viewModel.content().reviews?.summaryExpanded)
@@ -937,7 +951,7 @@ class UserProfileViewModelTest {
         reviews.updates.emit(sampleReviews())
         runCurrent()
 
-        assertEquals(personContent().copy(reviews = section()), viewModel.uiState.value)
+        assertEquals(personContent(reviews = sampleReviews()), viewModel.uiState.value)
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
 
@@ -1045,7 +1059,13 @@ class UserProfileViewModelTest {
     private fun reviewsRepository() = FakeTeacherReviewsRepository().apply { results = mapOf(5 to AppResult.Success(sampleReviews())) }
     private fun sampleReviews() = teacherReviews(5, listOf(TeacherReview("review-1", "Предмет", null, "Текст отзыва", 0, 0,
         ReviewOrigin.Reviews("Источник", "https://example.org/review"))))
-    private fun personContent() = UserProfileUiState.Content(5, "Персона 5", null, null, emptyList(), null, null)
+    private fun personContent(social: SocialBlock? = null, reviews: TeacherReviews? = null, name: String = "Персона 5") =
+        userProfileUiState(
+            5,
+            ProfilePart.Ready(samplePerson(5).copy(name = name)),
+            social?.let { ProfilePart.Ready(it) } ?: ProfilePart.Absent,
+            reviews?.let { ProfilePart.Ready(it) } ?: ProfilePart.Absent,
+        )
     private fun section(reviews: TeacherReviews = sampleReviews(), busyId: String? = null) = profileReviews(reviews, samplePerson(5), busyId)
     private fun TestScope.expireDeadline() { advanceTimeBy(UserProfileViewModel.PART_DEADLINE.inWholeMilliseconds); runCurrent() }
     private fun TestScope.states(viewModel: UserProfileViewModel) = mutableListOf<UserProfileUiState>().also { states ->
@@ -1060,13 +1080,13 @@ class UserProfileViewModelTest {
         social: SocialRepository = FakeSocialRepository(),
         people: PersonRepository = FakePersonRepository(),
         reviews: TeacherReviewsRepository = FakeTeacherReviewsRepository(),
-        currentIsu: Int = 1
-    ) = UserProfileViewModel(handle(5), social, people, reviews, currentUser(currentIsu))
+        currentIsu: Int = 1,
+        lessons: TeacherLessonsGateway = this.lessons,
+        now: TeacherNowGateway? = null,
+    ) = UserProfileViewModel(handle(5), social, people, reviews, currentUser(currentIsu), lessons, now)
 
-    private fun backendContent(relationship: RelationshipState = RelationshipState.NONE) = UserProfileUiState.Content(
-        5, "Пользователь 5", null, ProfileHeadline.Group("M3100", 1),
-        listOf(ProfileFact(ProfileFactKind.EDUCATION, "M3100", "ФИТиП", 1)),
-        SocialBlock(profile(5, relationship), isSelf = false, busy = false), null
+    private fun backendContent(relationship: RelationshipState = RelationshipState.NONE) = userProfileUiState(
+        5, ProfilePart.Absent, ProfilePart.Ready(SocialBlock(profile(5, relationship), isSelf = false, busy = false)), ProfilePart.Absent,
     )
 
     private fun UserProfileViewModel.content() = uiState.value as UserProfileUiState.Content
@@ -1074,5 +1094,101 @@ class UserProfileViewModelTest {
     private fun handle(isu: Int) = SavedStateHandle(mapOf(UserScreenArgs.ISU to isu))
     private fun currentUser(isu: Int) = object : CurrentUserProvider {
         override suspend fun getCurrentUser(): CurrentUser = CurrentUser(isu, "Я", null)
+    }
+
+    @Test
+    fun aTeachersCardAsksTheViewersLessonsAndPutsTeachingFirstWhenTheyTeachTheViewer() = runTest(main.dispatcher) {
+        val people = FakePersonRepository().apply { people = mapOf(5 to AppResult.Success(sampleTeacher())) }
+        val taught = TaughtBy(AppResult.Success(TeacherLessons(setOf(1L), listOf("Алгоритмы"))))
+        val viewModel = viewModel(people = people, lessons = taught)
+        runCurrent()
+
+        assertEquals(listOf(5), taught.asked)
+        assertEquals(true, viewModel.content().teachingFirst)
+        assertEquals(listOf("Алгоритмы"), viewModel.content().teaching?.subjects)
+    }
+
+    @Test
+    fun aStudentsCardNeverAsksTheLessonsAndAFailedAnswerTeachesNothing() = runTest(main.dispatcher) {
+        val taught = TaughtBy(AppResult.Success(TeacherLessons(setOf(1L), listOf("Алгоритмы"))))
+        viewModel(people = personRepository(), lessons = taught)
+        runCurrent()
+        assertEquals(emptyList(), taught.asked)
+
+        val people = FakePersonRepository().apply { people = mapOf(5 to AppResult.Success(sampleTeacher())) }
+        val failed = viewModel(people = people, lessons = TaughtBy(AppResult.Failure(AppError.Network)))
+        runCurrent()
+        assertEquals(false, failed.content().teachingFirst)
+        assertEquals(emptyList(), failed.content().teaching?.subjects)
+    }
+
+    @Test
+    fun slowLessonsAreDroppedAtTheDeadlineAndDoNotMoveTheShownCard() = runTest(main.dispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        val people = FakePersonRepository().apply { people = mapOf(5 to AppResult.Success(sampleTeacher())) }
+        val taught = TaughtBy(AppResult.Success(TeacherLessons(setOf(1L), listOf("Алгоритмы"))), gate)
+        val viewModel = viewModel(people = people, lessons = taught)
+        runCurrent()
+        assertEquals(UserProfileUiState.Loading, viewModel.uiState.value)
+
+        expireDeadline()
+        assertEquals(false, viewModel.content().teachingFirst)
+
+        gate.complete(Unit)
+        runCurrent()
+        assertEquals(false, viewModel.content().teachingFirst)
+        assertEquals(emptyList(), viewModel.content().teaching?.subjects)
+    }
+
+    @Test
+    fun aStudentWithoutTheAppIsInvitedOnlyWhenTheViewerIsConnected() = runTest(main.dispatcher) {
+        val people = FakePersonRepository().apply {
+            people = mapOf(5 to AppResult.Success(samplePerson(5).copy(education = listOf(PersonEducation("M3206", 2, "ФИТиП")))))
+        }
+        val absent = viewModel(people = people)
+        runCurrent()
+        assertEquals(listOf(CardAction.INVITE), absent.content().actions)
+
+        val offline = viewModel(FakeSocialRepository().apply { profileError = AppError.CustomServicesDisabled }, people)
+        runCurrent()
+        assertEquals(emptyList(), offline.content().actions)
+    }
+
+    @Test
+    fun aTeachersCardShowsTheirLessonNowAndItsFailureShowsNothing() = runTest(main.dispatcher) {
+        val people = FakePersonRepository().apply { people = mapOf(5 to AppResult.Success(sampleTeacher())) }
+        val lesson = TeacherNowLesson(
+            LocalTime(11, 40), LocalTime(13, 10), "Алгоритмы", 3, "2337", "Кронверкский пр., 49", false, listOf("M3207"), true,
+        )
+        val asked = mutableListOf<Int>()
+        val shown = viewModel(people = people, now = TeacherNowGateway { asked += it; AppResult.Success(lesson) })
+        runCurrent()
+        assertEquals(listOf(5), asked)
+        assertEquals(true, shown.content().teaching?.now?.isNow)
+
+        val failed = viewModel(people = people, now = TeacherNowGateway { AppResult.Failure(AppError.Network) })
+        runCurrent()
+        assertEquals(null, failed.content().teaching?.now)
+
+        val student = viewModel(people = personRepository(), now = TeacherNowGateway { asked += it; AppResult.Success(lesson) })
+        runCurrent()
+        assertEquals(listOf(5), asked)
+        assertEquals(null, student.content().teaching)
+    }
+
+    private fun sampleTeacher() = samplePerson(5).copy(positions = listOf(PersonPosition("доцент", "Кафедра физики")))
+
+    /** Answers [answer] once [gate] opens and records whom it was asked about. */
+    private class TaughtBy(
+        private val answer: AppResult<TeacherLessons> = AppResult.Success(TeacherLessons(emptySet(), emptyList())),
+        private val gate: CompletableDeferred<Unit>? = null,
+    ) : TeacherLessonsGateway {
+        val asked = mutableListOf<Int>()
+
+        override fun taughtBy(teacherIsu: Int): Flow<AppResult<TeacherLessons>> = flow {
+            asked += teacherIsu
+            gate?.await()
+            emit(answer)
+        }
     }
 }

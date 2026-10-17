@@ -256,7 +256,7 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.open(profile.route), .opened)
 
         XCTAssertEqual(router.path(of: .sport), [profile])
-        XCTAssertEqual(router.path(of: .sport).first?.chrome, .compose)
+        XCTAssertEqual(router.path(of: .sport).first?.chrome, .native)
         XCTAssertNil(router.sheet, "a screen closes the sheet it was opened from")
     }
 
@@ -513,10 +513,9 @@ final class RouterTests: XCTestCase {
             (AppRoutes.Diagnostics.shared, .swiftUI),
             (AppRoutes.DebugTools.shared, .notOnIOS),
             (AppRoutes.RecordbookSubject(args: subject), .swiftUI),
-            (AppRoutes.Friends.shared, .compose),
-            (AppRoutes.UserFriends(isu: 100_001, name: ""), .compose),
-            (AppRoutes.UserSearch.shared, .compose),
-            (AppRoutes.UserProfile(isu: 100_001), .compose),
+            (AppRoutes.Friends.shared, .swiftUI),
+            (AppRoutes.UserFriends(isu: 100_001, name: ""), .swiftUI),
+            (AppRoutes.UserProfile(isu: 100_001), .swiftUI),
             (AppRoutes.UserSchedule(isu: 100_001, name: ""), .swiftUI),
             (AppRoutes.UserSport(isu: 100_001, name: ""), .compose),
             (AppRoutes.SportPoints.shared, .swiftUI),
@@ -535,8 +534,8 @@ final class RouterTests: XCTestCase {
             (AppRoutes.LinkActions(args: links, linkId: "link-1"), .composeSheet),
             (AppRoutes.LessonDetails(args: lesson), .swiftUISheet),
             (AppRoutes.PendingSportDetails(args: pendingSport), .swiftUISheet),
-            // The reports are Compose dialogs inside the surface that asks for them.
-            (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .notOnIOS),
+            (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .swiftUISheet),
+            // The link report is a Compose dialog inside the sheet that asks for it.
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),
             (AppRoutes.LinkUnavailable.shared, .sheet(.linkUnavailable)),
             (AppRoutes.CancelBookingConfirm(lessonId: 42), .notOnIOS),

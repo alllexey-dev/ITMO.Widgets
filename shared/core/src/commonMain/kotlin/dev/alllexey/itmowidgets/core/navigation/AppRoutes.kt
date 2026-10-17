@@ -70,11 +70,6 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
-    @Serializable
-    data object UserSearch : AppRoute {
-        override val kind get() = RouteKind.SCREEN
-    }
-
     /** Built only from [UserScreenArgs.profileIsu] or another positive ISU. */
     @Serializable
     data class UserProfile(val isu: Int) : AppRoute {
@@ -240,7 +235,6 @@ object AppRoutes {
         subclass(RecordbookSubject::class)
         subclass(Friends::class)
         subclass(UserFriends::class)
-        subclass(UserSearch::class)
         subclass(UserProfile::class)
         subclass(UserSchedule::class)
         subclass(UserSport::class)

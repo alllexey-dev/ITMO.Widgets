@@ -14,6 +14,11 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
+import dev.alllexey.itmowidgets.core.schedule.TeacherNowGateway
+import dev.alllexey.itmowidgets.core.schedule.TeacherNowLesson
+import kotlinx.coroutines.async
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
@@ -32,7 +37,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.scan
+import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -42,13 +49,21 @@ class UserProfileViewModel(
     private val social: SocialRepository,
     private val people: PersonRepository,
     private val reviews: TeacherReviewsRepository,
-    private val currentUserProvider: CurrentUserProvider
+    private val currentUserProvider: CurrentUserProvider,
+    private val lessons: TeacherLessonsGateway,
+    /** MyITMO's teacher timetable; null until the app binds one, and the card shows no "Сейчас ведёт" then. */
+    private val teacherNow: TeacherNowGateway? = null,
 ) : ViewModel() {
 
     private val isu: Int = checkNotNull(savedStateHandle.get<Int>(UserScreenArgs.ISU)) { "Profile needs an ISU" }
     private val personPart = MutableStateFlow<ProfilePart<Person>>(ProfilePart.Loading)
     private val socialPart = MutableStateFlow<ProfilePart<SocialBlock>>(ProfilePart.Loading)
     private val reviewsPart = MutableStateFlow<ProfilePart<TeacherReviews>>(ProfilePart.Loading)
+    /** What the viewer's own lessons say the person teaches them; asked only for someone My ITMO lists a position for. */
+    private val teachesPart = MutableStateFlow<ProfilePart<TeacherLessons>>(ProfilePart.Loading)
+    private val absence = MutableStateFlow<SocialAbsence?>(null)
+    /** The teacher's lesson now or next today; it settles together with [teachesPart]. */
+    private val nowLesson = MutableStateFlow<TeacherNowLesson?>(null)
     private val refreshes = RefreshTracker(viewModelScope)
     /**
      * A load of any mode is running. Unlike `refreshes.refreshing` it covers the silent load on entry too: while
@@ -60,8 +75,12 @@ class UserProfileViewModel(
     /** Whether the summary shows its scales; kept across configuration changes and process death. */
     private val summaryExpanded = savedStateHandle.getStateFlow(SUMMARY_EXPANDED, false)
     private val reviewsView = combine(reviewBusy, summaryExpanded, ::Pair)
-    val uiState: StateFlow<UserProfileUiState> = combine(personPart, socialPart, reviewsPart, loading, reviewsView) { person, block, reviews, loading, (busy, expanded) ->
-        userProfileUiState(isu, person, block, reviews, busy, expanded) to loading
+    private val teacher = combine(teachesPart, nowLesson, ::Pair)
+    private val parts = combine(personPart, socialPart, reviewsPart, teacher, absence) { person, block, reviews, (teaches, now), absence ->
+        Parts(person, block, reviews, teaches, absence, now)
+    }
+    val uiState: StateFlow<UserProfileUiState> = combine(parts, loading, reviewsView) { parts, loading, (busy, expanded) ->
+        parts.state(busy, expanded) to loading
     }.scan(partsState()) { previous, (next, loading) ->
         if (loading && next !is UserProfileUiState.Content && previous is UserProfileUiState.Content) previous else next
     }.stateIn(viewModelScope, SharingStarted.Eagerly, partsState())
@@ -102,6 +121,11 @@ class UserProfileViewModel(
             if (personPart.value !is ProfilePart.Ready) personPart.value = people.cachedPerson(isu)?.let { ProfilePart.Ready(it) } ?: ProfilePart.Loading
             if (reviewsPart.value !is ProfilePart.Ready) reviewsPart.value = reviews.cachedReviews(isu)?.let(::shown) ?: ProfilePart.Loading
             if (socialPart.value !is ProfilePart.Ready) socialPart.value = ProfilePart.Loading
+            // A cached person who teaches nothing needs no lessons, so the cached page shows at once.
+            if (teachesPart.value !is ProfilePart.Ready) {
+                val cached = (personPart.value as? ProfilePart.Ready)?.value
+                teachesPart.value = if (cached != null && cached.positions.isEmpty()) ProfilePart.Absent else ProfilePart.Loading
+            }
         }
         isSelf = currentUserProvider.getCurrentUser()?.isu == isu
         currentCoroutineContext().ensureActive()
@@ -123,7 +147,15 @@ class UserProfileViewModel(
             }
         }
         listOf(
-            launch { val result = people.person(isu); currentCoroutineContext().ensureActive(); attempt.onPerson(result) },
+            launch {
+                val result = people.person(isu)
+                currentCoroutineContext().ensureActive()
+                attempt.onPerson(result)
+                val teacher = result is AppResult.Success && result.value.positions.isNotEmpty() && !isSelf
+                val (taught, now) = if (teacher) teacherFacts() else null to null
+                currentCoroutineContext().ensureActive()
+                attempt.onTeaches(taught, now)
+            },
             launch { val result = social.profile(isu); currentCoroutineContext().ensureActive(); attempt.onSocial(result) },
             launch { val result = reviews.reviews(isu); currentCoroutineContext().ensureActive(); attempt.onReviews(result) }
         ).joinAll()
@@ -138,6 +170,7 @@ class UserProfileViewModel(
         if (personPart.value is ProfilePart.Loading) { lateParts += Part.PERSON; personPart.value = ProfilePart.Absent }
         if (socialPart.value is ProfilePart.Loading) { lateParts += Part.SOCIAL; socialPart.value = ProfilePart.Absent }
         if (reviewsPart.value is ProfilePart.Loading) { lateParts += Part.REVIEWS; reviewsPart.value = ProfilePart.Absent }
+        if (teachesPart.value is ProfilePart.Loading) { lateParts += Part.TEACHES; teachesPart.value = ProfilePart.Absent }
     }
 
     /** Deferred identity sections must not move a visible page; they become usable if its last identity disappears. */
@@ -154,6 +187,14 @@ class UserProfileViewModel(
         fun onSocial(result: AppResult<UserProfile>) {
             if (Part.SOCIAL in lateParts && partsState() is UserProfileUiState.Content) deferredSocial = result
             else { failed = applySocial(result) || failed; releaseDeferred() }
+        }
+
+        /** A late answer would move the blocks and the buttons of a shown page, so it waits for the next load. */
+        fun onTeaches(result: TeacherLessons?, now: TeacherNowLesson?) {
+            if (Part.TEACHES in lateParts && partsState() is UserProfileUiState.Content) return
+            lateParts -= Part.TEACHES
+            nowLesson.value = now
+            teachesPart.value = result?.let { ProfilePart.Ready(it) } ?: ProfilePart.Absent
         }
 
         fun onReviews(result: AppResult<TeacherReviews>) {
@@ -183,10 +224,17 @@ class UserProfileViewModel(
     }
 
     private fun applySocial(result: AppResult<UserProfile>): Boolean = when (result) {
-        is AppResult.Success -> { socialPart.value = ProfilePart.Ready(SocialBlock(result.value, isSelf, busy = false)); false }
+        is AppResult.Success -> {
+            absence.value = null
+            socialPart.value = ProfilePart.Ready(SocialBlock(result.value, isSelf, busy = false))
+            false
+        }
         is AppResult.Failure -> {
             when {
-                result.error.isSocialAbsence() -> socialPart.value = ProfilePart.Absent
+                result.error.isSocialAbsence() -> {
+                    absence.value = if (result.error == AppError.NotFound) SocialAbsence.NOT_REGISTERED else SocialAbsence.NOT_CONNECTED
+                    socialPart.value = ProfilePart.Absent
+                }
                 result.error == AppError.Forbidden || result.error == AppError.Unauthorized || socialPart.value !is ProfilePart.Ready ->
                     socialPart.value = ProfilePart.Failed(result.error)
             }
@@ -202,22 +250,27 @@ class UserProfileViewModel(
         }
     }
 
-    fun onPrimaryAction() {
-        val block = socialBlock() ?: return
-        if (block.busy) return
-        when (block.profile.relationship) {
-            RelationshipState.NONE -> act { social.sendRequest(isu) }
-            RelationshipState.OUTGOING -> act { social.cancelRequest(isu) }
-            RelationshipState.INCOMING -> act { social.acceptRequest(isu) }
-            RelationshipState.FRIENDS -> (uiState.value as? UserProfileUiState.Content)?.let { content ->
-                viewModelScope.launch { eventQueue.send(UserProfileEvent.ConfirmRemove(content.displayName)) }
-            }
-            RelationshipState.BLOCKED -> Unit
+    /**
+     * A friendship button of the header. Writing a review and the invitation leave the screen, so the host handles
+     * them; a removal asks first ([requestRemoveFriend]).
+     */
+    fun onAction(action: CardAction) {
+        if (socialBlock()?.busy == true) return
+        if (action !in (uiState.value as? UserProfileUiState.Content)?.actions.orEmpty()) return
+        when (action) {
+            CardAction.ADD_FRIEND -> act { social.sendRequest(isu) }
+            CardAction.CANCEL_REQUEST -> act { social.cancelRequest(isu) }
+            CardAction.ACCEPT_REQUEST -> act { social.acceptRequest(isu) }
+            CardAction.REJECT_REQUEST -> act { social.rejectRequest(isu) }
+            CardAction.WRITE_REVIEW, CardAction.INVITE -> Unit
         }
     }
 
-    fun onSecondaryAction() {
-        if (socialBlock()?.profile?.relationship == RelationshipState.INCOMING) act { social.rejectRequest(isu) }
+    /** `Удалить из друзей`: the host confirms, then calls [removeFriend]. */
+    fun requestRemoveFriend() {
+        if (socialBlock()?.profile?.relationship != RelationshipState.FRIENDS) return
+        val content = uiState.value as? UserProfileUiState.Content ?: return
+        viewModelScope.launch { eventQueue.send(UserProfileEvent.ConfirmRemove(content.displayName)) }
     }
 
     fun removeFriend() = act { social.removeFriend(isu) }
@@ -279,13 +332,47 @@ class UserProfileViewModel(
     }
 
     private fun partsState() =
-        userProfileUiState(isu, personPart.value, socialPart.value, reviewsPart.value, reviewBusy.value, summaryExpanded.value)
+        Parts(personPart.value, socialPart.value, reviewsPart.value, teachesPart.value, absence.value, nowLesson.value)
+            .state(reviewBusy.value, summaryExpanded.value)
+
+    /** The lessons with the viewer and the lesson now, asked at once; a failed lesson now is simply not shown. */
+    private suspend fun teacherFacts(): Pair<TeacherLessons?, TeacherNowLesson?> = coroutineScope {
+        val now = async { (teacherNow?.lessonOf(isu) as? AppResult.Success)?.value }
+        taughtBy() to now.await()
+    }
+
+    /** The subjects the person teaches the viewer: the first positive answer, else all weeks; null when every week failed. */
+    private suspend fun taughtBy(): TeacherLessons? {
+        val last = lessons.taughtBy(isu)
+            .transformWhile { result ->
+                emit(result)
+                !(result is AppResult.Success && result.value.subjects.isNotEmpty())
+            }
+            .lastOrNull()
+        return when (last) {
+            is AppResult.Success -> last.value
+            is AppResult.Failure -> null
+            null -> TeacherLessons(emptySet(), emptyList())
+        }
+    }
+
+    private inner class Parts(
+        val person: ProfilePart<Person>,
+        val social: ProfilePart<SocialBlock>,
+        val reviews: ProfilePart<TeacherReviews>,
+        val teaches: ProfilePart<TeacherLessons>,
+        val absence: SocialAbsence?,
+        val now: TeacherNowLesson?,
+    ) {
+        fun state(busyId: String?, expanded: Boolean) =
+            userProfileUiState(isu, person, social, reviews, teaches, absence, now, busyId, expanded)
+    }
     private fun shown(value: TeacherReviews): ProfilePart<TeacherReviews> =
         ProfilePart.Ready(value.copy(reviews = reviewOrder.arrange(value.reviews) { it.id }))
     private fun readyReviews() = (reviewsPart.value as? ProfilePart.Ready)?.value
     private fun socialBlock() = (socialPart.value as? ProfilePart.Ready)?.value
     private fun AppError.isSocialAbsence() = this == AppError.NotFound || this == AppError.CustomServicesDisabled
-    private enum class Part { PERSON, SOCIAL, REVIEWS }
+    private enum class Part { PERSON, SOCIAL, REVIEWS, TEACHES }
 
     companion object {
         internal val PART_DEADLINE: Duration = 3.seconds

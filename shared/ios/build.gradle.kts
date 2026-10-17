@@ -36,6 +36,10 @@ kotlin {
             export(project(":shared:feature-schedule"))
             // The sport tab's, `Мои секции` and `Откуда баллы` ViewModels, SportSamples of the snapshot tests.
             export(project(":shared:feature-sport"))
+            // Профиль, Друзья, the person card and another user's friends: their ViewModels and SocialSamples.
+            export(project(":shared:feature-social"))
+            // The report of a review's ReportReviewViewModel.
+            export(project(":shared:feature-reviews"))
         }
     }
 
@@ -50,10 +54,10 @@ kotlin {
             api(project(":shared:feature-schedule"))
             api(project(":shared:feature-sport"))
             api(project(":shared:feature-recordbook"))
-            implementation(project(":shared:feature-social"))
+            api(project(":shared:feature-social"))
             api(project(":shared:feature-settings"))
             implementation(project(":shared:feature-resources"))
-            implementation(project(":shared:feature-reviews"))
+            api(project(":shared:feature-reviews"))
             api(project(":shared:feature-account"))
             // The composition probe of IosStrings and the screen hosts (screens/).
             implementation(libs.compose.runtime)
