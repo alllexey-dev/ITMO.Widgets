@@ -71,9 +71,10 @@ enum SnapshotMatrix {
 }
 
 /// The system spinner starts on a frame picked by the time it appears, so two renders of one screen differ in its
-/// pixels. Layer renders draw this still one instead: eight spokes of the tint, fading clockwise from the leading one.
-/// A determinate progress view stays the system's linear bar.
-private struct StillSpinnerStyle: ProgressViewStyle {
+/// pixels. Layer and window renders draw this still one instead: eight spokes of the tint, fading clockwise from the
+/// leading one. A determinate progress view stays the system's linear bar. A sheet's content does not inherit the
+/// style from its presenter, so a window test of a sheet sets it inside the sheet.
+struct StillSpinnerStyle: ProgressViewStyle {
     @Environment(\.controlSize) private var controlSize
 
     func makeBody(configuration: Configuration) -> some View {
@@ -186,6 +187,7 @@ extension SnapshotMatrix {
         let themed = view
             .environment(\.locale, Locale(identifier: "ru_RU"))
             .environment(\.dynamicTypeSize, appearance.dynamicTypeSize)
+            .progressViewStyle(StillSpinnerStyle())
             .background(Color(uiColor: .systemBackground))
         // Presentations and sheet detents apply at once: animated, a sheet ended a fraction of a point off, with the
         // glass under the dimming still lit, when the slow CI runner had not finished the transition within `settle`.
