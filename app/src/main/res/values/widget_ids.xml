@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The layout a settings preview applied, kept on its view to reapply the next render in place. -->
+    <item name="widget_preview_layout" type="id" />
+</resources>

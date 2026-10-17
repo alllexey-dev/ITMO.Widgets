@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSelector
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimeline
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimelineEntry
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlinx.coroutines.async
@@ -35,9 +36,12 @@ class SportWidgetDataProvider(
     private val tokens: SessionTokenStore,
 ) {
 
-    suspend fun load(): SportWidgetSnapshot {
-        val data = fetch() ?: return SportWidgetSnapshot.of(SportWidgetKind.SIGNED_OUT)
-        return selector.select(data.score, data.bookings, time.now(), time.timeZone)
+    /** Now, with the next instant the snapshot changes by itself (a booking ends, a midnight) for Android's alarm. */
+    suspend fun load(): SportWidgetLoad {
+        val now = time.now()
+        val data = fetch() ?: return SportWidgetLoad(SportWidgetSnapshot.of(SportWidgetKind.SIGNED_OUT), null)
+        val timeline = selector.timeline(data.score, data.bookings, now, now + LOOKAHEAD, time.timeZone)
+        return SportWidgetLoad(timeline.entries.first().snapshot, timeline.entries.getOrNull(1)?.validFrom?.let(Instant::parse))
     }
 
     /** From now to [until], for iOS WidgetKit (`sport-widget-v1.json`). */
@@ -75,5 +79,10 @@ class SportWidgetDataProvider(
 
     private companion object {
         val SETTLE_TIMEOUT = 10.seconds
+        /** Past the next midnight, so Android always knows its next change. */
+        val LOOKAHEAD = 2.days
     }
 }
+
+/** [snapshot] now and [nextChange], when it changes without new data (null: not before the next refresh). */
+data class SportWidgetLoad(val snapshot: SportWidgetSnapshot, val nextChange: Instant?)

@@ -30,7 +30,7 @@ import dev.alllexey.itmowidgets.feature.settings.ui.preview.SettingsPreviewData
 @Composable
 private fun SettingsPreview(state: SettingsUiState, themed: Boolean = false) =
     ItmoPreview(colorSource = state.themePreview?.takeIf { themed }?.let(ColorSource::Theme)) {
-        SettingsScreen(state, SettingsActions(), widgetPreview = { settings -> WidgetPreviewPlaceholder(settings) })
+        SettingsScreen(state, SettingsActions())
     }
 
 /**

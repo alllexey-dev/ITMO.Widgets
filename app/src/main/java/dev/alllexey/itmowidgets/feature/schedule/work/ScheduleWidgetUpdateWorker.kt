@@ -1,13 +1,11 @@
 package dev.alllexey.itmowidgets.feature.schedule.work
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
-import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetLoadResult
@@ -15,80 +13,76 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSel
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders
-import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRenderer
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import org.koin.core.Koin
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class ScheduleWidgetUpdateWorker(
     appContext: Context,
     workerParams: WorkerParameters,
-) : CoroutineWorker(appContext, workerParams), KoinComponent {
-
-    private val dataProvider: ScheduleWidgetDataProvider by inject()
-    private val store: ScheduleWidgetSnapshotStore by inject()
-    private val diagnostics: AppDiagnostics by inject()
-    private val palettes: WidgetPaletteSource by inject()
-
-    /** WorkManager can run a worker before `Application.onCreate()` has started Koin. */
-    override fun getKoin(): Koin = KoinStarter.ensureStarted(applicationContext)
+) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
-        val singleIds = ScheduleWidgetProviders.singleLessonIds(applicationContext)
-        val listIds = ScheduleWidgetProviders.dayScheduleIds(applicationContext)
-        if (singleIds.isEmpty() && listIds.isEmpty()) {
-            ScheduleWidgetWork.cancelIfUnused(applicationContext)
-            return Result.success()
+        // WorkManager can run a worker before `Application.onCreate()` has started Koin.
+        ScheduleWidgetUpdate(KoinStarter.ensureStarted(applicationContext), applicationContext).run(refresh = true)
+        return Result.success()
+    }
+}
+
+/**
+ * One update of both schedule widgets: select (after a fetch with [run]'s `refresh`), store, draw, and plan the next
+ * one: the next boundary through the worker and, while a countdown or the `сейчас` line runs, the next minute from
+ * the cache.
+ */
+internal class ScheduleWidgetUpdate(koin: Koin, private val context: Context) {
+    private val dataProvider: ScheduleWidgetDataProvider = koin.get()
+    private val store: ScheduleWidgetSnapshotStore = koin.get()
+    private val diagnostics: AppDiagnostics = koin.get()
+    private val palettes: WidgetPaletteSource = koin.get()
+    private val time: AcademicTimeProvider = koin.get()
+
+    suspend fun run(refresh: Boolean) {
+        val singleIds = ScheduleWidgetProviders.singleLessonIds(context)
+        val dayIds = ScheduleWidgetProviders.dayScheduleIds(context)
+        if (singleIds.isEmpty() && dayIds.isEmpty()) {
+            ScheduleWidgetWork.cancelIfUnused(context)
+            return
         }
 
         val generation = store.currentGeneration()
-        val rendered = try {
-            when (val result = dataProvider.load()) {
-                is ScheduleWidgetLoadResult.Available -> RenderedSnapshot(
-                    snapshot = result.selection.snapshot,
-                    nextUpdateDelay = result.selection.nextUpdateDelay
-                )
-
-                is ScheduleWidgetLoadResult.Unavailable -> {
+        val (selected, nextUpdate) = try {
+            when (val result = dataProvider.load(refresh)) {
+                is ScheduleWidgetLoadResult.Available -> result.selection.snapshot to result.selection.nextUpdateDelay
+                ScheduleWidgetLoadResult.Unavailable -> {
                     diagnostics.warn(TAG, "Schedule refresh failed and nothing is cached; keeping the last snapshot")
-                    RenderedSnapshot(
-                        snapshot = fallbackSnapshot(
-                            singleLessonStyle = result.singleLessonStyle,
-                            lessonListStyle = result.lessonListStyle
-                        ),
-                        nextUpdateDelay = ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
-                    )
+                    fallbackSnapshot() to ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
                 }
             }
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
             diagnostics.warn(TAG, "Widget update failed; keeping the last snapshot", error)
-            RenderedSnapshot(
-                snapshot = fallbackSnapshot(),
-                nextUpdateDelay = ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
-            )
+            fallbackSnapshot() to ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
         }
 
         currentCoroutineContext().ensureActive()
-        if (!store.writeIfCurrent(rendered.snapshot, generation)) return Result.success()
+        if (!store.writeIfCurrent(selected, generation)) return
         // Re-check persisted gates/expiry immediately before either widget type renders.
         val snapshot = store.read()
         currentCoroutineContext().ensureActive()
-        if (store.currentGeneration() != generation) return Result.success()
-        render(singleIds, listIds, snapshot, palettes.current())
-        ScheduleWidgetWork.scheduleNext(applicationContext, rendered.nextUpdateDelay)
-        return Result.success()
+        if (store.currentGeneration() != generation) return
+        val now = time.now()
+        ScheduleWidgetProviders.render(context, snapshot, palettes.current(), now, singleIds, dayIds)
+        if (refresh) ScheduleWidgetWork.scheduleNext(context, nextUpdate)
+        if (snapshot.isLive) ScheduleWidgetWork.scheduleTick(context, untilNextMinute(now.toEpochMilliseconds()))
+        else ScheduleWidgetWork.cancelTick(context)
     }
 
-    private suspend fun fallbackSnapshot(
-        singleLessonStyle: LessonStyle? = null,
-        lessonListStyle: LessonStyle? = null,
-    ): ScheduleWidgetSnapshot {
+    private suspend fun fallbackSnapshot(): ScheduleWidgetSnapshot {
         val previous = try {
             store.read().withoutPendingSport()
         } catch (cancellation: CancellationException) {
@@ -96,51 +90,17 @@ class ScheduleWidgetUpdateWorker(
         } catch (_: Exception) {
             null
         }
-        if (previous?.canBeShownWhenRefreshFails() == true) {
-            return previous.copy(
-                singleLessonStyle = singleLessonStyle ?: previous.singleLessonStyle,
-                lessonListStyle = lessonListStyle ?: previous.lessonListStyle
-            )
-        }
-        return ScheduleWidgetSnapshot.error(
-            singleLessonStyle = singleLessonStyle ?: LessonStyle.DOT,
-            lessonListStyle = lessonListStyle ?: LessonStyle.DOT
-        )
+        return previous?.takeIf { it.canBeShownWhenRefreshFails() } ?: ScheduleWidgetSnapshot.error()
     }
 
-    private fun render(
-        singleIds: IntArray,
-        listIds: IntArray,
-        snapshot: ScheduleWidgetSnapshot,
-        palette: WidgetPalette?,
-    ) {
-        val manager = AppWidgetManager.getInstance(applicationContext)
-        singleIds.forEach { appWidgetId ->
-            ScheduleWidgetRenderer.renderSingle(
-                context = applicationContext,
-                appWidgetManager = manager,
-                appWidgetId = appWidgetId,
-                snapshot = snapshot,
-                palette = palette
-            )
-        }
-        listIds.forEach { appWidgetId ->
-            ScheduleWidgetRenderer.renderList(
-                context = applicationContext,
-                appWidgetManager = manager,
-                appWidgetId = appWidgetId,
-                snapshot = snapshot,
-                palette = palette
-            )
-        }
+    /** Just past the next whole minute, so the text changes with the clock in the status bar. */
+    private fun untilNextMinute(nowMillis: Long): Duration {
+        val minute = 1.minutes.inWholeMilliseconds
+        return (minute - nowMillis % minute + TICK_LATENESS_MILLIS).milliseconds
     }
 
     private companion object {
         const val TAG = "ScheduleWidget"
+        const val TICK_LATENESS_MILLIS = 500L
     }
-
-    private data class RenderedSnapshot(
-        val snapshot: ScheduleWidgetSnapshot,
-        val nextUpdateDelay: Duration,
-    )
 }

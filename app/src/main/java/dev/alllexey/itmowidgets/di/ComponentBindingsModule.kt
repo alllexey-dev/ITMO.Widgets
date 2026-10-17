@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking.QueueKind
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileController
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
+import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.social.data.push.FriendshipPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportAgentBookedPushHandler
@@ -28,6 +29,8 @@ val componentBindingsModule = module {
     // The widgets, the worker and the session effects share one store; the cleaner contribution is qualified.
     singleOf(::ScheduleWidgetSnapshotStoreImpl) { bind<ScheduleWidgetSnapshotStore>() }
     single<SessionDataCleaner>(named("schedule-widget")) { get<ScheduleWidgetSnapshotStoreImpl>() }
+    singleOf(::SportWidgetSnapshotStore)
+    single<SessionDataCleaner>(named("sport-widget")) { get<SportWidgetSnapshotStore>() }
 
     factoryOf(::QrTileController)
 

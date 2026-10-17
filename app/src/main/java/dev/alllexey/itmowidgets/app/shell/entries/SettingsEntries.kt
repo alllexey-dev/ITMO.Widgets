@@ -1,18 +1,19 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.os.Build
-import android.os.Bundle
 import android.view.View
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,11 +30,9 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.snackbar.Snackbar
@@ -43,13 +42,16 @@ import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.SettingsScreenArgs
+import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
 import dev.alllexey.itmowidgets.core.ui.permission.openAppNotificationSettings
 import dev.alllexey.itmowidgets.core.ui.permission.requestNotifications
 import dev.alllexey.itmowidgets.core.ui.resolve
+import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
@@ -61,6 +63,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.CALENDAR_PERMISSIONS
 import dev.alllexey.itmowidgets.feature.settings.ui.CalendarAccessAnswer
@@ -89,7 +92,8 @@ import dev.alllexey.itmowidgets.feature.settings.ui.showCalendarAccessDenied
 import dev.alllexey.itmowidgets.feature.settings.ui.showCustomSpoilerEvent
 import dev.alllexey.itmowidgets.feature.settings.ui.showIcsDatePicker
 import dev.alllexey.itmowidgets.feature.settings.ui.showWidgetsRefreshStarted
-import kotlinx.coroutines.CoroutineScope
+import dev.alllexey.itmowidgets.feature.settings.ui.widgets.WidgetsGalleryActions
+import dev.alllexey.itmowidgets.feature.settings.ui.widgets.WidgetsGalleryScreen
 import kotlinx.coroutines.launch
 import org.koin.core.parameter.parametersOf
 
@@ -107,9 +111,8 @@ internal fun EntryRegistry.Builder.settingsEntries() {
 }
 
 /**
- * One settings page: the page's widget preview, the shown dialog and
- * a pending calendar request in this entry's saved state, the row states refreshed on every resume, and on the QR
- * widget page the custom spoiler image with its own ViewModel. A sub-page opens as another [AppRoutes.Settings].
+ * One settings page: the shown dialog and a pending calendar request in this entry's saved state, the row states
+ * refreshed on every resume, and on the widgets gallery the custom spoiler image with its own ViewModel. A sub-page opens as another [AppRoutes.Settings].
  */
 @Composable
 private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) {
@@ -121,11 +124,10 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
     val viewModel: SettingsViewModel = entryViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val page = remember(viewModel) { viewModel.uiState.value.page }
-    // Only the QR widget page reads the spoiler image.
-    val spoiler: CustomSpoilerViewModel? = if (page == SettingsPage.QR_WIDGET) entryViewModel() else null
+    // Only the widgets gallery reads the spoiler image (the pass sheet).
+    val spoiler: CustomSpoilerViewModel? = if (page == SettingsPage.WIDGETS) entryViewModel() else null
     val dialogs = rememberSaveable(saver = DialogsSaver) { SettingsDialogState() }
     var pendingCalendarAccess by rememberSaveable { mutableStateOf(false) }
-    val preview = rememberWidgetPreview(context)
 
     val notifications = rememberLauncherForActivityResult(RequestNotificationPermission()) { granted ->
         activity?.onSettingsNotificationPermission(granted, viewModel)
@@ -153,10 +155,10 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
         // Back from a system page, the rows follow what Android allows now.
         viewModel.onNotificationPermissionChanged(NotificationManagerCompat.from(context).areNotificationsEnabled())
         viewModel.onBackgroundWorkChanged()
+        if (page == SettingsPage.WIDGETS) countPlacedWidgets(context, viewModel)
         onPauseOrDispose { }
     }
     LaunchedEffect(viewModel, lifecycleOwner) {
-        if (page == SettingsPage.ROOT) preview.factory.preload(context, lifecycleOwner.lifecycleScope)
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.events.collect { event ->
                 when (event) {
@@ -185,7 +187,9 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
             }
         }
     }
-    if (spoiler != null) CustomSpoilerEffects(spoiler, viewModel, preview, view)
+    // A new spoiler image redraws the pass previews of the gallery.
+    var spoilerRevision by rememberSaveable { mutableStateOf(0) }
+    if (spoiler != null) CustomSpoilerEffects(spoiler, viewModel, onImageChanged = { spoilerRevision++ }, view)
 
     val actions = remember(viewModel, navigator, key, activity, platform) {
         SettingsActions(
@@ -199,12 +203,67 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
             onOpenAppSettings = { platform.openAppSettings() },
         )
     }
-    SettingsScreen(
+    if (page == SettingsPage.WIDGETS) {
+        WidgetsGalleryEntry(state, actions, viewModel, view, spoilerRevision)
+    } else {
+        SettingsScreen(state = state, actions = actions, dialogs = dialogs)
+    }
+}
+
+/**
+ * The widgets gallery: each card and the open sheet draw their own real widget preview, and `Добавить` pins one
+ * through the launcher; a pinned widget is counted again at once.
+ */
+@Composable
+private fun WidgetsGalleryEntry(
+    state: SettingsUiState,
+    actions: SettingsActions,
+    viewModel: SettingsViewModel,
+    view: View,
+    spoilerRevision: Int,
+) {
+    val context = LocalContext.current
+    val pins = remember(context) { WidgetPinRequester(context) }
+    DisposableEffect(pins) {
+        pins.start { countPlacedWidgets(context, viewModel) }
+        onDispose { pins.stop() }
+    }
+    val factory = remember(context) { KoinStarter.ensureStarted(context).get<WidgetPreviewFactory>() }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(factory) { factory.preload(context, scope) }
+    WidgetsGalleryScreen(
         state = state,
         actions = actions,
-        widgetPreview = { settings -> preview.Slot(settings) },
-        dialogs = dialogs,
+        galleryActions = WidgetsGalleryActions(
+            onAdd = { format ->
+                if (!pins.isSupported || !pins.request(WidgetProviders.of(format))) {
+                    snackbar(view, R.string.settings_widget_pin_failed, Snackbar.LENGTH_SHORT)
+                }
+            },
+        ),
+        widgetPreview = { settings, modifier -> key(spoilerRevision) { GalleryPreview(factory, settings, modifier) } },
     )
+}
+
+/** One real widget on the sample data, its own [WidgetPreview] for as long as it is on screen. */
+@Composable
+private fun GalleryPreview(factory: WidgetPreviewFactory, settings: WidgetPreviewSettings, modifier: Modifier) {
+    val scope = rememberCoroutineScope()
+    var preview by remember { mutableStateOf<WidgetPreview?>(null) }
+    AndroidView(
+        factory = { context -> factory.create(context, scope, settings).also { preview = it }.view },
+        modifier = modifier,
+        onRelease = { preview?.close() },
+        update = { preview?.bind(settings) },
+    )
+}
+
+/** How many widgets of each format the launcher holds now. */
+private fun countPlacedWidgets(context: Context, viewModel: SettingsViewModel) {
+    val manager = AppWidgetManager.getInstance(context)
+    WidgetFormat.entries.forEach { format ->
+        viewModel.onPlacedWidgets(format, manager.getAppWidgetIds(ComponentName(context, WidgetProviders.of(format))).size)
+    }
 }
 
 /** The snackbars and the site pages of [event]; [SettingsEntry] handles the rest of [SettingsEvent]. */
@@ -223,14 +282,14 @@ private fun showSettingsMessage(event: SettingsEvent, context: Context, view: Vi
 }
 
 /**
- * The QR widget page's custom image: its state drives the image rows, and a saved or reset image redraws the preview
- * and says so while the page is started.
+ * The gallery's custom spoiler image: its state drives the image rows, and a saved or reset image redraws the pass
+ * previews and says so while the page is started.
  */
 @Composable
 private fun CustomSpoilerEffects(
     spoiler: CustomSpoilerViewModel,
     viewModel: SettingsViewModel,
-    preview: SettingsWidgetPreview,
+    onImageChanged: () -> Unit,
     view: View,
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -242,76 +301,11 @@ private fun CustomSpoilerEffects(
                 }
             }
             spoiler.events.collect { event ->
-                if (event != CustomSpoilerEvent.FAILED) preview.refresh()
+                if (event != CustomSpoilerEvent.FAILED) onImageChanged()
                 view.showCustomSpoilerEvent(event)
             }
         }
     }
-}
-
-/**
- * The page's one widget preview, a View of [factory]: built on first use with the state saved before, then reused,
- * stopped with the entry and closed when the composition drops it.
- */
-private class SettingsWidgetPreview(val factory: WidgetPreviewFactory, private var savedState: Bundle?) {
-    private var preview: WidgetPreview? = null
-    private var boundSettings: WidgetPreviewSettings? = null
-
-    @Composable
-    fun Slot(settings: WidgetPreviewSettings) {
-        val scope = rememberCoroutineScope()
-        AndroidView(
-            factory = { context -> obtain(context, scope, settings).view },
-            modifier = Modifier.fillMaxWidth(),
-            onRelease = { release() },
-            update = { bind(settings) },
-        )
-    }
-
-    private fun obtain(context: Context, scope: CoroutineScope, settings: WidgetPreviewSettings): WidgetPreview =
-        preview ?: factory.create(context, scope, settings).also {
-            savedState?.let(it::restoreState)
-            preview = it
-            bind(settings)
-        }
-
-    private fun bind(settings: WidgetPreviewSettings) {
-        val shown = preview ?: return
-        if (settings == boundSettings) return
-        boundSettings = settings
-        shown.bind(settings)
-    }
-
-    fun refresh() {
-        preview?.refresh()
-    }
-
-    fun stop() {
-        preview?.stop()
-    }
-
-    fun save(): Bundle? = preview?.saveState() ?: savedState
-
-    /** Called when the composition drops the preview and when the entry leaves; the second call finds nothing. */
-    fun release() {
-        val shown = preview ?: return
-        savedState = shown.saveState() ?: savedState
-        shown.close()
-        preview = null
-        boundSettings = null
-    }
-}
-
-@Composable
-private fun rememberWidgetPreview(context: Context): SettingsWidgetPreview {
-    val factory = remember(context) { KoinStarter.ensureStarted(context).get<WidgetPreviewFactory>() }
-    val preview = rememberSaveable(
-        factory,
-        saver = Saver<SettingsWidgetPreview, Bundle>(save = { it.save() }, restore = { SettingsWidgetPreview(factory, it) }),
-    ) { SettingsWidgetPreview(factory, null) }
-    LifecycleStartEffect(preview) { onStopOrDispose { preview.stop() } }
-    DisposableEffect(preview) { onDispose { preview.release() } }
-    return preview
 }
 
 /** The shown dialog by name, kept in the entry's saved state. */
