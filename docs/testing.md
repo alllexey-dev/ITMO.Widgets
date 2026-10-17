@@ -139,6 +139,10 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   sorts before `NotificationTapUITests`, which only answers it.
 - Window snapshots (`assertScreenAppearances`) draw with UIKit animations off:
   a presented sheet is already where it ends, however slow the runner.
+- Snapshots draw spinners with the still `StillSpinnerStyle`, since the system
+  spinner keeps turning with animations off. A sheet's content does not inherit
+  the style from its presenter, so a window test of a sheet sets it inside the
+  sheet (`SheetScoresSnapshotTests`).
 - The last line is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha>`.
 
 ## Baseline profiles
