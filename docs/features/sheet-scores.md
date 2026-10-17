@@ -49,17 +49,36 @@ the action.
 
 - Own row: a cell equal to the ISU (`CurrentUser.isu`, spaces ignored) in any tab, else a cell equal to
   a form of the ITMO.ID name after `SheetText` normalisation (case, `ё`, spaces, the space after a
-  dot): full, surname + name, `Фамилия И.О.`, `Фамилия И.`, surname first and last (ITMO.ID word
-  order is unknown).
+  dot): full, surname + name, `Фамилия И.О.`, `Фамилия И.`. The forms of the token's `family_name`,
+  `given_name` and `middle_name` come first (a patronymic of several words included, and `Имя Фамилия`),
+  then those of `name` with the surname first and last (its two words come in an unknown order).
+- A person cell is an ISU or 2-8 words; titles such as `ФИО`, summary rows (`Итого по группе`,
+  `Средний балл`) and cells of initials only (`Ф.И.О.`) are not people.
 - The stored key is the ISU or the normalised name, never a row number; every reading finds the row
   again (`SheetRows.locate`: key column first, then any column, exactly one row).
 - Header (`SheetHeaders`): up to 6 rows above the first student row. A row whose only text is at or
   left of the key column is a title and skipped. Group titles span to the next title; the last
   header row does not span. Path segments join with ` · `; a column without one is
   `Столбец <буква>`.
-- Total (`SheetTotals.detect`): keyword groups by priority, matched by word start: `итог`, `σ`/`∑`,
-  `сумма`/`сум`/`sum`, `total`, `score`, `bars credits`/`барс`, `оценка`, `зачет`. Ties: a one-word
-  segment starting with the keyword, a filled value, an earlier tab, a column further right.
+- Total (`SheetTotals.decide`, over every tab holding the own row): the candidates are the cells under
+  a keyword header, matched by word start: `итог`/`всего`, `σ`/`∑`, `сумма`/`сум`/`sum`, `total` name
+  a total; `score`, `bars credits`/`барс` are weaker; `оценка`, `зачет` weakest. Candidates are ordered
+  by: a column of points (not text, percentages or `#REF!`-style errors); a tab not named as a copy,
+  template or archive (`Copy of`, `Копия`, `Шаблон`, `Архив`); not a column empty or zero for every
+  student while another total of the tab has points (a semester not begun); the header's strength; a
+  filled cell; the tab where the own row has more values; a segment that is the keyword itself
+  (`ИТОГО`); the keyword's order; an earlier tab; a column further right.
+- The decision carries a reason (`TotalReason`) and its confidence. Sure: the total is the sum of a run
+  of at least two columns on one side of it in four of five student rows with points (at least 3),
+  else just the strongest header. To check (`Проверьте итог`): the row is in several tabs whose
+  totals differ, the column is empty for everyone while the row has points, only a weak header, or
+  the column holds no points. Without any keyword header the viewer picks the cell.
+- The choice is stored with the connection (`TotalChoice`): `AUTO`, `AUTO_CHECK` (found, but the
+  subject page asks to check it) or `MANUAL`. Picking the automatic total again confirms it (`AUTO`);
+  `Вернуть авто` replaces a hand-picked one with the automatic one.
+- Issue 419 (АК): some students were also in `Copy of Общий список` of an earlier run under `Итого`,
+  which beat `∑` of `Общий список`; the copy now loses to the current tab. The 13 sheets of the issue,
+  anonymised, are fixtures in `resources/sheets/real` with the real total of each tab (`truth.tsv`).
 - The column is stored as `gid` + header path; a reading finds the same path (nearest to the old index
   when repeated), falls back to the old index while the tab is that wide, else the column is not
   found. Values are shown as the sheet shows them, never recomputed.
@@ -69,8 +88,17 @@ the action.
 The connected sheet sits in the hero of `Баллы` with its menu (open, `Изменить итог`, disconnect); its
 total is the hero's number (`таблица, в 16:30`) by the
 [recordbook's rule](recordbook.md#which-number-is-shown). The stored value shows
-at once and the tab is downloaded on entry and on every pull. Without a connection `Мои баллы из
+at once and the tab is downloaded on entry and on every pull. An `AUTO_CHECK` total read without a
+failure adds `Проверьте итог`, which opens the review. Without a connection `Мои баллы из
 таблицы` offers the subject's sheet links.
+
+## The total's review
+
+`Изменить итог`, `Проверьте итог` and a row without a total header open the review: the total as the
+sheet shows it with its column and tab and the reason (`Столбец «∑», сумма баллов сходится`; a reason
+to check in the warning colour, `Выбрано вручную` for a hand-picked one), the own row around it with
+the headers, the candidate columns with a value as chips (at most 4, the tab's name when two share a
+title) and `Другая ячейка`, which opens every cell of the row by tab. Any tap saves.
 
 ## In the recordbook list
 
@@ -108,14 +136,16 @@ ITMO and BARS.
 
 ## Tests
 
-`shared/feature-recordbook/src/androidHostTest` with synthetic sheets in `resources/sheets/`; no real
-sheet is opened, names and ISUs are made up.
+`shared/feature-recordbook/src/androidHostTest` with synthetic sheets in `resources/sheets/` and the
+anonymised real sheets of issue 419 in `resources/sheets/real` (`SheetRealSheetsTest`: chosen cases
+and every student of every tab against `truth.tsv`); no sheet is opened over the network, names and
+ISUs are made up.
 
 ## iOS
 
-`Мои баллы` is the shared `SheetScoresSheet` in a SwiftUI sheet (`SheetScoresSheetView`,
-`sheetScoresViewController` in `shared/ios`, `SheetScoresIosRoute`); the route builds the
-`SavedStateHandle`. A failed save shows a banner over the sheet. The client runs on
+`Мои баллы` is the SwiftUI `SheetScoresSheetView` (`iosApp/Sources/Features/Recordbook/SheetScoresSheet.swift`)
+over the shared `SheetScoresViewModel`, resolved with `SheetScoresIosParameters` (the `SavedStateHandle` Android's
+entry seeds); snapshots in `SheetScoresSnapshotTests`. A failed save shows a banner over the sheet. The client runs on
 `darwinHttpEngine()` with the same policy; storage is the same `filesDir/sheet_scores`. Links and
 the offer come from the subject's links ([subject page](subject-page.md#ios),
 [subject links](resources.md#ios)).

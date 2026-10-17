@@ -3,7 +3,7 @@ import SwiftUI
 
 extension Routes {
     /// The recordbook root (`RecordbookScreen`); the subject page is a SwiftUI screen pushed on the selected tab's
-    /// stack, the own sheet scores a Compose sheet above the shell.
+    /// stack, the own sheet scores a SwiftUI sheet above the shell.
     static func recordbook(_ route: any AppRoute) -> RouteTarget {
         switch route {
         case let subject as AppRoutes.RecordbookSubject:
@@ -11,7 +11,7 @@ extension Routes {
             return .swiftUI { AnyView(RecordbookSubjectScreen(args: args)) }
         case let scores as AppRoutes.SheetScores:
             let args = scores.args
-            return .composeSheet { AnyView(SheetScoresSheetView(scores: args)) }
+            return .swiftUISheet { AnyView(SheetScoresSheetView(scores: args)) }
         default:
             return tab(of: route).map(RouteTarget.tab) ?? .notOnIOS
         }

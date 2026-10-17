@@ -97,6 +97,16 @@ sealed interface SheetScoresUiState {
     data object Done : SheetScoresUiState
 }
 
+/** What a failed reading says; null for [SheetStatus.OK]. */
+fun SheetStatus.text(): UiText? = when (this) {
+    SheetStatus.OK -> null
+    SheetStatus.NETWORK -> UiText.Res(RecordbookStrings.sheet_scores_offline)
+    SheetStatus.CLOSED -> UiText.Res(RecordbookStrings.sheet_scores_closed)
+    SheetStatus.ROW_NOT_FOUND -> UiText.Res(RecordbookStrings.sheet_scores_row_not_found)
+    SheetStatus.COLUMN_NOT_FOUND -> UiText.Res(RecordbookStrings.sheet_scores_column_not_found)
+    SheetStatus.TOO_LARGE -> UiText.Res(RecordbookStrings.sheet_scores_too_large)
+}
+
 /** A column as the sheet names it: its header path, or `Столбец D` without one. */
 fun title(cell: SheetCell): UiText =
     cell.headerPath.takeIf { it.isNotEmpty() }?.let(UiText::Dynamic)
