@@ -91,6 +91,19 @@ requests, all in parallel. Keeps `flowTypeId == 2` lessons with that
 - `clearSessionData()` deletes the file; an answer requested before the clear
   is not stored. The recordbook is not used (its teachers carry no ISU).
 
+
+## What a teacher gives now
+
+`core/schedule/TeacherNowGateway.lessonOf(teacherIsu)` is the data of the
+person card's «Сейчас ведёт». `TeacherNowGatewayImpl` asks My ITMO's teacher
+timetable (`MyItmoApi` `ScheduleApi.getTeacherSchedule`,
+`/api/schedule/teacher/{isu}`, from 2.2.0) for today on every call; the caller
+decides how often. `teacherNow` picks the lesson running at academic now, else
+the next one today (`isNow` false), else null; room bookings (`flowTypeId` 5)
+are left out and lessons with the same time, subject and place for several
+groups merge into one with every group. A student's or unknown ISU answers
+with days without lessons, so null. Demo answers from the demo week without a
+request. Read only: never uploaded, nothing is cached.
 ## The feed
 
 `ScheduleFeedViewModel` reads a window of whole weeks around the visible day from `ScheduleDays`
