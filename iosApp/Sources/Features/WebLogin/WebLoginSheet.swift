@@ -38,6 +38,8 @@ struct WebLoginSheet: View {
                 )
             }
             .scrollDismissesKeyboard(.interactively)
+            // The kit's cards and groups sit on the grouped background, as in every sheet of the kit.
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(Text(verbatim: AppStrings.string("web_login_title")))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -52,6 +54,7 @@ struct WebLoginSheet: View {
                 }
             }
         }
+        .presentationBackground(Color(.systemGroupedBackground))
         .observing(model)
         .onChange(of: code) { _, typed in
             if typed != model.state.fieldCode { model.viewModel.onCodeChanged(code: typed) }
