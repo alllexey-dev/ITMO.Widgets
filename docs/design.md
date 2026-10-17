@@ -738,8 +738,9 @@ The surfaces the system draws stay Views with their own look; the expressive
 rules do not apply to them.
 
 - Widgets: RemoteViews with their own launcher-adapted palette (the
-  `widget_*` colours: the wallpaper's on Android 12+, the M3 baseline
-  `#6750A4` below); on Android 12+ they follow the launcher's widget corner
+  `widget_*` colours with the containers the new widgets use: the wallpaper's
+  on Android 12+, the M3 baseline `#6750A4` below; the status tones of
+  `очередь` and `записаны` are fixed); on Android 12+ they follow the launcher's widget corner
   radius. Rules in [Widgets](features/widgets.md).
 - The quick-settings tile icon `res/drawable/ic_tile_qr.xml` (Material Symbols
   `qr_code`, white, no theme tint: SystemUI colours tile icons and resolves no
