@@ -155,7 +155,7 @@ object LessonTimelines {
             lesson.change != null -> add(pill(LessonPillKind.CHANGED, CoreStrings.lesson_pill_changed))
         }
         when (lesson.sport) {
-            SportMark.QUEUED -> add(pill(LessonPillKind.QUEUE, CoreStrings.lesson_pill_queue))
+            SportMark.QUEUED -> add(LessonPill(LessonPillKind.QUEUE, queueText(lesson.queue)))
             SportMark.BOOKED -> add(pill(LessonPillKind.BOOKED, CoreStrings.lesson_pill_booked))
             null -> Unit
         }
@@ -163,6 +163,11 @@ object LessonTimelines {
     }
 
     private fun pill(kind: LessonPillKind, key: String) = LessonPill(kind, UiText.Res(key))
+
+    /** `очередь 2 из 5`; `очередь` while the place is unknown. */
+    private fun queueText(place: QueuePlace?): UiText =
+        place?.let { UiText.Res(CoreStrings.lesson_pill_queue_position, listOf(it.position, it.total)) }
+            ?: UiText.Res(CoreStrings.lesson_pill_queue)
 
     /** Where [time] is inside [from, to), 0..1. */
     private fun share(time: Int, from: Int, to: Int): Float = if (to <= from) {

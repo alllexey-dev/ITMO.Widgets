@@ -95,6 +95,17 @@ class LessonTimelinesTest {
     }
 
     @Test
+    fun aQueuedLessonSaysItsPlaceWhenItIsKnown() {
+        val queued = lesson("10:00", "11:30", sport = SportMark.QUEUED)
+
+        val placed = LessonTimelines.lesson(queued.copy(queue = QueuePlace(2, 5)), LessonState.UPCOMING)
+        val unknown = LessonTimelines.lesson(queued, LessonState.UPCOMING)
+
+        assertEquals(LessonPill(LessonPillKind.QUEUE, UiText.Res(CoreStrings.lesson_pill_queue_position, listOf(2, 5))), placed.pills.single())
+        assertEquals(LessonPill(LessonPillKind.QUEUE, UiText.Res(CoreStrings.lesson_pill_queue)), unknown.pills.single())
+    }
+
+    @Test
     fun aPlaceholderRoomMakesTheLessonOnlineWithoutAPlaceLine() {
         val remote = lesson("10:00", "11:30").copy(room = " Дистант ", building = null, note = "дистанционно")
         val ui = LessonTimelines.lesson(remote, LessonState.UPCOMING)
