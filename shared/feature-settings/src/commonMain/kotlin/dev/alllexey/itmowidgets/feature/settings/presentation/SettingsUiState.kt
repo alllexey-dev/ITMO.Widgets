@@ -21,19 +21,10 @@ data class SettingsUiState(
 
 sealed interface SettingsEvent {
     data object WidgetsRefreshStarted : SettingsEvent
-    data object OpenNotificationSettings : SettingsEvent
-    /** Asks for the Android 13 permission, or opens the system page when it cannot be asked. */
-    data object RequestNotificationPermission : SettingsEvent
     data object ChooseCustomSpoiler : SettingsEvent
     data object ResetCustomSpoiler : SettingsEvent
     data object OpenDiagnostics : SettingsEvent
-    /** «Подключённые устройства». */
-    data object OpenConnections : SettingsEvent
     data object CloseOverlays : SettingsEvent
-    /** Opens the system page where Android stops restricting the app in the background. */
-    data object OpenBackgroundWorkSettings : SettingsEvent
-    /** The one-time dialog about background work, offered when a background check is turned on. */
-    data object ShowBackgroundWorkHint : SettingsEvent
     /** Asks the system to add the QR pass tile; the answer comes back through `onQrTileResult`. */
     data object RequestQrTile : SettingsEvent
     /** Asks for the calendar permission when needed, then reports back through `onCalendarAccessGranted`. */

@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.designsystem.icons
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_assignment
+import dev.alllexey.itmowidgets.shared.designsystem.ic_badge
 import dev.alllexey.itmowidgets.shared.designsystem.ic_book_2
 import dev.alllexey.itmowidgets.shared.designsystem.ic_book_2_filled
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_telegram
@@ -15,8 +16,10 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_download
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_note
 import dev.alllexey.itmowidgets.shared.designsystem.ic_folder
 import dev.alllexey.itmowidgets.shared.designsystem.ic_format_list_numbered
+import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_link
 import dev.alllexey.itmowidgets.shared.designsystem.ic_login
+import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person_filled
@@ -34,6 +37,7 @@ import org.jetbrains.compose.resources.DrawableResource
 val AppIcon.drawable: DrawableResource
     get() = when (this) {
         AppIcon.ASSIGNMENT -> Res.drawable.ic_assignment
+        AppIcon.BADGE -> Res.drawable.ic_badge
         AppIcon.BOOK_2 -> Res.drawable.ic_book_2
         AppIcon.BOOK_2_FILLED -> Res.drawable.ic_book_2_filled
         AppIcon.BRAND_TELEGRAM -> Res.drawable.ic_brand_telegram
@@ -46,8 +50,10 @@ val AppIcon.drawable: DrawableResource
         AppIcon.EDIT_NOTE -> Res.drawable.ic_edit_note
         AppIcon.FOLDER -> Res.drawable.ic_folder
         AppIcon.FORMAT_LIST_NUMBERED -> Res.drawable.ic_format_list_numbered
+        AppIcon.GROUP -> Res.drawable.ic_group
         AppIcon.LINK -> Res.drawable.ic_link
         AppIcon.LOGIN -> Res.drawable.ic_login
+        AppIcon.NOTIFICATION -> Res.drawable.ic_notification
         AppIcon.OPEN_IN_NEW -> Res.drawable.ic_open_in_new
         AppIcon.PERSON -> Res.drawable.ic_person
         AppIcon.PERSON_FILLED -> Res.drawable.ic_person_filled

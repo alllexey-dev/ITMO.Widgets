@@ -781,6 +781,162 @@
         }
       }
     },
+    "services_consent_connect" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить"
+          }
+        }
+      }
+    },
+    "services_consent_later" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сейчас"
+          }
+        }
+      }
+    },
+    "services_consent_privacy" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание и спорт сначала видят только друзья. Выключить и удалить всё можно на странице «Подключение и данные»."
+          }
+        }
+      }
+    },
+    "services_consent_stored" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер будет хранить"
+          }
+        }
+      }
+    },
+    "services_consent_text" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер один раз проверит ваш токен ITMO.ID, чтобы убедиться, что это вы. Сам токен не сохраняется."
+          }
+        }
+      }
+    },
+    "services_consent_title" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить ITMO.Widgets?"
+          }
+        }
+      }
+    },
+    "services_stored_device" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен уведомлений этого устройства"
+          }
+        }
+      }
+    },
+    "services_stored_group" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учебная группа"
+          }
+        }
+      }
+    },
+    "services_stored_identity" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИСУ, имя и фото из ITMO.ID"
+          }
+        }
+      }
+    },
+    "services_stored_links" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваши ссылки к предметам"
+          }
+        }
+      }
+    },
+    "services_stored_schedule" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание на ближайшие недели"
+          }
+        }
+      }
+    },
+    "services_stored_sport" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записи и очереди на спорт"
+          }
+        }
+      }
+    },
+    "services_stored_token" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен ITMO.ID сервер проверяет один раз и не сохраняет. Пароль он не видит никогда."
+          }
+        }
+      }
+    },
     "settings_back" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

@@ -37,42 +37,6 @@
         }
       }
     },
-    "auth_feature_friends" : {
-      "comment" : "Generated from strings_auth.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Друзья и их расписание"
-          }
-        }
-      }
-    },
-    "auth_feature_sport" : {
-      "comment" : "Generated from strings_auth.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Спорт с автозаписью на занятия"
-          }
-        }
-      }
-    },
-    "auth_feature_widgets" : {
-      "comment" : "Generated from strings_auth.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Расписание и QR-пропуск на главном экране"
-          }
-        }
-      }
-    },
     "auth_login_itmo_id" : {
       "comment" : "Generated from strings_auth.xml",
       "extractionState" : "manual",
@@ -92,31 +56,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Другой способ входа"
-          }
-        }
-      }
-    },
-    "auth_manual_dialog_description" : {
-      "comment" : "Generated from strings_auth.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Этот способ — на случай, когда вход через ITMO.ID не работает. Токен останется на устройстве."
-          }
-        }
-      }
-    },
-    "auth_manual_dialog_title" : {
-      "comment" : "Generated from strings_auth.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вход по Refresh token"
+            "value" : "Другие способы входа"
           }
         }
       }
@@ -133,6 +73,30 @@
         }
       }
     },
+    "auth_manual_token_note" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен останется только на этом устройстве"
+          }
+        }
+      }
+    },
+    "auth_manual_token_placeholder" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставьте токен"
+          }
+        }
+      }
+    },
     "auth_manual_token_required" : {
       "comment" : "Generated from strings_auth.xml",
       "extractionState" : "manual",
@@ -145,6 +109,18 @@
         }
       }
     },
+    "auth_manual_token_sign_in" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти по токену"
+          }
+        }
+      }
+    },
     "auth_official_page_notice" : {
       "comment" : "Generated from strings_auth.xml",
       "extractionState" : "manual",
@@ -152,7 +128,19 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Логин и пароль вводятся только на странице ITMO.ID."
+            "value" : "Логин и пароль — только на странице ITMO.ID"
+          }
+        }
+      }
+    },
+    "auth_other_text" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обычно хватает ITMO.ID. Это — если его страница не открывается."
           }
         }
       }
@@ -177,6 +165,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Войти"
+          }
+        }
+      }
+    },
+    "auth_tagline" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пары, пропуск, баллы и спорт ИТМО — в приложении и в виджетах"
           }
         }
       }

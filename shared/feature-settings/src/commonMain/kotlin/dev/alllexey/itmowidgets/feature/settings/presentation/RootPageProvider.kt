@@ -6,7 +6,6 @@ import dev.alllexey.itmowidgets.core.settings.HexColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
-import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
@@ -14,9 +13,9 @@ import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 
 /**
- * The catalogue: one row per detail page, plus the notification permission and whether the widgets take the app's
- * theme (DS-ACC3); and the appearance page, whose rows are the stored [ThemeSpec] (DS-ACC1, DS-ACC2). The recordbook
- * page holds only the mark checks, so it is listed where the platform offers mark tracking.
+ * The catalogue: one row per detail page («Подключение и данные» with its state, «Уведомления» saying when the system
+ * denies them) and whether the widgets take the app's theme (DS-ACC3); and the appearance page, whose rows are the
+ * stored [ThemeSpec] (DS-ACC1, DS-ACC2).
  */
 class RootPageProvider(
     private val repository: SettingsRepository,
@@ -26,8 +25,6 @@ class RootPageProvider(
     override val pages = setOf(SettingsPage.ROOT, SettingsPage.APPEARANCE, SettingsPage.HOME)
 
     override val rows = setOf(
-        SettingRowId.NOTIFICATIONS,
-        SettingRowId.CONNECTIONS,
         SettingRowId.ACCENT_COLOR,
         SettingRowId.ACCENT_CUSTOM,
         SettingRowId.THEME_PALETTE,
@@ -70,23 +67,13 @@ class RootPageProvider(
                         }
                     )
                 ),
-                SettingRows.navigation(SettingsPage.PRIVACY),
-                SettingItem.Action(
-                    id = SettingRowId.CONNECTIONS,
-                    title = UiText.Res(SettingsStrings.settings_connections_title),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
-                ),
-                SettingItem.Action(
-                    id = SettingRowId.NOTIFICATIONS,
-                    title = UiText.Res(SettingsStrings.settings_notifications_title),
-                    value = UiText.Res(
-                        when (state.notificationsGranted) {
-                            true -> SettingsStrings.settings_notifications_allowed
-                            false -> SettingsStrings.settings_notifications_blocked
-                            null -> SettingsStrings.settings_notifications_checking
-                        }
-                    ),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                SettingRows.navigation(
+                    SettingsPage.NOTIFICATIONS,
+                    value = when (state.notificationsGranted) {
+                        true -> null
+                        false -> UiText.Res(SettingsStrings.settings_notifications_blocked)
+                        null -> null
+                    }
                 )
             )
         ),
@@ -112,7 +99,6 @@ class RootPageProvider(
                 SettingRows.navigation(SettingsPage.APPEARANCE),
                 SettingRows.navigation(SettingsPage.HOME),
                 SettingRows.navigation(SettingsPage.SCHEDULE),
-                SettingRows.navigation(SettingsPage.RECORDBOOK).takeIf { capabilities.marks },
                 SettingRows.navigation(SettingsPage.SPORT),
                 SettingRows.navigation(SettingsPage.MAINTENANCE)
             )
@@ -165,14 +151,6 @@ class RootPageProvider(
             )
         )
     )
-
-    override fun onAction(scope: SettingsPageScope, id: SettingRowId) {
-        when (id) {
-            SettingRowId.NOTIFICATIONS -> scope.send(SettingsEvent.OpenNotificationSettings)
-            SettingRowId.CONNECTIONS -> scope.send(SettingsEvent.OpenConnections)
-            else -> Unit
-        }
-    }
 
     override fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) {
         when (id) {

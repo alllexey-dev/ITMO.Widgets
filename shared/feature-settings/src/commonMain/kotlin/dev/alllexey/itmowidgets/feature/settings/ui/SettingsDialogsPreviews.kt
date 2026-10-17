@@ -52,27 +52,6 @@ internal class SettingsDialogQrAnimationPreview {
     )
 }
 
-internal class SettingsDialogPrivacyPreview {
-    @Preview(name = "privacy")
-    @Composable
-    fun SettingsDialog() = SettingsDialogPreview(
-        SettingsDialog.Choice(SettingRowId.SCHEDULE_SHARING),
-        SettingsPreviewData.Privacy,
-    )
-}
-
-internal class SettingsDialogCustomServicesPreview {
-    @Preview(name = "custom-services")
-    @Composable
-    fun SettingsDialog() = SettingsDialogPreview(SettingsDialog.CustomServicesConsent)
-}
-
-internal class SettingsDialogBackgroundWorkPreview {
-    @Preview(name = "background-work")
-    @Composable
-    fun SettingsDialog() = SettingsDialogPreview(SettingsDialog.BackgroundWorkHint)
-}
-
 internal class SettingsDialogCalendarAccessPreview {
     @Preview(name = "calendar-access")
     @Composable

@@ -15,18 +15,14 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import dev.alllexey.itmowidgets.core.settings.HexColor
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarBack
-import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsActionRow
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsChoiceRow
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
@@ -43,15 +39,13 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_back
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_loading
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
  * What a settings page asks its host to do: leave, change a row, open another page, run a row's own command
  * ([onAction]) or the button of a host dialog. The screen opens its dialogs itself, so a choice arrives as the picked
- * option and turning the custom services on arrives only after the consent.
+ * option.
  */
 data class SettingsActions(
     val onBack: () -> Unit = {},
@@ -59,8 +53,6 @@ data class SettingsActions(
     val onChoice: (id: SettingRowId, optionKey: String) -> Unit = { _, _ -> },
     val onNavigate: (page: SettingsPage) -> Unit = {},
     val onAction: (id: SettingRowId) -> Unit = {},
-    /** «Разрешить» of the background work hint: the system page that lifts the restriction. */
-    val onAllowBackgroundWork: () -> Unit = {},
     /** «Разрешить» of the calendar rationale: the system permission dialog. */
     val onAllowCalendarAccess: () -> Unit = {},
     /** «Открыть настройки» of the locked calendar rationale: the app's system page. */
@@ -74,7 +66,6 @@ object SettingsTestTags {
     const val BACK = "back_button"
     const val WIDGET_PREVIEW = "widget_preview_container"
     const val SCROLL = "settings_scroll"
-    const val PROGRESS = "settings_progress"
     const val FOOTER = "setting_section_footer"
     const val THEME_SAMPLE = "settings_theme_sample"
 }
@@ -83,10 +74,9 @@ object SettingsTestTags {
  * One settings page: the top bar with the page title, the widget the page configures (drawn by the host through
  * [widgetPreview], above the scrolling rows and never scrolled; the appearance page has a sample there, in the colours
  * the app draws now), and the page's [SettingSection]s as compact settings
- * groups. Only privacy shows a progress while Backend has not answered; every other page enters with its rows.
+ * groups.
  * Stateless: a switch shows what [state] says, so a refused, cancelled or failed change never needs undoing on
- * screen. The page's one dialog is [dialogs]: a choice row and turning the custom services on open theirs, the host
- * opens the background work and calendar ones.
+ * screen. The page's one dialog is [dialogs]: a choice row opens its own, the host opens the calendar one.
  */
 @Composable
 fun SettingsScreen(
@@ -126,11 +116,8 @@ fun SettingsScreen(
             )
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            when {
-                // The scroll column appears only with rows, so a restored position is not clamped to an empty page.
-                state.sections.isNotEmpty() -> SettingsSections(state.sections, actions, dialogs, scrollState)
-                state.page == SettingsPage.PRIVACY && state.loaded -> PrivacyProgress(Modifier.align(Alignment.Center))
-            }
+            // The scroll column appears only with rows, so a restored position is not clamped to an empty page.
+            if (state.sections.isNotEmpty()) SettingsSections(state.sections, actions, dialogs, scrollState)
         }
     }
     SettingsDialogs(dialogs, state.sections, actions, state.themePreview)
@@ -186,12 +173,7 @@ private fun SettingRow(item: SettingItem, actions: SettingsActions, dialogs: Set
             title = item.title.asString(),
             checked = item.checked.takeIf { item.stateKnown },
             onCheckedChange = { checked ->
-                // The services reach Backend, so they are turned on only after the consent; off needs none.
-                if (item.id == SettingRowId.CUSTOM_SERVICES && checked) {
-                    dialogs.show(SettingsDialog.CustomServicesConsent)
-                } else {
-                    actions.onToggle(item.id, checked)
-                }
+                actions.onToggle(item.id, checked)
             },
             modifier = tag,
             description = item.description?.asString(),
@@ -232,18 +214,4 @@ private fun SettingRow(item: SettingItem, actions: SettingsActions, dialogs: Set
         )
         is SettingItem.Info -> SettingsInfoRow(item.title.asString(), item.value.asString(), tag)
     }
-}
-
-/**
- * `settings_progress`: the one loading state of settings, read as `settings_loading`. Backend answers within a few
- * seconds, so it is the kit's short-wait indicator (the large spinner under the iOS style).
- */
-@Composable
-private fun PrivacyProgress(modifier: Modifier) {
-    val description = stringResource(Res.string.settings_loading)
-    ItmoLoadingIndicator(
-        modifier
-            .testTag(SettingsTestTags.PROGRESS)
-            .semantics { contentDescription = description },
-    )
 }

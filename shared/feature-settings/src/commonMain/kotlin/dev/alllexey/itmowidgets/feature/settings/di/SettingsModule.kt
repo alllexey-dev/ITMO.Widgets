@@ -12,12 +12,12 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewM
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.RecordbookPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SchedulePageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.ServicesPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SportPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetsPageProvider
 import org.koin.core.module.dsl.bind
@@ -49,14 +49,14 @@ val settingsDataModule = module {
  */
 val settingsModule = module {
     factory { RootPageProvider(get(), get()) }
-    factoryOf(::ServicesPageProvider)
     factory { WidgetsPageProvider(get(), get(), get()) }
-    factory { SchedulePageProvider(get(), get(), get(), get()) }
-    factoryOf(::RecordbookPageProvider)
+    factory { SchedulePageProvider(get(), get(), get()) }
     factoryOf(::SportPageProvider)
     factoryOf(::MaintenancePageProvider)
     factoryOf(::SettingsPages)
     viewModelOf(::SettingsViewModel)
+    viewModelOf(::ConnectionViewModel)
+    viewModelOf(::NotificationSettingsViewModel)
     viewModelOf(::IcsExportViewModel)
     viewModelOf(::DiagnosticsViewModel)
     viewModelOf(::CustomSpoilerViewModel)
