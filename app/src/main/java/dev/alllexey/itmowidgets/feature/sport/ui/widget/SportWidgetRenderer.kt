@@ -108,12 +108,15 @@ object SportWidgetRenderer {
             if (snapshot.done) context.getString(R.string.widget_sport_done)
             else context.resources.getQuantityString(R.plurals.widget_sport_remaining, snapshot.remaining, snapshot.remaining)
         )
-        views.setTextViewText(R.id.sport_visits, context.getString(R.string.widget_sport_visits, snapshot.visits))
-        views.setTextViewText(R.id.sport_bonus, context.getString(R.string.widget_sport_bonus, snapshot.bonus))
+        val visits = context.getString(R.string.widget_sport_visits, snapshot.visits)
+        val bonus = context.getString(R.string.widget_sport_bonus, snapshot.bonus)
+        // A closed ring has no arcs to name: the legend is one line, `посещения 65, бонусы 39`.
+        views.setTextViewText(R.id.sport_visits, if (snapshot.done) "$visits, $bonus" else visits)
+        views.setTextViewText(R.id.sport_bonus, bonus)
+        views.setViewVisibility(R.id.sport_bonus, if (snapshot.done) View.GONE else View.VISIBLE)
         colors.apply(views, R.id.sport_title, "setTextColor", R.color.widget_on_surface)
         colors.apply(views, R.id.sport_visits, "setTextColor", R.color.widget_on_surface_variant)
         colors.apply(views, R.id.sport_bonus, "setTextColor", R.color.widget_on_surface_variant)
-        // A closed ring has no arcs to name.
         val dots = if (snapshot.done) View.GONE else View.VISIBLE
         views.setViewVisibility(R.id.sport_visits_dot, dots)
         views.setViewVisibility(R.id.sport_bonus_dot, dots)

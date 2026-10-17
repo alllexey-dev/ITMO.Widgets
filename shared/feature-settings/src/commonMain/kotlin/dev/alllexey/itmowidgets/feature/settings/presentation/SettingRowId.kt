@@ -21,9 +21,7 @@ enum class SettingRowId(val key: String) {
     ICS_EXPORT("ics_export"),
     RETRY_PRIVACY("retry_privacy"),
     COMPACT_WIDGET_NEXT_LESSON_EARLY("compact_widget_next_lesson_early"),
-    COMPACT_WIDGET_HIDE_TEACHER("compact_widget_hide_teacher"),
-    FULL_WIDGET_HIDE_TEACHER("full_widget_hide_teacher"),
-    /** The day widget's teacher, shown while on: the inverse of [FULL_WIDGET_HIDE_TEACHER]'s stored value. */
+    /** The day widget's teacher, shown while on: the inverse of the stored `full_widget_hide_teacher`. */
     FULL_WIDGET_SHOW_TEACHER("full_widget_show_teacher"),
     FULL_WIDGET_HIDE_PAST("full_widget_hide_past"),
     FULL_WIDGET_SHOW_TOMORROW("full_widget_show_tomorrow"),

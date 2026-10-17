@@ -50,7 +50,7 @@ class SportPageProviderTest {
                 SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
                 false
             )
-            fixture.viewModel.onToggleChanged(SettingRowId.COMPACT_WIDGET_HIDE_TEACHER, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.FULL_WIDGET_SHOW_TEACHER, false)
             fixture.viewModel.onToggleChanged(SettingRowId.FULL_WIDGET_HIDE_PAST, true)
             fixture.viewModel.onToggleChanged(SettingRowId.FULL_WIDGET_SHOW_TOMORROW, true)
             fixture.viewModel.onToggleChanged(SettingRowId.QR_DYNAMIC_COLORS, false)
@@ -60,7 +60,7 @@ class SportPageProviderTest {
             advanceUntilIdle()
 
             assertEquals(listOf(false), fixture.repository.nextLessonEarlyRequests)
-            assertEquals(listOf(true), fixture.repository.widgetTeacherHiddenRequests)
+            assertEquals(listOf(true), fixture.repository.fullWidgetTeacherHiddenRequests)
             assertEquals(listOf(true), fixture.repository.pastLessonsHiddenRequests)
             assertEquals(listOf(true), fixture.repository.tomorrowScheduleRequests)
             assertEquals(listOf(false), fixture.repository.qrDynamicColorsRequests)

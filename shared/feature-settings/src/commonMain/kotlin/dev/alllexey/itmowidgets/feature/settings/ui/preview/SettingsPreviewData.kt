@@ -307,7 +307,7 @@ internal object SettingsPreviewData {
             backgroundWorkRestricted = false,
             placedWidgets = placed,
         )
-        val rows = WidgetGalleryRows(capabilities, canAddTile = true)
+        val rows = WidgetGalleryRows(capabilities, canAddTile = false)
         return SettingsUiState(SettingsPage.WIDGETS, rows.page(state), loaded = true, gallery = rows.gallery(state))
     }
 

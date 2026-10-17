@@ -63,10 +63,10 @@
                     android:layout_marginStart="4dp"
                     android:background="@drawable/widget_pill_warn"
                     android:maxLines="1"
-                    android:paddingHorizontal="8dp"
+                    android:paddingHorizontal="6dp"
                     android:paddingVertical="1dp"
                     android:textColor="@color/widget_on_warn_container"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     tools:text="очередь 2 из 5" />
             </LinearLayout>
 

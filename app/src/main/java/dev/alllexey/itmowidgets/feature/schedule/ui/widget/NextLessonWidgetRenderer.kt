@@ -8,6 +8,7 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.ui.lessonTypeColorRes
@@ -133,8 +134,11 @@ object NextLessonWidgetRenderer {
             views.setProgressBar(R.id.next_progress, PROGRESS_MAX, (progress * PROGRESS_MAX).roundToInt(), false)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 views.setColorStateList(R.id.next_progress, "setProgressTintList", ColorStateList.valueOf(colors.resolve(ink)))
+                // The track is the fill's colour, faint.
                 views.setColorStateList(
-                    R.id.next_progress, "setProgressBackgroundTintList", ColorStateList.valueOf(colors.resolve(quiet))
+                    R.id.next_progress,
+                    "setProgressBackgroundTintList",
+                    ColorStateList.valueOf(ColorUtils.setAlphaComponent(colors.resolve(ink), TRACK_ALPHA))
                 )
             }
         }
@@ -205,6 +209,7 @@ object NextLessonWidgetRenderer {
     private const val PROGRESS_MAX = 1000
     private const val REST_ROWS = 2
     private const val QUIET_ALPHA = 0.75f
+    private const val TRACK_ALPHA = 0x40
     private const val HEADLINE_SP = 13f
     private const val SUBJECT_SP = 15f
     private const val REST_SUBJECT_SP = 13f

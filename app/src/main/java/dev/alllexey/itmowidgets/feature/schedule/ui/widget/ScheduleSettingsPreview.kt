@@ -52,7 +52,7 @@ class ScheduleSettingsPreview(
     private fun dp(value: Float) = (value * context.resources.displayMetrics.density).roundToInt()
 
     companion object {
-        const val NEXT_HEIGHT_DP = 150f
+        const val NEXT_HEIGHT_DP = 180f
         const val DAY_HEIGHT_DP = 330f
 
         fun labels(context: Context) = SchedulePreviewLabels(

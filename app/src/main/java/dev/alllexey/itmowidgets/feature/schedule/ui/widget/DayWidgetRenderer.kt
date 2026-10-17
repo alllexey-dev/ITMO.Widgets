@@ -159,7 +159,8 @@ object DayWidgetRenderer {
             colors.tint(chip, R.id.now_chip_background, R.color.widget_primary)
             colors.apply(chip, R.id.now_chip, "setTextColor", R.color.widget_surface)
             textSize(chip, R.id.now_chip, HOUR_SP, scale)
-            place(chip, R.id.now_root, layout.y(now) - NOW_HEIGHT_DP / 2, null)
+            // The chip stays inside the canvas at its top.
+            place(chip, R.id.now_root, (layout.y(now) - NOW_HEIGHT_DP / 2).coerceAtLeast(0f), null)
             views.addView(R.id.day_canvas, chip)
         }
     }
