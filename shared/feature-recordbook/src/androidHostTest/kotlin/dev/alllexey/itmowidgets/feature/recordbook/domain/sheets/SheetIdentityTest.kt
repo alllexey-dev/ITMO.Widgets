@@ -39,6 +39,22 @@ class SheetIdentityTest {
         assertEquals(emptySet<String>(), SheetIdentity.nameVariants("Тестов"))
     }
 
+    @Test fun `ITMO_ID's name parts find the full name its two-word name misses`() {
+        val parts = OwnIdentity(null, "Тест Тестов", familyName = "Тестов", givenName = "Тест", middleName = "Тестович")
+
+        assertNull(SheetIdentity.matchOf("Тестов Тест Тестович", OwnIdentity(null, "Тест Тестов")))
+        assertEquals(KeyKind.NAME, SheetIdentity.matchOf("Тестов Тест Тестович", parts))
+        assertEquals(KeyKind.NAME, SheetIdentity.matchOf("Тестов Т.Т.", parts))
+        assertEquals(KeyKind.NAME, SheetIdentity.matchOf("Тест Тестов", parts))
+    }
+
+    @Test fun `a patronymic of two words and a long name match whole`() {
+        val parts = OwnIdentity(null, null, familyName = "Тестов", givenName = "Тест", middleName = "Тестар оглы")
+
+        assertEquals(KeyKind.NAME, SheetIdentity.matchOf("Тестов Тест Тестар оглы", parts))
+        assertEquals(KeyKind.NAME, SheetIdentity.matchOf("Тестов Тест Тестар оглы", OwnIdentity(null, "Тестов Тест Тестар оглы")))
+    }
+
     @Test fun `the ISU matches with or without spaces and nothing longer`() {
         assertEquals(KeyKind.ISU, SheetIdentity.matchOf("123 456", identity))
         assertEquals(KeyKind.ISU, SheetIdentity.matchOf("123456", identity))
@@ -62,6 +78,7 @@ class SheetIdentityTest {
         assertEquals(KeyKind.NAME, SheetIdentity.personKind("Тестов Т.Т."))
         assertEquals(KeyKind.ISU, SheetIdentity.personKind("100001"))
         assertEquals(KeyKind.NAME, SheetIdentity.personKind("Тест Мд Тестин Хасан Тестов"))
+        assertNull(SheetIdentity.personKind("Ф.И.О."))
     }
 
     @Test fun `a people column title is told from a name`() {

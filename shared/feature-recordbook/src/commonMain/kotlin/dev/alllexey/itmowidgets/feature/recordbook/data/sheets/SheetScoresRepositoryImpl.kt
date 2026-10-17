@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import kotlin.time.Instant
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -105,27 +106,34 @@ class SheetScoresRepositoryImpl(
         if (grids.isEmpty()) return SheetInspection.Failed(SheetStatus.TOO_LARGE)
         val workbook = SheetWorkbook(sheet, grids)
         val user = currentUser.getCurrentUser()
-        return SheetInspection.Ready(workbook, SheetRows.find(workbook, OwnIdentity(user?.isu, user?.name)))
+        val identity = OwnIdentity(user?.isu, user?.name, user?.familyName, user?.givenName, user?.middleName)
+        return SheetInspection.Ready(workbook, SheetRows.find(workbook, identity))
     }
 
-    override suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell): AppResult<Unit> {
+    override suspend fun connect(
+        scope: ResourceScope,
+        url: String,
+        row: SheetRowMatch,
+        total: SheetCell,
+        choice: TotalChoice,
+    ): AppResult<Unit> {
         require(row.tab == total.tab)
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         return lock.withLock {
             val now = clock.now()
-            val score = connection(scope, url, row, total, connectedAt = now)
+            val score = connection(scope, url, row, total, choice, connectedAt = now)
             write(loaded().filterNot { it.scope.key == scope.key } + score)
         }
     }
 
-    override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell): AppResult<Unit> {
+    override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell, choice: TotalChoice): AppResult<Unit> {
         require(row.tab == total.tab)
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         return lock.withLock {
             val current = loaded()
             val previous = current.firstOrNull { it.scope.key == scope.key }
                 ?: return@withLock AppResult.Failure(AppError.NotFound)
-            val score = connection(previous.scope, previous.url, row, total, connectedAt = previous.connectedAt)
+            val score = connection(previous.scope, previous.url, row, total, choice, connectedAt = previous.connectedAt)
             write(current.map { if (it.scope.key == scope.key) score else it })
         }
     }
@@ -162,7 +170,14 @@ class SheetScoresRepositoryImpl(
         }
     }
 
-    private fun connection(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell, connectedAt: Instant): SheetScore {
+    private fun connection(
+        scope: ResourceScope,
+        url: String,
+        row: SheetRowMatch,
+        total: SheetCell,
+        choice: TotalChoice,
+        connectedAt: Instant,
+    ): SheetScore {
         val value = total.value.trim().ifEmpty { null }
         return SheetScore(
             scope = scope,
@@ -173,6 +188,7 @@ class SheetScoresRepositoryImpl(
             keyColumn = row.keyColumn,
             keyKind = row.kind,
             column = SheetColumnRef(total.headerPath, total.column),
+            choice = choice,
             value = value,
             baseline = value,
             tracked = true,

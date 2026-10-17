@@ -41,3 +41,8 @@ kotlin {
 itmowidgetsStrings {
     androidExport("values/strings_recordbook.xml")
 }
+
+// SheetRawDumpTest reads real sheets from a local folder: -PsheetScores.raw=<dir> (see docs/features/sheet-scores.md).
+providers.gradleProperty("sheetScores.raw").orNull?.let { raw ->
+    tasks.withType<Test>().configureEach { systemProperty("sheetScores.raw", raw) }
+}

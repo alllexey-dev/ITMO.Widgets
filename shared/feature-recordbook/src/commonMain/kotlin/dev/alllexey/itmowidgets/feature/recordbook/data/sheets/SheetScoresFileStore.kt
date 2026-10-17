@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import okio.FileSystem
@@ -39,6 +40,8 @@ data class StoredSheetConnection(
     val keyKind: String,
     val headerPath: String,
     val columnIndex: Int,
+    /** How the total was chosen; absent for [TotalChoice.AUTO], as every total of 2.2 was, so 2.2 reads the same shape. */
+    val choice: String? = null,
     val value: String? = null,
     val baseline: String? = null,
     val tracked: Boolean,
@@ -84,6 +87,7 @@ internal fun StoredSheetConnection.toModel(): SheetScore {
         keyColumn = keyColumn.also { check(it >= 0) },
         keyKind = KeyKind.valueOf(required(keyKind)),
         column = SheetColumnRef(headerPath, columnIndex.also { check(it >= 0) }),
+        choice = choice?.let { TotalChoice.valueOf(it) } ?: TotalChoice.AUTO,
         value = value,
         baseline = baseline,
         tracked = tracked,
@@ -105,6 +109,7 @@ internal fun SheetScore.toStored() = StoredSheetConnection(
     keyKind = keyKind.name,
     headerPath = column.headerPath,
     columnIndex = column.index,
+    choice = choice.takeIf { it != TotalChoice.AUTO }?.name,
     value = value,
     baseline = baseline,
     tracked = tracked,

@@ -47,7 +47,23 @@ class IdTokenCurrentUserProviderTest {
             )
         )
 
-        assertEquals(CurrentUser(isu = 123456, name = "Иванов Иван", pictureUrl = null), provider.getCurrentUser())
+        assertEquals(
+            CurrentUser(isu = 123456, name = "Иванов Иван", pictureUrl = null, givenName = "Иван"),
+            provider.getCurrentUser(),
+        )
+    }
+
+    @Test
+    fun `reads the name parts, a blank one as absent`() = runTest {
+        val provider = provider(
+            token("""{"isu":1,"name":"Иван Иванов","family_name":"Иванов","given_name":"Иван","middle_name":" "}""")
+        )
+
+        val user = provider.getCurrentUser()
+
+        assertEquals("Иванов", user?.familyName)
+        assertEquals("Иван", user?.givenName)
+        assertNull(user?.middleName)
     }
 
     @Test

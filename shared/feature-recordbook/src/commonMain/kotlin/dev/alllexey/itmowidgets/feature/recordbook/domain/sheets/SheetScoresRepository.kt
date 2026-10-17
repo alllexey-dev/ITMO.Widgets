@@ -27,9 +27,9 @@ interface SheetScoresRepository {
     /** Downloads every tab of [url] and looks for the own row; the start of the connection flow. */
     suspend fun inspect(url: String): SheetInspection
     /** Connects [scope], replacing its previous connection; [total]'s value is the baseline. */
-    suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell): AppResult<Unit>
+    suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell, choice: TotalChoice): AppResult<Unit>
     /** Another total of the connected sheet; its value is the new baseline. */
-    suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell): AppResult<Unit>
+    suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell, choice: TotalChoice): AppResult<Unit>
     suspend fun disconnect(scope: ResourceScope)
     /** Reads every connection of [half]; changes count only for tracked connections. */
     suspend fun check(half: StudyHalf): SheetCheck

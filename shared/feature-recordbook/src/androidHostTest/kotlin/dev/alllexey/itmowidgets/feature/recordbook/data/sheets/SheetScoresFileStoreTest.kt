@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookStoreJson
 import dev.alllexey.itmowidgets.feature.recordbook.data.assertSameJson
 import dev.alllexey.itmowidgets.feature.recordbook.data.copyStored22
@@ -89,6 +90,17 @@ class SheetScoresFileStoreTest {
         assertEquals("""{"format":1,"owner":123456,"connections":[]}""", file.readText())
     }
 
+    @Test fun `a hand-picked or unsure total keeps how it was chosen, an automatic one writes no field`() {
+        val manual = connection.copy(choice = TotalChoice.MANUAL.name)
+        store.write(StoredSheetScores(connections = listOf(manual, connection.copy(subjectId = 2, choice = "AUTO_CHECK"))))
+
+        val read = store.read()!!.connections.map { it.toModel().choice }
+
+        assertEquals(listOf(TotalChoice.MANUAL, TotalChoice.AUTO_CHECK), read)
+        store.write(StoredSheetScores(connections = listOf(connection.toModel().toStored())))
+        assertFalse(file.readText().contains("choice"))
+    }
+
     @Test fun `a 2_2 temporary leftover is ignored`() {
         directory.mkdirs()
         File(directory, "state.json.tmp").writeText("{partial")
@@ -125,6 +137,7 @@ class SheetScoresFileStoreTest {
             RecordbookStoreJson.encodeToString(StoredSheetScores(connections = listOf(connection.copy(keyKind = "PHONE")))),
             RecordbookStoreJson.encodeToString(StoredSheetScores(connections = listOf(connection.copy(status = "LOST")))),
             RecordbookStoreJson.encodeToString(StoredSheetScores(connections = listOf(connection.copy(columnIndex = -1)))),
+            RecordbookStoreJson.encodeToString(StoredSheetScores(connections = listOf(connection.copy(choice = "GUESS")))),
         ).forEach { content ->
             file.writeText(content)
             assertThrows(content, Exception::class.java) { store.read() }

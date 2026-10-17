@@ -22,6 +22,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetInspection
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotals
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import java.io.File
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
@@ -146,8 +147,8 @@ class SheetScoresRepositoryImplTest {
         val ready = inspect(url) as SheetInspection.Ready
         val match = (ready.search as RowSearch.Found).matches.single { it.tab.gid == 22L }
         val tab = ready.workbook.tabs.single { it.tab.gid == 22L }
-        val total = SheetTotals.detect(SheetTotals.cells(tab, match))!!
-        assertEquals(AppResult.Success(Unit), connect(target, url, match, total))
+        val total = SheetTotals.decide(listOf(tab), listOf(match))!!.total
+        assertEquals(AppResult.Success(Unit), connect(target, url, match, total, TotalChoice.AUTO))
         return observe().first().single { it.scope == target }
     }
 
@@ -344,10 +345,11 @@ class SheetScoresRepositoryImplTest {
         val match = (ready.search as RowSearch.Found).matches.single { it.tab.gid == 22L }
         val grade = SheetTotals.cells(ready.workbook.tabs.single { it.tab.gid == 22L }, match).single { it.column == 12 }
 
-        assertEquals(AppResult.Success(Unit), repository.changeTotal(scope, match, grade))
+        assertEquals(AppResult.Success(Unit), repository.changeTotal(scope, match, grade, TotalChoice.MANUAL))
 
         val score = repository.observe().first().single()
         assertEquals("Оценка · 60-100", score.column.headerPath)
+        assertEquals(TotalChoice.MANUAL, score.choice)
         assertEquals(12, score.column.index)
         assertEquals("5A", score.value)
         assertEquals("5A", score.baseline)

@@ -21,6 +21,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRows
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.CsvGrid
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.testWorkbook
 import kotlinx.coroutines.CompletableDeferred
@@ -29,6 +32,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -85,7 +89,8 @@ class SheetScoresViewModelTest {
 
         val picker = vm.pickTotal()
         assertNull(picker.selected)
-        assertEquals(listOf(2 to "8", 4 to "9"), picker.cells.map { it.column to it.value })
+        assertEquals(listOf(2 to "8", 4 to "9"), picker.cells.filter { it.value.isNotEmpty() }.map { it.column to it.value })
+        assertNull(picker.decision)
         vm.pickTotal(picker.cells.last())
         runCurrent()
         assertEquals(SheetScoresUiState.Done, vm.uiState.value)
@@ -161,11 +166,54 @@ class SheetScoresViewModelTest {
         assertEquals(SheetCell(grades, 11, "ИТОГО баллов", "66,3"), picker.selected)
         assertTrue(picker.cells.any { it.tab.gid == 11L })
         val grade = picker.cells.single { it.tab == grades && it.column == 12 }
+        assertEquals(picker.selected, picker.decision?.total)
+        assertFalse(picker.canReset)
         vm.pickTotal(grade)
         runCurrent()
         assertEquals(SheetScoresUiState.Done, vm.uiState.value)
         assertEquals(grade, repository.totals.single().total)
+        assertEquals(TotalChoice.MANUAL, repository.totals.single().choice)
         assertTrue(repository.connected.isEmpty())
+    }
+
+    @Test fun `the automatic total picked again is confirmed`() = runTest(main.dispatcher) {
+        repository.scores.value = listOf(sheetScore(scope = scope).copy(choice = TotalChoice.AUTO_CHECK))
+        repository.inspections += ready(testWorkbook())
+        val vm = model(Step.TOTAL)
+        runCurrent()
+
+        vm.pickTotal(vm.pickTotal().decision!!.total)
+        runCurrent()
+
+        assertEquals(TotalChoice.AUTO, repository.totals.single().choice)
+    }
+
+    @Test fun `«Вернуть авто» replaces a hand-picked total with the automatic one`() = runTest(main.dispatcher) {
+        val grade = SheetColumnRef("Оценка · 60-100", 12)
+        repository.scores.value = listOf(sheetScore(scope = scope, column = grade).copy(choice = TotalChoice.MANUAL))
+        repository.inspections += ready(testWorkbook())
+        val vm = model(Step.TOTAL)
+        runCurrent()
+        val picker = vm.pickTotal()
+        assertEquals(12, picker.selected?.column)
+        assertTrue(picker.canReset)
+        assertEquals("ИТОГО баллов", picker.candidates.first().headerPath)
+
+        vm.resetTotal()
+        runCurrent()
+
+        assertEquals(SheetCell(grades, 11, "ИТОГО баллов", "66,3"), repository.totals.single().total)
+        assertEquals(TotalChoice.AUTO, repository.totals.single().choice)
+    }
+
+    @Test fun `a total worth a look is connected as one`() = runTest(main.dispatcher) {
+        val grid = CsvGrid.parse("ИСУ,ФИО,ЛР1,Score\n123456,Тестов Тест Тестович,5,5")
+        repository.inspections += ready(SheetWorkbook(testWorkbook().url, listOf(SheetTabGrid(grades, grid))))
+
+        model()
+        runCurrent()
+
+        assertEquals(TotalChoice.AUTO_CHECK, repository.connected.single().choice)
     }
 
     @Test fun `another total without the own row anywhere is a failure`() = runTest(main.dispatcher) {

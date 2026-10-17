@@ -36,6 +36,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookContro
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetInspection
@@ -137,9 +138,9 @@ internal class RecordbookTestGraph(var barsEnabled: Boolean = false) {
         override fun observe(): Flow<List<SheetScore>> = flowOf(emptyList())
         override suspend fun refresh(scope: ResourceScope) = Unit
         override suspend fun inspect(url: String): SheetInspection = SheetInspection.Failed(SheetStatus.NETWORK)
-        override suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell) =
+        override suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell, choice: TotalChoice) =
             AppResult.Success(Unit)
-        override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell) =
+        override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell, choice: TotalChoice) =
             AppResult.Success(Unit)
         override suspend fun disconnect(scope: ResourceScope) = Unit
         override suspend fun check(half: StudyHalf) = SheetCheck(emptyList(), emptyList())
