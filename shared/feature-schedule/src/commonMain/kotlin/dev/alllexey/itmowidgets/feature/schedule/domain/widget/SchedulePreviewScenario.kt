@@ -69,20 +69,20 @@ class SchedulePreviewScenario(private val selector: ScheduleWidgetSelector) {
         LessonDay(
             DATE,
             listOf(
-                lesson(1, "08:20", "09:50", labels.math, LECTURE, "1506", KRONVA),
-                lesson(2, "10:00", "11:30", labels.physics, PRACTICE, "2202", LOMO, moved = true),
-                lesson(3, "11:40", "13:10", labels.programming, LAB, "1506", KRONVA),
-                lesson(4, "15:20", "16:50", labels.english, PRACTICE, null, null, online = true),
-                lesson(5, "17:00", "18:30", labels.swimming, SPORT, SWIMMING_POOL, LOMO, sport = SportMark.BOOKED),
+                lesson(DATE, 1, "08:20", "09:50", labels.math, LECTURE, "1506", KRONVA),
+                lesson(DATE, 2, "10:00", "11:30", labels.physics, PRACTICE, "2202", LOMO, moved = true),
+                lesson(DATE, 3, "11:40", "13:10", labels.programming, LAB, "1506", KRONVA),
+                lesson(DATE, 4, "15:20", "16:50", labels.english, PRACTICE, null, null, online = true),
+                lesson(DATE, 5, "17:00", "18:30", labels.swimming, SPORT, SWIMMING_POOL, LOMO, sport = SportMark.BOOKED),
             ),
             cachedAt = null,
         ),
         LessonDay(
             TOMORROW,
             listOf(
-                lesson(6, "10:00", "11:30", labels.algorithms, LECTURE, "1404", BIRZHA),
-                lesson(7, "11:40", "13:10", labels.history, PRACTICE, "311", CHAIKA),
-                lesson(8, "15:20", "16:50", labels.swimming, SPORT, SWIMMING_POOL, LOMO, sport = SportMark.QUEUED)
+                lesson(TOMORROW, 6, "10:00", "11:30", labels.algorithms, LECTURE, "1404", BIRZHA),
+                lesson(TOMORROW, 7, "11:40", "13:10", labels.history, PRACTICE, "311", CHAIKA),
+                lesson(TOMORROW, 8, "15:20", "16:50", labels.swimming, SPORT, SWIMMING_POOL, LOMO, sport = SportMark.QUEUED)
                     .copy(queue = QueuePlace(2, 5)),
             ),
             cachedAt = null,
@@ -90,6 +90,7 @@ class SchedulePreviewScenario(private val selector: ScheduleWidgetSelector) {
     ).map { day -> day.copy(lessons = day.lessons.map { it.copy(teacher = labels.teacher) }) }
 
     private fun lesson(
+        date: LocalDate,
         id: Long,
         start: String,
         end: String,
@@ -111,7 +112,7 @@ class SchedulePreviewScenario(private val selector: ScheduleWidgetSelector) {
         online = online,
         target = LessonTarget.Lesson(
             LessonDetailsArgs(
-                pairId = id, date = DATE.toString(), subjectName = subject, typeId = typeId, format = "", start = start,
+                pairId = id, date = date.toString(), subjectName = subject, typeId = typeId, format = "", start = start,
                 end = end, teacherFio = null, teacherIsu = null, room = room, building = building, buildingId = null,
                 mainBuildingId = null, note = null, zoomUrl = null, zoomPassword = null, zoomInfo = null,
             ),
