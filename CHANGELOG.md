@@ -14,8 +14,8 @@ new iOS app.
 
 - The lesson sheet shows `Предмет` and `Ссылки 3` on both platforms when the record book knows the lesson's subject (the same match as the subject page's `Пары`): `Предмет` opens the subject page, `Ссылки` its `Материалы` tab. The count comes from the links stored on the device and is 0 without the connection.
 - iOS draws the schedule's week strip again, on the tab and on another user's schedule: the paging strip of #429 drew
-  its days below its own clip while they still took taps. The feed opens on today even when the first state has no
-  rows yet.
+  its days below its own clip while they still took taps. The feed stays on today when days load above it after the
+  launch jump (the nightly `testDemoScheduleOpensOnTodayUnderTheRootHeader`).
 - Past day headers in the schedule feed are dimmed like the strip's past days on Android and iOS.
 - The schedule no longer shows week parity: the header and the week rows read `7-я неделя`.
 - A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).

@@ -447,7 +447,11 @@ private struct ScheduleFeedList: View {
                 let index = Int(days.indexOf(date: jump.date))
                 if index >= 0, let target = items.first(where: { "\($0.date)" == "\(days.rows[index].date)" }) {
                     await ScheduleFeedScroll.settle(
-                        scroll: { proxy.scrollTo(target.id, anchor: .top) },
+                        scroll: {
+                            // The scroll position follows the jump, so rows that load above it later keep it in place.
+                            top = target.id
+                            proxy.scrollTo(target.id, anchor: .top)
+                        },
                         completed: { actions.jumped(jump.id) }
                     )
                     return
