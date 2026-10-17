@@ -273,7 +273,6 @@ private struct WebLoginConfirm: View {
     let confirm: WebLoginUiStateConfirm
     let actions: WebLoginActions
 
-    @ScaledMetric(relativeTo: .title3) private var symbolSize: CGFloat = 24
 
     var body: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.group) {
@@ -282,17 +281,13 @@ private struct WebLoginConfirm: View {
                 .font(.itmo(.bodyMedium))
                 .foregroundStyle(ItmoColor.onSurface)
             if !confirm.scopes.isEmpty {
-                VStack(spacing: 0) {
+                ItmoListGroup(inset: ItmoKit.padding) {
                     ForEach(confirm.scopes, id: \.scope) { choice in
-                        Toggle(isOn: Binding(
-                            get: { choice.checked },
-                            set: { actions.scope(choice.scope, $0) }
-                        )) {
-                            Text(verbatim: choice.title.resolved).font(.itmo(.bodyLarge))
-                        }
-                        .disabled(!confirm.scopesEditable || confirm.approving)
-                        .frame(minHeight: ItmoMetrics.touchTarget)
-                        .itmoTint()
+                        ItmoSwitchRow(
+                            title: choice.title.resolved,
+                            enabled: confirm.scopesEditable && !confirm.approving,
+                            isOn: Binding(get: { choice.checked }, set: { actions.scope(choice.scope, $0) })
+                        )
                         .accessibilityIdentifier("webLogin.scope.\(choice.scope.name.lowercased())")
                     }
                 }
@@ -303,16 +298,11 @@ private struct WebLoginConfirm: View {
                     .foregroundStyle(ItmoColor.onSurfaceVariant)
             }
             if let verification = confirm.verification {
-                Text(verbatim: verification.resolved)
-                    .font(.itmo(.titleSmall))
-                    .foregroundStyle(ItmoColor.onSecondaryContainer)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(ItmoSpacing.cardPadding)
-                    .background(
-                        RoundedRectangle(cornerRadius: ItmoShapes.cardContent)
-                            .fill(ItmoColor.secondaryContainer)
-                    )
-                    .accessibilityIdentifier("webLogin.verification")
+                ItmoCard(tone: .tertiary) {
+                    Text(verbatim: verification.resolved)
+                        .font(.itmo(.titleSmall, emphasized: true))
+                }
+                .accessibilityIdentifier("webLogin.verification")
             }
             Text(verbatim: confirm.warning.resolved)
                 .font(.itmo(.bodySmall))
@@ -338,29 +328,22 @@ private struct WebLoginConfirm: View {
     }
 
     private var card: some View {
-        HStack(spacing: ItmoSpacing.group) {
-            (confirm.kind == .webSession ? AppSymbol.computer : AppSymbol.codeBlocks).image
-                .font(.system(size: symbolSize))
-                .foregroundStyle(ItmoColor.onSurfaceVariant)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: ItmoSpacing.related) {
-                Text(verbatim: confirm.title.resolved)
-                    .font(.itmo(.titleMedium))
-                    .foregroundStyle(ItmoColor.onSurface)
-                    .accessibilityIdentifier("webLogin.browser")
-                ForEach(lines, id: \.self) { line in
-                    Text(verbatim: line)
-                        .font(.itmo(.bodyMedium))
-                        .foregroundStyle(ItmoColor.onSurfaceVariant)
+        ItmoCard {
+            HStack(spacing: ItmoSpacing.content) {
+                ItmoIconTile(symbol: confirm.kind == .webSession ? .computer : .codeBlocks, tone: .primary)
+                VStack(alignment: .leading, spacing: ItmoSpacing.related) {
+                    Text(verbatim: confirm.title.resolved)
+                        .font(.itmo(.titleMedium, emphasized: true))
+                        .accessibilityIdentifier("webLogin.browser")
+                    ForEach(lines, id: \.self) { line in
+                        Text(verbatim: line)
+                            .font(.itmo(.bodyMedium))
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(ItmoSpacing.cardPadding)
-        .background(
-            RoundedRectangle(cornerRadius: ItmoShapes.cardContent)
-                .fill(ItmoColor.surfaceContainerHighest)
-        )
         .accessibilityElement(children: .combine)
     }
 
