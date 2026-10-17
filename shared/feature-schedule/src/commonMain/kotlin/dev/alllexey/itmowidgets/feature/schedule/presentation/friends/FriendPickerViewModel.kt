@@ -15,7 +15,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.core.text.userDisplayName
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleDays
@@ -95,7 +94,7 @@ class FriendPickerViewModel(
                 user = null,
                 title = UiText.Res(ScheduleStrings.schedule_picker_mine),
                 person = me?.name,
-                initials = me?.name?.let(::personInitials) ?: OWN_INITIALS,
+                initials = me?.initials ?: OWN_INITIALS,
                 avatar = me?.pictureUrl,
                 status = status(null),
                 selectable = true,
@@ -137,7 +136,7 @@ class FriendPickerViewModel(
             user = SelectedUser(isu, name, pictureUrl, group),
             title = userDisplayName(name, isu),
             person = name,
-            initials = personInitials(name),
+            initials = this.initials,
             avatar = pictureUrl,
             status = status,
             selectable = sharing.schedule,

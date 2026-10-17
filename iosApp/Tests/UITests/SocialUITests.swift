@@ -165,7 +165,7 @@ final class SocialUITests: XCTestCase {
     private static let ivan = 999_002
     private static let sofia = 999_006
     private static let mathTeacher = 999_101
-    private static let meName = "Анна Смирнова"
+    private static let meName = "Смирнова Анна"
     /// The demo refusal, `error_demo_unavailable`, inside `friends_action_failed`.
     private static let demoUnavailable = "Недоступно в демо"
 

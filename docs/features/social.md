@@ -89,6 +89,14 @@ with exponential backoff, up to six attempts; iOS retries on each return to the 
 through `AppForeground`. Every failure goes to the diagnostics journal. Until it lands, `UserData.name` is empty and views render
 `Пользователь ИСУ N` through `userDisplayName` (`core/text/UserNames.kt`).
 
+People's names read «Фамилия Имя». ITMO.ID's `name` claim lacks one of the three parts and has no fixed order,
+so the own profile's name is `personName` of `family_name` and `given_name` (`IdTokenCurrentUserProvider`), and
+Backend builds `UserData.name` the same way on identity sync; the `name` claim is used only when a part is missing.
+`UserData` carries the parts as `familyName` and `givenName` (null until the account uploads them); `UserSummary`
+and `CurrentUser` keep them. Avatar initials (`personInitials` in `core/text/UserNames.kt`, also called by the iOS
+screens through the shared framework) are the first letters of the two parts when both are there, never a split of
+`name`; without them, and for My ITMO teachers («Фамилия Имя Отчество»), words 1 and 2 of the name.
+
 ## Screens
 
 - Profile tab: [me.md](me.md).

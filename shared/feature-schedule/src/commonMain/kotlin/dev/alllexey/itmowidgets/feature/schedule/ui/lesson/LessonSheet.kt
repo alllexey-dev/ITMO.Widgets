@@ -143,7 +143,7 @@ fun LessonSheetContent(state: LessonSheetUiState, actions: LessonSheetActions, m
                                     friend.name,
                                     Modifier.testTag(LessonSheetTestTags.friend(friend.isu)),
                                     subtitle = friend.groups.firstOrNull()?.name,
-                                    leading = { Avatar(friend.name, friend.pictureUrl) },
+                                    leading = { Avatar(friend.name, friend.pictureUrl, initials = friend.initials) },
                                     chevron = true,
                                     onClick = { actions.onProfile(friend.isu) },
                                 )

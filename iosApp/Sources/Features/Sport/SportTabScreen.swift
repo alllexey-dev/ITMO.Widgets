@@ -621,14 +621,10 @@ struct SportFriendStack: View {
         if !friends.isEmpty {
             HStack(spacing: -6) {
                 ForEach(friends.prefix(3), id: \.isu) {
-                    ItmoAvatar(initials: Self.initials($0.name), pictureUrl: $0.pictureUrl, size: 22)
+                    ItmoAvatar(initials: $0.initials, pictureUrl: $0.pictureUrl, size: 22)
                 }
             }
         }
-    }
-
-    static func initials(_ name: String) -> String {
-        name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined()
     }
 }
 

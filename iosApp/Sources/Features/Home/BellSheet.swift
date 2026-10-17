@@ -197,12 +197,7 @@ struct BellEventRow: View {
         case .sport:
             ItmoIconTile(symbol: .sprint, tone: item.failed ? .bad : .ok)
         case .friendRequest:
-            ItmoAvatar(initials: Self.initials(item.lead ?? ""), pictureUrl: item.pictureUrl)
+            ItmoAvatar(initials: item.initials ?? UserNamesKt.personInitials(name: item.lead ?? ""), pictureUrl: item.pictureUrl)
         }
-    }
-
-    /// A two-word name -> its two initials.
-    static func initials(_ name: String) -> String {
-        name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
     }
 }

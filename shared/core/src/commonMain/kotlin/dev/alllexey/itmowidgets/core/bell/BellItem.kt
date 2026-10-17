@@ -13,7 +13,7 @@ enum class BellKind { MARK, SCHEDULE_CHANGE, SPORT, FRIEND_REQUEST }
  * One event of the bell. [id] changes with the event's content, so a new mark of the same subject is new again.
  * [title] carries the value (`Матанализ: контрольная работа 2`), [text] the details (`9 из 10, итого 74`), [was] and
  * [now] a change's `было` and `стало`. [lead] is a mark's delta (`+9`) or the person's name of a request, with
- * [pictureUrl]. [failed] marks an event that went wrong (a refused booking). [at] is null when the source does not
+ * [pictureUrl] and the avatar's [initials]. [failed] marks an event that went wrong (a refused booking). [at] is null when the source does not
  * know the moment. [target] is the event's home; a request has the answer buttons instead of a target.
  */
 data class BellItem(
@@ -29,6 +29,7 @@ data class BellItem(
     val failed: Boolean = false,
     val target: EntryRoute? = null,
     val request: Int? = null,
+    val initials: String? = null,
 )
 
 /**

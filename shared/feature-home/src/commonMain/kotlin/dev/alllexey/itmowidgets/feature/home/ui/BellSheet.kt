@@ -247,7 +247,7 @@ private fun Lead(item: BellItem) {
         }
         BellKind.SCHEDULE_CHANGE -> IconTile(painterResource(KitRes.drawable.ic_edit_calendar), Tone.Warning)
         BellKind.SPORT -> IconTile(painterResource(KitRes.drawable.ic_sprint), if (item.failed) Tone.Error else Tone.Success)
-        BellKind.FRIEND_REQUEST -> Avatar(item.lead, item.pictureUrl, size = LeadSize)
+        BellKind.FRIEND_REQUEST -> Avatar(item.lead, item.pictureUrl, size = LeadSize, initials = item.initials)
     }
 }
 

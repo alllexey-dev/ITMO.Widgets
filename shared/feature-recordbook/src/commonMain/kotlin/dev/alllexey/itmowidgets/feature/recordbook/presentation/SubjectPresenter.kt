@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.schedule.lessonTypeName
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.core.text.shortPersonName
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
@@ -250,7 +251,7 @@ internal object SubjectPresenter {
             }
             SubjectTeacherRow(
                 name = shortPersonName(teacher.name),
-                initials = initials(teacher.name),
+                initials = personInitials(teacher.name),
                 detail = (roles + listOfNotNull(tone)).takeIf { it.isNotEmpty() }?.let { UiText.Joined(it, ", ") },
                 isu = UserScreenArgs.profileIsu(teacher.isu),
             )
@@ -269,10 +270,6 @@ internal object SubjectPresenter {
         PRACTICE -> UiText.Res(RecordbookStrings.subject_role_practice)
         else -> lessonTypeName(typeId)
     }
-
-    /** `ЕН` for `Ершов Никита Андреевич`: surname and name. */
-    private fun initials(name: String): String =
-        name.trim().split(Regex("\\s+")).filter(String::isNotEmpty).take(2).joinToString("") { it.first().uppercase() }
 
     // Материалы -----------------------------------------------------------------------------------------------------
 

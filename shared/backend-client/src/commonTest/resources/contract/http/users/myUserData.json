@@ -20,7 +20,10 @@
       "canViewSchedule": true,
       "canViewSport": true,
       "canViewFriends": true
-    }
+    },
+    "gender": "female",
+    "familyName": "Студент",
+    "givenName": "Тестовый"
   },
   "error": null
 }

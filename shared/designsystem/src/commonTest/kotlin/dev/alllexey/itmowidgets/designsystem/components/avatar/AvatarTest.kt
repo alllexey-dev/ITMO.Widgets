@@ -29,7 +29,7 @@ import kotlinx.coroutines.Dispatchers
 @RunWith(RobolectricTestRunner::class)
 class AvatarTest {
     @Test
-    fun initialsTakeTheFirstAndLastWords() = runComposeUiTest {
+    fun initialsAreTheSurnameAndTheGivenName() = runComposeUiTest {
         setContent {
             ItmoTheme {
                 Avatar(name = " Преображенская  Александра Вячеславовна ", pictureUrl = null)
@@ -37,7 +37,7 @@ class AvatarTest {
             }
         }
 
-        onNodeWithText("ПВ", useUnmergedTree = true).assertExists()
+        onNodeWithText("ПА", useUnmergedTree = true).assertExists()
         onNodeWithText("А", useUnmergedTree = true).assertExists()
     }
 
@@ -51,7 +51,7 @@ class AvatarTest {
         }
         waitForIdle()
 
-        onNodeWithText("ПВ", useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithText("ПА", useUnmergedTree = true).assertDoesNotExist()
         onNodeWithText("ИИ", useUnmergedTree = true).assertExists()
     }
 
@@ -65,14 +65,14 @@ class AvatarTest {
             }
         }
         waitForIdle()
-        onNodeWithText("ПВ", useUnmergedTree = true).assertExists()
+        onNodeWithText("ПА", useUnmergedTree = true).assertExists()
 
         url = PHOTO_URL
         waitForIdle()
         slow.complete(Unit)
         waitForIdle()
 
-        onNodeWithText("ПВ", useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithText("ПА", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test

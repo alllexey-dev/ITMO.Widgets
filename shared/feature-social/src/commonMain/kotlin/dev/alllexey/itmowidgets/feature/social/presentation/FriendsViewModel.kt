@@ -132,6 +132,8 @@ class FriendsViewModel(
         status = null,
         primary = primary,
         secondary = secondary,
-        busy = isu in busy
+        busy = isu in busy,
+        familyName = user.familyName,
+        givenName = user.givenName,
     )
 }

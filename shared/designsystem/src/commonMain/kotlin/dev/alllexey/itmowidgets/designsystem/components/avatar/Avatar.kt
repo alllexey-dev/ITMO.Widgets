@@ -41,9 +41,10 @@ val LocalAvatarImageLoader = staticCompositionLocalOf<ImageLoader?> { null }
 
 /**
  * A person's round avatar: their photo from [pictureUrl] when it loads, their initials until then and whenever it
- * fails or there is no URL, and an empty circle without a [name]. Each URL is its own request, so a late failure of an
- * earlier URL never replaces a newer photo (`core/ui/AvatarView.kt` guarded that by hand). Decorative unless
- * [contentDescription] is given, since the name usually stands beside it.
+ * fails or there is no URL, and an empty circle without a [name]. The letters are [initials], by default
+ * `personInitials` of [name]; a caller with ITMO.ID's name parts passes their initials. Each URL is its own request, so
+ * a late failure of an earlier URL never replaces a newer photo (`core/ui/AvatarView.kt` guarded that by hand).
+ * Decorative unless [contentDescription] is given, since the name usually stands beside it.
  */
 @Composable
 fun Avatar(
@@ -52,6 +53,7 @@ fun Avatar(
     modifier: Modifier = Modifier,
     size: Dp = DefaultSize,
     contentDescription: String? = null,
+    initials: String? = null,
 ) {
     val described = if (contentDescription == null) Modifier else Modifier.semantics(mergeDescendants = true) {
         this.contentDescription = contentDescription
@@ -65,17 +67,18 @@ fun Avatar(
         contentAlignment = Alignment.Center,
     ) {
         if (name == null) return@Box
+        val letters = initials ?: personInitials(name)
         val url = pictureUrl?.takeIf { it.isNotBlank() }
         if (url == null) {
-            Initials(name)
+            Initials(letters)
         } else {
-            key(url) { Photo(url, name) }
+            key(url) { Photo(url, letters) }
         }
     }
 }
 
 @Composable
-private fun Photo(url: String, name: String) {
+private fun Photo(url: String, initials: String) {
     val loader = LocalAvatarImageLoader.current ?: SingletonImageLoader.get(LocalPlatformContext.current)
     SubcomposeAsyncImage(
         model = url,
@@ -88,18 +91,18 @@ private fun Photo(url: String, name: String) {
         if (state is AsyncImagePainter.State.Success) {
             SubcomposeAsyncImageContent()
         } else {
-            Initials(name)
+            Initials(initials)
         }
     }
 }
 
 @Composable
-private fun Initials(name: String) {
+private fun Initials(letters: String) {
     BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         // 40 % of the circle in pixels, unscaled by the font scale, as AvatarView sized its text.
         val fontSize = with(LocalDensity.current) { (minOf(maxWidth, maxHeight) * INITIALS_RATIO).toSp() }
         Text(
-            initialsOf(name),
+            letters,
             color = ItmoTheme.colorScheme.onSurface,
             fontSize = fontSize,
             fontWeight = FontWeight.Bold,
@@ -111,9 +114,6 @@ private fun Initials(name: String) {
         )
     }
 }
-
-/** The first letters of the first and last words, upper case; one letter for one word, `?` for none. */
-internal fun initialsOf(name: String): String = personInitials(name)
 
 /** `item_user_row.xml`'s avatar. */
 private val DefaultSize = 48.dp

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.common
 
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.core.text.shortPersonName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLessonKind
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportOccupancyUi
@@ -57,7 +58,13 @@ data class SportPersonUi(val name: String, val isu: Int?)
 data class SportPlaceUi(val title: String, val subtitle: String?, val mapAddress: String?)
 
 /** A friend who goes: their name, [status] (`записан`, `в очереди 1 из 2`), [isu] for the card. */
-data class SportFriendUi(val name: String, val status: UiText?, val isu: Int, val pictureUrl: String? = null)
+data class SportFriendUi(
+    val name: String,
+    val status: UiText?,
+    val isu: Int,
+    val pictureUrl: String? = null,
+    val initials: String = personInitials(name),
+)
 
 data class SportDetailsAction(val action: SportBookingAction, val enabled: Boolean)
 
@@ -142,6 +149,7 @@ object SportLessonSheetPresenter {
                     },
                     isu = friend.isu,
                     pictureUrl = friend.pictureUrl,
+                    initials = personInitials(friend.name, friend.familyName, friend.givenName),
                 )
             },
             share = share(args, now),

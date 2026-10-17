@@ -35,6 +35,14 @@ class ClientUserMappingTest {
     }
 
     @Test
+    fun avatarInitialsComeFromTheNamePartsWhenBackendHasThem() {
+        val source = user(UserCapabilities(false, false, false)).copy(name = "Де Ла Круз Мария")
+
+        assertEquals("ДЛ", source.toUserSummary().initials)
+        assertEquals("ДМ", source.copy(familyName = "Де Ла Круз", givenName = "Мария").toUserSummary().initials)
+    }
+
+    @Test
     fun absentAndBlankPicturesStayAbsentAndEmptyGroupsStayEmpty() {
         for (picture in listOf(null, "", "  \t\n")) {
             val source = user(UserCapabilities(false, false, false)).copy(pictureUrl = picture, groups = emptyList())

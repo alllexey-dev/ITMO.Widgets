@@ -23,9 +23,12 @@
           "canViewSchedule": true,
           "canViewSport": true,
           "canViewFriends": true
-        }
+        },
+        "gender": "female",
+        "familyName": "Друг",
+        "givenName": "Первый"
       },
-      "occurredAt": "2026-10-05T12:00+03:00"
+      "occurredAt": "2026-10-05T12:00:00+03:00"
     }
   },
   "recipient_isu": "100001"

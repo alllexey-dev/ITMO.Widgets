@@ -23,9 +23,10 @@ fun ItmoHeroAvatar(
     modifier: Modifier = Modifier,
     size: Dp = HeroSize,
     contentDescription: String? = null,
+    initials: String? = null,
 ) {
     val masked = if (ItmoTheme.expressive) modifier.clip(MaterialShapes.Cookie9Sided.toShape()) else modifier
-    Avatar(name, pictureUrl, masked, size, contentDescription)
+    Avatar(name, pictureUrl, masked, size, contentDescription, initials)
 }
 
 /** The profile hero's avatar size (`item_profile_header.xml`'s 72 dp). */

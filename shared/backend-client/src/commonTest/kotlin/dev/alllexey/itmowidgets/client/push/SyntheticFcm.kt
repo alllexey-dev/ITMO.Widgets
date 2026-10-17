@@ -12,7 +12,8 @@ object SyntheticFcm {
             """"name":"Друг Первый","pictureUrl":"https://example.org/avatars/100002.jpg","groups":[""" +
             """{"name":"К3240","course":2,"facultyShortName":"ФИТИП"},""" +
             """{"name":"К3240c","course":2,"facultyShortName":"ФИТИП"}],""" +
-            """"capabilities":{"canViewSchedule":true,"canViewSport":true,"canViewFriends":true}},""" +
+            """"capabilities":{"canViewSchedule":true,"canViewSport":true,"canViewFriends":true},""" +
+            """"gender":"female","familyName":"Друг","givenName":"Первый"},""" +
             """"occurredAt":"2026-10-05T12:00+03:00"}}"""
 
     private const val GSON_LESSONS: String =

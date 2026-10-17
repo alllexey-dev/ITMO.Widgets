@@ -19,7 +19,10 @@ data class UserRowUi(
     val secondary: UserAction? = null,
     /** An action for this person is in flight; buttons are disabled meanwhile. */
     val busy: Boolean = false,
-    val opensProfile: Boolean = true
+    val opensProfile: Boolean = true,
+    /** ITMO.ID's name parts for the avatar's initials, when Backend has them. */
+    val familyName: String? = null,
+    val givenName: String? = null,
 ) {
     val displayName: UiText get() = userDisplayName(name, isu)
 }

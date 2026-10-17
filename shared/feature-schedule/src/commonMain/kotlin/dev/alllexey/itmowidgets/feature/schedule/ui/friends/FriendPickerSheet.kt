@@ -145,7 +145,7 @@ private fun Person(row: PickerRow, actions: FriendPickerActions, modifier: Modif
             .alpha(if (row.selectable) 1f else HIDDEN_ALPHA)
             .semantics { selected = row.selected },
         subtitle = row.status?.asString(),
-        leading = { Avatar(row.person, row.avatar) },
+        leading = { Avatar(row.person, row.avatar, initials = row.initials) },
         accessory = if (row.selected) {
             {
                 Icon(

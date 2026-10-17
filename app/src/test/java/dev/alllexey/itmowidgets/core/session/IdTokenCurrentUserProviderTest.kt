@@ -54,6 +54,17 @@ class IdTokenCurrentUserProviderTest {
     }
 
     @Test
+    fun `the name is the family then the given name when the token has both`() = runTest {
+        val provider = provider(
+            token("""{"isu":1,"name":"Иван Иванов","family_name":" Петров ","given_name":"Иван","middle_name":"Ильич"}""")
+        )
+
+        val user = provider.getCurrentUser()
+        assertEquals("Петров Иван", user?.name)
+        assertEquals("Петров" to "Иван", user?.familyName to user?.givenName)
+    }
+
+    @Test
     fun `reads the name parts, a blank one as absent`() = runTest {
         val provider = provider(
             token("""{"isu":1,"name":"Иван Иванов","family_name":"Иванов","given_name":"Иван","middle_name":" "}""")

@@ -416,7 +416,7 @@ fun SportLessonSheetContent(
                         ListRow(
                             title = friend.name,
                             subtitle = friend.status?.asString(),
-                            leading = { Avatar(friend.name, friend.pictureUrl, size = ItmoTheme.spacing.section) },
+                            leading = { Avatar(friend.name, friend.pictureUrl, size = ItmoTheme.spacing.section, initials = friend.initials) },
                             chevron = true,
                             onClick = { actions.onProfile(friend.isu) },
                         )

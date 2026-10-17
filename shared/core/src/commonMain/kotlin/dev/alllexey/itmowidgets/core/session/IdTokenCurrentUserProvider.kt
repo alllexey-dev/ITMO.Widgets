@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.session
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
+import dev.alllexey.itmowidgets.core.text.personName
 import kotlin.io.encoding.Base64
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
@@ -36,7 +37,7 @@ class IdTokenCurrentUserProvider(
 
             CurrentUser(
                 isu = claims.isu,
-                name = claims.name?.trim()?.takeIf(String::isNotEmpty),
+                name = personName(claims.familyName, claims.givenName) ?: claims.name?.trim()?.takeIf(String::isNotEmpty),
                 pictureUrl = claims.picture?.trim()?.takeIf(String::isNotEmpty),
                 familyName = claims.familyName?.trim()?.takeIf(String::isNotEmpty),
                 givenName = claims.givenName?.trim()?.takeIf(String::isNotEmpty),

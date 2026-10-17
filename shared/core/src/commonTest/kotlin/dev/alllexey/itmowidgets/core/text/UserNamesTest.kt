@@ -22,4 +22,42 @@ class UserNamesTest {
         assertEquals("Иванова А.", shortPersonName("Иванова Анна"))
         assertEquals("Преподаватель", shortPersonName(" Преподаватель "))
     }
+
+    @Test
+    fun avatarInitialsAreTheSurnameAndTheGivenName() {
+        assertEquals("ПА", personInitials("  Петров   Алексей иванович "))
+        assertEquals("ИА", personInitials("иванова Анна"))
+        assertEquals("П", personInitials(" Преподаватель "))
+        assertEquals("SJ", personInitials("smith John"))
+        assertEquals("РН", personInitials("Римский-Корсаков Николай Андреевич"))
+        assertEquals("ЁЁ", personInitials("ёлкин Ёжик"))
+    }
+
+    @Test
+    fun avatarInitialsOfNoNameAreAQuestionMark() {
+        assertEquals("?", personInitials(""))
+        assertEquals("?", personInitials("  "))
+    }
+
+    @Test
+    fun theStructuredNameIsTheSurnameThenTheGivenName() {
+        assertEquals("Петров Алексей", personName(" Петров ", "Алексей"))
+        assertEquals("Ёлкина-Петрова Анна", personName("Ёлкина-Петрова", "Анна"))
+    }
+
+    @Test
+    fun avatarInitialsPreferTheStructuredParts() {
+        assertEquals("ДМ", personInitials("Де Ла Круз Мария", " де Ла Круз ", "Мария"))
+        assertEquals("ЁА", personInitials("Анна Ёлкина", "ёлкина", "Анна"))
+        assertEquals("ИА", personInitials("Иванова Анна", "Иванова", null))
+        assertEquals("ИА", personInitials("Иванова Анна", " ", "Анна"))
+        assertEquals("?", personInitials("", null, null))
+    }
+
+    @Test
+    fun theStructuredNameNeedsBothParts() {
+        assertEquals(null, personName("Петров", null))
+        assertEquals(null, personName(" ", "Алексей"))
+        assertEquals(null, personName(null, null))
+    }
 }

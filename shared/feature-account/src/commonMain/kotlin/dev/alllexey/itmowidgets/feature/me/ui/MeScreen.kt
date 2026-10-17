@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.model.primaryGroup
+import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
@@ -217,7 +218,14 @@ private fun ProfileHeader(state: MeUiState, actions: MeActions) {
         Modifier.fillMaxWidth().padding(vertical = ItmoTheme.spacing.group),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Avatar(knownName, user?.pictureUrl ?: backendUser?.pictureUrl, size = AvatarSize)
+        Avatar(
+            knownName,
+            user?.pictureUrl ?: backendUser?.pictureUrl,
+            size = AvatarSize,
+            initials = knownName?.let {
+                personInitials(it, user?.familyName ?: backendUser?.familyName, user?.givenName ?: backendUser?.givenName)
+            },
+        )
         Column(Modifier.weight(1f).padding(start = ItmoTheme.spacing.group)) {
             Text(
                 name,

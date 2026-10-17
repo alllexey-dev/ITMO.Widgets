@@ -23,7 +23,10 @@
             "canViewSchedule": true,
             "canViewSport": true,
             "canViewFriends": true
-          }
+          },
+          "gender": "female",
+          "familyName": "Друг",
+          "givenName": "Первый"
         },
         "relationship": "FRIENDS"
       },
@@ -48,7 +51,10 @@
             "canViewSchedule": false,
             "canViewSport": false,
             "canViewFriends": false
-          }
+          },
+          "gender": "female",
+          "familyName": "Однокурсник",
+          "givenName": "Третий"
         },
         "relationship": "INCOMING"
       }

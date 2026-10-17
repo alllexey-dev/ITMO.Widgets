@@ -26,6 +26,7 @@ new iOS app.
 - `Главный экран` settings can hide the QR pass entry on Сегодня on both platforms without hiding widgets or shortcuts (#420).
 - Sport friend rows and lesson sheets preserve avatar URLs on both platforms; iOS friend-request notifications use their photo too (#426).
 - Sport lessons whose MyITMO end falls on the wrong date (two days before the start) end on their own day at the time slot end, so rows, sheets, the schedule, widgets and calendar export show the right time and length.
+- Avatar initials are the surname and the given name on both platforms: «Фамилия Имя Отчество» shows ФИ instead of ФО, and the own name reads «Фамилия Имя» from ITMO.ID's `family_name` and `given_name` instead of its two-word `name`, as other students' names do with Backend that stores the parts (itmo-widgets-backend#52). Avatars of other students take the initials from Backend's new `familyName` and `givenName` when it sends them (contract from Backend e475238). iOS friend requests, sport friends and recordbook teachers use the shared `personInitials`; the demo students follow the same order.
 
 - Subject link votes use like/dislike thumbs on Android and iOS, filled for the selected vote (#421).
 - iOS publishes the ITMO.ID identity to Backend, including groups, with foreground retries (#422).

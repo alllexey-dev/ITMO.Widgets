@@ -396,7 +396,7 @@ both platforms.
 | `ButtonRow` | Two buttons side by side, stacked at full width when the labels do not fit | Its buttons take the `ProgressButton` capsules |
 | `Pill` | The `моя` badge, a count, a status in its tone over a 12 % wash | Capsules in the iOS type |
 | `ToneDot` | The review tone dot, an empty slot until the tone arrives | Same |
-| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise | Same |
+| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise: surname and given name by `personInitials`, from ITMO.ID's name parts when the caller passes `initials` | Same; `ItmoAvatar` takes the initials from the shared `personInitials` or a model's `initials` |
 | `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
 | `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | A section header in `secondaryLabel` at UIKit's insets |
 | `GroupActionRow` | The last row of a group that leads further | A cell with the icon in the tint and the disclosure indicator |
