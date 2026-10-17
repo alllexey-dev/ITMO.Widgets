@@ -84,7 +84,9 @@ class PendingSportBookingsRepositoryImpl(
                             teacherFio = booking.teacherFio.trim(),
                             roomName = booking.roomName.trim(),
                             isPrediction = !booking.isLessonReal,
-                            teacherIsu = booking.teacherIsu
+                            teacherIsu = booking.teacherIsu,
+                            position = entry.position,
+                            total = entry.total,
                         )
                     }
                 AppResult.Success(pending)

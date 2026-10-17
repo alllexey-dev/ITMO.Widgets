@@ -24,6 +24,12 @@ limit come from Backend behind the custom-services gate.
   `записаны`, `очередь 2 из 5` or, for a lesson not published yet,
   `ждём расписание`. Ended bookings and finished queues are not listed; queue
   results live in the bell.
+- The sheet's teacher row says the tone of the teacher's reviews in words, as
+  the schedule's lesson sheet does (`TeacherLevelTone.words`: `скорее
+  хвалят`), else `Преподаватель`, and opens the person card.
+  `SportTeacherLevels` asks the core `TeacherLevelsRepository` once per
+  opening; the repository answers nothing without the custom-services opt-in
+  and demo levels in the demo session, so nothing reaches Backend there.
 - `Запись` lists every upcoming lesson of the day; `Есть места` keeps those
   bookable now and the own ones. A row's action is `Записаться`, `В очередь`,
   its status pill, or the lock with MyITMO's reason. A clash with an own
@@ -131,12 +137,12 @@ slot. Semantics are in Backend's sport automation contract (Sections).
 | `core/sport/PendingSportBookingsRepository` | read-only projection of own active queues for the schedule and widgets |
 
 - MyITMO sends some lessons with a `date_end` on the wrong date (a weekly
-  series ending two days before it starts). The MyItmoApi mappers rebuild an
-  end that is not after the start or falls on another Moscow date on the
-  start's Moscow date from the time slot end (else the raw time of day) and
-  keep it when 15 minutes to 6 hours long, otherwise the raw value stays. It is
-  the rule of MyItmoApi 2.1.1 `normalizedDateEnd`, copied until the app is on
-  2.1.1; Backend applies the same rule to its catalog.
+  series ending two days before it starts). The MyItmoApi mappers take the end
+  from MyItmoApi's `normalizedDateEnd`: an end that is not after the start or
+  falls on another Moscow date is rebuilt on the start's Moscow date from the
+  time slot end (else the raw time of day) and kept when 15 minutes to 6 hours
+  long; when it gives no sane end the raw value stays. Backend applies the same
+  rule to its catalog.
 - Sign-out runs the session cleaners of `SportDataRepositoryImpl` and
   `SportBookingRepositoryImpl`: score and attempts return to `Loading`, queue
   data to `Disabled`, bookings to an empty list, and an in-flight response of
@@ -214,7 +220,8 @@ Android screenshots in `shared/feature-sport/screenshots/` from the previews
 - `SportTabScreen` and `SportPointsScreen`
   (`iosApp/Sources/Features/Sport/`) are SwiftUI over the same view models
   (`ObservableViewModel`); the lesson sheet is drawn from
-  `SportMyViewModel.sheet` or `SportSignViewModel.sheet`, its section switch
+  `SportMyViewModel.sheet` or `SportSignViewModel.sheet` with the teacher's
+  level from `SportTeacherLevels` (Koin), its section switch
   from `SportMyViewModel.sectionToggle`. Sharing goes through `SportShares`, maps
   through `PlatformActions`. Koin modules `sportModule`, `sportIosModule` and
   social's `FriendRepository`. Tabs move by the native tab bar only.

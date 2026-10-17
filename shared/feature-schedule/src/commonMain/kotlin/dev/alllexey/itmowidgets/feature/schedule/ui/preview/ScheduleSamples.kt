@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.lesson.LessonPill
 import dev.alllexey.itmowidgets.core.lesson.LessonPillKind
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.lesson.QueuePlace
 import dev.alllexey.itmowidgets.core.lesson.SportMark
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserSharing
@@ -124,7 +125,7 @@ object ScheduleSamples {
             Monday.plus(1, DateTimeUnit.DAY), 2,
             lesson("08:20", "09:50", "Алгоритмы и структуры данных", 1, Filatov, "2337", Kronva),
             lesson("11:40", "13:10", "История", 1, Orlov, "426", Birzha),
-            lesson("15:20", "16:50", "Плавание", 11, Zakharov, "бассейн", null, sport = SportMark.QUEUED),
+            lesson("15:20", "16:50", "Плавание", 11, Zakharov, "бассейн", null, sport = SportMark.QUEUED).copy(queue = QueuePlace(2, 5)),
         )
         day(
             Monday.plus(2, DateTimeUnit.DAY), 2,
@@ -195,6 +196,9 @@ object ScheduleSamples {
 
     /** The own feed on today, Monday. */
     val Feed: ScheduleFeedUiState get() = feed()
+
+    /** Monday and Tuesday shown on Wednesday: their headers are dimmed as past, Wednesday's is today's. */
+    val PastDays: ScheduleFeedUiState get() = feed(now = LocalDateTime(Monday.plus(2, DateTimeUnit.DAY), LocalTime(12, 22)))
 
     /** The own feed on the next week: `Сегодня` shows. */
     val NextWeek: ScheduleFeedUiState get() = feed(visible = LocalDate(2026, 9, 14))

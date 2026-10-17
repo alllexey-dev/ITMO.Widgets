@@ -40,6 +40,7 @@ import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookTarget
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTab
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresEvent
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
@@ -88,9 +89,10 @@ internal fun RecordbookTabRoot(navigator: Nav3AppNavigator) {
 }
 
 /**
- * The subject page: links open outside the app, the link sheets, `Мои баллы`, a teacher's profile and the review
- * editor open above it, `Подключить` opens the connection settings, and a completed BARS sign-in loads it again. A key
- * whose arguments [RecordbookSubjectArgs.validOrNull] refuses closes at once and leaves the recordbook root.
+ * The subject page, on `Материалы` for a key with `materials` (the lesson sheet's links): links open outside the app,
+ * the link sheets, `Мои баллы`, a teacher's profile and the review editor open above it, `Подключить` opens the
+ * connection settings, and a completed BARS sign-in loads it again. A key whose arguments
+ * [RecordbookSubjectArgs.validOrNull] refuses closes at once and leaves the recordbook root.
  */
 @Composable
 private fun RecordbookSubjectEntry(key: AppRoutes.RecordbookSubject, navigator: Nav3AppNavigator) {
@@ -103,7 +105,8 @@ private fun RecordbookSubjectEntry(key: AppRoutes.RecordbookSubject, navigator: 
     val platform = LocalPlatformActions.current
     val context = LocalContext.current
     val viewModel: RecordbookSubjectViewModel = viewModel {
-        KoinStarter.ensureStarted(context).get { parametersOf(args) }
+        KoinStarter.ensureStarted(context).get<RecordbookSubjectViewModel> { parametersOf(args) }
+            .also { if (key.materials) it.selectTab(SubjectTab.MATERIALS) }
     }
     val barsLogin = rememberBarsLogin(onSignedIn = viewModel::barsSignedIn)
     val actions = remember(key, navigator, view, platform, barsLogin) {

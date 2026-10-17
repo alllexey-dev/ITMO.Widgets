@@ -3,7 +3,8 @@ import SwiftUI
 
 /// One subject (`AppRoutes.RecordbookSubject`, docs/features/subject-page.md) over the shared
 /// `RecordbookSubjectViewModel`, pushed on the recordbook stack under the native bar: the name and
-/// "kind, semester", the tabs scores, lessons and materials under it. Links open in the system, the link sheets,
+/// "kind, semester", the tabs scores, lessons and materials under it (materials first when `materials`, the lesson
+/// sheet's links). Links open in the system, the link sheets,
 /// the own sheet scores, a teacher, the review editor and the connection settings through the router, the BARS sign-in in
 /// `BarsLoginSheet`; a vote that did not reach the server says so.
 struct RecordbookSubjectScreen: View {
@@ -14,13 +15,14 @@ struct RecordbookSubjectScreen: View {
     @State private var showsBarsLogin = false
     @State private var message: SettingsMessage?
 
-    init(args: RecordbookSubjectArgs) {
+    init(args: RecordbookSubjectArgs, materials: Bool = false) {
         self.args = args
         _model = State(initialValue: ObservableViewModel(state: \.uiState) { store in
             guard let model = store.resolve(type: RecordbookSubjectViewModel.self, parameters: [args])
                 as? RecordbookSubjectViewModel else {
                 preconditionFailure("Koin resolved no RecordbookSubjectViewModel")
             }
+            if materials { model.selectTab(selected: .materials) }
             return model
         })
     }

@@ -81,6 +81,16 @@ final class SportSnapshotTests: XCTestCase {
         )
     }
 
+    /// A taller window shows the booked sheet down to the teacher row with the review tone in words.
+    func testLessonBookedWhole() {
+        assertSheet(
+            SportLessonSheetContent(sheet: samples.lesson(offer: "booked"), section: samples.sectionToggle(state: "on")),
+            named: "lesson-booked-whole",
+            appearances: [.light],
+            height: 1000
+        )
+    }
+
     func testLessonBookedInAFullSection() {
         assertSheet(
             SportLessonSheetContent(sheet: samples.lesson(offer: "booked"), section: samples.sectionToggle(state: "full")),
@@ -138,10 +148,11 @@ final class SportSnapshotTests: XCTestCase {
         _ sheet: Sheet,
         named name: String,
         appearances: [SnapshotAppearance] = SnapshotAppearance.all,
+        height: CGFloat = SnapshotMatrix.screenHeight,
         testName: String = #function
     ) {
         let screen = Color(.systemGroupedBackground).sheet(isPresented: .constant(true)) { sheet }
-        assertScreenAppearances(of: screen, named: name, appearances: appearances, settle: 1.5, testName: testName)
+        assertScreenAppearances(of: screen, named: name, appearances: appearances, height: height, settle: 1.5, testName: testName)
     }
 
     private func assertPushed<Content: View>(

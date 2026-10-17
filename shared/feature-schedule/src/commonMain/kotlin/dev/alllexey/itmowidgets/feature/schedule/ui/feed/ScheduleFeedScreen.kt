@@ -415,6 +415,8 @@ private fun WeekLabel(text: String) {
 @Composable
 private fun DayHeader(row: FeedRow.DayHeader) {
     val colors = ItmoTheme.colorScheme
+    // A past day reads as the strip's past days (WeekStrip's PAST_LABEL_ALPHA).
+    val emphasis = if (row.past) PAST_HEADER_ALPHA else 1f
     Row(
         Modifier
             .fillMaxWidth()
@@ -434,13 +436,13 @@ private fun DayHeader(row: FeedRow.DayHeader) {
             Text(
                 row.title,
                 Modifier.weight(1f, fill = false),
-                color = if (row.today) colors.primary else colors.onSurface,
+                color = if (row.today) colors.primary else colors.onSurface.copy(alpha = emphasis),
                 style = ItmoTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
             if (row.today) StatusPill(PillSpec(stringResource(Res.string.schedule_today_pill), Tone.Primary, solid = true))
         }
-        Text(row.count.asString(), color = colors.onSurfaceVariant, style = ItmoTheme.typography.labelLarge)
+        Text(row.count.asString(), color = colors.onSurfaceVariant.copy(alpha = emphasis), style = ItmoTheme.typography.labelLarge)
     }
 }
 
@@ -470,3 +472,5 @@ private fun QuietRow(icon: Painter, text: String, key: String) {
 
 /** The feed asks for more weeks this many rows before its end. */
 private const val EDGE_ROWS = 4
+
+private const val PAST_HEADER_ALPHA = 0.65f
