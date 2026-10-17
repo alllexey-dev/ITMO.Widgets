@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -34,6 +36,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSectionRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportTeacherLevels
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import kotlinx.datetime.LocalDate
@@ -110,6 +113,7 @@ internal class SportTestGraph(scope: CoroutineScope) {
         single { sections }
         single { time }
         single { ShareLinkFactory("https://widgets.alllexey.dev") }
+        single { SportTeacherLevels(NoSportTeacherLevels) }
         viewModel { SportMyViewModel(bookingRepository, SportData, holder, sections, time) }
         viewModel {
             SportSignViewModel(
@@ -179,4 +183,8 @@ internal class SportTestGraph(scope: CoroutineScope) {
         override suspend fun getUserBookings(isu: Int): AppResult<UserSportBookings> =
             AppResult.Success(UserSportBookings(confirmedLessonIds = emptyList(), pending = emptyList()))
     }
+}
+
+private object NoSportTeacherLevels : TeacherLevelsRepository {
+    override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = emptyMap()
 }

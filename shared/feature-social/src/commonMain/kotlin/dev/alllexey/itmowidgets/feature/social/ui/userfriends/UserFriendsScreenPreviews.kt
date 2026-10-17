@@ -5,7 +5,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsUiState
-import dev.alllexey.itmowidgets.feature.social.ui.list.preview.UserListPreviewData
+import dev.alllexey.itmowidgets.feature.social.ui.preview.SocialSamples
 
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
@@ -17,11 +17,11 @@ import dev.alllexey.itmowidgets.feature.social.ui.list.preview.UserListPreviewDa
 private fun UserFriendsPreview(state: UserFriendsUiState) = ItmoPreview {
     UserFriendsScreen(
         state = state,
-        ownerName = UserListPreviewData.OWNER_NAME,
+        ownerName = SocialSamples.USER_FRIENDS_OWNER,
         onRefresh = {},
         onRetry = {},
         onOpenProfile = {},
-        onOpenSettings = {},
+        onConnect = {},
         onBack = {},
     )
 }
@@ -29,31 +29,13 @@ private fun UserFriendsPreview(state: UserFriendsUiState) = ItmoPreview {
 internal class UserFriendsScreenContentPreview {
     @Preview(name = "content")
     @Composable
-    fun UserFriendsScreen() = UserFriendsPreview(UserFriendsUiState.Content(UserListPreviewData.Friends))
-}
-
-internal class UserFriendsScreenLoadingPreview {
-    @Preview(name = "loading")
-    @Composable
-    fun UserFriendsScreen() = UserFriendsPreview(UserFriendsUiState.Loading)
+    fun UserFriendsScreen() = UserFriendsPreview(SocialSamples.userFriends)
 }
 
 internal class UserFriendsScreenEmptyPreview {
     @Preview(name = "empty")
     @Composable
     fun UserFriendsScreen() = UserFriendsPreview(UserFriendsUiState.Content(emptyList()))
-}
-
-internal class UserFriendsScreenDeniedPreview {
-    @Preview(name = "denied")
-    @Composable
-    fun UserFriendsScreen() = UserFriendsPreview(UserFriendsUiState.Hidden)
-}
-
-internal class UserFriendsScreenDisabledPreview {
-    @Preview(name = "disabled")
-    @Composable
-    fun UserFriendsScreen() = UserFriendsPreview(UserFriendsUiState.Disabled)
 }
 
 internal class UserFriendsScreenErrorPreview {

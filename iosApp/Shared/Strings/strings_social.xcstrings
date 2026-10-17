@@ -1,246 +1,6 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
-    "friend_picker_apply_friend" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показать расписание: %1$@"
-          }
-        }
-      }
-    },
-    "friend_picker_apply_my" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показать моё расписание"
-          }
-        }
-      }
-    },
-    "friend_picker_disabled" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нет подключения к ITMO.Widgets"
-          }
-        }
-      }
-    },
-    "friend_picker_empty_title" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ничего не нашлось"
-          }
-        }
-      }
-    },
-    "friend_picker_loading" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Загружаем список друзей"
-          }
-        }
-      }
-    },
-    "friend_picker_more_groups" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ • и ещё %2$lld"
-          }
-        }
-      }
-    },
-    "friend_picker_my_schedule_accessibility" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Моё расписание"
-          }
-        }
-      }
-    },
-    "friend_picker_my_schedule_short" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Моё"
-          }
-        }
-      }
-    },
-    "friend_picker_no_group" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нет группы"
-          }
-        }
-      }
-    },
-    "friend_picker_people_empty_description" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Среди пользователей ITMO.Widgets нет таких"
-          }
-        }
-      }
-    },
-    "friend_picker_people_empty_title" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Никого не нашли"
-          }
-        }
-      }
-    },
-    "friend_picker_people_idle_description" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показываем только пользователей ITMO.Widgets"
-          }
-        }
-      }
-    },
-    "friend_picker_people_idle_title" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Кого ищем?"
-          }
-        }
-      }
-    },
-    "friend_picker_recent" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Недавние"
-          }
-        }
-      }
-    },
-    "friend_picker_schedule_hidden" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Расписание скрыто"
-          }
-        }
-      }
-    },
-    "friend_picker_scope_all" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Все"
-          }
-        }
-      }
-    },
-    "friend_picker_scope_friends" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Друзья"
-          }
-        }
-      }
-    },
-    "friend_picker_search_hint" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Имя, ИСУ или группа"
-          }
-        }
-      }
-    },
-    "friend_picker_search_people_hint" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Имя или фамилия"
-          }
-        }
-      }
-    },
-    "friend_picker_user_subtitle" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld • %2$@"
-          }
-        }
-      }
-    },
     "friends_action_failed" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
@@ -253,6 +13,18 @@
         }
       }
     },
+    "friends_connect" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить"
+          }
+        }
+      }
+    },
     "friends_disabled_description" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
@@ -260,7 +32,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Подключитесь в настройках, чтобы добавлять друзей"
+            "value" : "Друзья и заявки работают через сервер ITMO.Widgets"
           }
         }
       }
@@ -284,7 +56,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Найдите знакомых по имени и отправьте заявку"
+            "value" : "Найдите однокурсников поиском или отправьте ссылку на свой профиль"
           }
         }
       }
@@ -296,19 +68,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Друзей пока нет"
-          }
-        }
-      }
-    },
-    "friends_find_people" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Найти людей"
+            "value" : "Пока никого"
           }
         }
       }
@@ -337,38 +97,26 @@
         }
       }
     },
-    "friends_requests_empty_title" : {
+    "friends_share_subtitle" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заявок нет"
+            "value" : "Ссылка, по которой вас добавят"
           }
         }
       }
     },
-    "friends_section_incoming" : {
+    "friends_share_title" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Входящие"
-          }
-        }
-      }
-    },
-    "friends_section_outgoing" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отправленные"
+            "value" : "Поделиться профилем"
           }
         }
       }
@@ -409,62 +157,14 @@
         }
       }
     },
-    "home_friends_all" : {
+    "person_group_course" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Все заявки"
-          }
-        }
-      }
-    },
-    "person_course" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld курс"
-          }
-        }
-      }
-    },
-    "person_fact_education" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Учёба"
-          }
-        }
-      }
-    },
-    "person_fact_position" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Должность"
-          }
-        }
-      }
-    },
-    "person_fact_room" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Аудитория"
+            "value" : "%1$@, %2$lld курс"
           }
         }
       }
@@ -505,6 +205,78 @@
         }
       }
     },
+    "person_lesson_for" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ у %2$@"
+          }
+        }
+      }
+    },
+    "person_lesson_online" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Онлайн"
+          }
+        }
+      }
+    },
+    "person_next_lesson" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сегодня ещё пара в %1$@"
+          }
+        }
+      }
+    },
+    "person_now_teaching" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сейчас ведёт пару до %1$@"
+          }
+        }
+      }
+    },
+    "person_role_student" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Студент, %1$@"
+          }
+        }
+      }
+    },
+    "person_room" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ауд. %1$@"
+          }
+        }
+      }
+    },
     "person_section_education" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
@@ -517,18 +289,6 @@
         }
       }
     },
-    "person_section_positions" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Должности"
-          }
-        }
-      }
-    },
     "person_section_rooms" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
@@ -537,6 +297,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Где найти"
+          }
+        }
+      }
+    },
+    "person_section_teaching" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Преподавание"
+          }
+        }
+      }
+    },
+    "person_teaches_you" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ведёт у вас"
           }
         }
       }
@@ -825,18 +609,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Написать"
-          }
-        }
-      }
-    },
-    "teacher_reviews_count" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отзывы, %1$lld"
           }
         }
       }
@@ -1513,42 +1285,6 @@
         }
       }
     },
-    "user_friends_hidden_description" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пользователь ограничил доступ к списку друзей"
-          }
-        }
-      }
-    },
-    "user_friends_hidden_title" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Список друзей скрыт"
-          }
-        }
-      }
-    },
-    "user_friends_owner" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Друзья · %1$@"
-          }
-        }
-      }
-    },
     "user_friends_refresh" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
@@ -1609,26 +1345,14 @@
         }
       }
     },
-    "user_profile_friends_open" : {
+    "user_profile_invite" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Посмотреть список друзей"
-          }
-        }
-      }
-    },
-    "user_profile_hidden_friends_hint" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Обычно открывается после добавления в друзья"
+            "value" : "Пригласить в ITMO.Widgets"
           }
         }
       }
@@ -1669,18 +1393,6 @@
         }
       }
     },
-    "user_profile_schedule_open" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пары на ближайшие недели"
-          }
-        }
-      }
-    },
     "user_profile_self" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
@@ -1693,38 +1405,14 @@
         }
       }
     },
-    "user_profile_sport_open" : {
+    "user_profile_write_review" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Записи и ожидающие занятия"
-          }
-        }
-      }
-    },
-    "user_profile_title" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Профиль"
-          }
-        }
-      }
-    },
-    "user_profile_widgets_title" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ITMO.Widgets"
+            "value" : "Написать отзыв"
           }
         }
       }
@@ -1761,30 +1449,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Имя или фамилия"
-          }
-        }
-      }
-    },
-    "user_search_idle_description" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Поиск по всем студентам и сотрудникам ИТМО"
-          }
-        }
-      }
-    },
-    "user_search_idle_title" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Кого ищем?"
           }
         }
       }
@@ -1845,18 +1509,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "В ITMO.Widgets"
-          }
-        }
-      }
-    },
-    "user_search_title" : {
-      "comment" : "Generated from strings_social.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Найти людей"
           }
         }
       }

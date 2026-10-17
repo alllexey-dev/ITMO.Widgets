@@ -10,9 +10,18 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Спорт lesson sheet data (2026-10-17)
+
+- The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.
+
 ### Fixes (2026-10-17)
 
 - The lesson sheet shows `Предмет` and `Ссылки 3` on both platforms when the record book knows the lesson's subject (the same match as the subject page's `Пары`): `Предмет` opens the subject page, `Ссылки` its `Материалы` tab. The count comes from the links stored on the device and is 0 without the connection.
+- iOS draws the schedule's week strip again, on the tab and on another user's schedule: the paging strip of #429 drew
+  its days below its own clip while they still took taps. The feed stays on today when days load above it after the
+  launch jump (the nightly `testDemoScheduleOpensOnTodayUnderTheRootHeader`).
+- Past day headers in the schedule feed are dimmed like the strip's past days on Android and iOS.
+- The schedule no longer shows week parity: the header and the week rows read `7-я неделя`.
 - A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).
 - A doubtful total shows `Проверьте итог` on the subject page; the review shows the total with its reason, the row around it and the other candidates, and `Вернуть авто` undoes a hand-picked total. On iOS `Мои баллы` is a native sheet (#419).
 - An own sport queue in Сегодня and Расписание shows its place as the sport tab does, `очередь 2 из 5`, on both platforms; a predicted lesson or an unknown place keeps `очередь`.
@@ -171,6 +180,20 @@ new iOS app.
   Screen widgets and the `Пропуск` Control. `Виджеты` in settings is a gallery of live previews with `Добавить`
   (Android) or `Как добавить` (iOS) and each format's settings in a sheet; it replaces the `Компактное
   расписание`, `Полное расписание` and QR pages, and `Завтрашние пары вечером` is now on by default.
+- Профиль, Друзья and the person card are rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one
+  view model per screen). Профиль is a hub under the one-line header with `Поделиться`: the identity card, `Друзья`
+  as a counter (`3 друга, 1 заявка`) with the requests badge, `Приватность`, then `Подключение и данные` as a status,
+  `Уведомления`, `Виджеты`, `Подключить устройство`, My ITMO, the settings, the project links and `Выйти`; without
+  the connection a gate with `Подключить` stands in place of the people rows and nothing else is hidden. Друзья has
+  the people search on top (the separate search screen is gone), incoming requests with `Принять` and `Отклонить` in
+  the row, sent ones with `Отменить`, the friends and `Поделиться профилем`; removing a friend moved to their card.
+  The person card is one for any ISU: a centred header (avatar, full name, roles such as `Доцент, ПИиКТ` and
+  `Студент, M3206`, the ISU with copy, up to two full-width buttons: `Написать отзыв` first for someone who teaches
+  you, else `Добавить в друзья` or `Пригласить в ITMO.Widgets`), then `Преподавание` (the lesson they give now, once
+  the MyITMO teacher timetable is connected, the subjects they teach you from your own schedule, where to find them, the AI summary and the reviews) and `Учёба` (the groups, then the
+  schedule, sport and friends you may open), in the order of who they are to you. Someone else's hidden data is
+  simply absent; the `Обычно открывается после добавления в друзья` hint is gone. Another user's friends use the same
+  rows. On iOS the review report is a native sheet.
 - `Запись` filters: the sheet shows six sport types first (the ones the student books or attended, then the most
   booked) with `Ещё` for the rest and a search over them; chosen types stay in sight. The building filter lists every
   building with lessons, `Другие корпуса` for venues My ITMO's list lacks and `Онлайн`. The week strip runs from this

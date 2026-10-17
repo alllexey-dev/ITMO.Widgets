@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
@@ -69,6 +70,7 @@ class SportModuleTest {
                 MyItmoClient::class,
                 SportApi::class,
                 FriendRepository::class,
+                TeacherLevelsRepository::class,
                 BackendGate::class,
                 CustomServicesRepository::class,
                 SportSignSelectorPreferences::class,

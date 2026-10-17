@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
@@ -40,14 +41,10 @@ fun userDisplayName(name: String, isu: Int): UiText =
 
 fun UserSummary.displayName(): UiText = userDisplayName(name, isu)
 
+/** `M3206, 2 курс` from the current group, or `ИСУ 288104` without one. */
 fun UserSummary.subtitleText(): UiText {
-    if (groups.isEmpty()) return UiText.Res(SocialStrings.user_subtitle_isu, listOf(isu))
-    val groupsText = if (groups.size <= 2) {
-        groups.joinToString(" • ") { it.name }
-    } else {
-        "${groups.first().name} +${groups.size - 1}"
-    }
-    return UiText.Res(SocialStrings.friend_picker_user_subtitle, listOf(isu, groupsText))
+    val group = primaryGroup() ?: return UiText.Res(SocialStrings.user_subtitle_isu, listOf(isu))
+    return UiText.Res(SocialStrings.person_group_course, listOf(group.name, group.course))
 }
 
 fun RelationshipState.statusText(): UiText? = when (this) {

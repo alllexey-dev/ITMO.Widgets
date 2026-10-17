@@ -116,26 +116,30 @@ fun SearchField(
         horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
     ) {
         Icon(painterResource(Res.drawable.ic_search), contentDescription = null, tint = colors.onSurfaceVariant)
-        Box(Modifier.weight(1f)) {
-            if (query.isEmpty()) {
-                Text(
-                    placeholder,
-                    color = colors.onSurfaceVariant,
-                    style = ItmoTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier.fillMaxWidth().semantics { contentDescription = placeholder },
-                singleLine = true,
-                textStyle = ItmoTheme.typography.bodyLarge.copy(color = colors.onSurface),
-                cursorBrush = SolidColor(colors.primary),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            )
-        }
+        // The field fills the pill's height, so the whole pill is its 48 dp target.
+        BasicTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.weight(1f).heightIn(min = SearchHeight).semantics { contentDescription = placeholder },
+            singleLine = true,
+            textStyle = ItmoTheme.typography.bodyLarge.copy(color = colors.onSurface),
+            cursorBrush = SolidColor(colors.primary),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            decorationBox = { field ->
+                Box(Modifier.fillMaxWidth().heightIn(min = SearchHeight), contentAlignment = Alignment.CenterStart) {
+                    if (query.isEmpty()) {
+                        Text(
+                            placeholder,
+                            color = colors.onSurfaceVariant,
+                            style = ItmoTheme.typography.bodyLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    field()
+                }
+            },
+        )
         if (query.isNotEmpty()) {
             IconButton(onClick = { onQueryChange("") }) {
                 Icon(painterResource(Res.drawable.ic_close), contentDescription = clearLabel, tint = colors.onSurfaceVariant)

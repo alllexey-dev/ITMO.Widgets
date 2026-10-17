@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -116,9 +117,12 @@ class SportMyViewModel(
     /** The sheet of the booking [lessonId] as it is now; null once it is gone. */
     fun details(lessonId: Long): SportCommonDetailsArgs? = bookings.firstOrNull { it.lessonId == lessonId }?.toDetailsArgs()
 
-    /** The lesson sheet of [details] now, as the iOS host draws it; [submitted] once it has sent its action. */
-    fun sheet(details: SportCommonDetailsArgs, submitted: Boolean): SportLessonSheetUi =
-        SportLessonSheetPresenter.present(details, time.now(), time.timeZone, submitted = submitted)
+    /**
+     * The lesson sheet of [details] now, as the iOS host draws it; [submitted] once it has sent its action; the tone of
+     * [teacherLevel] from [dev.alllexey.itmowidgets.feature.sport.presentation.common.SportTeacherLevels].
+     */
+    fun sheet(details: SportCommonDetailsArgs, submitted: Boolean, teacherLevel: TeacherLevel?): SportLessonSheetUi =
+        SportLessonSheetPresenter.present(details, time.now(), time.timeZone, submitted = submitted, teacherLevel = teacherLevel)
 
     /**
      * The lesson sheet asked for [action] on [lessonId]: a cancellation is asked first, and only while the booking still

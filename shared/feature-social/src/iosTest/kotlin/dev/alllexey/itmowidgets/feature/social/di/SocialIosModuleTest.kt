@@ -15,6 +15,8 @@ import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
@@ -31,7 +33,6 @@ import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
-import dev.alllexey.itmowidgets.feature.social.presentation.UserSearchViewModel
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
@@ -86,7 +87,6 @@ class SocialIosModuleTest {
         }
 
         koin.get<FriendsViewModel>()
-        koin.get<UserSearchViewModel>()
         koin.get<UserProfileViewModel> { parametersOf(arguments()) }
         koin.get<UserFriendsViewModel> { parametersOf(arguments()) }
         assertEquals(1, koin.getAll<BellSource>().size)
@@ -130,6 +130,7 @@ class SocialIosModuleTest {
         }
         single<CustomServicesRepository> { FakeCustomServicesRepository(enabled = true) }
         single<TeacherReviewsRepository> { FakeTeacherReviewsRepository() }
+        single<TeacherLessonsGateway> { FakeTeacherLessonsGateway().apply { finish() } }
         // The app binds it in iosBackgroundModule, which needs the system notification centre.
         single { UiTextResolver { it.resolve() } }
     }

@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPrefere
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportTeacherLevels
 import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsViewModel
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportAutoSignFlow
@@ -84,6 +85,8 @@ val sportModule = module {
     factoryOf(::SportWidgetSelector)
     factoryOf(::SportWidgetDataProvider)
     singleOf(::SportSectionsHolder)
+    // The tone of the sheet's teacher; `TeacherLevelsRepository` comes from the reviews module.
+    factoryOf(::SportTeacherLevels)
     viewModelOf(::SportMyViewModel)
     viewModelOf(::SportSignViewModel)
     viewModelOf(::SportPointsViewModel)
