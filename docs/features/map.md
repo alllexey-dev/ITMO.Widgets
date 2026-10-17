@@ -28,9 +28,9 @@ the data decision [ADR 0033](../decisions/0033-campus-map-mirror.md).
 ## Mirror and offline
 
 The mirror is a static tree on `https://map.alllexey.dev/app/v1/` (srvscripts `stacks/itmomap/mirror/sync.py`, a
-daily run): `manifest.json` and content-addressed `files/<sha256>.{mbtiles,json}`, plus the label glyphs
+daily run): the manifest and content-addressed `files/<sha256>.{mbtiles,json}`, plus the label glyphs
 (`Noto Sans`). `CampusMapRepositoryImpl` fetches the manifest once per process, keeps the last valid one in
-`cache/campus_map/manifest.json`, downloads a building's tiles, graph and rooms once, checks each against its
+the cache directory `campus_map`, downloads a building's tiles, graph and rooms once, checks each against its
 sha256 and deletes files no manifest names. MapLibre reads the tiles from the local file (`mbtiles://`); the glyphs
 stay in MapLibre's own cache. Without network the stored manifest and files serve.
 
