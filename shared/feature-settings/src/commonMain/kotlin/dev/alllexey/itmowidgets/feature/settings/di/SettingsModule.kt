@@ -3,10 +3,12 @@ package dev.alllexey.itmowidgets.feature.settings.di
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
+import dev.alllexey.itmowidgets.feature.settings.data.BarsStatusRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.WidgetAppearanceRepositoryImpl
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsStatusRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
@@ -37,6 +39,7 @@ val settingsDataModule = module {
     singleOf(::CustomServicesRepositoryImpl) { bind<CustomServicesRepository>() }
     singleOf(::WidgetAppearanceRepositoryImpl) { bind<WidgetAppearanceRepository>() }
     singleOf(::SchedulePreferencesRepositoryImpl) { bind<SchedulePreferencesRepository>() }
+    singleOf(::BarsStatusRepositoryImpl) { bind<BarsStatusRepository>() }
 }
 
 /**

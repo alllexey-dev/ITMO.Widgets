@@ -43,7 +43,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.SwitchListRow
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
-import dev.alllexey.itmowidgets.feature.settings.presentation.connection.BarsConnection
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionPrivacy
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.PrivacyTopic

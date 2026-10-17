@@ -287,7 +287,7 @@ private fun PermissionRow(
         verticalAlignment = Alignment.Top,
     ) {
         IconTile(painterResource(icon), if (granted) Tone.Success else Tone.Primary)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
             Text(text(title), style = ItmoTheme.typography.titleMedium)
             Text(text(line), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
             Box(Modifier.padding(top = ItmoTheme.spacing.compact)) {

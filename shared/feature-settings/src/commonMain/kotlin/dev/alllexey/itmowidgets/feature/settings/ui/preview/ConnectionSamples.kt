@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.ui.preview
 
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
-import dev.alllexey.itmowidgets.feature.settings.presentation.connection.BarsConnection
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionPrivacy
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionUiState
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsPlurals

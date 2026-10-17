@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
+import dev.alllexey.itmowidgets.feature.settings.data.BarsStatusRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
@@ -74,7 +75,9 @@ internal fun settingsTestModule(spoilers: CustomSpoilerRepository = FakeCustomSp
     )
     viewModel { SettingsViewModel(pages, repository, refresher, get<SavedStateHandle>()) }
     viewModel {
-        ConnectionViewModel(FakeCustomServicesRepository(), repository, FakeSocialRepository(), PreferenceStores().markSources, refresher)
+        ConnectionViewModel(
+            FakeCustomServicesRepository(), repository, FakeSocialRepository(), BarsStatusRepositoryImpl(PreferenceStores().markSources), refresher,
+        )
     }
     viewModel {
         NotificationSettingsViewModel(

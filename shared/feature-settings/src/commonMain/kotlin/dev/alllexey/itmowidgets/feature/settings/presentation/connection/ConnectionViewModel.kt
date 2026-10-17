@@ -3,14 +3,14 @@ package dev.alllexey.itmowidgets.feature.settings.presentation.connection
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
-import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsStatusRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
@@ -40,7 +40,7 @@ class ConnectionViewModel(
     private val customServices: CustomServicesRepository,
     private val settings: SettingsRepository,
     private val social: SocialRepository,
-    markSources: MarkSourcePreferences,
+    barsStatus: BarsStatusRepository,
     private val widgetRefreshRequester: WidgetRefreshRequester,
 ) : ViewModel() {
 
@@ -51,16 +51,7 @@ class ConnectionViewModel(
     private val eventQueue = EventQueue<ConnectionEvent>()
     val events: Flow<ConnectionEvent> = eventQueue.events
 
-    private val bars: Flow<BarsConnection> = combine(
-        markSources.observeBarsMarksEnabled(),
-        markSources.observeBarsLoginPrompt(),
-    ) { enabled, prompt ->
-        when {
-            prompt != BarsLoginPrompt.NONE -> BarsConnection.EXPIRED
-            enabled != null -> BarsConnection.CONNECTED
-            else -> BarsConnection.NOT_CONNECTED
-        }
-    }
+    private val bars: Flow<BarsConnection> = barsStatus.observe()
 
     private val privacy: Flow<SharingSettingsState> = combine(
         settings.observeSharingSettings(),

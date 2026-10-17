@@ -10,6 +10,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.settings.data.BarsStatusRepositoryImpl
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
@@ -49,7 +51,7 @@ class ConnectionViewModelTest {
         val settings = FakeSettingsRepository(LocalSettings(customServicesEnabled = connected), sharing, true, MutableStateFlow(true))
         val social = FakeSocialRepository()
         val refresher = FakeWidgetRefreshRequester()
-        val viewModel = ConnectionViewModel(services, settings, social, stores.markSources, refresher)
+        val viewModel = ConnectionViewModel(services, settings, social, BarsStatusRepositoryImpl(stores.markSources), refresher)
     }
 
     private fun fixture(connected: Boolean = true, sharing: SharingSettingsState = Audiences) = Fixture(connected, sharing)
