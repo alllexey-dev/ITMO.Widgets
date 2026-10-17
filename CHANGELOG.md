@@ -10,6 +10,11 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Спорт lesson sheet data (2026-10-17)
+
+- A booked sport lesson shows `Отменить можно до 18:30` (its start, with the date on another day) on its card in `Моё` and under `Отменить запись` in the sheet, until it starts.
+- The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.
+
 ### Fixes (2026-10-17)
 
 - A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).

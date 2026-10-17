@@ -2,6 +2,9 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.common
 
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelTone
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.shortPersonName
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
@@ -19,6 +22,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
+import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
 
 /** The sport lesson sheet's cases at state level: the places, the clash, the one action, the conditions, the people. */
@@ -35,7 +39,8 @@ class SportLessonSheetPresenterTest {
         actionsEnabled: Boolean = true,
         busy: Boolean = false,
         submitted: Boolean = false,
-    ) = SportLessonSheetPresenter.present(item.toDetailsArgs(), at, zone, actionsEnabled, busy, submitted)
+        teacherLevel: TeacherLevel? = null,
+    ) = SportLessonSheetPresenter.present(item.toDetailsArgs(), at, zone, actionsEnabled, busy, submitted, teacherLevel)
 
     private fun res(key: String, vararg arguments: Any) = UiText.Res(key, arguments.toList())
 
@@ -135,7 +140,10 @@ class SportLessonSheetPresenterTest {
             FriendSportBooking(UserSummary(900002, "Второй", null, emptyList(), UserSharing(true, true)), 1, SportCardFixtures.entry()),
         )
         val sheet = sheet(lesson.copy(friendsBookings = friends, roomName = "Кронверкский пр., 49, спортивный зал"))
-        assertEquals(SportPersonUi("Тестовый п. с. д. и.".let { sheet.teacher!!.name }, 100), sheet.teacher)
+        assertEquals(
+            SportPersonUi("Тестовый п. с. д. и.".let { sheet.teacher!!.name }, 100, res(SportStrings.sport_filter_teacher)),
+            sheet.teacher,
+        )
         assertEquals(SportPlaceUi("Кронверкский пр., 49", "спортивный зал", "Кронверкский пр., 49"), sheet.place)
         assertEquals("Возьмите сменную обувь и воду.", sheet.comment)
         assertEquals(
@@ -145,5 +153,30 @@ class SportLessonSheetPresenterTest {
             ),
             sheet.friends,
         )
+    }
+
+    @Test fun aBookedLessonCanBeCancelledUntilItStarts() {
+        val booked = lesson.copy(signed = true)
+        assertEquals(res(SportStrings.sport_cancel_until, "8 сент., 18:30"), sheet(booked).actionNote, "another day names the date")
+        val hourBefore = lesson.start - 60.minutes
+        assertEquals(res(SportStrings.sport_cancel_until, "18:30"), sheet(booked, at = hourBefore).actionNote, "today only the time")
+        assertEquals(res(SportStrings.sport_sheet_booked_note), sheet(booked, at = lesson.start).actionNote, "a started lesson")
+        assertNull(SportLessonSheetPresenter.cancelUntil(lesson.toDetailsArgs(), now, zone), "not booked")
+        val prediction = lesson.copy(signed = true, isLessonReal = false).toDetailsArgs()
+        assertNull(SportLessonSheetPresenter.cancelUntil(prediction, now, zone), "a prediction")
+    }
+
+    @Test fun theTeacherRowSaysTheReviewToneInWordsOnceItIsKnown() {
+        assertEquals(TeacherLevelTone.POSITIVE.words, sheet(lesson, teacherLevel = TeacherLevel.POSITIVE).teacher!!.tone)
+        assertEquals(res(SportStrings.sport_filter_teacher), sheet(lesson).teacher!!.tone, "no summary: the role")
+    }
+
+    @Test fun theTeacherLevelIsAskedForTheLessonsTeacherOnly() = runTest {
+        val repository = FakeTeacherLevelsRepository().apply { levels[100] = TeacherLevel.MIXED }
+        val levels = SportTeacherLevels(repository)
+
+        assertEquals(TeacherLevel.MIXED, levels.level(lesson.toDetailsArgs()))
+        assertNull(levels.level(lesson.copy(teacherIsu = 0).toDetailsArgs()), "no ISU, no request")
+        assertEquals(listOf(setOf(100)), repository.calls)
     }
 }

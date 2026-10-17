@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.preview
 
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.lesson.DayLesson
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
@@ -301,7 +302,12 @@ object SportSamples {
                 myBookings.groupBy { it.start.toLocalDateTimeIn() }.map { (date, items) ->
                     SportBookingDay(
                         sportDayLabel(date, today),
-                        items.map { SportBookingItem(it.lessonId, it.toLessonUi(time), section(it)) },
+                        items.map {
+                            SportBookingItem(
+                                it.lessonId, it.toLessonUi(time), section(it),
+                                SportLessonSheetPresenter.cancelUntil(it.toDetailsArgs(), now, zone),
+                            )
+                        },
                     )
                 }
             },
@@ -326,7 +332,7 @@ object SportSamples {
 
     val myFailed = SportMyUiState(score = null, body = SportMyBody.Failed(AppError.Network))
 
-    /** The lesson sheet at the lab's axes: [offer] `can`, `queue`, `clash` or `booked`. */
+    /** The lesson sheet at the lab's axes: [offer] `can`, `queue`, `clash` or `booked` (its teacher mostly praised). */
     fun lesson(offer: String): SportLessonSheetUi {
         val item = when (offer) {
             "queue" -> fitness
@@ -336,7 +342,7 @@ object SportSamples {
         }
         var args = item.toDetailsArgs()
         if (offer == "clash") args = args.copy(clashSubject = "Алгоритмы и структуры данных", clashStart = "08:20")
-        return SportLessonSheetPresenter.present(args, now, zone)
+        return SportLessonSheetPresenter.present(args, now, zone, teacherLevel = TeacherLevel.POSITIVE.takeIf { offer == "booked" })
     }
 
     /** `Встать в очередь?` at the lab's axes: [kind] `full` (Фитнес, Tuesday) or `future` (Плавание in two weeks). */
