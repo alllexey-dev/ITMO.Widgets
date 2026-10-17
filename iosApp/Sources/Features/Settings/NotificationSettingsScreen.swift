@@ -152,6 +152,7 @@ struct NotificationSettingsContent: View {
                             isOn: Binding(get: { state.scheduleChanges }, set: actions.scheduleChanges),
                             preview: NotificationPreviews.shared.scheduleChanges
                         )
+                        .accessibilityElement(children: .contain)
                         .accessibilityIdentifier("notifications.changes")
                         ForEach(state.pushes, id: \.kind) { push in pushBlock(push) }
                     }
@@ -209,6 +210,7 @@ struct NotificationSettingsContent: View {
             }
             NotificationPreviewView(preview: NotificationPreviews.shared.marks)
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("notifications.marks")
     }
 
@@ -259,6 +261,7 @@ struct NotificationSettingsContent: View {
             )
             if push.connected { NotificationPreviewView(preview: push.preview) }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("notifications.push.\(push.kind.name.lowercased())")
     }
 

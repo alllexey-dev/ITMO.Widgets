@@ -1,7 +1,7 @@
 import XCTest
 
 /// The first-run flow on the shared session walks its three steps, asks iOS for notifications with the permission's
-/// own button and leaves the connection off with `onboarding.notNow`.
+/// own button and finishes on the connection step (the demo keeps the connection on).
 /// The dialog comes only while the permission is not determined, so this class must be the first to ask in a run:
 /// test classes run in alphabetical order, and it sorts before `NotificationTapUITests` (`NotificationDialog`).
 final class FirstRunUITests: XCTestCase {
@@ -38,7 +38,9 @@ final class FirstRunUITests: XCTestCase {
 
         XCTAssertTrue(element(app, "onboarding.step.connection").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "connection")
-        element(app, "onboarding.notNow").tap()
+        // The demo session keeps the connection on, so the last step only finishes; `Не сейчас` is for the others.
+        XCTAssertFalse(element(app, "onboarding.notNow").exists)
+        next.tap()
 
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: stepTimeout))
         XCTAssertFalse(element(app, "onboarding.screen").exists)

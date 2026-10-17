@@ -118,6 +118,7 @@ struct ConnectionDataContent: View {
                     )
                 }
                 .padding(.top, ItmoSpacing.group)
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("connection.delete")
                 ItmoGroupNote(text: AppStrings.string("connection_delete_note"))
             }
@@ -224,6 +225,7 @@ struct ConnectionDataContent: View {
             ItmoCard {
                 ProgressView().itmoTint().frame(maxWidth: .infinity).padding(ItmoSpacing.related)
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("connection.audiences")
         case .failed:
             ItmoListGroup {
@@ -232,6 +234,7 @@ struct ConnectionDataContent: View {
                         .buttonStyle(.glass)
                 }
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("connection.audiences")
         case let .audiences(audiences):
             ItmoListGroup {
@@ -239,6 +242,7 @@ struct ConnectionDataContent: View {
                 audienceRow(.sport, audiences.sport, enabled: !audiences.updating)
                 audienceRow(.friends, audiences.friends, enabled: !audiences.updating)
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("connection.audiences")
             ItmoGroupNote(text: AppStrings.string("connection_audience_note"))
         }
@@ -310,6 +314,7 @@ struct ConnectionDataContent: View {
                     }
                 }
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("connection.bars")
         }
     }
@@ -334,6 +339,7 @@ struct ConnectionDataContent: View {
                     action: on ? actions.devices : nil
                 )
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("connection.devices")
         }
     }
