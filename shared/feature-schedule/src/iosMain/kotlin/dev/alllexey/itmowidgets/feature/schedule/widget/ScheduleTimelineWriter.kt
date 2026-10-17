@@ -10,12 +10,10 @@ import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.text.roomShortTitle
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetTimelineLoadResult
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItem
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimeline
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineJson
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetContent
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetLesson
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.coroutines.cancellation.CancellationException
@@ -104,7 +102,7 @@ class ScheduleTimelineWriter(
             return@withLock
         }
         when (result) {
-            is ScheduleWidgetTimelineLoadResult.Unavailable ->
+            ScheduleWidgetTimelineLoadResult.Unavailable ->
                 log.warn(TAG, "No schedule for the widgets; the previous timeline stays")
             is ScheduleWidgetTimelineLoadResult.Available -> write(result.timeline)
         }
@@ -155,22 +153,18 @@ class ScheduleTimelineWriter(
         copy(entries = entries.map { entry -> entry.copy(snapshot = entry.snapshot.withShortLocations()) })
 
     private suspend fun ScheduleWidgetSnapshot.withShortLocations(): ScheduleWidgetSnapshot = copy(
-        singleLesson = singleLesson.withShortLocations(),
-        lessonList = lessonList.map { item -> item.withShortLocations() },
+        next = next.copy(lesson = next.lesson?.withShortLocations(), rest = next.rest.map { it.withShortLocations() }),
+        day = day.copy(lessons = day.lessons.map { it.withShortLocations() }),
         officialFallback = officialFallback?.withShortLocations(),
     )
 
-    private suspend fun SingleLessonWidgetContent.withShortLocations() = copy(lesson = lesson?.withShortLocations())
-
-    private suspend fun ScheduleListWidgetItem.withShortLocations() = copy(lesson = lesson?.withShortLocations())
-
-    private suspend fun ScheduleWidgetLesson.withShortLocations() = copy(
+    private suspend fun WidgetLesson.withShortLocations() = copy(
         room = room?.let { roomShortTitle(it).resolve() },
         building = building?.let { buildingShortTitle(it, BUILDING_MAX_LENGTH).resolve() },
     )
 
     companion object {
-        /** `schedule-timeline-v1.json`: the envelope's version is the timeline's own (`ScheduleWidgetTimelineJson`). */
+        /** `schedule-timeline-v2.json`: the envelope's version is the timeline's own (`ScheduleWidgetTimelineJson`). */
         val FILE = SnapshotFile(
             name = "schedule-timeline",
             version = ScheduleWidgetTimelineJson.VERSION,
