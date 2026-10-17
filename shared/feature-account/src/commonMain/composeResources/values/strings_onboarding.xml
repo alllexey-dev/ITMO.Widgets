@@ -1,42 +1,48 @@
 <resources>
-    <!-- First-run flow -->
-    <string name="onboarding_skip">Пропустить</string>
+    <!-- First-run flow: what the app does with your data, the permissions one by one, the connection -->
     <string name="onboarding_next">Далее</string>
     <string name="onboarding_done">Готово</string>
-    <string name="onboarding_step_progress">Шаг %1$d из %2$d</string>
+    <string name="onboarding_step_progress">%1$d из %2$d</string>
 
-    <string name="onboarding_compact_widget_title">Компактный виджет расписания</string>
-    <string name="onboarding_full_widget_title">Полный виджет расписания</string>
-    <string name="onboarding_qr_widget_title">Виджет QR-пропуска</string>
-    <string name="onboarding_widget_add">Добавить на главный экран</string>
-    <string name="onboarding_widget_added">Добавлен на главный экран</string>
-    <string name="onboarding_spoiler_image_replace">Выбрать другое</string>
-    <string name="onboarding_spoiler_image_reset">Вернуть стандартное</string>
-    <string name="onboarding_widget_manual_hint">Этот лаунчер не даёт добавить виджет отсюда. Добавьте его через меню виджетов на главном экране.</string>
+    <string name="onboarding_value_title">Всё уже на месте</string>
+    <string name="onboarding_value_text">Ваши пары, баллы и спорт из My ITMO и БАРС — не пример.</string>
+    <string name="onboarding_value_now">Сейчас</string>
+    <string name="onboarding_value_next">Далее</string>
+    <string name="onboarding_value_tomorrow">Завтра</string>
+    <string name="onboarding_value_more">И ещё</string>
+    <string name="onboarding_value_pass">Пропуск</string>
+    <string name="onboarding_value_pass_text">Кнопка на «Сегодня» и виджет</string>
+    <string name="onboarding_value_scores">Баллы с источником</string>
+    <string name="onboarding_value_scores_text">У каждого числа подписано: My ITMO, БАРС или таблица</string>
+    <string name="onboarding_value_sport">Спорт</string>
+    <string name="onboarding_value_sport_text">Баллы, запись и очередь на занятия</string>
+    <string name="onboarding_value_sport_score">%1$d из 100</string>
+    <string name="onboarding_value_widgets">Виджеты</string>
+    <string name="onboarding_value_widgets_text">Пара и день на главном экране</string>
 
-    <string name="onboarding_services_title">Подключение к ITMO.Widgets</string>
-    <string name="onboarding_services_subtitle">Друзья, автозапись на спорт и уведомления работают через сервер проекта.</string>
-    <string name="onboarding_services_toggle_title">Подключиться</string>
-    <string name="onboarding_services_toggle_description">Расписание, зачётка и QR работают и без подключения.</string>
-    <string name="onboarding_services_privacy_default">Расписание и спорт по умолчанию видят только друзья. Меняется в настройках.</string>
-    <string name="onboarding_services_gives_title">Что даёт</string>
-    <string name="onboarding_services_feature_friends">Друзья и их расписание</string>
-    <string name="onboarding_services_feature_sport">Автозапись на спорт</string>
-    <string name="onboarding_services_feature_notifications">Уведомления о заявках и записях</string>
-    <string name="onboarding_services_stored_title">Что хранит сервер</string>
-    <string name="onboarding_services_stored_identity">ИСУ, имя и фото из ITMO.ID</string>
-    <string name="onboarding_services_stored_group">Учебная группа</string>
-    <string name="onboarding_services_stored_schedule">Расписание на ближайшие недели — чтобы его видели друзья</string>
-    <string name="onboarding_services_stored_sport">Записи и очереди на спорт</string>
-    <string name="onboarding_services_stored_device">Токен уведомлений этого устройства</string>
-    <string name="onboarding_services_stored_footer">Токен ITMO.ID сервер проверяет и не сохраняет. Всё удаляется вместе с аккаунтом.</string>
-    <string name="onboarding_services_source_link">Код сервера</string>
-
+    <string name="onboarding_permissions_title">Разрешения</string>
+    <string name="onboarding_permissions_text">Каждое — по желанию и по одному. Передумать можно в настройках телефона.</string>
+    <string name="onboarding_permission_granted">разрешено</string>
     <string name="onboarding_notifications_title">Уведомления</string>
-    <string name="onboarding_notifications_subtitle">Заявки в друзья и результат автозаписи на спорт.</string>
-    <string name="onboarding_notifications_on">Разрешены</string>
-    <string name="onboarding_notifications_off">Выключены</string>
+    <string name="onboarding_notifications_text">Перенос пары, новые баллы, место в очереди. Какие именно — выберете потом на странице «Уведомления».</string>
     <string name="onboarding_notifications_allow">Разрешить</string>
     <string name="onboarding_notifications_open_settings">Открыть настройки</string>
-    <string name="onboarding_notifications_configure">Настроить в Android</string>
+    <string name="onboarding_calendar_title">Календарь телефона</string>
+    <string name="onboarding_calendar_text">Пары на 4 недели вперёд в обычном календаре. Изменения обновятся сами.</string>
+    <string name="onboarding_calendar_add">Добавить пары</string>
+    <string name="onboarding_permissions_widgets">Виджеты можно добавить позже: Профиль, «Виджеты».</string>
+
+    <string name="onboarding_connection_title">Друзья и очередь</string>
+    <string name="onboarding_connection_text">Это работает через сервер ITMO.Widgets — его держат студенты, не ИТМО. Всё остальное работает и без него.</string>
+    <string name="onboarding_connection_friends">Друзья</string>
+    <string name="onboarding_connection_friends_text">Их пары и где они сейчас</string>
+    <string name="onboarding_connection_queue">Очередь на спорт</string>
+    <string name="onboarding_connection_queue_text">Место займётся само, когда освободится</string>
+    <string name="onboarding_connection_links">Ссылки к предметам</string>
+    <string name="onboarding_connection_links_text">Общие ссылки и чаты группы</string>
+    <string name="onboarding_connection_details">Что хранит сервер и кто что видит</string>
+    <string name="onboarding_connection_later_note">Включить можно и позже: Профиль, «Подключение и данные».</string>
+    <string name="onboarding_connection_connect">Подключить</string>
+    <string name="onboarding_connection_not_now">Не сейчас</string>
+    <string name="onboarding_connection_connected">Подключено к ITMO.Widgets</string>
 </resources>

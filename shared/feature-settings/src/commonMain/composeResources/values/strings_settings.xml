@@ -90,7 +90,7 @@
     <string name="settings_qr_tile_already_added">Плитка уже в шторке</string>
     <string name="settings_qr_tile_failed">Не удалось добавить плитку</string>
     <string name="settings_restart_onboarding_title">Повторить первоначальную настройку</string>
-    <string name="settings_restart_onboarding_description">Виджеты, подключение и уведомления</string>
+    <string name="settings_restart_onboarding_description">Возможности, разрешения и подключение</string>
     <string name="settings_calendar_sync_title">Синхронизация с календарём</string>
     <string name="settings_calendar_sync_description">Пары на 4 недели вперёд в системном календаре телефона.</string>
     <string name="settings_calendar_sync_no_permission">Выключена: нет доступа к календарю.</string>

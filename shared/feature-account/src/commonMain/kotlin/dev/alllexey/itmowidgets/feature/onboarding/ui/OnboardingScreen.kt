@@ -1,185 +1,379 @@
 package dev.alllexey.itmowidgets.feature.onboarding.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
-import dev.alllexey.itmowidgets.designsystem.components.charts.StepsIndicator
+import dev.alllexey.itmowidgets.designsystem.components.services.ServicesConsentSheet
+import dev.alllexey.itmowidgets.designsystem.kit.IconTile
+import dev.alllexey.itmowidgets.designsystem.kit.LessonCard
+import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
+import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
+import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
+import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
+import dev.alllexey.itmowidgets.designsystem.kit.Tone
+import dev.alllexey.itmowidgets.designsystem.kit.toLessonView
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingStep
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiState
-import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetKind
-import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetOption
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.onboarding_done
-import dev.alllexey.itmowidgets.shared.feature.account.onboarding_next
-import dev.alllexey.itmowidgets.shared.feature.account.onboarding_skip
-import dev.alllexey.itmowidgets.shared.feature.account.onboarding_step_progress
-import org.jetbrains.compose.resources.stringResource
+import dev.alllexey.itmowidgets.shared.designsystem.Res
+import dev.alllexey.itmowidgets.shared.designsystem.ic_book_2
+import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_add
+import dev.alllexey.itmowidgets.shared.designsystem.ic_check
+import dev.alllexey.itmowidgets.shared.designsystem.ic_group
+import dev.alllexey.itmowidgets.shared.designsystem.ic_info
+import dev.alllexey.itmowidgets.shared.designsystem.ic_link
+import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
+import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
+import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
+import dev.alllexey.itmowidgets.shared.designsystem.ic_widgets
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 
 /** What a test or a host looks up on the first-run flow. */
 object OnboardingTestTags {
     const val STEPS = "onboarding_steps"
-    const val PAGER = "onboarding_pager"
-    const val SKIP = "onboarding_skip"
     const val NEXT = "onboarding_next"
-    const val PREVIEW = "onboarding_widget_preview"
-    const val PIN = "onboarding_pin"
-    const val PIN_HINT = "onboarding_pin_hint"
-    const val TEXT_SIZE = "onboarding_text_size"
-    const val SPOILER_IMAGE = "onboarding_spoiler_image"
-    const val SERVICES_ROW = "onboarding_services_row"
-    const val SERVICES_SWITCH = "onboarding_services_switch"
-    const val SERVICES_PROGRESS = "onboarding_services_progress"
-    const val SERVICES_SOURCE = "onboarding_services_source"
-    const val NOTIFICATIONS_STATUS = "onboarding_notifications_status"
+    const val NOT_NOW = "onboarding_not_now"
+    const val ME = "onboarding_me"
+    const val LESSON = "onboarding_lesson"
     const val NOTIFICATIONS_BUTTON = "onboarding_notifications_button"
-
-    fun option(option: WidgetOption): String = "onboarding_option_${option.name.lowercase()}"
+    const val NOTIFICATIONS_GRANTED = "onboarding_notifications_granted"
+    const val CALENDAR_BUTTON = "onboarding_calendar_button"
+    const val CALENDAR_GRANTED = "onboarding_calendar_granted"
+    const val DETAILS = "onboarding_connection_details"
 }
 
 /**
  * The callbacks of the first-run flow, one per [dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel]
- * entry point, plus the ones only a host can serve: the photo picker of the spoiler image and opening a link.
+ * entry point. [onDetails] opens the consent sheet to read what the server keeps, without connecting.
  */
 data class OnboardingActions(
     val onNext: () -> Unit = {},
-    val onSkip: () -> Unit = {},
-    val onOption: (WidgetOption, Boolean) -> Unit = { _, _ -> },
-    val onTextSize: (WidgetKind, WidgetTextSize) -> Unit = { _, _ -> },
-    val onPickSpoilerImage: () -> Unit = {},
-    val onResetSpoilerImage: () -> Unit = {},
-    val onPinWidget: (WidgetKind) -> Unit = {},
-    val onServicesEnabled: (Boolean) -> Unit = {},
     val onRequestNotifications: () -> Unit = {},
-    val onOpenLink: (url: String) -> Unit = {},
+    val onAddCalendar: () -> Unit = {},
+    val onConnect: () -> Unit = {},
+    val onNotNow: () -> Unit = {},
+    val onDetails: () -> Unit = {},
+    val onConsent: () -> Unit = {},
+    val onDismissConsent: () -> Unit = {},
 )
 
 /**
- * The first-run flow (`docs/features/onboarding.md`, Steps): the progress dots, one page per step of
- * [OnboardingUiState.steps] that only the footer moves, and the footer with `Пропустить` and `Далее`/`Готово`.
- * Stateless; the host owns the ViewModel, its events and back.
- *
- * [widgetPreview] draws the real widget of a [WidgetKind] in the preview card, filling the width it gets: the single
- * lesson at the widget's own height, the day list in its bounded 160 dp area (`WidgetPreviewFactory` on Android).
- * [notificationPermissionIsRuntime] is false where the system has no notification dialog (Android before 13), so the
- * notifications step offers the settings page from the start.
- *
- * A step change slides the pager on the components' standard spatial spring (`ItmoTheme.motion.scheme`); under
- * reduced motion the new step shows at once. The flow has no hero.
+ * The first-run flow (DECISIONS.md, Первый запуск): the step dots with `1 из 3`, the step's title and line over its
+ * scrolling body, and the step's actions pinned at the bottom: `Далее` on the first two (it works without any
+ * permission), `Подключить` and `Не сейчас` on the last. [consentShown] is the consent sheet the host keeps.
  */
 @Composable
 fun OnboardingScreen(
     state: OnboardingUiState,
     actions: OnboardingActions,
-    widgetPreview: @Composable (WidgetKind, Modifier) -> Unit,
     modifier: Modifier = Modifier,
-    notificationPermissionIsRuntime: Boolean = true,
+    consentShown: Boolean = false,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val steps = state.steps
-    val pager = rememberPagerState(initialPage = state.stepIndex) { steps.size }
-    val reducedMotion = rememberReducedMotion()
-    val pageSpec = ItmoTheme.motion.scheme.defaultSpatialSpec<Float>()
-    LaunchedEffect(pager, state.stepIndex) {
-        when {
-            pager.currentPage == state.stepIndex -> Unit
-            reducedMotion -> pager.scrollToPage(state.stepIndex)
-            else -> pager.animateScrollToPage(state.stepIndex, animationSpec = pageSpec)
-        }
-    }
     Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxSize()) {
-            StepsIndicator(
-                count = steps.size,
-                current = state.stepIndex,
-                contentDescription = stringResource(Res.string.onboarding_step_progress, state.stepIndex + 1, steps.size),
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = ItmoTheme.spacing.group, bottom = ItmoTheme.spacing.compact)
-                    .testTag(OnboardingTestTags.STEPS),
-            )
-            HorizontalPager(
-                state = pager,
-                // The flow moves through its footer, never by a swipe past an unanswered step.
-                modifier = Modifier.weight(1f).fillMaxWidth().testTag(OnboardingTestTags.PAGER),
-                userScrollEnabled = false,
-                key = { page -> steps[page] },
-            ) { page ->
-                when (val step = steps[page]) {
-                    OnboardingStep.COMPACT_WIDGET, OnboardingStep.FULL_WIDGET, OnboardingStep.QR_WIDGET ->
-                        OnboardingWidgetStep(step.widgetKind, state, actions, widgetPreview)
-                    OnboardingStep.SERVICES -> OnboardingServicesStep(state, actions)
-                    OnboardingStep.NOTIFICATIONS ->
-                        OnboardingNotificationsStep(state, actions, notificationPermissionIsRuntime)
+            StepHeader(state)
+            AnimatedContent(state.step, Modifier.weight(1f).testTag(OnboardingTestTags.STEPS), label = "onboarding step") { step ->
+                when (step) {
+                    OnboardingStep.VALUE -> StepBody(AccountStrings.onboarding_value_title, AccountStrings.onboarding_value_text) {
+                        ValueStep(state)
+                    }
+                    OnboardingStep.PERMISSIONS -> StepBody(
+                        AccountStrings.onboarding_permissions_title,
+                        AccountStrings.onboarding_permissions_text,
+                    ) { PermissionsStep(state, actions) }
+                    OnboardingStep.CONNECTION -> StepBody(
+                        AccountStrings.onboarding_connection_title,
+                        AccountStrings.onboarding_connection_text,
+                    ) { ConnectionStep(state, actions) }
                 }
             }
-            OnboardingFooter(state, actions)
+            Footer(state, actions)
         }
         SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
     }
+    if (consentShown) ServicesConsentSheet(onConnect = actions.onConsent, onDismiss = actions.onDismissConsent)
 }
 
-/** `Пропустить` until the last step, then only `Готово`; the activity leaves the flow, so one tap is enough. */
+/** The dots (the current one wide) and `1 из 3`, read together. */
 @Composable
-private fun OnboardingFooter(state: OnboardingUiState, actions: OnboardingActions) {
+private fun StepHeader(state: OnboardingUiState) {
+    val progress = text(AccountStrings.onboarding_step_progress, state.stepIndex + 1, state.stepCount)
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(
-                start = ItmoTheme.spacing.screenMargin,
-                top = ItmoTheme.spacing.compact,
-                end = ItmoTheme.spacing.screenMargin,
-                bottom = ItmoTheme.spacing.group,
-            ),
+            .heightIn(min = HeaderHeight)
+            .padding(horizontal = SidePadding)
+            .semantics(mergeDescendants = true) { contentDescription = progress },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (!state.isLastStep) {
-            ProgressButton(
-                label = stringResource(Res.string.onboarding_skip),
-                onClick = actions.onSkip,
-                modifier = Modifier.testTag(OnboardingTestTags.SKIP),
-                style = ProgressButtonStyle.Text,
-                enabled = !state.finished,
-            )
+        Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
+            repeat(state.stepCount) { index ->
+                val width by animateDpAsState(if (index == state.stepIndex) DotWide else DotSize, label = "dot")
+                Box(
+                    Modifier
+                        .height(DotSize)
+                        .width(width)
+                        .clip(CircleShape)
+                        .background(
+                            if (index <= state.stepIndex) ItmoTheme.colorScheme.primary else ItmoTheme.colorScheme.outlineVariant,
+                        ),
+                )
+            }
         }
         Spacer(Modifier.weight(1f))
-        ProgressButton(
-            label = stringResource(if (state.isLastStep) Res.string.onboarding_done else Res.string.onboarding_next),
-            onClick = actions.onNext,
-            modifier = Modifier.widthIn(min = NextMinWidth).testTag(OnboardingTestTags.NEXT),
-            enabled = !state.finished,
-        )
+        Text(progress, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.labelLarge)
     }
 }
 
-private val OnboardingStep.widgetKind: WidgetKind
-    get() = when (this) {
-        OnboardingStep.COMPACT_WIDGET -> WidgetKind.SINGLE_LESSON
-        OnboardingStep.FULL_WIDGET -> WidgetKind.DAY_SCHEDULE
-        OnboardingStep.QR_WIDGET -> WidgetKind.QR
-        OnboardingStep.SERVICES, OnboardingStep.NOTIFICATIONS -> error("$this is not a widget step")
+@Composable
+private fun StepBody(title: String, line: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = ItmoTheme.spacing.screenMargin)
+            .padding(bottom = ItmoTheme.spacing.group),
+        verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+    ) {
+        Text(
+            text(title),
+            Modifier.padding(horizontal = ItmoTheme.spacing.compact).padding(top = ItmoTheme.spacing.compact).semantics { heading() },
+            style = ItmoTheme.emphasizedTypography.headlineLarge,
+        )
+        Text(
+            text(line),
+            Modifier.padding(horizontal = ItmoTheme.spacing.compact).padding(bottom = ItmoTheme.spacing.content),
+            color = ItmoTheme.colorScheme.onSurfaceVariant,
+            style = ItmoTheme.typography.bodyLarge,
+        )
+        content()
     }
+}
 
-/** `fragment_onboarding.xml`'s `next_button` `android:minWidth`. */
-private val NextMinWidth = 128.dp
+/** Step 1: the person, the lesson that matters now and what else is there, from their own data as it loads. */
+@Composable
+private fun ValueStep(state: OnboardingUiState) {
+    state.me?.let { me ->
+        Row(
+            Modifier
+                .clip(CircleShape)
+                .background(ItmoTheme.colorScheme.surfaceContainerHigh)
+                .padding(start = ItmoTheme.spacing.related, end = ItmoTheme.spacing.cardPadding)
+                .padding(vertical = ItmoTheme.spacing.related)
+                .testTag(OnboardingTestTags.ME),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
+        ) {
+            Avatar(me.name, me.pictureUrl, size = ChipAvatar, initials = me.initials)
+            Text(me.name, style = ItmoTheme.typography.labelLarge)
+        }
+    }
+    state.lesson?.let { lesson ->
+        SectionHeader(lesson.title.asString())
+        LessonCard(lesson.lesson.toLessonView(), Modifier.testTag(OnboardingTestTags.LESSON))
+    }
+    SectionHeader(text(AccountStrings.onboarding_value_more))
+    ListGroup {
+        item { ValueRow(Res.drawable.ic_qr_code, Tone.Tertiary, AccountStrings.onboarding_value_pass, text(AccountStrings.onboarding_value_pass_text)) }
+        item { ValueRow(Res.drawable.ic_book_2, Tone.Primary, AccountStrings.onboarding_value_scores, text(AccountStrings.onboarding_value_scores_text)) }
+        item {
+            ValueRow(
+                Res.drawable.ic_sprint,
+                Tone.Success,
+                AccountStrings.onboarding_value_sport,
+                state.sport?.asString() ?: text(AccountStrings.onboarding_value_sport_text),
+            )
+        }
+        item { ValueRow(Res.drawable.ic_widgets, Tone.Neutral, AccountStrings.onboarding_value_widgets, text(AccountStrings.onboarding_value_widgets_text)) }
+    }
+}
+
+@Composable
+private fun ValueRow(icon: DrawableResource, tone: Tone, title: String, subtitle: String) {
+    ListRow(text(title), subtitle = subtitle, icon = painterResource(icon), iconTone = tone)
+}
+
+/** Step 2: each permission with its own button, or `разрешено` once granted. */
+@Composable
+private fun PermissionsStep(state: OnboardingUiState, actions: OnboardingActions) {
+    ListGroup {
+        item {
+            PermissionRow(
+                icon = Res.drawable.ic_notification,
+                title = AccountStrings.onboarding_notifications_title,
+                line = AccountStrings.onboarding_notifications_text,
+                action = if (state.notificationsAsked) {
+                    AccountStrings.onboarding_notifications_open_settings
+                } else {
+                    AccountStrings.onboarding_notifications_allow
+                },
+                granted = state.notificationsGranted,
+                onAction = actions.onRequestNotifications,
+                buttonTag = OnboardingTestTags.NOTIFICATIONS_BUTTON,
+                grantedTag = OnboardingTestTags.NOTIFICATIONS_GRANTED,
+            )
+        }
+        state.calendarSynced?.let { synced ->
+            item {
+                PermissionRow(
+                    icon = Res.drawable.ic_calendar_add,
+                    title = AccountStrings.onboarding_calendar_title,
+                    line = AccountStrings.onboarding_calendar_text,
+                    action = AccountStrings.onboarding_calendar_add,
+                    granted = synced,
+                    onAction = actions.onAddCalendar,
+                    buttonTag = OnboardingTestTags.CALENDAR_BUTTON,
+                    grantedTag = OnboardingTestTags.CALENDAR_GRANTED,
+                )
+            }
+        }
+    }
+    ListGroupNote(text(AccountStrings.onboarding_permissions_widgets))
+}
+
+@Composable
+private fun PermissionRow(
+    icon: DrawableResource,
+    title: String,
+    line: String,
+    action: String,
+    granted: Boolean,
+    onAction: () -> Unit,
+    buttonTag: String,
+    grantedTag: String,
+) {
+    Row(
+        Modifier.fillMaxWidth().padding(ItmoTheme.spacing.cardPadding),
+        horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+        verticalAlignment = Alignment.Top,
+    ) {
+        IconTile(painterResource(icon), if (granted) Tone.Success else Tone.Primary)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(text(title), style = ItmoTheme.typography.titleMedium)
+            Text(text(line), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+            Box(Modifier.padding(top = ItmoTheme.spacing.compact)) {
+                if (granted) {
+                    StatusPill(
+                        text(AccountStrings.onboarding_permission_granted),
+                        Modifier.testTag(grantedTag),
+                        tone = Tone.Success,
+                        icon = painterResource(Res.drawable.ic_check),
+                    )
+                } else {
+                    ProgressButton(text(action), onAction, Modifier.testTag(buttonTag), style = ProgressButtonStyle.Tonal)
+                }
+            }
+        }
+    }
+}
+
+/** Step 3: what the connection gives, a way to read what the server keeps, and where to turn it on later. */
+@Composable
+private fun ConnectionStep(state: OnboardingUiState, actions: OnboardingActions) {
+    ListGroup {
+        item { ValueRow(Res.drawable.ic_group, Tone.Primary, AccountStrings.onboarding_connection_friends, text(AccountStrings.onboarding_connection_friends_text)) }
+        item { ValueRow(Res.drawable.ic_sprint, Tone.Primary, AccountStrings.onboarding_connection_queue, text(AccountStrings.onboarding_connection_queue_text)) }
+        item { ValueRow(Res.drawable.ic_link, Tone.Primary, AccountStrings.onboarding_connection_links, text(AccountStrings.onboarding_connection_links_text)) }
+    }
+    ListGroup(Modifier.testTag(OnboardingTestTags.DETAILS)) {
+        item {
+            ListRow(
+                text(AccountStrings.onboarding_connection_details),
+                icon = painterResource(Res.drawable.ic_info),
+                chevron = true,
+                onClick = actions.onDetails,
+            )
+        }
+    }
+    if (state.servicesEnabled) {
+        StatusPill(
+            text(AccountStrings.onboarding_connection_connected),
+            Modifier.padding(start = ItmoTheme.spacing.compact),
+            tone = Tone.Success,
+            icon = painterResource(Res.drawable.ic_check),
+        )
+    } else {
+        ListGroupNote(text(AccountStrings.onboarding_connection_later_note))
+    }
+}
+
+@Composable
+private fun Footer(state: OnboardingUiState, actions: OnboardingActions) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = SidePadding, vertical = ItmoTheme.spacing.content),
+        verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related),
+    ) {
+        val last = state.step == OnboardingStep.CONNECTION
+        ProgressButton(
+            label = text(
+                when {
+                    !last -> AccountStrings.onboarding_next
+                    state.servicesEnabled -> AccountStrings.onboarding_done
+                    else -> AccountStrings.onboarding_connection_connect
+                },
+            ),
+            onClick = if (last) actions.onConnect else actions.onNext,
+            modifier = Modifier.fillMaxWidth().heightIn(min = MainButtonHeight).testTag(OnboardingTestTags.NEXT),
+            inProgress = state.servicesBusy,
+            enabled = !state.finished,
+        )
+        if (last && !state.servicesEnabled) {
+            ProgressButton(
+                label = text(AccountStrings.onboarding_connection_not_now),
+                onClick = actions.onNotNow,
+                modifier = Modifier.fillMaxWidth().testTag(OnboardingTestTags.NOT_NOW),
+                style = ProgressButtonStyle.Outlined,
+                enabled = !state.finished && !state.servicesBusy,
+            )
+        }
+    }
+}
+
+@Composable
+private fun text(key: String, vararg arguments: Any): String = UiText.Res(key, arguments.toList()).asString()
+
+private val HeaderHeight = 56.dp
+private val SidePadding = 24.dp
+private val DotSize: Dp = 8.dp
+private val DotWide: Dp = 24.dp
+private val ChipAvatar = 28.dp
+private val MainButtonHeight = 56.dp
