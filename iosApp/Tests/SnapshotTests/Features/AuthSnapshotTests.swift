@@ -18,7 +18,7 @@ final class AuthSnapshotTests: XCTestCase {
         let screen = content(AuthFixtures.state()).sheet(isPresented: .constant(true)) {
             AuthOtherWaysSheet(signIn: { _ in })
         }
-        assertScreenAppearances(of: screen, named: "other-ways", appearances: [.light, .dark], settle: 1.5)
+        assertScreenAppearances(of: screen, named: "other-ways", appearances: [.light, .dark], settle: 2.5)
     }
 
     func testReauthenticationWithError() {
