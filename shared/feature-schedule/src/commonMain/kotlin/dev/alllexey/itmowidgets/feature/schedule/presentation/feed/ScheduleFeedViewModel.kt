@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation.feed
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.platform.AppForeground
@@ -24,10 +25,12 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -54,6 +57,7 @@ class ScheduleFeedViewModel(
     private val time: AcademicTimeProvider,
     private val calendarSync: CalendarSync,
     foreground: AppForeground,
+    private val dispatchers: AppDispatchers,
 ) : ViewModel() {
 
     private val owner = MutableStateFlow(initialOwner())
@@ -66,6 +70,9 @@ class ScheduleFeedViewModel(
     private var generation = 0
     private var started = false
     private var cachedEmpty = true
+    private val inFlight = mutableMapOf<LoadKey, Load>()
+    private var earlierLoad: LoadKey? = null
+    private var laterLoad: LoadKey? = null
 
     init {
         foreground.returns().onEach { if (started) reloadWindow() }.launchIn(viewModelScope)
@@ -88,28 +95,26 @@ class ScheduleFeedViewModel(
         }
         .onEach { cachedEmpty = it.days.isEmpty() }
 
-    val uiState: StateFlow<ScheduleFeedUiState> = combine(
-        clock,
-        cached,
-        combine(known, visible, ::Pair),
-        status,
-        jump,
-    ) { now, cached, (known, visible), status, jump ->
-        ScheduleFeedPresenter.state(
-            FeedInput(
-                now = now,
-                owner = cached.owner,
-                window = cached.window,
-                days = cached.days,
-                known = known,
-                visible = visible,
-                loading = status.loading > 0,
-                error = status.error,
-                denied = status.denied,
-                refreshing = status.refreshing,
-                jump = jump,
-            ),
+    private val projected: Flow<Projected> = combine(clock, cached, known, status) { now, cached, known, status ->
+        FeedInput(
+            now = now,
+            owner = cached.owner,
+            window = cached.window,
+            days = cached.days,
+            known = known,
+            visible = cached.window.start,
+            loading = status.loading > 0,
+            error = status.error,
+            denied = status.denied,
+            refreshing = status.refreshing,
+            jump = null,
         )
+    }.mapLatest { input ->
+        withContext(dispatchers.default) { Projected(input, ScheduleFeedPresenter.state(input)) }
+    }
+
+    val uiState: StateFlow<ScheduleFeedUiState> = combine(projected, visible, jump) { projected, visible, jump ->
+        ScheduleFeedPresenter.select(projected.state, projected.input.copy(visible = visible, jump = jump))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), initialState())
 
     /**
@@ -129,23 +134,26 @@ class ScheduleFeedViewModel(
 
     /** The view's top day changed: the header, the strip and `Сегодня` follow it. */
     fun onVisibleDate(date: LocalDate) {
+        if (jump.value != null) return
         visible.value = date
     }
 
     /** The view came near the end of the feed: two more weeks join it and load. */
     fun onNearEnd() {
+        if (laterLoad?.let(inFlight::containsKey) == true) return
         val range = window.value
         val end = range.endInclusive.plus(GROWTH_WEEKS, DateTimeUnit.WEEK)
         window.value = range.start..end
-        load(range.endInclusive.plus(1, DateTimeUnit.DAY), end, indicator = false)
+        laterLoad = load(range.endInclusive.plus(1, DateTimeUnit.DAY), end, indicator = false)
     }
 
     /** The view came near the start of the feed: two earlier weeks join it and load. */
     fun onNearStart() {
+        if (earlierLoad?.let(inFlight::containsKey) == true) return
         val range = window.value
         val start = range.start.minus(GROWTH_WEEKS, DateTimeUnit.WEEK)
         window.value = start..range.endInclusive
-        load(start, range.start.minus(1, DateTimeUnit.DAY), indicator = false)
+        earlierLoad = load(start, range.start.minus(1, DateTimeUnit.DAY), indicator = false)
     }
 
     /** Scrolls the feed to [date] (a strip day, the month sheet's `Открыть`), bringing its weeks in first. */
@@ -163,6 +171,8 @@ class ScheduleFeedViewModel(
                 }
             }
             else -> {
+                earlierLoad = null
+                laterLoad = null
                 window.value = target
                 load(target.start, target.endInclusive, indicator = false)
             }
@@ -172,11 +182,18 @@ class ScheduleFeedViewModel(
         jump.value = FeedJump(date, jumps)
     }
 
-    /** The strip was swiped to the week at [index]: its Monday, or today on the current week. */
-    fun showWeek(index: Int) {
-        val monday = ScheduleFeedPresenter.monday(window.value.start).plus(index, DateTimeUnit.WEEK)
+    /** A new user gesture takes ownership from an older date jump, before its settled callback arrives. */
+    fun beginWeekPaging() {
+        jump.value = null
+    }
+
+    /** A user swipe settled on [monday]; stable dates survive a prepend and repeated layout callbacks. */
+    fun showWeek(monday: LocalDate) {
+        if (jump.value != null) return
+        val week = ScheduleFeedPresenter.monday(monday)
+        if (week !in window.value || week == ScheduleFeedPresenter.monday(visible.value)) return
         val today = time.today()
-        showDate(if (ScheduleFeedPresenter.monday(today) == monday) today else monday)
+        showDate(if (ScheduleFeedPresenter.monday(today) == week) today else week)
     }
 
     /** `Сегодня`. */
@@ -203,6 +220,8 @@ class ScheduleFeedViewModel(
         savedStateHandle[STATE_FRIEND_AVATAR] = user?.avatar
         savedStateHandle[STATE_FRIEND_GROUP] = user?.group
         generation++
+        earlierLoad = null
+        laterLoad = null
         known.value = emptySet()
         status.value = Status()
         cachedEmpty = true
@@ -211,31 +230,43 @@ class ScheduleFeedViewModel(
         load(range.start, range.endInclusive, indicator = false)
     }
 
-    private fun load(from: LocalDate, to: LocalDate, indicator: Boolean) {
+    private fun load(from: LocalDate, to: LocalDate, indicator: Boolean): LoadKey {
         val loadOwner = owner.value
-        val loadGeneration = generation
+        val key = LoadKey(generation, from, to)
+        inFlight[key]?.let { existing ->
+            existing.indicator = existing.indicator || indicator
+            if (indicator) status.update { it.copy(refreshing = true) }
+            return key
+        }
+        val request = Load(indicator)
+        inFlight[key] = request
         status.update { it.copy(loading = it.loading + 1, refreshing = it.refreshing || indicator) }
         viewModelScope.launch {
-            val result = days.refresh(loadOwner.user?.isu, from, to)
-            // A switch of schedules dropped this answer's status; it must not land on the other schedule.
-            if (loadGeneration != generation) return@launch
-            when (result) {
-                is AppResult.Success -> {
-                    known.update { it + datesOf(from, to) }
-                    status.update { it.copy(error = null) }
-                    if (indicator && loadOwner == FeedOwner.Own) calendarSync.requestSync()
+            try {
+                val result = days.refresh(loadOwner.user?.isu, from, to)
+                // A switch of schedules dropped this answer's status; it must not land on the other schedule.
+                if (key.generation != generation) return@launch
+                when (result) {
+                    is AppResult.Success -> {
+                        known.update { it + datesOf(from, to) }
+                        status.update { it.copy(error = null) }
+                        if (request.indicator && loadOwner == FeedOwner.Own) calendarSync.requestSync()
+                    }
+                    is AppResult.Failure -> when {
+                        loadOwner.user != null && result.error in DENIALS -> status.update { it.copy(denied = result.error) }
+                        cachedEmpty && known.value.isEmpty() -> status.update { it.copy(error = result.error) }
+                        else -> eventQueue.send(ScheduleFeedEvent.ShowError(result.error))
+                    }
                 }
-                is AppResult.Failure -> when {
-                    loadOwner.user != null && result.error in DENIALS -> status.update { it.copy(denied = result.error) }
-                    cachedEmpty && known.value.isEmpty() -> status.update { it.copy(error = result.error) }
-                    else -> eventQueue.send(ScheduleFeedEvent.ShowError(result.error))
+            } finally {
+                inFlight.remove(key)
+                if (key.generation == generation) status.update {
+                    val loading = (it.loading - 1).coerceAtLeast(0)
+                    it.copy(loading = loading, refreshing = it.refreshing && loading > 0)
                 }
-            }
-            status.update {
-                val loading = it.loading - 1
-                it.copy(loading = loading, refreshing = it.refreshing && loading > 0)
             }
         }
+        return key
     }
 
     private fun initialOwner(): FeedOwner {
@@ -276,6 +307,10 @@ class ScheduleFeedViewModel(
 
     private fun datesOf(from: LocalDate, to: LocalDate): Set<LocalDate> =
         generateSequence(from) { it.plus(1, DateTimeUnit.DAY) }.takeWhile { it <= to }.toSet()
+
+    private data class Projected(val input: FeedInput, val state: ScheduleFeedUiState)
+    private data class LoadKey(val generation: Int, val from: LocalDate, val to: LocalDate)
+    private class Load(var indicator: Boolean)
 
     private data class Cached(val owner: FeedOwner, val window: ClosedRange<LocalDate>, val days: List<LessonDay>)
 

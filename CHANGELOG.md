@@ -12,6 +12,11 @@ new iOS app.
 
 ### Fixes (2026-10-15)
 
+- Schedule week paging uses stable dates on both platforms and no longer treats programmatic movement as a swipe;
+  prepending weeks and interrupted jumps no longer reset the selected weekday. iOS animates week changes and cancels
+  stale positioning passes. Timeline projection runs off main and is reused while scrolling; cached timestamps no
+  longer reread day files, disabled queue rows skip sport refreshes, and duplicate/edge requests are bounded.
+
 - Past days in the schedule and sport week strips are dimmer; today and the selected day keep full emphasis (#424).
 - `Главный экран` settings can hide the QR pass entry on Сегодня on both platforms without hiding widgets or shortcuts (#420).
 - Sport friend rows and lesson sheets preserve avatar URLs on both platforms; iOS friend-request notifications use their photo too (#426).

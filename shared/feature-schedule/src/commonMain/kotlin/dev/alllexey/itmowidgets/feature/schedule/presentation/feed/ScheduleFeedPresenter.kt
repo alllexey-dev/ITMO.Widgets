@@ -64,8 +64,6 @@ object ScheduleFeedPresenter {
         val today = input.now.date
         val byDate = input.days.associateBy { it.date }
         val weeks = mondays(input.window).map { monday -> strip(monday, byDate, today) }
-        val selected = input.visible.coerceIn(input.window.start, input.window.endInclusive)
-        val selectedWeek = weeks.indexOfFirst { selected in it.monday..it.monday.plus(SUNDAY_OFFSET, DateTimeUnit.DAY) }
         val hasContent = input.days.isNotEmpty() || input.known.isNotEmpty()
         val body = when {
             input.denied != null -> ScheduleFeedBody.Failed(input.denied)
@@ -74,21 +72,35 @@ object ScheduleFeedPresenter {
             input.error != null -> ScheduleFeedBody.Failed(input.error)
             else -> ScheduleFeedBody.Days(emptyList())
         }
-        val user = input.owner.user
-        return ScheduleFeedUiState(
-            title = if (user == null) UiText.Dynamic(monthTitle(selected)) else UiText.Res(CoreStrings.tab_schedule),
-            subtitle = if (user == null) weekOf(selected, byDate)?.let(::weekLabel) else userLine(user),
+        return select(ScheduleFeedUiState(
+            title = UiText.Res(CoreStrings.tab_schedule),
+            subtitle = null,
             monthMenu = input.owner == FeedOwner.Own,
             canPickFriend = input.owner !is FeedOwner.Other,
             friend = (input.owner as? FeedOwner.Friend)?.user,
             weeks = weeks,
-            selectedWeek = selectedWeek.coerceAtLeast(0),
-            selected = selected,
-            offWeek = monday(selected) != monday(today),
+            selectedWeek = 0,
+            selected = input.visible,
+            offWeek = false,
             body = body,
             refreshing = input.refreshing,
             jump = input.jump,
             loading = input.loading,
+        ), input)
+    }
+
+    /** Selection changes reuse the projected weeks and timelines instead of rebuilding every lesson on scroll. */
+    fun select(content: ScheduleFeedUiState, input: FeedInput): ScheduleFeedUiState {
+        val selected = input.visible.coerceIn(input.window.start, input.window.endInclusive)
+        val user = input.owner.user
+        val byDate = input.days.associateBy { it.date }
+        return content.copy(
+            title = if (user == null) UiText.Dynamic(monthTitle(selected)) else UiText.Res(CoreStrings.tab_schedule),
+            subtitle = if (user == null) weekOf(selected, byDate)?.let(::weekLabel) else userLine(user),
+            selectedWeek = content.weeks.indexOfFirst { it.monday == monday(selected) }.coerceAtLeast(0),
+            selected = selected,
+            offWeek = monday(selected) != monday(input.now.date),
+            jump = input.jump,
         )
     }
 
