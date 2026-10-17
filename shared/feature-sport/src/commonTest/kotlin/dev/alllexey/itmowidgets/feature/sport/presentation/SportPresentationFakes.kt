@@ -191,8 +191,8 @@ internal class FakeSportSectionRepository : SportSectionRepository {
         requests += "stop $sectionId"
         failure?.let { return AppResult.Failure(it) }
         sections.value = LoadState.Content(sections.value.valueOrNull().orEmpty().filter { it.id != sectionId })
-        slots.replaceAll { _, slot ->
-            if (slot.subscriptionId == sectionId) slot.copy(subscribers = slot.subscribers - 1, subscriptionId = null, place = null) else slot
+        for ((lessonId, slot) in slots.entries.toList()) {
+            if (slot.subscriptionId == sectionId) slots[lessonId] = slot.copy(subscribers = slot.subscribers - 1, subscriptionId = null, place = null)
         }
         return AppResult.Success(Unit)
     }

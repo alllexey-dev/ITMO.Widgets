@@ -19,11 +19,8 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertFalse(app.tabBars.firstMatch.exists)
         attachScreenshot(named: "sign-in")
 
-        // The logo is decorative for VoiceOver, so it is tapped by its place: 88 pt, 24 pt above the title.
-        let logo = title.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0)).withOffset(CGVector(dx: 0, dy: -68))
-        for _ in 0..<5 {
-            logo.tap()
-        }
+        // One gesture of five taps: tapped one by one, the CI runner spaced them past the 1.5 s the entry allows.
+        element(app, "auth.logo").tap(withNumberOfTaps: 5, numberOfTouches: 1)
 
         XCTAssertTrue(element(app, "kit.demoBanner").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: stepTimeout))

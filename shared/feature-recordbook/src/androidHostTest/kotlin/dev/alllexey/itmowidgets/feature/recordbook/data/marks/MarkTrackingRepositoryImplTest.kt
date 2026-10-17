@@ -469,6 +469,18 @@ class MarkTrackingRepositoryImplTest {
         assertFalse(folder.exists())
     }
 
+    @Test
+    fun `every read of the demo dates its news back from the same moment`() = runTest {
+        val repository = repository(FakeDemoMode(active = true))
+        val first = repository.observeHistory().first().map { it.detectedAt }
+
+        clock.advance(1.seconds)
+        repository.markAllRead()
+
+        assertEquals(first, repository.observeHistory().first().map { it.detectedAt })
+        assertEquals(clock.now() - 1.seconds - 5.hours, first.first())
+    }
+
     private fun repository(demo: DemoMode = noDemo()) =
         MarkTrackingRepositoryImpl(recordbook, bars, store, ClockAcademicTime(clock), clock, notifier, users, sheets, demo, dispatchers)
 

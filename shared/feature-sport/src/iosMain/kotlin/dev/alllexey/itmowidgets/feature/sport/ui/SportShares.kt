@@ -16,7 +16,7 @@ import org.jetbrains.compose.resources.getString
 /**
  * What the sport details sheet shares on iOS, through the system share sheet ([PlatformActions]): the lesson's
  * section, day and time with its app link, a real lesson's or the prediction's of its prototype, as Android's
- * Android's sport details entry sends them. Called on the main thread; false when no sheet could be shown.
+ * Android's sport details entry sends them. Callable from any thread; false when no sheet could be shown.
  */
 class SportShares(
     private val actions: PlatformActions,

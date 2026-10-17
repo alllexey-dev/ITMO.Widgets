@@ -35,8 +35,7 @@ final class SettingsUITests: XCTestCase {
         let toggle = settingsSwitch(app, "schedule_sport_auto_sign")
         let before = isOn(toggle)
 
-        flip(toggle)
-        XCTAssertTrue(waitForValue(of: toggle, on: !before), "the switch follows the stored value")
+        XCTAssertTrue(flip(toggle, to: !before), "the switch follows the stored value")
         attachScreenshot(named: "schedule")
 
         app.terminate()
@@ -46,8 +45,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertEqual(isOn(relaunched), !before, "the stored value survives the relaunch")
 
         // Leave the simulator as it was for the next run.
-        flip(relaunched)
-        XCTAssertTrue(waitForValue(of: relaunched, on: before))
+        XCTAssertTrue(flip(relaunched, to: before))
     }
 
     /// The calendar group: the switch and the `.ics` row; the demo's own schedule is synthetic, so the sheet
@@ -161,9 +159,15 @@ final class SettingsUITests: XCTestCase {
         return toggle
     }
 
-    /// Taps the switch at the trailing edge: in a list only the switch flips, not the label.
-    private func flip(_ toggle: XCUIElement) {
-        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+    /// Taps the switch at the trailing edge (in a list only the switch flips, not the label) until it shows `on`. On
+    /// the CI runner a tap synthesized on the relaunched page once left the switch unchanged for 10 s, so a tap that
+    /// changed nothing within `stepTimeout` is repeated; a tap that did change it is never repeated.
+    private func flip(_ toggle: XCUIElement, to on: Bool) -> Bool {
+        for _ in 0..<3 {
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+            if waitForValue(of: toggle, on: on) { return true }
+        }
+        return false
     }
 
     private func isOn(_ toggle: XCUIElement) -> Bool {

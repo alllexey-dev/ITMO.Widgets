@@ -4,24 +4,29 @@ import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
 import dev.alllexey.itmowidgets.core.url.TelegramLinks
 import dev.alllexey.itmowidgets.core.url.UrlEncoding
+import platform.Foundation.NSThread
 import platform.Foundation.NSURL
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenNotificationSettingsURLString
 import platform.UIKit.UIApplicationOpenSettingsURLString
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
 
 /**
  * The iOS [PlatformActions]: the share sheet over [host]'s top controller, links and Apple Maps through
- * `UIApplication.open`, the app's pages in Settings. Called on the main thread, as UIKit requires.
+ * `UIApplication.open`, the app's pages in Settings. Callable from any thread: UIKit runs only on the main one, so a
+ * call from elsewhere (a suspend function Swift awaits resumes on a background queue) is queued there and answers
+ * true, the presenter unknown until then.
  */
 class IosPlatformActions(private val host: IosCoreHost) : PlatformActions {
 
     /** iOS's share sheet has no heading, so [title] is not shown. */
-    override fun shareText(title: String, text: String): Boolean {
-        val presenter = host.topViewController() ?: return false
+    override fun shareText(title: String, text: String): Boolean = onMain {
+        val presenter = host.topViewController() ?: return@onMain false
         val sheet = UIActivityViewController(activityItems = listOf(text), applicationActivities = null)
         presenter.presentViewController(sheet, animated = true, completion = null)
-        return true
+        true
     }
 
     /** t.me links go to Telegram when it is installed, otherwise the https page opens. */
@@ -49,7 +54,17 @@ class IosPlatformActions(private val host: IosCoreHost) : PlatformActions {
     }
 
     private fun open(url: NSURL, completion: (Boolean) -> Unit = {}) {
-        UIApplication.sharedApplication.openURL(url, options = emptyMap<Any?, Any?>(), completionHandler = completion)
+        onMain {
+            UIApplication.sharedApplication.openURL(url, options = emptyMap<Any?, Any?>(), completionHandler = completion)
+            true
+        }
+    }
+
+    /** [action]'s answer on the main thread; from another thread [action] is queued there and the answer is true. */
+    private fun onMain(action: () -> Boolean): Boolean {
+        if (NSThread.isMainThread) return action()
+        dispatch_async(dispatch_get_main_queue()) { action() }
+        return true
     }
 
     companion object {

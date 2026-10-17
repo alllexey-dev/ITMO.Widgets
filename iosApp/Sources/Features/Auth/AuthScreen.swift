@@ -86,6 +86,16 @@ struct AuthContent: View {
         .accessibilityIdentifier("auth.screen")
     }
 
+    /// The logo is decorative for VoiceOver. A Debug build under UI tests exposes it, so a test can send its five
+    /// taps as one gesture: tapped one by one, the slow CI runner spaced them past `DemoEntryTaps.MAX_INTERVAL`.
+    private static var logoFindable: Bool {
+        #if DEBUG
+        CommandLine.arguments.contains(ITMOWidgetsApp.uiTestsArgument)
+        #else
+        false
+        #endif
+    }
+
     private var signInEnabled: Bool {
         !state.manualLoginInProgress && !state.sessionTransitionInProgress
     }
@@ -96,7 +106,8 @@ struct AuthContent: View {
                 .frame(width: logoSize, height: logoSize)
                 .contentShape(Circle())
                 .onTapGesture(perform: logoTapped)
-                .accessibilityHidden(true)
+                .accessibilityHidden(!Self.logoFindable)
+                .accessibilityIdentifier("auth.logo")
             Text(verbatim: AppStrings.string("app_name"))
                 .font(.itmo(.headlineSmall))
                 .multilineTextAlignment(.center)

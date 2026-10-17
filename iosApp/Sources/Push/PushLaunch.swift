@@ -8,8 +8,5 @@ enum PushLaunch {
     @MainActor
     static func prepare() {
         UNUserNotificationCenter.current().delegate = NotificationTaps.shared
-        #if DEBUG
-        NotificationFixtures.postIfRequested()
-        #endif
     }
 }

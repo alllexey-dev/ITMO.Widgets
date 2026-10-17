@@ -3,11 +3,12 @@ package dev.alllexey.itmowidgets.buildlogic
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 /**
  * A shared module: the Android-KMP library plugin (`kotlin { android { } }`), iosArm64 and iosSimulatorArm64,
@@ -60,12 +61,15 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
             }
         }
 
-        if (usesCoreTestFixtures && !hasOwnTestSources) {
-            // The core fixtures alone compile to classes without a test; a module gets the check back with its first
-            // test source set.
-            tasks.withType<Test>().configureEach {
-                failOnNoDiscoveredTests.set(false)
-                filter.isFailOnNoMatchingTests = false
+        if (usesCoreTestFixtures) {
+            // The core fixtures alone compile to classes without a test; a test task gets the check back with the
+            // first test source set it compiles.
+            tasks.withType<AbstractTestTask>().configureEach {
+                val sourceSets = if (this is KotlinNativeTest) IOS_TEST_SOURCE_SETS else HOST_TEST_SOURCE_SETS
+                if (!hasOwnTestSources(projectDir, sourceSets)) {
+                    failOnNoDiscoveredTests.set(false)
+                    filter.isFailOnNoMatchingTests = false
+                }
             }
         }
 

@@ -32,9 +32,18 @@ internal val Project.lintConfigFile: File
 internal val Project.usesCoreTestFixtures: Boolean
     get() = path == ":shared:core" || path == ":shared:compose-strings" || path.startsWith(":shared:feature-")
 
-/** Whether this module has a test source set of its own, besides [coreTestFixturesDir]. */
-internal val Project.hasOwnTestSources: Boolean
-    get() = listOf("commonTest", "androidHostTest").any { layout.projectDirectory.dir("src/$it").asFile.isDirectory }
+/** The source sets the host test task compiles. */
+internal val HOST_TEST_SOURCE_SETS = listOf("commonTest", "androidHostTest")
+
+/** The source sets the iOS simulator test task compiles. */
+internal val IOS_TEST_SOURCE_SETS = listOf("commonTest", "nativeTest", "appleTest", "iosTest", "iosSimulatorArm64Test")
+
+/**
+ * Whether a module in [projectDir] has sources of its own in one of [testSourceSets], the source sets one test task
+ * compiles, besides [coreTestFixturesDir]: `androidHostTest` alone gives the iOS test task nothing to run.
+ */
+internal fun hasOwnTestSources(projectDir: File, testSourceSets: List<String>): Boolean =
+    testSourceSets.any { File(projectDir, "src/$it").isDirectory }
 
 internal val Project.libs: VersionCatalog
     get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
