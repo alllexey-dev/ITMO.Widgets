@@ -6,6 +6,7 @@ import android.util.SizeF
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
@@ -92,6 +93,7 @@ object DayWidgetRenderer {
     }
 
     /** API 31+: the hours, the gaps, the `сейчас` line under the lessons and its time on top, each at its minute. */
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun canvas(
         context: Context,
         views: RemoteViews,
@@ -222,6 +224,7 @@ object DayWidgetRenderer {
     }
 
     /** [viewId] at [top] dp of the canvas, [height] dp high (null: its own), [start] dp from its left edge. */
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun place(views: RemoteViews, viewId: Int, top: Float, height: Float?, start: Float = 0f) {
         views.setViewLayoutMargin(viewId, RemoteViews.MARGIN_TOP, top, TypedValue.COMPLEX_UNIT_DIP)
         if (start > 0f) views.setViewLayoutMargin(viewId, RemoteViews.MARGIN_START, start, TypedValue.COMPLEX_UNIT_DIP)
