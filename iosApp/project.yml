@@ -116,8 +116,11 @@ targets:
     platform: iOS
     sources:
       - path: Tests/UnitTests
-      # The shared reference timeline, which ScheduleTimelineTests decodes: the Kotlin fixture by path, never a copy.
-      - path: ../shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json
+      # The shared reference timelines, which ScheduleTimelineTests and SportTimelineTests decode: the Kotlin
+      # fixtures by path, never copies.
+      - path: ../shared/feature-schedule/fixtures/schedule-widget-timeline-v2.json
+        buildPhase: resources
+      - path: ../shared/feature-sport/fixtures/sport-widget-timeline-v1.json
         buildPhase: resources
       # The Kotlin golden fixtures NotificationServiceTests replays, by path, never copies: Backend's FCM
       # envelopes, MyITMO's sign-up answers and the golden push and sign-up outcomes.

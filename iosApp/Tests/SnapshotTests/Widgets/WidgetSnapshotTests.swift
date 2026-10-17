@@ -1,16 +1,125 @@
+import Shared
 import SwiftUI
 import WidgetKit
 import XCTest
 @testable import ITMOWidgets
 
-/// The widget entry views at their family size: the QR widget in all four appearances with Android's default
-/// options, without dynamic colours and on a tinted home screen, the lesson and the day widget
-/// light and dark, AX1 where a family has the least room, and all three in the app's theme (the teal preset).
+/// The widget entry views at their family size, on the shared sample (`IosWidgetPreviews`: the design lab's Monday,
+/// 7 September, through the real selectors and writers) at the design's moments: before the first lesson (08:05),
+/// during the third (12:22), in the gap (13:40) and after the last (19:40). The next-lesson widget small and medium
+/// with its Lock Screen families, the day widget large, the sport widget's states, the pass widget's options, the
+/// placeholders, and each in the app's theme (the teal preset). Time is frozen at the moment, so nothing moves.
 /// WidgetKit's container background is ignored outside a widget, so each entry view paints its own tile; the home
 /// screen clips the corners.
+@MainActor
 final class WidgetSnapshotTests: XCTestCase {
-    /// The fixture's generation time: 2026-09-01T08:00:30Z, so the spoiler's noise never changes.
+    /// The fixture's generation time: 2026-09-01T08:00:30Z.
     private let date = Date(timeIntervalSince1970: 1_788_249_630)
+
+    // MARK: Next lesson
+
+    func testNextNow() async throws {
+        let entry = try await schedule(at: .now)
+        assertNext(entry, family: .systemSmall, named: "now", appearances: SnapshotAppearance.all)
+        assertNext(entry, family: .systemMedium, named: "now-medium")
+    }
+
+    func testNextMorning() async throws {
+        let entry = try await schedule(at: .morning)
+        assertNext(entry, family: .systemSmall, named: "morning")
+        assertNext(entry, family: .systemMedium, named: "morning-medium")
+    }
+
+    func testNextGap() async throws {
+        let entry = try await schedule(at: .gap)
+        assertNext(entry, family: .systemSmall, named: "gap")
+        assertNext(entry, family: .systemMedium, named: "gap-medium")
+    }
+
+    func testNextTomorrow() async throws {
+        let entry = try await schedule(at: .evening)
+        assertNext(entry, family: .systemSmall, named: "tomorrow")
+        assertNext(entry, family: .systemMedium, named: "tomorrow-medium")
+    }
+
+    func testNextInTheAppThemeWithLargeText() async throws {
+        let entry = try await schedule(at: .now, textSize: .large, theme: Self.teal)
+        assertNext(entry, family: .systemMedium, named: "now-medium")
+    }
+
+    func testNextOnTheNarrowestPhone() async throws {
+        let entry = try await schedule(at: .now, textSize: .extraLarge)
+        assertNext(entry, family: .systemMedium, size: WidgetSizes.narrowMedium, named: "now-medium")
+    }
+
+    func testNextPlaceholders() {
+        assertNext(entry(.placeholder(.signedOut)), family: .systemSmall, named: "signed-out")
+        assertNext(entry(.placeholder(.demo)), family: .systemSmall, named: "demo")
+        assertNext(entry(.placeholder(.unavailable)), family: .systemSmall, named: "unavailable")
+        assertNext(entry(.placeholder(.noLessons)), family: .systemSmall, named: "no-lessons")
+    }
+
+    func testNextLockScreen() async throws {
+        let now = try await schedule(at: .now)
+        assertNext(now, family: .accessoryRectangular, named: "rectangular")
+        assertNext(now, family: .accessoryInline, named: "inline")
+        assertNext(now, family: .accessoryCircular, named: "circular")
+        assertNext(try await schedule(at: .morning), family: .accessoryCircular, named: "circular-morning")
+    }
+
+    // MARK: Day
+
+    func testDayNow() async throws {
+        assertDay(try await schedule(at: .now), named: "now", appearances: SnapshotAppearance.all)
+    }
+
+    func testDayMorning() async throws {
+        assertDay(try await schedule(at: .morning), named: "morning")
+    }
+
+    func testDayTomorrow() async throws {
+        assertDay(try await schedule(at: .evening), named: "done")
+    }
+
+    /// `settings_widget_hide_past_title` and the teacher on, in the app's theme on the narrowest phone.
+    func testDayWithoutPastLessonsInTheAppTheme() async throws {
+        let entry = try await schedule(at: .now, hidePast: true, teacher: true, theme: Self.teal)
+        assertDay(entry, size: WidgetSizes.narrowLarge, named: "hide-past")
+    }
+
+    func testDayPlaceholders() {
+        assertDay(entry(.placeholder(.signedOut)), named: "signed-out")
+        assertDay(entry(.placeholder(.loading)), named: "loading")
+    }
+
+    // MARK: Sport
+
+    func testSportQueue() async throws {
+        let entry = try await sport(.queue)
+        assertSport(entry, family: .systemMedium, named: "queue", appearances: SnapshotAppearance.all)
+        assertSport(entry, family: .systemSmall, named: "queue-small")
+    }
+
+    func testSportBooked() async throws {
+        assertSport(try await sport(.booked), family: .systemMedium, named: "booked")
+    }
+
+    func testSportDone() async throws {
+        let entry = try await sport(.done)
+        assertSport(entry, family: .systemMedium, named: "done")
+        assertSport(entry, family: .systemSmall, named: "done-small")
+    }
+
+    func testSportInTheAppTheme() async throws {
+        assertSport(try await sport(.queue, theme: Self.teal), family: .systemMedium, named: "queue")
+    }
+
+    func testSportPlaceholders() {
+        assertSport(SportWidgetEntry(date: date, content: .placeholder(.signedOut)), family: .systemMedium, named: "signed-out")
+        assertSport(SportWidgetEntry(date: date, content: .placeholder(.sportError)), family: .systemSmall, named: "error")
+    }
+
+    // MARK: Pass
 
     func testQrSpoiler() {
         assertQr(.spoiler, named: "spoiler")
@@ -26,7 +135,7 @@ final class WidgetSnapshotTests: XCTestCase {
 
     /// Dynamic colours off: the code and the spoiler are black on white in both themes, Android's static colours.
     func testQrWithoutDynamicColours() throws {
-        let off = QrWidgetAppearance(spoiler: true, dynamicColors: false, animation: .circle)
+        let off = ITMOWidgets.QrWidgetAppearance(spoiler: true, dynamicColors: false, animation: .circle)
         assertQr(.spoiler, appearance: off, named: "spoiler", appearances: [.light, .dark])
         assertQr(
             .revealed(matrix: try fixtureMatrix(), demo: false), appearance: off, named: "revealed",
@@ -46,7 +155,7 @@ final class WidgetSnapshotTests: XCTestCase {
 
     /// `settings_widgets_theme_title` with the teal preset: the code and the spoiler in the app's palette.
     func testQrInTheAppTheme() throws {
-        var themed = QrWidgetAppearance.standard
+        var themed = ITMOWidgets.QrWidgetAppearance.standard
         themed.palette = WidgetPaletteFixtures.teal
         assertQr(.spoiler, appearance: themed, named: "spoiler", appearances: [.light, .dark])
         assertQr(
@@ -63,98 +172,55 @@ final class WidgetSnapshotTests: XCTestCase {
         assertQr(.signedOut, named: "signed-out")
     }
 
-    // MARK: Lesson widget
+    // MARK: Samples
 
-    func testLessonCurrent() throws {
-        try assertLesson(.snapshot(fixture(at: 0)), family: .systemSmall, named: "current", appearances: SnapshotAppearance.all)
-        try assertLesson(.snapshot(fixture(at: 0)), family: .systemMedium, named: "current-medium")
+    /// The design's moments on the sample Monday (UTC+3).
+    enum Moment: String {
+        case morning = "2026-09-07T05:05:00Z"
+        case now = "2026-09-07T09:22:00Z"
+        case gap = "2026-09-07T10:40:00Z"
+        case evening = "2026-09-07T16:40:00Z"
     }
 
-    func testLessonInTheAppTheme() throws {
-        try assertLesson(
-            .snapshot(fixture(at: 0)), family: .systemSmall, palette: WidgetPaletteFixtures.teal, named: "current"
+    /// The sample's schedule entry at `moment`, as the gallery shows it.
+    private func schedule(
+        at moment: Moment,
+        textSize: WidgetTextSize = .normal,
+        hidePast: Bool = false,
+        teacher: Bool = false,
+        theme: ThemeSpec? = nil
+    ) async throws -> ScheduleWidgetEntry {
+        let settings = ScheduleWidgetSettings(
+            compact: CompactScheduleWidgetSettings(showNextLessonEarly: true, hideTeacher: false, textSize: textSize),
+            full: FullScheduleWidgetSettings(
+                hideTeacher: !teacher, hidePastLessons: hidePast, showTomorrowWhenTodayIsOver: true, textSize: textSize
+            )
         )
+        let file = try await IosWidgetPreviews.shared.schedule(settings: settings, theme: theme)
+        let instant = try XCTUnwrap(AppGroupSnapshot.parseInstant(moment.rawValue))
+        return try XCTUnwrap(WidgetGalleryPreviews.scheduleEntry(Data(file.utf8), at: instant))
     }
 
-    func testLessonInABreak() throws {
-        try assertLesson(.snapshot(fixture(at: 2)), family: .systemSmall, named: "break")
+    /// The teal preset while the widgets follow the app's theme: its palette comes from the shared writer.
+    static let teal = ThemeSpec(
+        accent: .teal, customArgb: ThemeSpec.companion.DEFAULT_CUSTOM_ARGB, style: .tonalSpot, contrast: .standard,
+        pureBlack: false
+    )
+
+    private func sport(_ state: SportWidgetSampleState, theme: ThemeSpec? = nil) async throws -> SportWidgetEntry {
+        let file = try await IosWidgetPreviews.shared.sport(state: state, theme: theme)
+        let moment = Date(timeIntervalSince1970: IosWidgetPreviews.shared.lessonMoment)
+        return try XCTUnwrap(WidgetGalleryPreviews.sportEntry(Data(file.utf8), at: moment))
     }
 
-    func testLessonPendingSport() throws {
-        try assertLesson(.snapshot(fixture(at: 5)), family: .systemMedium, named: "pending")
+    private func entry(_ content: ScheduleWidgetContent) -> ScheduleWidgetEntry {
+        ScheduleWidgetEntry(date: date, content: content, clock: .frozen(date))
     }
 
-    func testLessonEmptyDay() {
-        assertLesson(.snapshot(emptyDay), family: .systemSmall, named: "empty")
-    }
-
-    func testLessonSignedOut() {
-        assertLesson(.signedOut, family: .systemSmall, named: "signed-out")
-    }
-
-    func testLessonDemo() {
-        assertLesson(.demo, family: .systemSmall, named: "demo")
-    }
-
-    func testLessonUnavailable() {
-        assertLesson(.unavailable, family: .systemSmall, named: "unavailable")
-    }
-
-    func testLessonLockScreen() throws {
-        try assertLesson(.snapshot(fixture(at: 0)), family: .accessoryRectangular, named: "rectangular")
-        try assertLesson(.snapshot(fixture(at: 0)), family: .accessoryInline, named: "inline")
-    }
-
-    func testLessonLongNamesLargeTextOnTheNarrowestPhone() {
-        assertLesson(.snapshot(longNames), family: .systemMedium, size: WidgetSizes.narrowMedium, named: "long")
-    }
-
-    // MARK: Day widget
-
-    func testDayCurrent() throws {
-        try assertDay(.snapshot(fixture(at: 0)), family: .systemMedium, named: "current-medium")
-        try assertDay(.snapshot(fixture(at: 0)), family: .systemLarge, named: "current", appearances: SnapshotAppearance.all)
-    }
-
-    func testDayInTheAppTheme() throws {
-        try assertDay(
-            .snapshot(fixture(at: 0)), family: .systemMedium, palette: WidgetPaletteFixtures.teal, named: "current-medium"
-        )
-    }
-
-    func testDayInABreak() throws {
-        try assertDay(.snapshot(fixture(at: 2)), family: .systemLarge, named: "break")
-    }
-
-    func testDayPendingSport() throws {
-        try assertDay(.snapshot(fixture(at: 5)), family: .systemLarge, named: "pending")
-    }
-
-    func testDayTomorrowAfterToday() throws {
-        try assertDay(.snapshot(fixture(at: 6)), family: .systemLarge, named: "tomorrow")
-    }
-
-    func testDayEmpty() throws {
-        try assertDay(.snapshot(fixture(at: 9)), family: .systemMedium, named: "empty")
-    }
-
-    func testDaySignedOut() {
-        assertDay(.signedOut, family: .systemMedium, named: "signed-out")
-    }
-
-    func testDayDemo() {
-        assertDay(.demo, family: .systemMedium, named: "demo")
-    }
-
-    func testDayLongNamesLargeTextOnTheNarrowestPhone() {
-        assertDay(.snapshot(longNames), family: .systemMedium, size: WidgetSizes.narrowMedium, named: "long")
-    }
-
-    private func assertLesson(
-        _ content: LessonWidgetContent,
+    private func assertNext(
+        _ entry: ScheduleWidgetEntry,
         family: WidgetFamily,
         size: CGSize? = nil,
-        palette: WidgetPalette? = nil,
         named name: String,
         appearances: [SnapshotAppearance] = [.light, .dark],
         file: StaticString = #filePath,
@@ -163,42 +229,42 @@ final class WidgetSnapshotTests: XCTestCase {
     ) {
         let size = size ?? Self.size(of: family)
         assertAppearances(
-            of: SingleLessonEntryView(
-                entry: LessonWidgetEntry(date: date, content: content, palette: palette), family: family
-            ),
-            named: name,
-            appearances: appearances,
-            width: size.width,
-            height: size.height,
-            file: file,
-            testName: testName,
-            line: line
+            of: NextLessonEntryView(entry: entry, family: family),
+            named: name, appearances: appearances, width: size.width, height: size.height,
+            file: file, testName: testName, line: line
         )
     }
 
     private func assertDay(
-        _ content: LessonWidgetContent,
-        family: WidgetFamily,
-        size: CGSize? = nil,
-        palette: WidgetPalette? = nil,
+        _ entry: ScheduleWidgetEntry,
+        size: CGSize = WidgetSizes.large,
         named name: String,
         appearances: [SnapshotAppearance] = [.light, .dark],
         file: StaticString = #filePath,
         testName: String = #function,
         line: UInt = #line
     ) {
-        let size = size ?? Self.size(of: family)
         assertAppearances(
-            of: DayScheduleEntryView(
-                entry: LessonWidgetEntry(date: date, content: content, palette: palette), family: family
-            ),
-            named: name,
-            appearances: appearances,
-            width: size.width,
-            height: size.height,
-            file: file,
-            testName: testName,
-            line: line
+            of: DayEntryView(entry: entry),
+            named: name, appearances: appearances, width: size.width, height: size.height,
+            file: file, testName: testName, line: line
+        )
+    }
+
+    private func assertSport(
+        _ entry: SportWidgetEntry,
+        family: WidgetFamily,
+        named name: String,
+        appearances: [SnapshotAppearance] = [.light, .dark],
+        file: StaticString = #filePath,
+        testName: String = #function,
+        line: UInt = #line
+    ) {
+        let size = Self.size(of: family)
+        assertAppearances(
+            of: SportEntryView(entry: entry, family: family),
+            named: name, appearances: appearances, width: size.width, height: size.height,
+            file: file, testName: testName, line: line
         )
     }
 
@@ -208,67 +274,14 @@ final class WidgetSnapshotTests: XCTestCase {
         case .systemLarge: WidgetSizes.large
         case .accessoryRectangular: WidgetSizes.accessoryRectangular
         case .accessoryInline: WidgetSizes.accessoryInline
+        case .accessoryCircular: WidgetSizes.accessoryCircular
         default: WidgetSizes.medium
         }
     }
 
-    /// Entry `index` of the shared reference timeline (`shared/feature-schedule/fixtures`), read from the source tree in
-    /// the App Group envelope as the references are: 0 the first lesson now, 2 a break, 5 a pending sport row next,
-    /// 6 tomorrow after today, 9 nothing today or tomorrow.
-    private func fixture(at index: Int) throws -> LessonWidgetSnapshot {
-        let url = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .appendingPathComponent("../../../../shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json")
-            .standardized
-        let value = try String(contentsOf: url, encoding: .utf8)
-        let timeline = try XCTUnwrap(LessonTimeline.decode(Data(#"{"version": 1, "value": \#(value)}"#.utf8)))
-        return timeline.entries[index].snapshot
-    }
-
-    /// A day without lessons, as the selector writes it.
-    private var emptyDay: LessonWidgetSnapshot {
-        LessonWidgetSnapshot(
-            singleLesson: SingleLessonContent(kind: .emptyToday, lesson: nil, remainingLessons: 0),
-            lessonList: [
-                LessonListItem(kind: .header, lesson: nil, dateIso: "2026-09-01", tomorrow: false),
-                LessonListItem(kind: .emptyToday, lesson: nil, dateIso: nil, tomorrow: false),
-            ],
-            singleLessonStyle: .dot,
-            lessonListStyle: .dot,
-            compactTextSize: nil,
-            fullTextSize: nil
-        )
-    }
-
-    /// The longest names, the line marker and the largest text option.
-    private var longNames: LessonWidgetSnapshot {
-        func lesson(_ state: WidgetLesson.State, start: String, end: String, typeId: Int) -> WidgetLesson {
-            WidgetLesson(
-                subject: SnapshotFixtures.longSubjectName, start: start, end: end, typeId: typeId,
-                teacher: SnapshotFixtures.longPersonName, room: "1506/1", building: "Кронва", state: state,
-                pendingStatus: nil
-            )
-        }
-        let current = lesson(.current, start: "10:00", end: "11:30", typeId: 3)
-        return LessonWidgetSnapshot(
-            singleLesson: SingleLessonContent(kind: .lesson, lesson: current, remainingLessons: 3),
-            lessonList: [
-                LessonListItem(kind: .header, lesson: nil, dateIso: "2026-09-01", tomorrow: false),
-                LessonListItem(kind: .lesson, lesson: lesson(.completed, start: "08:20", end: "09:50", typeId: 1), dateIso: nil, tomorrow: false),
-                LessonListItem(kind: .lesson, lesson: current, dateIso: nil, tomorrow: false),
-                LessonListItem(kind: .lesson, lesson: lesson(.upcoming, start: "11:40", end: "13:10", typeId: 6), dateIso: nil, tomorrow: false),
-                LessonListItem(kind: .end, lesson: nil, dateIso: nil, tomorrow: false),
-            ],
-            singleLessonStyle: .line,
-            lessonListStyle: .line,
-            compactTextSize: .extraLarge,
-            fullTextSize: .extraLarge
-        )
-    }
-
     private func assertQr(
         _ content: QrWidgetContent,
-        appearance: QrWidgetAppearance = .standard,
+        appearance: ITMOWidgets.QrWidgetAppearance = .standard,
         renderingMode: WidgetRenderingMode = .fullColor,
         named name: String,
         appearances: [SnapshotAppearance] = SnapshotAppearance.all,

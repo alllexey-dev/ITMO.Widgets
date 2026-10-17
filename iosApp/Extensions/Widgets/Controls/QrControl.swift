@@ -2,8 +2,8 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-/// The QR pass in Control Center, on the Lock Screen and on the Action button: the iOS counterpart of Android's QR
-/// tile (`qr_tile_label`). It opens the app on the pass above home (`OpenRouteIntent`, route `qr_pass`); like the
+/// The pass (`settings_widget_pass_title`) in Control Center, on the Lock Screen and on the Action button: the iOS counterpart of Android's QR
+/// tile. It opens the app on the pass above home (`OpenRouteIntent`, route `qr_pass`); like the
 /// tile it cannot draw the code itself.
 struct QrControl: ControlWidget {
     /// A stable identifier (`StableIdentifiersTests`): placed Controls keep it.
@@ -16,13 +16,13 @@ struct QrControl: ControlWidget {
         StaticControlConfiguration(kind: Self.kind) {
             ControlWidgetButton(action: Self.action) {
                 Label {
-                    Text(.qrTileLabel)
+                    Text(.StringsSettings.settingsWidgetPassTitle)
                 } icon: {
                     Image(systemName: AppSymbol.qrCode.systemName)
                 }
             }
         }
-        .displayName(.qrTileLabel)
+        .displayName(.StringsSettings.settingsWidgetPassTitle)
         .description(.iosControlQrDescription)
     }
 }

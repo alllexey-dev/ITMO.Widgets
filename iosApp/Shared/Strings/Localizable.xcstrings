@@ -80,7 +80,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Открывает QR-пропуск"
+            "value" : "Открывает пропуск"
           }
         }
       }
@@ -297,6 +297,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Наведите камеру на QR на странице входа"
+          }
+        }
+      }
+    },
+    "ios_widget_inline_at" : {
+      "comment" : "Generated from strings_ios_widgets.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ в %2$@"
+          }
+        }
+      }
+    },
+    "ios_widget_inline_until" : {
+      "comment" : "Generated from strings_ios_widgets.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ до %2$@"
           }
         }
       }

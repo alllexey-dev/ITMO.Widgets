@@ -47,7 +47,7 @@ final class StableIdentifiersTests: XCTestCase {
         XCTAssertEqual(RouteURL.scheme, "itmowidgets")
         XCTAssertEqual(
             RouteURL.ids.compactMap { RouteURL.url(id: $0)?.absoluteString },
-            ["recordbook", "schedule", "home", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
+            ["recordbook", "schedule", "home", "sport", "me", "qr_pass", "today", "lesson"].map { "itmowidgets://route/\($0)" }
         )
     }
 
@@ -55,6 +55,7 @@ final class StableIdentifiersTests: XCTestCase {
     func testQrWidget() {
         XCTAssertEqual(QrWidget.kind, "dev.alllexey.itmowidgets.widget.qr")
         XCTAssertEqual(QrWidget.passURL, RouteURL.url(id: "qr_pass"))
+        XCTAssertEqual(WidgetRoute.pass, QrWidget.passURL)
         XCTAssertEqual(
             [SessionFile.fileName, QrPassSnapshot.fileName, QrWidgetReveal.fileName],
             ["session-v1.json", "qr-pass-v1.json", "qr-widget-v1.json"]
@@ -77,13 +78,23 @@ final class StableIdentifiersTests: XCTestCase {
         )
     }
 
-    /// The lesson and the day widget keep their kinds, the app's writer reloads them by name and writes the timeline
-    /// file they read; a tap opens the schedule tab.
+    /// The next-lesson and the day widget keep their kinds, the app's writer reloads them by name and writes the
+    /// timeline file they read; the day's header opens the schedule on today, a lesson its sheet.
     func testScheduleWidgets() {
-        XCTAssertEqual(SingleLessonWidget.kind, "dev.alllexey.itmowidgets.widget.single-lesson")
-        XCTAssertEqual(DayScheduleWidget.kind, "dev.alllexey.itmowidgets.widget.day-schedule")
-        XCTAssertEqual(LessonWidgetRoute.scheduleURL, RouteURL.url(id: "schedule"))
-        XCTAssertEqual(LessonTimeline.fileName, "schedule-timeline-v1.json")
+        XCTAssertEqual(NextLessonWidget.kind, "dev.alllexey.itmowidgets.widget.single-lesson")
+        XCTAssertEqual(DayWidget.kind, "dev.alllexey.itmowidgets.widget.day-schedule")
+        XCTAssertEqual(WidgetRoute.today, RouteURL.url(id: "today"))
+        XCTAssertEqual(ScheduleTimeline.fileName, "schedule-timeline-v2.json")
+        XCTAssertEqual(
+            [WidgetRoute.lessonArguments, WidgetRoute.sportLesson, WidgetRoute.sportPredicted], ["args", "lesson", "predicted"]
+        )
+    }
+
+    /// The sport widget keeps its kind and file; a tap opens the sport tab.
+    func testSportWidget() {
+        XCTAssertEqual(SportWidget.kind, "dev.alllexey.itmowidgets.widget.sport")
+        XCTAssertEqual(SportTimeline.fileName, "sport-widget-v1.json")
+        XCTAssertEqual(WidgetRoute.sport, RouteURL.url(id: "sport"))
     }
 
     /// The app refresh task keeps its identifier: the system drops a scheduled request whose identifier the app no

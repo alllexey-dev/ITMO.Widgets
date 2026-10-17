@@ -88,14 +88,6 @@ struct QrWidgetTile: Equatable {
         Self.color(Self.channels(foregroundRGB))
     }
 
-    /// Shade `index` of `QrNoisePattern.shadeCount`, evenly between the background and the foreground.
-    func shade(_ index: Int) -> Color {
-        let fraction = Double(index + 1) / Double(QrNoisePattern.shadeCount + 1)
-        let from = Self.channels(backgroundRGB), to = Self.channels(foregroundRGB)
-        func mix(_ from: Double, _ to: Double) -> Double { from + (to - from) * fraction }
-        return Self.color((mix(from.red, to.red), mix(from.green, to.green), mix(from.blue, to.blue)))
-    }
-
     /// The resolver's darkness on the 0...255 channels.
     private static func darkness(_ rgb: UInt32) -> Double {
         let (red, green, blue) = channels(rgb)

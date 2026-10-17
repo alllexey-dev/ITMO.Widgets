@@ -10,9 +10,11 @@ enum WidgetSizes {
     /// The narrowest phone iOS 26 runs on (iPhone SE, 375 pt wide): the 321 pt medium family is where long names
     /// wrap and truncate first.
     static let narrowMedium = CGSize(width: 321, height: 148)
+    static let narrowLarge = CGSize(width: 321, height: 324)
 
     /// Lock Screen families, about their size on the pinned simulator; the system renders them in its vibrant style,
     /// the references show the layout.
     static let accessoryRectangular = CGSize(width: 160, height: 72)
     static let accessoryInline = CGSize(width: 234, height: 26)
+    static let accessoryCircular = CGSize(width: 72, height: 72)
 }

@@ -59,11 +59,6 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(state, named: "recordbook-off", height: 440, ax1Height: 720)
     }
 
-    func testQrWidget() {
-        let state = SettingsFixtures.page(.qrWidget, SettingsFixtures.pageState(notificationsGranted: true))
-        assertPage(state, named: "qr", height: 420, ax1Height: 980)
-    }
-
     func testEveryRowTypeWithLongValues() {
         assertPage(SettingsFixtures.longValues, named: "long", height: 1500, ax1Height: 3600)
     }
@@ -85,7 +80,7 @@ final class SettingsSnapshotTests: XCTestCase {
     }
 
     func testLoading() {
-        let state = SettingsUiState(page: .root, sections: [], loaded: false, previewSettings: nil, themePreview: nil)
+        let state = SettingsUiState(page: .root, sections: [], loaded: false, previewSettings: nil, themePreview: nil, gallery: nil)
         assertPage(state, named: "loading", height: 320, ax1Height: 320)
     }
 
@@ -121,7 +116,8 @@ enum SettingsFixtures {
         notificationsGranted: Bool,
         backgroundWorkRestricted: Bool = false,
         calendar: CalendarSyncState = CalendarSyncState(enabled: false, problem: nil),
-        local: LocalSettings = SettingsFixtures.local
+        local: LocalSettings = SettingsFixtures.local,
+        placedWidgets: [WidgetFormat: KotlinInt] = [:]
     ) -> SettingsPageState {
         SettingsPageState(
             local: local,
@@ -131,7 +127,8 @@ enum SettingsFixtures {
             imageBusy: false,
             backgroundWorkRestricted: backgroundWorkRestricted,
             calendar: calendar,
-            diagnosticsCount: 0
+            diagnosticsCount: 0,
+            placedWidgets: placedWidgets
         )
     }
 
@@ -140,14 +137,23 @@ enum SettingsFixtures {
         guard let pages = IosKoin.shared.get(type: SettingsPages.self) as? SettingsPages else {
             preconditionFailure("Koin resolved no SettingsPages")
         }
-        let sections = pages.forPage(page: page).sections(page: page, state: state)
-        return SettingsUiState(page: page, sections: sections, loaded: true, previewSettings: nil, themePreview: nil)
+        let provider = pages.forPage(page: page)
+        return SettingsUiState(
+            page: page,
+            sections: provider.sections(page: page, state: state),
+            loaded: true,
+            previewSettings: nil,
+            themePreview: nil,
+            gallery: provider.gallery(page: page, state: state)
+        )
     }
 
     static let local = localSettings()
 
     /// A fresh install's values; `barsMarksEnabled` is set once the account's first BARS answer came.
-    static func localSettings(barsMarksEnabled: KotlinBoolean? = nil, theme: ThemeSpec? = nil) -> LocalSettings {
+    static func localSettings(
+        barsMarksEnabled: KotlinBoolean? = nil, theme: ThemeSpec? = nil, hidePastLessons: Bool = false
+    ) -> LocalSettings {
         LocalSettings(
             customServicesEnabled: true,
             scheduleWidget: ScheduleWidgetSettings(
@@ -158,7 +164,7 @@ enum SettingsFixtures {
                 ),
                 full: FullScheduleWidgetSettings(
                     hideTeacher: false,
-                    hidePastLessons: false,
+                    hidePastLessons: hidePastLessons,
                     showTomorrowWhenTodayIsOver: false,
                     textSize: .normal
                 )
@@ -222,7 +228,8 @@ enum SettingsFixtures {
             sections: [SettingSection(title: text(long), items: items, footer: text(person))],
             loaded: true,
             previewSettings: nil,
-            themePreview: nil
+            themePreview: nil,
+            gallery: nil
         )
     }
 

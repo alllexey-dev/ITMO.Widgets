@@ -21,14 +21,16 @@ final class SnapshotReaderTests: XCTestCase {
         XCTAssertNil(SessionFile.read(fromContainer: container))
         XCTAssertNil(QrPassSnapshot.read(fromContainer: container))
         XCTAssertNil(QrWidgetReveal.read(fromContainer: container))
-        XCTAssertNil(LessonTimeline.read(fromContainer: container))
+        XCTAssertNil(ScheduleTimeline.read(fromContainer: container))
+        XCTAssertNil(SportTimeline.read(fromContainer: container))
     }
 
     func testNoContainerReadsAsNothing() {
         XCTAssertNil(SessionFile.read(fromContainer: nil))
         XCTAssertNil(QrPassSnapshot.read(fromContainer: nil))
         XCTAssertNil(QrWidgetReveal.read(fromContainer: nil))
-        XCTAssertNil(LessonTimeline.read(fromContainer: nil))
+        XCTAssertNil(ScheduleTimeline.read(fromContainer: nil))
+        XCTAssertNil(SportTimeline.read(fromContainer: nil))
     }
 
     // MARK: Corrupt files
@@ -38,11 +40,13 @@ final class SnapshotReaderTests: XCTestCase {
             try write(corrupt, to: SessionFile.fileName)
             try write(corrupt, to: QrPassSnapshot.fileName)
             try write(corrupt, to: QrWidgetReveal.fileName)
-            try write(corrupt, to: LessonTimeline.fileName)
+            try write(corrupt, to: ScheduleTimeline.fileName)
+            try write(corrupt, to: SportTimeline.fileName)
             XCTAssertNil(SessionFile.read(fromContainer: container), corrupt)
             XCTAssertNil(QrPassSnapshot.read(fromContainer: container), corrupt)
             XCTAssertNil(QrWidgetReveal.read(fromContainer: container), corrupt)
-            XCTAssertNil(LessonTimeline.read(fromContainer: container), corrupt)
+            XCTAssertNil(ScheduleTimeline.read(fromContainer: container), corrupt)
+            XCTAssertNil(SportTimeline.read(fromContainer: container), corrupt)
         }
     }
 
@@ -60,12 +64,14 @@ final class SnapshotReaderTests: XCTestCase {
         try write(#"{"version": 2, "value": {"isu": 1, "demo": false, "alertsAllowed": true}}"#, to: SessionFile.fileName)
         try write(#"{"version": 2, "value": {"revealedUntil": "2026-09-01T08:00:00Z"}}"#, to: QrWidgetReveal.fileName)
         try write(#"{"version": 2, "value": {"rows": 21}}"#, to: QrPassSnapshot.fileName)
-        try write(#"{"version": 2, "value": {"entries": []}}"#, to: LessonTimeline.fileName)
+        try write(#"{"version": 3, "value": {"entries": []}}"#, to: ScheduleTimeline.fileName)
+        try write(#"{"version": 2, "value": {"entries": []}}"#, to: SportTimeline.fileName)
 
         XCTAssertNil(SessionFile.read(fromContainer: container))
         XCTAssertNil(QrWidgetReveal.read(fromContainer: container))
         XCTAssertNil(QrPassSnapshot.read(fromContainer: container))
-        XCTAssertNil(LessonTimeline.read(fromContainer: container))
+        XCTAssertNil(ScheduleTimeline.read(fromContainer: container))
+        XCTAssertNil(SportTimeline.read(fromContainer: container))
     }
 
     // MARK: Files of this version
@@ -93,12 +99,21 @@ final class SnapshotReaderTests: XCTestCase {
     }
 
     func testTheScheduleTimelineReadsFromTheContainer() throws {
-        let fixture = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "schedule-widget-timeline-v1", withExtension: "json"))
+        let fixture = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "schedule-widget-timeline-v2", withExtension: "json"))
         let value = try String(contentsOf: fixture, encoding: .utf8)
-        try write(#"{"version": 1, "value": \#(value)}"#, to: "schedule-timeline-v1.json")
+        try write(#"{"version": 2, "value": \#(value)}"#, to: "schedule-timeline-v2.json")
 
-        let timeline = try XCTUnwrap(LessonTimeline.read(fromContainer: container))
-        XCTAssertEqual(timeline.entries.count, 10)
+        let timeline = try XCTUnwrap(ScheduleTimeline.read(fromContainer: container))
+        XCTAssertEqual(timeline.entries.count, 13)
+    }
+
+    func testTheSportTimelineReadsFromTheContainer() throws {
+        let fixture = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "sport-widget-timeline-v1", withExtension: "json"))
+        let value = try String(contentsOf: fixture, encoding: .utf8)
+        try write(#"{"version": 1, "value": \#(value)}"#, to: "sport-widget-v1.json")
+
+        let timeline = try XCTUnwrap(SportTimeline.read(fromContainer: container))
+        XCTAssertEqual(timeline.entries.count, 2)
     }
 
     // MARK: Container
