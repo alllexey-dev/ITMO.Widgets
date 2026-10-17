@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
 class ScheduleWidgetTimelineFixtureTest {
 
     // Host tests run in the module directory.
-    private val fixture = File("fixtures/schedule-widget-timeline-v1.json")
+    private val fixture = File("fixtures/schedule-widget-timeline-v2.json")
 
     @Test
     fun theFixtureIsWhatTheSelectorWritesAndRoundTrips() {

@@ -55,7 +55,7 @@ class ScheduleWidgetSelector {
 
     /**
      * [select] at [from] and at every later instant before [until] where its snapshot can change: lesson starts and
-     * ends, the early switch before an end, midnights. Adjacent snapshots that differ only in the `сейчас` minute merge;
+     * ends, an hour before a start (the `сейчас` line), the early switch before an end, midnights. Adjacent snapshots that differ only in the `сейчас` minute merge;
      * an entry whose day shows the line carries a [NowTick] every [TICK] for it. [days] cover the dates of [from]
      * through the day after the last instant before [until].
      */
@@ -108,8 +108,10 @@ class ScheduleWidgetSelector {
         val early = EARLY_SWITCH
         val lessons = days.flatMap { day ->
             day.lessons.flatMap { lesson ->
+                val start = instantOf(day.date, lesson.start)
                 val end = instantOf(day.date, lesson.end)
-                listOf(instantOf(day.date, lesson.start), end, end - early)
+                // The `сейчас` line appears an hour before a first lesson.
+                listOf(start, start - NOW_LEAD_MINUTES.minutes, end, end - early)
             }
         }
         val lastMidnight = until.toLocalDateTime(timeZone).date.plus(1, DateTimeUnit.DAY)

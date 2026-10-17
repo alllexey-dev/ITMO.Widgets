@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.core.storage
 
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -23,14 +22,11 @@ class WidgetSettingsPreferencesTest {
     fun `uses documented defaults`() = runTest {
         val preferences = WidgetSettingsPreferences(InMemoryPreferencesDataStore())
 
-        assertTrue(preferences.getWidgetSmartSchedulingEnabled())
-        assertEquals(LessonStyle.DOT, preferences.getSingleLessonWidgetStyle())
-        assertEquals(LessonStyle.DOT, preferences.getLessonListWidgetStyle())
         for (settings in listOf(preferences.getScheduleWidgetSettings(), preferences.observeScheduleWidgetSettings().first())) {
             assertTrue(settings.compact.showNextLessonEarly)
             assertFalse(settings.compact.hideTeacher)
             assertFalse(settings.full.hidePastLessons)
-            assertFalse(settings.full.showTomorrowWhenTodayIsOver)
+            assertTrue(settings.full.showTomorrowWhenTodayIsOver)
         }
     }
 

@@ -1,448 +1,167 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
-import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
-import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
-import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
-import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
+import dev.alllexey.itmowidgets.core.lesson.LessonChange
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineSamples.LABELS
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineSamples.ZONE
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineSamples.preferences
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineSamples.scenario
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.UtcOffset
-import kotlinx.datetime.asTimeZone
-import kotlinx.datetime.isoDayNumber
-import kotlinx.datetime.plus
+import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 
+/** The sample Monday of [SchedulePreviewScenario]: 08:20, 10:00 (moved), 11:40, 15:20 (online), 17:00 (sport). */
 class ScheduleWidgetSelectorTest {
 
     private val selector = ScheduleWidgetSelector()
+    private val days = scenario.days(LABELS)
 
     @Test
-    fun showsCurrentLessonAndSchedulesForwardSwitchBeforeItsEnd() {
-        val first = lesson(1, "09:30", "11:00", "Математика")
-        val second = lesson(2, "11:20", "12:50", "Физика")
+    fun beforeTheFirstLessonTheNextWidgetCountsDownToItAndTheDayIsPlanned() {
+        val snapshot = select("08:05")
 
-        val result = selector.select(
-            schedule = listOf(day(TODAY, first, second)),
-            now = at("10:00"),
-            timeZone = ZONE,
-            preferences = preferences(forwardScheduling = true)
-        )
+        assertEquals(NextLessonMoment.FIRST, snapshot.next.moment)
+        assertEquals(LABELS.math, snapshot.next.lesson?.subject)
+        assertEquals(at("08:20").toString(), snapshot.next.until)
+        assertNull(snapshot.next.since)
+        assertEquals(listOf(LABELS.physics, LABELS.programming), snapshot.next.rest.map { it.subject })
+        assertEquals(DaySummary(DaySummaryKind.PLANNED, lessons = 4, sport = true, from = "08:20", to = "18:30"), snapshot.day.summary)
+        assertEquals(485, snapshot.day.now)
+        assertEquals(480, snapshot.day.axisStart)
+    }
 
-        assertEquals("Математика", result.snapshot.singleLesson.lesson?.subject)
+    @Test
+    fun duringALessonTheNextWidgetShowsItWithItsProgressAndTheTwoAfterIt() {
+        val snapshot = select("12:22")
+
+        assertEquals(NextLessonMoment.NOW, snapshot.next.moment)
+        assertEquals(WidgetLessonState.NOW, snapshot.next.lesson?.state)
+        assertEquals(at("11:40").toString(), snapshot.next.since)
+        assertEquals(at("13:10").toString(), snapshot.next.until)
+        assertEquals(listOf(LABELS.english, LABELS.swimming), snapshot.next.rest.map { it.subject })
+        assertEquals("18:30", snapshot.next.lastEnd)
+        assertTrue(snapshot.isLive)
+    }
+
+    @Test
+    fun theDayWidgetPlacesTheLessonsOnTheAxisWithTheNowLineAndTheGap() {
+        val day = select("12:22").day
+
+        assertEquals(WidgetContentKind.CONTENT, day.kind)
+        assertEquals("2026-09-07", day.date)
+        assertFalse(day.tomorrow)
+        assertEquals(742, day.now)
+        assertEquals(480, day.axisStart)
+        assertEquals(18 * 60 + 35, day.axisEnd)
+        assertEquals(listOf(WidgetGap(13 * 60 + 10, 15 * 60 + 20)), day.gaps)
         assertEquals(
-            ScheduleWidgetLessonState.CURRENT,
-            result.snapshot.singleLesson.lesson?.state
+            listOf(WidgetLessonState.DONE, WidgetLessonState.DONE, WidgetLessonState.NOW, WidgetLessonState.UPCOMING, WidgetLessonState.UPCOMING),
+            day.lessons.map { it.state },
         )
-        assertEquals(1, result.snapshot.singleLesson.remainingLessons)
-        assertEquals(45.minutes, result.nextUpdateDelay)
+        assertEquals(DaySummary(DaySummaryKind.REMAINING, lessons = 2, sport = true, to = "18:30"), day.summary)
+        assertTrue(day.lessons[1].changed)
+        assertTrue(day.lessons[3].online)
+        assertNull(day.lessons[3].room)
+        assertEquals("Иванов И. И.", day.lessons[0].teacher)
     }
 
     @Test
-    fun movesToNextLessonDuringForwardWindow() {
-        val first = lesson(1, "09:30", "11:00", "Математика")
-        val second = lesson(2, "11:20", "12:50", "Физика")
+    fun inAGapOfAnHourOrMoreTheWaitIsAWindow() {
+        val next = select("13:40").next
 
-        val result = selector.select(
-            schedule = listOf(day(TODAY, first, second)),
-            now = at("10:50"),
-            timeZone = ZONE,
-            preferences = preferences(forwardScheduling = true)
-        )
-
-        assertEquals("Физика", result.snapshot.singleLesson.lesson?.subject)
-        assertEquals(
-            ScheduleWidgetLessonState.UPCOMING,
-            result.snapshot.singleLesson.lesson?.state
-        )
-        assertEquals(0, result.snapshot.singleLesson.remainingLessons)
-        assertEquals(10.minutes, result.nextUpdateDelay)
+        assertEquals(NextLessonMoment.NEXT, next.moment)
+        assertEquals(LABELS.english, next.lesson?.subject)
+        assertTrue(next.window)
+        assertEquals(listOf(LABELS.swimming), next.rest.map { it.subject })
     }
 
     @Test
-    fun showsTomorrowInListAfterTodaysLessonsFinish() {
-        val todayLesson = lesson(1, "08:20", "09:50", "История")
-        val tomorrowLesson = lesson(2, "10:00", "11:30", "Алгоритмы")
+    fun theEarlySwitchShowsTheNextLessonFifteenMinutesBeforeTheEnd() {
+        val next = select("12:56", preferences(showNextLessonEarly = true)).next
 
-        val result = selector.select(
-            schedule = listOf(
-                day(TODAY, todayLesson),
-                day(TODAY.plus(1, DateTimeUnit.DAY), tomorrowLesson)
-            ),
-            now = at("18:00"),
-            timeZone = ZONE,
-            preferences = preferences(showTomorrowWhenFinished = true)
-        )
-
-        assertEquals(
-            SingleLessonWidgetKind.NO_MORE_TODAY,
-            result.snapshot.singleLesson.kind
-        )
-        assertEquals(
-            listOf(
-                ScheduleListWidgetItemKind.HEADER,
-                ScheduleListWidgetItemKind.LESSON,
-                ScheduleListWidgetItemKind.END
-            ),
-            result.snapshot.lessonList.map(ScheduleListWidgetItem::kind)
-        )
-        assertEquals(true, result.snapshot.lessonList.first().tomorrow)
-        assertEquals("Алгоритмы", result.snapshot.lessonList[1].lesson?.subject)
+        assertEquals(NextLessonMoment.NEXT, next.moment)
+        assertEquals(LABELS.english, next.lesson?.subject)
+        assertFalse(next.window)
+        assertEquals(LABELS.programming, select("12:54", preferences(showNextLessonEarly = true)).next.lesson?.subject)
     }
 
     @Test
-    fun hidesCompletedLessonsFromDayList() {
-        val completed = lesson(1, "08:20", "09:50", "История")
-        val current = lesson(2, "10:00", "11:30", "Алгоритмы")
-        val upcoming = lesson(3, "11:40", "13:10", "Физика")
+    fun afterTheLastLessonBothWidgetsShowTomorrowWithItsQueue() {
+        val snapshot = select("19:40")
 
-        val result = selector.select(
-            schedule = listOf(day(TODAY, completed, current, upcoming)),
-            now = at("10:30"),
-            timeZone = ZONE,
-            preferences = preferences(hidePreviousLessons = true)
-        )
-
-        assertEquals(
-            listOf("Алгоритмы", "Физика"),
-            result.snapshot.lessonList.mapNotNull { it.lesson?.subject }
-        )
+        assertEquals(NextLessonMoment.TOMORROW, snapshot.next.moment)
+        assertEquals(LABELS.algorithms, snapshot.next.lesson?.subject)
+        assertNull(snapshot.next.until)
+        assertTrue(snapshot.next.todayHadLessons)
+        assertTrue(snapshot.next.rest.last().queued)
+        assertTrue(snapshot.day.tomorrow)
+        assertNull(snapshot.day.now)
+        assertEquals(DaySummaryKind.OVER, snapshot.day.summary?.kind)
+        assertFalse(snapshot.isLive)
+        // The queue has an official-only twin and holds until Android's next queue refresh.
+        assertNotNull(snapshot.officialFallback)
+        assertEquals(3, snapshot.day.lessons.size)
+        assertEquals(2, snapshot.officialFallback?.day?.lessons?.size)
     }
 
     @Test
-    fun reportsEmptyTodayAndTomorrowWithoutExposingTeacher() {
-        val result = selector.select(
-            schedule = emptyList(),
-            now = at("10:30"),
-            timeZone = ZONE,
-            preferences = preferences(
-                hideTeacher = true,
-                showTomorrowWhenFinished = true
-            )
-        )
+    fun withoutTomorrowTheDayStaysOnTodayAndHidingPastLessonsDropsThem() {
+        val evening = select("19:40", preferences(showTomorrow = false)).day
+        assertFalse(evening.tomorrow)
+        assertEquals(DaySummaryKind.OVER, evening.summary?.kind)
+        assertNull(evening.now)
 
-        assertEquals(
-            SingleLessonWidgetKind.EMPTY_TODAY,
-            result.snapshot.singleLesson.kind
-        )
-        assertEquals(
-            ScheduleListWidgetItemKind.EMPTY_TODAY_AND_TOMORROW,
-            result.snapshot.lessonList.single().kind
-        )
-        assertNull(result.snapshot.singleLesson.lesson)
+        val hidden = select("12:22", preferences(hidePastLessons = true)).day
+        assertEquals(listOf(LABELS.programming, LABELS.english, LABELS.swimming), hidden.lessons.map { it.subject })
+        assertEquals(11 * 60, hidden.axisStart)
     }
 
     @Test
-    fun usesSevenMinuteRefreshWhenSmartSchedulingIsDisabled() {
-        val result = selector.select(
-            schedule = listOf(day(TODAY, lesson(1, "08:20", "19:50", "Практика"))),
-            now = at("10:30"),
-            timeZone = ZONE,
-            preferences = preferences(smartScheduling = false)
-        )
+    fun aCancelledLessonIsNeverTheOneToGoTo() {
+        val cancelled = days.map { day ->
+            day.copy(lessons = day.lessons.map {
+                if (it.subject == LABELS.programming) it.copy(change = LessonChange(DATE.atTime(9, 0), cancelled = true)) else it
+            })
+        }
+        val snapshot = select("12:22", days = cancelled)
 
-        assertEquals(7.minutes, result.nextUpdateDelay)
+        assertEquals(LABELS.english, snapshot.next.lesson?.subject)
+        assertTrue(snapshot.day.lessons.single { it.subject == LABELS.programming }.cancelled)
     }
 
     @Test
-    fun removesTeacherAccordingToWidgetPrivacySetting() {
-        val result = selector.select(
-            schedule = listOf(
-                day(
-                    TODAY,
-                    lesson(
-                        id = 1,
-                        start = "10:00",
-                        end = "11:30",
-                        subject = "Алгоритмы",
-                        teacher = "Иванов Иван Иванович"
-                    )
-                )
-            ),
-            now = at("10:30"),
-            timeZone = ZONE,
-            preferences = preferences(hideTeacher = true)
-        )
+    fun noLessonsTodayOrTomorrowIsEmpty() {
+        val snapshot = select("12:22", days = listOf(LessonDay(DATE, emptyList(), cachedAt = null)))
 
-        assertNull(result.snapshot.singleLesson.lesson?.teacher)
-        assertNull(result.snapshot.lessonList.first().lesson?.teacher)
+        assertEquals(WidgetContentKind.EMPTY, snapshot.next.kind)
+        assertEquals(WidgetContentKind.EMPTY, snapshot.day.kind)
+        assertEquals(DaySummaryKind.NONE_TODAY, snapshot.day.summary?.kind)
     }
 
     @Test
-    fun pendingOnlyTodayAppearsInBothWidgetsWithWaitingAndPredictedMarkers() {
-        val result = selector.select(
-            schedule = emptyList(),
-            now = at("10:00"),
-            timeZone = ZONE,
-            preferences = preferences(),
-            pendingSport = listOf(
-                pending(2, "13:00", prediction = true),
-                pending(1, "11:00")
-            )
-        )
+    fun theNextUpdateIsTheNextBoundary() {
+        val selection = selector.select(days, at("12:22"), ZONE, preferences(showNextLessonEarly = true))
 
-        assertEquals(SingleLessonWidgetKind.LESSON, result.snapshot.singleLesson.kind)
-        assertEquals("Секция 1", result.snapshot.singleLesson.lesson?.subject)
-        assertEquals(ScheduleWidgetPendingStatus.WAITING, result.snapshot.singleLesson.lesson?.pendingStatus)
-        assertEquals(ScheduleWidgetLessonState.UPCOMING, result.snapshot.singleLesson.lesson?.state)
-        assertEquals(1, result.snapshot.singleLesson.remainingLessons)
-        val displayed = result.snapshot.lessonList.mapNotNull { it.lesson }
-        assertEquals(listOf("Секция 1", "Секция 2"), displayed.map { it.subject })
-        assertEquals(
-            listOf(ScheduleWidgetPendingStatus.WAITING, ScheduleWidgetPendingStatus.PREDICTED),
-            displayed.map { it.pendingStatus }
-        )
-        assertTrue(displayed.all { it.typeId == 11 && it.state == ScheduleWidgetLessonState.UPCOMING })
-        assertEquals(ScheduleListWidgetItemKind.END, result.snapshot.lessonList.last().kind)
+        assertEquals(33.minutes, selection.nextUpdateDelay)
     }
 
-    @Test
-    fun pendingOnlyTomorrowAppearsInTomorrowListWithoutBecomingTodaysNextLesson() {
-        val tomorrow = pending(1, "11:00", prediction = true, date = TODAY.plus(1, DateTimeUnit.DAY))
-        val result = selector.select(
-            schedule = emptyList(),
-            now = at("18:00"),
-            timeZone = ZONE,
-            preferences = preferences(showTomorrowWhenFinished = true),
-            pendingSport = listOf(tomorrow)
-        )
+    private fun select(time: String, preferences: ScheduleWidgetPreferences = preferences(), days: List<LessonDay> = this.days) =
+        selector.select(days, at(time), ZONE, preferences).snapshot
 
-        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, result.snapshot.singleLesson.kind)
-        assertNull(result.snapshot.singleLesson.lesson)
-        assertEquals(
-            listOf(ScheduleListWidgetItemKind.HEADER, ScheduleListWidgetItemKind.LESSON, ScheduleListWidgetItemKind.END),
-            result.snapshot.lessonList.map { it.kind }
-        )
-        assertEquals(TODAY.plus(1, DateTimeUnit.DAY).toString(), result.snapshot.lessonList.first().dateIso)
-        assertTrue(result.snapshot.lessonList.first().tomorrow)
-        assertTrue(result.snapshot.lessonList.last().tomorrow)
-        assertEquals(ScheduleWidgetPendingStatus.PREDICTED, result.snapshot.lessonList[1].lesson?.pendingStatus)
-
-        val todayOnly = selector.select(emptyList(), at("18:00"), ZONE, preferences(), listOf(tomorrow))
-        assertEquals(ScheduleListWidgetItemKind.EMPTY_TODAY, todayOnly.snapshot.lessonList.single().kind)
-    }
-
-    @Test
-    fun mixedOfficialAndPendingLessonsAreOrderedAndRespectHiddenTeachers() {
-        val result = selector.select(
-            schedule = listOf(day(
-                TODAY,
-                lesson(2, "14:00", "15:30", "Физика", "Преподаватель физики"),
-                lesson(1, "09:30", "10:30", "Математика", "Преподаватель математики")
-            )),
-            now = at("10:00"),
-            timeZone = ZONE,
-            preferences = preferences(hideTeacher = true),
-            pendingSport = listOf(pending(2, "13:00", prediction = true), pending(1, "11:00"))
-        )
-
-        assertEquals("Математика", result.snapshot.singleLesson.lesson?.subject)
-        assertEquals(3, result.snapshot.singleLesson.remainingLessons)
-        assertNull(result.snapshot.singleLesson.lesson?.teacher)
-        val displayed = result.snapshot.lessonList.mapNotNull { it.lesson }
-        assertEquals(listOf("Математика", "Секция 1", "Секция 2", "Физика"), displayed.map { it.subject })
-        assertTrue(displayed.all { it.teacher == null })
-        assertEquals(
-            listOf(null, ScheduleWidgetPendingStatus.WAITING, ScheduleWidgetPendingStatus.PREDICTED, null),
-            displayed.map { it.pendingStatus }
-        )
-    }
-
-    @Test
-    fun pendingTimesNormalizeToWidgetOffsetWhileStartedExpiredAndInvalidEntriesAreExcluded() {
-        val future = pending(1, "11:00").copy(
-            start = Instant.parse("2026-08-10T08:00:00Z"),
-            end = Instant.parse("2026-08-10T09:30:00Z"),
-            sectionName = "  Плавание  ",
-            teacherFio = "  Тестовый преподаватель  ",
-            roomName = "  Бассейн  "
-        )
-        val result = selector.select(
-            schedule = emptyList(),
-            now = at("10:00"),
-            timeZone = ZONE,
-            preferences = preferences(),
-            pendingSport = listOf(
-                future,
-                pending(2, "10:00"),
-                pending(3, "08:00"),
-                pending(4, "12:00").let { it.copy(end = it.start) },
-                pending(5, "11:00", date = TODAY.plus(2, DateTimeUnit.DAY))
-            )
-        )
-
-        val displayed = result.snapshot.lessonList.mapNotNull { it.lesson }.single()
-        assertEquals("Плавание", displayed.subject)
-        assertEquals("11:00", displayed.start)
-        assertEquals("12:30", displayed.end)
-        assertEquals("Тестовый преподаватель", displayed.teacher)
-        assertEquals("Бассейн", displayed.room)
-        assertEquals(displayed, result.snapshot.singleLesson.lesson)
-        assertEquals(0, result.snapshot.singleLesson.remainingLessons)
-    }
-
-    @Test
-    fun smartRefreshReachesPendingStartBeforeCurrentOfficialLessonEnds() {
-        val official = listOf(day(TODAY, lesson(1, "09:30", "11:30", "Математика")))
-        val waiting = pending(1, "10:05")
-        val result = selector.select(official, at("10:00"), ZONE, preferences(), listOf(waiting))
-
-        assertEquals(5.minutes, result.nextUpdateDelay)
-        assertEquals(at("10:05").toString(), result.snapshot.pendingValidUntil)
-
-        val started = selector.select(official, at("10:05"), ZONE, preferences(), listOf(waiting))
-        assertEquals(listOf("Математика"), started.snapshot.lessonList.mapNotNull { it.lesson?.subject })
-        assertNull(started.snapshot.officialFallback)
-        assertNull(started.snapshot.pendingValidUntil)
-    }
-
-    @Test
-    fun pendingReplayValidityIsCappedAtSevenMinutesOrItsEarliestStart() {
-        val now = at("10:00")
-        val later = selector.select(emptyList(), now, ZONE, preferences(), listOf(pending(1, "11:00")))
-        assertEquals((now + 7.minutes).toString(), later.snapshot.pendingValidUntil)
-
-        val sooner = selector.select(
-            emptyList(), now, ZONE, preferences(), listOf(pending(1, "11:00"), pending(2, "10:03"))
-        )
-        assertEquals((now + 3.minutes).toString(), sooner.snapshot.pendingValidUntil)
-    }
-
-    @Test
-    fun officialFallbackRestoresExactNextLessonListAndRemainingCountRatherThanFilteringPendingRows() {
-        val schedule = listOf(day(
-            TODAY,
-            lesson(2, "14:00", "15:30", "Физика"),
-            lesson(1, "12:00", "13:30", "Математика")
-        ))
-        val official = selector.select(schedule, at("10:00"), ZONE, preferences()).snapshot
-        val mixed = selector.select(
-            schedule, at("10:00"), ZONE, preferences(), listOf(pending(1, "11:00"), pending(2, "13:45"))
-        ).snapshot
-
-        assertEquals("Секция 1", mixed.singleLesson.lesson?.subject)
-        assertEquals(3, mixed.singleLesson.remainingLessons)
-        assertEquals(official, mixed.officialFallback)
-        assertEquals(official, mixed.withoutPendingSport())
-        assertEquals("Математика", mixed.withoutPendingSport().singleLesson.lesson?.subject)
-        assertEquals(1, mixed.withoutPendingSport().singleLesson.remainingLessons)
-        assertEquals(
-            listOf("Математика", "Физика"),
-            mixed.withoutPendingSport().lessonList.mapNotNull { it.lesson?.subject }
-        )
-        assertNull(official.officialFallback)
-        assertNull(official.pendingValidUntil)
-    }
-
-    @Test
-    fun pendingTeachersAndOfficialFallbackRespectEachFormatIndependently() {
-        val options = preferences().copy(display = ScheduleWidgetSettings(
-            compact = CompactScheduleWidgetSettings(hideTeacher = true),
-            full = FullScheduleWidgetSettings(hideTeacher = false)
-        ))
-        val selection = selector.select(
-            listOf(day(TODAY, lesson(1, "14:00", "15:30", "Official", "Teacher"))),
-            at("10:00"), ZONE, options, listOf(pending(1, "11:00"))
-        ).snapshot
-        assertNull(selection.singleLesson.lesson?.teacher)
-        assertTrue(selection.lessonList.mapNotNull { it.lesson }.all { it.teacher != null })
-        assertNull(selection.withoutPendingSport().singleLesson.lesson?.teacher)
-        assertEquals("Teacher", selection.withoutPendingSport().lessonList.first().lesson?.teacher)
-    }
-
-    private fun pending(
-        id: Long,
-        start: String,
-        prediction: Boolean = false,
-        date: LocalDate = TODAY,
-    ): PendingSportBooking {
-        val startsAt = LocalDateTime(date, LocalTime.parse(start)).toInstant(ZONE)
-        return PendingSportBooking(
-            queueId = id,
-            queueKind = if (prediction) PendingSportBooking.QueueKind.AUTO else PendingSportBooking.QueueKind.FREE,
-            lessonId = if (prediction) -id else id,
-            sectionName = "Секция $id",
-            start = startsAt,
-            end = startsAt + 90.minutes,
-            teacherFio = "Тестовый преподаватель",
-            roomName = "Тестовый корпус",
-            isPrediction = prediction
-        )
-    }
-
-    private fun preferences(
-        smartScheduling: Boolean = true,
-        forwardScheduling: Boolean = false,
-        hideTeacher: Boolean = false,
-        hidePreviousLessons: Boolean = false,
-        showTomorrowWhenFinished: Boolean = false,
-    ) = ScheduleWidgetPreferences(
-        smartScheduling = smartScheduling,
-        display = ScheduleWidgetSettings(
-            compact = CompactScheduleWidgetSettings(forwardScheduling, hideTeacher),
-            full = FullScheduleWidgetSettings(hideTeacher, hidePreviousLessons, showTomorrowWhenFinished)
-        ),
-        singleLessonStyle = LessonStyle.DOT,
-        lessonListStyle = LessonStyle.DOT
-    )
-
-    private fun at(time: String): Instant = LocalDateTime(TODAY, LocalTime.parse(time)).toInstant(ZONE)
-
-    private fun day(date: LocalDate, vararg lessons: Lesson): DaySchedule {
-        return DaySchedule(
-            dayNumber = date.dayOfWeek.isoDayNumber,
-            weekNumber = 1,
-            date = date,
-            note = null,
-            lessons = lessons.toList()
-        )
-    }
-
-    private fun lesson(
-        id: Long,
-        start: String,
-        end: String,
-        subject: String,
-        teacher: String? = null,
-    ): Lesson {
-        return Lesson(
-            pairId = id,
-            start = LocalTime.parse(start),
-            end = LocalTime.parse(end),
-            type = "Лекция",
-            typeId = Lesson.TypeId(1),
-            note = null,
-            subjectName = subject,
-            subjectId = id,
-            groupName = "M0000",
-            flowId = id,
-            flowTypeId = 2,
-            teacherIsu = null,
-            teacherFio = teacher,
-            room = null,
-            building = null,
-            buildingId = null,
-            mainBuildingId = null,
-            format = "Очно",
-            formatId = 1,
-            zoomUrl = null,
-            zoomPassword = null,
-            zoomInfo = null
-        )
+    private fun at(time: String): Instant {
+        val (hour, minute) = time.split(":").map(String::toInt)
+        return DATE.atTime(hour, minute).toInstant(ZONE)
     }
 
     private companion object {
-        val TODAY: LocalDate = LocalDate(2026, 8, 10)
-        val ZONE = UtcOffset(hours = 3).asTimeZone()
+        val DATE = LocalDate(2026, 9, 7)
     }
 }
