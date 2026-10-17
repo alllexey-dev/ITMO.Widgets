@@ -138,8 +138,8 @@ object UserProfileTestTags {
  * The person card (DECISIONS.md, Карточка человека), one for any ISU: a skeleton until the parts settle,
  * `Профиль не найден` without an action, `Не удалось загрузить` with the reason and `Повторить`, or the card. The card
  * is a lazy list with stable keys: the centred header (avatar, full name, roles, ISU with copy, up to two full-width
- * buttons, the filled one first), then "Преподавание" (teaches you, where to find, the AI summary and the reviews) and
- * "Учёба" (the groups, then what the viewer may open), in the order the state gives, and `Удалить из друзей` last.
+ * buttons, the filled one first), then `Преподавание` (teaches you, where to find, the AI summary and the reviews) and
+ * `Учёба` (the groups, then what the viewer may open), in the order the state gives, and `Удалить из друзей` last.
  * Someone else's hidden data is simply absent. Stateless; the route feeds it.
  */
 @Composable
@@ -352,7 +352,7 @@ private fun CardAction.icon(): DrawableResource = when (this) {
     CardAction.INVITE -> Res.drawable.ic_share
 }
 
-/** "Преподавание": the subjects they teach the viewer and where to find them, then the reviews with their summary. */
+/** `Преподавание`: the subjects they teach the viewer and where to find them, then the reviews with their summary. */
 private fun LazyListScope.teaching(state: UserProfileUiState.Content, actions: UserProfileActions) {
     val block: TeachingBlock = state.teaching ?: return
     item(key = "teaching:title", contentType = "title") {
@@ -439,7 +439,7 @@ private fun LazyListScope.reviews(reviews: ProfileReviews, actions: UserProfileA
     }
 }
 
-/** "Учёба": the groups, then the schedule, sport and friends the viewer may open. */
+/** `Учёба`: the groups, then the schedule, sport and friends the viewer may open. */
 private fun LazyListScope.study(block: StudyBlock?, actions: UserProfileActions) {
     if (block == null) return
     item(key = "study:title", contentType = "title") {

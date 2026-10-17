@@ -364,5 +364,5 @@ private inline fun <reified VM : ViewModel> entryViewModel(): VM {
 /** The privacy page of the settings (`SettingsPage.PRIVACY`), as the Me tab opens it. */
 private const val PRIVACY_PAGE = "PRIVACY"
 
-/** `SettingsPage.SERVICES`: the connection to ITMO.Widgets, until "Подключение и данные" has its own page. */
+/** `SettingsPage.SERVICES`: the connection to ITMO.Widgets, until `Подключение и данные` has its own page. */
 private const val SERVICES_PAGE = "SERVICES"

@@ -46,7 +46,7 @@ val socialModule = module {
 
     viewModelOf(::FriendsViewModel)
     viewModelOf(::UserFriendsViewModel)
-    // The teacher timetable (`TeacherNowGateway`) is optional: without its binding the card shows no "Сейчас ведёт".
+    // The teacher timetable (`TeacherNowGateway`) is optional: without its binding the card shows no `Сейчас ведёт`.
     viewModel {
         UserProfileViewModel(get(), get(), get(), get(), get(), get(), getOrNull())
     }

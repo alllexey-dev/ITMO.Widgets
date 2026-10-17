@@ -51,7 +51,7 @@ class UserProfileViewModel(
     private val reviews: TeacherReviewsRepository,
     private val currentUserProvider: CurrentUserProvider,
     private val lessons: TeacherLessonsGateway,
-    /** MyITMO's teacher timetable; null until the app binds one, and the card shows no "Сейчас ведёт" then. */
+    /** MyITMO's teacher timetable; null until the app binds one, and the card shows no `Сейчас ведёт` then. */
     private val teacherNow: TeacherNowGateway? = null,
 ) : ViewModel() {
 

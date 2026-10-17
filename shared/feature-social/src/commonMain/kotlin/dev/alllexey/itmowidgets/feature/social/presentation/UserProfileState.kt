@@ -44,24 +44,24 @@ enum class ProfileRoleKind { POSITION, STUDY, FRIEND, OWN }
 
 data class ProfileRole(val kind: ProfileRoleKind, val text: UiText)
 
-/** One row with a title and a quieter line: a room in "Где найти", a study group in "Учёба". */
+/** One row with a title and a quieter line: a room in `Где найти`, a study group in `Учёба`. */
 data class ProfileLine(val title: UiText, val detail: String?)
 
 /**
- * "Сейчас ведёт": the teacher's lesson now, or else their next one today, from MyITMO's teacher timetable. [heading]
+ * `Сейчас ведёт`: the teacher's lesson now, or else their next one today, from MyITMO's teacher timetable. [heading]
  * says which (`Сейчас ведёт пару до 13:10`), [place] is the room and building or `Онлайн`, [lesson] the subject with
  * the type and the groups (`Алгоритмы, практика у M3207`).
  */
 data class TeacherNowLine(val heading: UiText, val place: UiText, val lesson: UiText, val isNow: Boolean)
 
 /**
- * "Преподавание": the lesson they give now ([now]), what the viewer's own lessons say the person teaches them
+ * `Преподавание`: the lesson they give now ([now]), what the viewer's own lessons say the person teaches them
  * ([subjects], newest first) and where to find them; the reviews follow under it on the screen
  * ([UserProfileUiState.Content.reviews]).
  */
 data class TeachingBlock(val subjects: List<String>, val rooms: List<ProfileLine>, val now: TeacherNowLine? = null)
 
-/** "Учёба": the groups, then the rows Backend lets the viewer open. */
+/** `Учёба`: the groups, then the rows Backend lets the viewer open. */
 data class StudyBlock(val groups: List<ProfileLine>, val schedule: Boolean, val sport: Boolean, val friends: Boolean)
 
 sealed interface UserProfileUiState {
@@ -70,7 +70,7 @@ sealed interface UserProfileUiState {
 
     /**
      * The person card (docs/features/social.md § Person profile): the centred header with [roles] and up to two
-     * [actions], then "Преподавание" and "Учёба", each only with data, in the order of [teachingFirst], and
+     * [actions], then `Преподавание` and `Учёба`, each only with data, in the order of [teachingFirst], and
      * `Удалить из друзей` last when [canRemoveFriend].
      */
     data class Content(
