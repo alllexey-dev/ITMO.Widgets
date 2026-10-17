@@ -87,18 +87,26 @@ final class ShellUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
 
+        // A friend's sport is the Compose route left on the profile stack: Друзья, Иван's card, his sport.
         app.selectTab("me")
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
-        element(app, "find_people_row").tap()
-        let search = element(app, "social.search")
-        XCTAssertTrue(search.waitForExistence(timeout: stepTimeout))
+        element(app, "friends_row").tap()
+        let friend = element(app, "user_list_row_999002")
+        XCTAssertTrue(friend.waitForExistence(timeout: stepTimeout))
+        friend.tap()
+        let sportRow = element(app, "user_profile_sport")
+        XCTAssertTrue(sportRow.waitForExistence(timeout: stepTimeout))
+        if !sportRow.isHittable { element(app, "user_profile_list").swipeUp() }
+        sportRow.tap()
+        let sport = element(app, "sport.user")
+        XCTAssertTrue(sport.waitForExistence(timeout: stepTimeout))
         XCTAssertFalse(app.navigationBars.firstMatch.exists, "a compose route hides the navigation bar")
 
         let edge = app.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
         edge.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
 
-        XCTAssertTrue(search.waitForNonExistence(timeout: stepTimeout), "the edge swipe did not go back")
-        XCTAssertTrue(element(app, "shell.root.me").exists)
+        XCTAssertTrue(sport.waitForNonExistence(timeout: stepTimeout), "the edge swipe did not go back")
+        XCTAssertTrue(element(app, "social.profile").exists)
     }
 
     func testRouteWaitsForSignIn() throws {

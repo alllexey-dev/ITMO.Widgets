@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
-import dev.alllexey.itmowidgets.feature.me.ui.preview.MePreviewData
+import dev.alllexey.itmowidgets.feature.me.ui.preview.MeSamples
 
 /*
  * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named `MeScreen_<state>` and
@@ -17,32 +17,26 @@ private fun MePreview(state: MeUiState) = ItmoPreview {
     MeScreen(state, showDebugTools = true, actions = MeActions())
 }
 
-internal class MeScreenGroupRequestsPreview {
-    @Preview(name = "group-requests")
+internal class MeScreenRequestsPreview {
+    @Preview(name = "requests", heightDp = 1200)
     @Composable
-    fun MeScreen() = MePreview(MePreviewData.GroupAndRequests)
+    fun MeScreen() = MePreview(MeSamples.state(connection = "on", requests = "yes"))
 }
 
-internal class MeScreenServicesOffPreview {
-    @Preview(name = "services-off")
+internal class MeScreenNoRequestsPreview {
+    @Preview(name = "no-requests", heightDp = 1200)
     @Composable
-    fun MeScreen() = MePreview(MePreviewData.ServicesOff)
+    fun MeScreen() = MePreview(MeSamples.state(connection = "on", requests = "no"))
 }
 
-internal class MeScreenFriendsLoadingPreview {
-    @Preview(name = "friends-loading")
+internal class MeScreenNotConnectedPreview {
+    @Preview(name = "not-connected", heightDp = 1300)
     @Composable
-    fun MeScreen() = MePreview(MePreviewData.FriendsLoading)
-}
-
-internal class MeScreenFriendsErrorPreview {
-    @Preview(name = "friends-error")
-    @Composable
-    fun MeScreen() = MePreview(MePreviewData.FriendsError)
+    fun MeScreen() = MePreview(MeSamples.state(connection = "off"))
 }
 
 internal class MeScreenLongNamePreview {
     @Preview(name = "long-name")
     @Composable
-    fun MeScreen() = MePreview(MePreviewData.LongName)
+    fun MeScreen() = MePreview(MeSamples.longName)
 }

@@ -102,7 +102,7 @@ struct ShellStack: View {
         }
     }
 
-    /// The tab's root: the SwiftUI today and recordbook, the Compose schedule, sport tab and profile.
+    /// The tab's root, each a SwiftUI screen over its shared ViewModels.
     @ViewBuilder
     private var root: some View {
         switch tab {

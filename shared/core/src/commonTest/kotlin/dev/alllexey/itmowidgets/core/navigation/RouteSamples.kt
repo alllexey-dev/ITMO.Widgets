@@ -27,7 +27,6 @@ object RouteSamples {
         AppRoutes.RecordbookSubject(subject),
         AppRoutes.Friends,
         AppRoutes.UserFriends(100001, "Тестовый Пользователь"),
-        AppRoutes.UserSearch,
         AppRoutes.UserProfile(100001),
         AppRoutes.UserSchedule(100001, "Тестовый Пользователь"),
         AppRoutes.UserSport(100001),

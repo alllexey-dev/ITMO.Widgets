@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
+import dev.alllexey.itmowidgets.feature.social.presentation.CardAction
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
@@ -51,7 +52,9 @@ class UserProfileExits(
     val onFriends: (UserProfileUiState.Content) -> Unit = {},
     val onSchedule: (UserProfileUiState.Content) -> Unit = {},
     val onSport: (UserProfileUiState.Content) -> Unit = {},
-    /** `Написать` and the own review's `Изменить`: the editor for this teacher. */
+    /** `Пригласить в ITMO.Widgets`: shares the invitation. */
+    val onInvite: () -> Unit = {},
+    /** `Написать отзыв` and the own review's `Изменить`: the editor for this teacher. */
     val onReviewEditor: (UserProfileUiState.Content) -> Unit = {},
     val onReport: (UserProfileUiState.Content, reviewId: String) -> Unit = { _, _ -> },
     /** A review author's name. */
@@ -63,16 +66,11 @@ class UserProfileExits(
 /**
  * The person profile with its Koin ViewModel, which reads the ISU from the destination's arguments. A page with a part
  * that failed shows the single `Часть данных не загрузилась` snackbar with `Повторить`; a failed action shows a
- * snackbar of its own. Removing a friend and deleting the own review ask in a dialog first. [reviewsEnabled] is always
- * on for Android; the iOS host feeds it from its platform capabilities. Android hosts it in the Compose shell; the
- * iOS shell hosts the same route.
+ * snackbar of its own. Removing a friend and deleting the own review ask in a dialog first. Android hosts it in the
+ * Compose shell; iOS draws the same ViewModel in SwiftUI.
  */
 @Composable
-fun UserProfileRoute(
-    exits: UserProfileExits,
-    reviewsEnabled: Boolean = true,
-    viewModel: UserProfileViewModel = koinViewModel(),
-) {
+fun UserProfileRoute(exits: UserProfileExits, viewModel: UserProfileViewModel = koinViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
     var pendingRemoval by remember { mutableStateOf<UiText?>(null) }
@@ -114,14 +112,17 @@ fun UserProfileRoute(
         onShare = { withPage(exits.onShare) },
         onRetry = { viewModel.refresh(RefreshMode.Force) },
         onCopyIsu = exits.onCopyIsu,
-        onPrimaryAction = viewModel::onPrimaryAction,
-        onSecondaryAction = viewModel::onSecondaryAction,
-        // For a friend the primary action is the removal, which the ViewModel confirms first.
-        onRemoveFriend = viewModel::onPrimaryAction,
+        onAction = { action ->
+            when (action) {
+                CardAction.WRITE_REVIEW -> withPage(exits.onReviewEditor)
+                CardAction.INVITE -> exits.onInvite()
+                else -> viewModel.onAction(action)
+            }
+        },
+        onRemoveFriend = viewModel::requestRemoveFriend,
         onFriends = { withPage(exits.onFriends) },
         onSchedule = { withPage(exits.onSchedule) },
         onSport = { withPage(exits.onSport) },
-        onWriteReview = { withPage(exits.onReviewEditor) },
         onToggleSummary = viewModel::toggleSummaryScales,
         review = TeacherReviewActions(
             onVote = viewModel::vote,
@@ -136,7 +137,6 @@ fun UserProfileRoute(
     UserProfileScreen(
         state = state,
         actions = actions,
-        reviewsEnabled = reviewsEnabled,
         snackbarHostState = snackbars,
     )
 

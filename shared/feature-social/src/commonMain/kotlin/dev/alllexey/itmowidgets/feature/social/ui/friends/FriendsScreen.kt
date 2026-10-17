@@ -1,304 +1,257 @@
 package dev.alllexey.itmowidgets.feature.social.ui.friends
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Badge
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
-import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
+import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
+import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
-import dev.alllexey.itmowidgets.designsystem.components.state.Skeleton
-import dev.alllexey.itmowidgets.designsystem.components.state.SkeletonStyle
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateActionStyle
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
+import dev.alllexey.itmowidgets.designsystem.kit.GateCard
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
+import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
+import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.SearchField
+import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.social.presentation.FriendsEmpty
-import dev.alllexey.itmowidgets.feature.social.presentation.FriendsEvent
-import dev.alllexey.itmowidgets.feature.social.presentation.FriendsTab
+import dev.alllexey.itmowidgets.feature.social.presentation.FriendLists
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsUiState
+import dev.alllexey.itmowidgets.feature.social.presentation.PeopleSearchResults
 import dev.alllexey.itmowidgets.feature.social.presentation.UserAction
 import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
-import dev.alllexey.itmowidgets.feature.social.ui.list.UserList
 import dev.alllexey.itmowidgets.feature.social.ui.list.UserListTestTags
-import dev.alllexey.itmowidgets.shared.compose.strings.common_back
-import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
-import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
-import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_title
-import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
+import dev.alllexey.itmowidgets.feature.social.ui.text
+import dev.alllexey.itmowidgets.feature.social.ui.list.personGroup
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
+import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
-import dev.alllexey.itmowidgets.shared.designsystem.ic_how_to_reg
-import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import dev.alllexey.itmowidgets.shared.designsystem.ic_search
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.friends_disabled_description
-import dev.alllexey.itmowidgets.shared.feature.social.friends_disabled_title
-import dev.alllexey.itmowidgets.shared.feature.social.friends_empty_description
-import dev.alllexey.itmowidgets.shared.feature.social.friends_empty_title
-import dev.alllexey.itmowidgets.shared.feature.social.friends_find_people
-import dev.alllexey.itmowidgets.shared.feature.social.friends_remove_confirm_message
-import dev.alllexey.itmowidgets.shared.feature.social.friends_remove_confirm_title
-import dev.alllexey.itmowidgets.shared.feature.social.friends_requests_empty_title
-import dev.alllexey.itmowidgets.shared.feature.social.friends_tab_friends
-import dev.alllexey.itmowidgets.shared.feature.social.friends_tab_requests
-import dev.alllexey.itmowidgets.shared.feature.social.friends_title
-import dev.alllexey.itmowidgets.shared.feature.social.user_action_remove
+import dev.alllexey.itmowidgets.shared.designsystem.ic_share
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
-/** Test tags of [FriendsScreen]; the list and its rows carry [UserListTestTags]. */
+/** What Друзья asks of its route and host. */
+class FriendsActions(
+    val onBack: () -> Unit = {},
+    val onQueryChange: (String) -> Unit = {},
+    val onRefresh: () -> Unit = {},
+    val onRetry: () -> Unit = {},
+    val onRetrySearch: () -> Unit = {},
+    val onLoadMore: () -> Unit = {},
+    val onAction: (UserRowUi, UserAction) -> Unit = { _, _ -> },
+    val onOpenProfile: (Int) -> Unit = {},
+    /** The gate's `Подключить`: the connection settings. */
+    val onConnect: () -> Unit = {},
+    /** `Поделиться профилем` with the viewer's name and ISU. */
+    val onShareProfile: (name: String, isu: Int) -> Unit = { _, _ -> },
+)
+
 object FriendsTestTags {
-    const val LOADING = "friends_loading"
-
-    /** The empty, disabled or error state in the list's place. */
+    const val LIST = "friends_list"
+    const val SEARCH = "friends_search"
+    const val SHARE = "friends_share"
+    const val GATE = "friends_gate"
     const val STATE = "friends_state"
-    const val TABS = "friends_tabs"
-    const val BADGE = "friends_requests_badge"
-
-    fun tab(tab: FriendsTab): String = "friends_tab_${tab.name.lowercase()}"
 }
 
 /**
- * The viewer's own friends and requests. `Друзья` lists friends with a remove button, `Заявки` the incoming requests
- * (accept, reject) over the outgoing ones (cancel), and carries the count of incoming requests in a badge beside its
- * label. A row in flight keeps its buttons inert; failed actions go to [snackbarHostState]. Removing asks first: while
- * [pendingRemoval] is set the screen shows the confirmation, which answers through [onConfirmRemoval] or
- * [onDismissRemoval].
- *
- * The first load shows list placeholders; afterwards a reload keeps the list and only a pull shows the indicator.
- * An empty tab says so (`Друзья` with a way to people search), disabled services offer the settings and an error a
- * retry. Stateless apart from the list kept over a reload; [FriendsRoute] feeds it.
+ * Друзья (DECISIONS.md): the search field on top; under it the incoming requests with `Принять` and `Отклонить` in the
+ * row, the sent ones with `Отменить`, then the friends, who open their card (removing a friend lives there), and
+ * `Поделиться профилем`. A typed query shows the people found in place of the lists. Without the connection the gate
+ * says why; an empty screen leads to the search and the link. Stateless; [FriendsRoute] feeds it.
  */
 @Composable
 fun FriendsScreen(
     state: FriendsUiState,
-    onSelectTab: (FriendsTab) -> Unit,
-    onRefresh: () -> Unit,
-    onRetry: () -> Unit,
-    onAction: (UserRowUi, UserAction) -> Unit,
-    onOpenProfile: (Int) -> Unit,
-    onOpenSearch: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onBack: () -> Unit,
+    actions: FriendsActions,
     modifier: Modifier = Modifier,
-    pendingRemoval: FriendsEvent.ConfirmRemove? = null,
-    onConfirmRemoval: (Int) -> Unit = {},
-    onDismissRemoval: () -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val shown = rememberShownState(state)
-    Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
-        Column(Modifier.fillMaxSize()) {
-            AppTopBar(
-                title = stringResource(Res.string.friends_title),
-                navigation = {
-                    AppTopBarAction(
-                        painterResource(KitRes.drawable.ic_arrow_back),
-                        stringResource(CoreRes.string.common_back),
-                        onClick = onBack,
+    val lists = state.lists
+    ItmoDetailScreen(
+        title = text(SocialStrings.friends_title),
+        onBack = actions.onBack,
+        backLabel = text(CoreStrings.common_back),
+        modifier = modifier,
+        subtitle = (lists as? FriendLists.Content)?.subtitle?.asString(),
+    ) { padding ->
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            if (lists == FriendLists.Disabled) {
+                Column(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
+                    GateCard(
+                        title = text(SocialStrings.friends_disabled_title),
+                        reason = text(SocialStrings.friends_disabled_description),
+                        fix = text(SocialStrings.friends_connect),
+                        onFix = actions.onConnect,
+                        modifier = Modifier.testTag(FriendsTestTags.GATE),
+                        icon = painterResource(Res.drawable.ic_group),
                     )
-                },
-                actions = {
-                    AppTopBarAction(
-                        painterResource(KitRes.drawable.ic_search),
-                        stringResource(Res.string.friends_find_people),
-                        onClick = onOpenSearch,
-                    )
-                },
+                }
+            } else {
+                val refreshing = (lists as? FriendLists.Content)?.refreshing == true
+                AppRefreshBox(refreshing, actions.onRefresh, Modifier.fillMaxSize()) {
+                    Body(state, actions)
+                }
+            }
+            SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
+        }
+    }
+}
+
+@Composable
+private fun Body(state: FriendsUiState, actions: FriendsActions) {
+    val open = { row: UserRowUi -> actions.onOpenProfile(row.isu) }
+    LazyColumn(
+        Modifier.fillMaxSize().testTag(FriendsTestTags.LIST),
+        contentPadding = PaddingValues(
+            start = ItmoTheme.spacing.screenMargin,
+            end = ItmoTheme.spacing.screenMargin,
+            bottom = ItmoTheme.spacing.section,
+        ),
+        verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+    ) {
+        item(key = "search", contentType = "search") {
+            SearchField(
+                query = state.query,
+                onQueryChange = actions.onQueryChange,
+                placeholder = text(SocialStrings.user_search_hint),
+                clearLabel = text(SocialStrings.user_search_clear),
+                modifier = Modifier.testTag(FriendsTestTags.SEARCH),
             )
-            if (shown is FriendsUiState.Content) FriendsTabs(shown.tab, shown.incomingCount, onSelectTab)
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                FriendsBody(shown, onRefresh, onRetry, onAction, onOpenProfile, onOpenSearch, onOpenSettings)
+        }
+        val search = state.search
+        if (search != null) {
+            searchResults(search, actions, open)
+        } else {
+            lists(state, actions, open)
+        }
+    }
+}
+
+private fun LazyListScope.searchResults(search: PeopleSearchResults, actions: FriendsActions, open: (UserRowUi) -> Unit) {
+    when (search) {
+        PeopleSearchResults.Loading -> item(key = "search:loading") { ContentStateLoading(size = ContentStateSize.Compact) }
+        PeopleSearchResults.Empty -> item(key = "search:empty") {
+            ContentState(
+                title = text(SocialStrings.user_search_empty_title),
+                modifier = Modifier.testTag(FriendsTestTags.STATE),
+                size = ContentStateSize.Compact,
+                icon = painterResource(Res.drawable.ic_search),
+            )
+        }
+        is PeopleSearchResults.Error -> item(key = "search:error") {
+            ContentState(
+                title = text(CoreStrings.common_load_error_title),
+                modifier = Modifier.testTag(FriendsTestTags.STATE),
+                size = ContentStateSize.Compact,
+                icon = painterResource(Res.drawable.ic_error),
+                description = search.error.toUiText().asString(),
+                action = ContentStateAction(text(CoreStrings.common_retry), actions.onRetrySearch),
+            )
+        }
+        is PeopleSearchResults.Content -> {
+            personGroup("registered", search.registered, open, actions.onAction, UiText.Res(SocialStrings.user_search_section_registered))
+            personGroup("others", search.others, open, actions.onAction, UiText.Res(SocialStrings.user_search_section_others))
+            if (search.offersMore || search.loadingMore) {
+                item(key = "search:more") {
+                    ProgressButton(
+                        label = text(SocialStrings.user_search_load_more),
+                        onClick = actions.onLoadMore,
+                        modifier = Modifier.fillMaxWidth().testTag(UserListTestTags.LOAD_MORE),
+                        inProgress = search.loadingMore,
+                        style = ProgressButtonStyle.Text,
+                    )
+                }
             }
         }
-        SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
-    }
-    pendingRemoval?.let { removal -> RemoveConfirmation(removal, onConfirmRemoval, onDismissRemoval) }
-}
-
-/** The list on screen stays while the repository reloads; only an empty screen shows the placeholders. */
-@Composable
-private fun rememberShownState(state: FriendsUiState): FriendsUiState {
-    var kept by remember { mutableStateOf<FriendsUiState.Content?>(null) }
-    return when (state) {
-        is FriendsUiState.Content -> state.also { kept = it }
-        FriendsUiState.Loading -> kept ?: state
-        else -> state.also { kept = null }
     }
 }
 
-/** `TabLayout` in fixed mode inside the 16 dp margins; the badge sits beside «Заявки», never over it. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FriendsTabs(selected: FriendsTab, incomingCount: Int, onSelectTab: (FriendsTab) -> Unit) {
-    PrimaryTabRow(
-        selectedTabIndex = selected.ordinal,
-        modifier = Modifier.padding(horizontal = ItmoTheme.spacing.group).testTag(FriendsTestTags.TABS),
-        containerColor = ItmoTheme.colorScheme.surface,
-        indicator = {
-            TabRowDefaults.PrimaryIndicator(
-                Modifier.tabIndicatorOffset(selected.ordinal, matchContentSize = true),
-                width = Dp.Unspecified,
-            )
-        },
-    ) {
-        FriendsTab.entries.forEach { tab ->
-            Tab(
-                selected = tab == selected,
-                onClick = { onSelectTab(tab) },
-                modifier = Modifier.testTag(FriendsTestTags.tab(tab)),
-                selectedContentColor = ItmoTheme.colorScheme.primary,
-                unselectedContentColor = ItmoTheme.colorScheme.onSurfaceVariant,
-                text = { TabLabel(tab, if (tab == FriendsTab.REQUESTS) incomingCount else 0) },
+private fun LazyListScope.lists(state: FriendsUiState, actions: FriendsActions, open: (UserRowUi) -> Unit) {
+    when (val lists = state.lists) {
+        FriendLists.Loading, FriendLists.Disabled -> item(key = "loading") { ContentStateLoading(size = ContentStateSize.Compact) }
+        is FriendLists.Error -> item(key = "error") {
+            ContentState(
+                title = text(CoreStrings.common_load_error_title),
+                modifier = Modifier.testTag(FriendsTestTags.STATE),
+                size = ContentStateSize.Compact,
+                icon = painterResource(Res.drawable.ic_error),
+                description = lists.error.toUiText().asString(),
+                action = ContentStateAction(text(CoreStrings.common_retry), actions.onRetry),
             )
         }
-    }
-}
-
-@Composable
-private fun TabLabel(tab: FriendsTab, badgeCount: Int) {
-    val label = stringResource(
-        when (tab) {
-            FriendsTab.FRIENDS -> Res.string.friends_tab_friends
-            FriendsTab.REQUESTS -> Res.string.friends_tab_requests
-        },
-    )
-    if (badgeCount <= 0) {
-        Text(label)
-        return
-    }
-    val count = badgeCount.badgeText()
-    Layout(
-        content = {
-            Text(label)
-            Badge(Modifier.testTag(FriendsTestTags.BADGE).semantics { contentDescription = count }) { Text(count) }
-        },
-    ) { measurables, constraints ->
-        val text = measurables[0].measure(constraints)
-        val badge = measurables[1].measure(Constraints())
-        // The label keeps its own size, so it stays centred in the tab; the badge hangs off its end, raised above
-        // the line like `BadgeDrawable` with `horizontalOffsetWithText = 0`.
-        layout(text.width, text.height) {
-            text.place(0, 0)
-            badge.place(text.width, -BadgeRaise.roundToPx())
-        }
-    }
-}
-
-/** `BadgeDrawable`'s default cap of four characters: up to 999, then `999+`. */
-private fun Int.badgeText(): String = if (this > MAX_BADGE_NUMBER) "$MAX_BADGE_NUMBER+" else toString()
-
-@Composable
-private fun FriendsBody(
-    state: FriendsUiState,
-    onRefresh: () -> Unit,
-    onRetry: () -> Unit,
-    onAction: (UserRowUi, UserAction) -> Unit,
-    onOpenProfile: (Int) -> Unit,
-    onOpenSearch: () -> Unit,
-    onOpenSettings: () -> Unit,
-) {
-    when (state) {
-        FriendsUiState.Loading ->
-            Skeleton(SkeletonStyle.List, Modifier.fillMaxSize().testTag(FriendsTestTags.LOADING))
-        FriendsUiState.Disabled -> FriendsState(
-            painterResource(KitRes.drawable.ic_lock),
-            stringResource(Res.string.friends_disabled_title),
-            stringResource(Res.string.friends_disabled_description),
-            ContentStateAction(stringResource(CoreRes.string.settings_title), onOpenSettings),
-        )
-        is FriendsUiState.Error -> FriendsState(
-            painterResource(KitRes.drawable.ic_error),
-            stringResource(CoreRes.string.common_load_error_title),
-            state.error.toUiText().asString(),
-            ContentStateAction(stringResource(CoreRes.string.common_retry), onRetry),
-        )
-        is FriendsUiState.Content -> when (state.empty) {
-            FriendsEmpty.NO_FRIENDS -> FriendsState(
-                painterResource(KitRes.drawable.ic_group),
-                stringResource(Res.string.friends_empty_title),
-                stringResource(Res.string.friends_empty_description),
-                ContentStateAction(stringResource(Res.string.friends_find_people), onOpenSearch),
-            )
-            FriendsEmpty.NO_REQUESTS -> FriendsState(
-                painterResource(KitRes.drawable.ic_how_to_reg),
-                stringResource(Res.string.friends_requests_empty_title),
-            )
-            null -> AppRefreshBox(state.refreshing, onRefresh, Modifier.fillMaxSize()) {
-                UserList(
-                    state.items,
-                    onOpen = { onOpenProfile(it.isu) },
-                    modifier = Modifier.fillMaxSize(),
-                    onAction = onAction,
+        is FriendLists.Content -> if (lists.isEmpty) {
+            item(key = "empty") {
+                val viewer = state.viewer
+                ContentState(
+                    title = text(SocialStrings.friends_empty_title),
+                    modifier = Modifier.testTag(FriendsTestTags.STATE),
+                    size = ContentStateSize.Compact,
+                    icon = painterResource(Res.drawable.ic_group),
+                    description = text(SocialStrings.friends_empty_description),
+                    action = viewer?.let {
+                        ContentStateAction(
+                            text(SocialStrings.friends_share_title),
+                            { actions.onShareProfile(it.name, it.isu) },
+                            ContentStateActionStyle.Filled,
+                        )
+                    },
                 )
             }
+        } else {
+            personGroup(
+                "requests",
+                lists.incoming + lists.outgoing,
+                open,
+                actions.onAction,
+                UiText.Res(SocialStrings.friends_tab_requests),
+            )
+            personGroup(
+                "friends",
+                lists.friends,
+                open,
+                actions.onAction,
+                UiText.Res(SocialStrings.friends_tab_friends),
+                count = lists.friends.size.toString(),
+            )
+            state.viewer?.let { viewer ->
+                item(key = "share") {
+                    ListGroup(Modifier.padding(top = ItmoTheme.spacing.content)) {
+                        item {
+                            ListRow(
+                                text(SocialStrings.friends_share_title),
+                                Modifier.testTag(FriendsTestTags.SHARE),
+                                subtitle = text(SocialStrings.friends_share_subtitle),
+                                icon = painterResource(Res.drawable.ic_share),
+                                iconTone = Tone.Primary,
+                                chevron = true,
+                                onClick = { actions.onShareProfile(viewer.name, viewer.isu) },
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
-
-@Composable
-private fun FriendsState(
-    icon: Painter,
-    title: String,
-    description: String? = null,
-    action: ContentStateAction? = null,
-) {
-    ContentState(
-        title = title,
-        modifier = Modifier.fillMaxSize().testTag(FriendsTestTags.STATE),
-        icon = icon,
-        description = description,
-        action = action,
-    )
-}
-
-@Composable
-private fun RemoveConfirmation(
-    removal: FriendsEvent.ConfirmRemove,
-    onConfirm: (Int) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    ConfirmDialog(
-        title = stringResource(Res.string.friends_remove_confirm_title),
-        confirmLabel = stringResource(Res.string.user_action_remove),
-        dismissLabel = stringResource(CoreRes.string.common_cancel),
-        onConfirm = { onConfirm(removal.isu) },
-        onDismiss = onDismiss,
-        text = stringResource(Res.string.friends_remove_confirm_message, removal.name.asString()),
-        destructive = true,
-    )
-}
-
-private const val MAX_BADGE_NUMBER = 999
-private val BadgeRaise: Dp = 4.dp

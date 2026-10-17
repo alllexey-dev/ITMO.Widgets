@@ -88,7 +88,6 @@ object IosRoutes {
         AppRoutes.SheetScores::class to RouteFeature.RECORDBOOK,
         AppRoutes.Friends::class to RouteFeature.SOCIAL,
         AppRoutes.UserFriends::class to RouteFeature.SOCIAL,
-        AppRoutes.UserSearch::class to RouteFeature.SOCIAL,
         AppRoutes.UserProfile::class to RouteFeature.SOCIAL,
         AppRoutes.UserSchedule::class to RouteFeature.SCHEDULE,
         AppRoutes.Bell::class to RouteFeature.HOME,
