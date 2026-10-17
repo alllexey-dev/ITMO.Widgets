@@ -273,7 +273,6 @@ private struct WebLoginConfirm: View {
     let confirm: WebLoginUiStateConfirm
     let actions: WebLoginActions
 
-
     var body: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.group) {
             card
