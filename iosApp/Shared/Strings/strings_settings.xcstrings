@@ -1837,78 +1837,6 @@
         }
       }
     },
-    "settings_connections_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключённые устройства"
-          }
-        }
-      }
-    },
-    "settings_custom_services_consent_message" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сервер один раз проверит токен ITMO.ID, чтобы убедиться, что это вы. Токен не сохраняется."
-          }
-        }
-      }
-    },
-    "settings_custom_services_consent_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключиться к ITMO.Widgets?"
-          }
-        }
-      }
-    },
-    "settings_custom_services_enable" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключиться"
-          }
-        }
-      }
-    },
-    "settings_custom_services_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключение к ITMO.Widgets"
-          }
-        }
-      }
-    },
-    "settings_custom_services_toggle" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключиться"
-          }
-        }
-      }
-    },
     "settings_dark_black_description" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1933,30 +1861,6 @@
         }
       }
     },
-    "settings_delete_account_description" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Как удалить данные с сервера ITMO.Widgets"
-          }
-        }
-      }
-    },
-    "settings_delete_account_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Удалить аккаунт ITMO.Widgets"
-          }
-        }
-      }
-    },
     "settings_diagnostics_count" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1977,18 +1881,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Журнал ошибок"
-          }
-        }
-      }
-    },
-    "settings_friends_sharing_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Кто видит список друзей"
           }
         }
       }
@@ -2161,78 +2053,6 @@
         }
       }
     },
-    "settings_loading" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Загружаем настройки"
-          }
-        }
-      }
-    },
-    "settings_marks_bars_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оценки БАРС"
-          }
-        }
-      }
-    },
-    "settings_marks_footer" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Уведомлять о новых и изменённых оценках."
-          }
-        }
-      }
-    },
-    "settings_marks_myitmo_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оценки My ITMO"
-          }
-        }
-      }
-    },
-    "settings_marks_notifications_off" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Уведомления выключены."
-          }
-        }
-      }
-    },
-    "settings_marks_sheets_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оценки из таблиц"
-          }
-        }
-      }
-    },
     "settings_notifications_allowed" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -2257,30 +2077,6 @@
         }
       }
     },
-    "settings_notifications_checking" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Проверяем разрешение…"
-          }
-        }
-      }
-    },
-    "settings_notifications_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Уведомления"
-          }
-        }
-      }
-    },
     "settings_privacy_all" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -2293,18 +2089,6 @@
         }
       }
     },
-    "settings_privacy_footer" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Имя, группу и ИСУ видят все пользователи приложения."
-          }
-        }
-      }
-    },
     "settings_privacy_friends" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -2313,30 +2097,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Друзья"
-          }
-        }
-      }
-    },
-    "settings_privacy_load_error" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сервер не ответил."
-          }
-        }
-      }
-    },
-    "settings_privacy_loading" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Загружаем…"
           }
         }
       }
@@ -2361,54 +2121,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Политика конфиденциальности"
-          }
-        }
-      }
-    },
-    "settings_privacy_retry" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Повторить"
-          }
-        }
-      }
-    },
-    "settings_privacy_services_required" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сначала подключитесь к ITMO.Widgets."
-          }
-        }
-      }
-    },
-    "settings_privacy_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Приватность"
-          }
-        }
-      }
-    },
-    "settings_privacy_unknown" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не загрузилось"
           }
         }
       }
@@ -2605,42 +2317,6 @@
         }
       }
     },
-    "settings_schedule_changes_description" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Уведомлять о переносах и отменах пар."
-          }
-        }
-      }
-    },
-    "settings_schedule_changes_notifications_off" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Уведомления выключены."
-          }
-        }
-      }
-    },
-    "settings_schedule_changes_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Изменения расписания"
-          }
-        }
-      }
-    },
     "settings_schedule_footer" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -2661,18 +2337,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Уведомления об изменениях"
-          }
-        }
-      }
-    },
-    "settings_schedule_sharing_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Кто видит моё расписание"
           }
         }
       }
@@ -2721,30 +2385,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Подключено"
-          }
-        }
-      }
-    },
-    "settings_services_footer" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нужно для друзей и автозаписи на спорт. Расписание, зачётка и QR работают и без подключения."
-          }
-        }
-      }
-    },
-    "settings_sport_sharing_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Кто видит мой спорт"
           }
         }
       }
