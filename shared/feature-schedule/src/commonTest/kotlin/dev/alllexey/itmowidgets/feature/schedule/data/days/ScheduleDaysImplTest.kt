@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.days
 
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.lesson.QueuePlace
 import dev.alllexey.itmowidgets.core.lesson.SportMark
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
@@ -74,6 +75,17 @@ class ScheduleDaysImplTest {
 
         val off = gateway(queues = false, bookings = arrayOf(queued)).observe(tuesday, wednesday).first()
         assertTrue(off.isEmpty())
+    }
+
+    @Test
+    fun aQueuedLessonCarriesItsPlaceUnlessItIsPredicted() = runTest {
+        val real = ScheduleWidgetTimelineSamples.pending(5, tuesday, "15:20").copy(position = 2, total = 5)
+        val predicted = ScheduleWidgetTimelineSamples.pending(6, tuesday, "17:00", prediction = true).copy(position = 1, total = 3)
+        val unknown = ScheduleWidgetTimelineSamples.pending(7, tuesday, "18:40")
+
+        val lessons = gateway(bookings = arrayOf(real, predicted, unknown)).observe(tuesday, wednesday).first().single().lessons
+
+        assertEquals(listOf(QueuePlace(2, 5), null, null), lessons.map { it.queue })
     }
 
     @Test

@@ -14,10 +14,21 @@ new iOS app.
 
 - `TeacherNowGateway`: the lesson a teacher gives now or next today, from My ITMO's teacher timetable (MyItmoApi 2.2.0 `getTeacherSchedule`), for the person card's «Сейчас ведёт»; parallel groups in one room are one lesson.
 
+### Спорт lesson sheet data (2026-10-17)
+
+- The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.
+
 ### Fixes (2026-10-17)
 
+- The lesson sheet shows `Предмет` and `Ссылки 3` on both platforms when the record book knows the lesson's subject (the same match as the subject page's `Пары`): `Предмет` opens the subject page, `Ссылки` its `Материалы` tab. The count comes from the links stored on the device and is 0 without the connection.
+- iOS draws the schedule's week strip again, on the tab and on another user's schedule: the paging strip of #429 drew
+  its days below its own clip while they still took taps. The feed stays on today when days load above it after the
+  launch jump (the nightly `testDemoScheduleOpensOnTodayUnderTheRootHeader`).
+- Past day headers in the schedule feed are dimmed like the strip's past days on Android and iOS.
+- The schedule no longer shows week parity: the header and the week rows read `7-я неделя`.
 - A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).
 - A doubtful total shows `Проверьте итог` on the subject page; the review shows the total with its reason, the row around it and the other candidates, and `Вернуть авто` undoes a hand-picked total. On iOS `Мои баллы` is a native sheet (#419).
+- An own sport queue in Сегодня and Расписание shows its place as the sport tab does, `очередь 2 из 5`, on both platforms; a predicted lesson or an unknown place keeps `очередь`.
 
 ### Fixes (2026-10-15)
 

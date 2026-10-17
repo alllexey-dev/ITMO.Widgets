@@ -8,7 +8,8 @@ extension Routes {
         switch route {
         case let subject as AppRoutes.RecordbookSubject:
             guard let args = subject.args.validOrNull() else { return .notOnIOS }
-            return .swiftUI { AnyView(RecordbookSubjectScreen(args: args)) }
+            let materials = subject.materials
+            return .swiftUI { AnyView(RecordbookSubjectScreen(args: args, materials: materials)) }
         case let scores as AppRoutes.SheetScores:
             let args = scores.args
             return .swiftUISheet { AnyView(SheetScoresSheetView(scores: args)) }

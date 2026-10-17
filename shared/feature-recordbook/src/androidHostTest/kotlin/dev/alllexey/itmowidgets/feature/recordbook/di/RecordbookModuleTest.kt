@@ -11,6 +11,7 @@ import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.bell.BellSource
+import dev.alllexey.itmowidgets.core.lesson.LessonSubjectSource
 import dev.alllexey.itmowidgets.core.today.TodayTodoSource
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
@@ -26,8 +27,10 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
+import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.InMemorySecureStore
@@ -158,11 +161,15 @@ class RecordbookModuleTest {
         assertEquals(1, cleaners.count { it === koin.get<SheetScoresRepositoryImpl>() })
     }
 
-    /** Сегодня reads every `BellSource` and `TodayTodoSource` once: the marks and the BARS sign-in. */
+    /**
+     * Сегодня reads every `BellSource` and `TodayTodoSource` once: the marks and the BARS sign-in; the lesson sheet its
+     * one `LessonSubjectSource`.
+     */
     @Test
     fun theMarksAreOneBellSourceAndTheBarsSignInOneTodoSource() {
         assertEquals(1, koin.getAll<BellSource>().size)
         assertEquals(1, koin.getAll<TodayTodoSource>().size)
+        assertEquals(1, koin.getAll<LessonSubjectSource>().size)
     }
 
     /** What the app's bridges supply, as fakes; no request leaves the test. */
@@ -187,6 +194,8 @@ class RecordbookModuleTest {
             }
         }
         single<DemoMode> { FakeDemoMode() }
+        single<SubjectLinksRepository> { FakeSubjectLinksRepository() }
+        single<BackendGate> { FakeBackendGate(optedIn = false) }
         single { Dispatchers.Unconfined.let { AppDispatchers(io = it, default = it, main = it) } }
         single<AcademicTimeProvider> { FixedAcademicTime() }
         single<BarsSilentLogin> {

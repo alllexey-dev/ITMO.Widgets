@@ -171,6 +171,7 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(entry.lessonId, pending.lessonId)
         assertEquals(entry.targetLesson.start, pending.start)
         assertEquals(PendingSportBooking.QueueKind.FREE, pending.queueKind)
+        assertEquals(entry.position to entry.total, pending.position to pending.total)
         assertEquals(1, bookings.refreshes)
         assertEquals(1, data.refreshes)
     }

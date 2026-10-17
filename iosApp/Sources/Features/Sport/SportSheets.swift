@@ -2,11 +2,11 @@ import Shared
 import SwiftUI
 
 /// The lesson sheet of one opening: the action is sent once (`act` gets it), the share goes through the share sheet
-/// and the map to Apple Maps.
+/// and the map to Apple Maps; the teacher's review tone loads once per opening.
 struct SportLessonSheet: View {
     let item: SportLessonItem
-    /// The sheet as it is now; `true` once its action was sent.
-    let present: (Bool) -> SportLessonSheetUi
+    /// The sheet as it is now; `true` once its action was sent, then the teacher's level once known.
+    let present: (Bool, TeacherLevel?) -> SportLessonSheetUi
     let act: (SportBookingAction) -> Void
     let openProfile: (Int32) -> Void
     /// "Make it a section" of a booked lesson as it is now; nil for any other lesson.
@@ -14,10 +14,11 @@ struct SportLessonSheet: View {
     var toggleSection: (Int64) -> Void = { _ in }
 
     @State private var submitted = false
+    @State private var teacherLevel: TeacherLevel?
 
     var body: some View {
         SportLessonSheetContent(
-            sheet: present(submitted),
+            sheet: present(submitted, teacherLevel),
             act: { action in
                 guard !submitted else { return }
                 submitted = true
@@ -28,6 +29,12 @@ struct SportLessonSheet: View {
             section: section(),
             toggleSection: toggleSection
         )
+        .task { await loadTeacherLevel() }
+    }
+
+    private func loadTeacherLevel() async {
+        guard let levels = IosKoin.shared.get(type: SportTeacherLevels.self) as? SportTeacherLevels else { return }
+        teacherLevel = try? await levels.level(args: item.details)
     }
 
     private func share(_ target: SportShareTarget) {
@@ -100,7 +107,7 @@ struct SportLessonSheetContent: View {
                 if let teacher = sheet.teacher {
                     ItmoRow(
                         title: teacher.name,
-                        subtitle: AppStrings.string("sport_filter_teacher"),
+                        subtitle: teacher.tone.resolved,
                         symbol: .person,
                         chevron: teacher.isu != nil,
                         action: teacher.isu.map { isu in { openProfile(isu.int32Value) } }
