@@ -28076,11 +28076,11 @@ SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkNewsTexts;-><ini
 SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkNewsTexts;->delta(Ldev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkValue;)Ljava/lang/String;
 SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkNewsTexts;->details(Ldev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkNews;)Ldev/alllexey/itmowidgets/core/text/UiText;
 SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkNewsTexts;->title(Ldev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkNews;)Ldev/alllexey/itmowidgets/core/text/UiText;
-Ldev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkCheckSource;
-SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkCheckSource;->$values()[Ldev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkCheckSource;
-SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkCheckSource;-><clinit>()V
-SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkCheckSource;-><init>(Ljava/lang/String;I)V
-SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkCheckSource;->getEntries()Lkotlin/enums/EnumEntries;
+Ldev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkSource;
+SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkSource;->$values()[Ldev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkSource;
+SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkSource;-><clinit>()V
+SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkSource;-><init>(Ljava/lang/String;I)V
+SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkSource;->getEntries()Lkotlin/enums/EnumEntries;
 Ldev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkSubjectTarget;
 SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkSubjectTarget;-><clinit>()V
 SPLdev/alllexey/itmowidgets/feature/recordbook/domain/marks/MarkSubjectTarget;-><init>(JILjava/lang/String;JLdev/alllexey/itmowidgets/feature/recordbook/domain/model/BarsJournalReference;)V

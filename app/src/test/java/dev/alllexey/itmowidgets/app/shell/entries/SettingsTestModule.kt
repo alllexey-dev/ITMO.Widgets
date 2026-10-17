@@ -4,13 +4,14 @@ import android.content.Context
 import android.view.View
 import android.widget.Space
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
-import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
@@ -19,7 +20,9 @@ import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
+import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
@@ -35,14 +38,14 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewM
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.RecordbookPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SchedulePageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.ServicesPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SportPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetsPageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,16 +65,22 @@ internal fun settingsTestModule(spoilers: CustomSpoilerRepository = FakeCustomSp
     }
     val pages = SettingsPages(
         root = RootPageProvider(repository),
-        services = ServicesPageProvider(repository, FakeCustomServicesRepository(), refresher),
         widgets = WidgetsPageProvider(repository, NoQuickSettingsTile),
-        schedule = SchedulePageProvider(repository, FakeScheduleChangeTracking(), FakeCalendarSync()),
-        recordbook = RecordbookPageProvider(FakeMarkTracking()),
+        schedule = SchedulePageProvider(repository, FakeCalendarSync()),
         sport = SportPageProvider(repository),
         maintenance = MaintenancePageProvider(
             refresher, FakeOnboardingRepository(completed = true), AppVersion("test"), RecordingDiagnostics(),
         ),
     )
-    viewModel { SettingsViewModel(pages, repository, refresher, UnrestrictedWork, get<SavedStateHandle>()) }
+    viewModel { SettingsViewModel(pages, repository, refresher, get<SavedStateHandle>()) }
+    viewModel {
+        ConnectionViewModel(FakeCustomServicesRepository(), repository, FakeSocialRepository(), PreferenceStores().markSources, refresher)
+    }
+    viewModel {
+        NotificationSettingsViewModel(
+            repository, FakeScheduleChangeTracking(), FakeMarkTracking(), UnrestrictedWork, AndroidPlatformCapabilities,
+        )
+    }
     viewModel { CustomSpoilerViewModel(spoilers) }
     viewModel { DiagnosticsViewModel(RecordingDiagnostics(), FixedAcademicTime()) }
     viewModel { IcsExportViewModel(NoLessons, FixedAcademicTime(), get<SavedStateHandle>()) }

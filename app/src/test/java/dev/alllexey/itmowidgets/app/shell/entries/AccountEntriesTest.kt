@@ -41,27 +41,30 @@ import dev.alllexey.itmowidgets.core.navigation.ShellBackStack
 import dev.alllexey.itmowidgets.core.navigation.ShellGate
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.core.navigation.appRouteSerializersModule
+import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionState
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
-import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.testing.FakeDayLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.FakeSportLessonTemplateController
+import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
+import dev.alllexey.itmowidgets.core.weblogin.PairLink
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -87,9 +90,6 @@ import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateTestTags
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebTestTags
-import dev.alllexey.itmowidgets.core.session.CurrentUser
-import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.weblogin.PairLink
 import dev.alllexey.itmowidgets.feature.weblogin.domain.AgentScope
 import dev.alllexey.itmowidgets.feature.weblogin.domain.Connection
 import dev.alllexey.itmowidgets.feature.weblogin.domain.HpkeSender
@@ -105,7 +105,6 @@ import kotlin.time.TimeSource
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.PolymorphicSerializer
@@ -166,8 +165,12 @@ class AccountEntriesTest {
                         OnboardingViewModel(
                             FakeOnboardingRepository(completed = false),
                             FakeCustomServicesRepository(),
-                            NoAppearance,
-                            FakeCustomSpoilerRepository(),
+                            sessions,
+                            FakeDayLessonsGateway(),
+                            FakeSportScoreRepository(),
+                            FakeCalendarSync(),
+                            FixedAcademicTime(),
+                            AndroidPlatformCapabilities,
                             get<SavedStateHandle>(),
                         )
                     }
@@ -456,20 +459,6 @@ class AccountEntriesTest {
         },
         clock = kotlin.time.Clock.System,
     )
-
-    /** The stored appearance never answers, so the flow's preview cards stay empty. */
-    private object NoAppearance : WidgetAppearanceRepository {
-        override fun observeAppearance(): Flow<WidgetAppearance> = emptyFlow()
-        override suspend fun setCompactNextLessonEarly(enabled: Boolean) = Unit
-        override suspend fun setCompactTeacherHidden(hidden: Boolean) = Unit
-        override suspend fun setFullTeacherHidden(hidden: Boolean) = Unit
-        override suspend fun setFullPastLessonsHidden(hidden: Boolean) = Unit
-        override suspend fun setFullTomorrowEnabled(enabled: Boolean) = Unit
-        override suspend fun setCompactTextSize(size: WidgetTextSize) = Unit
-        override suspend fun setFullTextSize(size: WidgetTextSize) = Unit
-        override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) = Unit
-        override suspend fun setQrSpoilerEnabled(enabled: Boolean) = Unit
-    }
 
     private object NoPreviews : WidgetPreviewFactory {
         override fun create(context: Context, scope: CoroutineScope, settings: WidgetPreviewSettings): WidgetPreview =

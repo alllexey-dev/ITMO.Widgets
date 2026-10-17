@@ -24,7 +24,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkCheckResult
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNews
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkCheckSource
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSource
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.ReadStamp
@@ -131,7 +131,7 @@ internal class RecordbookTestGraph(var barsEnabled: Boolean = false) {
         override suspend fun markNotified(ids: Set<String>) = Unit
         override suspend fun markRead(half: StudyHalf, nameKey: String) = Unit
         override suspend fun markAllRead() = Unit
-        override suspend fun resetSource(source: MarkCheckSource) = Unit
+        override suspend fun resetSource(source: MarkSource) = Unit
     }
 
     private object NoSheets : SheetScoresRepository {

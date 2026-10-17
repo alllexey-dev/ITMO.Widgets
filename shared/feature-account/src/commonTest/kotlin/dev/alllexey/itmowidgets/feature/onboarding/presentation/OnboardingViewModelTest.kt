@@ -8,13 +8,13 @@ import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
-import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeDayLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
@@ -30,10 +30,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
@@ -197,19 +194,6 @@ class OnboardingViewModelTest {
         assertEquals(emptyList(), fixture.services.requests)
     }
 
-    private class FakeDays(days: List<LessonDay>) : DayLessonsGateway {
-        val days = MutableStateFlow(days)
-        var refreshes = 0
-
-        override fun observe(from: LocalDate, to: LocalDate): Flow<List<LessonDay>> =
-            days.map { list -> list.filter { it.date in from..to } }
-
-        override suspend fun refresh(from: LocalDate, to: LocalDate): AppResult<Unit> {
-            refreshes++
-            return AppResult.Success(Unit)
-        }
-    }
-
     private class Fixture(
         saved: SavedStateHandle = SavedStateHandle(),
         time: FixedAcademicTime = FixedAcademicTime(LocalDateTime(Today, LocalTime(12, 0))),
@@ -222,7 +206,7 @@ class OnboardingViewModelTest {
         val session = FakeSessionRepository(
             SessionState.SignedIn(CurrentUser(1, "Александрова Мария", null, familyName = "Александрова", givenName = "Мария")),
         )
-        val days = FakeDays(days)
+        val days = FakeDayLessonsGateway(days)
         val sport = FakeSportScoreRepository().apply {
             periods = AppResult.Success(listOf(SportScorePeriod(9, "Осень"), SportScorePeriod(10, "Весна", current = true)))
             score = AppResult.Success(SportScoreSummary(64, 26))
