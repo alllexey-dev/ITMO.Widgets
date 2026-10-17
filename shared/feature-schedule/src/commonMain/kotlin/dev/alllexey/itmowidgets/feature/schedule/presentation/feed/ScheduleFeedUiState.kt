@@ -12,7 +12,7 @@ data class SelectedUser(val isu: Int, val name: String, val avatar: String?, val
 
 /**
  * The schedule feed (docs/features/schedule.md): the root header ([title] `Сентябрь` with [subtitle]
- * `2-я неделя, чётная`, or `Расписание` over a friend's name), the week strip ([weeks], [selectedWeek] and the
+ * `2-я неделя`, or `Расписание` over a friend's name), the week strip ([weeks], [selectedWeek] and the
  * [selected] day, the one at the top of the feed) and the [body]. [monthMenu]: the title opens the month sheet;
  * [canPickFriend]: the friends button; [friend]: the tab shows that friend's schedule, `Вернуться к своему`;
  * [offWeek]: the feed is off the current week, `Сегодня`. [jump] asks the view to scroll once to a day; while
@@ -81,13 +81,22 @@ sealed interface FeedRow {
     /** The days this row stands for. */
     val dates: ClosedRange<LocalDate> get() = date..date
 
-    /** `2-я неделя, чётная` before a week; [date] is its Monday. */
+    /** `2-я неделя` (MyITMO's week number) before a week; [date] is its Monday. */
     data class WeekLabel(override val date: LocalDate, val text: UiText) : FeedRow {
         override val key get() = "week-$date"
     }
 
-    /** The sticky header of a day with lessons: [title] `Понедельник, 7 сентября`, `сегодня`, [count] `5 пар`. */
-    data class DayHeader(override val date: LocalDate, val title: String, val today: Boolean, val count: UiText) : FeedRow {
+    /**
+     * The sticky header of a day with lessons: [title] `Понедельник, 7 сентября`, `сегодня`, [count] `5 пар`; [past]
+     * before the academic today, dimmed as the strip's past days.
+     */
+    data class DayHeader(
+        override val date: LocalDate,
+        val title: String,
+        val today: Boolean,
+        val past: Boolean,
+        val count: UiText,
+    ) : FeedRow {
         override val key get() = "head-$date"
     }
 

@@ -565,26 +565,14 @@
         }
       }
     },
-    "schedule_week_even" : {
+    "schedule_week" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld-я неделя, чётная"
-          }
-        }
-      }
-    },
-    "schedule_week_odd" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld-я неделя, нечётная"
+            "value" : "%1$lld-я неделя"
           }
         }
       }

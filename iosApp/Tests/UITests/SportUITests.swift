@@ -63,6 +63,25 @@ final class SportUITests: XCTestCase {
         attachScreenshot(named: "filters")
     }
 
+    /// The sign-up strip's days are drawn, not only hittable, also after a tab switch back to the sport tab.
+    func testSignUpWeekStripIsDrawn() {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        openSport(app)
+        app.buttons[Self.signUpTab].firstMatch.tap()
+        let day = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'kit.weekDay.'"))
+            .firstMatch
+        XCTAssertTrue(day.waitForExistence(timeout: stepTimeout), "the sign-up strip has days")
+        attachScreenshot(named: "strip")
+        XCTAssertTrue(day.waitUntilDrawn(timeout: stepTimeout), "the sign-up strip is drawn")
+
+        app.selectTab("home")
+        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: stepTimeout))
+        openSport(app)
+        XCTAssertTrue(day.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(day.waitUntilDrawn(timeout: stepTimeout), "the sign-up strip is drawn after a tab switch")
+    }
+
     func testPointsArePushedAndTheDemoSectionIsInMine() {
         let app = XCUIApplication.itmo()
         app.launch()
@@ -99,8 +118,8 @@ final class SportUITests: XCTestCase {
         XCTAssertTrue(element(app, "sport.user").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "user_sport_list").waitForExistence(timeout: stepTimeout), "Ivan's demo visits")
         attachScreenshot(named: "user-sport")
-        let title = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", Self.ivanFirstName))
-        XCTAssertTrue(title.firstMatch.exists, "the title names the user")
+        let title = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", Self.ivanTitleName))
+        XCTAssertTrue(title.firstMatch.waitForExistence(timeout: stepTimeout), "the title names the user")
         app.buttons[QrPassUITests.backLabel].tap()
         XCTAssertTrue(element(app, "social.profile").waitForExistence(timeout: stepTimeout))
     }
@@ -123,9 +142,10 @@ final class SportUITests: XCTestCase {
 
     // MARK: Helpers
 
-    /// `DemoPeople.IVAN`, a friend with demo visits, and the first name his sport's title shows.
+    /// `DemoPeople.IVAN` (`Кузнецов Иван`), a friend with demo visits, and the first word of his name, which his
+    /// sport's title shows.
     private static let ivan = 999_002
-    private static let ivanFirstName = "Иван"
+    private static let ivanTitleName = "Кузнецов"
     /// `sport_tab_sign`, `sport_filters_title`, `sport_lesson_sign_up` and `error_demo_unavailable`.
     private static let signUpTab = "Запись"
     private static let filtersLabel = "Фильтры"
