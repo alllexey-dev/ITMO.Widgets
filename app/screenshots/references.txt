@@ -27,3 +27,6 @@ Widget_sport-booked-off
 Widget_sport-done-off
 Widget_qr-off
 Widget_qr-teal
+WidgetsGalleryLive
+WidgetsGalleryLiveNext
+WidgetsGalleryLiveDay
