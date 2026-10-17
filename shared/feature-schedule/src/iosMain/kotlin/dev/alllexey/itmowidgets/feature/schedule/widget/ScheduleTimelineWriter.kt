@@ -149,20 +149,6 @@ class ScheduleTimelineWriter(
         }
     }
 
-    private suspend fun ScheduleWidgetTimeline.withShortLocations(): ScheduleWidgetTimeline =
-        copy(entries = entries.map { entry -> entry.copy(snapshot = entry.snapshot.withShortLocations()) })
-
-    private suspend fun ScheduleWidgetSnapshot.withShortLocations(): ScheduleWidgetSnapshot = copy(
-        next = next.copy(lesson = next.lesson?.withShortLocations(), rest = next.rest.map { it.withShortLocations() }),
-        day = day.copy(lessons = day.lessons.map { it.withShortLocations() }),
-        officialFallback = officialFallback?.withShortLocations(),
-    )
-
-    private suspend fun WidgetLesson.withShortLocations() = copy(
-        room = room?.let { roomShortTitle(it).resolve() },
-        building = building?.let { buildingShortTitle(it, BUILDING_MAX_LENGTH).resolve() },
-    )
-
     companion object {
         /** `schedule-timeline-v2.json`: the envelope's version is the timeline's own (`ScheduleWidgetTimelineJson`). */
         val FILE = SnapshotFile(
@@ -186,8 +172,27 @@ class ScheduleTimelineWriter(
         /** Longer than a schedule refresh takes, shorter than a user's next pull to refresh. */
         val OWN_REFRESH_WINDOW = 1.minutes
 
-        /** As Android's `ScheduleWidgetRenderer`. */
-        private const val BUILDING_MAX_LENGTH = 14
         private const val TAG = "ScheduleTimeline"
     }
 }
+
+/**
+ * The timeline with the short room and building titles Android's widget shows (`roomShortTitle`,
+ * `buildingShortTitle`), as the writer stores it; the widgets gallery's samples go through it too.
+ */
+suspend fun ScheduleWidgetTimeline.withShortLocations(): ScheduleWidgetTimeline =
+    copy(entries = entries.map { entry -> entry.copy(snapshot = entry.snapshot.withShortLocations()) })
+
+private suspend fun ScheduleWidgetSnapshot.withShortLocations(): ScheduleWidgetSnapshot = copy(
+    next = next.copy(lesson = next.lesson?.withShortLocations(), rest = next.rest.map { it.withShortLocations() }),
+    day = day.copy(lessons = day.lessons.map { it.withShortLocations() }),
+    officialFallback = officialFallback?.withShortLocations(),
+)
+
+private suspend fun WidgetLesson.withShortLocations() = copy(
+    room = room?.let { roomShortTitle(it).resolve() },
+    building = building?.let { buildingShortTitle(it, BUILDING_MAX_LENGTH).resolve() },
+)
+
+/** As Android's `ScheduleWidgetRenderer`. */
+private const val BUILDING_MAX_LENGTH = 14

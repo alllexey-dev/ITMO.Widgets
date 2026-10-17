@@ -14,6 +14,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.asTimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.atTime
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
@@ -46,6 +47,15 @@ class SchedulePreviewScenario(private val selector: ScheduleWidgetSelector) {
     ): ScheduleWidgetSnapshot = selector.select(days(labels), instant(moment), ZONE, ScheduleWidgetPreferences(settings)).snapshot
 
     fun instant(moment: SchedulePreviewMoment): Instant = DATE.atTime(moment.hour, moment.minute).toInstant(ZONE)
+
+    /** The whole sample, from the Monday's midnight to the end of the Tuesday: iOS previews pick its entries. */
+    fun timeline(settings: ScheduleWidgetSettings, labels: SchedulePreviewLabels): ScheduleWidgetTimeline = selector.timeline(
+        days(labels),
+        DATE.atStartOfDayIn(ZONE),
+        TOMORROW.plus(1, DateTimeUnit.DAY).atStartOfDayIn(ZONE),
+        ZONE,
+        ScheduleWidgetPreferences(settings),
+    )
 
     fun days(labels: SchedulePreviewLabels): List<LessonDay> = listOf(
         LessonDay(

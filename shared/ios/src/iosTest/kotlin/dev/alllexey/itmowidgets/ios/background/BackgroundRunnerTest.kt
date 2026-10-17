@@ -185,6 +185,7 @@ class BackgroundRunnerTest {
             step(RefreshStepKeys.CALENDAR_SYNC),
             step(RefreshStepKeys.MARKS),
             step(RefreshStepKeys.SCHEDULE_CHANGES),
+            step(RefreshStepKeys.SPORT_WIDGET),
             step(RefreshStepKeys.WIDGET_SNAPSHOTS),
         )
 

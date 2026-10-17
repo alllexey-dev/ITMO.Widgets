@@ -33,6 +33,7 @@ import dev.alllexey.itmowidgets.feature.social.di.socialIosModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.sport.di.sportIosModule
 import dev.alllexey.itmowidgets.feature.sport.di.sportModule
+import dev.alllexey.itmowidgets.feature.sport.di.sportWidgetIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppStoreListing
@@ -40,6 +41,7 @@ import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginIosModule
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import dev.alllexey.itmowidgets.ios.IosPlatform
+import dev.alllexey.itmowidgets.ios.widgets.widgetRefreshIosModule
 import org.koin.core.module.Module
 import platform.Foundation.NSBundle
 
@@ -63,8 +65,8 @@ object IosKoinModules {
         // The recordbook graph with the BARS session on WebKit and the Keychain; the tab, the subject page
         // and `Мои баллы`.
         recordbookModule, recordbookIosModule(platform),
-        // The schedule widgets' App Group timeline and the schedule widget refresh port.
-        scheduleWidgetIosModule,
+        // The schedule and sport widgets' App Group timelines and the refresh port sport asks after a booking.
+        scheduleWidgetIosModule, sportWidgetIosModule, widgetRefreshIosModule,
         // The web sign-in sheet, pairing's CryptoKit and LocalAuthentication ports and the update offer on their iOS
         // ports.
         webLoginDataModule, webLoginModule, webLoginIosModule(platform), updateModule, updateIosModule,
