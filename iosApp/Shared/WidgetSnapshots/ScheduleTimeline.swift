@@ -204,6 +204,9 @@ struct WidgetLesson: Equatable, Decodable {
     var changed: Bool
     var cancelled: Bool
     var queued: Bool
+    /// The place in a queue and its length, 0 when Backend does not know them.
+    var queuePosition: Int
+    var queueTotal: Int
     var lesson: JSONValue?
     var sport: PendingSportTarget?
 }

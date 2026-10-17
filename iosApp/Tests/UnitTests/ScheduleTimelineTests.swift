@@ -59,6 +59,9 @@ final class ScheduleTimelineTests: XCTestCase {
         XCTAssertTrue(evening.day.tomorrow)
         XCTAssertNil(evening.day.now)
         XCTAssertEqual(evening.day.lessons.last?.queued, true)
+        let queue = try XCTUnwrap(evening.day.lessons.last)
+        XCTAssertEqual([queue.queuePosition, queue.queueTotal], [2, 5])
+        XCTAssertEqual(ScheduleWidgetText.queue(of: queue), "очередь 2 из 5")
 
         let over = try XCTUnwrap(timeline.entries.last).snapshot
         XCTAssertEqual(over.next.kind, .empty)
@@ -309,7 +312,7 @@ final class ScheduleWidgetLayoutTests: XCTestCase {
         WidgetLesson(
             subject: "Физика", start: "11:40", end: "13:10", startMinute: start, endMinute: end, typeId: 1, state: .upcoming,
             room: room, building: building, teacher: nil, online: false, changed: false, cancelled: false, queued: false,
-            lesson: nil, sport: nil
+            queuePosition: 0, queueTotal: 0, lesson: nil, sport: nil
         )
     }
 }

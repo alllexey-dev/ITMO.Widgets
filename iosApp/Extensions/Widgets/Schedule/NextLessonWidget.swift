@@ -305,7 +305,7 @@ private struct NextLessonRestRow: View {
                     .foregroundStyle(colors.primaryText)
                 HStack(spacing: 3) {
                     if lesson.queued {
-                        Text(.StringsCommon.lessonPillQueue)
+                        Text(verbatim: ScheduleWidgetText.queue(of: lesson))
                     } else {
                         if lesson.online {
                             Image(systemName: AppSymbol.videocam.systemName).accessibilityHidden(true)

@@ -36,6 +36,13 @@ enum ScheduleWidgetText {
         return parts.isEmpty ? nil : parts.joined(separator: ", ")
     }
 
+    /// A queue's pill: the place in it when Backend knows it.
+    static func queue(of lesson: WidgetLesson) -> String {
+        lesson.queuePosition > 0 && lesson.queueTotal > 0
+            ? String(localized: .StringsCommon.lessonPillQueuePosition(lesson.queuePosition, lesson.queueTotal))
+            : String(localized: .StringsCommon.lessonPillQueue)
+    }
+
     /// The next-lesson headline of each moment (`widget_next_now`, `_first`, `_next`, `_tomorrow`).
     static func headline(_ moment: NextLessonMoment, lesson: WidgetLesson) -> String {
         switch moment {

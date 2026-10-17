@@ -269,7 +269,7 @@ private struct DayBlock: View {
         if lesson.cancelled {
             WidgetPill(text: String(localized: .StringsCommon.lessonPillCancelled), color: ItmoColor.error, size: 10)
         } else if lesson.queued {
-            WidgetPill(text: String(localized: .StringsCommon.lessonPillQueue), color: WidgetColors.warning, size: 10)
+            WidgetPill(text: ScheduleWidgetText.queue(of: lesson), color: WidgetColors.warning, size: 10)
         }
     }
 }
