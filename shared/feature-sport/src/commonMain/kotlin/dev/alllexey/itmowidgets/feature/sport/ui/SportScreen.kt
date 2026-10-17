@@ -244,7 +244,6 @@ private fun MyPart(state: SportMyUiState, actions: SportMyActions, tabs: LazyLis
                                 Box(Modifier.testTag(SportTestTags.booking(booking.lessonId))) {
                                     LessonCard(booking.lesson.toLessonView(), onClick = { actions.onOpenBooking(booking.lessonId) })
                                 }
-                                booking.cancelUntil?.let { CancelUntil(it.asString()) }
                                 booking.section?.let { BookingSection(it, actions.onToggleSection) }
                             }
                         }

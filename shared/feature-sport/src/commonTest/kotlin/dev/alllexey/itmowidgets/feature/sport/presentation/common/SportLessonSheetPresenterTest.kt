@@ -155,15 +155,10 @@ class SportLessonSheetPresenterTest {
         )
     }
 
-    @Test fun aBookedLessonCanBeCancelledUntilItStarts() {
+    @Test fun aBookedLessonSaysItIsInTheScheduleBeforeAndAfterItStarts() {
         val booked = lesson.copy(signed = true)
-        assertEquals(res(SportStrings.sport_cancel_until, "8 сент., 18:30"), sheet(booked).actionNote, "another day names the date")
-        val hourBefore = lesson.start - 60.minutes
-        assertEquals(res(SportStrings.sport_cancel_until, "18:30"), sheet(booked, at = hourBefore).actionNote, "today only the time")
-        assertEquals(res(SportStrings.sport_sheet_booked_note), sheet(booked, at = lesson.start).actionNote, "a started lesson")
-        assertNull(SportLessonSheetPresenter.cancelUntil(lesson.toDetailsArgs(), now, zone), "not booked")
-        val prediction = lesson.copy(signed = true, isLessonReal = false).toDetailsArgs()
-        assertNull(SportLessonSheetPresenter.cancelUntil(prediction, now, zone), "a prediction")
+        assertEquals(res(SportStrings.sport_sheet_booked_note), sheet(booked).actionNote)
+        assertEquals(res(SportStrings.sport_sheet_booked_note), sheet(booked, at = lesson.start).actionNote)
     }
 
     @Test fun theTeacherRowSaysTheReviewToneInWordsOnceItIsKnown() {

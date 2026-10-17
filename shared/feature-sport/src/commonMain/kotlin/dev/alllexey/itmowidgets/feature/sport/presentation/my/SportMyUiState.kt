@@ -39,16 +39,8 @@ sealed interface SportMyBody {
 /** One day of bookings under its label: `Сегодня, 7 сент.`. */
 data class SportBookingDay(val title: UiText, val bookings: List<SportBookingItem>)
 
-/**
- * A booking or a queue as a lesson card; [lessonId] opens its sheet; a booked one has its [section] switch and, until
- * it starts, [cancelUntil]: `Отменить можно до 18:30`.
- */
-data class SportBookingItem(
-    val lessonId: Long,
-    val lesson: LessonUi,
-    val section: SportSectionToggleUi? = null,
-    val cancelUntil: UiText? = null,
-)
+/** A booking or a queue as a lesson card; [lessonId] opens its sheet; a booked one has its [section] switch. */
+data class SportBookingItem(val lessonId: Long, val lesson: LessonUi, val section: SportSectionToggleUi? = null)
 
 /**
  * The points of the semester in a ring: [visits] and the credited [bonus] add up to [total] out of 100; [formula] is

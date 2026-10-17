@@ -12,7 +12,6 @@ new iOS app.
 
 ### Спорт lesson sheet data (2026-10-17)
 
-- A booked sport lesson shows `Отменить можно до 18:30` (its start, with the date on another day) on its card in `Моё` and under `Отменить запись` in the sheet, until it starts.
 - The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.
 
 ### Fixes (2026-10-17)

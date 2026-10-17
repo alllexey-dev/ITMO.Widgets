@@ -302,12 +302,7 @@ object SportSamples {
                 myBookings.groupBy { it.start.toLocalDateTimeIn() }.map { (date, items) ->
                     SportBookingDay(
                         sportDayLabel(date, today),
-                        items.map {
-                            SportBookingItem(
-                                it.lessonId, it.toLessonUi(time), section(it),
-                                SportLessonSheetPresenter.cancelUntil(it.toDetailsArgs(), now, zone),
-                            )
-                        },
+                        items.map { SportBookingItem(it.lessonId, it.toLessonUi(time), section(it)) },
                     )
                 }
             },

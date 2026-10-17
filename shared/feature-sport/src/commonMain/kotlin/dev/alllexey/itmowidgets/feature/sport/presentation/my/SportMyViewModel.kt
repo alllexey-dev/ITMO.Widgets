@@ -178,13 +178,7 @@ class SportMyViewModel(
         val days = bookings
             .groupBy { it.start.toLocalDateTime(time.timeZone).date }
             .map { (date, items) ->
-                SportBookingDay(sportDayLabel(date, today), items.map { booking ->
-                    SportBookingItem(
-                        lessonId = booking.lessonId,
-                        lesson = booking.toLessonUi(time),
-                        cancelUntil = SportLessonSheetPresenter.cancelUntil(booking.toDetailsArgs(), now, time.timeZone),
-                    )
-                })
+                SportBookingDay(sportDayLabel(date, today), items.map { SportBookingItem(it.lessonId, it.toLessonUi(time)) })
             }
         val errors = listOfNotNull(score.errorOrNull(), bookingsState.errorOrNull())
         return SportMyBody.Content(days, refreshing = byUser, partialError = errors.isNotEmpty()).also { lastBody = it }

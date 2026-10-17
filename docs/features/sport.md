@@ -24,12 +24,6 @@ limit come from Backend behind the custom-services gate.
   `записаны`, `очередь 2 из 5` or, for a lesson not published yet,
   `ждём расписание`. Ended bookings and finished queues are not listed; queue
   results live in the bell.
-- A booking can be cancelled until the lesson starts (owner decision), so a
-  booked card in `Моё` and the sheet's note under `Отменить запись` say
-  `Отменить можно до 18:30` with the start time in Moscow time, or
-  `до 10 сент., 15:20` on another day than today
-  (`SportLessonSheetPresenter.cancelUntil`). After the start the sheet says
-  `Занятие уже в вашем расписании`; queues and predictions have no deadline.
 - The sheet's teacher row says the tone of the teacher's reviews in words, as
   the schedule's lesson sheet does (`TeacherLevelTone.words`: `скорее
   хвалят`), else `Преподаватель`, and opens the person card.

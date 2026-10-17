@@ -134,7 +134,7 @@ object SportLessonSheetPresenter {
                 } else {
                     UiText.Res(SportStrings.sport_sheet_future_note)
                 }
-                SportBookingAction.CANCEL -> cancelUntil(args, now, zone) ?: UiText.Res(SportStrings.sport_sheet_booked_note)
+                SportBookingAction.CANCEL -> UiText.Res(SportStrings.sport_sheet_booked_note)
                 else -> null
             },
             conditions = if (args.signed || availability == null) emptyList() else conditions(args, now, zone),
@@ -165,19 +165,6 @@ object SportLessonSheetPresenter {
             },
             share = share(args, now),
         )
-    }
-
-    /**
-     * `Отменить можно до 18:30` of a booked lesson that has not started: a booking can be cancelled until the start.
-     * Another day than today adds the date: `до 10 сент., 15:20`.
-     */
-    fun cancelUntil(args: SportCommonDetailsArgs, now: Instant, zone: TimeZone): UiText? {
-        val start = DateTexts.parseOffsetInstant(args.start)
-        if (!args.signed || !args.isReal || start <= now) return null
-        val local = start.toLocalDateTime(zone)
-        val today = local.date == now.toLocalDateTime(zone).date
-        val at = if (today) local.time.format(DateTexts.TIME) else local.format(DateTexts.DAY_SHORT_MONTH_TIME)
-        return UiText.Res(SportStrings.sport_cancel_until, listOf(at))
     }
 
     /** The button for what the lesson offers now; null where the sheet only shows or nothing is offered. */

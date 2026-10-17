@@ -99,14 +99,3 @@ internal fun BookingSection(section: SportSectionToggleUi, onToggle: (Long) -> U
         }
     }
 }
-
-/** Under a booked lesson's card until it starts: `Отменить можно до 18:30`. */
-@Composable
-internal fun CancelUntil(label: String) {
-    Text(
-        label,
-        Modifier.padding(start = ItmoTheme.spacing.related),
-        color = ItmoTheme.colorScheme.onSurfaceVariant,
-        style = ItmoTheme.typography.bodyMedium,
-    )
-}

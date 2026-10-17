@@ -265,18 +265,6 @@
         }
       }
     },
-    "sport_cancel_until" : {
-      "comment" : "Generated from strings_sport.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отменить можно до %1$@"
-          }
-        }
-      }
-    },
     "sport_check_clash_allowed" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",

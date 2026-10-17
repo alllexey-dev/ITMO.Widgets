@@ -127,7 +127,6 @@
     <string name="sport_sheet_queue_note_waiting">В очереди уже %1$d. Место освободится — запишем сами</string>
     <string name="sport_sheet_future_note">Занятие появится в My ITMO примерно за неделю — запишем сами</string>
     <string name="sport_sheet_booked_note">Занятие уже в вашем расписании</string>
-    <string name="sport_cancel_until">Отменить можно до %1$s</string>
     <string name="sport_sheet_clash">Пересекается с парой %1$s, %2$s</string>
     <string name="sport_sheet_clash_unknown">Пересекается с парой</string>
     <plurals name="sport_seats_free">

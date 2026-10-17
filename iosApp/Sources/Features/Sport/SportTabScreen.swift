@@ -243,13 +243,6 @@ struct SportMyPart: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("sport.booking.\(booking.lessonId)")
-                    if let cancelUntil = booking.cancelUntil {
-                        Text(verbatim: cancelUntil.resolved)
-                            .font(.itmo(.bodyMedium))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, ItmoSpacing.related)
-                            .accessibilityIdentifier("sport.booking.cancelUntil.\(booking.lessonId)")
-                    }
                     if let section = booking.section {
                         SportBookingSection(section: section) { actions.toggleSection(section.lessonId) }
                     }
