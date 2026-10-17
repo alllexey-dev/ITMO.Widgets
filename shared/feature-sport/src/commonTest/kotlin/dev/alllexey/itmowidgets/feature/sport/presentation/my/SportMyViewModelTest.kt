@@ -122,7 +122,9 @@ class SportMyViewModelTest {
         val booked = days[0].bookings.single()
         assertEquals(7L, booked.lessonId)
         assertEquals(LessonPillKind.BOOKED, booked.lesson.pills.single().kind)
+        assertEquals(UiText.Res(SportStrings.sport_cancel_until, listOf("8 сент., 18:30")), booked.cancelUntil)
         assertEquals(UiText.Res(SportStrings.sport_queue_position, listOf(3, 12)), days[1].bookings.single().lesson.pills.single().text)
+        assertNull(days[1].bookings.single().cancelUntil, "a queue has no booking to cancel")
     }
 
     @Test

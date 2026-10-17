@@ -24,6 +24,18 @@ limit come from Backend behind the custom-services gate.
   `записаны`, `очередь 2 из 5` or, for a lesson not published yet,
   `ждём расписание`. Ended bookings and finished queues are not listed; queue
   results live in the bell.
+- A booking can be cancelled until the lesson starts (owner decision), so a
+  booked card in `Моё` and the sheet's note under `Отменить запись` say
+  `Отменить можно до 18:30` with the start time in Moscow time, or
+  `до 10 сент., 15:20` on another day than today
+  (`SportLessonSheetPresenter.cancelUntil`). After the start the sheet says
+  `Занятие уже в вашем расписании`; queues and predictions have no deadline.
+- The sheet's teacher row says the tone of the teacher's reviews in words, as
+  the schedule's lesson sheet does (`TeacherLevelTone.words`: `скорее
+  хвалят`), else `Преподаватель`, and opens the person card.
+  `SportTeacherLevels` asks the core `TeacherLevelsRepository` once per
+  opening; the repository answers nothing without the custom-services opt-in
+  and demo levels in the demo session, so nothing reaches Backend there.
 - `Запись` lists every upcoming lesson of the day; `Есть места` keeps those
   bookable now and the own ones. A row's action is `Записаться`, `В очередь`,
   its status pill, or the lock with MyITMO's reason. A clash with an own
@@ -214,7 +226,8 @@ Android screenshots in `shared/feature-sport/screenshots/` from the previews
 - `SportTabScreen` and `SportPointsScreen`
   (`iosApp/Sources/Features/Sport/`) are SwiftUI over the same view models
   (`ObservableViewModel`); the lesson sheet is drawn from
-  `SportMyViewModel.sheet` or `SportSignViewModel.sheet`, its section switch
+  `SportMyViewModel.sheet` or `SportSignViewModel.sheet` with the teacher's
+  level from `SportTeacherLevels` (Koin), its section switch
   from `SportMyViewModel.sectionToggle`. Sharing goes through `SportShares`, maps
   through `PlatformActions`. Koin modules `sportModule`, `sportIosModule` and
   social's `FriendRepository`. Tabs move by the native tab bar only.
