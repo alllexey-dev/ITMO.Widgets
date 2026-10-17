@@ -59,6 +59,9 @@
     <string name="widget_preview_time_evening_short">18:00</string>
     <string name="widget_preview_time_description">Изменить время в примере</string>
     <string name="widget_preview_subject_physics">Физика</string>
+    <string name="widget_preview_subject_english">Английский язык</string>
+    <string name="widget_preview_subject_swimming">Плавание</string>
+    <string name="widget_preview_subject_algorithms">Алгоритмы и структуры данных</string>
     <string name="widget_preview_teacher">Иванов И. И.</string>
 
     <!-- The bell: the found changes -->

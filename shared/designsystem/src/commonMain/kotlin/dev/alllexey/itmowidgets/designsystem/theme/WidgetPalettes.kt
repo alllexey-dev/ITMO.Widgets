@@ -30,6 +30,10 @@ private fun ColorScheme.widgetRoles() = WidgetColorRoles(
     onSurfaceVariant = onSurfaceVariant.rgb(),
     outlineVariant = outlineVariant.rgb(),
     primary = primary.rgb(),
+    primaryContainer = primaryContainer.rgb(),
+    onPrimaryContainer = onPrimaryContainer.rgb(),
+    surfaceContainerHigh = surfaceContainerHigh.rgb(),
+    tertiary = tertiary.rgb(),
 )
 
 /** Opaque `0xRRGGBB`: every role of a generated scheme is opaque. */
