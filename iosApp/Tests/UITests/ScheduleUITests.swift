@@ -38,6 +38,55 @@ final class ScheduleUITests: XCTestCase {
         attachScreenshot(named: "days-later")
     }
 
+    func testFastPagingDoesNotLoseTheSelectedDay() throws {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        openSchedule(app)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Europe/Moscow"))
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = calendar.timeZone
+        formatter.dateFormat = "yyyy-MM-dd"
+        let today = try XCTUnwrap(formatter.date(from: Self.today))
+        let weekdayOffset = (calendar.component(.weekday, from: today) + 5) % 7
+        let target = try XCTUnwrap(calendar.date(byAdding: .day, value: 14 - weekdayOffset + 2, to: today))
+        let iso = formatter.string(from: target)
+        let strip = element(app, "schedule.strip")
+        let weekday = element(app, "kit.weekDay.\(Self.today)")
+        XCTAssertTrue(waitUntilHittable(weekday))
+        // The scroll view can extend under the root header; swipe through the actual day buttons, not its frame's center.
+        let y = weekday.frame.midY
+        let start = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: strip.frame.maxX - 24, dy: y))
+        let end = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: strip.frame.minX + 24, dy: y))
+        start.press(forDuration: 0.01, thenDragTo: end, withVelocity: .fast, thenHoldForDuration: 0)
+        start.press(forDuration: 0.01, thenDragTo: end, withVelocity: .fast, thenHoldForDuration: 0)
+        let chosen = element(app, "kit.weekDay.\(iso)")
+        attachScreenshot(named: "week-after-swipes")
+        XCTAssertTrue(waitUntilHittable(chosen), "two fast swipes preserve the expected week")
+        chosen.tap()
+        let row = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'schedule.row.' AND identifier CONTAINS %@", iso))
+            .firstMatch
+        XCTAssertTrue(waitUntilHittable(row), "the chosen weekday must not jump back to Monday")
+        let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "selected == true"), object: chosen)
+        XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: stepTimeout), .completed)
+
+        attachScreenshot(named: "chosen-day")
+        // safeAreaBar inherits the screen identifier on its buttons; choose the header action by label and bounds.
+        let todayAction = app.buttons.matching(NSPredicate(format: "label == %@", "Сегодня"))
+            .allElementsBoundByIndex.first { $0.frame.maxY < strip.frame.maxY }
+        try XCTUnwrap(todayAction).tap()
+        let todayRow = todayRow(app)
+        if calendar.component(.weekday, from: today) == 1 && !todayRow.exists {
+            let saturday = try XCTUnwrap(calendar.date(byAdding: .day, value: -1, to: today))
+            let weekend = element(app, "schedule.row.weekend-\(formatter.string(from: saturday))")
+            XCTAssertTrue(waitUntilHittable(weekend), "Today opens the current free weekend")
+        } else {
+            XCTAssertTrue(waitUntilHittable(todayRow), "Today returns after fast week paging")
+        }
+    }
+
     func testLessonSheetShowsTheLessonAndCloses() {
         let app = XCUIApplication.itmo()
         app.launch()

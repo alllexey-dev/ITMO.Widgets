@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.schedule.ui.feed
 
+import androidx.compose.foundation.MutatePriority
+import androidx.compose.foundation.gestures.stopScroll
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -60,6 +64,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.toTimelineRows
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.FeedRow
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedBody
+import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedPresenter
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedUiState
 import dev.alllexey.itmowidgets.shared.compose.strings.common_back
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
@@ -75,12 +80,12 @@ import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_month_action
 import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_return_to_mine
 import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_today
 import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_today_pill
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.daysUntil
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
@@ -97,6 +102,8 @@ object ScheduleFeedTestTags {
     const val FRIENDS = "schedule:friends"
     const val LESSON_PREFIX = "schedule:lesson:"
 
+    fun week(monday: LocalDate) = "schedule:week:$monday"
+
     fun row(key: String) = "schedule:row:$key"
 
     /** The lesson at [index] of the timeline of [date]. */
@@ -111,7 +118,8 @@ data class ScheduleFeedActions(
     val onNearStart: () -> Unit = {},
     val onNearEnd: () -> Unit = {},
     val onDay: (LocalDate) -> Unit = {},
-    val onWeek: (Int) -> Unit = {},
+    val onWeek: (LocalDate) -> Unit = {},
+    val onWeekPagingStarted: () -> Unit = {},
     val onToday: () -> Unit = {},
     val onJumped: (Int) -> Unit = {},
     val onMonth: () -> Unit = {},
@@ -216,7 +224,7 @@ private fun Body(
     padding: PaddingValues,
 ) {
     Column(Modifier.fillMaxSize().padding(padding)) {
-        WeekPager(state, actions)
+        ScheduleWeekPager(state, actions)
         HorizontalDivider(color = ItmoTheme.colorScheme.outlineVariant)
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when (val body = state.body) {
@@ -242,43 +250,88 @@ private fun Body(
 
 /** The strip pages by weeks; a swipe that settles on another week moves the feed there, the feed's week moves it. */
 @Composable
-private fun WeekPager(state: ScheduleFeedUiState, actions: ScheduleFeedActions) {
+internal fun ScheduleWeekPager(state: ScheduleFeedUiState, actions: ScheduleFeedActions) {
     val weeks = state.weeks
     if (weeks.isEmpty()) return
     val pager = rememberPagerState(initialPage = state.selectedWeek) { weeks.size }
     val firstMonday = weeks.first().monday
+    val selectedMonday = ScheduleFeedPresenter.monday(state.selected)
     var shownFirst by remember { mutableStateOf(firstMonday) }
-    LaunchedEffect(firstMonday, state.selectedWeek) {
-        // Earlier weeks joined the strip: the same week moves to a later page without a visible scroll.
-        val shift = firstMonday.daysUntil(shownFirst) / DAYS_PER_WEEK
-        shownFirst = firstMonday
-        if (shift != 0) pager.scrollToPage(pager.currentPage + shift)
-        if (pager.currentPage != state.selectedWeek) pager.animateScrollToPage(state.selectedWeek)
-    }
-    val selectedWeek by rememberUpdatedState(state.selectedWeek)
+    var synchronizing by remember { mutableStateOf(false) }
+    var userPaging by remember { mutableStateOf(false) }
+    var dragging by remember { mutableStateOf(false) }
+    var seenJump by remember { mutableStateOf<Int?>(null) }
+    var gesture by remember { mutableStateOf(0) }
+    val currentMonday by rememberUpdatedState(selectedMonday)
     val onWeek by rememberUpdatedState(actions.onWeek)
+    val onPagingStarted by rememberUpdatedState(actions.onWeekPagingStarted)
+
     LaunchedEffect(pager) {
-        snapshotFlow { pager.settledPage }.collect { page -> if (page != selectedWeek) onWeek(page) }
+        pager.interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is DragInteraction.Start -> { gesture++; dragging = true; userPaging = true; onPagingStarted() }
+                is DragInteraction.Stop, is DragInteraction.Cancel -> dragging = false
+            }
+        }
+    }
+    LaunchedEffect(firstMonday, selectedMonday, state.jump?.id) {
+        val explicit = state.jump?.id?.let { it != seenJump } == true
+        state.jump?.id?.let { seenJump = it }
+        val prepended = shownFirst != firstMonday
+        shownFirst = firstMonday
+        if (userPaging && !explicit) return@LaunchedEffect
+        val interrupted = explicit && (pager.isScrollInProgress || dragging)
+        if (explicit) { gesture++; userPaging = false }
+        val target = weeks.indexOfFirst { it.monday == selectedMonday }
+        if (target < 0 || (!interrupted && pager.currentPage == target && pager.currentPageOffsetFraction == 0f)) return@LaunchedEffect
+        synchronizing = true
+        try {
+            if (interrupted) pager.stopScroll(MutatePriority.PreventUserInput)
+            // Stable keys already preserve the week on prepend; never add a manual index shift.
+            if (prepended) pager.scrollToPage(target) else pager.animateScrollToPage(target)
+        } finally {
+            synchronizing = false
+        }
+    }
+    LaunchedEffect(pager) {
+        snapshotFlow {
+            val key = pager.layoutInfo.visiblePagesInfo.firstOrNull { it.index == pager.settledPage }?.key as? String
+            Triple(key, pager.isScrollInProgress || dragging, gesture)
+        }.collectLatest { (key, moving, epoch) ->
+            if (moving) {
+                // Includes accessibility paging, which has no DragInteraction.
+                if (!synchronizing && !userPaging) { gesture++; userPaging = true; onPagingStarted() }
+                return@collectLatest
+            }
+            if (!userPaging || synchronizing || key == null) return@collectLatest
+            // Drag completion can briefly look idle before its fling starts on the next frame.
+            withFrameNanos { }
+            val settledKey = pager.layoutInfo.visiblePagesInfo.firstOrNull { it.index == pager.settledPage }?.key
+            if (!userPaging || synchronizing || gesture != epoch || pager.isScrollInProgress || dragging || settledKey != key) return@collectLatest
+            userPaging = false
+            val monday = LocalDate.parse(key)
+            if (monday != currentMonday) onWeek(monday)
+        }
     }
     HorizontalPager(
         pager,
         Modifier.fillMaxWidth().testTag(ScheduleFeedTestTags.STRIP),
         contentPadding = PaddingValues(horizontal = ItmoTheme.spacing.related),
-        key = { weeks.getOrNull(it)?.monday?.toString() ?: "$it" },
+        key = { weeks[it].monday.toString() },
     ) { page ->
         val week = weeks[page]
         WeekStrip(
             week.days.map { WeekStripDay(it.weekday, it.number, it.lessons, it.changed, it.today, it.past) },
             selected = week.days.indexOfFirst { it.date == state.selected }.takeIf { it >= 0 },
             onDayClick = { index -> actions.onDay(week.days[index].date) },
-            modifier = Modifier.padding(vertical = ItmoTheme.spacing.compact),
+            modifier = Modifier.padding(vertical = ItmoTheme.spacing.compact).testTag(ScheduleFeedTestTags.week(week.monday)),
         )
     }
 }
 
 @Composable
 private fun Feed(state: ScheduleFeedUiState, body: ScheduleFeedBody.Days, actions: ScheduleFeedActions, listState: LazyListState) {
-    val rows = body.rows
+    val rows by rememberUpdatedState(body.rows)
     val callbacks by rememberUpdatedState(actions)
     LaunchedEffect(state.jump, rows, state.loading) {
         val jump = state.jump ?: return@LaunchedEffect
@@ -288,25 +341,22 @@ private fun Feed(state: ScheduleFeedUiState, body: ScheduleFeedBody.Days, action
         if (index >= 0) listState.scrollToItem(index)
         callbacks.onJumped(jump.id)
     }
-    val jumping = state.jump != null
-    LaunchedEffect(listState, rows, jumping) {
-        if (jumping) return@LaunchedEffect
-        snapshotFlow { listState.firstVisibleItemIndex }
-            .map { rows.getOrNull(it)?.date }
+    val jumping by rememberUpdatedState(state.jump != null)
+    LaunchedEffect(listState) {
+        snapshotFlow { if (jumping) null else rows.getOrNull(listState.firstVisibleItemIndex)?.date }
             .filterNotNull()
             .distinctUntilChanged()
             .collect { callbacks.onVisibleDate(it) }
     }
-    LaunchedEffect(listState, rows, jumping) {
-        if (jumping || rows.isEmpty()) return@LaunchedEffect
+    LaunchedEffect(listState) {
         snapshotFlow {
             val info = listState.layoutInfo
-            (info.visibleItemsInfo.lastOrNull()?.index ?: 0) >= info.totalItemsCount - EDGE_ROWS
+            !jumping && rows.isNotEmpty() &&
+                (info.visibleItemsInfo.lastOrNull()?.index ?: 0) >= info.totalItemsCount - EDGE_ROWS
         }.distinctUntilChanged().filter { it }.collect { callbacks.onNearEnd() }
     }
-    LaunchedEffect(listState, rows, jumping) {
-        if (jumping || rows.isEmpty()) return@LaunchedEffect
-        snapshotFlow { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
+    LaunchedEffect(listState) {
+        snapshotFlow { !jumping && rows.isNotEmpty() && listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
             .distinctUntilChanged()
             .filter { it }
             .collect { callbacks.onNearStart() }
@@ -417,8 +467,6 @@ private fun QuietRow(icon: Painter, text: String, key: String) {
         }
     }
 }
-
-private const val DAYS_PER_WEEK = 7
 
 /** The feed asks for more weeks this many rows before its end. */
 private const val EDGE_ROWS = 4

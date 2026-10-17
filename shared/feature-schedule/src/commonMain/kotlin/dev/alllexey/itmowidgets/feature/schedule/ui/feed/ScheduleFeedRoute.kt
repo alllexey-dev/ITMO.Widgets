@@ -90,6 +90,7 @@ fun ScheduleFeedRoute(
             onNearEnd = viewModel::onNearEnd,
             onDay = viewModel::showDate,
             onWeek = viewModel::showWeek,
+            onWeekPagingStarted = viewModel::beginWeekPaging,
             onToday = viewModel::showToday,
             onJumped = viewModel::onJumped,
             onMonth = { host.onMonth(viewModel.uiState.value.selected, null) },
