@@ -5,11 +5,15 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetHeaders
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRowMatch
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotalDecision
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalReason
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
 
 /**
  * Synthetic sheets of the scores sheet's previews and host tests: no real sheet, person or ISU. The first states show
- * two rows of the own name and the connected tab's cells; the others add a long roster, several tabs and many cells.
+ * two rows of the own name and the connected tab's cells; the others add a long roster, several tabs and many cells, and
+ * the total's review sure, unsure and hand-picked.
  */
 object SheetScoresPreviewSamples {
     const val SUBJECT = "Математический анализ (продвинутый уровень)"
@@ -44,19 +48,38 @@ object SheetScoresPreviewSamples {
     /** The tabs with students when the own row was not found; one without a name. */
     val pickTab = SheetScoresUiState.PickTab(listOf(group, longTab, untitledTab))
 
-    /** The own row of the connected tab: the total (connected), a test, the grade and four labs. */
+    /** The own row of the connected tab: the total (connected), a module total, a test, the grade and four labs. */
+    val ownRow: List<SheetCell> = listOf(
+        "ЛР1" to "10",
+        "ЛР2" to "9",
+        "ЛР3" to "10",
+        "ЛР4" to "8",
+        "Тест к видеолекциям" to "8",
+        "ЛР · Итог" to "37",
+        TOTAL_HEADER to "66,3",
+        "Оценка" to "5A",
+    ).mapIndexed { index, (header, value) -> SheetCell(group, index + 2, header, value) }
+
+    val total = ownRow.single { it.headerPath == TOTAL_HEADER }
+    private val labs = ownRow.single { it.headerPath == "ЛР · Итог" }
+    private val test = ownRow.single { it.headerPath == "Тест к видеолекциям" }
+
+    /** The automatic total, sure of itself: its sum checks out; the module total and the test are the other chips. */
     val pickTotal = SheetScoresUiState.PickTotal(
-        cells = listOf(
-            TOTAL_HEADER to "66,3",
-            "Тест к видеолекциям" to "8",
-            "Оценка" to "5A",
-            "ЛР1" to "10",
-            "ЛР2" to "9",
-            "ЛР3" to "10",
-            "ЛР4" to "8",
-        ).mapIndexed { index, (header, value) -> SheetCell(group, index + 1, header, value) },
-        selected = SheetCell(group, 1, TOTAL_HEADER, "66,3"),
+        cells = ownRow,
+        selected = total,
+        decision = SheetTotalDecision(total, TotalReason.SUM_MATCHES, listOf(total, labs, ownRow.last())),
+        choice = TotalChoice.AUTO,
     )
+
+    /** An automatic total to check: the row is in another tab too. */
+    val pickTotalCheck = pickTotal.copy(
+        decision = SheetTotalDecision(total, TotalReason.SEVERAL_TABS, listOf(total, SheetCell(englishTab, 14, TOTAL_HEADER, "52"))),
+        choice = TotalChoice.AUTO_CHECK,
+    )
+
+    /** A total the viewer picked: «Выбрано вручную» and «Вернуть авто». */
+    val pickTotalManual = pickTotal.copy(selected = test, choice = TotalChoice.MANUAL)
 
     /** Two tabs of fifteen cells: a long header path, a column without a header, values as the sheet has them. */
     val manyCells: List<SheetCell> = listOf(group, englishTab).flatMap { tab ->
@@ -65,7 +88,8 @@ object SheetScoresPreviewSamples {
         ordered.mapIndexed { index, value -> SheetCell(tab, index + 1, header(index), value) }
     }
 
-    val pickManyTotals = SheetScoresUiState.PickTotal(manyCells, selected = manyCells.first())
+    /** No total header: every cell of the row at once, the grid of both tabs. */
+    val pickManyTotals = SheetScoresUiState.PickTotal(manyCells, selected = null)
 
     private fun header(index: Int): String = when (index) {
         0 -> TOTAL_HEADER

@@ -779,9 +779,13 @@ in [Shared components](#shared-components).
   (`ui/sheets/SheetScoresSheet.kt`) on the kit's `SheetScaffold` (handle, title,
   subject, one bounded area of at least 288 dp for loading, failures and the
   choices; choice rows with the title in `bodyLarge`, the caption in
-  `bodySmall`, the value in `titleSmall` at the end, `ic_check` in `primary`
-  and `selected` for the current total; the whole row is the target), hosted
-  by `app/shell/entries/RecordbookEntries.kt`.
+  `bodySmall`; the whole row is the target). The total's review: the value in
+  `headlineMedium`, its column and tab in `bodyMedium`, the reason in `bodySmall` (the warning
+  colour for a total to check), the own row around it as cell tiles (header in
+  `labelSmall` over the value in `titleSmall`, a 48 dp target, the total on
+  `primaryContainer`), the candidates and `Другая ячейка` as chips, `Вернуть
+  авто` for a hand-picked total. Hosted by `app/shell/entries/RecordbookEntries.kt`;
+  on iOS the SwiftUI `SheetScoresSheetView` on `ItmoSheet`.
 - The `.ics` sheet: `IcsExportSheetContent` (`:shared:feature-settings`,
   `feature/settings/ui/ics`) (handle, title,
   subtitle, one area of at least 288 dp for the ranges, loading, the file,

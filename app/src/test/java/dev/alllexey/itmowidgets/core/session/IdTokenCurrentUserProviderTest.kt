@@ -65,6 +65,19 @@ class IdTokenCurrentUserProviderTest {
     }
 
     @Test
+    fun `reads the name parts, a blank one as absent`() = runTest {
+        val provider = provider(
+            token("""{"isu":1,"name":"Иван Иванов","family_name":"Иванов","given_name":"Иван","middle_name":" "}""")
+        )
+
+        val user = provider.getCurrentUser()
+
+        assertEquals("Иванов", user?.familyName)
+        assertEquals("Иван", user?.givenName)
+        assertNull(user?.middleName)
+    }
+
+    @Test
     fun `an id token payload that is not a claims object reads as no user`() = runTest {
         for (payload in listOf("[]", "\"text\"", """{"isu":{"id":1}}""")) {
             assertNull(payload, provider(token(payload)).getCurrentUser())

@@ -41,6 +41,7 @@ class IdTokenCurrentUserProvider(
                 pictureUrl = claims.picture?.trim()?.takeIf(String::isNotEmpty),
                 familyName = claims.familyName?.trim()?.takeIf(String::isNotEmpty),
                 givenName = claims.givenName?.trim()?.takeIf(String::isNotEmpty),
+                middleName = claims.middleName?.trim()?.takeIf(String::isNotEmpty),
             ).takeIf { it.isu != null || it.name != null }
         } catch (error: Exception) {
             // Never log the token or its payload.
@@ -53,9 +54,10 @@ class IdTokenCurrentUserProvider(
     private data class IdTokenClaims(
         val isu: Int? = null,
         val name: String? = null,
+        val picture: String? = null,
         @SerialName("family_name") val familyName: String? = null,
         @SerialName("given_name") val givenName: String? = null,
-        val picture: String? = null
+        @SerialName("middle_name") val middleName: String? = null,
     )
 
     private companion object {

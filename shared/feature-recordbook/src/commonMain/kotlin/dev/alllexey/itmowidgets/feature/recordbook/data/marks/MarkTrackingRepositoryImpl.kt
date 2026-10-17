@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -83,12 +84,17 @@ class MarkTrackingRepositoryImpl(
 
     /** The demo session's news the user has read, in memory only. */
     private val demoRead = MutableStateFlow<Set<String>>(emptySet())
+    /**
+     * The moment the demo's news are dated back from, taken at the session's first read. A fresh `now` per read gave
+     * each reader its own instants, so the bell's ids (which carry them) seen in the sheet were not the badge's.
+     */
+    private val demoNow = MutableStateFlow<Instant?>(null)
 
     override fun observeNews(): Flow<List<MarkNews>> = observeHistory().map { news -> news.filterNot { it.read } }
 
     override fun observeHistory(): Flow<List<MarkNews>> = flow {
         if (demo.isActive()) {
-            emitAll(demoRead.map { read -> DemoRecordbook.news(time.today(), clock.now()).map { it.copy(read = it.id in read) } })
+            emitAll(demoRead.map { read -> demoNews().map { it.copy(read = it.id in read) } })
             return@flow
         }
         lock.withLock { loaded() }
@@ -251,7 +257,7 @@ class MarkTrackingRepositoryImpl(
 
     override suspend fun markAllRead() {
         if (demo.isActive()) {
-            demoRead.update { read -> read + DemoRecordbook.news(time.today(), clock.now()).map { it.id } }
+            demoRead.update { read -> read + demoNews().map { it.id } }
             return
         }
         update { stored -> stored.copy(news = stored.news.map { it.copy(read = true) }) }
@@ -270,12 +276,16 @@ class MarkTrackingRepositoryImpl(
 
     override suspend fun clearSessionData() {
         demoRead.value = emptySet()
+        demoNow.value = null
         generation.incrementAndFetch()
         lock.withLock {
             withContext(dispatchers.io) { store.clear() }
             state.value = StoredMarks()
         }
     }
+
+    private fun demoNews(): List<MarkNews> =
+        DemoRecordbook.news(time.today(), checkNotNull(demoNow.updateAndGet { it ?: clock.now() }))
 
     /** Every program's periods of [half]; the first failure fails the whole answer. */
     private suspend fun requestMyItmo(half: StudyHalf): AppResult<MyItmoMarkSnapshot> {

@@ -11,7 +11,7 @@ kotlin {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
             implementation(project(":shared:compose-strings"))
-            // QrCodeViewModel is a KMP ViewModel that :app obtains through Koin.
+            // QrPassViewModel is a KMP ViewModel that :app obtains through Koin.
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)

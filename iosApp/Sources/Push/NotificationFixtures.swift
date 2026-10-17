@@ -4,7 +4,8 @@ import Shared
 import UserNotifications
 
 /// Debug-only notifications a UI test taps before the app has a push token: `-itmoNotificationFixture <kind>` asks
-/// for permission, then posts one a moment after launch. `friendship` and `sport` are local notifications shaped like
+/// for permission, then posts one once the today tab first shows. Posted at launch, the banner came and went while a slow
+/// CI runner was still drawing the first screen, before the test could tap it. `friendship` and `sport` are local notifications shaped like
 /// Backend's pushes (`userInfo` with the `data` envelope and `recipient_isu`); `schedule-changes`, `marks` and
 /// `bars-login` go through the app's own notifier (`IosAppNotifier`) with the `userInfo` a real one carries. Every
 /// value is synthetic.
@@ -35,8 +36,13 @@ enum NotificationFixtures {
         }
     }
 
+    @MainActor private static var posted = false
+
+    /// Once per launch.
+    @MainActor
     static func postIfRequested(_ defaults: UserDefaults = .standard) {
-        guard let name = defaults.string(forKey: argument) else { return }
+        guard !posted, let name = defaults.string(forKey: argument) else { return }
+        posted = true
         if let kind = Kind(rawValue: name) {
             postOnceAllowed { try await UNUserNotificationCenter.current().add(request(kind)) }
         } else if let kind = LocalKind(rawValue: name) {

@@ -81,14 +81,28 @@ internal class SheetScoresSheetPickTabRowPreview {
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTabRow)
 }
 
-/** The cells of the connected tab with the connected total checked. */
+/** The total's review: the total, why, the row around it, the candidate chips. */
 internal class SheetScoresSheetPickTotalPreview {
     @Preview(name = "pick-total")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotal)
 }
 
-/** Thirty cells in two tabs: headings, a long header path, a column letter; the list scrolls inside the sheet. */
+/** An unsure automatic total: the reason to check in the warning colour. */
+internal class SheetScoresSheetPickTotalCheckPreview {
+    @Preview(name = "pick-total-check")
+    @Composable
+    fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalCheck)
+}
+
+/** A hand-picked total: «Выбрано вручную» and «Вернуть авто». */
+internal class SheetScoresSheetPickTotalManualPreview {
+    @Preview(name = "pick-total-manual")
+    @Composable
+    fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalManual)
+}
+
+/** No total header: thirty cells in two tabs as a grid, a long header path, a column letter; it scrolls in the sheet. */
 internal class SheetScoresSheetManyTotalsPreview {
     @Preview(name = "pick-total-many")
     @Composable

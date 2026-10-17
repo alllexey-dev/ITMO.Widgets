@@ -8,12 +8,14 @@ import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
-import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassViewModel
 import dev.alllexey.itmowidgets.feature.qr.widget.QrPassSnapshotWriter
 import dev.alllexey.itmowidgets.feature.qr.widget.TestDevice
 import io.ktor.client.engine.HttpClientEngine
@@ -35,7 +37,7 @@ import platform.UIKit.UIViewController
 
 /**
  * The QR route's graph as the iOS app starts it (`IosKoinModules`): the core module, [qrModule] and [qrIosModule],
- * with the account types and the simulator test binary's device stood in.
+ * with the account and social types and the simulator test binary's device stood in.
  */
 class QrIosModuleTest {
 
@@ -54,7 +56,7 @@ class QrIosModuleTest {
 
         definitions.forEach { definition -> koin.get<Any>(definition.primaryType, definition.qualifier) }
 
-        koin.get<QrCodeViewModel>()
+        koin.get<QrPassViewModel>()
         assertSame<Any>(koin.get<QrCodeRepository>(), koin.get<SessionDataCleaner>(named("qr")))
         koin.get<QrPassSnapshotWriter>()
         assertEquals(emptyList(), requests)
@@ -64,6 +66,7 @@ class QrIosModuleTest {
     private fun accountTypes() = module {
         single<DemoMode> { FakeDemoMode(active = true) }
         single<SessionRepository> { FakeSessionRepository(SessionState.SignedOut) }
+        single<SocialRepository> { FakeSocialRepository() }
     }
 
     /**

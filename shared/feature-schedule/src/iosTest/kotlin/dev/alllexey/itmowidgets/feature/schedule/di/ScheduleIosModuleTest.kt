@@ -68,6 +68,7 @@ import org.koin.core.annotation.KoinInternalApi
 import org.koin.core.parameter.parametersOf
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
+import platform.Foundation.NSThread
 import platform.UIKit.UIViewController
 
 /**
@@ -87,8 +88,19 @@ class ScheduleIosModuleTest {
         FileSystem.SYSTEM.createDirectories(root)
     }
 
+    /**
+     * Work the graph started on the default dispatcher (its view models and repositories) can still write after
+     * `koin.close()`; a file written between the listing and the removal of its directory failed the deletion
+     * ("Directory not empty" on CI), so the deletion is tried again until the writes have stopped.
+     */
     @AfterTest
-    fun deleteDevice() = FileSystem.SYSTEM.deleteRecursively(root)
+    fun deleteDevice() {
+        repeat(DELETE_ATTEMPTS - 1) {
+            if (runCatching { FileSystem.SYSTEM.deleteRecursively(root) }.isSuccess) return
+            NSThread.sleepForTimeInterval(0.1)
+        }
+        FileSystem.SYSTEM.deleteRecursively(root)
+    }
 
     /** Koin's `verify()` is JVM-only; on Kotlin/Native every definition is resolved instead. */
     @OptIn(KoinInternalApi::class)
@@ -261,6 +273,7 @@ class ScheduleIosModuleTest {
     }
 
     private companion object {
+        const val DELETE_ATTEMPTS = 20
         const val ORIGIN = "https://dev.widgets.alllexey.dev"
         const val USER = 100_001
         const val DATE = "2026-10-08"
