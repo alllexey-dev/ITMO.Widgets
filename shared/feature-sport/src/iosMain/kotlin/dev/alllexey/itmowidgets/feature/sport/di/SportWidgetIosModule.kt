@@ -19,7 +19,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import org.koin.core.qualifier.named
-import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
@@ -46,7 +45,8 @@ val sportWidgetIosModule = module {
                 ),
             )
         }
-    } bind AppGroupWidgetRefresh::class
+    }
+    single<AppGroupWidgetRefresh>(named("sport-widget")) { get<SportWidgetWriter>() }
     single(named(RefreshStepKeys.SPORT_WIDGET)) {
         val writer = get<SportWidgetWriter>()
         RefreshStep(RefreshStepKeys.SPORT_WIDGET, RefreshStepKeys.SPORT_WIDGET_PERIOD) {

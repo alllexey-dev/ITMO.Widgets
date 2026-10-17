@@ -32,7 +32,6 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
-import org.koin.dsl.bind
 import org.koin.dsl.module
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
@@ -60,7 +59,8 @@ val scheduleWidgetIosModule = module {
         ).also { writer ->
             writer.launchIn(CoroutineScope(SupervisorJob() + get<AppDispatchers>().main), triggers())
         }
-    } bind AppGroupWidgetRefresh::class
+    }
+    single<AppGroupWidgetRefresh>(named("schedule-timeline")) { get<ScheduleTimelineWriter>() }
     single<ScheduleWidgetRefreshRequester> {
         val scope = this
         ScheduleWidgetRefreshRequester { scope.getAll<AppGroupWidgetRefresh>().forEach(AppGroupWidgetRefresh::requestWrite) }
