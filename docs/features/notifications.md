@@ -52,9 +52,28 @@ before clearing credentials.
 
 `sport`, `friends`, `schedule_changes`, `marks`, `connections`, all default importance,
 created on start (`AppNotificationChannels`). Android owns permission, sound
-and per-channel visibility; the app has no duplicate switches. Friend
+and per-channel visibility; the app has no duplicate switches for them. Friend
 notifications use the actor's ISU as id (a repeated request replaces the old
 one) and are grouped under a summary.
+
+## Settings page
+
+«Уведомления» (`AppRoutes.Settings` `NOTIFICATIONS`, DECISIONS.md: one settings
+page) is the only home of notification settings; the bell's last row, the
+settings root and the schedule settings link to it. `NotificationSettingsViewModel`
+(`:shared:feature-settings`, `presentation/notifications`) serves the Compose and
+the SwiftUI screens; details are in [settings](../settings.md#notifications).
+
+- The local checks have their switches here: `Баллы` (the mark check, with its
+  sources My ITMO, БАРС once BARS has answered, and the teachers' sheets) and
+  `Изменения расписания`. Each type shows how it arrives
+  (`NotificationPreviews`: the notifiers' own titles with sample values).
+- The pushes (`Спорт и очереди`, `Заявки в друзья`, `Новые устройства`) have no
+  switch of the app: without the connection the row says it is needed and opens
+  «Подключение и данные»; on Android the row shows the channel's state and opens
+  the channel's system page; on iOS it opens the app's notification settings.
+- While the system denies notifications a gate with `Разрешить` stands first and
+  the settings below stay, dimmed.
 
 ## Sport handler
 

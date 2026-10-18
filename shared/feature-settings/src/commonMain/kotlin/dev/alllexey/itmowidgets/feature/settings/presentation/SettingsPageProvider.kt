@@ -4,7 +4,6 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
-import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -46,13 +45,10 @@ interface SettingsPageProvider {
  */
 data class SettingsPageState(
     val local: LocalSettings,
-    val sharing: SharingSettingsState,
     /** Null until the screen has asked the system. */
     val notificationsGranted: Boolean?,
     val hasCustomSpoiler: Boolean,
     val imageBusy: Boolean,
-    /** True only once Android is known to restrict the app in the background. */
-    val backgroundWorkRestricted: Boolean,
     val calendar: CalendarSyncState = CalendarSyncState(),
     val diagnosticsCount: Int = 0,
     /** How many widgets of each format the home screen holds, as the gallery screen last counted; empty until then. */

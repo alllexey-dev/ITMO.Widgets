@@ -11,9 +11,9 @@ import androidx.compose.ui.graphics.painter.Painter
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.HexColor
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.controls.ColorPicker
 import dev.alllexey.itmowidgets.designsystem.components.controls.ColorPickerLabels
-import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialogSurface
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
@@ -24,22 +24,17 @@ import dev.alllexey.itmowidgets.designsystem.theme.accentSwatch
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
+import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
+import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_add
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_done
-import dev.alllexey.itmowidgets.shared.feature.settings.background_work_allow
-import dev.alllexey.itmowidgets.shared.feature.settings.background_work_dialog_message
-import dev.alllexey.itmowidgets.shared.feature.settings.background_work_later
 import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_allow
 import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_later
 import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_open_settings
 import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_rationale
 import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_background_work_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_consent_message
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_consent_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_enable
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_done
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_brightness
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_hex
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_hex_error
@@ -48,24 +43,16 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_pr
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_saturation
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** A dialog of a settings page. Each one is saved by [SettingsDialogState], so it comes back after recreation. */
 sealed interface SettingsDialog {
 
     /**
-     * The single choice of the [SettingItem.Choice] row [id]: text size, the QR animation, the privacy audiences, the
+     * The single choice of the [SettingItem.Choice] row [id]: text size, the QR animation, the
      * colour swatches of the accent colour. It shows the row as the page has it now and is not drawn while the page
      * has no such row.
      */
     data class Choice(val id: SettingRowId) : SettingsDialog
-
-    /** The custom-services consent, asked before they are turned on. */
-    data object CustomServicesConsent : SettingsDialog
-
-    /** The once-per-device offer to let the app work in the background. */
-    data object BackgroundWorkHint : SettingsDialog
 
     /** Why the app asks for the calendar; [locked] after a refusal for good, when only the app's system page helps. */
     data class CalendarAccess(val locked: Boolean) : SettingsDialog
@@ -93,15 +80,11 @@ class SettingsDialogState(initial: SettingsDialog? = null) {
     fun save(): String? = when (val shown = dialog) {
         null -> null
         is SettingsDialog.Choice -> CHOICE_PREFIX + shown.id.name
-        SettingsDialog.CustomServicesConsent -> CUSTOM_SERVICES
-        SettingsDialog.BackgroundWorkHint -> BACKGROUND_WORK
         is SettingsDialog.CalendarAccess -> if (shown.locked) CALENDAR_ACCESS_LOCKED else CALENDAR_ACCESS
     }
 
     companion object {
         private const val CHOICE_PREFIX = "choice:"
-        private const val CUSTOM_SERVICES = "custom-services"
-        private const val BACKGROUND_WORK = "background-work"
         private const val CALENDAR_ACCESS = "calendar-access"
         private const val CALENDAR_ACCESS_LOCKED = "calendar-access-locked"
 
@@ -112,8 +95,6 @@ class SettingsDialogState(initial: SettingsDialog? = null) {
                 saved.startsWith(CHOICE_PREFIX) -> SettingRowId.entries
                     .firstOrNull { it.name == saved.removePrefix(CHOICE_PREFIX) }
                     ?.let(SettingsDialog::Choice)
-                saved == CUSTOM_SERVICES -> SettingsDialog.CustomServicesConsent
-                saved == BACKGROUND_WORK -> SettingsDialog.BackgroundWorkHint
                 saved == CALENDAR_ACCESS -> SettingsDialog.CalendarAccess(locked = false)
                 saved == CALENDAR_ACCESS_LOCKED -> SettingsDialog.CalendarAccess(locked = true)
                 else -> null
@@ -178,24 +159,6 @@ internal fun SettingsDialogBody(
                 SettingsChoice(windowed, item, onSelect = { key -> onConfirm { actions.onChoice(item.id, key) } }, onDismiss)
             }
         }
-        SettingsDialog.CustomServicesConsent -> SettingsConfirm(
-            windowed = windowed,
-            title = stringResource(Res.string.settings_custom_services_consent_title),
-            text = stringResource(Res.string.settings_custom_services_consent_message),
-            confirmLabel = stringResource(Res.string.settings_custom_services_enable),
-            dismissLabel = stringResource(CoreRes.string.common_cancel),
-            onConfirm = { onConfirm { actions.onToggle(SettingRowId.CUSTOM_SERVICES, true) } },
-            onDismiss = onDismiss,
-        )
-        SettingsDialog.BackgroundWorkHint -> SettingsConfirm(
-            windowed = windowed,
-            title = stringResource(Res.string.settings_background_work_title),
-            text = stringResource(Res.string.background_work_dialog_message),
-            confirmLabel = stringResource(Res.string.background_work_allow),
-            dismissLabel = stringResource(Res.string.background_work_later),
-            onConfirm = { onConfirm { actions.onAllowBackgroundWork() } },
-            onDismiss = onDismiss,
-        )
         // The Material 3 hero-icon dialog: the calendar in the secondary colour above a centred title.
         is SettingsDialog.CalendarAccess -> SettingsConfirm(
             windowed = windowed,

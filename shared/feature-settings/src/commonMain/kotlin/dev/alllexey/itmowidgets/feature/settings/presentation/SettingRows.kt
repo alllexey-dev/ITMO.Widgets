@@ -1,8 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 
 /** Rows more than one page shows. */
 internal object SettingRows {
@@ -16,13 +14,5 @@ internal object SettingRows {
         title = title,
         value = value,
         page = page
-    )
-
-    /** The whole row is the button: it opens the system page, and the row leaves once Android lets the app work. */
-    fun backgroundWork() = SettingItem.Action(
-        id = SettingRowId.BACKGROUND_WORK,
-        title = UiText.Res(SettingsStrings.settings_background_work_title),
-        description = UiText.Res(SettingsStrings.background_work_hint),
-        trailingIcon = AppIcon.OPEN_IN_NEW
     )
 }

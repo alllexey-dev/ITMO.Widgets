@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -15,9 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,9 +42,13 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
-import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
-import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialogSurface
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
+import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoMarkTile
+import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
+import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
+import dev.alllexey.itmowidgets.designsystem.kit.IconTile
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
+import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthUiState
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
@@ -48,37 +56,36 @@ import dev.alllexey.itmowidgets.shared.compose.strings.app_name
 import dev.alllexey.itmowidgets.shared.compose.strings.app_unofficial_notice
 import dev.alllexey.itmowidgets.shared.compose.strings.auth_initializing
 import dev.alllexey.itmowidgets.shared.compose.strings.auth_signing_in
-import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
-import dev.alllexey.itmowidgets.shared.designsystem.ic_exercise
-import dev.alllexey.itmowidgets.shared.designsystem.ic_group
+import dev.alllexey.itmowidgets.shared.designsystem.ic_content_paste
+import dev.alllexey.itmowidgets.shared.designsystem.ic_key
+import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import dev.alllexey.itmowidgets.shared.designsystem.ic_login
-import dev.alllexey.itmowidgets.shared.designsystem.ic_schedule
 import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.auth_feature_friends
-import dev.alllexey.itmowidgets.shared.feature.account.auth_feature_sport
-import dev.alllexey.itmowidgets.shared.feature.account.auth_feature_widgets
 import dev.alllexey.itmowidgets.shared.feature.account.auth_login_itmo_id
 import dev.alllexey.itmowidgets.shared.feature.account.auth_login_refresh_token
 import dev.alllexey.itmowidgets.shared.feature.account.auth_logo
-import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_dialog_description
-import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_dialog_title
 import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_hint
+import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_note
+import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_placeholder
 import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_required
+import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_sign_in
 import dev.alllexey.itmowidgets.shared.feature.account.auth_official_page_notice
+import dev.alllexey.itmowidgets.shared.feature.account.auth_other_text
 import dev.alllexey.itmowidgets.shared.feature.account.auth_reauthentication_description
-import dev.alllexey.itmowidgets.shared.feature.account.auth_sign_in
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.StringResource
+import dev.alllexey.itmowidgets.shared.feature.account.auth_tagline
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The sign-in screen (`auth`): the logo, the app name, what the app does, the ITMO.ID sign-in and the refresh-token
- * sign-in, with the notices under them. While the session is checked only the loading indicator shows. The logo is the hidden
- * demo entry: every tap goes to [onLogoTap] through a plain pointer handler, not a click, so accessibility services
- * never stop on it. [onSignInWithToken] gets the token typed into the refresh-token dialog; the token lives in that
- * dialog's composition only and is dropped when the dialog closes.
+ * The sign-in screen (`auth`, DECISIONS.md «Вход»): the app mark, the name, one line on what the app does, and one
+ * main path, `Войти через ITMO.ID`, with the note that the password goes only to the ITMO.ID page. The refresh token
+ * waits under `Другие способы входа` in a sheet. While the session is checked only the loading indicator shows.
+ * The mark is the hidden demo entry (ADR 0015): every tap goes to [onLogoTap] through a plain pointer handler, not a
+ * click, so accessibility services never stop on it, and nothing else on the screen names the demo.
+ * [onSignInWithToken] gets the token typed into the sheet; the token lives in the sheet's composition only and is
+ * dropped when the sheet closes.
  */
 @Composable
 fun AuthScreen(
@@ -107,7 +114,7 @@ fun AuthScreen(
         }
     }
     if (asksToken) {
-        RefreshTokenDialog(
+        OtherWaysSheet(
             onSignIn = { token ->
                 asksToken = false
                 onSignInWithToken(token)
@@ -125,48 +132,44 @@ private fun AuthContent(
     onAskToken: () -> Unit,
 ) {
     val loginEnabled = !state.manualLoginInProgress && !state.sessionTransitionInProgress
+    val colors = ItmoTheme.colorScheme
     val textModifier = Modifier.fillMaxWidth()
     Column(
         Modifier
             .fillMaxSize()
             .testTag(AuthTestTags.CONTENT)
             .verticalScroll(rememberScrollState())
-            .padding(start = ScreenPadding, top = TopPadding, end = ScreenPadding, bottom = BottomPadding),
+            .padding(horizontal = ScreenPadding, vertical = ItmoTheme.spacing.group),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Spacer(Modifier.heightIn(min = TopSpace))
         Logo(onLogoTap)
         Text(
             stringResource(CoreRes.string.app_name),
-            textModifier.padding(top = ItmoTheme.spacing.section),
-            color = ItmoTheme.colorScheme.onSurface,
+            textModifier.padding(top = ItmoTheme.spacing.group),
+            color = colors.onSurface,
             textAlign = TextAlign.Center,
-            style = ItmoTheme.typography.headlineSmall,
+            style = ItmoTheme.emphasizedTypography.displaySmall,
         )
-        // The feature lines stay; only an expired session needs a line explaining itself.
-        if (state.reauthenticationRequired) {
-            Text(
-                stringResource(Res.string.auth_reauthentication_description),
-                textModifier
-                    .padding(top = ItmoTheme.spacing.compact)
-                    .testTag(AuthTestTags.REAUTH_NOTICE),
-                color = ItmoTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                style = ItmoTheme.typography.bodyLarge,
-            )
-        }
-        Column(
-            Modifier.padding(top = ItmoTheme.spacing.section),
-            verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
-        ) {
-            Features.forEach { (icon, text) -> FeatureRow(icon, text) }
-        }
+        Text(
+            stringResource(
+                if (state.reauthenticationRequired) Res.string.auth_reauthentication_description else Res.string.auth_tagline,
+            ),
+            textModifier
+                .padding(top = ItmoTheme.spacing.compact)
+                .then(if (state.reauthenticationRequired) Modifier.testTag(AuthTestTags.REAUTH_NOTICE) else Modifier),
+            color = colors.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            style = ItmoTheme.typography.bodyLarge,
+        )
+        Spacer(Modifier.heightIn(min = ButtonsTopSpace))
         state.error?.let { error ->
             Text(
                 error.asString(),
                 textModifier
-                    .padding(top = ItmoTheme.spacing.group)
+                    .padding(bottom = ItmoTheme.spacing.content)
                     .testTag(AuthTestTags.ERROR),
-                color = ItmoTheme.colorScheme.error,
+                color = colors.error,
                 textAlign = TextAlign.Center,
                 style = ItmoTheme.typography.bodyMedium,
             )
@@ -175,11 +178,23 @@ private fun AuthContent(
             label = stringResource(Res.string.auth_login_itmo_id),
             onClick = onSignInWithItmoId,
             modifier = textModifier
-                .padding(top = ButtonsTopPadding)
+                .heightIn(min = MainButtonHeight)
                 .testTag(AuthTestTags.ITMO_ID_LOGIN),
             enabled = loginEnabled,
             icon = painterResource(KitRes.drawable.ic_login),
         )
+        Row(
+            Modifier.padding(top = ItmoTheme.spacing.content),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
+        ) {
+            Icon(painterResource(KitRes.drawable.ic_lock), null, Modifier.size(NoteIconSize), tint = colors.onSurfaceVariant)
+            Text(
+                stringResource(Res.string.auth_official_page_notice),
+                color = colors.onSurfaceVariant,
+                style = ItmoTheme.typography.bodySmall,
+            )
+        }
         ProgressButton(
             label = stringResource(Res.string.auth_login_refresh_token),
             onClick = onAskToken,
@@ -200,101 +215,103 @@ private fun AuthContent(
             )
         }
         Text(
-            stringResource(Res.string.auth_official_page_notice),
-            textModifier.padding(top = ItmoTheme.spacing.section),
-            color = ItmoTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            style = ItmoTheme.typography.bodySmall,
-        )
-        Text(
             stringResource(CoreRes.string.app_unofficial_notice),
             textModifier
                 .padding(top = ItmoTheme.spacing.compact)
                 .testTag(AuthTestTags.UNOFFICIAL_NOTICE),
-            color = ItmoTheme.colorScheme.onSurfaceVariant,
+            color = colors.outline,
             textAlign = TextAlign.Center,
-            style = ItmoTheme.typography.bodySmall,
+            style = ItmoTheme.typography.labelSmall,
         )
     }
 }
 
-/** The 88 dp logo, decorative for accessibility services; taps reach [onTap] without a click action. */
+/** The app mark in its cookie tile, decorative for accessibility services; taps reach [onTap] without a click action. */
 @Composable
 private fun Logo(onTap: () -> Unit) {
     val currentOnTap by rememberUpdatedState(onTap)
-    Image(
-        painterResource(Res.drawable.auth_logo),
-        contentDescription = null,
-        modifier = Modifier
-            .size(LogoSize)
+    ItmoMarkTile(
+        LogoTileSize,
+        Modifier
             .testTag(AuthTestTags.LOGO)
             .pointerInput(Unit) { detectTapGestures(onTap = { currentOnTap() }) },
-    )
+    ) {
+        Image(painterResource(Res.drawable.auth_logo), contentDescription = null, modifier = Modifier.size(LogoSize))
+    }
 }
 
-/** `Widget.ItmoWidgets.FeatureRow`: a 24 dp `onSurfaceVariant` icon, 12 dp, the text in `bodyLarge`. */
+/** `Другие способы входа`: the refresh token in a sheet over the screen. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FeatureRow(icon: DrawableResource, text: StringResource) {
-    Row(Modifier.heightIn(min = FeatureIconSize), verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            painterResource(icon),
-            contentDescription = null,
-            modifier = Modifier
-                .padding(end = ItmoTheme.spacing.content)
-                .size(FeatureIconSize),
-            tint = ItmoTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(stringResource(text), color = ItmoTheme.colorScheme.onSurface, style = ItmoTheme.typography.bodyLarge)
+private fun OtherWaysSheet(onSignIn: (String) -> Unit, onDismiss: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        dragHandle = null,
+        containerColor = ItmoTheme.colorScheme.surfaceContainerLow,
+    ) {
+        OtherWaysSheetContent(onSignIn, onDismiss)
     }
 }
 
 /**
- * Asks for a refresh token. «Войти» with an empty field shows `auth_manual_token_required` and keeps the dialog;
- * otherwise the field is emptied and [onSignIn] gets the token. The token is `remember`ed, never saved into the
- * instance state, so it leaves with the dialog.
+ * The sheet's body: why it exists, then the refresh token card. `Войти по токену` with an empty field shows
+ * `auth_manual_token_required` and keeps the sheet; otherwise the field is emptied and [onSignIn] gets the token.
+ * The token is `remember`ed, never saved into the instance state, so it leaves with the sheet.
  */
 @Composable
-private fun RefreshTokenDialog(onSignIn: (String) -> Unit, onDismiss: () -> Unit) {
+internal fun OtherWaysSheetContent(onSignIn: (String) -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     var token by remember { mutableStateOf("") }
     var missing by remember { mutableStateOf(false) }
-    ConfirmDialog(
-        title = stringResource(Res.string.auth_manual_dialog_title),
-        confirmLabel = stringResource(Res.string.auth_sign_in),
-        dismissLabel = stringResource(CoreRes.string.common_cancel),
-        onConfirm = {
-            if (token.isBlank()) {
-                missing = true
-            } else {
-                val value = token
-                token = ""
-                onSignIn(value)
-            }
-        },
-        onDismiss = {
+    val colors = ItmoTheme.colorScheme
+    SheetScaffold(
+        title = stringResource(Res.string.auth_login_refresh_token),
+        modifier = modifier.testTag(AuthTestTags.OTHER_WAYS),
+        close = SheetClose(stringResource(CoreRes.string.common_close)) {
             token = ""
             onDismiss()
         },
-        text = stringResource(Res.string.auth_manual_dialog_description),
-        content = { RefreshTokenField(token, missing, onValueChange = { token = it }) },
-    )
+    ) {
+        Column(
+            Modifier.padding(horizontal = ItmoTheme.spacing.section),
+            verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+        ) {
+            Text(stringResource(Res.string.auth_other_text), color = colors.onSurfaceVariant, style = ItmoTheme.typography.bodyLarge)
+            ItmoCard {
+                Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content), verticalAlignment = Alignment.CenterVertically) {
+                    IconTile(painterResource(KitRes.drawable.ic_key), Tone.Primary)
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(Res.string.auth_manual_token_hint), style = ItmoTheme.typography.titleMedium)
+                        Text(
+                            stringResource(Res.string.auth_manual_token_note),
+                            color = colors.onSurfaceVariant,
+                            style = ItmoTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+                RefreshTokenField(token, missing, onValueChange = {
+                    token = it
+                    missing = false
+                })
+                ProgressButton(
+                    label = stringResource(Res.string.auth_manual_token_sign_in),
+                    onClick = {
+                        if (token.isBlank()) {
+                            missing = true
+                        } else {
+                            val value = token
+                            token = ""
+                            onSignIn(value)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag(AuthTestTags.TOKEN_SIGN_IN),
+                )
+            }
+        }
+    }
 }
 
-/** The refresh-token dialog without its window, for previews. */
-@Composable
-internal fun RefreshTokenDialogSurface(token: String, missing: Boolean, modifier: Modifier = Modifier) {
-    ConfirmDialogSurface(
-        title = stringResource(Res.string.auth_manual_dialog_title),
-        confirmLabel = stringResource(Res.string.auth_sign_in),
-        dismissLabel = stringResource(CoreRes.string.common_cancel),
-        onConfirm = {},
-        onDismiss = {},
-        modifier = modifier,
-        text = stringResource(Res.string.auth_manual_dialog_description),
-        content = { RefreshTokenField(token, missing, onValueChange = {}) },
-    )
-}
-
-/** `dialog_auth_refresh_token.xml`: an outlined password field, one line, no suggestions. */
+/** An outlined password field, one line, no suggestions, with the paste mark. */
 @Composable
 private fun RefreshTokenField(token: String, missing: Boolean, onValueChange: (String) -> Unit) {
     OutlinedTextField(
@@ -302,14 +319,17 @@ private fun RefreshTokenField(token: String, missing: Boolean, onValueChange: (S
         onValueChange = onValueChange,
         modifier = Modifier
             .fillMaxWidth()
+            .padding(top = ItmoTheme.spacing.compact)
             .testTag(AuthTestTags.TOKEN_INPUT),
-        label = { Text(stringResource(Res.string.auth_manual_token_hint)) },
+        placeholder = { Text(stringResource(Res.string.auth_manual_token_placeholder)) },
+        trailingIcon = { Icon(painterResource(KitRes.drawable.ic_content_paste), contentDescription = null) },
         supportingText = if (missing) {
             { Text(stringResource(Res.string.auth_manual_token_required)) }
         } else {
             null
         },
         isError = missing,
+        shape = ItmoTheme.shapes.large,
         visualTransformation = PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
         singleLine = true,
@@ -327,20 +347,17 @@ object AuthTestTags {
     const val REFRESH_TOKEN_LOGIN = "refresh_token_login_button"
     const val MANUAL_PROGRESS = "manual_login_progress"
     const val UNOFFICIAL_NOTICE = "auth_unofficial_notice"
+    const val OTHER_WAYS = "auth_other_ways"
     const val TOKEN_INPUT = "refresh_token_input"
+    const val TOKEN_SIGN_IN = "refresh_token_sign_in"
 }
 
-private val Features = listOf(
-    KitRes.drawable.ic_schedule to Res.string.auth_feature_widgets,
-    KitRes.drawable.ic_exercise to Res.string.auth_feature_sport,
-    KitRes.drawable.ic_group to Res.string.auth_feature_friends,
-)
-
-private val LogoSize = 88.dp
-private val FeatureIconSize = 24.dp
+private val LogoTileSize = 132.dp
+private val LogoSize = 96.dp
 private val ScreenPadding = 24.dp
-private val TopPadding = 64.dp
-private val BottomPadding = 32.dp
-private val ButtonsTopPadding = 32.dp
-/** The XML `manual_login_progress`'s 32 dp, now the kit's loading indicator for a short wait. */
+private val TopSpace = 96.dp
+private val ButtonsTopSpace = 72.dp
+private val MainButtonHeight = 56.dp
+private val NoteIconSize = 16.dp
+/** The kit's loading indicator for a short wait. */
 private val ManualProgressSize = 32.dp

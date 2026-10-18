@@ -18,7 +18,6 @@ struct SettingsScreen: View {
     @State private var system = SettingsSystemState()
     @State private var pendingToggles: [SettingRowId: Bool] = [:]
     @State private var message: SettingsMessage?
-    @State private var showsBackgroundHint = false
     @State private var showsCalendarRationale = false
     @State private var showsIcsExport = false
     @State private var widgetPreviews = WidgetGalleryPreviews()
@@ -78,21 +77,6 @@ struct SettingsScreen: View {
             }
         }
         .animation(.default, value: message?.id)
-        .alert(
-            Text(verbatim: AppStrings.string("ios_background_refresh_title")),
-            isPresented: $showsBackgroundHint
-        ) {
-            Button {
-                open(UIApplication.openSettingsURLString)
-            } label: {
-                Text(verbatim: AppStrings.string("ios_background_refresh_open_settings"))
-            }
-            Button(role: .cancel) {} label: {
-                Text(verbatim: AppStrings.string("background_work_later"))
-            }
-        } message: {
-            Text(verbatim: AppStrings.string("ios_background_refresh_off"))
-        }
         .calendarAccessRationale(isPresented: $showsCalendarRationale) {
             open(UIApplication.openSettingsURLString)
         }
@@ -133,19 +117,11 @@ struct SettingsScreen: View {
         switch onEnum(of: event) {
         case .widgetsRefreshStarted:
             show(AppStrings.string("settings_refresh_widgets_started"))
-        case .openNotificationSettings, .requestNotificationPermission:
-            Task { await openNotifications() }
         case .openDiagnostics:
             router.open(AppRoutes.Diagnostics.shared)
-        case .openConnections:
-            router.open(AppRoutes.Connections.shared)
         case .closeOverlays:
             // The onboarding flag is reset; the session gate shows the first-run flow, settings only leave.
             router.setPath([], of: router.selectedTab)
-        case .openBackgroundWorkSettings:
-            open(UIApplication.openSettingsURLString)
-        case .showBackgroundWorkHint:
-            showsBackgroundHint = true
         case let .openWebPage(page):
             if let url = SettingsLinks.webPage(page.path) { openURL(url) }
         case let .showMessage(shown):
@@ -185,23 +161,11 @@ struct SettingsScreen: View {
         }
     }
 
-    /// Asks once while iOS has never asked; after that only Settings can change the answer.
-    private func openNotifications() async {
-        let center = UNUserNotificationCenter.current()
-        if await center.notificationSettings().authorizationStatus == .notDetermined {
-            _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
-            await readSystemState()
-        } else {
-            open(UIApplication.openNotificationSettingsURLString)
-        }
-    }
-
     private func readSystemState() async {
         let status = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
         let granted = [.authorized, .provisional, .ephemeral].contains(status)
         system.backgroundRefresh = UIApplication.shared.backgroundRefreshStatus
         model.viewModel.onNotificationPermissionChanged(granted: granted)
-        model.viewModel.onBackgroundWorkChanged()
         await countPlacedWidgets()
     }
 

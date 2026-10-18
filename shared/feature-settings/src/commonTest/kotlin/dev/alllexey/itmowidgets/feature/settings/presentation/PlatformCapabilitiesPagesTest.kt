@@ -48,23 +48,6 @@ class PlatformCapabilitiesPagesTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun rootListsTheRecordbookPageOnlyWithMarkTracking() = runTest(main.dispatcher) {
-        val withoutMarks = createFixture(capabilities = EveryPlatformCapability.copy(marks = false))
-        val withMarks = createFixture()
-        advanceUntilIdle()
-
-        val pages = withoutMarks.viewModel.allItems().filterIsInstance<SettingItem.Navigation>().map { it.page }
-        assertEquals(
-            SettingsPage.entries.filter { it != SettingsPage.ROOT && it != SettingsPage.RECORDBOOK },
-            pages
-        )
-        assertTrue(
-            withMarks.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
-                .any { it.page == SettingsPage.RECORDBOOK }
-        )
-    }
-
-    @Test
     fun qrPageDropsTheTileTheAnimationAndTheCustomImageWithoutTheirCapabilities() = runTest(main.dispatcher) {
         val local = LocalSettings(qrWidget = QrWidgetSettings(spoilerEnabled = true))
         val fixture = createFixture(
@@ -104,7 +87,7 @@ class PlatformCapabilitiesPagesTest {
         advanceUntilIdle()
 
         val ids = fixture.viewModel.allItems().map { it.id }
-        assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES, SettingRowId.SCHEDULE_SPORT_AUTO_SIGN), ids)
+        assertEquals(listOf(SettingRowId.PAGE_NOTIFICATIONS, SettingRowId.SCHEDULE_SPORT_AUTO_SIGN), ids)
         assertEquals(2, fixture.viewModel.uiState.value.sections.size)
         assertTrue(fixture.viewModel.uiState.value.loaded)
     }

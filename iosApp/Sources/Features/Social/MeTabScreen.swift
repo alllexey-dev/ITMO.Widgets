@@ -133,13 +133,12 @@ struct MeContent: View {
                 action: { actions.open(connection) }
             )
             .accessibilityIdentifier("connection_row")
-            // The notifications and widgets pages come with phase 7; until then both open the settings root.
             ItmoRow(
                 title: AppStrings.string("me_notifications_title"),
                 symbol: .notification,
                 tone: .warn,
                 chevron: true,
-                action: { actions.open(AppRoutes.Settings(page: "ROOT")) }
+                action: { actions.open(AppRoutes.Settings(page: "NOTIFICATIONS")) }
             )
             .accessibilityIdentifier("notifications_row")
             ItmoRow(

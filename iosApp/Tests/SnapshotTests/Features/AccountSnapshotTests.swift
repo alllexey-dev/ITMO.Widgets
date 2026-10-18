@@ -83,7 +83,7 @@ final class AccountSnapshotTests: XCTestCase {
 
     func testConnectionsList() async {
         let state = await fixtureConnections()
-        assertAppearances(of: NavigationStack { ConnectionsList(state: state) }, named: "connections", height: pageHeight)
+        assertScreenAppearances(of: NavigationStack { ConnectionsList(state: state) }, named: "connections", height: pageHeight)
     }
 
     func testConnectionsEmpty() {
@@ -135,7 +135,7 @@ final class AccountSnapshotTests: XCTestCase {
     // MARK: Helpers
 
     private func webLogin(_ state: WebLoginUiState, code: String = "") -> some View {
-        WebLoginContent(state: state, code: .constant(code))
+        WebLoginContent(state: state, code: .constant(code)).background(Color(.systemGroupedBackground))
     }
 
     /// The fixture's card: Chrome on macOS for the sign-in link, the agent «nas» for the pairing link, requested at

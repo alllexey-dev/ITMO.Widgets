@@ -15,6 +15,12 @@ tokens ITMO.ID issues and never sees a password. See also
   launches `LoginActivity` for a result and plays the demo confirmation.
 - `AuthUiState` follows `SessionRepository.state`; errors map in
   `toAuthText` (a malformed token response counts as `Unauthorized`).
+- The look (DECISIONS.md, Вход): the app mark in its tile, the name, one line on
+  what the app does (or that the session ended), one main path `Войти через
+  ITMO.ID` with `Логин и пароль — только на странице ITMO.ID`, and `Другие
+  способы входа`, which opens a sheet with the refresh token card (`Войти по
+  токену`). The unofficial notice closes the screen. The demo stays on five taps
+  on the mark (ADR 0015); nothing on the screen names it.
 
 ## ITMO.ID page
 
@@ -39,8 +45,9 @@ tokens ITMO.ID issues and never sees a password. See also
 
 `SessionRepositoryImpl` implements `core/session/SessionRepository`.
 
-- Refresh-token sign-in: the dialog keeps the token in `remember` only, never
-  in saved state; `signInWithRefreshToken` refreshes it once via the stateless
+- Refresh-token sign-in: the `Другие способы входа` sheet keeps the token in
+  `remember` (SwiftUI `@State`) only, never in saved state, and drops it when it
+  closes; `signInWithRefreshToken` refreshes it once via the stateless
   `identity.refresh`, and the current session stays until that succeeds.
 
 - `initialize()`: an active demo restores the demo; no refresh token is
@@ -81,7 +88,8 @@ Same shared ViewModels and `SessionRepository` under SwiftUI
   while signed in. Initialization, sign-in and enabling custom services sync on
   both platforms. Demo and disabled custom services send nothing.
 
-- `AuthScreen` (`iosApp/Sources/Features/Auth/`); `ItmoSignInScreen`: `WKWebView` on the default data store with the same
+- `AuthScreen` (`iosApp/Sources/Features/Auth/`) with the same look; the refresh token
+  is `AuthOtherWaysSheet`. `ItmoSignInScreen`: `WKWebView` on the default data store with the same
   `token_refresh_interceptor.js`, accepted only from the main frame of
   `https://my.itmo.ru` on `/login/callback`. As on Android, every load (a
   fresh page, a retry) first clears WebKit's website data

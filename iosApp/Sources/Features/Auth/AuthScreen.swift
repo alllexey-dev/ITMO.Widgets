@@ -2,14 +2,15 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// Android's `AuthScreen` over the shared `AuthViewModel`: the logo, the app name, what the app does, the
-/// ITMO.ID sign-in (`ItmoSignInScreen` above it) and the refresh-token sign-in, with the notices under them. Five taps
-/// on the logo open the demo session (`DemoEntryTaps`); the logo stays decorative for VoiceOver, as on Android.
+/// The sign-in screen over the shared `AuthViewModel` (DECISIONS.md, sign-in): the app mark, the name, one line on what
+/// the app does and one main path, `auth_login_itmo_id` (`ItmoSignInScreen` above it), with the note that the
+/// password goes only to the ITMO.ID page. The refresh token waits under `auth_login_refresh_token` in a sheet. Five taps
+/// on the mark open the demo session (`DemoEntryTaps`, ADR 0015); the mark stays decorative for VoiceOver, as on
+/// Android, and nothing else names the demo.
 struct AuthScreen: View {
     @State private var model = ObservableViewModel(AuthViewModel.self, state: \.uiState)
     @State private var showsSignInPage = false
-    @State private var asksRefreshToken = false
-    @State private var refreshToken = ""
+    @State private var showsOtherWays = false
 
     var body: some View {
         AuthContent(
@@ -19,7 +20,7 @@ struct AuthScreen: View {
                 model.viewModel.clearError()
                 showsSignInPage = true
             },
-            signInWithRefreshToken: { asksRefreshToken = true }
+            signInWithRefreshToken: { showsOtherWays = true }
         )
         .observing(model)
         .onEvents(of: model, \.events) { event in
@@ -33,26 +34,11 @@ struct AuthScreen: View {
         .fullScreenCover(isPresented: $showsSignInPage, onDismiss: model.viewModel.clearError) {
             ItmoSignInScreen { showsSignInPage = false }
         }
-        .alert(Text(verbatim: AppStrings.string("auth_manual_dialog_title")), isPresented: $asksRefreshToken) {
-            SecureField(AppStrings.string("auth_manual_token_hint"), text: $refreshToken)
-                .textContentType(.oneTimeCode)
-                .accessibilityIdentifier("auth.refreshToken.field")
-            Button(role: .cancel) {
-                refreshToken = ""
-            } label: {
-                Text(verbatim: AppStrings.string("common_cancel"))
-            }
-            Button {
-                let token = refreshToken
-                refreshToken = ""
+        .sheet(isPresented: $showsOtherWays) {
+            AuthOtherWaysSheet { token in
+                showsOtherWays = false
                 model.viewModel.signInWithRefreshToken(refreshToken: token)
-            } label: {
-                Text(verbatim: AppStrings.string("auth_sign_in"))
             }
-            .disabled(refreshToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .accessibilityIdentifier("auth.refreshToken.signIn")
-        } message: {
-            Text(verbatim: AppStrings.string("auth_manual_dialog_description"))
         }
     }
 }
@@ -64,7 +50,7 @@ struct AuthContent: View {
     let signIn: () -> Void
     let signInWithRefreshToken: () -> Void
 
-    @ScaledMetric(relativeTo: .largeTitle) private var logoSize: CGFloat = 88
+    @ScaledMetric(relativeTo: .largeTitle) private var logoSize: CGFloat = 92
 
     var body: some View {
         Group {
@@ -72,21 +58,24 @@ struct AuthContent: View {
                 ItmoLoadingView(title: AppStrings.string("auth_initializing"))
                     .frame(maxHeight: .infinity)
             } else {
-                ScrollView {
-                    content
-                        .padding(.horizontal, ItmoSpacing.section)
-                        .padding(.top, 64)
-                        .padding(.bottom, ItmoSpacing.statePadding)
+                GeometryReader { proxy in
+                    ScrollView {
+                        content
+                            .padding(.horizontal, ItmoSpacing.section)
+                            .padding(.vertical, ItmoSpacing.group)
+                            .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
                 }
             }
         }
         .frame(maxWidth: .infinity)
-        .background(Color(uiColor: .systemBackground))
+        .background(Color(uiColor: .systemGroupedBackground))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("auth.screen")
     }
 
-    /// The logo is decorative for VoiceOver. A Debug build under UI tests exposes it, so a test can send its five
+    /// The mark is decorative for VoiceOver. A Debug build under UI tests exposes it, so a test can send its five
     /// taps as one gesture: tapped one by one, the slow CI runner spaced them past `DemoEntryTaps.MAX_INTERVAL`.
     private static var logoFindable: Bool {
         #if DEBUG
@@ -102,43 +91,56 @@ struct AuthContent: View {
 
     private var content: some View {
         VStack(spacing: 0) {
+            Spacer(minLength: ItmoSpacing.statePadding)
             AuthLogo()
                 .frame(width: logoSize, height: logoSize)
-                .contentShape(Circle())
+                .padding(20)
+                .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 34))
+                .contentShape(.rect(cornerRadius: 34))
                 .onTapGesture(perform: logoTapped)
                 .accessibilityHidden(!Self.logoFindable)
                 .accessibilityIdentifier("auth.logo")
             Text(verbatim: AppStrings.string("app_name"))
-                .font(.itmo(.headlineSmall))
+                .font(.system(.largeTitle, weight: .bold))
                 .multilineTextAlignment(.center)
-                .padding(.top, ItmoSpacing.section)
+                .padding(.top, 22)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("auth.title")
-            if state.reauthenticationRequired {
-                Text(verbatim: AppStrings.string("auth_reauthentication_description"))
-                    .font(.itmo(.bodyLarge))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, ItmoSpacing.compact)
-                    .accessibilityIdentifier("auth.reauthentication")
-            }
-            features
-                .padding(.top, ItmoSpacing.section)
+            Text(verbatim: AppStrings.string(state.reauthenticationRequired ? "auth_reauthentication_description" : "auth_tagline"))
+                .font(.itmo(.bodyLarge))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.top, 6)
+                .accessibilityIdentifier(state.reauthenticationRequired ? "auth.reauthentication" : "auth.tagline")
+            Spacer(minLength: ItmoSpacing.statePadding * 2)
             if let error = state.error {
                 Text(verbatim: error.resolved)
                     .font(.itmo(.bodyMedium))
                     .foregroundStyle(ItmoColor.error)
                     .multilineTextAlignment(.center)
-                    .padding(.top, ItmoSpacing.group)
+                    .padding(.bottom, ItmoSpacing.content)
                     .accessibilityIdentifier("auth.error")
             }
-            ItmoProgressButton(title: AppStrings.string("auth_login_itmo_id"), symbol: .login, action: signIn)
-                .disabled(!signInEnabled)
-                .padding(.top, ItmoSpacing.statePadding)
-                .accessibilityIdentifier("auth.signInItmoId")
+            Button(action: signIn) {
+                Label { Text(verbatim: AppStrings.string("auth_login_itmo_id")) } icon: { AppSymbol.login.image }
+                    .font(.itmo(.titleMedium, emphasized: true))
+                    .foregroundStyle(ItmoColor.onPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.glassProminent)
+            .controlSize(.extraLarge)
+            .itmoTint()
+            .disabled(!signInEnabled)
+            .accessibilityIdentifier("auth.signInItmoId")
+            Label { Text(verbatim: AppStrings.string("auth_official_page_notice")) } icon: { AppSymbol.lock.image }
+                .font(.itmo(.bodySmall))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.top, 12)
             Button(action: signInWithRefreshToken) {
                 Text(verbatim: AppStrings.string("auth_login_refresh_token"))
-                    .font(.itmo(.labelLarge))
+                    .font(.itmo(.bodyMedium))
                     .multilineTextAlignment(.center)
                     .frame(minHeight: ItmoMetrics.touchTarget)
             }
@@ -153,49 +155,71 @@ struct AuthContent: View {
                     .accessibilityLabel(Text(verbatim: AppStrings.string("auth_signing_in")))
                     .accessibilityIdentifier("auth.progress")
             }
-            notice(AppStrings.string("auth_official_page_notice"))
-                .padding(.top, ItmoSpacing.section)
-            notice(AppStrings.string("app_unofficial_notice"))
+            Text(verbatim: AppStrings.string("app_unofficial_notice"))
+                .font(.itmo(.labelSmall))
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
                 .padding(.top, ItmoSpacing.compact)
         }
         .frame(maxWidth: .infinity)
     }
-
-    private var features: some View {
-        VStack(alignment: .leading, spacing: ItmoSpacing.content) {
-            AuthFeatureRow(symbol: .schedule, title: AppStrings.string("auth_feature_widgets"))
-            AuthFeatureRow(symbol: .exercise, title: AppStrings.string("auth_feature_sport"))
-            AuthFeatureRow(symbol: .group, title: AppStrings.string("auth_feature_friends"))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func notice(_ text: String) -> some View {
-        Text(verbatim: text)
-            .font(.itmo(.bodySmall))
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
-    }
 }
 
-/// `Widget.ItmoWidgets.FeatureRow`: a secondary symbol beside the first line of a `bodyLarge` text.
-struct AuthFeatureRow: View {
-    let symbol: AppSymbol
-    let title: String
-
-    @ScaledMetric(relativeTo: .body) private var symbolWidth = ItmoMetrics.rowSymbolWidth
+/// `auth_login_refresh_token`: why it exists and the refresh token card. The token lives in this sheet's state only and
+/// leaves with it; `auth_manual_token_sign_in` stays off while the field is blank.
+struct AuthOtherWaysSheet: View {
+    let signIn: (String) -> Void
+    @State private var token = ""
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: ItmoSpacing.content) {
-            symbol.image
+        ItmoSheet(title: AppStrings.string("auth_login_refresh_token")) {
+            Text(verbatim: AppStrings.string("auth_other_text"))
                 .font(.itmo(.bodyLarge))
                 .foregroundStyle(.secondary)
-                .frame(width: symbolWidth)
-                .accessibilityHidden(true)
-            Text(verbatim: title)
-                .font(.itmo(.bodyLarge))
-                .fixedSize(horizontal: false, vertical: true)
+            ItmoCard {
+                HStack(spacing: ItmoSpacing.content) {
+                    ItmoIconTile(symbol: .key, tone: .primary)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(verbatim: AppStrings.string("auth_manual_token_hint")).font(.itmo(.titleMedium, emphasized: true))
+                        Text(verbatim: AppStrings.string("auth_manual_token_note"))
+                            .font(.itmo(.bodyMedium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                HStack {
+                    SecureField(AppStrings.string("auth_manual_token_placeholder"), text: $token)
+                        .textContentType(.oneTimeCode)
+                        .accessibilityIdentifier("auth.refreshToken.field")
+                    PasteButton(payloadType: String.self) { strings in
+                        if let first = strings.first { token = first }
+                    }
+                    .labelStyle(.iconOnly)
+                    .buttonBorderShape(.circle)
+                }
+                .padding(.leading, 14)
+                .padding(.trailing, 6)
+                .padding(.vertical, 6)
+                .background(Color(.tertiarySystemGroupedBackground), in: .capsule)
+                .padding(.top, ItmoSpacing.compact)
+                Button {
+                    let value = token
+                    token = ""
+                    signIn(value)
+                } label: {
+                    Text(verbatim: AppStrings.string("auth_manual_token_sign_in"))
+                        .foregroundStyle(ItmoColor.onPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                }
+                .buttonStyle(.glassProminent)
+                .controlSize(.large)
+                .itmoTint()
+                .disabled(token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .padding(.top, 4)
+                .accessibilityIdentifier("auth.refreshToken.signIn")
+            }
         }
+        .onDisappear { token = "" }
     }
 }
 

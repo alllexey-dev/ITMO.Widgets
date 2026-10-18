@@ -424,6 +424,8 @@ one switch; heroes read `ItmoTheme.heroMotionScheme`. Where each is used:
 | `ItmoLoadingIndicator` | A wait shorter than about 5 s outside a button; `contained` in pull-to-refresh | `UIActivityIndicatorView` |
 | `ItmoButtonGroup` | A single choice of two to four short options with a selection required; under expressive the kit's `SegmentedChoice` | `UISegmentedControl` with the selection haptic |
 | `ItmoWavyProgress` | Determinate progress of a hero only, linear or circular | A plain `UIProgressView` |
+| `ItmoMarkTile` | The app mark's tile on the sign-in screen, the twelve-sided cookie | A large rounded square |
+| `ServicesConsentSheet`, `StoredDataGroup` | The consent before connecting to ITMO.Widgets and the list of what the server keeps (`ServicesStoredData`), shared by «Подключение и данные» and the first-run flow | SwiftUI `ServicesConsentSheet` |
 | `ItmoSplitButton` | A primary action with a menu of its variants | A capsule with a chevron half that opens `ItmoMenu` |
 | `ItmoFabMenu` | A FAB that opens a menu of actions above it | A round filled toggle that opens `ItmoMenu` |
 | `ItmoFloatingToolbar` | More than two icon actions floating over the content, never docked with the navigation bar | An opaque capsule of tinted icons |
@@ -852,7 +854,13 @@ in [Shared components](#shared-components).
   with an 8 dp `primary` dot when new; the details in `bodyMedium`; `было`
   struck through in `onSurfaceVariant` over `стало` in `warning`; small
   `Принять` and outlined `Отклонить`), `Ничего нового` with `ic_check_circle`
-  in `success` when nothing is new, and the `Настройки уведомлений` row last.
+  in `success` when nothing is new, and the `Настройки уведомлений` row last,
+  which opens «Уведомления».
+- Settings pages of their own: «Подключение и данные» (`ui/connection/ConnectionScreen.kt` of
+  `:shared:feature-settings`: the status hero with its switch, `ListGroup`s, pills in a card, the danger row) and
+  «Уведомления» (`ui/notifications/NotificationSettingsScreen.kt`: switch rows with a notification miniature under
+  each, the gate while denied); the sign-in (`AuthScreen`) and the first-run flow (`OnboardingScreen`) of
+  `:shared:feature-account`.
 - Schedule changes in the schedule: on the lesson itself in the timeline (`изменена`, the old room struck through, the
   `Изменено вчера в 20:14` note); in the lesson sheet the `Изменения` group, one `было → стало` row per field (the old
   value struck through in `onSurfaceVariant`, the new one in `warning`), in `ui/lesson/LessonSheet.kt` of

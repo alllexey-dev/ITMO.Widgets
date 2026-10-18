@@ -11,21 +11,27 @@ final class SettingsUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testRootOpensFromMeWithTheRecordbookPage() {
+    func testRootOpensFromMeAndLeadsToTheConnectionAndTheNotifications() {
         let app = XCUIApplication.itmo(session: .demo)
         app.launch()
         openSettings(app)
 
-        XCTAssertTrue(element(app, "settings.row.page_services").exists)
-        XCTAssertTrue(element(app, "settings.row.notifications").exists)
-        // The form is lazy: the recordbook row exists once it scrolls near the screen.
-        let recordbook = element(app, "settings.row.page_recordbook")
-        for _ in 0..<4 where !recordbook.exists {
-            element(app, "settings.page.root").swipeUp()
-        }
-        XCTAssertTrue(recordbook.exists, "mark tracking is on iOS")
         XCTAssertTrue(app.navigationBars.firstMatch.exists, "a SwiftUI screen uses the stack's navigation bar")
         attachScreenshot(named: "root")
+        element(app, "settings.row.page_notifications").tap()
+        XCTAssertTrue(element(app, "notifications.screen").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "notifications.changes").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "notifications.marks").exists, "mark tracking is on iOS")
+        XCTAssertTrue(element(app, "notifications.changes").waitUntilDrawn(timeout: stepTimeout), "the type is drawn")
+        attachScreenshot(named: "notifications")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        element(app, "settings.row.page_services").tap()
+        XCTAssertTrue(element(app, "connection.screen").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "connection.switch").waitForExistence(timeout: stepTimeout))
+        XCTAssertFalse(element(app, "connection.switch").isEnabled, "the demo's opt-in cannot change")
+        XCTAssertTrue(element(app, "connection.switch").waitUntilDrawn(timeout: stepTimeout), "the status card is drawn")
+        attachScreenshot(named: "connection")
     }
 
     func testASwitchKeepsItsValueAcrossARelaunch() {
@@ -72,14 +78,17 @@ final class SettingsUITests: XCTestCase {
     }
 
     /// The mark checks: My ITMO and the sheets; BARS joins with the account's first BARS answer.
-    func testTheRecordbookPageListsTheMarkChecks() {
+    /// The mark sources follow `Баллы` on the notifications page while it is on.
+    func testTheNotificationsPageListsTheMarkSources() {
         let app = XCUIApplication.itmo(session: .demo)
         app.launch()
-        openPage(app, "recordbook")
+        openSettings(app)
+        element(app, "settings.row.page_notifications").tap()
+        XCTAssertTrue(element(app, "notifications.screen").waitForExistence(timeout: stepTimeout))
 
-        XCTAssertTrue(settingsSwitch(app, "myitmo_marks").exists)
-        XCTAssertTrue(settingsSwitch(app, "sheet_marks").exists)
-        attachScreenshot(named: "recordbook")
+        XCTAssertTrue(element(app, "notifications.marks.my_itmo").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "notifications.marks.sheets").exists)
+        attachScreenshot(named: "notifications-marks")
     }
 
     /// The gallery opens from the me tab's `widgets_row` with a drawn live preview; the pass sheet lists only what iOS

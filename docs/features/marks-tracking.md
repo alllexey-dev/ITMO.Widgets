@@ -7,6 +7,8 @@ Detects new and changed own marks of the current half-year in My ITMO and BARS a
 the connected sheets ([sheet scores](sheet-scores.md#background-check-of-sheets)), and names the
 subjects in one notification.
 
+- The switches (`Баллы` and its sources) are on «Уведомления»
+  ([settings](../settings.md#notifications)).
 - Everything stays on the device: marks, the BARS token and the ITMO.ID cookies never reach Backend;
   the feature works without `Подключение к ITMO.Widgets`.
 - BARS is read in the background through the cookie renewal (decision
@@ -121,7 +123,7 @@ the cycle `BarsClient -> repository -> BARS read -> BarsClient`:
   `TokenRefreshException` with a network cause) is `AppError.Network` on every path: retried,
   snapshots kept, never a prompt. Only ITMO.ID's `LOGIN_REQUIRED` or missing cookies end a session.
 - Xiaomi `Умный режим` cuts background network even with `CONNECTED`; the settings row
-  `Работа в фоне` leads to the fix ([settings](../settings.md#recordbook)).
+  `Работа в фоне` leads to the fix ([settings](../settings.md#background-work)).
 
 ## Notification
 

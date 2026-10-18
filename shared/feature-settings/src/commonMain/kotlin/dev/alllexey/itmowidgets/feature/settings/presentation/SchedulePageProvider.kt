@@ -6,7 +6,6 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
@@ -15,13 +14,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
 /**
- * Schedule changes, sport auto sign in the schedule, and the calendar group. Only this page reads the calendar
- * state, and only where the platform offers calendar export. It also handles the background work row, which the
- * recordbook page shows too.
+ * The link to the schedule change notifications («Уведомления» holds their switch), sport auto sign in the schedule,
+ * and the calendar group. Only this page reads the calendar state, and only where the platform offers calendar
+ * export.
  */
 class SchedulePageProvider(
     private val repository: SettingsRepository,
-    private val tracking: ScheduleChangeTracking,
     private val calendarSync: CalendarSync,
     private val capabilities: PlatformCapabilities = EveryPlatformCapability
 ) : SettingsPageProvider {
@@ -29,8 +27,6 @@ class SchedulePageProvider(
     override val pages = setOf(SettingsPage.SCHEDULE)
 
     override val rows = setOf(
-        SettingRowId.SCHEDULE_CHANGES,
-        SettingRowId.BACKGROUND_WORK,
         SettingRowId.SCHEDULE_SPORT_AUTO_SIGN,
         SettingRowId.CALENDAR_SYNC,
         SettingRowId.ICS_EXPORT
@@ -46,21 +42,11 @@ class SchedulePageProvider(
     override fun sections(page: SettingsPage, state: SettingsPageState) = listOfNotNull(
         SettingSection(
             title = null,
-            items = listOfNotNull(
-                SettingItem.Toggle(
-                    id = SettingRowId.SCHEDULE_CHANGES,
-                    title = UiText.Res(SettingsStrings.settings_schedule_changes_title),
-                    description = UiText.Res(
-                        if (state.notificationsGranted == false) {
-                            SettingsStrings.settings_schedule_changes_notifications_off
-                        } else {
-                            SettingsStrings.settings_schedule_changes_description
-                        }
-                    ),
-                    checked = state.local.scheduleChangesEnabled
-                ),
-                SettingRows.backgroundWork()
-                    .takeIf { state.backgroundWorkRestricted && state.local.scheduleChangesEnabled }
+            items = listOf(
+                SettingRows.navigation(
+                    SettingsPage.NOTIFICATIONS,
+                    title = UiText.Res(SettingsStrings.settings_schedule_notifications_title),
+                )
             )
         ),
         SettingSection(
@@ -80,7 +66,6 @@ class SchedulePageProvider(
 
     override fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) {
         when (id) {
-            SettingRowId.SCHEDULE_CHANGES -> scope.updateBackgroundCheck(checked) { tracking.setEnabled(checked) }
             SettingRowId.SCHEDULE_SPORT_AUTO_SIGN -> scope.updateWidgetSetting {
                 repository.setScheduleSportAutoSignEnabled(checked)
             }
@@ -95,7 +80,6 @@ class SchedulePageProvider(
 
     override fun onAction(scope: SettingsPageScope, id: SettingRowId) {
         when (id) {
-            SettingRowId.BACKGROUND_WORK -> scope.send(SettingsEvent.OpenBackgroundWorkSettings)
             SettingRowId.ICS_EXPORT -> scope.send(SettingsEvent.OpenIcsExport)
             else -> Unit
         }

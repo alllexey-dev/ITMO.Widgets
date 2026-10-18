@@ -7,6 +7,7 @@ package dev.alllexey.itmowidgets.core.text
  */
 enum class AppIcon(val id: String) {
     ASSIGNMENT("assignment"),
+    BADGE("badge"),
     BOOK_2("book_2"),
     BOOK_2_FILLED("book_2_filled"),
     BRAND_TELEGRAM("brand_telegram"),
@@ -19,8 +20,10 @@ enum class AppIcon(val id: String) {
     EDIT_NOTE("edit_note"),
     FOLDER("folder"),
     FORMAT_LIST_NUMBERED("format_list_numbered"),
+    GROUP("group"),
     LINK("link"),
     LOGIN("login"),
+    NOTIFICATION("notification"),
     OPEN_IN_NEW("open_in_new"),
     PERSON("person"),
     PERSON_FILLED("person_filled"),
