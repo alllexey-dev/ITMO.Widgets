@@ -21,8 +21,15 @@ new iOS app.
 - `Пара`, `Расписание на день` and `Спорт` are marked beta: `(бета)` in the system widget picker and a `Бета` pill in
   `Виджеты`.
 
+### Friend request time (2026-10-18)
+
+- Friend requests say when they were sent, in the bell and in Друзья on both platforms (`12:05`, `вчера`, `28 сент.`), from Backend's new `UserProfile.requestedAt` (itmo-widgets-backend#53, contract from Backend f9dd1e0); requests still lead the bell, newest first. Without the time from an older Backend nothing changes.
+
 ### Fixes (2026-10-18)
 
+- iOS shows the pull-to-refresh spinner on every tab root (Спорт, Сегодня, Расписание, Зачётка, Профиль) under the
+  header, and on every screen it stays until the refresh ends: the roots' hidden navigation bar took the refresh
+  control with it, and the refresh action returned at once or was cancelled by the first state change.
 - Another user's sport is titled by their given name (`Спорт: Иван`), from ITMO.ID's `given_name` or the second word of «Фамилия Имя», not by their surname.
 
 ### Data (2026-10-17)

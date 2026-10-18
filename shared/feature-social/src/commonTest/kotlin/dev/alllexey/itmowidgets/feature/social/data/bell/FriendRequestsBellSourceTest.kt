@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.core.text.userDisplayName
 import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Instant
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -28,6 +29,7 @@ class FriendRequestsBellSourceTest {
     private val person = UserProfile(
         UserSummary(300001, "Смирнов Кирилл", null, listOf(UserGroup("M3205", 2, "ФИТиП")), UserSharing(false, false)),
         RelationshipState.INCOMING,
+        requestedAt = Instant.parse("2026-10-04T18:30:00Z"),
     )
 
     @Test
@@ -42,6 +44,7 @@ class FriendRequestsBellSourceTest {
         assertEquals(UiText.Res(SocialStrings.social_bell_request, listOf(userDisplayName("Смирнов Кирилл", 300001))), item.title)
         assertEquals(UiText.Dynamic("M3205"), item.text)
         assertEquals(300001, item.request)
+        assertEquals(Instant.parse("2026-10-04T18:30:00Z"), item.at)
         assertEquals(EntryRoute(AppTab.HOME, overlay = AppRoutes.UserProfile(300001)), item.target)
     }
 

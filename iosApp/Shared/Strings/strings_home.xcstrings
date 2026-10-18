@@ -85,18 +85,6 @@
         }
       }
     },
-    "bell_yesterday" : {
-      "comment" : "Generated from strings_home.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "вчера"
-          }
-        }
-      }
-    },
     "today_at" : {
       "comment" : "Generated from strings_home.xml",
       "extractionState" : "manual",

@@ -289,6 +289,18 @@
         }
       }
     },
+    "event_moment_yesterday" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "вчера"
+          }
+        }
+      }
+    },
     "friend_picker_title" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

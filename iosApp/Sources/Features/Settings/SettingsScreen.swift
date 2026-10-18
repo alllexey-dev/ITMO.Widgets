@@ -44,6 +44,8 @@ struct SettingsScreen: View {
         page
         .navigationTitle(Text(verbatim: model.state.page.title.resolved))
         .navigationSubtitle(Text(verbatim: model.state.gallery?.subtitle?.resolved ?? ""))
+        // The root under it is inline (`itmoRootHeader`); a settings page keeps its large title.
+        .toolbarTitleDisplayMode(.large)
         .observing(model)
         .onEvents(of: model, \.events) { event in
             handle(event)

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.social.presentation
 
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.model.UserProfile
@@ -40,6 +41,7 @@ import kotlinx.coroutines.launch
 class FriendsViewModel(
     private val social: SocialRepository,
     private val search: PeopleSearchRepository,
+    private val time: AcademicTimeProvider,
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
@@ -178,10 +180,10 @@ class FriendsViewModel(
         }
         return FriendLists.Content(
             incoming = requestList.incoming.map {
-                it.toRow(busy, UserAction.ACCEPT, UserAction.REJECT, UiText.Res(SocialStrings.user_status_incoming))
+                it.toRow(busy, UserAction.ACCEPT, UserAction.REJECT, it.requestStatus(UiText.Res(SocialStrings.user_status_incoming), time))
             },
             outgoing = requestList.outgoing.map {
-                it.toRow(busy, null, UserAction.CANCEL, UiText.Res(SocialStrings.user_status_outgoing))
+                it.toRow(busy, null, UserAction.CANCEL, it.requestStatus(UiText.Res(SocialStrings.user_status_outgoing), time))
             },
             friends = friendList.map { it.toRow(busy, null, null, null) },
             refreshing = refreshing,

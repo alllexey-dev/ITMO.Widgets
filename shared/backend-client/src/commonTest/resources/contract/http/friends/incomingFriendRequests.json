@@ -27,7 +27,8 @@
         "familyName": "Однокурсник",
         "givenName": "Третий"
       },
-      "relationship": "INCOMING"
+      "relationship": "INCOMING",
+      "requestedAt": "2026-10-04T18:30:00Z"
     }
   ],
   "error": null

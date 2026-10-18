@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.RelationshipState
@@ -41,7 +42,7 @@ import org.koin.dsl.module
  */
 internal fun socialTestModule(): Module = module {
     single<FriendRepository> { OneFriend }
-    viewModel { FriendsViewModel(OneFriendSocial, NoPeople) }
+    viewModel { FriendsViewModel(OneFriendSocial, NoPeople, FixedAcademicTime()) }
     viewModel { UserFriendsViewModel(get<SavedStateHandle>(), OneFriendSocial) }
     viewModel { UserProfileViewModel(get<SavedStateHandle>(), OneFriendSocial, NoPerson, NoReviews, Viewer, NobodyTaught) }
 }

@@ -31,7 +31,11 @@ struct UserFriendsScreen: View {
             retry: { model.viewModel.refresh(mode: .force) },
             connect: { messages.opened(router.open(AppRoutes.Settings(page: "SERVICES"))) }
         )
-        .refreshable { model.viewModel.refresh(mode: .pull) }
+        .refreshable {
+            await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                ($0.uiState.value as? UserFriendsUiStateContent)?.refreshing == true
+            })
+        }
         .itmoDetailHeader(title: AppStrings.string("friends_title"), subtitle: name.isEmpty ? nil : name)
         .socialMessages(messages)
         .observing(model)

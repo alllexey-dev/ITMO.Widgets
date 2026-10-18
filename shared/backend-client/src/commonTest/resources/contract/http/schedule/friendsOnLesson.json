@@ -27,7 +27,8 @@
         "familyName": "Друг",
         "givenName": "Первый"
       },
-      "relationship": "FRIENDS"
+      "relationship": "FRIENDS",
+      "requestedAt": null
     },
     {
       "user": {
@@ -44,7 +45,8 @@
         "familyName": null,
         "givenName": null
       },
-      "relationship": "FRIENDS"
+      "relationship": "FRIENDS",
+      "requestedAt": null
     }
   ],
   "error": null

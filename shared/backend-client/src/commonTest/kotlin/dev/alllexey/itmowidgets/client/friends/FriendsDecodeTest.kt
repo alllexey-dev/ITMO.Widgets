@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.client.users.SyntheticUsers.profile
 import dev.alllexey.itmowidgets.client.users.SyntheticUsers.profileJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Instant
 
 /** What every [FriendsApi] call returns for a synthetic Backend answer. */
 class FriendsDecodeTest {
@@ -49,6 +50,16 @@ class FriendsDecodeTest {
 
     @Test
     fun outgoingFriendRequests() = runSuspend { list { friends.outgoingFriendRequests() } }
+
+    @Test
+    fun aPendingRequestCarriesWhenItWasSentAndOthersNull() = runSuspend {
+        val sent = """{"user":${SyntheticUsers.userJson()},"relationship":"INCOMING","requestedAt":"2026-10-04T18:30:00Z"}"""
+        val friend = """{"user":${SyntheticUsers.userJson()},"relationship":"FRIENDS","requestedAt":null}"""
+
+        val result = answering("[$sent,$friend]").client.friends.incomingFriendRequests()
+
+        assertEquals(listOf(Instant.parse("2026-10-04T18:30:00Z"), null), result.map { it.requestedAt })
+    }
 
     @Test
     fun emptyListsStayEmpty() = runSuspend {

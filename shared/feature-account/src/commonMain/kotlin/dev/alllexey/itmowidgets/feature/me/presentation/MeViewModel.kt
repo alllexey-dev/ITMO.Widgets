@@ -40,6 +40,9 @@ class MeViewModel(
     private val signOutInProgress = MutableStateFlow(false)
     private val refreshes = RefreshTracker(viewModelScope)
 
+    /** A pull's or a retry's refresh is in flight; the iOS host's pull-to-refresh reads it while its spinner shows. */
+    val isRefreshing: Boolean get() = refreshes.refreshing.value
+
     val uiState: StateFlow<MeUiState> = combine(
         combine(sessionRepository.state, customServices.observeEnabled(), ::Pair),
         socialRepository.observeCurrentUser(),
