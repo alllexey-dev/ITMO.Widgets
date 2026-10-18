@@ -1,19 +1,17 @@
 package dev.alllexey.itmowidgets.feature.weblogin.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -26,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
@@ -34,18 +31,21 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
 import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicatorSize
-import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoSwitch
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
+import dev.alllexey.itmowidgets.designsystem.kit.IconTile
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
+import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
+import dev.alllexey.itmowidgets.designsystem.kit.SwitchListRow
+import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.weblogin.domain.AgentScope
 import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlock
@@ -240,24 +240,14 @@ private fun CodeStep(code: String, error: String?, checking: Boolean, actions: W
  */
 @Composable
 private fun ConfirmStep(state: WebLoginUiState.Confirm, actions: WebLoginActions) {
-    // A nested panel: the sheet itself already sits on surfaceContainerLow.
-    Surface(
+    ItmoCard(
         Modifier
             .stepMargin()
             .padding(top = ItmoTheme.spacing.compact)
             .testTag(WebLoginSheetTestTags.BROWSER),
-        shape = ItmoTheme.shapes.cardContent,
-        color = ItmoTheme.colorScheme.surfaceContainerHighest,
     ) {
-        Row(Modifier.padding(ItmoTheme.spacing.cardPadding), verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painterResource(kindIcon(state.kind)),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(end = ItmoTheme.spacing.group)
-                    .size(BrowserIconSize),
-                tint = ItmoTheme.colorScheme.onSurfaceVariant,
-            )
+        Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content), verticalAlignment = Alignment.CenterVertically) {
+            IconTile(painterResource(kindIcon(state.kind)), Tone.Primary)
             Column(Modifier.weight(1f)) {
                 Text(
                     state.title.asString(),
@@ -283,7 +273,11 @@ private fun ConfirmStep(state: WebLoginUiState.Confirm, actions: WebLoginActions
         color = ItmoTheme.colorScheme.onSurface,
         style = ItmoTheme.typography.bodyMedium,
     )
-    state.scopes.forEach { choice -> ScopeRow(choice, state.scopesEditable && !state.approving, actions) }
+    if (state.scopes.isNotEmpty()) {
+        ListGroup(Modifier.stepMargin().padding(top = ItmoTheme.spacing.compact)) {
+            state.scopes.forEach { choice -> item { ScopeRow(choice, state.scopesEditable && !state.approving, actions) } }
+        }
+    }
     if (state.sharedSession) {
         Text(
             stringResource(Res.string.pair_shared_session),
@@ -295,20 +289,14 @@ private fun ConfirmStep(state: WebLoginUiState.Confirm, actions: WebLoginActions
         )
     }
     state.verification?.let { verification ->
-        Surface(
+        ItmoCard(
             Modifier
                 .stepMargin()
                 .padding(top = ItmoTheme.spacing.group)
                 .testTag(WebLoginSheetTestTags.VERIFICATION),
-            shape = ItmoTheme.shapes.cardContent,
-            color = ItmoTheme.colorScheme.secondaryContainer,
+            tone = Tone.Tertiary,
         ) {
-            Text(
-                verification.asString(),
-                Modifier.padding(ItmoTheme.spacing.cardPadding),
-                color = ItmoTheme.colorScheme.onSecondaryContainer,
-                style = ItmoTheme.typography.titleSmall,
-            )
+            Text(verification.asString(), style = ItmoTheme.typography.titleSmall)
         }
     }
     Text(
@@ -348,28 +336,13 @@ internal fun kindIcon(kind: PairingKind): DrawableResource =
 /** One permission: a switch for a new agent, a shown state for an agent session. The whole row is the toggle. */
 @Composable
 private fun ScopeRow(choice: ScopeChoice, editable: Boolean, actions: WebLoginActions) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = ScopeRowMinHeight)
-            .toggleable(
-                value = choice.checked,
-                enabled = editable,
-                role = Role.Switch,
-                onValueChange = { actions.onScopeChanged(choice.scope, it) },
-            )
-            .padding(horizontal = ItmoTheme.spacing.screenMargin)
-            .testTag(WebLoginSheetTestTags.scope(choice.scope)),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            choice.title.asString(),
-            Modifier.weight(1f),
-            color = ItmoTheme.colorScheme.onSurface,
-            style = ItmoTheme.typography.bodyLarge,
-        )
-        ItmoSwitch(checked = choice.checked, onCheckedChange = null, enabled = editable)
-    }
+    SwitchListRow(
+        choice.title.asString(),
+        checked = choice.checked,
+        onCheckedChange = { actions.onScopeChanged(choice.scope, it) },
+        modifier = Modifier.testTag(WebLoginSheetTestTags.scope(choice.scope)),
+        enabled = editable,
+    )
 }
 
 /** The screen lock, the hand-off or the upload: a spinner and what happens. */
@@ -454,8 +427,3 @@ object WebLoginSheetTestTags {
     fun scope(scope: AgentScope): String = "web_login_scope:${scope.name}"
 }
 
-/** The device card's 24 dp icon. */
-private val BrowserIconSize = 24.dp
-
-/** A permission row keeps the 48 dp touch target. */
-private val ScopeRowMinHeight = 48.dp

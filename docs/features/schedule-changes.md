@@ -5,7 +5,8 @@ Product behaviour: [Как это работает: расписание](../how
 The app detects changes of the own personal schedule on the device only and
 never talks to Backend about them (decision
 [0013](../decisions/0013-schedule-changes-on-device.md)). The code is part of
-the schedule feature ([modules](schedule.md#modules)).
+the schedule feature ([modules](schedule.md#modules)); its switch is on
+«Уведомления» ([settings](../settings.md#notifications)).
 
 ## Background check
 
@@ -38,7 +39,7 @@ the schedule feature ([modules](schedule.md#modules)).
   (Moscow dates from `AcademicTimeProvider`). It neither fills the schedule
   cache nor uploads to Backend.
 - Timing is up to Android; Xiaomi's default battery mode cuts a background
-  app's network ([settings](../settings.md#schedule), `Работа в фоне`).
+  app's network ([settings](../settings.md#background-work), `Работа в фоне`).
 
 ## Snapshot and comparison
 
@@ -97,7 +98,7 @@ file is deleted, so the next check is a baseline.
 - A failed write of `markNotified`, `markAllRead` or `resetSnapshot` keeps
   the state in memory until the next write.
 
-Turning `Изменения расписания` off ([settings](../settings.md#schedule))
+Turning `Изменения расписания` off ([settings](../settings.md#notifications))
 cancels the work and resets the snapshot; history stays.
 
 ## Notification

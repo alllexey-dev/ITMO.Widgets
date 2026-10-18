@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
+import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
@@ -44,7 +45,7 @@ class SettingsModuleTest {
     }
 
     /**
-     * The page providers and the four ViewModels resolve over the settings data; the Android side of settings
+     * The page providers and the ViewModels resolve over the settings data; the Android side of settings
      * comes from the app's `androidSettingsModule`, the core contracts from the platform's Koin modules.
      */
     @Test
@@ -63,6 +64,7 @@ class SettingsModuleTest {
                 AcademicTimeProvider::class,
                 SavedStateHandle::class,
                 PlatformCapabilities::class,
+                SocialRepository::class,
             ),
         )
     }

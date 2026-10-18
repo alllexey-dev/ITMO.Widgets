@@ -17,7 +17,7 @@ final class SettingsTests: XCTestCase {
     }
 
     func testEveryPageResolvesItsOwnViewModelAndLoadsStoredValues() async {
-        for page in SettingsPage.allCases {
+        for page in SettingsPage.allCases where !Self.ownScreens.contains(page) {
             let model = ObservableViewModel<SettingsViewModel, SettingsUiState>(state: \.uiState) { store in
                 let parameters: [Any?] = settingsPageParameters(page: page.name)
                 return store.resolve(type: SettingsViewModel.self, parameters: parameters) as! SettingsViewModel
@@ -30,6 +30,16 @@ final class SettingsTests: XCTestCase {
         }
     }
 
+    func testTheConnectionAndNotificationPagesAreScreensOfTheirOwn() {
+        for page in Self.ownScreens {
+            XCTAssertEqual(Routes.target(for: AppRoutes.Settings(page: page.name)).chrome, .native)
+        }
+        let connection = ObservableViewModel(ConnectionViewModel.self, state: \.uiState)
+        XCTAssertNotNil(connection.state)
+        let notifications = ObservableViewModel(NotificationSettingsViewModel.self, state: \.uiState)
+        XCTAssertNotNil(notifications.state)
+    }
+
     func testAnUnknownPageNameOpensTheRoot() {
         let model = ObservableViewModel<SettingsViewModel, SettingsUiState>(state: \.uiState) { store in
             let parameters: [Any?] = settingsPageParameters(page: "SCHEDULE_WIDGETS_OLD")
@@ -40,16 +50,16 @@ final class SettingsTests: XCTestCase {
 
     func testTheNotificationRowSaysIosWhereTheSharedValueNamesAndroid() async {
         let model = settingsModel(page: "ROOT")
-        model.viewModel.onNotificationPermissionChanged(granted: true)
+        model.viewModel.onNotificationPermissionChanged(granted: false)
         let copy = SettingsIosCopy(system: SettingsSystemState(backgroundRefresh: .available))
 
         for await state in model.viewModel.uiState where state.loaded {
-            let row = state.sections.flatMap(\.items).compactMap { $0 as? SettingItemAction }
-                .first { $0.id == .notifications }
-            guard let value = row?.value, (value as? UiTextRes)?.key == "settings_notifications_allowed" else {
+            let row = state.sections.flatMap(\.items).compactMap { $0 as? SettingItemNavigation }
+                .first { $0.page == SettingsPage.notifications }
+            guard let value = row?.value, (value as? UiTextRes)?.key == "settings_notifications_blocked" else {
                 continue
             }
-            XCTAssertEqual(copy.text(value), AppStrings.string("ios_settings_notifications_allowed"))
+            XCTAssertEqual(copy.text(value), AppStrings.string("ios_settings_notifications_blocked"))
             XCTAssertNotEqual(copy.text(value), value.resolved)
             XCTAssertEqual(copy.text(state.page.title), state.page.title.resolved, "other texts stay as built")
             break
@@ -68,6 +78,9 @@ final class SettingsTests: XCTestCase {
             "startKoinIos installed the hook"
         )
     }
+
+    /// The pages with view models of their own; `SettingsViewModel` builds none of them.
+    private static let ownScreens: Set<SettingsPage> = [.services, .privacy, .notifications]
 
     private func settingsModel(page: String) -> ObservableViewModel<SettingsViewModel, SettingsUiState> {
         ObservableViewModel(state: \.uiState) { store in

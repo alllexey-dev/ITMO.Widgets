@@ -12,7 +12,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,11 +28,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.alllexey.itmowidgets.BuildConfig
@@ -47,8 +44,6 @@ import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
-import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
-import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
 import dev.alllexey.itmowidgets.feature.auth.ui.AuthRoute
@@ -65,15 +60,12 @@ import dev.alllexey.itmowidgets.feature.me.ui.openProjectLink
 import dev.alllexey.itmowidgets.feature.me.ui.shareOwnProfile
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingContent
-import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingWidgetPreviews
 import dev.alllexey.itmowidgets.feature.onboarding.ui.canStepBack
 import dev.alllexey.itmowidgets.feature.onboarding.ui.handleOnboardingEvent
 import dev.alllexey.itmowidgets.feature.onboarding.ui.onNotificationsEnabled
-import dev.alllexey.itmowidgets.feature.onboarding.ui.onSpoilerCropped
-import dev.alllexey.itmowidgets.feature.onboarding.ui.onWidgetPinnedProvider
 import dev.alllexey.itmowidgets.feature.onboarding.ui.onboardingActions
-import dev.alllexey.itmowidgets.feature.onboarding.ui.openOnboardingLink
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
+import dev.alllexey.itmowidgets.feature.settings.ui.CALENDAR_PERMISSIONS
 import dev.alllexey.itmowidgets.feature.update.navigation.UpdateRoutes
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateRoute
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
@@ -135,8 +127,7 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenFriends = { navigator.open(AppRoutes.Friends) },
     onOpenPrivacy = { navigator.open(AppRoutes.Settings(PRIVACY_PAGE)) },
     onOpenConnection = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
-    // The settings root holds the notification and widget rows until their own pages exist.
-    onOpenNotifications = { navigator.open(AppRoutes.Settings()) },
+    onOpenNotifications = { navigator.open(AppRoutes.Settings(SettingsPage.NOTIFICATIONS.name)) },
     onOpenWidgets = { navigator.open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) },
     onOpenWebLogin = { navigator.open(AppRoutes.WebLogin()) },
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
@@ -165,10 +156,9 @@ private fun AuthEntry() {
 }
 
 /**
- * The first-run flow: the real widget previews, the launcher pin (its receiver lives as long as this entry,
- * so a pin confirmed while the app is stopped still counts), the notification permission, the spoiler photo
- * picker and crop screen, links, and Back as a step back from the second step on. The shell leaves the flow on its
- * own once the first-run flag is set.
+ * The first-run flow: the notification permission, the calendar permission (granted, the sync turns on), the
+ * consent sheet in this entry's saved state, and Back as a step back from the second step on. The shell leaves the
+ * flow on its own once the first-run flag is set.
  */
 @Composable
 private fun OnboardingEntry() {
@@ -179,28 +169,16 @@ private fun OnboardingEntry() {
     val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val snackbars = remember { SnackbarHostState() }
+    var consent by rememberSaveable { mutableStateOf(false) }
     val showSnackbar: (Int) -> Unit = { message ->
         scope.launch { snackbars.showSnackbar(resources.getString(message), duration = SnackbarDuration.Long) }
     }
     val notifications = rememberLauncherForActivityResult(RequestNotificationPermission()) { granted ->
         viewModel.onNotificationPermission(granted)
     }
-    val pickSpoilerImage = rememberSpoilerImagePicker { result ->
-        viewModel.onSpoilerCropped(result) { showSnackbar(R.string.settings_qr_custom_image_failed) }
+    val calendar = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+        if (results.isNotEmpty() && results.values.all { it }) viewModel.onCalendarAccessGranted()
     }
-    val pinRequester = remember(context) { WidgetPinRequester(context) }
-    DisposableEffect(pinRequester, viewModel) {
-        pinRequester.start(viewModel::onWidgetPinnedProvider)
-        viewModel.onPinSupportChanged(pinRequester.isSupported)
-        onDispose { pinRequester.stop() }
-    }
-    val factory = remember(context) { KoinStarter.ensureStarted(context).get<WidgetPreviewFactory>() }
-    val previews = remember(factory) { OnboardingWidgetPreviews(factory) }
-    DisposableEffect(previews) {
-        factory.preload(context, lifecycleOwner.lifecycleScope)
-        onDispose { previews.close() }
-    }
-    LifecycleStartEffect(previews) { onStopOrDispose { previews.stop() } }
     LifecycleResumeEffect(viewModel) {
         viewModel.onNotificationsEnabled(context)
         onPauseOrDispose { }
@@ -209,23 +187,18 @@ private fun OnboardingEntry() {
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.events.collect { event ->
-                context.handleOnboardingEvent(event, pinRequester, notifications, showSnackbar)
+                context.handleOnboardingEvent(
+                    event,
+                    notifications,
+                    askCalendar = { calendar.launch(CALENDAR_PERMISSIONS) },
+                    showConsent = { consent = true },
+                    showSnackbar = showSnackbar,
+                )
             }
         }
     }
-    val actions = remember(viewModel, pickSpoilerImage) {
-        onboardingActions(
-            viewModel,
-            onPickSpoilerImage = pickSpoilerImage,
-            onOpenLink = { url -> context.openOnboardingLink(url) { showSnackbar(R.string.link_open_failed) } },
-        )
-    }
-    OnboardingContent(
-        state = state,
-        actions = actions,
-        widgetPreview = { kind, modifier -> previews.Slot(kind, state, lifecycleOwner.lifecycleScope, modifier) },
-        snackbars = snackbars,
-    )
+    val actions = remember(viewModel) { onboardingActions(viewModel, onShowConsent = { consent = it }) }
+    OnboardingContent(state = state, actions = actions, consentShown = consent, snackbars = snackbars)
 }
 
 /**
@@ -362,8 +335,8 @@ private inline fun <reified VM : ViewModel> entryViewModel(): VM {
     return viewModel { KoinStarter.ensureStarted(context).get<VM> { parametersOf(createSavedStateHandle()) } }
 }
 
-/** The privacy page of the settings (`SettingsPage.PRIVACY`), as the Me tab opens it. */
+/** `SettingsPage.PRIVACY`: «Подключение и данные», where `Кто видит` lives. */
 private const val PRIVACY_PAGE = "PRIVACY"
 
-/** `SettingsPage.SERVICES`: the connection to ITMO.Widgets, until `Подключение и данные` has its own page. */
+/** `SettingsPage.SERVICES`: «Подключение и данные». */
 private const val SERVICES_PAGE = "SERVICES"

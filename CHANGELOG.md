@@ -49,6 +49,10 @@ new iOS app.
 - New module `:shared:feature-map` with the router of itmo-map-web ported to shared Kotlin (same routes as `router.js` on all 360 checked pairs of ITMO's six plans), the mapping of timetable rooms to plan rooms and the three-part «Маршрут» planner; `itmo_buildings.json` gains each building's campus-map id and Гастелло, 12.
 - The campus map screen on both platforms (native MapLibre): the lesson's room on its floor, «Маршрут» from the day's previous lesson or the entrance with «По городу» in the system Maps between buildings, room view, search across buildings, place chips, «У корпуса нет плана». `Маршрут` in the lesson sheet and on the Сегодня hero opens it. Plans come from the mirror on map.alllexey.dev and stay on the device (ADR 0033).
 
+### Settings and first run (2026-10-17)
+
+- New «Подключение и данные» and «Уведомления» pages, a sign-in with one main path and `Другие способы входа` in a sheet, and a three-step first run (your data, permissions one by one, the connection through a consent sheet) on Android and iOS; the old services, privacy and recordbook settings pages and the widget steps of the first run are gone.
+
 ### Спорт lesson sheet data (2026-10-17)
 
 - The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.

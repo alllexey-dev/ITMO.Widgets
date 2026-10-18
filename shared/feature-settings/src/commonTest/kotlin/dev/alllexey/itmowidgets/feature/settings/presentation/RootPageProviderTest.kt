@@ -36,11 +36,11 @@ class RootPageProviderTest {
 
             assertEquals(SettingsPage.ROOT, fixture.viewModel.uiState.value.page)
             assertEquals(3, fixture.viewModel.uiState.value.sections.size)
-            assertEquals(11, fixture.viewModel.allItems().size)
+            assertEquals(8, fixture.viewModel.allItems().size)
             assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
             val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
             assertEquals(
-                SettingsPage.entries.filter { it != SettingsPage.ROOT },
+                SettingsPage.entries.filter { it != SettingsPage.ROOT && it != SettingsPage.PRIVACY },
                 navigation.map { it.page }
             )
             assertTrue(navigation.all { it.description == null })
@@ -54,7 +54,6 @@ class RootPageProviderTest {
                     SettingsPage.APPEARANCE,
                     SettingsPage.HOME,
                     SettingsPage.SCHEDULE,
-                    SettingsPage.RECORDBOOK,
                     SettingsPage.SPORT,
                     SettingsPage.MAINTENANCE
                 ),
@@ -82,22 +81,23 @@ class RootPageProviderTest {
     }
 
     @Test
-    fun exposesNotificationStatusAndApplicationVersion() =
+    fun theNotificationsRowSaysOnlyWhenTheSystemDeniesThemAndMaintenanceShowsTheVersion() =
         runTest(main.dispatcher) {
             val fixture = createFixture()
             advanceUntilIdle()
+            val row = {
+                fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
+                    .single { it.page == SettingsPage.NOTIFICATIONS }
+            }
 
-            assertEquals(
-                UiText.Res(SettingsStrings.settings_notifications_checking),
-                fixture.viewModel.action(SettingRowId.NOTIFICATIONS).value
-            )
+            assertEquals(null, row().value)
+            fixture.viewModel.onNotificationPermissionChanged(granted = false)
+            advanceUntilIdle()
+            assertEquals(UiText.Res(SettingsStrings.settings_notifications_blocked), row().value)
             fixture.viewModel.onNotificationPermissionChanged(granted = true)
             advanceUntilIdle()
+            assertEquals(null, row().value)
 
-            assertEquals(
-                UiText.Res(SettingsStrings.settings_notifications_allowed),
-                fixture.viewModel.action(SettingRowId.NOTIFICATIONS).value
-            )
             val maintenance = createFixture(page = SettingsPage.MAINTENANCE)
             advanceUntilIdle()
             val version = maintenance.viewModel.allItems()
@@ -107,16 +107,18 @@ class RootPageProviderTest {
         }
 
     @Test
-    fun rootListsTheRecordbookBetweenScheduleAndSport() =
+    fun theAccessGroupLeadsToTheConnectionAndTheNotifications() =
         runTest(main.dispatcher) {
             val fixture = createFixture()
             advanceUntilIdle()
 
-            val pages = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>().map { it.page }
-            val index = pages.indexOf(SettingsPage.RECORDBOOK)
-            assertEquals(SettingsPage.SCHEDULE, pages[index - 1])
-            assertEquals(SettingsPage.SPORT, pages[index + 1])
-            assertEquals(UiText.Res(CoreStrings.title_recordbook), SettingsPage.RECORDBOOK.title)
+            val access = fixture.viewModel.uiState.value.sections.first()
+            assertEquals(
+                listOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS),
+                access.items.filterIsInstance<SettingItem.Navigation>().map { it.page }
+            )
+            assertEquals(UiText.Res(SettingsStrings.connection_title), SettingsPage.SERVICES.title)
+            assertEquals(UiText.Res(SettingsStrings.notifications_title), SettingsPage.NOTIFICATIONS.title)
         }
 
     @Test

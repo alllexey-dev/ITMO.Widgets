@@ -5,16 +5,13 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.view.View
 import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.copyToClipboard
-import dev.alllexey.itmowidgets.core.ui.permission.openNotificationSettingsIfLocked
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 
 // What only Android does for the settings pages and the error journal; the shell's settings entries call these.
 
@@ -45,12 +42,6 @@ internal fun Activity.calendarAccessAnswer(results: Map<String, Boolean>): Calen
     !ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.WRITE_CALENDAR) ->
         CalendarAccessAnswer.LOCKED
     else -> CalendarAccessAnswer.DENIED
-}
-
-/** The notification dialog's answer: a lock opens the system page, and the row follows the system switch. */
-internal fun Activity.onSettingsNotificationPermission(granted: Boolean, viewModel: SettingsViewModel) {
-    openNotificationSettingsIfLocked(granted)
-    viewModel.onNotificationPermissionChanged(NotificationManagerCompat.from(this).areNotificationsEnabled())
 }
 
 /** Turning calendar sync on was refused once more; the dialog may still appear next time. */

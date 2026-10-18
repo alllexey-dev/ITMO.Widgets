@@ -16,6 +16,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -119,36 +120,54 @@ class AuthScreenTest {
     }
 
     @Test
-    fun anEmptyTokenKeepsTheDialogAndATypedOneSignsInOnce() = runComposeUiTest {
+    fun anEmptyTokenKeepsTheSheetAndATypedOneSignsInOnce() = runComposeUiTest {
         val tokens = mutableListOf<String>()
-        setContent { Screen(SignedOut, onSignInWithToken = { tokens += it }) }
+        setContent { ItmoTheme { OtherWaysSheetContent(onSignIn = { tokens += it }, onDismiss = {}) } }
 
-        onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performClick()
-        onNodeWithText("Войти").performClick()
+        onNodeWithTag(AuthTestTags.TOKEN_SIGN_IN).performClick()
         onNodeWithText("Вставьте Refresh token").assertExists()
         assertEquals(emptyList(), tokens)
 
         onNodeWithTag(AuthTestTags.TOKEN_INPUT).performTextInput(SYNTHETIC_TOKEN)
-        onNodeWithText("Войти").performClick()
+        onNodeWithTag(AuthTestTags.TOKEN_SIGN_IN).performClick()
         waitForIdle()
 
         assertEquals(listOf(SYNTHETIC_TOKEN), tokens)
-        onNodeWithTag(AuthTestTags.TOKEN_INPUT).assertDoesNotExist()
+        val text = onNodeWithTag(AuthTestTags.TOKEN_INPUT).fetchSemanticsNode().config[SemanticsProperties.EditableText]
+        assertEquals("", text.text, "the token leaves the field once it is handed over")
     }
 
     @Test
-    fun cancelDropsTheTypedToken() = runComposeUiTest {
-        setContent { Screen(SignedOut) }
+    fun closingTheSheetDropsTheTypedToken() = runComposeUiTest {
+        var closed = 0
+        var shown by mutableStateOf(true)
+        setContent {
+            ItmoTheme {
+                if (shown) OtherWaysSheetContent(onSignIn = {}, onDismiss = { closed++ })
+            }
+        }
 
-        onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performClick()
         onNodeWithTag(AuthTestTags.TOKEN_INPUT).performTextInput(SYNTHETIC_TOKEN)
-        onNodeWithText("Отмена").performClick()
+        onNodeWithContentDescription("Закрыть").performClick()
+        assertEquals(1, closed)
+        shown = false
         waitForIdle()
-        onNodeWithTag(AuthTestTags.TOKEN_INPUT).assertDoesNotExist()
+        shown = true
+        waitForIdle()
 
-        onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performClick()
         val text = onNodeWithTag(AuthTestTags.TOKEN_INPUT).fetchSemanticsNode().config[SemanticsProperties.EditableText]
         assertEquals("", text.text)
+    }
+
+    @Test
+    fun otherWaysOpensTheSheet() = runComposeUiTest {
+        setContent { Screen(SignedOut) }
+
+        onNodeWithTag(AuthTestTags.OTHER_WAYS).assertDoesNotExist()
+        onNodeWithTag(AuthTestTags.REFRESH_TOKEN_LOGIN).performScrollTo().performClick()
+        waitForIdle()
+        onNodeWithTag(AuthTestTags.OTHER_WAYS).assertExists()
+        onNodeWithTag(AuthTestTags.TOKEN_INPUT).assertExists()
     }
 
     @Test

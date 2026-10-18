@@ -47,9 +47,6 @@ import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.messageRes
-import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
-import dev.alllexey.itmowidgets.core.ui.permission.openAppNotificationSettings
-import dev.alllexey.itmowidgets.core.ui.permission.requestNotifications
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
@@ -83,8 +80,6 @@ import dev.alllexey.itmowidgets.feature.settings.ui.ics.IcsExportActions
 import dev.alllexey.itmowidgets.feature.settings.ui.ics.IcsExportSheetContent
 import dev.alllexey.itmowidgets.feature.settings.ui.listenToIcsDatePicker
 import dev.alllexey.itmowidgets.feature.settings.ui.onCustomSpoilerCropped
-import dev.alllexey.itmowidgets.feature.settings.ui.onSettingsNotificationPermission
-import dev.alllexey.itmowidgets.feature.settings.ui.openBackgroundWorkSettings
 import dev.alllexey.itmowidgets.feature.settings.ui.openIcs
 import dev.alllexey.itmowidgets.feature.settings.ui.requestAddQrTile
 import dev.alllexey.itmowidgets.feature.settings.ui.shareIcs
@@ -104,7 +99,11 @@ import org.koin.core.parameter.parametersOf
  */
 internal fun EntryRegistry.Builder.settingsEntries() {
     entry<AppRoutes.Settings>(args = { bundleOf(SettingsScreenArgs.PAGE to it.page) }) { key, navigator ->
-        SettingsEntry(key, navigator)
+        when (SettingsPage.fromArgument(key.page)) {
+            SettingsPage.SERVICES, SettingsPage.PRIVACY -> ConnectionEntry(key, navigator)
+            SettingsPage.NOTIFICATIONS -> NotificationSettingsEntry(key, navigator)
+            else -> SettingsEntry(key, navigator)
+        }
     }
     entry<AppRoutes.Diagnostics> { key, navigator -> DiagnosticsEntry(onBack = { navigator.close(key) }) }
     entry<AppRoutes.IcsExport> { _, _ -> IcsExportEntry() }
@@ -129,9 +128,6 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
     val dialogs = rememberSaveable(saver = DialogsSaver) { SettingsDialogState() }
     var pendingCalendarAccess by rememberSaveable { mutableStateOf(false) }
 
-    val notifications = rememberLauncherForActivityResult(RequestNotificationPermission()) { granted ->
-        activity?.onSettingsNotificationPermission(granted, viewModel)
-    }
     val calendar = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
         if (!pendingCalendarAccess || activity == null) return@rememberLauncherForActivityResult
         pendingCalendarAccess = false
@@ -154,7 +150,6 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
     LifecycleResumeEffect(viewModel) {
         // Back from a system page, the rows follow what Android allows now.
         viewModel.onNotificationPermissionChanged(NotificationManagerCompat.from(context).areNotificationsEnabled())
-        viewModel.onBackgroundWorkChanged()
         if (page == SettingsPage.WIDGETS) countPlacedWidgets(context, viewModel)
         onPauseOrDispose { }
     }
@@ -162,16 +157,11 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.events.collect { event ->
                 when (event) {
-                    SettingsEvent.OpenNotificationSettings -> context.openAppNotificationSettings()
-                    SettingsEvent.RequestNotificationPermission -> context.requestNotifications(notifications)
                     SettingsEvent.ChooseCustomSpoiler -> if (spoiler?.uiState?.value?.busy == false) pickSpoilerImage()
                     SettingsEvent.ResetCustomSpoiler -> spoiler?.resetImage()
                     SettingsEvent.OpenDiagnostics -> navigator.open(AppRoutes.Diagnostics)
-                    SettingsEvent.OpenConnections -> navigator.open(AppRoutes.Connections)
                     // The root gate already switched to the flow; the overlay just has to leave.
                     SettingsEvent.CloseOverlays -> navigator.dismissOverlays()
-                    SettingsEvent.OpenBackgroundWorkSettings -> activity?.openBackgroundWorkSettings()
-                    SettingsEvent.ShowBackgroundWorkHint -> dialogs.show(SettingsDialog.BackgroundWorkHint)
                     SettingsEvent.RequestQrTile -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         activity?.requestAddQrTile(viewModel::onQrTileResult)
                     }
@@ -198,7 +188,6 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
             onChoice = { id, optionKey -> viewModel.onChoiceChanged(id, optionKey) },
             onNavigate = { next -> navigator.open(AppRoutes.Settings(next.name)) },
             onAction = { id -> viewModel.onAction(id) },
-            onAllowBackgroundWork = { activity?.openBackgroundWorkSettings() },
             onAllowCalendarAccess = askCalendarAccess,
             onOpenAppSettings = { platform.openAppSettings() },
         )

@@ -77,7 +77,7 @@ class WidgetsPageProviderTest {
                 qrWidget = QrWidgetSettings(dynamicColors = false, animationType = QrAnimationType.NONE),
                 scheduleWidget = ScheduleWidgetSettings(full = FullScheduleWidgetSettings(hideTeacher = true))
             )
-            SettingsPage.entries.forEach { page ->
+            (SettingsPage.entries - setOf(SettingsPage.SERVICES, SettingsPage.PRIVACY, SettingsPage.NOTIFICATIONS)).forEach { page ->
                 val fixture = createFixture(page = page, local = local)
                 advanceUntilIdle()
                 assertEquals(page == SettingsPage.WIDGETS, fixture.viewModel.uiState.value.gallery != null, "$page")

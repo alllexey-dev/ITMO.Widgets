@@ -2,11 +2,9 @@ package dev.alllexey.itmowidgets.feature.auth.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -52,13 +50,13 @@ internal class AuthScreenErrorPreview {
     fun AuthScreen() = AuthPreview(SignedOut.copy(error = UiText.Res(AccountStrings.auth_error_invalid_credentials)))
 }
 
-/** The dialog alone on the screen's background, mirroring the dialog window. */
-internal class AuthScreenTokenDialogPreview {
-    @Preview(name = "token-dialog")
+/** `Другие способы входа`: the sheet's body on the sheet's colour. */
+internal class AuthScreenOtherWaysPreview {
+    @Preview(name = "other-ways")
     @Composable
     fun AuthScreen() = ItmoPreview {
-        Box(Modifier.background(ItmoTheme.colorScheme.surface).padding(DialogMargin)) {
-            RefreshTokenDialogSurface(token = "", missing = false)
+        Box(Modifier.background(ItmoTheme.colorScheme.surfaceContainerLow)) {
+            OtherWaysSheetContent(onSignIn = {}, onDismiss = {})
         }
     }
 }
@@ -75,6 +73,3 @@ internal class LoginScreenErrorPreview {
         )
     }
 }
-
-/** The space a dialog window keeps around its surface. */
-private val DialogMargin = 24.dp

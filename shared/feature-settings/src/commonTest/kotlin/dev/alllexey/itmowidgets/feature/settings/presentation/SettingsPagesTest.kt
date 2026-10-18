@@ -2,8 +2,6 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
-import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
-import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -26,13 +24,13 @@ class SettingsPagesTest {
     // Lazy: the fixture's ViewModel needs the main dispatcher setUp installs.
     private val pages by lazy { createFixture().pages }
     private val navigationRows = SettingsPage.entries.filter { it != SettingsPage.ROOT }.map(SettingRowId::navigation)
-    /** Shown by the schedule and recordbook pages, handled by the schedule provider. */
-    private val sharedRows = setOf(SettingRowId.BACKGROUND_WORK)
+    /** «Подключение и данные» and «Уведомления» have view models of their own; no provider builds them. */
+    private val ownScreens = setOf(SettingsPage.SERVICES, SettingsPage.PRIVACY, SettingsPage.NOTIFICATIONS)
 
     @Test
-    fun everySettingsPageHasExactlyOneProvider() {
+    fun everySettingsPageHasExactlyOneProviderAndTheOwnScreensNone() {
         SettingsPage.entries.forEach { page ->
-            assertEquals(1, pages.providers.count { page in it.pages }, "providers of $page")
+            assertEquals(if (page in ownScreens) 0 else 1, pages.providers.count { page in it.pages }, "providers of $page")
         }
     }
 
@@ -50,31 +48,27 @@ class SettingsPagesTest {
     }
 
     @Test
-    fun aPageShowsOnlyItsProvidersRowsNavigationRowsAndSharedRows() {
+    fun aPageShowsOnlyItsProvidersRowsAndNavigationRows() {
         val states = listOf(
             SettingsPageState(
                 local = LocalSettings(customServicesEnabled = true, barsMarksEnabled = true),
-                sharing = SharingSettingsState.Content(SharingSettings()),
                 notificationsGranted = false,
                 hasCustomSpoiler = true,
                 imageBusy = false,
-                backgroundWorkRestricted = true,
                 calendar = CalendarSyncState(enabled = true)
             ),
             SettingsPageState(
                 local = LocalSettings(),
-                sharing = SharingSettingsState.Error,
                 notificationsGranted = null,
                 hasCustomSpoiler = false,
-                imageBusy = true,
-                backgroundWorkRestricted = false
+                imageBusy = true
             )
         )
-        SettingsPage.entries.forEach { page ->
+        (SettingsPage.entries - ownScreens).forEach { page ->
             val provider = pages.forPage(page)
             states.forEach { state ->
                 val ids = provider.sections(page, state).flatMap(SettingSection::items).map { it.id }
-                val foreign = ids.filter { it !in provider.rows && it !in navigationRows && it !in sharedRows }
+                val foreign = ids.filter { it !in provider.rows && it !in navigationRows }
                 assertTrue(foreign.isEmpty(), "$page shows rows of other providers: $foreign")
             }
         }

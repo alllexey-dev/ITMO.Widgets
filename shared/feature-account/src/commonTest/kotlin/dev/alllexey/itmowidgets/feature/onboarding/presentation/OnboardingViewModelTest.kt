@@ -1,28 +1,43 @@
 package dev.alllexey.itmowidgets.feature.onboarding.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
-import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
-import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.lesson.DayLesson
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
+import dev.alllexey.itmowidgets.core.lesson.LessonState
+import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
+import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
+import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
+import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.testing.FakeDayLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 
+/** The three steps of the first run: the user's own data, the permissions one by one, the consent-gated connection. */
 class OnboardingViewModelTest {
 
     private val main = TestMainDispatcher()
@@ -34,329 +49,209 @@ class OnboardingViewModelTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun withoutTheOptInTheFlowHasFourStepsAndEndsOnServices() = runTest(main.dispatcher) {
-        val fixture = createFixture()
+    fun theFlowWalksThreeStepsAndEndsWithNotNow() = runTest(main.dispatcher) {
+        val fixture = Fixture()
         advanceUntilIdle()
 
-        val walked = mutableListOf(fixture.viewModel.uiState.value.step)
-        repeat(3) { fixture.viewModel.next(); walked += fixture.viewModel.uiState.value.step }
-
-        assertEquals(
-            listOf(OnboardingStep.COMPACT_WIDGET, OnboardingStep.FULL_WIDGET, OnboardingStep.QR_WIDGET, OnboardingStep.SERVICES),
-            walked
-        )
-        assertTrue(fixture.viewModel.uiState.value.isLastStep)
+        val walked = mutableListOf<OnboardingStep>(fixture.viewModel.uiState.value.step)
+        repeat(2) { fixture.viewModel.next(); walked += fixture.viewModel.uiState.value.step }
+        assertEquals(OnboardingStep.entries.toList(), walked.toList())
         assertFalse(fixture.onboarding.observeCompleted().first())
 
+        fixture.viewModel.back()
+        assertEquals(OnboardingStep.PERMISSIONS, fixture.viewModel.uiState.value.step)
         fixture.viewModel.next()
+        fixture.viewModel.notNow()
         advanceUntilIdle()
 
         assertTrue(fixture.onboarding.observeCompleted().first())
         assertTrue(fixture.viewModel.uiState.value.finished)
+        assertEquals(emptyList(), fixture.services.requests, "not now leaves the connection off")
     }
 
     @Test
-    fun theOptInAddsTheNotificationsStepAndItsLossReturnsToServices() =
-        runTest(main.dispatcher) {
-            val fixture = createFixture()
-            advanceUntilIdle()
-            repeat(3) { fixture.viewModel.next() }
-            assertEquals(4, fixture.viewModel.uiState.value.steps.size)
-
-            fixture.viewModel.setServicesEnabled(true)
-            advanceUntilIdle()
-            assertEquals(5, fixture.viewModel.uiState.value.steps.size)
-            assertFalse(fixture.viewModel.uiState.value.isLastStep)
-
-            fixture.viewModel.next()
-            assertEquals(OnboardingStep.NOTIFICATIONS, fixture.viewModel.uiState.value.step)
-            assertTrue(fixture.viewModel.uiState.value.isLastStep)
-
-            fixture.services.enabled.value = false
-            advanceUntilIdle()
-
-            assertEquals(OnboardingStep.SERVICES, fixture.viewModel.uiState.value.step)
-            assertEquals(4, fixture.viewModel.uiState.value.steps.size)
-        }
-
-    @Test
-    fun backWalksTheStepsInReverseAndStopsAtTheFirstOne() = runTest(main.dispatcher) {
-        val fixture = createFixture()
-        advanceUntilIdle()
-        repeat(2) { fixture.viewModel.next() }
-        assertEquals(OnboardingStep.QR_WIDGET, fixture.viewModel.uiState.value.step)
-
-        fixture.viewModel.back()
-        assertEquals(OnboardingStep.FULL_WIDGET, fixture.viewModel.uiState.value.step)
-        fixture.viewModel.back()
-        fixture.viewModel.back()
-        assertEquals(OnboardingStep.COMPACT_WIDGET, fixture.viewModel.uiState.value.step)
-        assertEquals(0, fixture.viewModel.uiState.value.stepIndex)
+    fun theStepSurvivesProcessDeath() = runTest(main.dispatcher) {
+        val saved = SavedStateHandle()
+        Fixture(saved).viewModel.next()
+        assertEquals(OnboardingStep.PERMISSIONS, Fixture(saved).viewModel.uiState.value.step)
     }
 
     @Test
-    fun theCurrentStepIsRestoredFromTheSavedState() = runTest(main.dispatcher) {
-        val handle = SavedStateHandle()
-        createFixture(savedStateHandle = handle).viewModel.next()
+    fun theFirstStepShowsThePersonTheLessonNowAndTheSportScore() = runTest(main.dispatcher) {
+        val fixture = Fixture()
         advanceUntilIdle()
 
-        val restored = createFixture(savedStateHandle = handle).viewModel
-
-        assertEquals(OnboardingStep.FULL_WIDGET, restored.uiState.value.step)
+        val state = fixture.viewModel.uiState.value
+        assertEquals(OnboardingMe("Александрова Мария", "АМ", null), state.me)
+        assertEquals(UiText.Res(AccountStrings.onboarding_value_now), state.lesson?.title)
+        assertEquals("Программирование", state.lesson?.lesson?.subject)
+        assertEquals(LessonState.NOW, state.lesson?.lesson?.state)
+        assertEquals(UiText.Res(AccountStrings.onboarding_value_sport_score, listOf(90)), state.sport)
+        assertEquals(listOf(10L), fixture.sport.scoreRequests, "the current period")
+        assertEquals(1, fixture.days.refreshes)
     }
 
     @Test
-    fun skippingCompletesTheFlowFromAnyStep() = runTest(main.dispatcher) {
-        val fixture = createFixture()
+    fun afterTodaysLessonsTheFirstStepShowsTomorrowsFirst() = runTest(main.dispatcher) {
+        val fixture = Fixture(time = FixedAcademicTime(LocalDateTime(Today, LocalTime(19, 0))))
         advanceUntilIdle()
 
-        fixture.viewModel.skip()
-        advanceUntilIdle()
-
-        assertTrue(fixture.onboarding.observeCompleted().first())
-        assertTrue(fixture.viewModel.uiState.value.finished)
+        assertEquals(UiText.Res(AccountStrings.onboarding_value_tomorrow), fixture.viewModel.uiState.value.lesson?.title)
+        assertEquals("Физика", fixture.viewModel.uiState.value.lesson?.lesson?.subject)
     }
 
     @Test
-    fun theOptInIsReportedWhileItRunsAndOnceItSettles() = runTest(main.dispatcher) {
-        val fixture = createFixture()
+    fun withoutDataTheFirstStepKeepsItsDescriptions() = runTest(main.dispatcher) {
+        val fixture = Fixture(days = emptyList())
+        fixture.sport.periods = AppResult.Failure(dev.alllexey.itmowidgets.core.result.AppError.Network)
         advanceUntilIdle()
 
-        fixture.viewModel.setServicesEnabled(true)
-        advanceUntilIdle()
-        assertTrue(fixture.viewModel.uiState.value.servicesEnabled)
-        assertFalse(fixture.viewModel.uiState.value.servicesBusy)
-
-        fixture.viewModel.setServicesEnabled(false)
-        advanceUntilIdle()
-        assertFalse(fixture.viewModel.uiState.value.servicesEnabled)
-        assertEquals(listOf(true, false), fixture.services.requests)
+        assertNull(fixture.viewModel.uiState.value.lesson)
+        assertNull(fixture.viewModel.uiState.value.sport)
     }
 
     @Test
-    fun aFailedOptInStaysOffAndExplainsItself() = runTest(main.dispatcher) {
-        val fixture = createFixture()
-        fixture.services.failing = true
+    fun notificationsAskOnceThenOpenTheSystemPage() = runTest(main.dispatcher) {
+        val fixture = Fixture()
         advanceUntilIdle()
 
-        fixture.viewModel.setServicesEnabled(true)
+        fixture.viewModel.requestNotifications()
+        assertEquals(OnboardingEvent.RequestNotificationPermission, fixture.viewModel.events.first())
+        fixture.viewModel.onNotificationPermission(granted = false)
+        fixture.viewModel.requestNotifications()
+        assertEquals(OnboardingEvent.OpenNotificationSettings, fixture.viewModel.events.first())
+    }
+
+    @Test
+    fun theCalendarTurnsOnAfterItsPermissionAndOnlyWhereOffered() = runTest(main.dispatcher) {
+        val fixture = Fixture()
+        val without = Fixture(capabilities = Capabilities.copy(calendarExport = false))
+        advanceUntilIdle()
+        assertEquals(false, fixture.viewModel.uiState.value.calendarSynced)
+        assertNull(without.viewModel.uiState.value.calendarSynced)
+
+        fixture.viewModel.addLessonsToCalendar()
+        assertEquals(OnboardingEvent.RequestCalendarAccess, fixture.viewModel.events.first())
+        fixture.viewModel.onCalendarAccessGranted()
         advanceUntilIdle()
 
-        assertFalse(fixture.viewModel.uiState.value.servicesEnabled)
-        assertFalse(fixture.viewModel.uiState.value.servicesBusy)
+        assertEquals(1, fixture.calendar.enables)
+        assertEquals(true, fixture.viewModel.uiState.value.calendarSynced)
+    }
+
+    @Test
+    fun aFailedCalendarSaysSo() = runTest(main.dispatcher) {
+        val fixture = Fixture()
+        fixture.calendar.enableResult = CalendarSyncResult.FAILED
+        advanceUntilIdle()
+
+        fixture.viewModel.onCalendarAccessGranted()
+        advanceUntilIdle()
+
         assertTrue(fixture.viewModel.events.first() is OnboardingEvent.ShowError)
     }
 
     @Test
-    fun everyWidgetOptionWritesThroughAndThePreviewFollows() = runTest(main.dispatcher) {
-        val fixture = createFixture()
-        advanceUntilIdle()
-        val before = checkNotNull(fixture.viewModel.uiState.value.appearance)
-
-        WidgetOption.entries.forEach { option ->
-            fixture.viewModel.setOption(option, !option.isEnabled(before))
-        }
+    fun connectingGoesThroughTheConsentAndEndsTheFlow() = runTest(main.dispatcher) {
+        val fixture = Fixture()
         advanceUntilIdle()
 
-        val after = checkNotNull(fixture.viewModel.uiState.value.appearance)
-        WidgetOption.entries.forEach { option ->
-            assertEquals(!option.isEnabled(before), option.isEnabled(after), option.name)
-        }
+        fixture.viewModel.connect()
+        assertEquals(OnboardingEvent.ShowConsent, fixture.viewModel.events.first())
+        assertEquals(emptyList(), fixture.services.requests, "nothing turns on before the consent")
+
+        fixture.viewModel.onConsent()
+        advanceUntilIdle()
+
+        assertEquals(listOf(true), fixture.services.requests)
+        assertTrue(fixture.viewModel.uiState.value.finished)
+        assertTrue(fixture.onboarding.observeCompleted().first())
     }
 
     @Test
-    fun textSizeWritesThroughPerScheduleWidgetAndTheQRStepHasNone() = runTest(main.dispatcher) {
-        val fixture = createFixture()
+    fun aFailedConnectionStaysOnTheStep() = runTest(main.dispatcher) {
+        val fixture = Fixture()
+        fixture.services.failing = true
         advanceUntilIdle()
 
-        fixture.viewModel.setTextSize(WidgetKind.SINGLE_LESSON, WidgetTextSize.EXTRA_LARGE)
-        fixture.viewModel.setTextSize(WidgetKind.QR, WidgetTextSize.LARGE)
+        fixture.viewModel.onConsent()
         advanceUntilIdle()
 
-        val appearance = checkNotNull(fixture.viewModel.uiState.value.appearance)
-        assertEquals(WidgetTextSize.EXTRA_LARGE, WidgetKind.SINGLE_LESSON.textSize(appearance))
-        assertEquals(WidgetTextSize.NORMAL, WidgetKind.DAY_SCHEDULE.textSize(appearance))
-        assertEquals(null, WidgetKind.QR.textSize(appearance))
-
-        fixture.viewModel.setTextSize(WidgetKind.DAY_SCHEDULE, WidgetTextSize.LARGE)
-        advanceUntilIdle()
-        assertEquals(WidgetTextSize.LARGE, checkNotNull(fixture.viewModel.uiState.value.appearance).schedule.full.textSize)
+        assertTrue(fixture.viewModel.events.first() is OnboardingEvent.ShowError)
+        assertFalse(fixture.viewModel.uiState.value.finished)
+        assertFalse(fixture.viewModel.uiState.value.servicesBusy)
     }
 
     @Test
-    fun theStoredSpoilerImageIsReadOnceAndASaveMarksItForThePreview() =
-        runTest(main.dispatcher) {
-            val fixture = createFixture()
-            assertEquals(null, fixture.viewModel.uiState.value.customSpoiler)
-            advanceUntilIdle()
-            assertEquals(false, fixture.viewModel.uiState.value.customSpoiler)
-            assertEquals(0, fixture.viewModel.uiState.value.spoilerRevision)
-
-            fixture.viewModel.saveSpoilerImage("content://test/image")
-            fixture.viewModel.saveSpoilerImage("content://test/duplicate")
-            fixture.viewModel.resetSpoilerImage()
-            runCurrent()
-            assertTrue(fixture.viewModel.uiState.value.spoilerBusy)
-            assertEquals(listOf("content://test/image"), fixture.spoiler.saved)
-
-            fixture.spoiler.result.complete(true)
-            advanceUntilIdle()
-
-            val state = fixture.viewModel.uiState.value
-            assertEquals(true, state.customSpoiler)
-            assertFalse(state.spoilerBusy)
-            assertEquals(1, state.spoilerRevision)
-            assertEquals(0, fixture.spoiler.resets)
-        }
-
-    @Test
-    fun aFailedImageKeepsThePreviousOneAndExplainsItself() = runTest(main.dispatcher) {
-        val fixture = createFixture(spoiler = FakeCustomSpoilerRepository(hasImage = true))
+    fun alreadyConnectedTheLastButtonFinishes() = runTest(main.dispatcher) {
+        val fixture = Fixture(connected = true)
         advanceUntilIdle()
 
-        fixture.viewModel.saveSpoilerImage("content://test/broken")
-        fixture.spoiler.result.complete(false)
+        fixture.viewModel.connect()
         advanceUntilIdle()
 
-        val state = fixture.viewModel.uiState.value
-        assertEquals(true, state.customSpoiler)
-        assertFalse(state.spoilerBusy)
-        assertEquals(0, state.spoilerRevision)
-        assertEquals(OnboardingEvent.SpoilerImageFailed, fixture.viewModel.events.first())
+        assertTrue(fixture.viewModel.uiState.value.finished)
+        assertEquals(emptyList(), fixture.services.requests)
     }
 
-    @Test
-    fun aResetReturnsToTheDefaultImage() = runTest(main.dispatcher) {
-        val fixture = createFixture(spoiler = FakeCustomSpoilerRepository(hasImage = true))
-        advanceUntilIdle()
-        assertEquals(true, fixture.viewModel.uiState.value.customSpoiler)
-
-        fixture.viewModel.resetSpoilerImage()
-        fixture.spoiler.result.complete(true)
-        advanceUntilIdle()
-
-        assertEquals(false, fixture.viewModel.uiState.value.customSpoiler)
-        assertEquals(1, fixture.spoiler.resets)
-        assertEquals(1, fixture.viewModel.uiState.value.spoilerRevision)
-    }
-
-    @Test
-    fun eachWidgetStepOffersItsOwnOptions() {
-        assertEquals(listOf(WidgetOption.COMPACT_NEXT_LESSON_EARLY, WidgetOption.COMPACT_HIDE_TEACHER), WidgetKind.SINGLE_LESSON.options)
-        assertEquals(
-            listOf(WidgetOption.FULL_HIDE_TEACHER, WidgetOption.FULL_HIDE_PAST_LESSONS, WidgetOption.FULL_SHOW_TOMORROW),
-            WidgetKind.DAY_SCHEDULE.options
+    private class Fixture(
+        saved: SavedStateHandle = SavedStateHandle(),
+        time: FixedAcademicTime = FixedAcademicTime(LocalDateTime(Today, LocalTime(12, 0))),
+        days: List<LessonDay> = Week,
+        connected: Boolean = false,
+        capabilities: PlatformCapabilities = Capabilities,
+    ) {
+        val onboarding = FakeOnboardingRepository(completed = false)
+        val services = FakeCustomServicesRepository(enabled = connected)
+        val session = FakeSessionRepository(
+            SessionState.SignedIn(CurrentUser(1, "Александрова Мария", null, familyName = "Александрова", givenName = "Мария")),
         )
-        assertEquals(listOf(WidgetOption.QR_DYNAMIC_COLORS, WidgetOption.QR_SPOILER), WidgetKind.QR.options)
-    }
-
-    @Test
-    fun aPinnedWidgetIsAskedForOnceAndThenMarked() = runTest(main.dispatcher) {
-        val fixture = createFixture()
-        advanceUntilIdle()
-
-        fixture.viewModel.pinWidget(WidgetKind.QR)
-        assertEquals(OnboardingEvent.RequestPinWidget(WidgetKind.QR), fixture.viewModel.events.first())
-
-        fixture.viewModel.onWidgetPinned(WidgetKind.QR)
-
-        assertEquals(setOf(WidgetKind.QR), fixture.viewModel.uiState.value.pinnedWidgets)
-    }
-
-    @Test
-    fun aDeniedPermissionLeadsToTheSystemSettingsOnTheSecondTap() =
-        runTest(main.dispatcher) {
-            val fixture = createFixture()
-            advanceUntilIdle()
-
-            fixture.viewModel.requestNotifications()
-            assertEquals(OnboardingEvent.RequestNotificationPermission, fixture.viewModel.events.first())
-            assertTrue(fixture.viewModel.uiState.value.notificationsAsked)
-
-            fixture.viewModel.onNotificationPermission(granted = false)
-            fixture.viewModel.requestNotifications()
-
-            assertEquals(OnboardingEvent.OpenNotificationSettings, fixture.viewModel.events.first())
+        val days = FakeDayLessonsGateway(days)
+        val sport = FakeSportScoreRepository().apply {
+            periods = AppResult.Success(listOf(SportScorePeriod(9, "Осень"), SportScorePeriod(10, "Весна", current = true)))
+            score = AppResult.Success(SportScoreSummary(64, 26))
         }
-
-    @Test
-    fun aGrantedPermissionOpensTheSystemPageWhereChannelsLive() =
-        runTest(main.dispatcher) {
-            val fixture = createFixture()
-            advanceUntilIdle()
-
-            fixture.viewModel.onNotificationPermission(granted = true)
-            fixture.viewModel.requestNotifications()
-
-            assertEquals(OnboardingEvent.OpenNotificationSettings, fixture.viewModel.events.first())
-        }
-
-    private fun createFixture(
-        savedStateHandle: SavedStateHandle = SavedStateHandle(),
-        spoiler: FakeCustomSpoilerRepository = FakeCustomSpoilerRepository()
-    ): Fixture {
-        val onboarding = FakeOnboardingRepository()
-        val services = FakeCustomServicesRepository()
-        val appearance = FakeWidgetAppearanceRepository()
-        return Fixture(
-            onboarding = onboarding,
-            services = services,
-            appearance = appearance,
-            spoiler = spoiler,
-            viewModel = OnboardingViewModel(
-                onboardingRepository = onboarding,
-                customServicesRepository = services,
-                widgetAppearanceRepository = appearance,
-                customSpoilerRepository = spoiler,
-                savedStateHandle = savedStateHandle
-            )
+        val calendar = FakeCalendarSync()
+        val viewModel = OnboardingViewModel(
+            onboarding, services, session, this.days, sport, calendar, time, capabilities, saved,
         )
     }
 
-    private data class Fixture(
-        val onboarding: FakeOnboardingRepository,
-        val services: FakeCustomServicesRepository,
-        val appearance: FakeWidgetAppearanceRepository,
-        val spoiler: FakeCustomSpoilerRepository,
-        val viewModel: OnboardingViewModel
-    )
+    private companion object {
+        val Today = LocalDate(2026, 9, 7)
 
-    private class FakeWidgetAppearanceRepository : WidgetAppearanceRepository {
-        val state = MutableStateFlow(WidgetAppearance())
+        val Capabilities = PlatformCapabilities(
+            quickSettingsTile = true,
+            backgroundWorkSettings = true,
+            updateChannel = true,
+            calendarExport = true,
+            recordbook = true,
+            marks = true,
+            reviews = true,
+            qrWidgetAnimation = true,
+            qrCustomSpoiler = true,
+            wallpaperColors = true,
+            pinWidgets = true,
+            lockScreenWidgets = true,
+        )
 
-        override fun observeAppearance(): Flow<WidgetAppearance> = state
+        fun lesson(subject: String, start: LocalTime, end: LocalTime) = DayLesson(
+            start = start,
+            end = end,
+            subject = subject,
+            typeId = 2,
+            teacher = null,
+            room = "1506",
+            building = "Кронверкский пр., 49",
+            online = false,
+            target = LessonTarget.Lesson(
+                LessonDetailsArgs(1, Today.toString(), subject, 2, "", "$start", "$end", null, null, "1506", null, null, null, null, null, null, null),
+            ),
+        )
 
-        override suspend fun setCompactNextLessonEarly(enabled: Boolean) =
-            schedule { copy(compact = compact.copy(showNextLessonEarly = enabled)) }
-
-        override suspend fun setCompactTeacherHidden(hidden: Boolean) =
-            schedule { copy(compact = compact.copy(hideTeacher = hidden)) }
-
-        override suspend fun setFullTeacherHidden(hidden: Boolean) =
-            schedule { copy(full = full.copy(hideTeacher = hidden)) }
-
-        override suspend fun setFullPastLessonsHidden(hidden: Boolean) =
-            schedule { copy(full = full.copy(hidePastLessons = hidden)) }
-
-        override suspend fun setFullTomorrowEnabled(enabled: Boolean) =
-            schedule { copy(full = full.copy(showTomorrowWhenTodayIsOver = enabled)) }
-
-        override suspend fun setCompactTextSize(size: WidgetTextSize) =
-            schedule { copy(compact = compact.copy(textSize = size)) }
-
-        override suspend fun setFullTextSize(size: WidgetTextSize) =
-            schedule { copy(full = full.copy(textSize = size)) }
-
-        override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) = qr { copy(dynamicColors = enabled) }
-
-        override suspend fun setQrSpoilerEnabled(enabled: Boolean) = qr { copy(spoilerEnabled = enabled) }
-
-        private fun schedule(block: ScheduleWidgetSettings.() -> ScheduleWidgetSettings) {
-            state.value = state.value.copy(schedule = state.value.schedule.block())
-        }
-
-        private fun qr(block: QrWidgetSettings.() -> QrWidgetSettings) {
-            state.value = state.value.copy(qr = state.value.qr.block())
-        }
+        val Week = listOf(
+            LessonDay(Today, listOf(lesson("Программирование", LocalTime(11, 40), LocalTime(13, 10))), null),
+            LessonDay(LocalDate(2026, 9, 8), listOf(lesson("Физика", LocalTime(10, 0), LocalTime(11, 30))), null),
+        )
     }
 }
