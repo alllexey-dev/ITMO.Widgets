@@ -7,11 +7,13 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
+import dev.alllexey.itmowidgets.core.schedule.TeacherNowGateway
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.TeacherNowGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherWeeksFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.bell.ScheduleChangesBellSource
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
@@ -75,6 +77,8 @@ val scheduleDataModule = module {
     factory { TeacherWeeksFileStore(get<AppDirectories>()) }
     singleOf(::TeacherLessonsGatewayImpl) { bind<TeacherLessonsGateway>() }
     single<SessionDataCleaner>(named("schedule-teacher-lessons")) { get<TeacherLessonsGatewayImpl>() }
+    // Stateless: every call asks MyITMO for today.
+    factoryOf(::TeacherNowGatewayImpl) { bind<TeacherNowGateway>() }
 
     factory { ScheduleChangesFileStore(get<AppDirectories>()) }
     singleOf(::ScheduleChangesRepositoryImpl) { bind<ScheduleChangesRepository>() }

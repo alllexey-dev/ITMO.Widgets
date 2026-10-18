@@ -31,7 +31,7 @@ coil = "3.6.3"
 ksoup = "0.2.6"
 materialKolor = "5.0.1"
 skie = "0.10.15"
-myItmoApiKmp = "2.1.1"
+myItmoApiKmp = "2.2.0"
 
 # Tests and screenshots (ADR 0022).
 robolectric = "4.17"

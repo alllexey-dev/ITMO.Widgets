@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Data (2026-10-17)
+
+- `TeacherNowGateway`: the lesson a teacher gives now or next today, from My ITMO's teacher timetable (MyItmoApi 2.2.0 `getTeacherSchedule`), for the person card's «Сейчас ведёт»; parallel groups in one room are one lesson.
+
 ### iOS UI tests (2026-10-18)
 
 - iOS UI tests run on a pinned academic date, this week's Wednesday (`-itmoAcademicDate` in a Debug build), so
