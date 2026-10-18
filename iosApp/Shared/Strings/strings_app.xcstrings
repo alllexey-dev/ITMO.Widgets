@@ -96,6 +96,18 @@
           }
         }
       }
+    },
+    "widget_pin_failed" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось добавить виджет"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

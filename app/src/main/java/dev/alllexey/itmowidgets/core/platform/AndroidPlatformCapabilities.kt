@@ -14,4 +14,6 @@ val AndroidPlatformCapabilities = PlatformCapabilities(
     qrWidgetAnimation = true,
     qrCustomSpoiler = true,
     wallpaperColors = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+    pinWidgets = true,
+    lockScreenWidgets = false,
 )

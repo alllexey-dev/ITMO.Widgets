@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.schedule.widget
 
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.settings.AccentColor
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
@@ -11,14 +10,16 @@ import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetTimelineLoadResult
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLesson
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLessonState
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.DayWidgetContent
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.NextLessonMoment
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.NextLessonWidgetContent
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimeline
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineEntry
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineJson
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetContent
-import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetContentKind
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetLesson
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetLessonState
 import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import kotlin.random.Random
@@ -67,19 +68,20 @@ class ScheduleTimelineWriterTest {
     fun deleteDevice() = FileSystem.SYSTEM.deleteRecursively(root)
 
     /**
-     * The reference fixture through the writer is the fixture in the App Group envelope: the Swift reader's tests
-     * (`ScheduleTimelineTests`) wrap the same file the same way.
+     * The reference fixture through the writer is the fixture with short locations in the App Group envelope: the
+     * Swift reader's tests (`ScheduleTimelineTests`) wrap the same file the same way.
      */
     @Test
-    fun theReferenceFixtureIsWrittenInTheEnvelopeUnchanged() = runTest(UnconfinedTestDispatcher()) {
-        val fixture = FileSystem.SYSTEM.read(repositoryRoot() / FIXTURE) { readUtf8() }
-        source.result = ScheduleWidgetTimelineLoadResult.Available(ScheduleWidgetTimelineJson.decode(fixture))
+    fun theReferenceFixtureIsWrittenInTheEnvelopeWithShortLocations() = runTest(UnconfinedTestDispatcher()) {
+        val fixture = ScheduleWidgetTimelineJson.decode(FileSystem.SYSTEM.read(repositoryRoot() / FIXTURE) { readUtf8() })
+        source.result = ScheduleWidgetTimelineLoadResult.Available(fixture)
 
         writer.publish()
 
         val written = Json.parseToJsonElement(FileSystem.SYSTEM.read(directory.file(FILE_NAME)) { readUtf8() })
-        val expected = JsonObject(mapOf("version" to JsonPrimitive(1), "value" to Json.parseToJsonElement(fixture)))
-        assertEquals(expected, written)
+        val value = Json.parseToJsonElement(ScheduleWidgetTimelineJson.encode(fixture.withShortLocations()))
+        assertEquals(JsonObject(mapOf("version" to JsonPrimitive(2), "value" to value)), written)
+        assertEquals("Кронва", read().entries.first().snapshot.next.lesson?.building)
         assertEquals(listOf(SINGLE_LESSON_KIND, DAY_SCHEDULE_KIND), reloads)
     }
 
@@ -107,9 +109,11 @@ class ScheduleTimelineWriterTest {
 
         writer.publish()
 
-        val lesson = assertNotNull(read().entries.single().snapshot.singleLesson.lesson)
+        val snapshot = read().entries.single().snapshot
+        val lesson = assertNotNull(snapshot.next.lesson)
         assertEquals("1506/1", lesson.room)
         assertEquals("Корпус на длин", lesson.building)
+        assertEquals(lesson, snapshot.day.lessons.single())
     }
 
     @Test
@@ -118,7 +122,7 @@ class ScheduleTimelineWriterTest {
         val previous = read()
         reloads.clear()
 
-        source.result = ScheduleWidgetTimelineLoadResult.Unavailable(LessonStyle.DOT, LessonStyle.DOT)
+        source.result = ScheduleWidgetTimelineLoadResult.Unavailable
         writer.publish()
         source.failure = IllegalStateException("No definition for ScheduleWidgetDataProvider")
         writer.publish()
@@ -143,7 +147,7 @@ class ScheduleTimelineWriterTest {
         triggers.session.value = "signed-out"
         triggers.settings.value = "large text"
         triggers.foregrounds.emit(Unit)
-        writer.refreshScheduleWidgets()
+        writer.requestWrite()
 
         assertEquals(5, source.untils.size)
         assertEquals(5 * 2, reloads.size)
@@ -182,7 +186,7 @@ class ScheduleTimelineWriterTest {
     }
 
     private fun read(): ScheduleWidgetTimeline =
-        assertNotNull(AppGroupSnapshotWriter(directory, reloader = {}).read(ScheduleTimelineWriter.FILE))
+        assertNotNull(AppGroupSnapshotWriter(directory, reloader = {}, json = ScheduleTimelineWriter.JSON).read(ScheduleTimelineWriter.FILE))
 
     private fun appGroup(): AppGroupDirectory {
         FileSystem.SYSTEM.createDirectories(root)
@@ -220,24 +224,26 @@ class ScheduleTimelineWriterTest {
     }
 
     private companion object {
-        const val FILE_NAME = "schedule-timeline-v1.json"
-        const val FIXTURE = "shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json"
+        const val FILE_NAME = "schedule-timeline-v2.json"
+        const val FIXTURE = "shared/feature-schedule/fixtures/schedule-widget-timeline-v2.json"
         const val SINGLE_LESSON_KIND = "dev.alllexey.itmowidgets.widget.single-lesson"
         const val DAY_SCHEDULE_KIND = "dev.alllexey.itmowidgets.widget.day-schedule"
 
         val NOW: Instant = Instant.parse("2026-10-07T09:00:00Z")
 
-        fun lesson(room: String?, building: String?) = ScheduleWidgetLesson(
+        fun lesson(room: String?, building: String?) = WidgetLesson(
             subject = "Математика",
             start = "12:00",
             end = "13:30",
+            startMinute = 720,
+            endMinute = 810,
             typeId = 1,
+            state = WidgetLessonState.NOW,
             room = room,
             building = building,
-            state = ScheduleWidgetLessonState.CURRENT,
         )
 
-        fun available(lesson: ScheduleWidgetLesson) = ScheduleWidgetTimelineLoadResult.Available(
+        fun available(lesson: WidgetLesson) = ScheduleWidgetTimelineLoadResult.Available(
             ScheduleWidgetTimeline(
                 generatedAt = NOW,
                 validUntil = NOW + 36.hours,
@@ -245,10 +251,8 @@ class ScheduleTimelineWriterTest {
                     ScheduleWidgetTimelineEntry(
                         NOW,
                         ScheduleWidgetSnapshot(
-                            singleLesson = SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, lesson),
-                            lessonList = emptyList(),
-                            singleLessonStyle = LessonStyle.DOT,
-                            lessonListStyle = LessonStyle.DOT,
+                            next = NextLessonWidgetContent(WidgetContentKind.CONTENT, NextLessonMoment.NOW, lesson),
+                            day = DayWidgetContent(WidgetContentKind.CONTENT, lessons = listOf(lesson)),
                         )
                     )
                 )

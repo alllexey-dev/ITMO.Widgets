@@ -80,7 +80,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Открывает QR-пропуск"
+            "value" : "Открывает пропуск"
           }
         }
       }
@@ -297,6 +297,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Наведите камеру на QR на странице входа"
+          }
+        }
+      }
+    },
+    "ios_widget_inline_at" : {
+      "comment" : "Generated from strings_ios_widgets.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ в %2$@"
+          }
+        }
+      }
+    },
+    "ios_widget_inline_until" : {
+      "comment" : "Generated from strings_ios_widgets.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ до %2$@"
           }
         }
       }
@@ -1297,6 +1321,126 @@
         }
       }
     },
+    "widget_day_empty" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пар нет"
+          }
+        }
+      }
+    },
+    "widget_day_lessons" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld пары"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld пар"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld пара"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld пары"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "widget_day_planned" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@–%3$@"
+          }
+        }
+      }
+    },
+    "widget_day_remaining" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ещё %1$@ до %2$@"
+          }
+        }
+      }
+    },
+    "widget_day_sport_only" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "спорт"
+          }
+        }
+      }
+    },
+    "widget_day_tomorrow" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завтра, %1$@"
+          }
+        }
+      }
+    },
+    "widget_day_window" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "окно %1$@"
+          }
+        }
+      }
+    },
+    "widget_day_with_sport" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ и спорт"
+          }
+        }
+      }
+    },
     "widget_lesson_list_description" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",
@@ -1304,7 +1448,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Список пар на сегодня"
+            "value" : "День с линией «сейчас»"
           }
         }
       }
@@ -1316,7 +1460,163 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Расписание"
+            "value" : "Расписание на день"
+          }
+        }
+      }
+    },
+    "widget_next_first" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Первая пара в %1$@"
+          }
+        }
+      }
+    },
+    "widget_next_in" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "через %1$@"
+          }
+        }
+      }
+    },
+    "widget_next_last_until" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Последняя до %1$@"
+          }
+        }
+      }
+    },
+    "widget_next_left" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ещё %1$@"
+          }
+        }
+      }
+    },
+    "widget_next_next" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Далее в %1$@"
+          }
+        }
+      }
+    },
+    "widget_next_none_today" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "сегодня пар нет"
+          }
+        }
+      }
+    },
+    "widget_next_now" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сейчас, до %1$@"
+          }
+        }
+      }
+    },
+    "widget_next_over" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "на сегодня всё"
+          }
+        }
+      }
+    },
+    "widget_next_rest_next" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Далее"
+          }
+        }
+      }
+    },
+    "widget_next_rest_then" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потом"
+          }
+        }
+      }
+    },
+    "widget_next_rest_tomorrow" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ещё завтра"
+          }
+        }
+      }
+    },
+    "widget_next_tomorrow" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завтра в %1$@"
+          }
+        }
+      }
+    },
+    "widget_next_window" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "окно ещё %1$@"
           }
         }
       }
@@ -1376,7 +1676,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "QR-код"
+            "value" : "Пропуск"
           }
         }
       }
@@ -1388,7 +1688,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Текущая или следующая"
+            "value" : "Сейчас и далее"
           }
         }
       }
@@ -1401,6 +1701,186 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пара"
+          }
+        }
+      }
+    },
+    "widget_sport_bonus" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "бонусы %1$lld"
+          }
+        }
+      }
+    },
+    "widget_sport_description" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Баллы и запись"
+          }
+        }
+      }
+    },
+    "widget_sport_done" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зачёт набран"
+          }
+        }
+      }
+    },
+    "widget_sport_empty" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записей нет"
+          }
+        }
+      }
+    },
+    "widget_sport_error" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить баллы"
+          }
+        }
+      }
+    },
+    "widget_sport_later" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "widget_sport_loading" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружаем баллы"
+          }
+        }
+      }
+    },
+    "widget_sport_name" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спорт"
+          }
+        }
+      }
+    },
+    "widget_sport_of" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "из %1$lld"
+          }
+        }
+      }
+    },
+    "widget_sport_remaining" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ещё %1$lld балла до зачёта"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ещё %1$lld баллов до зачёта"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ещё %1$lld балл до зачёта"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ещё %1$lld балла до зачёта"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "widget_sport_today" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сегодня %1$@"
+          }
+        }
+      }
+    },
+    "widget_sport_tomorrow" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завтра %1$@"
+          }
+        }
+      }
+    },
+    "widget_sport_visits" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "посещения %1$lld"
           }
         }
       }

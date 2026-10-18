@@ -21,13 +21,13 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * The JSON of `widgets/schedule_snapshot.json`. 2: kotlinx with a top-level `formatVersion`, always written first. A
- * file without it is 2.2's Gson snapshot: the same keys and enum names, nulls omitted, text sizes possibly absent.
- * 2.2 ignores the marker, so either build reads the other's file.
+ * The JSON of `widgets/schedule_snapshot.json`: kotlinx with a top-level `formatVersion`, always written first. 3: the
+ * next-lesson and day contents of the UX overhaul. A file of another version, or 2.2's file without the marker, reads
+ * as loading until the next update writes this one.
  */
 internal object ScheduleWidgetSnapshotJson {
     private const val FORMAT_VERSION_KEY = "formatVersion"
-    private const val FORMAT_VERSION = 2
+    private const val FORMAT_VERSION = 3
 
     fun encode(snapshot: ScheduleWidgetSnapshot): String {
         val fields = ScheduleStoreJson.encodeToJsonElement(ScheduleWidgetSnapshot.serializer(), snapshot).jsonObject
@@ -39,7 +39,7 @@ internal object ScheduleWidgetSnapshotJson {
     fun decode(text: String): ScheduleWidgetSnapshot {
         val root = ScheduleStoreJson.parseToJsonElement(text).jsonObject
         val version = root[FORMAT_VERSION_KEY]?.jsonPrimitive?.int
-        check(version == null || version == FORMAT_VERSION) { "Unknown schedule widget snapshot version $version" }
+        check(version == FORMAT_VERSION) { "Unknown schedule widget snapshot version $version" }
         return ScheduleStoreJson.decodeFromJsonElement(ScheduleWidgetSnapshot.serializer(), root)
     }
 }

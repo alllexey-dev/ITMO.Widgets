@@ -73,7 +73,7 @@ class SchedulePageProviderTest {
             assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
             assertTrue(fixture.repository.sportSharingRequests.isEmpty())
             assertEquals(2, fixture.widgetRefresher.refreshCount)
-            assertEquals(null, fixture.viewModel.uiState.value.previewSettings)
+            assertEquals(null, fixture.viewModel.uiState.value.gallery)
         }
 
     @Test

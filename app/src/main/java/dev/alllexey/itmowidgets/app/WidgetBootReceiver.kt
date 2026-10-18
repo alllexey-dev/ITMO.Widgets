@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrCodeWidgetProvider
 import dev.alllexey.itmowidgets.feature.qr.work.QrWidgetWork
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetWork
+import dev.alllexey.itmowidgets.feature.sport.work.SportWidgetWork
 
 class WidgetBootReceiver : BroadcastReceiver() {
 
@@ -19,6 +20,10 @@ class WidgetBootReceiver : BroadcastReceiver() {
         if (ScheduleWidgetProviders.hasAnyWidget(context)) {
             ScheduleWidgetWork.ensurePeriodic(context)
             ScheduleWidgetWork.enqueueUpdate(context, force = true)
+        }
+        if (SportWidgetWork.ids(context).isNotEmpty()) {
+            SportWidgetWork.ensurePeriodic(context)
+            SportWidgetWork.enqueueUpdate(context, force = true)
         }
     }
 }

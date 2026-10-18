@@ -24,4 +24,6 @@ val IosPlatformCapabilities = PlatformCapabilities(
     qrWidgetAnimation = false,
     qrCustomSpoiler = false,
     wallpaperColors = false,
+    pinWidgets = false,
+    lockScreenWidgets = true,
 )

@@ -266,7 +266,8 @@ class StableIdentifiersTest {
             "dev.alllexey.itmowidgets.feature.schedule.ui.widget.DayScheduleWidgetProvider" to "receiver",
             "dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetRefreshReceiver" to "receiver",
             "dev.alllexey.itmowidgets.app.WidgetBootReceiver" to "receiver",
-            "dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRemoteViewsService" to "service",
+            "dev.alllexey.itmowidgets.feature.sport.ui.widget.SportWidgetProvider" to "receiver",
+            "dev.alllexey.itmowidgets.feature.sport.work.SportWidgetRefreshReceiver" to "receiver",
             "dev.alllexey.itmowidgets.core.notification.MyFirebaseMessagingService" to "service"
         )
 

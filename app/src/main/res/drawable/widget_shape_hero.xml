@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- White, so a widget renderer tints it (WidgetColors.tint): RemoteViews cannot tint a background below API 31. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="@android:color/white" />
+
+    <corners android:radius="20dp" />
+</shape>

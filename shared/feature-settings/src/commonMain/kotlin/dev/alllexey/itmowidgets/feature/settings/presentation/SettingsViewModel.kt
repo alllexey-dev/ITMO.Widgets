@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
@@ -53,6 +54,7 @@ class SettingsViewModel(
     private val backgroundWorkUnrestricted = MutableStateFlow<Boolean?>(null)
     private val backgroundWorkHintMutex = Mutex()
     private var backgroundWorkRecheck: Job? = null
+    private val placedWidgets = MutableStateFlow<Map<WidgetFormat, Int>>(emptyMap())
     private val customSpoilerConfigured = MutableStateFlow(false)
     private val customSpoilerBusy = MutableStateFlow(false)
     // Start masked so cached backend values cannot flash before the fresh request.
@@ -77,15 +79,18 @@ class SettingsViewModel(
         notificationPermissionGranted,
         customSpoilerConfigured,
         customSpoilerBusy,
-        backgroundWorkUnrestricted
+        backgroundWorkUnrestricted,
+        placedWidgets
     ) { values ->
+        @Suppress("UNCHECKED_CAST")
         SettingsPageState(
             local = values[0] as LocalSettings,
             sharing = values[1] as SharingSettingsState,
             notificationsGranted = values[2] as Boolean?,
             hasCustomSpoiler = values[3] as Boolean,
             imageBusy = values[4] as Boolean,
-            backgroundWorkRestricted = values[5] == false
+            backgroundWorkRestricted = values[5] == false,
+            placedWidgets = values[6] as Map<WidgetFormat, Int>
         )
     }
 
@@ -98,8 +103,8 @@ class SettingsViewModel(
                 page = page,
                 sections = provider.sections(page, state),
                 loaded = true,
-                previewSettings = provider.preview(page, state.local),
-                themePreview = provider.themePreview(page, state.local)
+                themePreview = provider.themePreview(page, state.local),
+                gallery = provider.gallery(page, state)
             )
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState(page))
@@ -138,6 +143,11 @@ class SettingsViewModel(
             delay(BACKGROUND_WORK_RECHECK_MS)
             backgroundWorkUnrestricted.value = backgroundWork.isUnrestricted()
         }
+    }
+
+    /** The home screen holds [count] widgets of [format]: the gallery counts them each time it is shown. */
+    fun onPlacedWidgets(format: WidgetFormat, count: Int) {
+        placedWidgets.value = placedWidgets.value + (format to count)
     }
 
     fun onCustomSpoilerChanged(configured: Boolean, refreshWidgets: Boolean = false, busy: Boolean = false) {

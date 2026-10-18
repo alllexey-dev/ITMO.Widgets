@@ -1,6 +1,13 @@
 package dev.alllexey.itmowidgets.feature.settings.ui.preview
 
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.settings.AccentColor
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
+import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
+import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
+import dev.alllexey.itmowidgets.feature.settings.presentation.EveryPlatformCapability
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPageState
+import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetGalleryRows
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
@@ -156,16 +163,7 @@ internal object SettingsPreviewData {
         ),
         SettingSection(
             title = res(Res.string.settings_group_widgets),
-            items = listOf(
-                navigation(SettingsPage.COMPACT_SCHEDULE_WIDGET),
-                navigation(SettingsPage.FULL_SCHEDULE_WIDGET),
-                navigation(SettingsPage.QR_WIDGET, title = res(Res.string.settings_qr_short_title)),
-                SettingItem.Toggle(
-                    id = SettingRowId.WIDGETS_FOLLOW_THEME,
-                    title = res(Res.string.settings_widgets_theme_title),
-                    checked = false
-                )
-            )
+            items = listOf(navigation(SettingsPage.WIDGETS))
         ),
         SettingSection(
             title = res(CoreRes.string.me_group_app),
@@ -292,98 +290,26 @@ internal object SettingsPreviewData {
     /** The minimum loading time of privacy: the page is loaded, its rows are not. */
     val PrivacyLoading = SettingsUiState(page = SettingsPage.PRIVACY, loaded = true)
 
-    val CompactScheduleWidget = state(
-        SettingsPage.COMPACT_SCHEDULE_WIDGET,
-        SettingSection(
-            title = null,
-            items = listOf(
-                SettingItem.Toggle(
-                    id = SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
-                    title = res(CoreRes.string.settings_widget_next_early_title),
-                    description = res(CoreRes.string.settings_widget_next_early_description),
-                    checked = true
-                ),
-                SettingItem.Toggle(
-                    id = SettingRowId.COMPACT_WIDGET_HIDE_TEACHER,
-                    title = res(CoreRes.string.settings_widget_hide_teacher_title),
-                    checked = false
-                ),
-                textSize(SettingRowId.COMPACT_WIDGET_TEXT_SIZE)
-            )
-        ),
-        preview = WidgetPreviewSettings.Schedule(ScheduleWidgetSettings(), ScheduleWidgetFormat.COMPACT)
-    )
+    /** The gallery with every format, one placed widget and the pass under its spoiler. */
+    val Widgets = widgets(placed = mapOf(WidgetFormat.DAY to 1))
 
-    val FullScheduleWidget = state(
-        SettingsPage.FULL_SCHEDULE_WIDGET,
-        SettingSection(
-            title = null,
-            items = listOf(
-                SettingItem.Toggle(
-                    id = SettingRowId.FULL_WIDGET_HIDE_TEACHER,
-                    title = res(CoreRes.string.settings_widget_hide_teacher_title),
-                    checked = false
-                ),
-                SettingItem.Toggle(
-                    id = SettingRowId.FULL_WIDGET_HIDE_PAST,
-                    title = res(CoreRes.string.settings_widget_hide_past_title),
-                    checked = false
-                ),
-                SettingItem.Toggle(
-                    id = SettingRowId.FULL_WIDGET_SHOW_TOMORROW,
-                    title = res(CoreRes.string.settings_widget_tomorrow_title),
-                    description = res(CoreRes.string.settings_widget_tomorrow_description),
-                    checked = false
-                ),
-                textSize(SettingRowId.FULL_WIDGET_TEXT_SIZE)
-            )
-        ),
-        preview = WidgetPreviewSettings.Schedule(ScheduleWidgetSettings(), ScheduleWidgetFormat.FULL)
-    )
-
-    val QrWidget = state(
-        SettingsPage.QR_WIDGET,
-        SettingSection(
-            title = null,
-            items = listOf(
-                SettingItem.Toggle(
-                    id = SettingRowId.QR_DYNAMIC_COLORS,
-                    title = res(CoreRes.string.settings_qr_dynamic_colors_title),
-                    checked = true
-                ),
-                SettingItem.Toggle(
-                    id = SettingRowId.QR_SPOILER,
-                    title = res(CoreRes.string.settings_qr_spoiler_title),
-                    description = res(CoreRes.string.settings_qr_spoiler_description),
-                    checked = true
-                )
-            )
-        ),
-        SettingSection(
-            title = res(Res.string.settings_group_spoiler),
-            items = listOf(
-                SettingItem.Choice(
-                    id = SettingRowId.QR_ANIMATION,
-                    title = res(Res.string.settings_qr_animation_title),
-                    value = QrAnimationType.CIRCLE.label(),
-                    options = QrAnimationType.entries.map { ChoiceOption(it.name, it.label()) },
-                    selectedOptionKey = QrAnimationType.CIRCLE.name
-                ),
-                SettingItem.Action(
-                    id = SettingRowId.QR_CUSTOM_IMAGE,
-                    title = res(CoreRes.string.settings_qr_custom_image_title),
-                    value = res(CoreRes.string.settings_qr_custom_image_default),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
-                ),
-                SettingItem.Action(
-                    id = SettingRowId.QR_RESET_IMAGE,
-                    title = res(Res.string.settings_qr_reset_image_title),
-                    enabled = false
-                )
-            )
-        ),
-        preview = WidgetPreviewSettings.Qr(QrWidgetSettings())
-    )
+    fun widgets(
+        placed: Map<WidgetFormat, Int> = emptyMap(),
+        local: LocalSettings = LocalSettings(),
+        capabilities: PlatformCapabilities = EveryPlatformCapability,
+    ): SettingsUiState {
+        val state = SettingsPageState(
+            local = local,
+            sharing = SharingSettingsState.Disabled,
+            notificationsGranted = true,
+            hasCustomSpoiler = false,
+            imageBusy = false,
+            backgroundWorkRestricted = false,
+            placedWidgets = placed,
+        )
+        val rows = WidgetGalleryRows(capabilities, canAddTile = false)
+        return SettingsUiState(SettingsPage.WIDGETS, rows.page(state), loaded = true, gallery = rows.gallery(state))
+    }
 
     val Schedule = state(
         SettingsPage.SCHEDULE,
@@ -495,7 +421,7 @@ internal object SettingsPreviewData {
 
     /** Every row kind with long Russian text, a locked switch, a switch still loading and a disabled row. */
     val LongText = SettingsUiState(
-        page = SettingsPage.QR_WIDGET,
+        page = SettingsPage.HOME,
         loaded = true,
         sections = listOf(
             SettingSection(
@@ -584,11 +510,8 @@ internal object SettingsPreviewData {
     private fun navigation(page: SettingsPage, title: UiText = page.title, value: UiText? = null) =
         SettingItem.Navigation(SettingRowId.navigation(page), title, value, page = page)
 
-    private fun state(
-        page: SettingsPage,
-        vararg sections: SettingSection,
-        preview: WidgetPreviewSettings? = null
-    ) = SettingsUiState(page, sections.toList(), loaded = true, previewSettings = preview)
+    private fun state(page: SettingsPage, vararg sections: SettingSection) =
+        SettingsUiState(page, sections.toList(), loaded = true)
 
     private fun res(resource: StringResource) = UiText.Res(resource.key)
 

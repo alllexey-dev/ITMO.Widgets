@@ -217,4 +217,4 @@ view touching the bar's edge takes the bar's height as a vertical content inset 
 (`ScheduleUITests.testWeekStripIsDrawnOnLaunchAndAfterATabSwitch` checks the pixels); `ScheduleSheets.swift` has the lesson sheet, the month sheet and the friend picker
 (`Routes+Schedule.swift`, all `.swiftUISheet`). The picker and the month sheet answer through `AppRouter.open(_:onResult:)`
 (`FriendPick`, `DatePick`). Snapshot references: `ScheduleSnapshotTests`. See also
-[schedule changes](schedule-changes.md#ios), [calendar](calendar.md#ios), [widgets](widgets.md#ios).
+[schedule changes](schedule-changes.md#ios), [calendar](calendar.md#ios), [widgets](widgets.md#timeline-widgetkit).

@@ -16,7 +16,11 @@ data class WidgetPalette(
     fun roles(dark: Boolean): WidgetColorRoles = if (dark) this.dark else light
 }
 
-/** The few scheme roles a widget uses, each an opaque `0xRRGGBB`. */
+/**
+ * The few scheme roles a widget uses, each an opaque `0xRRGGBB`. The current lesson sits on [primaryContainer], lesson
+ * blocks on [surfaceContainerHigh], the sport ring's bonus arc is [tertiary]; files written before these roles read
+ * them as their nearest older role.
+ */
 @Serializable
 data class WidgetColorRoles(
     @SerialName("surface") val surface: Int,
@@ -25,4 +29,8 @@ data class WidgetColorRoles(
     @SerialName("onSurfaceVariant") val onSurfaceVariant: Int,
     @SerialName("outlineVariant") val outlineVariant: Int,
     @SerialName("primary") val primary: Int,
+    @SerialName("primaryContainer") val primaryContainer: Int = surfaceContainer,
+    @SerialName("onPrimaryContainer") val onPrimaryContainer: Int = onSurface,
+    @SerialName("surfaceContainerHigh") val surfaceContainerHigh: Int = surfaceContainer,
+    @SerialName("tertiary") val tertiary: Int = primary,
 )

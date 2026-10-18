@@ -12,8 +12,10 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.app.shell.BottomSheetSceneStrategy
@@ -24,6 +26,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ShellBackStack
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropActivity
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
@@ -36,6 +39,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsTestTags
 import dev.alllexey.itmowidgets.feature.settings.ui.diagnostics.DiagnosticsTestTags
 import dev.alllexey.itmowidgets.feature.settings.ui.ics.IcsExportTestTags
+import dev.alllexey.itmowidgets.feature.settings.ui.widgets.WidgetsGalleryTags
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -131,16 +135,19 @@ class SettingsEntriesTest {
     }
 
     @Test
-    fun theSpoilerPickAndCropReachTheQrPageAfterItsStateWasRestored() {
+    fun theSpoilerPickAndCropReachThePassSheetAfterItsStateWasRestored() {
         val restoration = StateRestorationTester(compose)
         restoration.setContent { Shell() }
-        act { open(AppRoutes.Settings(SettingsPage.QR_WIDGET.name)) }
-        awaitRows()
+        act { open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) }
+        awaitGallery()
+        compose.onNodeWithTag(WidgetsGalleryTags.SCROLL).performScrollToNode(hasTestTag(WidgetsGalleryTags.settings(WidgetFormat.PASS)))
+        clickTop(WidgetsGalleryTags.settings(WidgetFormat.PASS))
 
-        clickRow(SettingRowId.QR_CUSTOM_IMAGE)
+        compose.onAllNodesWithTag(SettingRowId.QR_CUSTOM_IMAGE.key).onLast().performScrollTo().performClick()
+        compose.waitForIdle()
         val pick = shadowOf(compose.activity).nextStartedActivityForResult
         restoration.emulateSavedInstanceStateRestore()
-        awaitRows()
+        awaitGallery()
 
         dispatch(pick.requestCode, Intent().setData(PICKED))
         val crop = shadowOf(compose.activity).nextStartedActivityForResult
@@ -167,6 +174,11 @@ class SettingsEntriesTest {
     private fun act(block: Nav3AppNavigator.() -> Unit) {
         compose.runOnIdle { navigator.block() }
         compose.waitForIdle()
+    }
+
+    /** The gallery shows its cards once its local settings arrive. */
+    private fun awaitGallery() {
+        compose.waitUntil(TIMEOUT_MS) { compose.onAllNodesWithTag(WidgetsGalleryTags.SCROLL).fetchSemanticsNodes().isNotEmpty() }
     }
 
     /** The top page shows its rows once its local settings arrive. */

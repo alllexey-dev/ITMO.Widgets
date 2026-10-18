@@ -183,6 +183,15 @@ new iOS app.
   free slot; `Моё` lists the sections with the place (`3-й из 7 в секции`), an off switch and the next three dates,
   each of which can be skipped. `Только мои секции` in the filters sheet of `Запись` keeps the lessons of the sections. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
   awards by month with the day the credit was reached; no forecast. Another user's sport shows lesson cards.
+- Widgets are rebuilt on both platforms (RemoteViews on Android, WidgetKit on iOS, one shared snapshot): `Пара`
+  (small, and medium with the next two lessons) shows the lesson to go to with its room in large type and a live
+  countdown, and tomorrow after the last lesson; `Расписание на день` is the day to scale with the `сейчас` line,
+  the current lesson highlighted, past ones dimmed and gaps labelled `окно 2 ч 10 мин`; the new `Спорт` widget has
+  the score ring (visits and bonus, green and closed once the credit is reached) and, medium, the nearest booking
+  or queue in the words of Спорт. A lesson opens its sheet, a queue or booking its sport lesson. iOS adds Lock
+  Screen widgets and the `Пропуск` Control. `Виджеты` in settings is a gallery of live previews with `Добавить`
+  (Android) or `Как добавить` (iOS) and each format's settings in a sheet; it replaces the `Компактное
+  расписание`, `Полное расписание` and QR pages, and `Завтрашние пары вечером` is now on by default.
 - Профиль, Друзья and the person card are rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one
   view model per screen). Профиль is a hub under the one-line header with `Поделиться`: the identity card, `Друзья`
   as a counter (`3 друга, 1 заявка`) with the requests badge, `Приватность`, then `Подключение и данные` as a status,

@@ -6,19 +6,12 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import kotlinx.coroutines.flow.Flow
 
 /** The schedule widgets' display settings, one set per format. */
 class WidgetSettingsPreferences(dataStore: DataStore<Preferences>) : DataStorePreferences(dataStore) {
-
-    suspend fun getWidgetSmartSchedulingEnabled(): Boolean = true
-
-    suspend fun getSingleLessonWidgetStyle(): LessonStyle = LessonStyle.DOT
-
-    suspend fun getLessonListWidgetStyle(): LessonStyle = LessonStyle.DOT
 
     suspend fun getScheduleWidgetSettings(): ScheduleWidgetSettings = read().scheduleWidgetSettings()
 
@@ -63,7 +56,7 @@ class WidgetSettingsPreferences(dataStore: DataStore<Preferences>) : DataStorePr
         full = FullScheduleWidgetSettings(
             hideTeacher = this[FULL_WIDGET_HIDE_TEACHER] ?: this[WIDGET_HIDE_TEACHER_ENABLED] ?: false,
             hidePastLessons = this[FULL_WIDGET_HIDE_PAST] ?: this[WIDGET_HIDE_PREVIOUS_LESSONS_ENABLED] ?: false,
-            showTomorrowWhenTodayIsOver = this[FULL_WIDGET_SHOW_TOMORROW] ?: this[WIDGET_FUTURE_SCHEDULE_ENABLED] ?: false,
+            showTomorrowWhenTodayIsOver = this[FULL_WIDGET_SHOW_TOMORROW] ?: this[WIDGET_FUTURE_SCHEDULE_ENABLED] ?: true,
             textSize = safeEnumOf(this[FULL_WIDGET_TEXT_SIZE], WidgetTextSize.NORMAL)
         )
     )

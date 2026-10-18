@@ -33,6 +33,14 @@ when" has one source of truth.
 emulator (ADR 0022). iOS degrades where WidgetKit forbids: no reveal animation, no 7-minute pending-sport refresh.
 Every change to a snapshot model updates the JSON fixtures that both Kotlin and Swift tests decode.
 
+**Amended (2026-10-17).** The UX overhaul's widgets keep this decision: the next-lesson, day and new sport widget
+are RemoteViews in `app/` over shared snapshots. The day widget is no longer a collection: from API 31 its rows are
+placed at their minutes (`setViewLayoutMargin`, `setViewLayoutHeight`), below it they stack, so
+`ScheduleWidgetRemoteViewsService` is gone. The timeline is version 2 (`next` and `day` contents, `nowTicks` for the
+`сейчас` line; App Group `schedule-timeline-v2.json`); the sport widget adds `sport-widget-v1.json` and the kind
+`dev.alllexey.itmowidgets.widget.sport`. Swift renders countdowns as system live text to the instants Kotlin gives;
+it still takes no time decision.
+
 **Supersedes.** Nothing.
 
 **Revisit when.** A Glance check shows at least 15 of 18 frames within 450 ms and Glance widgets are planned; the

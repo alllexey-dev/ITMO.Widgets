@@ -20,6 +20,17 @@
     <color name="widget_on_surface_variant">#FF49454F</color>
     <color name="widget_outline_variant">#FFCAC4D0</color>
     <color name="widget_primary">#FF6750A4</color>
+    <color name="widget_primary_container">#FFEADDFF</color>
+    <color name="widget_on_primary_container">#FF21005D</color>
+    <color name="widget_surface_container_high">#FFECE6F0</color>
+    <color name="widget_tertiary">#FF7D5260</color>
+    <!-- The widgets' status tones, as the app's Tone.WARN and Tone.OK containers and their text. -->
+    <color name="widget_warn_container">#FFFFDDB8</color>
+    <color name="widget_on_warn_container">#FF6B3B00</color>
+    <color name="widget_warn">#FF8B5000</color>
+    <color name="widget_ok_container">#FFC4EED0</color>
+    <color name="widget_on_ok_container">#FF0F5223</color>
+    <color name="widget_ok">#FF1E8E3E</color>
     <color name="shortcut_icon_background">#FFFFFFFF</color>
 
 </resources>

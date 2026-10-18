@@ -54,6 +54,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.entries.shellEntries
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRouteRegistration
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
@@ -206,6 +207,9 @@ class ShellHost(
             RecordbookSubjectArgs.from(intent.extras),
             launchedFromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0,
             link = intent.dataString,
+            lesson = intent.getStringExtra(AppEntryIntents.EXTRA_LESSON),
+            sportLesson = intent.getLongExtra(AppEntryIntents.EXTRA_SPORT_LESSON, 0L),
+            sportPredicted = intent.getBooleanExtra(AppEntryIntents.EXTRA_SPORT_PREDICTED, false),
         ) ?: return
         routes.offer(route)
         routeOffers++
