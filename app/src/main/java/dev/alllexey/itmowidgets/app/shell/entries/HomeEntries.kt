@@ -64,6 +64,7 @@ internal fun HomeTabRoot(navigator: Nav3AppNavigator) {
                 }
             },
             onJoin = { url -> context.openUrl(url) },
+            onRoute = { route -> navigator.open(route) },
             onTodo = { route -> navigator.run(context, route) },
         )
     }

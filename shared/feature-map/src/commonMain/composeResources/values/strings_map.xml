@@ -1,0 +1,55 @@
+<resources>
+    <!-- The screen -->
+    <string name="map_title">Карта</string>
+    <string name="map_floor">%1$d этаж</string>
+    <string name="map_floor_short">%1$d</string>
+    <string name="map_floors">Этажи</string>
+    <string name="map_room_on_floor">%1$s, %2$s</string>
+    <string name="map_room_fallback">Помещение</string>
+    <string name="map_room_missing">Аудитории %1$s нет на плане</string>
+    <string name="map_room_approximate">%1$s нет на плане, показана %2$s</string>
+    <string name="map_route">Маршрут</string>
+    <string name="map_open_in_maps">Открыть в Картах</string>
+    <string name="map_no_plan_title">У корпуса нет плана</string>
+    <string name="map_close">Закрыть</string>
+
+    <!-- Search and places -->
+    <string name="map_search_hint">Аудитория или место</string>
+    <string name="map_search_other_buildings">В других корпусах</string>
+    <string name="map_search_empty">Ничего не нашлось</string>
+    <string name="map_place_restrooms">Туалеты</string>
+    <string name="map_place_food">Еда</string>
+    <string name="map_place_coworking">Коворкинги</string>
+    <string name="map_place_cloakroom">Гардероб</string>
+    <string name="map_place_students">Студофис</string>
+    <string name="map_place_library">Библиотека</string>
+    <string name="map_place_health">Медпункт</string>
+    <string name="map_place_entrances">Входы</string>
+    <string name="map_place_water">Вода</string>
+    <string name="map_place_atm">Банкоматы</string>
+
+    <!-- The route -->
+    <string name="map_route_from_entrance">От входа</string>
+    <string name="map_route_from_room">От %1$s</string>
+    <string name="map_route_step">Шаг %1$d из %2$d</string>
+    <string name="map_route_previous">Назад</string>
+    <string name="map_route_next">Дальше</string>
+    <string name="map_step_floor_title">%1$d этаж</string>
+    <string name="map_step_up_title">Подъём</string>
+    <string name="map_step_down_title">Спуск</string>
+    <string name="map_step_yard_title">Двор</string>
+    <string name="map_step_city_title">По городу</string>
+    <string name="map_step_floor">По %1$d этажу</string>
+    <string name="map_step_floor_to_stairs">По %1$d этажу до лестницы</string>
+    <string name="map_step_floor_to_exit">По %1$d этажу до выхода во двор</string>
+    <string name="map_step_floor_to_target">По %1$d этажу до %2$s</string>
+    <string name="map_step_floor_to_entrance">По %1$d этажу к выходу</string>
+    <string name="map_step_up">По лестнице на %1$d этаж</string>
+    <string name="map_step_down">По лестнице вниз на %1$d этаж</string>
+    <string name="map_step_yard">Через двор</string>
+    <string name="map_step_yard_to_entrance">Через двор ко входу</string>
+    <string name="map_step_city">До корпуса %1$s</string>
+    <string name="map_step_same_room">Вы уже здесь: %1$s</string>
+    <string name="map_step_floor_near_target">По %1$d этажу к %2$s: вход на плане не отмечен</string>
+    <string name="map_step_no_path">Путь по плану не найден: %1$s, %2$s</string>
+</resources>

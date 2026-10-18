@@ -20,6 +20,10 @@ packages:
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing
     exactVersion: 1.19.6
+  # The campus map's native plan view (docs/features/map.md); Android uses org.maplibre.gl:android-sdk.
+  MapLibre:
+    url: https://github.com/maplibre/maplibre-gl-native-distribution
+    exactVersion: 6.31.0
 
 settingGroups:
   # Target presets set CODE_SIGN_IDENTITY at target level, above any xcconfig; route it back to Base.xcconfig.
@@ -66,6 +70,7 @@ targets:
     dependencies:
       - target: ITMOWidgetsWidgets
       - target: ITMOWidgetsNotificationService
+      - package: MapLibre
     preBuildScripts:
       # Builds the Kotlin framework `Shared` before Compile Sources (direct integration).
       - name: Build Kotlin framework

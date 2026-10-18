@@ -186,9 +186,10 @@ sheet otherwise. On iOS there is no shell route to the sport tab's sheet yet, so
 - The lesson's type and day as the sheet's title, the status pill (`отменена`, `изменена`, `очередь`, `идёт ещё
   48 мин`, `через 2 ч 58 мин`), the subject, the room big (`Онлайн` for an online lesson) with the time and its length
   and the building's full address (`BuildingDirectory`, else MyITMO's text).
-- Actions, only the relevant ones: `Видео` (the meeting link, opened, never shown), `Друзья 2` (scrolls to the friends
-  on the lesson), `Ссылки 3` and `Предмет` from the first `LessonSubjectSource` that knows the subject (an open set in
-  `core/lesson`). `Маршрут` waits for the map (phase 8).
+- Actions, only the relevant ones: `Маршрут` for an in-person lesson with a room or a building (the
+  [campus map](map.md) with the route from the day's previous lesson), `Видео` (the meeting link, opened, never shown),
+  `Друзья 2` (scrolls to the friends on the lesson), `Ссылки 3` and `Предмет` from the first `LessonSubjectSource` that
+  knows the subject (an open set in `core/lesson`).
 - The recordbook's source (`RecordbookLessonSubjects`) takes the record book subject of the lesson's half-year that the
   subject page would bind to the lesson's schedule subject (`SubjectContextResolver`: a confirmed binding or the same
   id, else the one subject of that name not bound elsewhere). `Предмет` opens its [page](subject-page.md), `Ссылки 3`

@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.home.presentation
 
+import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.navigation.CampusMapArgs
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.lesson.DayLesson
 import dev.alllexey.itmowidgets.core.lesson.DayMoment
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
@@ -109,6 +112,9 @@ object TodayPresenter {
         progress = progress,
         note = lesson.noteText,
         target = lesson.target,
+        route = (lesson.target as? LessonTarget.Lesson)?.args
+            ?.takeIf { !lesson.isOnline && !(lesson.room.isNullOrBlank() && lesson.building.isNullOrBlank()) }
+            ?.let { AppRoutes.CampusMap(CampusMapArgs(it, route = true)) },
     )
 
     /** A lesson one goes to: not cancelled and not waiting in a sport queue. */

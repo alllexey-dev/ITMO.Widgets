@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.home.presentation
 
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.lesson.TimelineItem
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -31,7 +32,7 @@ sealed interface TodayUiState {
  * The lesson to go to now: [label] (`Сейчас`, `Первая пара`, `Далее`, `Завтра`) and [countdown] (`ещё 48 мин`,
  * `через 15 мин`, `в 10:00`) over the [subject] and [byline]; the big [room] with the building's full [address], or
  * `Онлайн` with `Войти` for [videoUrl]; [time] `10:00–11:30`, the current lesson's elapsed [progress] between
- * [start] and [end]; the lesson's [note].
+ * [start] and [end]; the lesson's [note]; [route] the campus map's «Маршрут» to an in-person lesson.
  */
 data class TodayHero(
     val label: UiText,
@@ -47,6 +48,7 @@ data class TodayHero(
     val progress: Float?,
     val note: String?,
     val target: LessonTarget,
+    val route: AppRoute? = null,
 ) {
     val time: String get() = "$start–$end"
 }

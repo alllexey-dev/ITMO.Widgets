@@ -36,4 +36,5 @@ fun shellEntries(debugTools: Boolean = BuildConfig.DEBUG): EntryRegistry = entry
     resourcesEntries()
     reviewsEntries()
     recordbookEntries()
+    mapEntries()
 }

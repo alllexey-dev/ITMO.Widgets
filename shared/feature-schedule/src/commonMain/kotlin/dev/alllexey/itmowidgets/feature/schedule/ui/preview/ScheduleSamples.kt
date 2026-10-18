@@ -305,6 +305,7 @@ object ScheduleSamples {
         "11:40–13:10, 1 ч 30 мин",
         Kronva,
         actions = listOf(
+            LessonAction(LessonActionKind.ROUTE, UiText.Dynamic("Маршрут"), route = AppRoutes.CampusMap()),
             LessonAction(LessonActionKind.FRIENDS, UiText.Dynamic("Друзья 1")),
             LessonAction(LessonActionKind.LINKS, UiText.Dynamic("Ссылки 3"), route = subjectRoute),
             LessonAction(LessonActionKind.SUBJECT, UiText.Dynamic("Предмет"), route = subjectRoute),

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.ui.lesson
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +58,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_link
 import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
+import dev.alllexey.itmowidgets.shared.designsystem.ic_directions
 import dev.alllexey.itmowidgets.shared.designsystem.ic_videocam
 import dev.alllexey.itmowidgets.shared.feature.schedule.Res
 import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_sheet_changes
@@ -127,7 +129,7 @@ fun LessonSheetContent(state: LessonSheetUiState, actions: LessonSheetActions, m
                     when (action.kind) {
                         LessonActionKind.VIDEO -> action.url?.let(actions.onVideo)
                         LessonActionKind.FRIENDS -> scope.launch { friends.bringIntoView() }
-                        LessonActionKind.LINKS, LessonActionKind.SUBJECT -> action.route?.let(actions.onRoute)
+                        LessonActionKind.ROUTE, LessonActionKind.LINKS, LessonActionKind.SUBJECT -> action.route?.let(actions.onRoute)
                     }
                 }
             }
@@ -212,7 +214,14 @@ private fun ActionTiles(actions: List<LessonAction>, onAction: (LessonAction) ->
                         Icon(action.kind.icon(), contentDescription = null)
                     }
                 }
-                Text(action.label.asString(), style = ItmoTheme.typography.labelMedium, maxLines = 1)
+                // Five tiles at 320 dp: the label shrinks to labelSmall instead of clipping («Маршрут»).
+                val type = ItmoTheme.typography
+                Text(
+                    action.label.asString(),
+                    style = type.labelMedium,
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(minFontSize = type.labelSmall.fontSize, maxFontSize = type.labelMedium.fontSize),
+                )
             }
         }
     }
@@ -221,6 +230,7 @@ private fun ActionTiles(actions: List<LessonAction>, onAction: (LessonAction) ->
 @Composable
 private fun LessonActionKind.icon(): Painter = painterResource(
     when (this) {
+        LessonActionKind.ROUTE -> KitRes.drawable.ic_directions
         LessonActionKind.VIDEO -> KitRes.drawable.ic_videocam
         LessonActionKind.FRIENDS -> KitRes.drawable.ic_group
         LessonActionKind.LINKS -> KitRes.drawable.ic_link
