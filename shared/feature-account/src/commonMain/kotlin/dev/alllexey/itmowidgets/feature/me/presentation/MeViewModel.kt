@@ -3,14 +3,20 @@ package dev.alllexey.itmowidgets.feature.me.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.model.UserProfile
+import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.personInitials
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -42,11 +48,10 @@ class MeViewModel(
         signOutInProgress
     ) { (session, servicesEnabled), backendUser, friends, requests, signingOut ->
         MeUiState(
-            user = (session as? SessionState.SignedIn)?.user,
-            backendUser = backendUser,
+            header = header((session as? SessionState.SignedIn)?.user, backendUser),
             friends = summarize(friends, requests),
+            connected = servicesEnabled,
             signOutInProgress = signingOut,
-            webLoginAvailable = servicesEnabled
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, MeUiState())
 
@@ -72,6 +77,23 @@ class MeViewModel(
             sessionRepository.signOut()
             signOutInProgress.value = false
         }
+    }
+
+    /** Name and avatar from the ID token, else from Backend; the group only from Backend; the ISU from either. */
+    private fun header(user: CurrentUser?, backend: UserSummary?): MeHeader {
+        val name = user?.name ?: backend?.name?.takeIf { it.isNotBlank() }
+        val group = backend?.primaryGroup()
+        return MeHeader(
+            name = name?.let(UiText::Dynamic) ?: UiText.Res(AccountStrings.me_unknown_user),
+            initials = name?.let {
+                personInitials(it, user?.familyName ?: backend?.familyName, user?.givenName ?: backend?.givenName)
+            },
+            pictureUrl = user?.pictureUrl ?: backend?.pictureUrl,
+            group = group?.let {
+                UiText.Res(AccountStrings.me_group_format, listOf(it.name, it.course, it.facultyShortName))
+            },
+            isu = user?.isu ?: backend?.isu,
+        )
     }
 
     private fun summarize(

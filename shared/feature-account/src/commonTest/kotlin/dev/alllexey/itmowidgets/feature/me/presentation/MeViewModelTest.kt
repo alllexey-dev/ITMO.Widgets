@@ -14,6 +14,9 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.shared.core.CorePlurals
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -40,7 +43,41 @@ class MeViewModelTest {
         val viewModel = MeViewModel(repository, FakeSocialRepository(), FakeCustomServicesRepository(true))
         advanceUntilIdle()
 
-        assertEquals(user, viewModel.uiState.value.user)
+        val header = viewModel.uiState.value.header
+        assertEquals(UiText.Dynamic("Иванов Иван"), header.name)
+        assertEquals("ИИ", header.initials)
+        assertEquals(123456, header.isu)
+        assertEquals(true, header.shareable)
+    }
+
+    @Test
+    fun theHeaderFallsBackToBackendAndTakesTheGroupFromIt() = runTest(main.dispatcher) {
+        val social = FakeSocialRepository().apply { currentUser.value = friendProfile(9).user }
+        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true))
+        advanceUntilIdle()
+
+        val header = viewModel.uiState.value.header
+        assertEquals(UiText.Dynamic("Пользователь 9"), header.name)
+        assertEquals(UiText.Res(AccountStrings.me_group_format, listOf("M3100", 1, "ФИТиП")), header.group)
+        assertEquals(9, header.isu)
+    }
+
+    @Test
+    fun theFriendsRowCountsFriendsAndRequests() {
+        fun subtitle(friends: Int, requests: Int) = MeUiState(friends = MeFriendsSummary.Content(friends, requests)).friendsSubtitle
+        assertEquals(UiText.Res(AccountStrings.me_friends_none), subtitle(0, 0))
+        assertEquals(UiText.Plural(CorePlurals.friends_count, 3, listOf(3)), subtitle(3, 0))
+        assertEquals(
+            UiText.Joined(
+                listOf(
+                    UiText.Plural(CorePlurals.friends_count, 3, listOf(3)),
+                    UiText.Plural(CorePlurals.friend_requests_count, 1, listOf(1)),
+                ),
+                ", ",
+            ),
+            subtitle(3, 1),
+        )
+        assertEquals(null, MeUiState(friends = MeFriendsSummary.Disabled).friendsSubtitle)
     }
 
     @Test
@@ -56,7 +93,7 @@ class MeViewModelTest {
             advanceUntilIdle()
 
             assertEquals(MeFriendsSummary.Content(friends = 2, incomingRequests = 1), viewModel.uiState.value.friends)
-            assertEquals(9, viewModel.uiState.value.backendUser?.isu)
+            assertEquals(1, viewModel.uiState.value.incomingRequests)
             assertEquals(1, social.refreshes)
         }
 
@@ -102,16 +139,19 @@ class MeViewModelTest {
         }
 
     @Test
-    fun webSignInIsOfferedOnlyWithTheConnection() = runTest(main.dispatcher) {
+    fun theConnectionRowsFollowTheOptIn() = runTest(main.dispatcher) {
         val services = FakeCustomServicesRepository(false)
         val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), FakeSocialRepository(), services)
         advanceUntilIdle()
-        assertEquals(false, viewModel.uiState.value.webLoginAvailable)
+        assertEquals(false, viewModel.uiState.value.connected)
+        assertEquals(UiText.Res(AccountStrings.me_connection_off), viewModel.uiState.value.connectionStatus)
+        assertEquals(UiText.Res(AccountStrings.me_needs_connection), viewModel.uiState.value.webLoginSubtitle)
 
         services.enabled.value = true
         advanceUntilIdle()
 
-        assertEquals(true, viewModel.uiState.value.webLoginAvailable)
+        assertEquals(true, viewModel.uiState.value.connected)
+        assertEquals(UiText.Res(AccountStrings.me_web_login_subtitle), viewModel.uiState.value.webLoginSubtitle)
     }
 
     @Test

@@ -160,9 +160,10 @@ struct ItmoLessonDetails: View {
     }
 }
 
-/// Pills or tags wrapped onto lines.
+/// Pills or tags wrapped onto lines; `centered` centres each line (a centred header).
 struct ItmoFlow: Layout {
     var spacing: CGFloat = ItmoSpacing.compact
+    var centered = false
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let width = proposal.width ?? .infinity
@@ -174,7 +175,7 @@ struct ItmoFlow: Layout {
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         for line in arrange(subviews, width: bounds.width) {
-            var x = bounds.minX
+            var x = bounds.minX + (centered ? max(0, (bounds.width - line.width) / 2) : 0)
             for index in line.items {
                 let size = subviews[index].sizeThatFits(.unspecified)
                 subviews[index].place(at: CGPoint(x: x, y: bounds.minY + line.y), proposal: ProposedViewSize(size))

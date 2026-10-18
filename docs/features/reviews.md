@@ -182,8 +182,8 @@ The iOS app ([iOS app](../ios.md)) loads `reviewsModule` with
   (`reviewEditorViewController` in `shared/ios` `screens/ReviewsScreens.kt`;
   `iosApp/Sources/Features/Reviews/ReviewEditorSheet.swift`); a failed save shows
   as a banner.
-- The report is a Compose dialog over the profile (`ReportReviewHosted`);
-  `AppRoutes.ReportReview` has no iOS surface of its own.
+- The report (`AppRoutes.ReportReview`) is a SwiftUI form sheet over `ReportReviewViewModel`
+  (`iosApp/Sources/Features/Reviews/ReportReviewSheet.swift`); a failure shows under the comment.
 - The demo shows `DemoReviews` and refuses every change
   (`error_demo_unavailable`) with no request.
 - Tests: `ReviewsIosModuleTest` (`scripts/ios/test.sh kn :shared:feature-reviews`)

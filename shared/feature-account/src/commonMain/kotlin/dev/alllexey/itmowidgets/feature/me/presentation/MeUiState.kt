@@ -1,22 +1,68 @@
 package dev.alllexey.itmowidgets.feature.me.presentation
 
-import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.shared.core.CorePlurals
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 
-/** What the social card can say about friends before or after Backend answered. */
+/** What the friends row can say before or after Backend answered. */
 sealed interface MeFriendsSummary {
+    /** No connection to ITMO.Widgets: the hub shows the gate in place of the people rows. */
     data object Disabled : MeFriendsSummary
     data object Loading : MeFriendsSummary
     data object Error : MeFriendsSummary
     data class Content(val friends: Int, val incomingRequests: Int) : MeFriendsSummary
 }
 
+/**
+ * The hub's identity card: the name (the placeholder until either source knows it), the avatar letters from
+ * ITMO.ID's name parts, the study group line from Backend and the ISU, which [shareable] needs.
+ */
+data class MeHeader(
+    val name: UiText = UiText.Res(AccountStrings.me_unknown_user),
+    val initials: String? = null,
+    val pictureUrl: String? = null,
+    val group: UiText? = null,
+    val isu: Int? = null,
+) {
+    val shareable: Boolean get() = isu != null && isu > 0
+}
+
+/**
+ * The Профиль tab (docs/features/me.md): the header, the people rows or their gate, the ITMO.Widgets rows, the app
+ * rows and the sign-out. Every text is built here, so the Compose and SwiftUI views only lay it out.
+ */
 data class MeUiState(
-    val user: CurrentUser? = null,
-    /** Backend's view of the same account; carries the study group. */
-    val backendUser: UserSummary? = null,
+    val header: MeHeader = MeHeader(),
     val friends: MeFriendsSummary = MeFriendsSummary.Loading,
+    /** The ITMO.Widgets connection (custom services) is on. */
+    val connected: Boolean = false,
     val signOutInProgress: Boolean = false,
-    /** Sign-in to the web version goes through Backend, so it needs the ITMO.Widgets connection. */
-    val webLoginAvailable: Boolean = false
-)
+) {
+    /** `3 друга, 1 заявка`; null while there is nothing to say. */
+    val friendsSubtitle: UiText?
+        get() = when (friends) {
+            MeFriendsSummary.Loading -> UiText.Res(AccountStrings.me_friends_loading)
+            MeFriendsSummary.Error -> UiText.Res(AccountStrings.me_friends_error)
+            MeFriendsSummary.Disabled -> null
+            is MeFriendsSummary.Content -> when {
+                friends.friends == 0 && friends.incomingRequests == 0 -> UiText.Res(AccountStrings.me_friends_none)
+                friends.incomingRequests == 0 -> friendsCount(friends.friends)
+                friends.friends == 0 -> requestsCount(friends.incomingRequests)
+                else -> UiText.Joined(listOf(friendsCount(friends.friends), requestsCount(friends.incomingRequests)), ", ")
+            }
+        }
+
+    /** The badge on the friends row: incoming requests. */
+    val incomingRequests: Int get() = (friends as? MeFriendsSummary.Content)?.incomingRequests ?: 0
+
+    val connectionStatus: UiText
+        get() = UiText.Res(if (connected) AccountStrings.me_connection_on else AccountStrings.me_connection_off)
+
+    /** The web sign-in row says what it does, or that it needs the connection (its tap then opens the connection). */
+    val webLoginSubtitle: UiText
+        get() = UiText.Res(if (connected) AccountStrings.me_web_login_subtitle else AccountStrings.me_needs_connection)
+}
+
+private fun friendsCount(count: Int) = UiText.Plural(CorePlurals.friends_count, count, listOf(count))
+
+private fun requestsCount(count: Int) = UiText.Plural(CorePlurals.friend_requests_count, count, listOf(count))

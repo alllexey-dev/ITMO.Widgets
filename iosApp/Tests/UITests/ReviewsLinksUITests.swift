@@ -1,8 +1,9 @@
 import XCTest
 
 /// The subject links and the teacher reviews on the shared demo session: the Compose sheets in SwiftUI
-/// sheets above the subject page's materials tab (the link editor, a link's actions) with the report dialogs as Compose dialogs
-/// over what asked for them, and the review editor, a form sheet a drag does not close. The demo shows
+/// sheets above the subject page's materials tab (the link editor, a link's actions) with the link report as a Compose
+/// dialog over them; on a teacher's SwiftUI card the report of a review, a SwiftUI form sheet, and the review editor,
+/// a form sheet a drag does not close. The demo shows
 /// `DemoSubjectLinks` and `DemoReviews` and refuses every change (`error_demo_unavailable`) without a request. Compose
 /// maps `testTag` to the accessibility identifier (`SubjectLinksSheetTestTags`, `LinkEditorSheetTestTags`,
 /// `LinkActionsSheetTestTags`, `UserProfileTestTags`, `TeacherReviewTestTags`, `ReviewEditorSheetTestTags`); the texts
@@ -97,7 +98,7 @@ final class ReviewsLinksUITests: XCTestCase {
         app.launch()
         openTeacher(app)
 
-        // The report of another student's review: the Compose dialog over the profile.
+        // The report of another student's review: the SwiftUI form sheet over the card.
         tapRevealed(element(app, "teacher_review_more"), in: element(app, "user_profile_list"))
         let report = labelled(app, Self.reportLabel)
         XCTAssertTrue(report.waitForExistence(timeout: stepTimeout))
@@ -201,23 +202,22 @@ final class ReviewsLinksUITests: XCTestCase {
         app.buttons[Self.materialsTab].firstMatch.tap()
     }
 
-    /// The math teacher's profile through people search, with its reviews section.
+    /// The math teacher's card through the search of Друзья, with its reviews section.
     private func openTeacher(_ app: XCUIApplication) {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
         app.selectTab("me")
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
-        element(app, "find_people_row").tap()
-        let field = element(app, "user_search_field")
+        element(app, "friends_row").tap()
+        XCTAssertTrue(element(app, "social.friends").waitForExistence(timeout: stepTimeout))
+        let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: stepTimeout))
-        if !app.keyboards.firstMatch.waitForExistence(timeout: stepTimeout) { field.tap() }
+        field.tap()
         field.typeText("Корнилов")
         let row = element(app, "user_list_row_\(Self.mathTeacher)")
         XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
         row.tap()
         XCTAssertTrue(element(app, "user_profile_hero").waitForExistence(timeout: stepTimeout))
-        let reviews = element(app, "user_profile_reviews")
-        for _ in 0..<6 where !reviews.exists { element(app, "user_profile_list").swipeUp(velocity: .slow) }
-        XCTAssertTrue(reviews.waitForExistence(timeout: stepTimeout), "the reviews section shows on iOS")
+        XCTAssertTrue(element(app, "user_profile_reviews").waitForExistence(timeout: stepTimeout), "the reviews section shows on iOS")
     }
 
     /// Scrolls `list` in short drags until `target` lies wholly inside it (a lazy list composes a row only near the
