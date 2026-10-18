@@ -14,8 +14,8 @@ import dev.alllexey.itmowidgets.feature.sport.ui.preview.SportSamples
  */
 
 @Composable
-private fun UserSportPreview(state: UserSportUiState, name: String) = ItmoPreview {
-    UserSportScreen(state, name, SportSamples.time, UserSportActions())
+private fun UserSportPreview(state: UserSportUiState, givenName: String) = ItmoPreview {
+    UserSportScreen(state, givenName, SportSamples.time, UserSportActions())
 }
 
 /** Another user's two volleyball bookings, read-only, as the reference showed Ivan's. */
@@ -24,7 +24,7 @@ internal class UserSportScreenContentPreview {
     @Composable
     fun UserSportScreen() = UserSportPreview(
         UserSportUiState.Content(SportSamples.friendBookings, refreshing = false),
-        name = "Иван Петров",
+        givenName = "Иван",
     )
 }
 
@@ -34,7 +34,7 @@ internal class UserSportScreenEmptyPreview {
     @Composable
     fun UserSportScreen() = UserSportPreview(
         UserSportUiState.Content(emptyList(), refreshing = false),
-        name = "Дмитрий Смирнов",
+        givenName = "Дмитрий",
     )
 }
 
@@ -42,5 +42,5 @@ internal class UserSportScreenEmptyPreview {
 internal class UserSportScreenLockPreview {
     @Preview(name = "lock")
     @Composable
-    fun UserSportScreen() = UserSportPreview(UserSportUiState.Error(AppError.Forbidden), name = "Иван Петров")
+    fun UserSportScreen() = UserSportPreview(UserSportUiState.Error(AppError.Forbidden), givenName = "Иван")
 }

@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Fixes (2026-10-18)
+
+- Another user's sport is titled by their given name (`Спорт: Иван`), from ITMO.ID's `given_name` or the second word of «Фамилия Имя», not by their surname.
+
 ### iOS UI tests (2026-10-18)
 
 - iOS UI tests run on a pinned academic date, this week's Wednesday (`-itmoAcademicDate` in a Debug build), so

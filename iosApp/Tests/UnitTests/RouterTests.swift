@@ -542,7 +542,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.UserFriends(isu: 100_001, name: ""), .swiftUI),
             (AppRoutes.UserProfile(isu: 100_001), .swiftUI),
             (AppRoutes.UserSchedule(isu: 100_001, name: ""), .swiftUI),
-            (AppRoutes.UserSport(isu: 100_001, name: ""), .compose),
+            (AppRoutes.UserSport(isu: 100_001, name: "", givenName: nil), .compose),
             (AppRoutes.SportPoints.shared, .swiftUI),
             (AppRoutes.Bell.shared, .swiftUISheet),
             (AppRoutes.QrPass.shared, .swiftUISheet),
