@@ -14,7 +14,8 @@ import org.koin.compose.getKoin
 import org.koin.core.parameter.parametersOf
 
 /**
- * Another user's sport as the iOS shell hosts it: [UserSportRoute] with its ViewModel reading [isu] and [name] from the
+ * Another user's sport as the iOS shell hosts it: [UserSportRoute] with its ViewModel reading [isu], [name] and
+ * [givenName] from the
  * arguments Android's destination gives it (`UserScreenArgs`). `koinViewModel()` would hand the definition the
  * Compose controller's own empty `SavedStateHandle` instead.
  */
@@ -22,13 +23,18 @@ import org.koin.core.parameter.parametersOf
 fun UserSportIosRoute(
     isu: Int,
     name: String,
+    givenName: String?,
     time: AcademicTimeProvider,
     onBack: () -> Unit,
     onOpenMap: (SportBooking) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val koin = getKoin()
-    val handle = remember { SavedStateHandle(mapOf(UserScreenArgs.ISU to isu, UserScreenArgs.NAME to name)) }
+    val handle = remember {
+        SavedStateHandle(
+            mapOf(UserScreenArgs.ISU to isu, UserScreenArgs.NAME to name, UserScreenArgs.GIVEN_NAME to givenName),
+        )
+    }
     val viewModel = viewModel { koin.get<UserSportViewModel> { parametersOf(handle) } }
     UserSportRoute(time, onBack, onOpenMap, modifier, viewModel)
 }

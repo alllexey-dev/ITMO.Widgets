@@ -81,7 +81,7 @@ struct UserProfileScreen: View {
             },
             removeFriend: { viewModel.requestRemoveFriend() },
             schedule: { open(AppRoutes.UserSchedule(isu: $0.isu, name: $0.displayName.resolved)) },
-            sport: { open(AppRoutes.UserSport(isu: $0.isu, name: $0.displayName.resolved)) },
+            sport: { open(AppRoutes.UserSport(isu: $0.isu, name: $0.displayName.resolved, givenName: $0.givenName)) },
             friends: { open(AppRoutes.UserFriends(isu: $0.isu, name: $0.displayName.resolved)) },
             toggleSummary: { viewModel.toggleSummaryScales() },
             review: TeacherReviewActions(

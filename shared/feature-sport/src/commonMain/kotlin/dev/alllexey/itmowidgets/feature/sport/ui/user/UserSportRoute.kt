@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportViewMod
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Another user's sport with its Koin ViewModel, which reads the user's ISU and name from the destination's arguments.
+ * Another user's sport with its Koin ViewModel, which reads the user's ISU and names from the destination's arguments.
  * Android hosts it in the shell's `UserSport` entry; the iOS shell hosts the same route.
  */
 @Composable
@@ -35,5 +35,5 @@ fun UserSportRoute(
             onOpenMap = { currentOnOpenMap(it) },
         )
     }
-    UserSportScreen(state, viewModel.name, time, actions, modifier)
+    UserSportScreen(state, viewModel.givenName, time, actions, modifier)
 }

@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.valueOrNull
+import dev.alllexey.itmowidgets.core.text.personGivenName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
@@ -28,7 +29,11 @@ class UserSportViewModel(
 ) : ViewModel() {
 
     private val isu: Int = checkNotNull(savedStateHandle.get<Int>(UserScreenArgs.ISU)) { "Sport needs an ISU" }
-    val name: String = savedStateHandle.get<String>(UserScreenArgs.NAME).orEmpty()
+    /** The title's `Иван` of `Спорт: Иван`; empty without a name. */
+    val givenName: String = personGivenName(
+        savedStateHandle.get<String>(UserScreenArgs.NAME).orEmpty(),
+        savedStateHandle.get<String>(UserScreenArgs.GIVEN_NAME),
+    )
 
     private val refreshes = RefreshTracker(viewModelScope)
 
