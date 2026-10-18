@@ -21,7 +21,11 @@ struct RecordbookScreen: View {
                 openSources: { model.viewModel.openSources(id: $0) }
             )
         )
-        .refreshable { model.viewModel.refresh(mode: .pull) }
+        .refreshable {
+            await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                ($0.uiState.value.body as? RecordbookBodyContent)?.refreshing == true
+            })
+        }
         .itmoRootHeader(title: ShellTab.recordbook.title, subtitle: model.state.subtitle?.resolved) {
             if let periods = model.state.periods {
                 RecordbookPeriodMenu(periods: periods) { programId, semester in

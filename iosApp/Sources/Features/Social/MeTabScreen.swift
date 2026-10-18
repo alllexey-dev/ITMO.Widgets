@@ -15,7 +15,11 @@ struct MeTabScreen: View {
     var body: some View {
         let state = model.state
         MeContent(state: state, actions: actions)
-            .refreshable { model.viewModel.refresh(mode: .pull) }
+            .refreshable {
+                await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                    $0.isRefreshing
+                })
+            }
             .itmoRootHeader(title: ShellTab.profile.title, subtitle: nil) {
                 if state.header.shareable, let isu = state.header.isu {
                     MeShareButton { SocialSharing.profile(name: state.header.name.resolved, isu: isu.int32Value) }

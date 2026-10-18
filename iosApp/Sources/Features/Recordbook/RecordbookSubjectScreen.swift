@@ -30,7 +30,11 @@ struct RecordbookSubjectScreen: View {
     var body: some View {
         let content = model.state as? RecordbookSubjectUiStateContent
         RecordbookSubjectContent(state: model.state, actions: actions)
-            .refreshable { model.viewModel.refresh(mode: .pull) }
+            .refreshable {
+                await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                    ($0.uiState.value as? RecordbookSubjectUiStateContent)?.refreshing == true
+                })
+            }
             .itmoDetailHeader(title: content?.title ?? "", subtitle: content?.subtitle.resolved)
             .toolbar {
                 if content?.tab == .materials, let links = content?.materials as? SubjectMaterialsContent {

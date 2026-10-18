@@ -23,7 +23,11 @@ struct TodayScreen: View {
                 retry: { model.viewModel.refresh(mode: .force) }
             )
         )
-        .refreshable { model.viewModel.refresh(mode: .pull) }
+        .refreshable {
+            await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                ($0.uiState.value as? TodayUiStateContent)?.refreshing == true
+            })
+        }
         .itmoRootHeader(title: header.state.title.resolved, subtitle: header.state.subtitle.resolved) {
             ItmoBellButton(label: AppStrings.string("today_notifications"), badge: Int(header.state.badge)) {
                 opened(router.open(AppRoutes.Bell.shared))

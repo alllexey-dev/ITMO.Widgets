@@ -58,9 +58,44 @@ final class ObservableViewModel<Model: SharedViewModel, State: AnyObject> {
         }
     }
 
+    /// A pull-to-refresh for `.refreshable`, whose spinner stays exactly while its action runs: `start` asks the
+    /// ViewModel for the refresh (`refresh(mode: .pull)`), and this returns once `refreshing` reads false, so a pull
+    /// that joins a refresh in flight waits for it too. The state follows `start` a moment later and a cached answer
+    /// is instant, so the spinner stays at least `PullRefresh.minimum`.
+    func pullRefresh(_ start: (Model) -> Void, while refreshing: @escaping (Model) -> Bool) async {
+        start(viewModel)
+        let model = viewModel
+        // SwiftUI cancels the refresh action once the state it shows changes, and a refresh always changes it: the
+        // wait runs outside that task, bounded by `PullRefresh.maximum` for a ViewModel cleared mid-refresh.
+        await Task { @MainActor in
+            let started = ContinuousClock.now
+            while ContinuousClock.now - started < PullRefresh.maximum {
+                let waited = ContinuousClock.now - started
+                if waited >= PullRefresh.minimum && !refreshing(model) { return }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+        }.value
+    }
+
     deinit {
         store.clear()
     }
+}
+
+enum PullRefresh {
+    /// The launch argument of a Debug build that keeps a pull's spinner five seconds, so a UI test sees it over the
+    /// demo's instant refresh.
+    static let slowArgument = "-itmoSlowRefresh"
+
+    static let minimum: Duration = {
+        #if DEBUG
+        if CommandLine.arguments.contains(slowArgument) { return .seconds(5) }
+        #endif
+        return .milliseconds(500)
+    }()
+
+    /// A cleared ViewModel's state stops changing; the spinner never outlasts this.
+    static let maximum: Duration = .seconds(60)
 }
 
 extension View {
