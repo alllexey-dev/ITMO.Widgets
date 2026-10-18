@@ -96,7 +96,8 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   which returns `.swiftUI` (native bar), `.compose` (the route draws its own bar), `.sheet`, `.swiftUISheet`, `.composeSheet`, a tab,
   the gate or `.notOnIOS`. `RouterTests` fails for a key no feature claims.
 - Debug launch arguments replace Android's debug tools: `-itmoDemo`, `-itmoSignedOut`, `-itmoShellSession <state>`,
-  `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoWebLoginFixture`, `-itmoBarsLogin`.
+  `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoWebLoginFixture`, `-itmoBarsLogin`,
+  `-itmoAcademicDate <yyyy-mm-dd>` (the academic date at the real wall time, Android's test academic date).
 
 | Route id | URL | Opens |
 |---|---|---|

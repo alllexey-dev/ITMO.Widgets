@@ -28,6 +28,12 @@ extension XCUIElement {
         return differing * 200 > width * height
     }
 
+    /// Whether the element is on screen to tap and drawn there: the check a scroll loop stops on. `isDrawn` alone
+    /// would screenshot an element off the screen.
+    var isShown: Bool {
+        isHittable && isDrawn
+    }
+
     /// Waits until the element is drawn (`isDrawn`).
     func waitUntilDrawn(timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)

@@ -243,6 +243,7 @@ final class ReviewsLinksUITests: XCTestCase {
         }
         if let screenshot { attachScreenshot(named: screenshot) }
         XCTAssertTrue(list.frame.contains(target.frame), "\(target) is on the screen")
+        XCTAssertTrue(target.isDrawn, "\(target) is drawn")
         target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 

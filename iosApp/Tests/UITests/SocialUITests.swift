@@ -65,13 +65,15 @@ final class SocialUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
         row.tap()
 
-        XCTAssertTrue(element(app, "user_profile_hero").waitForExistence(timeout: stepTimeout))
+        let hero = element(app, "user_profile_hero")
+        XCTAssertTrue(hero.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(hero.waitUntilDrawn(timeout: stepTimeout), "the profile hero is drawn")
         XCTAssertTrue(element(app, "user_profile_write_review").waitForExistence(timeout: stepTimeout))
         let reviews = element(app, "user_profile_reviews")
         XCTAssertTrue(reviews.waitForExistence(timeout: stepTimeout), "the reviews section")
-        for _ in 0..<6 where !reviews.isHittable { element(app, "user_profile_list").swipeUp(velocity: .slow) }
+        for _ in 0..<6 where !reviews.isShown { element(app, "user_profile_list").swipeUp(velocity: .slow) }
         attachScreenshot(named: "teacher-profile")
-        XCTAssertTrue(reviews.isHittable)
+        XCTAssertTrue(reviews.isShown, "the reviews section is drawn")
     }
 
     func testFriendsOpenAProfileAndItsFriends() {
@@ -123,9 +125,10 @@ final class SocialUITests: XCTestCase {
         openMe(app)
         let row = element(app, "my_itmo_row")
         XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
-        for _ in 0..<4 where !row.isHittable {
+        for _ in 0..<4 where !row.isShown {
             element(app, "main").swipeUp()
         }
+        XCTAssertTrue(row.isShown, "the My ITMO row is drawn")
 
         row.tap()
 
@@ -145,11 +148,11 @@ final class SocialUITests: XCTestCase {
 
         // The tab scrolls: its last control, the sign-out, comes clear of the demo banner and the tab bar.
         let signOut = element(app, "sign_out_row")
-        for _ in 0..<6 where !signOut.isHittable {
+        for _ in 0..<6 where !signOut.isShown {
             element(app, "main").swipeUp()
         }
         attachScreenshot(named: "me-ax1-end")
-        XCTAssertTrue(signOut.isHittable, "the sign-out is reachable at AX1")
+        XCTAssertTrue(signOut.isShown, "the sign-out is reachable and drawn at AX1")
         XCTAssertLessThanOrEqual(signOut.frame.maxY, element(app, "kit.demoBanner").frame.minY)
     }
 

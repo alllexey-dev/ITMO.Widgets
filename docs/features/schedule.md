@@ -115,8 +115,9 @@ refresh status or academic time changes; selecting another visible day reuses th
   iOS animates programmatic week changes unless Reduce Motion is on. A new date jump wins over a stale settled
   callback; a later user gesture explicitly takes over from the old jump.
 - The view reports the day at its top (`onVisibleDate`) and its ends (`onNearStart`, `onNearEnd`): the window grows by
-  two weeks there and those weeks load. A jump (a strip day, the month sheet, `Сегодня`) brings the day's weeks in
-  (or moves the window when it is far) and asks the view to scroll there once (`FeedJump`). Edge observation stays
+  two weeks there and those weeks load. A jump (a strip day, the month sheet, `Сегодня`, the `today` link) brings the
+  day's weeks in (or moves the window when it is far) and asks the view to scroll there once (`FeedJump`). A free
+  Sunday lands on its weekend's `Выходные` row, which stands for both days, not on the next Monday. Edge observation stays
   attached across row updates. Each direction has at most one expansion in flight, independent of refresh;
   identical range requests share their load within one owner generation. Switching away and back starts a new
   generation rather than reusing the old account's in-flight request.

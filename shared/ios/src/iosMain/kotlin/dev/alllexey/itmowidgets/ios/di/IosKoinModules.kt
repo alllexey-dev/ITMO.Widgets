@@ -40,6 +40,7 @@ import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginIosModule
 import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import dev.alllexey.itmowidgets.ios.IosPlatform
+import kotlinx.datetime.LocalDate
 import org.koin.core.module.Module
 import platform.Foundation.NSBundle
 
@@ -49,8 +50,8 @@ import platform.Foundation.NSBundle
  */
 object IosKoinModules {
 
-    fun all(platform: IosPlatform): List<Module> = listOf(
-        iosCoreModule(platform),
+    fun all(platform: IosPlatform, academicDate: LocalDate? = null): List<Module> = listOf(
+        iosCoreModule(platform, academicDate = academicDate),
         // The shared session and demo switch on their iOS ports.
         authDataModule, accountIosModule,
         // The QR pass screen and the App Group snapshot of the QR widget.
