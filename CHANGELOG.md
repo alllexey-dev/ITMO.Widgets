@@ -14,6 +14,10 @@ new iOS app.
 
 - `TeacherNowGateway`: the lesson a teacher gives now or next today, from My ITMO's teacher timetable (MyItmoApi 2.2.0 `getTeacherSchedule`), for the person card's «Сейчас ведёт»; parallel groups in one room are one lesson.
 
+### Campus map (2026-10-17)
+
+- New module `:shared:feature-map` with the router of itmo-map-web ported to shared Kotlin (same routes as `router.js` on all 360 checked pairs of ITMO's six plans), the mapping of timetable rooms to plan rooms and the three-part «Маршрут» planner; `itmo_buildings.json` gains each building's campus-map id and Гастелло, 12. No screen yet.
+
 ### Спорт lesson sheet data (2026-10-17)
 
 - The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.

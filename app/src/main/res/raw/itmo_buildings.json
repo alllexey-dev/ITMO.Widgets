@@ -2,6 +2,7 @@
   {
     "id": "kronva",
     "buildingIds": [13],
+    "planBuildingId": 13,
     "aliases": ["кронв"],
     "label": "Кронверкский пр., 49",
     "address": "Кронверкский проспект, 49, Санкт-Петербург",
@@ -11,6 +12,7 @@
   {
     "id": "lomo",
     "buildingIds": [273],
+    "planBuildingId": 273,
     "aliases": ["ломо"],
     "label": "ул. Ломоносова, 9",
     "address": "улица Ломоносова, 9, Санкт-Петербург",
@@ -29,6 +31,7 @@
   {
     "id": "griva",
     "buildingIds": [],
+    "planBuildingId": 279,
     "aliases": ["гривц"],
     "label": "пер. Гривцова, 14-16",
     "address": "переулок Гривцова, 14-16, Санкт-Петербург",
@@ -38,6 +41,7 @@
   {
     "id": "birzha",
     "buildingIds": [],
+    "planBuildingId": 275,
     "aliases": ["бирж"],
     "label": "Биржевая линия, 14-16",
     "address": "Биржевая линия, 14, Санкт-Петербург",
@@ -47,6 +51,7 @@
   {
     "id": "pesochka",
     "buildingIds": [],
+    "planBuildingId": 15,
     "aliases": ["песоч"],
     "label": "Песочная наб., 14",
     "address": "Песочная набережная, 14, Санкт-Петербург",
@@ -61,5 +66,15 @@
     "address": "улица Чайковского, 11/2, Санкт-Петербург",
     "latitude": 59.9462611,
     "longitude": 30.3453071
+  },
+  {
+    "id": "gastello",
+    "buildingIds": [],
+    "planBuildingId": 6,
+    "aliases": ["гастелло"],
+    "label": "ул. Гастелло, 12",
+    "address": "улица Гастелло, 12, Санкт-Петербург",
+    "latitude": 59.8596005,
+    "longitude": 30.3240835
   }
 ]
