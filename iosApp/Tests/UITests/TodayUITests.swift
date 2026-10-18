@@ -60,10 +60,9 @@ final class TodayUITests: XCTestCase {
     private func waitForToday(_ app: XCUIApplication) {
         XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
         let shown = NSPredicate(format: "identifier IN %@", ["today.hero", "today.day", "today.empty"])
-        XCTAssertTrue(
-            app.descendants(matching: .any).matching(shown).firstMatch.waitForExistence(timeout: rootTimeout),
-            "Сегодня shows a day or says there is none"
-        )
+        let day = app.descendants(matching: .any).matching(shown).firstMatch
+        XCTAssertTrue(day.waitForExistence(timeout: rootTimeout), "Сегодня shows a day or says there is none")
+        XCTAssertTrue(day.waitUntilDrawn(timeout: stepTimeout), "the today screen's day is drawn")
     }
 
     private func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {
