@@ -69,6 +69,7 @@ private struct WidgetGalleryCard: View {
     var body: some View {
         ItmoCard {
             WidgetPreview(format: card.format, previews: previews)
+                .accessibilityIdentifier("settings.widgets.\(card.format.name.lowercased()).preview")
             HStack(spacing: ItmoSpacing.content) {
                 VStack(alignment: .leading, spacing: ItmoSpacing.related) {
                     Text(verbatim: card.title.resolved)
