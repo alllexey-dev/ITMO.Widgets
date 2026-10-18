@@ -18,6 +18,10 @@ new iOS app.
 - The scroll loops and key checks of the UI tests (profile rows, the Me tab, the pass code, Сегодня, sport
   sections, the record book, settings) also check that the element is drawn, not only hittable.
 
+### Campus map (2026-10-17)
+
+- New module `:shared:feature-map` with the router of itmo-map-web ported to shared Kotlin (same routes as `router.js` on all 360 checked pairs of ITMO's six plans), the mapping of timetable rooms to plan rooms and the three-part «Маршрут» planner; `itmo_buildings.json` gains each building's campus-map id and Гастелло, 12. No screen yet.
+
 ### Спорт lesson sheet data (2026-10-17)
 
 - The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.
