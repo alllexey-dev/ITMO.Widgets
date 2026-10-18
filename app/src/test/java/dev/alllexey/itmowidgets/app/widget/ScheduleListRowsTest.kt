@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.schedule.ui.widget
+package dev.alllexey.itmowidgets.app.widget
 
 import android.content.Context
 import android.widget.FrameLayout
@@ -16,6 +16,9 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewSc
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetContentKind
+import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleListRow
+import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleListRows
+import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleSettingsPreview
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
