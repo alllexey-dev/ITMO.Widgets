@@ -88,7 +88,7 @@ class ScheduleSettingsPreview(
         ): View {
             if (settings.format != ScheduleWidgetFormat.LIST) return views(context, scenario, settings, moment).apply(context, FrameLayout(context))
             val snapshot = scenario.snapshot(settings.appearance, moment, labels(context))
-            return ScheduleListWidgetRenderer.previewView(context, snapshot, settings.theme?.widgetPalette(context))
+            return ScheduleListWidgetRenderer.previewView(context, snapshot, settings.theme?.widgetPalette(context), SizeF(DAY_WIDTH_DP, LIST_HEIGHT_DP))
         }
 
         /** The widget [settings] describe on the sample day, drawn as the launcher would at its default size. */

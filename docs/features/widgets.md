@@ -50,7 +50,8 @@ Shared in `shared/feature-schedule` (`domain/widget`, `data/widget`); RemoteView
   marker, or one message row (`Сегодня нет пар`, `На сегодня пары закончились`, `Сегодня и завтра нет пар`, loading,
   signed out, error). The rows are inline `RemoteCollectionItems` with ids from their identity and at least 9 view
   types; `ScheduleWidgetRemoteViewsService` serves the same rows to a launcher that still binds 2.2's adapter. Every
-  row opens the schedule. It reads W2's settings (`full_widget_*`). The list draws no clock, so the minute tick skips
+  row opens the schedule. The end marker stays only when every row, measured at the launcher's smallest size, fits
+  above it, so it never shows cut; the lessons still scroll. It reads W2's settings (`full_widget_*`). The list draws no clock, so the minute tick skips
   it and it is redrawn only by the worker at boundaries and refreshes.
 - Placed widgets keep their provider: a list placed in 2.2 is `DayScheduleWidgetProvider` and stays a list; W2 is a
   new provider that no release had shipped (ADR 0027, amended 2026-10-18).

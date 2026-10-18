@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.util.SizeF
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -39,9 +40,13 @@ import kotlinx.datetime.format
  */
 object ScheduleListWidgetRenderer {
 
-    fun views(context: Context, snapshot: ScheduleWidgetSnapshot, palette: WidgetPalette?, widgetId: Int): RemoteViews {
+    /** The widget for the launcher's [sizes] (dp); the end marker stays only where it fits in the smallest. */
+    fun views(context: Context, snapshot: ScheduleWidgetSnapshot, palette: WidgetPalette?, widgetId: Int, sizes: List<SizeF>): RemoteViews {
         val views = shell(context, palette)
-        RemoteViewsCompat.setRemoteAdapter(context, views, widgetId, R.id.lesson_list, ScheduleListRows(context, palette).collectionItems(snapshot))
+        val smallest = sizes.takeIf { it.isNotEmpty() }?.let { all -> SizeF(all.minOf { it.width }, all.minOf { it.height }) }
+        RemoteViewsCompat.setRemoteAdapter(
+            context, views, widgetId, R.id.lesson_list, ScheduleListRows(context, palette).collectionItems(snapshot, smallest)
+        )
         views.setPendingIntentTemplate(R.id.lesson_list, WidgetIntents.schedule(context, widgetId))
         return views
     }
@@ -50,9 +55,9 @@ object ScheduleListWidgetRenderer {
      * The widget as a plain view for the gallery, the launcher preview images and the screenshots: the same shell and
      * rows, with a local adapter instead of a host's collection.
      */
-    fun previewView(context: Context, snapshot: ScheduleWidgetSnapshot, palette: WidgetPalette?): View {
+    fun previewView(context: Context, snapshot: ScheduleWidgetSnapshot, palette: WidgetPalette?, size: SizeF): View {
         val root = shell(context, palette).apply(context, FrameLayout(context))
-        val rows = ScheduleListRows(context, palette).rows(snapshot)
+        val rows = ScheduleListRows(context, palette).rows(snapshot, size)
         root.findViewById<ListView>(R.id.lesson_list).adapter = object : BaseAdapter() {
             override fun getCount() = rows.size
             override fun getItem(position: Int) = rows[position]
@@ -85,16 +90,20 @@ class ScheduleListRows(context: Context, private val palette: WidgetPalette? = n
     private val colors = WidgetColors(this.context, palette)
     private val texts = ScheduleWidgetTexts(this.context)
 
-    fun collectionItems(snapshot: ScheduleWidgetSnapshot): RemoteViewsCompat.RemoteCollectionItems {
+    fun collectionItems(snapshot: ScheduleWidgetSnapshot, size: SizeF? = null): RemoteViewsCompat.RemoteCollectionItems {
         val builder = RemoteViewsCompat.RemoteCollectionItems.Builder()
             .setHasStableIds(true)
             .setViewTypeCount(VIEW_TYPE_COUNT)
-        rows(snapshot).forEach { row -> builder.addItem(row.id, row.views) }
+        rows(snapshot, size).forEach { row -> builder.addItem(row.id, row.views) }
         return builder.build()
     }
 
-    /** The rows of [snapshot]'s day, shared by the widget's collection items and the adapter service of 2.2. */
-    fun rows(snapshot: ScheduleWidgetSnapshot): List<ScheduleListRow> {
+    /**
+     * The rows of [snapshot]'s day, shared by the widget's collection items and the adapter service of 2.2. In a widget
+     * of [size] (dp) the end marker is dropped unless every row fits whole above it, so it never shows cut in half; the
+     * lessons still scroll. Without a size it stays.
+     */
+    fun rows(snapshot: ScheduleWidgetSnapshot, size: SizeF? = null): List<ScheduleListRow> {
         val day = snapshot.day
         val scale = snapshot.fullTextSize.scale
         val date = day.date?.let(LocalDate::parse)
@@ -116,6 +125,9 @@ class ScheduleListRows(context: Context, private val palette: WidgetPalette? = n
             WidgetContentKind.SIGNED_OUT ->
                 rows += "signed-out" to message(R.layout.item_lesson_list_error, R.id.empty_view, R.string.schedule_widget_signed_out, scale)
         }
+        if (size != null && rows.size > 1 && rows.last().first.startsWith("end|") && !fits(rows.map { it.second }, size)) {
+            rows.removeAt(rows.lastIndex)
+        }
         val used = HashSet<Long>()
         return rows.map { (identity, views) ->
             // Ids from row identity, not position, so a launcher keeps the scroll when a lesson above changes; equal
@@ -124,6 +136,17 @@ class ScheduleListRows(context: Context, private val palette: WidgetPalette? = n
             while (!used.add(id)) id++
             ScheduleListRow(id, views)
         }
+    }
+
+    /** Whether [rows] laid out at [size]'s width are no taller than the list inside it. */
+    private fun fits(rows: List<RemoteViews>, size: SizeF): Boolean {
+        val density = context.resources.displayMetrics.density
+        val width = ((size.width - 2 * LIST_MARGIN_DP) * density).roundToInt()
+        val height = ((size.height - 2 * LIST_MARGIN_DP) * density).roundToInt()
+        val parent = FrameLayout(context)
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        return rows.sumOf { row -> row.apply(context, parent).apply { measure(widthSpec, heightSpec) }.measuredHeight } <= height
     }
 
     private fun empty(day: DayWidgetContent, scale: Float): RemoteViews = when {
@@ -195,6 +218,8 @@ class ScheduleListRows(context: Context, private val palette: WidgetPalette? = n
         const val VIEW_TYPE_COUNT = 9
 
         private const val DONE_ALPHA = 0.62f
+        /** `lesson_list`'s margin in `widget_lesson_list`. */
+        private const val LIST_MARGIN_DP = 4f
         private const val OPAQUE = 255
         private const val FNV_OFFSET = -0x340d631b7bdddcdbL
         private const val FNV_PRIME = 0x100000001b3L

@@ -42,7 +42,7 @@ object ScheduleWidgetProviders {
             manager.updateAppWidget(id, DayWidgetRenderer.views(context, snapshot, palette, manager.widgetSizes(id), id))
         }
         listIds.forEach { id ->
-            manager.updateAppWidget(id, ScheduleListWidgetRenderer.views(context, snapshot, palette, id))
+            manager.updateAppWidget(id, ScheduleListWidgetRenderer.views(context, snapshot, palette, id, manager.widgetSizes(id)))
         }
     }
 
