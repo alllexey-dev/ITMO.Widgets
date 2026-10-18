@@ -72,14 +72,14 @@ object UserSportScreenTestTags {
 
 /**
  * Another user's confirmed lessons and pending queues, read-only: a card opens nothing and offers no cancellation, only
- * the building's map. The title names the user by first name (`Спорт: Иван`), or reads `Спорт` without a name. The
+ * the building's map. The title names the user by [givenName] (`Спорт: Иван`), or reads `Спорт` without one. The
  * first load shows placeholder cards; a list follows a pull; no bookings, privacy (`Forbidden`: the lock, nothing to
  * retry) and errors (a retry) take the list's place. Stateless; [UserSportRoute] feeds it.
  */
 @Composable
 fun UserSportScreen(
     state: UserSportUiState,
-    name: String,
+    givenName: String,
     time: AcademicTimeProvider,
     actions: UserSportActions,
     modifier: Modifier = Modifier,
@@ -90,10 +90,10 @@ fun UserSportScreen(
             .background(ItmoTheme.colorScheme.surface),
     ) {
         AppTopBar(
-            title = if (name.isBlank()) {
+            title = if (givenName.isBlank()) {
                 stringResource(CoreRes.string.user_profile_sport_title)
             } else {
-                stringResource(Res.string.user_sport_title, name.substringBefore(" "))
+                stringResource(Res.string.user_sport_title, givenName)
             },
             navigation = {
                 AppTopBarAction(

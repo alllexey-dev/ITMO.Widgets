@@ -685,11 +685,12 @@ extension View {
 struct UserSportScreen: View {
     let isu: Int32
     let name: String
+    let givenName: String?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ComposeHost { [isu, name, dismiss] in
-            userSportViewController(isu: isu, name: name, onBack: { dismiss() })
+        ComposeHost { [isu, name, givenName, dismiss] in
+            userSportViewController(isu: isu, name: name, givenName: givenName, onBack: { dismiss() })
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("sport.user")
