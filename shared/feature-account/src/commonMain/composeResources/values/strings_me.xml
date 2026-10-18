@@ -5,26 +5,32 @@
     <string name="me_sign_out_confirm_title">Выйти из аккаунта?</string>
     <string name="me_sign_out_confirm_message">С устройства удалятся данные аккаунта и содержимое виджетов. Настройки приложения останутся.</string>
 
-    <!-- Me: social and profile rows -->
-    <string name="me_group_social">Друзья</string>
+    <!-- Профиль hub -->
+    <string name="me_group_people">Люди</string>
+    <string name="me_group_widgets">ITMO.Widgets</string>
     <string name="me_friends_title">Друзья</string>
-    <string name="me_friends_count">%1$d</string>
     <string name="me_friends_none">Пока никого</string>
     <string name="me_friends_loading">Загружаем…</string>
     <string name="me_friends_error">Не загрузились</string>
-    <string name="me_requests_badge">%1$d</string>
     <string name="me_requests_badge_accessibility">Входящих заявок: %1$d</string>
-    <string name="me_find_people_title">Найти людей</string>
-    <string name="me_find_people_description">По имени в My ITMO</string>
-    <string name="me_services_disabled_title">Нет подключения к ITMO.Widgets</string>
-    <string name="me_services_disabled_description">Друзья, заявки и приватность появятся после подключения</string>
     <string name="me_privacy_title">Приватность</string>
     <string name="me_privacy_description">Кто видит расписание, спорт и друзей</string>
-    <string name="me_github">GitHub</string>
-    <string name="me_github_accessibility">Открыть проект на GitHub</string>
-    <string name="me_telegram">Telegram</string>
-    <string name="me_telegram_accessibility">Открыть канал @itmowidgets в Telegram</string>
-    <string name="me_group_format">%1$s • %2$d курс • %3$s</string>
+    <string name="me_gate_title">Друзья недоступны</string>
+    <string name="me_gate_reason">Друзья, приватность и вход на сайт работают через сервер ITMO.Widgets. Расписание, зачётка и спорт работают и без него.</string>
+    <string name="me_gate_fix">Подключить</string>
+    <string name="me_connection_title">Подключение и данные</string>
+    <string name="me_connection_on">Подключено</string>
+    <string name="me_connection_off">Не подключено</string>
+    <string name="me_notifications_title">Уведомления</string>
+    <string name="me_widgets_title">Виджеты</string>
     <string name="me_web_login_title">Подключить устройство</string>
+    <string name="me_web_login_subtitle">Вход на сайт по QR или коду</string>
+    <string name="me_needs_connection">Нужно подключение</string>
     <string name="me_my_itmo">My ITMO</string>
+    <string name="me_my_itmo_subtitle">Сайт университета</string>
+    <string name="me_telegram">Telegram</string>
+    <string name="me_telegram_subtitle">Канал @itmowidgets</string>
+    <string name="me_github">GitHub</string>
+    <string name="me_github_subtitle">Исходный код приложения</string>
+    <string name="me_group_format">%1$s, %2$d курс, %3$s</string>
 </resources>

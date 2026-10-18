@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.RelationshipState
@@ -20,13 +21,13 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
-import dev.alllexey.itmowidgets.feature.social.presentation.UserSearchViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -36,15 +37,14 @@ import org.koin.dsl.module
 
 /**
  * The ViewModels of the social keys over synthetic data, for every shell test whose screens open them: the viewer
- * has one friend, [SocialSamples.FRIEND], whose profile, friends and schedule are open; search finds nobody, the
+ * has one friend, [SocialSamples.FRIEND], whose profile, friends and schedule are open; search (in Друзья) finds nobody, the
  * directory knows nobody and nobody has reviews. The schedule's friend picker reads the friend as a `FriendRepository`.
  */
 internal fun socialTestModule(): Module = module {
     single<FriendRepository> { OneFriend }
-    viewModel { FriendsViewModel(OneFriendSocial, FixedAcademicTime()) }
-    viewModel { UserSearchViewModel(NoPeople, OneFriendSocial) }
+    viewModel { FriendsViewModel(OneFriendSocial, NoPeople, FixedAcademicTime()) }
     viewModel { UserFriendsViewModel(get<SavedStateHandle>(), OneFriendSocial) }
-    viewModel { UserProfileViewModel(get<SavedStateHandle>(), OneFriendSocial, NoPerson, NoReviews, Viewer) }
+    viewModel { UserProfileViewModel(get<SavedStateHandle>(), OneFriendSocial, NoPerson, NoReviews, Viewer, NobodyTaught) }
 }
 
 internal object SocialSamples {
@@ -122,4 +122,9 @@ private object NoReviews : TeacherReviewsRepository {
 private object Viewer : CurrentUserProvider {
     override suspend fun getCurrentUser() =
         CurrentUser(isu = SocialSamples.VIEWER_ISU, name = "Студент Тестовый", pictureUrl = null)
+}
+
+private object NobodyTaught : TeacherLessonsGateway {
+    override fun taughtBy(teacherIsu: Int): Flow<AppResult<TeacherLessons>> =
+        flowOf(AppResult.Success(TeacherLessons(emptySet(), emptyList())))
 }

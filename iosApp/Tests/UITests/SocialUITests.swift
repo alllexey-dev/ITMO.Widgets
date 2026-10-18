@@ -1,11 +1,11 @@
 import XCTest
 
-/// The me tab and the social screens on the shared demo session: the Compose Me tab as the root of the me
-/// stack, people search with Compose's text field on the system keyboard, the person profile with the demo's refusal
-/// of a friendship action and a teacher's reviews section (`ReviewsLinksUITests` covers its editor and
-/// report), the friends list and a user's friends, the home feed's friend-requests card, and the Me tab at the accessibility text size AX1. Compose maps `testTag` to the accessibility
-/// identifier (`MeTestTags`, `UserSearchTestTags`, `UserListTestTags`, `UserProfileTestTags`); the texts are Russian
-/// on an English iPhone. The ISUs are the demo set's (`DemoPeople`).
+/// Профиль and the social screens, all SwiftUI, on the shared demo session: the profile tab and its rows, Друзья with
+/// its search, the person card with the demo's refusal of a friendship action and a teacher's reviews section
+/// (`ReviewsLinksUITests` covers its editor and report), a user's friends, the bell's friend request, and the profile
+/// at the accessibility text size AX1. The identifiers are Compose's test tags kept on the SwiftUI views (`MeTestTags`,
+/// `FriendsTestTags`, `UserListTestTags`, `UserProfileTestTags`); the texts are Russian on an English iPhone. The ISUs
+/// are the demo set's (`DemoPeople`).
 final class SocialUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
@@ -14,26 +14,25 @@ final class SocialUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testMeTabShowsTheDemoProfileAndItsGroups() {
+    func testProfileShowsTheDemoProfileAndItsRows() {
         let app = XCUIApplication.itmo()
         app.launch()
         openMe(app)
 
         XCTAssertTrue(element(app, "profile_name").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(app.staticTexts[Self.meName].exists, "the demo's own name")
-        XCTAssertTrue(element(app, "friends_row").exists)
-        XCTAssertTrue(element(app, "find_people_row").exists)
+        for row in ["profile_share_button", "friends_row", "privacy_row", "connection_row", "notifications_row", "widgets_row"] {
+            XCTAssertTrue(element(app, row).exists, "\(row) is on the profile")
+        }
         XCTAssertFalse(element(app, "debug_tools_row").exists, "the developer tools stay Android-only")
-        XCTAssertFalse(app.navigationBars.firstMatch.exists, "the tab draws no top bar, as on Android")
+        XCTAssertFalse(element(app, "people_gate").exists, "the demo is connected")
         attachScreenshot(named: "me")
     }
 
-    func testSearchOpensAProfileWhoseFriendRequestTheDemoRefuses() {
+    func testSearchFindsAPersonWhoseFriendRequestTheDemoRefuses() {
         let app = XCUIApplication.itmo()
         app.launch()
-        openMe(app)
-        element(app, "find_people_row").tap()
-        XCTAssertTrue(element(app, "social.search").waitForExistence(timeout: stepTimeout))
+        openFriends(app)
 
         search(app, "Софи")
         let row = element(app, "user_list_row_\(Self.sofia)")
@@ -51,39 +50,34 @@ final class SocialUITests: XCTestCase {
         XCTAssertTrue(refusal.waitForExistence(timeout: stepTimeout), "the demo sends no friend request")
         attachScreenshot(named: "profile-demo-refusal")
 
-        app.buttons[QrPassUITests.backLabel].tap()
-        XCTAssertTrue(element(app, "social.search").waitForExistence(timeout: stepTimeout))
-        app.buttons[QrPassUITests.backLabel].tap()
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(element(app, "social.friends").waitForExistence(timeout: stepTimeout))
+        app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
     }
 
     func testTeacherProfileShowsTheReviewsSection() {
         let app = XCUIApplication.itmo()
         app.launch()
-        openMe(app)
-        element(app, "find_people_row").tap()
-        XCTAssertTrue(element(app, "social.search").waitForExistence(timeout: stepTimeout))
-
+        openFriends(app)
         search(app, "Корнилов")
         let row = element(app, "user_list_row_\(Self.mathTeacher)")
         XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
         row.tap()
 
         XCTAssertTrue(element(app, "user_profile_hero").waitForExistence(timeout: stepTimeout))
-        // The section is the last of a lazy list: it exists once scrolled near.
+        XCTAssertTrue(element(app, "user_profile_write_review").waitForExistence(timeout: stepTimeout))
         let reviews = element(app, "user_profile_reviews")
-        for _ in 0..<6 where !reviews.exists { element(app, "user_profile_list").swipeUp(velocity: .slow) }
-        attachScreenshot(named: "teacher-profile")
         XCTAssertTrue(reviews.waitForExistence(timeout: stepTimeout), "the reviews section")
-        XCTAssertTrue(element(app, "user_profile_write_review").exists)
+        for _ in 0..<6 where !reviews.isHittable { element(app, "user_profile_list").swipeUp(velocity: .slow) }
+        attachScreenshot(named: "teacher-profile")
+        XCTAssertTrue(reviews.isHittable)
     }
 
     func testFriendsOpenAProfileAndItsFriends() {
         let app = XCUIApplication.itmo()
         app.launch()
-        openMe(app)
-        element(app, "friends_row").tap()
-        XCTAssertTrue(element(app, "social.friends").waitForExistence(timeout: stepTimeout))
+        openFriends(app)
         let friend = element(app, "user_list_row_\(Self.ivan)")
         XCTAssertTrue(friend.waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "friends")
@@ -98,11 +92,11 @@ final class SocialUITests: XCTestCase {
         XCTAssertTrue(element(app, "social.userFriends").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "user_list_row_\(Self.me)").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "user-friends")
-        app.buttons[QrPassUITests.backLabel].tap()
+        app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(element(app, "social.profile").waitForExistence(timeout: stepTimeout))
     }
 
-    /// The demo's incoming request is a row of the bell with its answers; the row opens the requester's profile.
+    /// The demo's incoming request is a row of the bell with its answers; the row opens the requester's card.
     func testABellRequestOpensTheProfile() {
         let app = XCUIApplication.itmo()
         app.launch()
@@ -119,9 +113,10 @@ final class SocialUITests: XCTestCase {
         request.staticTexts.firstMatch.tap()
 
         XCTAssertTrue(element(app, "social.profile").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "user_profile_hero").waitForExistence(timeout: stepTimeout))
     }
 
-    /// My ITMO moved from the today feed to the profile; the demo cannot open it and says so.
+    /// My ITMO is a profile row; the demo cannot open it and says so.
     func testMyItmoRowSaysTheDemoCannotOpenIt() {
         let app = XCUIApplication.itmo()
         app.launch()
@@ -140,7 +135,7 @@ final class SocialUITests: XCTestCase {
         XCTAssertTrue(element(app, "shell.root.me").exists, "nothing opens over the profile")
     }
 
-    func testMeTabAtAccessibilityTextSize() {
+    func testProfileAtAccessibilityTextSize() {
         let ax1 = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityM"]
         let app = XCUIApplication.itmo(arguments: ax1)
         app.launch()
@@ -150,7 +145,7 @@ final class SocialUITests: XCTestCase {
 
         // The tab scrolls: its last control, the sign-out, comes clear of the demo banner and the tab bar.
         let signOut = element(app, "sign_out_row")
-        for _ in 0..<4 where !signOut.isHittable {
+        for _ in 0..<6 where !signOut.isHittable {
             element(app, "main").swipeUp()
         }
         attachScreenshot(named: "me-ax1-end")
@@ -175,12 +170,17 @@ final class SocialUITests: XCTestCase {
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
     }
 
-    /// Types `query` into the search field with the system keyboard. The route focuses the field when it opens, so a
-    /// tap (which would show the edit menu over the list) is needed only while no keyboard is up.
+    private func openFriends(_ app: XCUIApplication) {
+        openMe(app)
+        element(app, "friends_row").tap()
+        XCTAssertTrue(element(app, "social.friends").waitForExistence(timeout: stepTimeout))
+    }
+
+    /// Types `query` into Друзья's search field (`friends_search`, the screen's only text field) with the system keyboard.
     private func search(_ app: XCUIApplication, _ query: String) {
-        let field = element(app, "user_search_field")
+        let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: stepTimeout))
-        if !app.keyboards.firstMatch.waitForExistence(timeout: stepTimeout) { field.tap() }
+        field.tap()
         field.typeText(query)
     }
 
