@@ -10,6 +10,12 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Campus map rooms (2026-10-19)
+
+- `201 (составное)` on Биржевая opens its own room on the campus map instead of room 201: the whole timetable text is
+  matched first. `RoomMatcherParityTest` checks the matcher on every room of Backend's synced lessons against
+  itmo-map-web's `rooms.js`.
+
 ### Widgets (2026-10-18)
 
 - The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in

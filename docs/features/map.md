@@ -76,8 +76,11 @@ A My ITMO lesson has `room` (text), `building` (text), `bld_id` and `main_bld_id
 - Room (`RoomMatcher`): the whole text and, for `Name (number)`, the number and the name are compared with the
   plan's `ref`, then its `name`, ignoring case, `ё`, spaces and the `(присв)`/`(усл)` marks; only `class=room`
   units count. `Lemon Classroom (1419)` finds 1419, `Актовый зал (1216/0 (усл))` finds the hall by its name.
+- `201 (составное)` is another ISU room than `201`; the whole text is tried first, so it finds its own plan room.
 - A number with a letter missing on the plan (`1224в`) falls back to the number without it and is marked
-  approximate. On the owner's timetable 2025-2026, 47 of 48 rooms match exactly, the 48th approximately.
+  approximate. On Backend's synced lessons (2026-10-18, 208 distinct rooms in buildings with a plan), 205 match
+  exactly, `1224в` approximately; `129` (279) and `212` (15) are not on the plans. Two labels name two ISU rooms each
+  (275 `206`, 279 `260 (усл)`); the first plan room wins.
 
 ## Router
 
@@ -106,6 +109,11 @@ walk from the target entrance.
   (`scripts/map/router-fixtures.mjs` writes the graph and the expected routes into the test resources). With
   `CAMPUS_MAP_GRAPHS=<dir of <id>.json>` and `CAMPUS_MAP_EXPECTED=<file from router-fixtures.mjs --graphs>` it also
   checks ITMO's real graphs; on 2026-10-17 all 360 pairs of the six buildings matched.
+- `RoomMatcherParityTest` (host): `RoomMatcher` against itmo-map-web's `rooms.js` (`scripts/map/reference-rooms.mjs`)
+  on every timetable room of Backend's synced lessons. `scripts/map/room-fixtures.mjs <lessons.tsv> <rooms dir>`
+  writes the cases (timetable text and the accepted plan room ids, no plans) into the test resources; the test runs
+  with `CAMPUS_MAP_ROOMS=<the same rooms dir>`. itmo-map-web's `web/rooms.test.mjs` checks `rooms.js` on the same
+  cases.
 - `IndoorRouterTest`, `RoomMatcherTest`, `PlanBuildingResolverTest`, `TripPlannerTest` (`commonTest`).
 - `CampusMapRepositoryImplTest` (MockEngine, fake file system: download once, offline copy, hash check),
   `CampusMapViewModelTest` (room, route from the entrance and through the city, missing room, no plan, search,
