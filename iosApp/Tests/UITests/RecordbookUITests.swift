@@ -81,7 +81,7 @@ final class RecordbookUITests: XCTestCase {
             NSPredicate(format: "identifier BEGINSWITH %@", Self.subjectRowPrefix)
         )
         let last = rows.element(boundBy: rows.count - 1)
-        XCTAssertTrue(last.isHittable, "the last subject is reachable at AX1")
+        XCTAssertTrue(last.isShown, "the last subject is reachable and drawn at AX1")
         XCTAssertLessThanOrEqual(last.frame.maxY, element(app, "kit.demoBanner").frame.minY)
     }
 

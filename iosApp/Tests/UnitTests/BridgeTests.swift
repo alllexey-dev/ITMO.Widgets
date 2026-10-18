@@ -16,7 +16,7 @@ final class BridgeTests: XCTestCase {
         XCTAssertTrue(reloader is AppPlatform)
 
         let other = AppPlatform()
-        XCTAssertFalse(startKoinIos(platform: other))
+        XCTAssertFalse(startKoinIos(platform: other, academicDate: nil))
 
         let kept = try XCTUnwrap(IosKoin.shared.get(protocol: WidgetReloader.self) as? AppPlatform)
         XCTAssertTrue(kept === reloader as AnyObject)

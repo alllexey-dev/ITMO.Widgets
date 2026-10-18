@@ -21,7 +21,7 @@ struct ITMOWidgetsApp: App {
             AppPlatform.removeWebsiteData = { $0() }
         }
         #endif
-        _ = startKoinIos(platform: AppPlatform())
+        _ = startKoinIos(platform: AppPlatform(), academicDate: Self.academicDate())
         BackgroundRefresh.start()
         let router = AppRouter()
         _router = State(initialValue: router)
@@ -57,6 +57,19 @@ struct ITMOWidgetsApp: App {
     /// The launch argument of a Debug build that starts signed out, ending a stored session or demo first, for the UI
     /// tests of the sign-in screen and its five taps.
     static let signedOutArgument = "-itmoSignedOut"
+
+    /// The launch argument of a Debug build that pins the academic date, `-itmoAcademicDate 2026-10-14`, at the real
+    /// wall time, as Android's debug tools do: the UI tests run on a known weekday.
+    static let academicDateArgument = "itmoAcademicDate"
+
+    /// The pinned academic date from the launch arguments; nil without one, or in a Release build.
+    private static func academicDate() -> String? {
+        #if DEBUG
+        UserDefaults.standard.string(forKey: academicDateArgument)
+        #else
+        nil
+        #endif
+    }
 
     private static func makeSession() -> ShellSession {
         if let fixture = ShellFixtures.sessionState() {

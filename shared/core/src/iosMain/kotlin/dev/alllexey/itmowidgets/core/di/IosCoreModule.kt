@@ -67,11 +67,12 @@ import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.preferencesDataStoreFile
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.DefaultAcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.NoAcademicTimeOverride
+import dev.alllexey.itmowidgets.core.time.LaunchAcademicDate
 import io.ktor.client.engine.HttpClientEngine
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.datetime.LocalDate
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -90,13 +91,15 @@ import org.koin.dsl.module
  *
  * [backendOrigin] is the build's Backend, from the app's Info.plist ([BackendOrigin]), and the site the share links
  * name, as Android's `WIDGETS_BASE_URL` is both; [appVersion] its marketing version ([AppBundleVersion]);
- * [clientVersion] the build every Backend request names in `X-App-Version` ([IosClientVersion]).
+ * [clientVersion] the build every Backend request names in `X-App-Version` ([IosClientVersion]); [academicDate] the
+ * academic date a Debug build's launch argument pins ([LaunchAcademicDate]), null for the real one.
  */
 fun iosCoreModule(
     host: IosCoreHost,
     backendOrigin: String = BackendOrigin.fromMainBundle(),
     appVersion: String = AppBundleVersion.fromMainBundle(),
-    clientVersion: ClientVersion = IosClientVersion.fromMainBundle()
+    clientVersion: ClientVersion = IosClientVersion.fromMainBundle(),
+    academicDate: LocalDate? = null
 ): Module = module {
     single<WidgetReloader> { host }
     single { clientVersion }
@@ -116,7 +119,7 @@ fun iosCoreModule(
     // The application scope, as Android's `CoroutinesModule`: work a screen starts that must outlive it.
     single<CoroutineScope> { CoroutineScope(SupervisorJob() + get<AppDispatchers>().default) }
     single<AcademicTimeProvider> {
-        DefaultAcademicTimeProvider(get(), MOSCOW, NoAcademicTimeOverride)
+        DefaultAcademicTimeProvider(get(), MOSCOW, LaunchAcademicDate(academicDate))
     }
 
     single { BundleIdentifiers.fromMainBundle() }

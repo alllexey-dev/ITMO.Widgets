@@ -131,6 +131,13 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   `AppPlatform.removeWebsiteData`. UI tests launch a Debug build with
   `-itmoUITests` (`XCUIApplication.itmo`, `itmoSignedOut`), which makes that
   removal complete at once; Release builds ignore it.
+- UI tests run on a pinned academic date, this week's Wednesday
+  (`XCUIApplication.academicDate`, launch argument `-itmoAcademicDate`), so the
+  demo's day has lessons on any weekday; a test that needs another day passes
+  `itmo(academicDate:)`. Element checks that guard a blank render use
+  `isDrawn` (`isShown` in scroll loops, `waitUntilDrawn`), not only
+  `isHittable`: a Compose or SwiftUI view can take taps while nothing of it is
+  drawn.
 - `test.sh ui` waits for SpringBoard's notification server to take in the
   installed apps (two minutes after the simulator boots; an app installed
   earlier never gets the notification dialog nor its scheduled notifications),

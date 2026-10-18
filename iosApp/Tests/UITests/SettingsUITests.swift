@@ -123,7 +123,7 @@ final class SettingsUITests: XCTestCase {
             element(app, "settings.page.root").swipeUp()
         }
         XCTAssertTrue(maintenance.waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(maintenance.isHittable, "the last row is reachable at AX1")
+        XCTAssertTrue(maintenance.isShown, "the last row is reachable and drawn at AX1")
         attachScreenshot(named: "root-ax1-end")
     }
 

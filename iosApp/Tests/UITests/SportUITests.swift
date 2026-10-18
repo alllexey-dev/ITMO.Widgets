@@ -94,8 +94,8 @@ final class SportUITests: XCTestCase {
         app.navigationBars.buttons.firstMatch.tap()
 
         let section = element(app, "sport.section.1")
-        for _ in 0..<6 where !section.isHittable { element(app, "sport.list").swipeUp() }
-        XCTAssertTrue(section.isHittable, "Anna's volleyball is a section in the demo")
+        for _ in 0..<6 where !section.isShown { element(app, "sport.list").swipeUp() }
+        XCTAssertTrue(section.isShown, "Anna's volleyball is a section in the demo, drawn")
         attachScreenshot(named: "sections")
     }
 
