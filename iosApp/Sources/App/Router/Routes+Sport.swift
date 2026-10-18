@@ -11,7 +11,8 @@ extension Routes {
         case let sport as AppRoutes.UserSport:
             let isu = sport.isu
             let name = sport.name
-            return .compose { AnyView(UserSportScreen(isu: isu, name: name)) }
+            let givenName = sport.givenName
+            return .compose { AnyView(UserSportScreen(isu: isu, name: name, givenName: givenName)) }
         default:
             return tab(of: route).map(RouteTarget.tab) ?? .notOnIOS
         }

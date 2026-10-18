@@ -118,7 +118,7 @@ final class SportUITests: XCTestCase {
         XCTAssertTrue(element(app, "sport.user").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(element(app, "user_sport_list").waitForExistence(timeout: stepTimeout), "Ivan's demo visits")
         attachScreenshot(named: "user-sport")
-        let title = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", Self.ivanTitleName))
+        let title = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", Self.ivanTitle))
         XCTAssertTrue(title.firstMatch.waitForExistence(timeout: stepTimeout), "the title names the user")
         app.buttons[QrPassUITests.backLabel].tap()
         XCTAssertTrue(element(app, "social.profile").waitForExistence(timeout: stepTimeout))
@@ -142,10 +142,10 @@ final class SportUITests: XCTestCase {
 
     // MARK: Helpers
 
-    /// `DemoPeople.IVAN` (`Кузнецов Иван`), a friend with demo visits, and the first word of his name, which his
-    /// sport's title shows.
+    /// `DemoPeople.IVAN` (`Кузнецов Иван`), a friend with demo visits, and his sport's title, which names him by his
+    /// given name (`user_sport_title`).
     private static let ivan = 999_002
-    private static let ivanTitleName = "Кузнецов"
+    private static let ivanTitle = "Спорт: Иван"
     /// `sport_tab_sign`, `sport_filters_title`, `sport_lesson_sign_up` and `error_demo_unavailable`.
     private static let signUpTab = "Запись"
     private static let filtersLabel = "Фильтры"

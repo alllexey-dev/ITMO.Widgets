@@ -82,8 +82,9 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** [givenName] is ITMO.ID's, for the title; null without it. */
     @Serializable
-    data class UserSport(val isu: Int, val name: String = "") : AppRoute {
+    data class UserSport(val isu: Int, val name: String = "", val givenName: String? = null) : AppRoute {
         override val kind get() = RouteKind.SCREEN
     }
 
