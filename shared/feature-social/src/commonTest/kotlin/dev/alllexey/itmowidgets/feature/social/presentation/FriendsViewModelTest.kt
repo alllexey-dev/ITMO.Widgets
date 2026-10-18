@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.PersonSearchResult
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CorePlurals
@@ -33,11 +34,16 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendsViewModelTest {
 
     private val main = TestMainDispatcher()
+    private val time = FixedAcademicTime(LocalDateTime(LocalDate(2026, 10, 5), LocalTime(12, 0)))
 
     @BeforeTest
     fun setUp() = main.install()
@@ -48,20 +54,37 @@ class FriendsViewModelTest {
     // Lists
 
     @Test
+    fun aRequestStatusJoinsItsBaseWithTheMomentAndKeepsTheBaseWithoutOne() {
+        val base = UiText.Res(SocialStrings.user_status_incoming)
+        val today = profile(2, RelationshipState.INCOMING).copy(requestedAt = Instant.parse("2026-10-05T09:05:00Z"))
+        val earlier = profile(2, RelationshipState.INCOMING).copy(requestedAt = Instant.parse("2026-09-28T09:00:00Z"))
+
+        assertEquals(UiText.Joined(listOf(base, UiText.Dynamic("12:05")), ", "), today.requestStatus(base, time))
+        assertEquals(UiText.Joined(listOf(base, UiText.Dynamic("28 сент.")), ", "), earlier.requestStatus(base, time))
+        assertEquals(base, profile(2, RelationshipState.INCOMING).requestStatus(base, time))
+        assertNull(profile(2, RelationshipState.INCOMING).requestStatus(null, time))
+    }
+
+    @Test
     fun requestsAnswerInlineSentOnesCancelAndFriendsOnlyOpenTheirCard() = runTest(main.dispatcher) {
         val repository = FakeSocialRepository().apply {
             friends.value = LoadState.Content(listOf(profile(1, RelationshipState.FRIENDS)))
             requests.value = LoadState.Content(
                 FriendRequests(
                     incoming = listOf(profile(2, RelationshipState.INCOMING)),
-                    outgoing = listOf(profile(3, RelationshipState.OUTGOING)),
+                    outgoing = listOf(profile(3, RelationshipState.OUTGOING).copy(requestedAt = Instant.parse("2026-10-04T09:00:00Z"))),
                 ),
             )
         }
-        val viewModel = FriendsViewModel(repository, PagedPeopleSearch())
+        val viewModel = FriendsViewModel(repository, PagedPeopleSearch(), time)
         advanceUntilIdle()
 
         val lists = viewModel.uiState.value.lists as FriendLists.Content
+        assertEquals(
+            UiText.Joined(listOf(UiText.Res(SocialStrings.user_status_outgoing), UiText.Res(CoreStrings.event_moment_yesterday)), ", "),
+            lists.outgoing.single().status,
+            "a sent request says when",
+        )
         assertEquals(1, repository.refreshes)
         assertEquals(listOf<Pair<UserAction?, UserAction?>>(UserAction.ACCEPT to UserAction.REJECT), lists.incoming.map { it.primary to it.secondary })
         assertEquals(UiText.Res(SocialStrings.user_status_incoming), lists.incoming.single().status)
@@ -90,7 +113,7 @@ class FriendsViewModelTest {
                 FriendRequests(incoming = listOf(profile(2, RelationshipState.INCOMING)), outgoing = emptyList()),
             )
         }
-        val viewModel = FriendsViewModel(repository, PagedPeopleSearch())
+        val viewModel = FriendsViewModel(repository, PagedPeopleSearch(), time)
         advanceUntilIdle()
         val incoming = (viewModel.uiState.value.lists as FriendLists.Content).incoming.single()
 
@@ -116,7 +139,7 @@ class FriendsViewModelTest {
             )
             actionError = AppError.Network
         }
-        val viewModel = FriendsViewModel(repository, PagedPeopleSearch())
+        val viewModel = FriendsViewModel(repository, PagedPeopleSearch(), time)
         advanceUntilIdle()
         val outgoing = (viewModel.uiState.value.lists as FriendLists.Content).outgoing.single()
 
@@ -130,7 +153,7 @@ class FriendsViewModelTest {
     @Test
     fun disabledServicesAndErrorsMapToTheirStatesWhileARefreshKeepsProgress() = runTest(main.dispatcher) {
         val repository = FakeSocialRepository()
-        val viewModel = FriendsViewModel(repository, PagedPeopleSearch())
+        val viewModel = FriendsViewModel(repository, PagedPeopleSearch(), time)
         advanceUntilIdle()
         assertEquals(FriendLists.Loading, viewModel.uiState.value.lists)
 
@@ -152,7 +175,7 @@ class FriendsViewModelTest {
             requests.value = LoadState.Content(FriendRequests.EMPTY)
             currentUser.value = profile(9, RelationshipState.NONE).user
         }
-        val viewModel = FriendsViewModel(repository, PagedPeopleSearch())
+        val viewModel = FriendsViewModel(repository, PagedPeopleSearch(), time)
         advanceUntilIdle()
 
         val lists = viewModel.uiState.value.lists as FriendLists.Content
@@ -168,7 +191,7 @@ class FriendsViewModelTest {
             friends.value = LoadState.Content(listOf(unnamed))
             requests.value = LoadState.Content(FriendRequests.EMPTY)
         }
-        val viewModel = FriendsViewModel(repository, PagedPeopleSearch())
+        val viewModel = FriendsViewModel(repository, PagedPeopleSearch(), time)
         advanceUntilIdle()
 
         val row = (viewModel.uiState.value.lists as FriendLists.Content).friends.single()
@@ -182,7 +205,7 @@ class FriendsViewModelTest {
             friends.value = LoadState.Content(emptyList())
             requests.value = LoadState.Content(FriendRequests.EMPTY)
         }
-        val viewModel = FriendsViewModel(repository, PagedPeopleSearch())
+        val viewModel = FriendsViewModel(repository, PagedPeopleSearch(), time)
         runCurrent()
         assertEquals(1, repository.refreshes)
         assertFalse((viewModel.uiState.value.lists as FriendLists.Content).refreshing)
@@ -208,7 +231,7 @@ class FriendsViewModelTest {
             friends.value = LoadState.Error(AppError.Network)
             requests.value = LoadState.Content(FriendRequests.EMPTY)
         }
-        val viewModel = FriendsViewModel(repository, PagedPeopleSearch())
+        val viewModel = FriendsViewModel(repository, PagedPeopleSearch(), time)
         runCurrent()
         assertEquals(FriendLists.Error(AppError.Network), viewModel.uiState.value.lists)
 
@@ -230,7 +253,7 @@ class FriendsViewModelTest {
             )
             actionError = AppError.Network
         }
-        val viewModel = FriendsViewModel(repository, PagedPeopleSearch())
+        val viewModel = FriendsViewModel(repository, PagedPeopleSearch(), time)
         advanceUntilIdle()
         val outgoing = (viewModel.uiState.value.lists as FriendLists.Content).outgoing.single()
 
@@ -262,7 +285,7 @@ class FriendsViewModelTest {
                 2 to PeopleSearchPage(listOf(PersonSearchResult(3, "Третий", null, null)), 3, null),
             ),
         )
-        val viewModel = FriendsViewModel(FakeSocialRepository(), search)
+        val viewModel = FriendsViewModel(FakeSocialRepository(), search, time)
 
         viewModel.onQueryChanged("и")
         viewModel.onQueryChanged("ив")
@@ -295,7 +318,7 @@ class FriendsViewModelTest {
             pages = mapOf(0 to PeopleSearchPage(listOf(PersonSearchResult(1, "Кто-то", null, profile(1))), 1, null)),
         )
         val social = FakeSocialRepository()
-        val viewModel = FriendsViewModel(social, search)
+        val viewModel = FriendsViewModel(social, search, time)
         viewModel.onQueryChanged("кто")
         advanceUntilIdle()
         val row = (viewModel.uiState.value.search as PeopleSearchResults.Content).registered.single()
@@ -320,7 +343,7 @@ class FriendsViewModelTest {
             pages = mapOf(0 to PeopleSearchPage(listOf(PersonSearchResult(2, "Посторонний", null, null)), 1, null)),
             error = AppError.Network,
         )
-        val viewModel = FriendsViewModel(FakeSocialRepository(), search)
+        val viewModel = FriendsViewModel(FakeSocialRepository(), search, time)
 
         viewModel.onQueryChanged("пос")
         advanceUntilIdle()
@@ -344,7 +367,7 @@ class FriendsViewModelTest {
         val search = PagedPeopleSearch(
             pages = mapOf(0 to PeopleSearchPage(listOf(PersonSearchResult(2, "Посторонний", null, null)), 1, null)),
         )
-        val viewModel = FriendsViewModel(FakeSocialRepository(), search)
+        val viewModel = FriendsViewModel(FakeSocialRepository(), search, time)
         viewModel.onQueryChanged("пос")
         advanceUntilIdle()
         val row = (viewModel.uiState.value.search as PeopleSearchResults.Content).others.single()
@@ -356,7 +379,7 @@ class FriendsViewModelTest {
 
     @Test
     fun nobodyFoundIsTheEmptyState() = runTest(main.dispatcher) {
-        val viewModel = FriendsViewModel(FakeSocialRepository(), PagedPeopleSearch())
+        val viewModel = FriendsViewModel(FakeSocialRepository(), PagedPeopleSearch(), time)
         viewModel.onQueryChanged("никто")
         advanceUntilIdle()
         assertEquals(PeopleSearchResults.Empty, viewModel.uiState.value.search)
@@ -371,7 +394,7 @@ class FriendsViewModelTest {
                 1 to PeopleSearchPage(listOf(PersonSearchResult(3, "Третий", null, null)), 2, null),
             ),
         )
-        val viewModel = FriendsViewModel(FakeSocialRepository(), search)
+        val viewModel = FriendsViewModel(FakeSocialRepository(), search, time)
         viewModel.onQueryChanged("пос")
         advanceUntilIdle()
         search.pageGate = { gate.await() }

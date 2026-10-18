@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Friend request time (2026-10-18)
+
+- Friend requests say when they were sent, in the bell and in Друзья on both platforms (`12:05`, `вчера`, `28 сент.`), from Backend's new `UserProfile.requestedAt` (itmo-widgets-backend#53, contract from Backend f9dd1e0); requests still lead the bell, newest first. Without the time from an older Backend nothing changes.
+
 ### Fixes (2026-10-18)
 
 - Another user's sport is titled by their given name (`Спорт: Иван`), from ITMO.ID's `given_name` or the second word of «Фамилия Имя», not by their surname.

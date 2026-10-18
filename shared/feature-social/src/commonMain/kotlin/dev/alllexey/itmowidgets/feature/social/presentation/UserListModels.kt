@@ -1,9 +1,12 @@
 package dev.alllexey.itmowidgets.feature.social.presentation
 
 import dev.alllexey.itmowidgets.core.model.RelationshipState
+import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.eventMoment
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 
@@ -45,6 +48,15 @@ fun UserSummary.displayName(): UiText = userDisplayName(name, isu)
 fun UserSummary.subtitleText(): UiText {
     val group = primaryGroup() ?: return UiText.Res(SocialStrings.user_subtitle_isu, listOf(isu))
     return UiText.Res(SocialStrings.person_group_course, listOf(group.name, group.course))
+}
+
+/**
+ * A pending request's row status with when it was sent: [base] (`Хочет добавить вас`) and `вчера` become
+ * `Хочет добавить вас, вчера`; without [base] the moment alone, without a known moment [base] alone.
+ */
+fun UserProfile.requestStatus(base: UiText?, time: AcademicTimeProvider): UiText? {
+    val moment = requestedAt?.let { eventMoment(it, time.today(), time.timeZone) } ?: return base
+    return base?.let { UiText.Joined(listOf(it, moment), ", ") } ?: moment
 }
 
 fun RelationshipState.statusText(): UiText? = when (this) {

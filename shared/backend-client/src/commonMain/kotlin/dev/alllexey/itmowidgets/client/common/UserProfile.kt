@@ -1,7 +1,9 @@
 package dev.alllexey.itmowidgets.client.common
 
 import dev.alllexey.itmowidgets.client.json.StrictEnumSerializer
+import dev.alllexey.itmowidgets.client.json.WireInstantSerializer
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 
 /**
  * A user as the authenticated viewer sees them. The app has its own `core.model.UserProfile` and
@@ -11,6 +13,8 @@ import kotlinx.serialization.Serializable
 data class UserProfile(
     val user: UserData,
     val relationship: RelationshipState,
+    /** When the pending request was sent; only for OUTGOING and INCOMING, absent before Backend f9dd1e0. */
+    @Serializable(with = WireInstantSerializer::class) val requestedAt: Instant? = null,
 )
 
 /** The relationship to the authenticated viewer, not the stored direction. Strict: an unknown value fails. */
