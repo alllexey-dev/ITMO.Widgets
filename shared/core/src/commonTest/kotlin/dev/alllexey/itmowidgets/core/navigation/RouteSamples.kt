@@ -48,6 +48,7 @@ object RouteSamples {
         AppRoutes.LinkActions(links, "link-1"),
         AppRoutes.LessonDetails(lesson),
         AppRoutes.PendingSportDetails(pendingSport),
+        AppRoutes.CampusMap(CampusMapArgs(lesson, route = true)),
         AppRoutes.ReportReview(teacher, "review-1"),
         AppRoutes.ReportLink(links, "link-1"),
         AppRoutes.LinkUnavailable,

@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.location.KnownBuilding
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.navigation.CampusMapArgs
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
@@ -84,13 +85,13 @@ class LessonSheetViewModelTest {
         )
         val vm = viewModel(AppRoutes.LessonDetails(LESSON.copy(zoomUrl = "https://example.org/meet")), subjects = subjects)
 
-        val state = vm.uiState.first { it.actions.size == 4 && it.teacher?.tone != UiText.Res(ScheduleStrings.schedule_sheet_teacher) }
+        val state = vm.uiState.first { it.actions.size == 5 && it.teacher?.tone != UiText.Res(ScheduleStrings.schedule_sheet_teacher) }
 
         assertEquals(
-            listOf(LessonActionKind.VIDEO, LessonActionKind.FRIENDS, LessonActionKind.LINKS, LessonActionKind.SUBJECT),
+            listOf(LessonActionKind.ROUTE, LessonActionKind.VIDEO, LessonActionKind.FRIENDS, LessonActionKind.LINKS, LessonActionKind.SUBJECT),
             state.actions.map { it.kind },
         )
-        assertEquals(UiText.Res(ScheduleStrings.schedule_sheet_links, listOf(3)), state.actions[2].label)
+        assertEquals(UiText.Res(ScheduleStrings.schedule_sheet_links, listOf(3)), state.actions[3].label)
         assertEquals(listOf(FRIEND), state.friends)
         assertEquals(TEACHER_ISU, state.teacher?.isu)
     }
@@ -99,7 +100,8 @@ class LessonSheetViewModelTest {
     fun withoutTheConnectionNoFriendsNoToneAndNoSubjectWithoutASource() = runTest(main.dispatcher) {
         val state = viewModel(AppRoutes.LessonDetails(LESSON), services = false).uiState.first()
 
-        assertTrue(state.actions.isEmpty())
+        // Only the route: it needs neither the connection nor a subject source.
+        assertEquals(listOf(AppRoutes.CampusMap(CampusMapArgs(LESSON, route = true))), state.actions.map { it.route })
         assertEquals(UiText.Res(ScheduleStrings.schedule_sheet_teacher), state.teacher?.tone)
     }
 

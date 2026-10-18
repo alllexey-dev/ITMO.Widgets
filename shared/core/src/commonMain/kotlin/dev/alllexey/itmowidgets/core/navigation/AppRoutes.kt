@@ -202,6 +202,12 @@ object AppRoutes {
         override val exclusiveGroup get() = SPORT_DETAILS_GROUP
     }
 
+    /** The campus map (`Карта`, docs/features/map.md), full screen; «Маршрут» of a lesson or browsing. */
+    @Serializable
+    data class CampusMap(val args: CampusMapArgs = CampusMapArgs()) : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
     @Serializable
     data class ReportReview(val args: TeacherReviewArgs, val reviewId: String) : AppRoute {
         override val kind get() = RouteKind.DIALOG
@@ -254,6 +260,7 @@ object AppRoutes {
         subclass(LinkActions::class)
         subclass(LessonDetails::class)
         subclass(PendingSportDetails::class)
+        subclass(CampusMap::class)
         subclass(ReportReview::class)
         subclass(ReportLink::class)
         subclass(LinkUnavailable::class)

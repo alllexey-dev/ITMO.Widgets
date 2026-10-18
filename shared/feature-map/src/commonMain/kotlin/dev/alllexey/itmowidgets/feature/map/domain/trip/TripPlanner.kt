@@ -19,8 +19,17 @@ sealed interface TripStart {
 
 /** One part of a «Маршрут»: walking inside a building, or «По городу» between two buildings in the system Maps. */
 sealed interface TripLeg {
-    /** From [from] to [to] in [buildingId]; [route] is null when the graph has no way (the rooms are still shown). */
-    data class Indoor(val buildingId: Int, val from: MapRoom, val to: MapRoom, val route: IndoorRoute?) : TripLeg
+    /**
+     * From [from] to [to] in [buildingId]; [route] is null when the graph has no way (the rooms are still shown).
+     * [nearTarget]: ITMO's graph has no way into [to] (about 7% of the rooms), so [route] ends at the closest place.
+     */
+    data class Indoor(
+        val buildingId: Int,
+        val from: MapRoom,
+        val to: MapRoom,
+        val route: IndoorRoute?,
+        val nearTarget: Boolean = false,
+    ) : TripLeg
 
     data class City(val fromBuildingId: Int, val toBuildingId: Int) : TripLeg
 }
@@ -44,6 +53,12 @@ object TripPlanner {
         return listOfNotNull(departure, TripLeg.City(from.buildingId, to.buildingId), arrival)
     }
 
-    private fun indoor(plan: BuildingPlan, from: MapRoom, to: MapRoom) =
-        TripLeg.Indoor(plan.buildingId, from, to, plan.router.findRoutes(from.id, to.id).firstOrNull())
+    private fun indoor(plan: BuildingPlan, from: MapRoom, to: MapRoom): TripLeg.Indoor {
+        plan.router.findRoutes(from.id, to.id).firstOrNull()?.let { return TripLeg.Indoor(plan.buildingId, from, to, it) }
+        if (from.id == to.id) return TripLeg.Indoor(plan.buildingId, from, to, null)
+        val near = plan.areasNear(to, NEAR_AREAS).firstNotNullOfOrNull { area -> plan.router.findRoutes(from.id, area).firstOrNull() }
+        return TripLeg.Indoor(plan.buildingId, from, to, near, nearTarget = near != null)
+    }
+
+    private const val NEAR_AREAS = 8
 }

@@ -18,6 +18,7 @@ struct TodayScreen: View {
             actions: TodayContentActions(
                 lesson: { open(target: $0) },
                 join: { url in URL(string: url).map { UIApplication.shared.open($0) } },
+                route: { opened(router.open($0)) },
                 todo: { router.open(entry: $0) },
                 retry: { model.viewModel.refresh(mode: .force) }
             )
@@ -73,6 +74,7 @@ struct TodayScreen: View {
 struct TodayContentActions {
     var lesson: (LessonTarget) -> Void = { _ in }
     var join: (String) -> Void = { _ in }
+    var route: (any AppRoute) -> Void = { _ in }
     var todo: (EntryRoute) -> Void = { _ in }
     var retry: () -> Void = {}
 }
@@ -223,7 +225,22 @@ struct TodayHeroCard: View {
 
     private var place: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.related) {
-            if hero.room != nil || hero.address != nil {
+            if let route = hero.route {
+                // The small route button next to the big room, as "join" next to "online"; the address goes under them.
+                HStack(spacing: 0) {
+                    if let room = hero.room {
+                        Text(verbatim: room.resolved).font(.itmo(.displayMedium, emphasized: true)).monospacedDigit()
+                    }
+                    Spacer(minLength: ItmoSpacing.content)
+                    ItmoProminentButton(title: AppStrings.string("today_route"), symbol: .directions) { actions.route(route) }
+                        .controlSize(.small)
+                        .fixedSize()
+                        .accessibilityIdentifier("today.route")
+                }
+                if let address = hero.address {
+                    Text(verbatim: address).font(.itmo(.titleMedium))
+                }
+            } else if hero.room != nil || hero.address != nil {
                 // The big room never clips: the address goes under it when the row is too narrow for both.
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .firstTextBaseline, spacing: ItmoSpacing.content) { roomAndAddress }

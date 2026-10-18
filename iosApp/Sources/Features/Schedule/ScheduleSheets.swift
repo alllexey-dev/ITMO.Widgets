@@ -82,7 +82,7 @@ struct LessonSheetContent: View {
                                 switch action.kind {
                                 case .video: if let url = action.url { actions.video(url) }
                                 case .friends: withAnimation { proxy.scrollTo("friends", anchor: .top) }
-                                case .links, .subject: if let route = action.route { actions.route(route) }
+                                case .route, .links, .subject: if let route = action.route { actions.route(route) }
                                 }
                             }
                         }
@@ -151,6 +151,7 @@ struct LessonSheetContent: View {
 
     private func symbol(_ kind: LessonActionKind) -> AppSymbol {
         switch kind {
+        case .route: .directions
         case .video: .videocam
         case .friends: .group
         case .links: .link

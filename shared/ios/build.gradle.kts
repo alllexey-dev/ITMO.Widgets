@@ -40,6 +40,8 @@ kotlin {
             export(project(":shared:feature-social"))
             // The report of a review's ReportReviewViewModel.
             export(project(":shared:feature-reviews"))
+            // The campus map's ViewModel, its style and samples.
+            export(project(":shared:feature-map"))
         }
     }
 
@@ -53,6 +55,7 @@ kotlin {
             api(project(":shared:feature-home"))
             api(project(":shared:feature-schedule"))
             api(project(":shared:feature-sport"))
+            api(project(":shared:feature-map"))
             api(project(":shared:feature-recordbook"))
             api(project(":shared:feature-social"))
             api(project(":shared:feature-settings"))

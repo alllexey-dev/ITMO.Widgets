@@ -19,6 +19,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,6 +57,7 @@ import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.feature.home.Res
 import dev.alllexey.itmowidgets.shared.feature.home.today_empty_title
 import dev.alllexey.itmowidgets.shared.feature.home.today_join
+import dev.alllexey.itmowidgets.shared.feature.home.today_route
 import dev.alllexey.itmowidgets.shared.feature.home.today_online
 import dev.alllexey.itmowidgets.shared.feature.home.today_todo_title
 import org.jetbrains.compose.resources.painterResource
@@ -63,6 +65,7 @@ import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_today
+import dev.alllexey.itmowidgets.shared.designsystem.ic_directions
 import dev.alllexey.itmowidgets.shared.designsystem.ic_videocam
 
 /** Test tags of [TodayScreen]. */
@@ -73,6 +76,7 @@ object TodayTestTags {
     const val EMPTY = "today:empty"
     const val HERO = "today:hero"
     const val JOIN = "today:join"
+    const val ROUTE = "today:route"
     const val DAY = "today:day"
 
     fun todo(id: String) = "today:todo:$id"
@@ -84,6 +88,7 @@ data class TodayActions(
     val onRetry: () -> Unit = {},
     val onLesson: (LessonTarget) -> Unit = {},
     val onJoin: (url: String) -> Unit = {},
+    val onRoute: (AppRoute) -> Unit = {},
     val onTodo: (EntryRoute) -> Unit = {},
 )
 
@@ -206,7 +211,7 @@ private fun Hero(hero: TodayHero, actions: TodayActions) {
         Text(hero.byline.asString(), color = quiet, style = ItmoTheme.typography.bodyMedium)
         when {
             hero.online -> Online(hero, actions)
-            hero.room != null || hero.address != null -> Place(hero, quiet)
+            hero.room != null || hero.address != null -> Place(hero, quiet, actions)
             else -> Text(hero.time, color = quiet, style = ItmoTheme.typography.titleSmall)
         }
         if (!hero.online && hero.note != null) {
@@ -256,7 +261,36 @@ private class SpaceBetweenAtLeast(override val spacing: Dp) : Arrangement.Horizo
 /** The big room never clips: the address goes under it when the row is too narrow for both. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Place(hero: TodayHero, quiet: Color) {
+private fun Place(hero: TodayHero, quiet: Color, actions: TodayActions) {
+    val route = hero.route
+    if (route != null) {
+        // The small «Маршрут» next to the big room, as «Войти» next to «Онлайн»; the address goes under them.
+        val gap = ItmoTheme.spacing.content
+        FlowRow(
+            Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.related),
+            horizontalArrangement = remember(gap) { SpaceBetweenAtLeast(gap) },
+            verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
+        ) {
+            hero.room?.let {
+                Text(it.asString(), Modifier.align(Alignment.CenterVertically), style = ItmoTheme.emphasizedTypography.displayMedium)
+            }
+            SmallButton(
+                stringResource(Res.string.today_route),
+                onClick = { actions.onRoute(route) },
+                modifier = Modifier.align(Alignment.CenterVertically).testTag(TodayTestTags.ROUTE),
+                icon = painterResource(KitRes.drawable.ic_directions),
+            )
+        }
+        hero.address?.let { Text(it, style = ItmoTheme.typography.titleMedium) }
+    } else {
+        RoomAndAddress(hero)
+    }
+    Timing(hero, quiet)
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RoomAndAddress(hero: TodayHero) {
     FlowRow(
         Modifier.padding(top = ItmoTheme.spacing.related),
         horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
@@ -272,6 +306,10 @@ private fun Place(hero: TodayHero, quiet: Color) {
             )
         }
     }
+}
+
+@Composable
+private fun Timing(hero: TodayHero, quiet: Color) {
     val progress = hero.progress
     if (progress != null) {
         ItmoWavyProgress({ progress }, Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.related))

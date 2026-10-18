@@ -52,6 +52,7 @@ enum Routes {
         case .reviews: return reviews(route)
         case .resources: return resources(route)
         case .calendar: return calendar(route)
+        case .map: return map(route)
         case .debug: return debug(route)
         }
     }
