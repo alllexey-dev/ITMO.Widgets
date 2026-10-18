@@ -51,7 +51,7 @@ Each bundle runs in its own process; they share only the App Group container and
 | Target | Kotlin | Does |
 |---|---|---|
 | `ITMOWidgets` (app) | `Shared` | every screen and network request, DataStore, the Keychain session, the App Group writers, background refresh, local notifications, push registration |
-| `ITMOWidgetsWidgets` | none | QR, lesson and day widgets and the QR Control; reads App Group files, never calls the network |
+| `ITMOWidgetsWidgets` | none | next-lesson, day, sport and QR widgets and the QR Control; reads App Group files, never calls the network |
 | `ITMOWidgetsNotificationService` | none | the sport booking of a push and its text; Swift micro-client for MyITMO and Backend |
 
 - Only the app has DataStore and a Koin graph. An extension that needs a fact reads a versioned JSON file the app
