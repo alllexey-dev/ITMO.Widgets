@@ -20,6 +20,9 @@ Widget_day-off
 Widget_day-teal
 Widget_day-morning-off
 Widget_day-evening-off
+Widget_list-off
+Widget_list-teal
+Widget_list-evening-off
 Widget_sport-small-off
 Widget_sport-queue-off
 Widget_sport-queue-teal
@@ -30,3 +33,4 @@ Widget_qr-teal
 WidgetsGalleryLive
 WidgetsGalleryLiveNext
 WidgetsGalleryLiveDay
+WidgetsGalleryLiveList

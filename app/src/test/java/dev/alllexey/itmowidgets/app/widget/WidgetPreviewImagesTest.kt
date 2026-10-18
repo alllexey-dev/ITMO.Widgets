@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.app.widget
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.widget.FrameLayout
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
 import java.io.File
@@ -33,7 +32,7 @@ class WidgetPreviewImagesTest {
             PREVIEWS.forEach { (name, case) ->
                 val file = File(directory, "$name.png")
                 if (write) {
-                    val view = WidgetsScreenshotTest.views(context, case, theme = null).apply(context, FrameLayout(context))
+                    val view = WidgetsScreenshotTest.view(context, case, theme = null)
                     directory.mkdirs()
                     file.outputStream().use {
                         WidgetsScreenshotTest.render(context, view, case.widthDp, case.heightDp).compress(Bitmap.CompressFormat.PNG, 100, it)
@@ -49,7 +48,8 @@ class WidgetPreviewImagesTest {
         val RES = File("src/main/res")
         val PREVIEWS = listOf(
             "widget_single_lesson_preview" to WidgetsScreenshotTest.Case.NextMedium,
-            "widget_lesson_list_preview" to WidgetsScreenshotTest.Case.Day,
+            "widget_day_preview" to WidgetsScreenshotTest.Case.Day,
+            "widget_lesson_list_preview" to WidgetsScreenshotTest.Case.List,
             "widget_sport_preview" to WidgetsScreenshotTest.Case.SportQueue,
         )
     }

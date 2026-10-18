@@ -71,6 +71,8 @@ class ScheduleRulesTest {
         val ANDROID_COMPONENTS = setOf(
             "$SCHEDULE_PACKAGE.ui.widget.SingleLessonWidgetProvider",
             "$SCHEDULE_PACKAGE.ui.widget.DayScheduleWidgetProvider",
+            "$SCHEDULE_PACKAGE.ui.widget.DayTimelineWidgetProvider",
+            "$SCHEDULE_PACKAGE.ui.widget.ScheduleWidgetRemoteViewsService",
             "$SCHEDULE_PACKAGE.work.ScheduleWidgetRefreshReceiver",
             "$SCHEDULE_PACKAGE.work.ScheduleWidgetUpdateWorker",
             "$SCHEDULE_PACKAGE.work.ScheduleChangesWorker",

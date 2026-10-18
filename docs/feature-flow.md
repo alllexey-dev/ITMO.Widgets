@@ -105,9 +105,9 @@ shows (`domain/widget/ScheduleWidgetSelector.kt`).
 - **Android.** `ScheduleWidgetWork` enqueues
   `ScheduleWidgetUpdateWorker` (`app/.../feature/schedule/work/`), which calls
   `load()`, writes `widgets/schedule_snapshot.json` through
-  `ScheduleWidgetSnapshotStoreImpl` and renders RemoteViews with
-  `ScheduleWidgetRenderer` for `DayScheduleWidgetProvider` and
-  `SingleLessonWidgetProvider`. `WidgetRefreshCoordinator` asks for a refresh
+  `ScheduleWidgetSnapshotStoreImpl` and renders RemoteViews through
+  `ScheduleWidgetProviders` for `SingleLessonWidgetProvider`,
+  `DayTimelineWidgetProvider` and `DayScheduleWidgetProvider` (the classic list). `WidgetRefreshCoordinator` asks for a refresh
   after actions that change the schedule.
 - **iOS.** `ScheduleTimelineWriter` (`shared/feature-schedule/src/iosMain`)
   calls `loadTimeline(until)` and writes the timeline to the App Group;

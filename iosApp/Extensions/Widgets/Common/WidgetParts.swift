@@ -188,13 +188,16 @@ enum WidgetPlaceholder: Equatable {
     case loading
     /// The schedule widgets: no lesson today or tomorrow.
     case noLessons
+    /// The classic list: no lesson today, and no more today.
+    case noLessonsToday
+    case noMoreToday
     case sportLoading
     case sportError
 
     var symbol: AppSymbol {
         switch self {
         case .signedOut: .login
-        case .demo, .noLessons: .eventNote
+        case .demo, .noLessons, .noLessonsToday, .noMoreToday: .eventNote
         case .unavailable, .sportError: .refresh
         case .loading, .sportLoading: .history
         }
@@ -207,6 +210,8 @@ enum WidgetPlaceholder: Equatable {
         case .unavailable: .scheduleWidgetError
         case .loading: .scheduleWidgetLoading
         case .noLessons: .scheduleWidgetEmptyTodayAndTomorrow
+        case .noLessonsToday: .scheduleWidgetEmptyToday
+        case .noMoreToday: .scheduleWidgetNoMoreToday
         case .sportLoading: .widgetSportLoading
         case .sportError: .widgetSportError
         }

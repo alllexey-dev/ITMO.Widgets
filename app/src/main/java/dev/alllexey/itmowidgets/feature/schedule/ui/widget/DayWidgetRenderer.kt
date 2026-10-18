@@ -23,7 +23,7 @@ import kotlin.math.roundToInt
 import kotlinx.datetime.LocalDate
 
 /**
- * The day widget (W2, `DayScheduleWidgetProvider`): the header and the day to scale with the `сейчас` line. From API
+ * The day widget (W2, `DayTimelineWidgetProvider`): the header and the day to scale with the `сейчас` line. From API
  * 31 one layout per launcher size, its rows placed at their times (`setViewLayoutMargin`, `setViewLayoutHeight`);
  * below it the lessons stack without the axis.
  */

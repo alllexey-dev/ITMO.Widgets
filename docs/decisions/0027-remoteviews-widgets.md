@@ -41,6 +41,12 @@ placed at their minutes (`setViewLayoutMargin`, `setViewLayoutHeight`), below it
 `dev.alllexey.itmowidgets.widget.sport`. Swift renders countdowns as system live text to the instants Kotlin gives;
 it still takes no time decision.
 
+**Amended (2026-10-18).** The classic list of 2.2 comes back as `Список пар` beside the new widgets, on the same
+snapshot: it draws `ScheduleWidgetSnapshot.day` as rows. Placed list widgets keep their identifiers, so they are lists
+again: Android `DayScheduleWidgetProvider` (a `RemoteCollectionItems` list, `ScheduleWidgetRemoteViewsService` back
+for 2.2's cached adapter) and iOS kind `.widget.day-schedule`; the day to scale moves to the new
+`DayTimelineWidgetProvider` and `.widget.day-timeline`, which no release had shipped.
+
 **Supersedes.** Nothing.
 
 **Revisit when.** A Glance check shows at least 15 of 18 frames within 450 ms and Glance widgets are planned; the

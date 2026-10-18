@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
+import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders.NONE
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetWork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +52,7 @@ class SingleLessonWidgetProvider : AppWidgetProvider(), KoinComponent {
         val pending = goAsync()
         scope.launch {
             try {
-                ScheduleWidgetProviders.render(context, store.read(), palettes.current(), time.now(), singleIds = ids, dayIds = IntArray(0))
+                ScheduleWidgetProviders.render(context, store.read(), palettes.current(), time.now(), singleIds = ids, dayIds = NONE, listIds = NONE)
                 // WorkManager toggling its own components re-sends APPWIDGET_UPDATE: only the throttled
                 // enqueue and the kept periodic job may follow, or the widget refreshes in a loop.
                 if (scheduleUpdate) {

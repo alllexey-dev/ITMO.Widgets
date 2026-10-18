@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewSc
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.NextLessonWidgetRenderer
+import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleListRows
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleSettingsPreview
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSampleState
 import dev.alllexey.itmowidgets.feature.sport.ui.widget.SportSettingsPreview
@@ -70,6 +71,16 @@ class WidgetRenderingTest {
             assertEquals(View.VISIBLE, list.visibility)
             assertEquals(5, list.childCount)
         }
+    }
+
+    @Test
+    fun theClassicListRowsInflateWithTheDayHeaderAndEveryLesson() {
+        val snapshot = scenario.snapshot(ScheduleWidgetSettings(), SchedulePreviewMoment.LESSON, ScheduleSettingsPreview.labels(context))
+        val rows = ScheduleListRows(context).rows(snapshot).map { applied(it.views) }
+
+        assertEquals(snapshot.day.lessons.size + 2, rows.size)
+        assertTrue(text(rows.first(), R.id.day_title).startsWith(context.getString(R.string.schedule_widget_today)))
+        assertEquals(snapshot.day.lessons.first().subject, text(rows[1], R.id.title))
     }
 
     @Test

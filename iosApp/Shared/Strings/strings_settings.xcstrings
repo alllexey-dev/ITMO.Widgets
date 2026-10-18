@@ -1933,6 +1933,18 @@
         }
       }
     },
+    "settings_widget_beta" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бета"
+          }
+        }
+      }
+    },
     "settings_widget_day_description" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1953,6 +1965,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Расписание на день"
+          }
+        }
+      }
+    },
+    "settings_widget_list_description" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пары дня по порядку, как раньше"
+          }
+        }
+      }
+    },
+    "settings_widget_list_note" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эти настройки общие с «Расписанием на день»."
+          }
+        }
+      }
+    },
+    "settings_widget_list_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список пар"
           }
         }
       }

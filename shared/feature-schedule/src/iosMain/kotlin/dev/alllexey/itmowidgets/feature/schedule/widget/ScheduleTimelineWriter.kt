@@ -164,10 +164,14 @@ class ScheduleTimelineWriter(
             encodeDefaults = true
         }
 
-        /** The WidgetKit kinds of the lesson and the day widget, stable identifiers (`StableIdentifiersTests`). */
+        /**
+         * The WidgetKit kinds of the lesson widget, the classic list (the day widget's kind before the day to scale)
+         * and the day widget, stable identifiers (`StableIdentifiersTests`).
+         */
         const val SINGLE_LESSON_KIND = "dev.alllexey.itmowidgets.widget.single-lesson"
         const val DAY_SCHEDULE_KIND = "dev.alllexey.itmowidgets.widget.day-schedule"
-        val KINDS = listOf(SINGLE_LESSON_KIND, DAY_SCHEDULE_KIND)
+        const val DAY_TIMELINE_KIND = "dev.alllexey.itmowidgets.widget.day-timeline"
+        val KINDS = listOf(SINGLE_LESSON_KIND, DAY_SCHEDULE_KIND, DAY_TIMELINE_KIND)
 
         /** Longer than a schedule refresh takes, shorter than a user's next pull to refresh. */
         val OWN_REFRESH_WINDOW = 1.minutes

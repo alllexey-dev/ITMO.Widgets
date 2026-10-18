@@ -3,15 +3,17 @@
 Product behaviour: [Как это работает: виджеты](../how-it-works/widgets.md). Settings: [the widgets
 gallery](../settings.md#widgets-gallery).
 
-Four home-screen widgets (spec "Виджеты" of the UX overhaul): the next lesson (W1, small and medium), the day
-(W2, large), sport (W3, small and medium) and the QR pass. Android draws them as RemoteViews (ADR 0027) from
+Five home-screen widgets: the next lesson (W1, small and medium), the day (W2, large) and sport (W3, small and
+medium) of the UX overhaul (spec "Виджеты"), labelled beta (`(бета)` in the picker names, a `Бета` pill in the
+gallery) while they are refined; the classic list `Список пар` of 2.2; and the QR pass. Android draws them as RemoteViews (ADR 0027) from
 WorkManager workers and alarms; the app never registers a widget host. iOS draws them in WidgetKit from App Group
 timelines ([iOS widgets](../ios.md#widgets)).
 
 ## Schedule widgets
 
 Shared in `shared/feature-schedule` (`domain/widget`, `data/widget`); RemoteViews in `:app`
-(`feature/schedule/ui/widget`: `NextLessonWidgetRenderer`, `DayWidgetRenderer`, `DayTimelineLayout`;
+(`feature/schedule/ui/widget`: `NextLessonWidgetRenderer`, `DayWidgetRenderer`, `DayTimelineLayout`,
+`ScheduleListWidgetRenderer`;
 `feature/schedule/work`: `ScheduleWidgetUpdateWorker`, `ScheduleWidgetRefreshReceiver`).
 
 - `ScheduleWidgetDataProvider` reads the own `ScheduleDays` of today and tomorrow (the days Сегодня and the
@@ -38,10 +40,20 @@ Shared in `shared/feature-schedule` (`domain/widget`, `data/widget`); RemoteView
   the 7-minute queue refresh run the worker with a fetch.
 - W1 is one provider (`SingleLessonWidgetProvider`) with two layouts: from API 31 a responsive `RemoteViews(Map)`
   (small from 110 dp, medium from 250 dp wide); below it the layout of the widget's narrowest width.
-- W2 (`DayScheduleWidgetProvider`): from API 31 one layout per launcher size (`OPTION_APPWIDGET_SIZES`), the hours,
+- W2 (`DayTimelineWidgetProvider`, `widget_day_info`): from API 31 one layout per launcher size (`OPTION_APPWIDGET_SIZES`), the hours,
   the gaps, the lessons and the `сейчас` line placed at their minutes on `day_canvas` with `setViewLayoutMargin`
   and `setViewLayoutHeight`. `DayTimelineLayout` maps minutes to dp: a lesson keeps at least two lines' height and
   the rest of the day shares what is left in proportion. Below API 31 the lessons stack in `day_list`.
+- The classic list (`DayScheduleWidgetProvider`, `widget_lesson_list_info`, `Список пар`) is 2.2's list widget on
+  the same snapshot: `ScheduleListRows` turns `day` into the header (`Сегодня · 7 сентября`), a row per lesson (time,
+  type dot, subject, type or queue or `отменена`, place and teacher; done and cancelled ones faded) and the end
+  marker, or one message row (`Сегодня нет пар`, `На сегодня пары закончились`, `Сегодня и завтра нет пар`, loading,
+  signed out, error). The rows are inline `RemoteCollectionItems` with ids from their identity and at least 9 view
+  types; `ScheduleWidgetRemoteViewsService` serves the same rows to a launcher that still binds 2.2's adapter. Every
+  row opens the schedule. It reads W2's settings (`full_widget_*`). The list draws no clock, so the minute tick skips
+  it and it is redrawn only by the worker at boundaries and refreshes.
+- Placed widgets keep their provider: a list placed in 2.2 is `DayScheduleWidgetProvider` and stays a list; W2 is a
+  new provider that no release had shipped (ADR 0027, amended 2026-10-18).
 - Snapshot: kotlinx JSON in `noBackupFilesDir/widgets/schedule_snapshot.json` (`ScheduleWidgetSnapshotStoreImpl`,
   `AtomicTextFile`), `formatVersion` 3 written first; another version (2.2's file, version 2) reads as loading
   until the next update. The store is a session cleaner: cleanup invalidates in-flight worker tickets before
@@ -125,5 +137,6 @@ in `feature/sport/ui/widget` (`SportWidgetProvider`, `SportWidgetRenderer`, `Spo
   `QrPreviewBitmapCache` holds at most four bitmap pairs, off the main thread. Previews never register a host,
   create PendingIntents, touch the network or write snapshots.
 - Checks: `WidgetsScreenshotTest` (`app/screenshots/Widget_*`) draws every widget state through RemoteViews on the
-  JVM, `WidgetsGalleryScreenshotTest` the gallery with them, the instrumented `WidgetRenderingTest` inflates every
+  JVM (the classic list through `ScheduleListWidgetRenderer.previewView`, a local adapter over the same rows),
+  `ScheduleListRowsTest` the list's rows, `WidgetsGalleryScreenshotTest` the gallery with them, the instrumented `WidgetRenderingTest` inflates every
   layout on the device's API level.

@@ -1321,6 +1321,18 @@
         }
       }
     },
+    "widget_day_description" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "День с линией «сейчас»"
+          }
+        }
+      }
+    },
     "widget_day_empty" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",
@@ -1365,6 +1377,18 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "widget_day_name" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание на день (бета)"
           }
         }
       }
@@ -1448,7 +1472,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "День с линией «сейчас»"
+            "value" : "Пары дня по порядку"
           }
         }
       }
@@ -1460,7 +1484,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Расписание на день"
+            "value" : "Список пар"
           }
         }
       }
@@ -1700,7 +1724,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Пара"
+            "value" : "Пара (бета)"
           }
         }
       }
@@ -1796,7 +1820,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Спорт"
+            "value" : "Спорт (бета)"
           }
         }
       }

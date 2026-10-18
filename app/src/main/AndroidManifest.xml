@@ -143,6 +143,18 @@
         </receiver>
 
         <receiver
+            android:name=".feature.schedule.ui.widget.DayTimelineWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_day_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_day_info" />
+        </receiver>
+
+        <receiver
             android:name=".feature.schedule.work.ScheduleWidgetRefreshReceiver"
             android:exported="false" />
 
@@ -184,6 +196,12 @@
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             tools:node="remove" />
+
+        <!-- The classic list's adapter of 2.2: a launcher may bind it until the first render after an update. -->
+        <service
+            android:name=".feature.schedule.ui.widget.ScheduleWidgetRemoteViewsService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
 
     </application>
 

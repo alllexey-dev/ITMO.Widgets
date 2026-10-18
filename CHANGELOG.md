@@ -10,6 +10,17 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Widgets (2026-10-18)
+
+- The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in
+  rows under `Сегодня · 7 сентября`, past ones faded, tomorrow once today is over, with the day widget's settings; on
+  Android it scrolls. It draws the same snapshot as the new widgets.
+- Widgets placed as lists in 2.2 and the first iOS builds stay lists (Android `DayScheduleWidgetProvider`, iOS kind
+  `.widget.day-schedule`); `Расписание на день` moves to its own provider and kind (`DayTimelineWidgetProvider`,
+  `.widget.day-timeline`), so a day widget placed from a master build after #447 has to be added again.
+- `Пара`, `Расписание на день` and `Спорт` are marked beta: `(бета)` in the system widget picker and a `Бета` pill in
+  `Виджеты`.
+
 ### Data (2026-10-17)
 
 - `TeacherNowGateway`: the lesson a teacher gives now or next today, from My ITMO's teacher timetable (MyItmoApi 2.2.0 `getTeacherSchedule`), for the person card's «Сейчас ведёт»; parallel groups in one room are one lesson.

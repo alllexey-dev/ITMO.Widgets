@@ -196,7 +196,7 @@ Frozen from the first TestFlight build; `iosApp/Tests/UnitTests/StableIdentifier
 | Bundle IDs | `dev.alllexey.itmowidgets`, `.widgets`, `.notification-service` |
 | App Group | `group.dev.alllexey.itmowidgets` (all three) |
 | Keychain access group | `$(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared` (app and notification service) |
-| Widget kinds | `dev.alllexey.itmowidgets.widget.qr`, `.widget.single-lesson` (next lesson and Lock Screen), `.widget.day-schedule`, `.widget.sport` |
+| Widget kinds | `dev.alllexey.itmowidgets.widget.qr`, `.widget.single-lesson` (next lesson and Lock Screen), `.widget.day-schedule` (the classic list, the day widget of the first builds), `.widget.day-timeline` (the day to scale), `.widget.sport` |
 | Control kind | `dev.alllexey.itmowidgets.control.qr` |
 | Quick action types | `dev.alllexey.itmowidgets.qr_pass`, `dev.alllexey.itmowidgets.today` |
 | Background task | `dev.alllexey.itmowidgets.refresh` |
@@ -244,11 +244,15 @@ The widget extension reads App Group files on each timeline request and makes no
 - Next-lesson widget (`NextLessonWidget`, kind `.widget.single-lesson`): small, medium (two more lessons on the
   right), and on the Lock Screen the line beside the date, the rectangle and the countdown ring. The day widget
   (`DayWidget`, large only) draws the day to scale (`DayAxis`: linear time, every lesson at least one readable row),
-  gaps, and the now line. Both read schedule-timeline-v2.json in `Extensions/Widgets/Schedule/`: Swift picks the entry
+  gaps, and the now line (kind `.widget.day-timeline`). The classic list (`ClassicListWidget`, kind
+  `.widget.day-schedule`, medium and large) draws the same day content as rows: the header, the lessons that fit (done
+  ones leave first) and the end. All three read schedule-timeline-v2.json in `Extensions/Widgets/Schedule/`: Swift picks the entry
   whose `validFrom` has passed and, inside it, the last `nowTicks` minute; countdowns and progress are the system's
   live views on `until` and `since` (`WidgetCountdown`, `WidgetLessonProgress`), so Swift computes no time.
 - Sport widget (`Extensions/Widgets/Sport/`, medium and small): the score ring, the remaining points and the nearest
   bookings or queues from sport-widget-v1.json.
+- The picker names of the next-lesson, day and sport widgets end in `(бета)` (`widget_*_name`), as the gallery's `Бета`
+  pills.
 - The pass widget and the pass Control (`Extensions/Widgets/Controls/`) are titled `settings_widget_pass_title`; the
   Control opens the pass sheet through `OpenRouteIntent`.
 - Every widget shows a calm placeholder signed out, in the demo, without a file or a container (unsigned builds), and

@@ -227,8 +227,8 @@ them, and a change needs a migration.
 Widget data is shared, rendering is native.
 
 - **Android widgets** are RemoteViews providers in `app/`: the QR widget
-  (`QrCodeWidgetProvider`) and the schedule widgets (`DayScheduleWidgetProvider`,
-  `SingleLessonWidgetProvider`). A worker loads data through the shared
+  (`QrCodeWidgetProvider`) and the schedule widgets (`SingleLessonWidgetProvider`,
+  `DayTimelineWidgetProvider`, and `DayScheduleWidgetProvider` for the classic list). A worker loads data through the shared
   provider (`ScheduleWidgetDataProvider`), writes a snapshot and renders it.
   Rules: [widgets](features/widgets.md).
 - **iOS widgets** are a WidgetKit extension in `iosApp/Extensions/Widgets/`

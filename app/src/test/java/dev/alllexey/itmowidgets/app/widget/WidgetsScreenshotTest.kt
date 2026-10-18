@@ -67,6 +67,8 @@ class WidgetsScreenshotTest(
         Day("day", 320, 330),
         DayMorning("day-morning", 320, 330),
         DayEvening("day-evening", 320, 330),
+        List("list", 320, 250),
+        ListEvening("list-evening", 320, 250),
         SportSmall("sport-small", 170, 170),
         SportQueue("sport-queue", 340, 170),
         SportBooked("sport-booked", 340, 170),
@@ -78,13 +80,12 @@ class WidgetsScreenshotTest(
     fun capture() {
         RuntimeEnvironment.setQualifiers(CaptureSize().qualifiers(appearance))
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val bitmap = if (case == Case.Qr) qrCode(context, theme?.widgetPalette(context)) else drawn(context, views(context, case, theme))
+        val bitmap = if (case == Case.Qr) {
+            qrCode(context, theme?.widgetPalette(context))
+        } else {
+            render(context, view(context, case, theme), case.widthDp, case.heightDp)
+        }
         bitmap.captureRoboImage(AppScreenshotRule.appBaselines.file(base(case, theme), appearance), ShotsCompare.options)
-    }
-
-    private fun drawn(context: Context, remote: RemoteViews): Bitmap {
-        val view = remote.apply(context, FrameLayout(context))
-        return render(context, view, case.widthDp, case.heightDp)
     }
 
     /** The code in the colours the widget takes with `Динамические цвета` on. */
@@ -112,8 +113,20 @@ class WidgetsScreenshotTest(
         private const val QR_SAMPLE = "ITMO-TEST"
         private val scenario = SchedulePreviewScenario(ScheduleWidgetSelector())
 
-        /** The RemoteViews of [case], as the launcher would draw it; the launcher previews use it too. */
-        fun views(context: Context, case: Case, theme: ThemeSpec?): RemoteViews {
+        /** [case] as the launcher would draw it; the launcher previews use it too. */
+        fun view(context: Context, case: Case, theme: ThemeSpec?): View {
+            val list = { moment: SchedulePreviewMoment ->
+                ScheduleSettingsPreview.view(context, scenario, WidgetPreviewSettings.Schedule(ScheduleWidgetSettings(), ScheduleWidgetFormat.LIST, theme), moment)
+            }
+            return when (case) {
+                Case.List -> list(SchedulePreviewMoment.LESSON)
+                Case.ListEvening -> list(SchedulePreviewMoment.EVENING)
+                else -> views(context, case, theme).apply(context, FrameLayout(context))
+            }
+        }
+
+        /** The RemoteViews of [case]; the classic list is a collection, drawn by [view]. */
+        private fun views(context: Context, case: Case, theme: ThemeSpec?): RemoteViews {
             val schedule = { format: ScheduleWidgetFormat, moment: SchedulePreviewMoment ->
                 ScheduleSettingsPreview.views(context, scenario, WidgetPreviewSettings.Schedule(ScheduleWidgetSettings(), format, theme), moment)
             }
@@ -142,6 +155,7 @@ class WidgetsScreenshotTest(
                 Case.SportQueue -> sport(true, SportWidgetSampleState.QUEUE)
                 Case.SportBooked -> sport(true, SportWidgetSampleState.BOOKED)
                 Case.SportDone -> sport(true, SportWidgetSampleState.DONE)
+                Case.List, Case.ListEvening -> error("The classic list is a collection")
                 Case.Qr -> error("The QR widget is a bitmap")
             }
         }
@@ -164,7 +178,7 @@ class WidgetsScreenshotTest(
             "Widget_${case.state}-${theme?.accent?.name?.lowercase() ?: "off"}"
 
         /** The teal palette is checked on the widgets that draw the most roles. */
-        private val THEMED = setOf(Case.NextMedium, Case.Day, Case.SportQueue, Case.Qr)
+        private val THEMED = setOf(Case.NextMedium, Case.Day, Case.List, Case.SportQueue, Case.Qr)
 
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}_{1}_{2}")

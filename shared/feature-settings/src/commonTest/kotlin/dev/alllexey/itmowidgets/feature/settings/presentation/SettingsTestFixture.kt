@@ -85,9 +85,10 @@ internal fun TestScope.recordEvents(fixture: Fixture): List<SettingsEvent> {
 }
 
 /** The page's rows and, on the widgets gallery, the rows of every format's sheet. */
+/** Every row once: the classic list's sheet repeats the day widget's rows. */
 internal fun SettingsViewModel.allItems(): List<SettingItem> =
-    uiState.value.sections.flatMap(SettingSection::items) +
-        uiState.value.gallery?.cards.orEmpty().flatMap { card -> card.settings.flatMap(SettingSection::items) }
+    (uiState.value.sections.flatMap(SettingSection::items) +
+        uiState.value.gallery?.cards.orEmpty().flatMap { card -> card.settings.flatMap(SettingSection::items) }).distinctBy { it.id }
 
 internal fun SettingsViewModel.card(format: WidgetFormat): WidgetCard =
     checkNotNull(uiState.value.gallery).cards.single { it.format == format }

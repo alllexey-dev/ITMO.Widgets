@@ -72,8 +72,11 @@ private struct WidgetGalleryCard: View {
                 .accessibilityIdentifier("settings.widgets.\(card.format.name.lowercased()).preview")
             HStack(spacing: ItmoSpacing.content) {
                 VStack(alignment: .leading, spacing: ItmoSpacing.related) {
-                    Text(verbatim: card.title.resolved)
-                        .font(.itmo(.titleMedium, emphasized: true))
+                    // The pill wraps under a long title rather than squeezing it.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: ItmoSpacing.related) { title; beta }
+                        VStack(alignment: .leading, spacing: ItmoSpacing.related) { title; beta }
+                    }
                     Text(verbatim: card.description_.resolved)
                         .font(.itmo(.bodyMedium))
                         .foregroundStyle(.secondary)
@@ -95,6 +98,19 @@ private struct WidgetGalleryCard: View {
         // A container keeps the children's own identifiers (the preview, the settings button).
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("settings.widgets.\(card.format.name.lowercased())")
+    }
+
+    private var title: some View {
+        Text(verbatim: card.title.resolved)
+            .font(.itmo(.titleMedium, emphasized: true))
+    }
+
+    @ViewBuilder
+    private var beta: some View {
+        if card.beta {
+            ItmoStatusPill(pill: ItmoPill(text: AppStrings.string("settings_widget_beta"), tone: .tertiary))
+                .accessibilityIdentifier("settings.widgets.\(card.format.name.lowercased()).beta")
+        }
     }
 
     @ViewBuilder
@@ -129,6 +145,10 @@ struct WidgetPreview: View {
         case .day:
             WidgetStage(size: WidgetFamilySizes.large) {
                 previews.day.map { DayEntryView(entry: $0) }
+            }
+        case .list:
+            WidgetStage(size: WidgetFamilySizes.medium) {
+                previews.list.map { ClassicListEntryView(entry: $0, family: .systemMedium) }
             }
         case .sport:
             WidgetStage(size: WidgetFamilySizes.medium) {
