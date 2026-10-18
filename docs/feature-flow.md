@@ -111,8 +111,9 @@ shows (`domain/widget/ScheduleWidgetSelector.kt`).
   after actions that change the schedule.
 - **iOS.** `ScheduleTimelineWriter` (`shared/feature-schedule/src/iosMain`)
   calls `loadTimeline(until)` and writes the timeline to the App Group;
-  `iosApp/Shared/WidgetSnapshots/LessonTimeline.swift` reads it and
-  `iosApp/Extensions/Widgets/Schedule/DayScheduleWidget.swift` draws it.
+  `iosApp/Shared/WidgetSnapshots/ScheduleTimeline.swift` reads it and
+  `iosApp/Extensions/Widgets/Schedule/NextLessonWidget.swift` and
+  `DayWidget.swift` draw it.
 
 ## 9. Tests at each layer
 
@@ -123,7 +124,7 @@ shows (`domain/widget/ScheduleWidgetSelector.kt`).
 | View model | `ScheduleFeedPresenterTest`, `ScheduleFeedViewModelTest` (`commonTest`) |
 | Screen | `ScheduleScreenshotTest`, app `ScheduleEntriesTest`, iOS `ScheduleSnapshotTests` |
 | Koin | `ScheduleModuleTest`, `ScheduleIosModuleTest`, app `ScheduleGraphTest` |
-| Widget | `ScheduleWidgetDataProviderTest`, `ScheduleTimelineWriterTest`, instrumented `ScheduleWidgetSnapshotStoreTest` and `ScheduleWidgetRenderingTest`, iOS `ScheduleTimelineTests.swift` |
+| Widget | `ScheduleWidgetSelectorTest`, `ScheduleWidgetDataProviderTest`, `SportWidgetSelectorTest`, `ScheduleTimelineWriterTest`, `WidgetsScreenshotTest`, instrumented `ScheduleWidgetSnapshotStoreTest` and `WidgetRenderingTest`, iOS `ScheduleTimelineTests.swift` |
 | UI on device | iOS `ScheduleUITests.swift` |
 
 ## Adding a Backend call

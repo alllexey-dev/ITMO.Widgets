@@ -51,7 +51,7 @@ Each bundle runs in its own process; they share only the App Group container and
 | Target | Kotlin | Does |
 |---|---|---|
 | `ITMOWidgets` (app) | `Shared` | every screen and network request, DataStore, the Keychain session, the App Group writers, background refresh, local notifications, push registration |
-| `ITMOWidgetsWidgets` | none | QR, lesson and day widgets and the QR Control; reads App Group files, never calls the network |
+| `ITMOWidgetsWidgets` | none | next-lesson, day, sport and QR widgets and the QR Control; reads App Group files, never calls the network |
 | `ITMOWidgetsNotificationService` | none | the sport booking of a push and its text; Swift micro-client for MyITMO and Backend |
 
 - Only the app has DataStore and a Koin graph. An extension that needs a fact reads a versioned JSON file the app
@@ -96,17 +96,21 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   which returns `.swiftUI` (native bar), `.compose` (the route draws its own bar), `.sheet`, `.swiftUISheet`, `.composeSheet`, a tab,
   the gate or `.notOnIOS`. `RouterTests` fails for a key no feature claims.
 - Debug launch arguments replace Android's debug tools: `-itmoDemo`, `-itmoSignedOut`, `-itmoShellSession <state>`,
-  `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoWebLoginFixture`, `-itmoBarsLogin`.
+  `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoWebLoginFixture`, `-itmoBarsLogin`,
+  `-itmoAcademicDate <yyyy-mm-dd>` (the academic date at the real wall time, Android's test academic date).
 
 | Route id | URL | Opens |
 |---|---|---|
 | `home` (today), `schedule`, `recordbook`, `sport`, `me` (profile) | `itmowidgets://route/<root>` | that root |
 | `qr_pass` | `itmowidgets://route/qr_pass` | the pass sheet over today |
 | `today` | `itmowidgets://route/today` | the schedule root on today |
+| `lesson` | `itmowidgets://route/lesson?args=<base64url LessonDetailsArgs JSON>` | the lesson sheet over the schedule (without readable `args`, the schedule) |
+| `sport` with `lesson` | `itmowidgets://route/sport?lesson=<id>[&predicted=1]` | Sport on that lesson (`TabRequest.SportLesson`) |
 | any other id | `itmowidgets://route/<id>` | the damaged-link sheet over today |
 
-The scheme is the build setting `APP_URL_SCHEME`. Placed widgets and Controls keep their URLs, so the scheme and route
-ids are frozen (`StableIdentifiersTests.testRouteUrls`).
+The scheme is the build setting `APP_URL_SCHEME`. Placed widgets and Controls keep their URLs, so the scheme, the route
+ids and the query names `args`, `lesson`, `predicted` are frozen (`StableIdentifiersTests`). Widgets build them in
+`WidgetRoute` (`Extensions/Widgets/Common/`); `RouteURL` reads them through `IosRoutes.lessonRoute` and `sportRoute`.
 
 ## Swift bridge and screens
 
@@ -198,7 +202,7 @@ Frozen from the first TestFlight build; `iosApp/Tests/UnitTests/StableIdentifier
 | Bundle IDs | `dev.alllexey.itmowidgets`, `.widgets`, `.notification-service` |
 | App Group | `group.dev.alllexey.itmowidgets` (all three) |
 | Keychain access group | `$(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared` (app and notification service) |
-| Widget kinds | `dev.alllexey.itmowidgets.widget.qr`, `.widget.single-lesson`, `.widget.day-schedule` |
+| Widget kinds | `dev.alllexey.itmowidgets.widget.qr`, `.widget.single-lesson` (next lesson and Lock Screen), `.widget.day-schedule`, `.widget.sport` |
 | Control kind | `dev.alllexey.itmowidgets.control.qr` |
 | Quick action types | `dev.alllexey.itmowidgets.qr_pass`, `dev.alllexey.itmowidgets.today` |
 | Background task | `dev.alllexey.itmowidgets.refresh` |
@@ -227,7 +231,8 @@ placeholder state (`AppGroupSnapshot`, `SnapshotReaderTests`).
 | session-v1.json | `SessionSnapshotWriter` on every session change | widgets, notification service |
 | qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`) | QR widget |
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension | QR widget |
-| schedule-timeline-v1.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`) | lesson and day widgets |
+| schedule-timeline-v2.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`) on the session, widget options, foreground, cached schedule and after a booking | next-lesson and day widgets |
+| sport-widget-v1.json | `SportWidgetWriter` (`:shared:feature-sport`) on the session and widget theme, after a booking and as the `sport-widget` refresh step | sport widget |
 | `locks/<name>.lock` | `FileCrossProcessLock` (`flock`), held only around the guarded call | app, notification service |
 | `sport-results/<lesson>-<millis>.json` | `SportResultInbox` in the notification service, one per booked or refused queue lesson, moved in place whole | `AppGroupSportResultInbox` (`:shared:feature-sport`), which moves each into the bell's `SportResultLog` and deletes it |
 
@@ -242,9 +247,24 @@ The widget extension reads App Group files on each timeline request and makes no
 
 - QR widget (`Extensions/Widgets/Qr/`): signed out, spoiler, revealed and expired states; the spoiler is a
   `Button(intent: RevealQrIntent())` that shows the code for 30 s. Options come from qr-pass-v1.json.
-- Lesson widget (small, medium, Lock Screen) and day widget (medium, large) in `Extensions/Widgets/Schedule/` read
-  the shared timeline; Swift picks the entry whose `validFrom` has passed and takes no academic decision.
-- QR Control (`Extensions/Widgets/Controls/`) opens the QR pass through `OpenRouteIntent`.
+- Next-lesson widget (`NextLessonWidget`, kind `.widget.single-lesson`): small, medium (two more lessons on the
+  right), and on the Lock Screen the line beside the date, the rectangle and the countdown ring. The day widget
+  (`DayWidget`, large only) draws the day to scale (`DayAxis`: linear time, every lesson at least one readable row),
+  gaps, and the now line. Both read schedule-timeline-v2.json in `Extensions/Widgets/Schedule/`: Swift picks the entry
+  whose `validFrom` has passed and, inside it, the last `nowTicks` minute; countdowns and progress are the system's
+  live views on `until` and `since` (`WidgetCountdown`, `WidgetLessonProgress`), so Swift computes no time.
+- Sport widget (`Extensions/Widgets/Sport/`, medium and small): the score ring, the remaining points and the nearest
+  bookings or queues from sport-widget-v1.json.
+- The pass widget and the pass Control (`Extensions/Widgets/Controls/`) are titled `settings_widget_pass_title`; the
+  Control opens the pass sheet through `OpenRouteIntent`.
+- Every widget shows a calm placeholder signed out, in the demo, without a file or a container (unsigned builds), and
+  for the loading and error snapshots. The app's palette (`settings_widgets_theme_title`) reaches every file as
+  `palette`.
+- The widget sources (minus `WidgetsBundle.swift`) compile into the app too: the widgets gallery
+  (`Sources/Features/Settings/WidgetGalleryForm.swift`) draws the real entry views on the shared sample, which
+  `IosWidgetPreviews` (`shared/ios`) writes as the App Group files the writers would leave for the gallery's settings
+  and theme, frozen at 12:22 on the sample Monday. The gallery counts placed widgets per kind through
+  `WidgetCenter.currentConfigurations()` and offers how to add one, the Lock Screen widgets and the Control.
 
 ## System entries
 
@@ -255,7 +275,8 @@ route id (`qr_pass`, `today`) through `RouteInbox` (`Shared/Intents/`), which th
 
 One app refresh task, `dev.alllexey.itmowidgets.refresh`. `BackgroundRunner` (`shared/ios`) is the entry point of the
 task, of every launch and every return to the foreground. It runs the bound `RefreshStep`s in `RefreshStepKeys.ORDER`
-(widget snapshots, schedule changes, marks with the BARS cookie renewal, calendar sync), keeps Android's periods in
+(widget snapshots, the sport widget at most every 30 minutes, schedule changes, marks with the BARS cookie renewal,
+calendar sync), keeps Android's periods in
 `UserDefaultsRefreshStepLog`, and stops after 25 s. `IosAppNotifier` posts local notifications; anything found between
 00:00 and 06:00 Moscow time is scheduled for 06:00.
 
@@ -280,6 +301,8 @@ task, of every launch and every return to the foreground. It runs the bound `Ref
 | Colours | static brand scheme | iOS has no wallpaper colours |
 | Placing a widget | the app shows how to add one | iOS lets no app place a widget |
 | QR widget | fade instead of the circle reveal; no custom spoiler image | WidgetKit animates only between entries |
+| Widget countdowns | the minutes in the system's full words (`48 минут`), not `48 мин` | the live offset text has no abbreviated style |
+| Widget gallery of the system | the user's own data or a placeholder, no sample | the sample comes from Kotlin, which the extension does not link |
 | QR tile | the Control opens the pass, cannot draw the code | a Control shows only a symbol and a title |
 | Widget refresh | no seven-minute pending sport refresh | WidgetKit allows about 40 to 70 reloads a day |
 | Background checks | when iOS wakes the app, at launch and on return | iOS has no WorkManager |

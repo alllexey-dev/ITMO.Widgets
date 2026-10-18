@@ -17,6 +17,7 @@ import kotlinx.cinterop.getOriginalKotlinClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import org.koin.core.Koin
 import org.koin.core.context.startKoin
 
@@ -24,9 +25,11 @@ import org.koin.core.context.startKoin
  * Starts the app's Koin graph over [IosKoinModules] with [platform]; the first call of `App.init` after the app
  * locale. From then on a Kotlin crash lands in the error journal ([IosCrashHook]) and Compose screens follow the
  * stored accent colour ([AppColorSource]). A later call keeps the running graph and its platform (the hosted tests
- * run inside the started app) and returns false. Call it on the main thread.
+ * run inside the started app) and returns false. Call it on the main thread. [academicDate] (`2026-10-14`) pins the
+ * academic date at the real wall time, for a Debug build's `-itmoAcademicDate`; null keeps the real date.
  */
-fun startKoinIos(platform: IosPlatform): Boolean = IosKoin.start(platform)
+fun startKoinIos(platform: IosPlatform, academicDate: String?): Boolean =
+    IosKoin.start(platform, academicDate?.let(LocalDate::parse))
 
 /**
  * The app's graph as Swift reads it. Koin's `get` is reified, so Swift names the type by its class or protocol:
@@ -51,11 +54,11 @@ object IosKoin {
         requireNotNull(getOriginalKotlinClass(protocol)) { "$protocol is not a Kotlin interface" }
     )
 
-    internal fun start(platform: IosPlatform): Boolean {
+    internal fun start(platform: IosPlatform, academicDate: LocalDate?): Boolean {
         if (started != null) return false
         val koin = startKoin {
             allowOverride(false)
-            modules(IosKoinModules.all(platform))
+            modules(IosKoinModules.all(platform, academicDate))
         }.koin
         started = koin
         IosCrashHook.install(koin.get<IosAppDiagnostics>())

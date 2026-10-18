@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
@@ -36,6 +37,8 @@ class PlatformCapabilitiesPagesTest {
         qrWidgetAnimation = false,
         qrCustomSpoiler = false,
         wallpaperColors = false,
+        pinWidgets = false,
+        lockScreenWidgets = false,
     )
 
     @BeforeTest
@@ -48,31 +51,32 @@ class PlatformCapabilitiesPagesTest {
     fun qrPageDropsTheTileTheAnimationAndTheCustomImageWithoutTheirCapabilities() = runTest(main.dispatcher) {
         val local = LocalSettings(qrWidget = QrWidgetSettings(spoilerEnabled = true))
         val fixture = createFixture(
-            page = SettingsPage.QR_WIDGET,
+            page = SettingsPage.WIDGETS,
             local = local,
             tileAccess = FakeQuickSettingsTileAccess(canRequest = true),
             capabilities = none
         )
         advanceUntilIdle()
 
-        assertEquals(
-            listOf(SettingRowId.QR_DYNAMIC_COLORS, SettingRowId.QR_SPOILER),
-            fixture.viewModel.allItems().map { it.id }
-        )
-        assertEquals(1, fixture.viewModel.uiState.value.sections.size)
+        val pass = fixture.viewModel.card(WidgetFormat.PASS)
+        assertEquals(listOf(SettingRowId.QR_DYNAMIC_COLORS, SettingRowId.QR_SPOILER), pass.settings.flatMap { it.items }.map { it.id })
+        assertEquals(1, pass.settings.size)
+        // No launcher pinning and no Lock Screen widgets without the capabilities.
+        assertEquals(WidgetCardAction.NONE, pass.action)
+        assertTrue(checkNotNull(fixture.viewModel.uiState.value.gallery).howToAdd)
     }
 
     @Test
     fun qrPageKeepsTheSpoilerGroupWhenOnlyTheAnimationIsOffered() = runTest(main.dispatcher) {
         val fixture = createFixture(
-            page = SettingsPage.QR_WIDGET,
+            page = SettingsPage.WIDGETS,
             capabilities = none.copy(qrWidgetAnimation = true)
         )
         advanceUntilIdle()
 
         assertEquals(
             listOf(SettingRowId.QR_DYNAMIC_COLORS, SettingRowId.QR_SPOILER, SettingRowId.QR_ANIMATION),
-            fixture.viewModel.allItems().map { it.id }
+            fixture.viewModel.card(WidgetFormat.PASS).settings.flatMap { it.items }.map { it.id }
         )
     }
 

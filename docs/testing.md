@@ -78,7 +78,7 @@ They run only on an emulator, because they clear app data. Start one (Android
 Studio's Device Manager or `emulator -avd <name>`), then:
 
 ```bash
-ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui WidgetPreviewTest
+ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui WidgetRenderingTest
 ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui ShellSuite
 ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui all
 ANDROID_SERIAL=emulator-5554 scripts/verify.sh ui @platform   # app/src/androidTest/platform-tests.txt under Test Orchestrator
@@ -131,6 +131,13 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   `AppPlatform.removeWebsiteData`. UI tests launch a Debug build with
   `-itmoUITests` (`XCUIApplication.itmo`, `itmoSignedOut`), which makes that
   removal complete at once; Release builds ignore it.
+- UI tests run on a pinned academic date, this week's Wednesday
+  (`XCUIApplication.academicDate`, launch argument `-itmoAcademicDate`), so the
+  demo's day has lessons on any weekday; a test that needs another day passes
+  `itmo(academicDate:)`. Element checks that guard a blank render use
+  `isDrawn` (`isShown` in scroll loops, `waitUntilDrawn`), not only
+  `isHittable`: a Compose or SwiftUI view can take taps while nothing of it is
+  drawn.
 - `test.sh ui` waits for SpringBoard's notification server to take in the
   installed apps (two minutes after the simulator boots; an app installed
   earlier never gets the notification dialog nor its scheduled notifications),

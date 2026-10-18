@@ -142,7 +142,6 @@ struct MeContent: View {
                 symbol: .widgets,
                 tone: .primary,
                 chevron: true,
-                // The widgets gallery's key: until its page lands, an unknown key opens the settings root.
                 action: { actions.open(AppRoutes.Settings(page: "WIDGETS")) }
             )
             .accessibilityIdentifier("widgets_row")

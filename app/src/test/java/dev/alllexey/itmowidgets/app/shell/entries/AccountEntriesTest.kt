@@ -462,9 +462,13 @@ class AccountEntriesTest {
         clock = kotlin.time.Clock.System,
     )
 
+    /** The widgets gallery gets empty views. */
     private object NoPreviews : WidgetPreviewFactory {
         override fun create(context: Context, scope: CoroutineScope, settings: WidgetPreviewSettings): WidgetPreview =
-            error("the appearance never answers")
+            object : WidgetPreview {
+                override val view: View = View(context)
+                override fun bind(settings: WidgetPreviewSettings) = Unit
+            }
     }
 
     private object NoUpdateAction : UpdateAction {

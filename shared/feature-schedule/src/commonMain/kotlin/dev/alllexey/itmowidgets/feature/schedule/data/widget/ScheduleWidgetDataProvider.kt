@@ -1,17 +1,13 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.widget
 
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
-import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleDays
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPreferences
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelection
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
@@ -21,44 +17,38 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTim
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
+/**
+ * The schedule widgets' data: the own [ScheduleDays] of today and tomorrow (the days Сегодня draws, with their changes
+ * and, while the queue rows are on, the sport queues), signed-out and unavailable states. [load] with `refresh` fetches
+ * first, as every scheduled update does; without it, for the minute ticks of Android's countdown and `сейчас` line, it
+ * reads the cache only and starts no request.
+ */
 class ScheduleWidgetDataProvider(
-    private val repository: ScheduleRepository,
+    private val days: ScheduleDays,
     private val scheduleChecks: ScheduleCheckPreferences,
     private val widgetSettings: WidgetSettingsPreferences,
     private val backend: BackendGate,
     private val timeProvider: AcademicTimeProvider,
     private val selector: ScheduleWidgetSelector,
-    private val pendingBookings: PendingSportBookingsRepository,
     private val tokens: SessionTokenStore,
 ) {
 
-    suspend fun load(): ScheduleWidgetLoadResult {
-        val fetched = fetch { today, preferences ->
-            if (preferences.display.full.showTomorrowWhenTodayIsOver) today.plus(1, DateTimeUnit.DAY) else today
-        }
+    suspend fun load(refresh: Boolean = true): ScheduleWidgetLoadResult {
+        val fetched = fetch(refresh) { today -> today.plus(1, DateTimeUnit.DAY) }
         return when (fetched) {
-            is FetchedSchedule.SignedOut -> signedOut(fetched.preferences)
-            is FetchedSchedule.Unavailable -> unavailable(fetched.preferences)
+            FetchedSchedule.SignedOut -> signedOut()
+            FetchedSchedule.Unavailable -> ScheduleWidgetLoadResult.Unavailable
             is FetchedSchedule.Ready -> ScheduleWidgetLoadResult.Available(
-                selector.select(
-                    schedule = fetched.schedule,
-                    now = fetched.now,
-                    timeZone = timeProvider.timeZone,
-                    preferences = fetched.preferences,
-                    pendingSport = fetched.pendingSport
-                ).let { selection ->
+                selector.select(fetched.days, fetched.now, timeProvider.timeZone, fetched.preferences).let { selection ->
                     // Queue status can change remotely even before a lesson boundary.
-                    if (fetched.pendingRequested) selection.copy(nextUpdateDelay = minOf(
-                        selection.nextUpdateDelay, ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
-                    )) else selection
+                    if (pendingEnabled()) {
+                        selection.copy(nextUpdateDelay = minOf(selection.nextUpdateDelay, ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY))
+                    } else selection
                 }
             )
         }
@@ -72,82 +62,38 @@ class ScheduleWidgetDataProvider(
         require(timeProvider.now() < until) { "Timeline ends at $until, which is not after now" }
         // The selector reads tomorrow of every instant, so the range ends the day after the last covered instant.
         val lastDay = (until - 1.nanoseconds).toLocalDateTime(timeProvider.timeZone).date
-        val fetched = fetch { _, _ -> lastDay.plus(1, DateTimeUnit.DAY) }
-        return when (fetched) {
-            is FetchedSchedule.SignedOut -> ScheduleWidgetTimelineLoadResult.Available(
-                singleEntry(signedOut(fetched.preferences).selection.snapshot, until)
+        return when (val fetched = fetch(refresh = true) { lastDay.plus(1, DateTimeUnit.DAY) }) {
+            FetchedSchedule.SignedOut -> ScheduleWidgetTimelineLoadResult.Available(
+                singleEntry(signedOut().selection.snapshot, until)
             )
-            is FetchedSchedule.Unavailable -> ScheduleWidgetTimelineLoadResult.Unavailable(
-                singleLessonStyle = fetched.preferences.singleLessonStyle,
-                lessonListStyle = fetched.preferences.lessonListStyle
-            )
+            FetchedSchedule.Unavailable -> ScheduleWidgetTimelineLoadResult.Unavailable
             is FetchedSchedule.Ready -> ScheduleWidgetTimelineLoadResult.Available(
-                selector.timeline(
-                    schedule = fetched.schedule,
-                    from = fetched.now,
-                    until = until,
-                    timeZone = timeProvider.timeZone,
-                    preferences = fetched.preferences,
-                    pendingSport = fetched.pendingSport
-                )
+                selector.timeline(fetched.days, fetched.now, until, timeProvider.timeZone, fetched.preferences)
             )
         }
     }
 
-    private suspend fun fetch(lastDate: (LocalDate, ScheduleWidgetPreferences) -> LocalDate): FetchedSchedule {
-        val preferences = readPreferences()
-        if (!tokens.hasRefreshToken()) return FetchedSchedule.SignedOut(preferences)
+    private suspend fun fetch(refresh: Boolean, lastDate: (LocalDate) -> LocalDate): FetchedSchedule {
+        if (!tokens.hasRefreshToken()) return FetchedSchedule.SignedOut
+        val preferences = ScheduleWidgetPreferences(widgetSettings.getScheduleWidgetSettings())
         val now = timeProvider.now()
         val start = now.toLocalDateTime(timeProvider.timeZone).date
-        val end = lastDate(start, preferences)
-
-        val includePending = pendingEnabled()
-        val (refreshResult, pending) = coroutineScope {
-            val optional = async { if (includePending) loadPending() else emptyList() }
-            val official = repository.refreshSchedule(userIsu = null, startDate = start, endDate = end)
-            official to optional.await()
-        }
-        if (!tokens.hasRefreshToken()) return FetchedSchedule.SignedOut(preferences)
-        val cached = repository.observeScheduleForRange(
-            userIsu = null,
-            startDate = start,
-            endDate = end
-        ).first()
-
-        if (refreshResult is AppResult.Failure && cached.isEmpty()) return FetchedSchedule.Unavailable(preferences)
-        return FetchedSchedule.Ready(
-            preferences = preferences,
-            now = now,
-            schedule = cached,
-            pendingSport = if (pendingEnabled()) pending else emptyList(),
-            pendingRequested = includePending
-        )
-    }
-
-    private suspend fun loadPending(): List<PendingSportBooking> = try {
-        pendingBookings.refresh()
-        pendingBookings.getPendingBookings().valueOrNull().orEmpty()
-    } catch (cancellation: CancellationException) {
-        throw cancellation
-    } catch (_: Exception) {
-        emptyList()
+        val end = lastDate(start)
+        val refreshed = if (refresh) days.refresh(userIsu = null, from = start, to = end) else null
+        if (!tokens.hasRefreshToken()) return FetchedSchedule.SignedOut
+        val cached = days.observe(userIsu = null, from = start, to = end).first()
+        if (refreshed is AppResult.Failure && cached.isEmpty()) return FetchedSchedule.Unavailable
+        return FetchedSchedule.Ready(preferences, now, cached)
     }
 
     private suspend fun pendingEnabled(): Boolean =
         scheduleChecks.getScheduleSportAutoSignEnabled() && backend.isOptedIn()
 
-    private fun signedOut(preferences: ScheduleWidgetPreferences) = ScheduleWidgetLoadResult.Available(
+    private suspend fun signedOut() = ScheduleWidgetLoadResult.Available(
         ScheduleWidgetSelection(
-            ScheduleWidgetSnapshot.signedOut(
-                preferences.singleLessonStyle, preferences.lessonListStyle
-            ).withTextSizes(preferences.display),
+            ScheduleWidgetSnapshot.signedOut().withTextSizes(widgetSettings.getScheduleWidgetSettings()),
             ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
         )
-    )
-
-    private fun unavailable(preferences: ScheduleWidgetPreferences) = ScheduleWidgetLoadResult.Unavailable(
-        singleLessonStyle = preferences.singleLessonStyle,
-        lessonListStyle = preferences.lessonListStyle
     )
 
     private fun singleEntry(snapshot: ScheduleWidgetSnapshot, until: Instant): ScheduleWidgetTimeline {
@@ -158,53 +104,31 @@ class ScheduleWidgetDataProvider(
             entries = listOf(ScheduleWidgetTimelineEntry(now, snapshot))
         )
     }
-
-    private suspend fun readPreferences(): ScheduleWidgetPreferences {
-        return ScheduleWidgetPreferences(
-            smartScheduling = widgetSettings.getWidgetSmartSchedulingEnabled(),
-            display = widgetSettings.getScheduleWidgetSettings(),
-            singleLessonStyle = widgetSettings.getSingleLessonWidgetStyle(),
-            lessonListStyle = widgetSettings.getLessonListWidgetStyle()
-        )
-    }
 }
 
 private sealed interface FetchedSchedule {
-    val preferences: ScheduleWidgetPreferences
+    data object SignedOut : FetchedSchedule
 
-    data class SignedOut(override val preferences: ScheduleWidgetPreferences) : FetchedSchedule
-
-    data class Unavailable(override val preferences: ScheduleWidgetPreferences) : FetchedSchedule
+    data object Unavailable : FetchedSchedule
 
     data class Ready(
-        override val preferences: ScheduleWidgetPreferences,
+        val preferences: ScheduleWidgetPreferences,
         val now: Instant,
-        val schedule: List<DaySchedule>,
-        val pendingSport: List<PendingSportBooking>,
-        val pendingRequested: Boolean,
+        val days: List<LessonDay>,
     ) : FetchedSchedule
 }
 
 sealed interface ScheduleWidgetLoadResult {
 
-    data class Available(
-        val selection: ScheduleWidgetSelection
-    ) : ScheduleWidgetLoadResult
+    data class Available(val selection: ScheduleWidgetSelection) : ScheduleWidgetLoadResult
 
-    data class Unavailable(
-        val singleLessonStyle: LessonStyle,
-        val lessonListStyle: LessonStyle,
-    ) : ScheduleWidgetLoadResult
+    /** Nothing cached and the refresh failed: the caller keeps its last snapshot. */
+    data object Unavailable : ScheduleWidgetLoadResult
 }
 
 sealed interface ScheduleWidgetTimelineLoadResult {
 
-    data class Available(
-        val timeline: ScheduleWidgetTimeline
-    ) : ScheduleWidgetTimelineLoadResult
+    data class Available(val timeline: ScheduleWidgetTimeline) : ScheduleWidgetTimelineLoadResult
 
-    data class Unavailable(
-        val singleLessonStyle: LessonStyle,
-        val lessonListStyle: LessonStyle,
-    ) : ScheduleWidgetTimelineLoadResult
+    data object Unavailable : ScheduleWidgetTimelineLoadResult
 }

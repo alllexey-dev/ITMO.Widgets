@@ -39,7 +39,7 @@ internal class SettingsDialogTextSizePreview {
     @Composable
     fun SettingsDialog() = SettingsDialogPreview(
         SettingsDialog.Choice(SettingRowId.COMPACT_WIDGET_TEXT_SIZE),
-        SettingsPreviewData.CompactScheduleWidget,
+        SettingsPreviewData.Widgets,
     )
 }
 
@@ -48,7 +48,7 @@ internal class SettingsDialogQrAnimationPreview {
     @Composable
     fun SettingsDialog() = SettingsDialogPreview(
         SettingsDialog.Choice(SettingRowId.QR_ANIMATION),
-        SettingsPreviewData.QrWidget,
+        SettingsPreviewData.Widgets,
     )
 }
 

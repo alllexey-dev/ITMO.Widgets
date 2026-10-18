@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
@@ -37,6 +38,7 @@ class SettingsViewModel(
     private val provider = pages.forPage(page)
 
     private val notificationPermissionGranted = MutableStateFlow<Boolean?>(null)
+    private val placedWidgets = MutableStateFlow<Map<WidgetFormat, Int>>(emptyMap())
     private val customSpoilerConfigured = MutableStateFlow(false)
     private val customSpoilerBusy = MutableStateFlow(false)
     private val localSettings = repository.observeLocalSettings()
@@ -47,12 +49,14 @@ class SettingsViewModel(
         notificationPermissionGranted,
         customSpoilerConfigured,
         customSpoilerBusy,
-    ) { local, notificationsGranted, hasCustomSpoiler, imageBusy ->
+        placedWidgets,
+    ) { local, notificationsGranted, hasCustomSpoiler, imageBusy, placed ->
         SettingsPageState(
             local = local,
             notificationsGranted = notificationsGranted,
             hasCustomSpoiler = hasCustomSpoiler,
             imageBusy = imageBusy,
+            placedWidgets = placed,
         )
     }
 
@@ -65,8 +69,8 @@ class SettingsViewModel(
                 page = page,
                 sections = provider.sections(page, state),
                 loaded = true,
-                previewSettings = provider.preview(page, state.local),
-                themePreview = provider.themePreview(page, state.local)
+                themePreview = provider.themePreview(page, state.local),
+                gallery = provider.gallery(page, state)
             )
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState(page))
@@ -78,6 +82,11 @@ class SettingsViewModel(
 
     fun onNotificationPermissionChanged(granted: Boolean) {
         notificationPermissionGranted.value = granted
+    }
+
+    /** The home screen holds [count] widgets of [format]: the gallery counts them each time it is shown. */
+    fun onPlacedWidgets(format: WidgetFormat, count: Int) {
+        placedWidgets.value = placedWidgets.value + (format to count)
     }
 
     fun onCustomSpoilerChanged(configured: Boolean, refreshWidgets: Boolean = false, busy: Boolean = false) {

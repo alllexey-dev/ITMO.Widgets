@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import dev.alllexey.itmowidgets.core.settings.HexColor
-import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarBack
@@ -64,17 +63,14 @@ data class SettingsActions(
  */
 object SettingsTestTags {
     const val BACK = "back_button"
-    const val WIDGET_PREVIEW = "widget_preview_container"
     const val SCROLL = "settings_scroll"
     const val FOOTER = "setting_section_footer"
     const val THEME_SAMPLE = "settings_theme_sample"
 }
 
 /**
- * One settings page: the top bar with the page title, the widget the page configures (drawn by the host through
- * [widgetPreview], above the scrolling rows and never scrolled; the appearance page has a sample there, in the colours
- * the app draws now), and the page's [SettingSection]s as compact settings
- * groups.
+ * One settings page: the top bar with the page title, the appearance page's sample in the colours the app draws now
+ * (above the scrolling rows and never scrolled), and the page's [SettingSection]s as compact settings groups.
  * Stateless: a switch shows what [state] says, so a refused, cancelled or failed change never needs undoing on
  * screen. The page's one dialog is [dialogs]: a choice row opens its own, the host opens the calendar one.
  */
@@ -82,7 +78,6 @@ object SettingsTestTags {
 fun SettingsScreen(
     state: SettingsUiState,
     actions: SettingsActions,
-    widgetPreview: @Composable (WidgetPreviewSettings) -> Unit,
     modifier: Modifier = Modifier,
     scrollState: ScrollState = rememberScrollState(),
     dialogs: SettingsDialogState = rememberSettingsDialogState(),
@@ -98,15 +93,6 @@ fun SettingsScreen(
                 )
             },
         )
-        state.previewSettings?.let { settings ->
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = ItmoTheme.spacing.screenMargin)
-                    .padding(bottom = ItmoTheme.spacing.compact)
-                    .testTag(SettingsTestTags.WIDGET_PREVIEW),
-            ) { widgetPreview(settings) }
-        }
         if (state.themePreview != null) {
             AppearanceSample(
                 Modifier

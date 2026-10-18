@@ -25,8 +25,7 @@ builds every text of the screen (`MeUiState`), so the Compose and SwiftUI views 
   only in Android debug builds ([Debug tools](debug.md)), the Telegram channel and GitHub; then `Выйти`.
 - The rows name no route themselves: `MeActions` reaches the host, which maps them. The connection and privacy open
   «Подключение и данные» (`AppRoutes.Settings(SERVICES)`, `PRIVACY`), notifications «Уведомления»
-  (`AppRoutes.Settings(NOTIFICATIONS)`) and widgets the gallery's key `AppRoutes.Settings(WIDGETS)` (the settings
-  root until the gallery's page lands).
+  (`AppRoutes.Settings(NOTIFICATIONS)`) and widgets the widgets gallery (`AppRoutes.Settings(WIDGETS)`).
 - The first frame shows the cached state; a recreated tab is never blank. `StoreScreenshotCapture` sets
   `MeHost.releaseLook`, so a debug build shows the release screen without the developer tools row.
 

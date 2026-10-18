@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The next-lesson widget's lesson (W1), in the lesson card's order: headline, type bar with subject and type, the
+     room big with its building, the countdown. The small widget and the medium widget's hero both include it. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/next_body"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:ignore="UseAppTint">
+
+    <TextView
+        android:id="@+id/next_headline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:maxLines="1"
+        android:textColor="@color/widget_primary"
+        android:textSize="13sp"
+        tools:text="Сейчас, до 13:10" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal">
+
+        <!-- Framework classes: AppCompat overrides lack RemoteViews method annotations. -->
+        <android.widget.ImageView
+            android:id="@+id/next_bar"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_shape_bar" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/next_subject"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:textColor="@color/widget_on_surface"
+                android:textSize="15sp"
+                tools:text="Программирование" />
+
+            <TextView
+                android:id="@+id/next_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/widget_on_surface_variant"
+                android:textSize="12sp"
+                tools:text="Лабораторная" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <android.widget.ImageView
+            android:id="@+id/next_online_icon"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginEnd="4dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_videocam"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/next_place"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/widget_on_surface"
+            android:textSize="28sp"
+            tools:text="1506 Кронва" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ProgressBar
+            android:id="@+id/next_progress"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="4dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:max="1000"
+            android:progressDrawable="@drawable/widget_progress"
+            android:visibility="gone" />
+
+        <android.widget.ImageView
+            android:id="@+id/next_footer_icon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginEnd="4dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_schedule" />
+
+        <TextView
+            android:id="@+id/next_footer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:textColor="@color/widget_on_surface_variant"
+            android:textSize="12sp"
+            tools:text="ещё 48 мин" />
+    </LinearLayout>
+</LinearLayout>

@@ -16,9 +16,8 @@ enum class SettingsPage(val title: UiText) {
     SERVICES(UiText.Res(SettingsStrings.connection_title)),
     PRIVACY(UiText.Res(SettingsStrings.connection_title)),
     NOTIFICATIONS(UiText.Res(SettingsStrings.notifications_title)),
-    COMPACT_SCHEDULE_WIDGET(UiText.Res(SettingsStrings.settings_compact_schedule_widget_title)),
-    FULL_SCHEDULE_WIDGET(UiText.Res(SettingsStrings.settings_full_schedule_widget_title)),
-    QR_WIDGET(UiText.Res(SettingsStrings.settings_group_qr_widget)),
+    /** The widgets gallery; the Profile links to it, so its name is a stable route argument. */
+    WIDGETS(UiText.Res(SettingsStrings.settings_group_widgets)),
     APPEARANCE(UiText.Res(SettingsStrings.settings_appearance_title)),
     HOME(UiText.Res(SettingsStrings.settings_home_title)),
     SCHEDULE(UiText.Res(SettingsStrings.settings_group_schedule)),
@@ -28,8 +27,11 @@ enum class SettingsPage(val title: UiText) {
     companion object {
         const val ARGUMENT = SettingsScreenArgs.PAGE
 
+        /** The per-widget pages the gallery replaced, which placed shortcuts and old links still name. */
+        private val OLD_WIDGET_PAGES = setOf("SCHEDULE_WIDGETS", "COMPACT_SCHEDULE_WIDGET", "FULL_SCHEDULE_WIDGET", "QR_WIDGET")
+
         fun fromArgument(value: String?): SettingsPage = when (value) {
-            "SCHEDULE_WIDGETS" -> COMPACT_SCHEDULE_WIDGET
+            in OLD_WIDGET_PAGES -> WIDGETS
             // The mark checks moved to «Уведомления» with the schedule changes.
             "RECORDBOOK" -> NOTIFICATIONS
             else -> entries.firstOrNull { it.name == value } ?: ROOT

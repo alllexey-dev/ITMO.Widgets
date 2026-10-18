@@ -231,6 +231,8 @@ class OnboardingViewModelTest {
             qrWidgetAnimation = true,
             qrCustomSpoiler = true,
             wallpaperColors = true,
+            pinWidgets = true,
+            lockScreenWidgets = true,
         )
 
         fun lesson(subject: String, start: LocalTime, end: LocalTime) = DayLesson(

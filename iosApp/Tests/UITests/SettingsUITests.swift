@@ -91,10 +91,31 @@ final class SettingsUITests: XCTestCase {
         attachScreenshot(named: "notifications-marks")
     }
 
-    func testQrWidgetPageListsOnlyWhatIosOffers() {
+    /// The gallery opens from the me tab's `widgets_row` with a drawn live preview; the pass sheet lists only what iOS
+    /// offers.
+    func testWidgetsGalleryDrawsPreviewsAndThePassSheetListsOnlyWhatIosOffers() {
         let app = XCUIApplication.itmo(session: .demo)
         app.launch()
-        openPage(app, "qr_widget")
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
+        app.selectTab("me")
+        let entry = element(app, "widgets_row")
+        XCTAssertTrue(entry.waitForExistence(timeout: stepTimeout))
+        for _ in 0..<4 where !entry.isHittable { element(app, "main").swipeUp() }
+        entry.tap()
+        XCTAssertTrue(element(app, "settings.page.widgets").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(
+            element(app, "settings.widgets.next.preview").waitUntilDrawn(timeout: stepTimeout),
+            "the next-lesson preview is drawn"
+        )
+        attachScreenshot(named: "widgets")
+
+        let passSettings = app.buttons["settings.widgets.pass.settings"].firstMatch
+        for _ in 0..<6 where !passSettings.isHittable { element(app, "settings.page.widgets").swipeUp() }
+        passSettings.tap()
+        XCTAssertTrue(
+            element(app, "settings.widgets.sheet.pass").waitUntilDrawn(timeout: stepTimeout), "the pass sheet is drawn"
+        )
+        attachScreenshot(named: "widgets-pass")
 
         XCTAssertTrue(element(app, "settings.row.qr_dynamic_colors").exists)
         XCTAssertTrue(element(app, "settings.row.qr_spoiler").exists)
@@ -132,7 +153,7 @@ final class SettingsUITests: XCTestCase {
             element(app, "settings.page.root").swipeUp()
         }
         XCTAssertTrue(maintenance.waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(maintenance.isHittable, "the last row is reachable at AX1")
+        XCTAssertTrue(maintenance.isShown, "the last row is reachable and drawn at AX1")
         attachScreenshot(named: "root-ax1-end")
     }
 

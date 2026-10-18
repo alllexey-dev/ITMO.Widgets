@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -80,8 +81,13 @@ internal fun TestScope.recordEvents(fixture: Fixture): List<SettingsEvent> {
     return events
 }
 
+/** The page's rows and, on the widgets gallery, the rows of every format's sheet. */
 internal fun SettingsViewModel.allItems(): List<SettingItem> =
-    uiState.value.sections.flatMap(SettingSection::items)
+    uiState.value.sections.flatMap(SettingSection::items) +
+        uiState.value.gallery?.cards.orEmpty().flatMap { card -> card.settings.flatMap(SettingSection::items) }
+
+internal fun SettingsViewModel.card(format: WidgetFormat): WidgetCard =
+    checkNotNull(uiState.value.gallery).cards.single { it.format == format }
 
 internal fun SettingsViewModel.toggle(id: SettingRowId): SettingItem.Toggle =
     allItems().filterIsInstance<SettingItem.Toggle>().single { it.id == id }
@@ -227,12 +233,6 @@ internal class FakeSettingsRepository(
         )
     }
 
-    override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) {
-        widgetTeacherHiddenRequests += hidden
-        local.value = local.value.copy(
-            scheduleWidget = local.value.scheduleWidget.copy(compact = local.value.scheduleWidget.compact.copy(hideTeacher = hidden))
-        )
-    }
 
     val fullWidgetTeacherHiddenRequests = mutableListOf<Boolean>()
 

@@ -2,6 +2,7 @@ import Shared
 import SwiftUI
 import UIKit
 import UserNotifications
+import WidgetKit
 
 /// One settings page: the page's `SettingsViewModel` rendered by `SettingsForm` under the stack's navigation
 /// bar. Android's Compose pages are not used on iOS.
@@ -9,7 +10,9 @@ import UserNotifications
 /// The screen feeds the ViewModel what only iOS knows, on appear and on every return to the app: the notification
 /// permission and Background App Refresh. It answers the page's events with system pages, the router and a short
 /// message at the bottom; the calendar switch asks for calendar access (`CalendarAccess`) and the `.ics` row opens
-/// `IcsExportSheet`. The events of rows iOS does not list (the tile, the custom spoiler) never come.
+/// `IcsExportSheet`. The events of rows iOS does not list (the tile, the custom spoiler) never come. The widgets page
+/// is the gallery (`WidgetGalleryForm`): the screen loads its live previews whenever their settings change and tells
+/// the ViewModel how many widgets of each format WidgetKit has placed.
 struct SettingsScreen: View {
     @State private var model: ObservableViewModel<SettingsViewModel, SettingsUiState>
     @State private var system = SettingsSystemState()
@@ -17,6 +20,7 @@ struct SettingsScreen: View {
     @State private var message: SettingsMessage?
     @State private var showsCalendarRationale = false
     @State private var showsIcsExport = false
+    @State private var widgetPreviews = WidgetGalleryPreviews()
     private let calendarAccess: CalendarAccess
     @Environment(AppRouter.self) private var router
     @Environment(\.openURL) private var openURL
@@ -36,19 +40,20 @@ struct SettingsScreen: View {
     }
 
     var body: some View {
-        SettingsForm(
-            state: model.state,
-            system: system,
-            pendingToggles: pendingToggles,
-            actions: actions
-        )
+        page
         .navigationTitle(Text(verbatim: model.state.page.title.resolved))
+        .navigationSubtitle(Text(verbatim: model.state.gallery?.subtitle?.resolved ?? ""))
         .observing(model)
         .onEvents(of: model, \.events) { event in
             handle(event)
         }
         .task {
             await readSystemState()
+        }
+        // Kotlin's data classes compare by value (`isEqual:`), so a changed setting or theme loads the previews again.
+        .task(id: model.state.gallery?.cards.compactMap { $0.preview as? NSObject }) {
+            guard let cards = model.state.gallery?.cards else { return }
+            widgetPreviews = await WidgetGalleryPreviews.load(cards)
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
@@ -77,6 +82,21 @@ struct SettingsScreen: View {
             IcsExportSheet()
         }
         .accessibilityIdentifier("settings.page.\(model.state.page.name.lowercased())")
+    }
+
+    @ViewBuilder
+    private var page: some View {
+        if model.state.loaded, let gallery = model.state.gallery {
+            WidgetGalleryForm(
+                gallery: gallery,
+                sections: model.state.sections,
+                previews: widgetPreviews,
+                pendingToggles: pendingToggles,
+                actions: actions
+            )
+        } else {
+            SettingsForm(state: model.state, system: system, pendingToggles: pendingToggles, actions: actions)
+        }
     }
 
     private var actions: SettingsFormActions {
@@ -144,6 +164,20 @@ struct SettingsScreen: View {
         let granted = [.authorized, .provisional, .ephemeral].contains(status)
         system.backgroundRefresh = UIApplication.shared.backgroundRefreshStatus
         model.viewModel.onNotificationPermissionChanged(granted: granted)
+        await countPlacedWidgets()
+    }
+
+    /// The home screen widgets of each format WidgetKit has placed; Lock Screen accessories are not counted.
+    private func countPlacedWidgets() async {
+        guard let configurations = try? await WidgetCenter.shared.currentConfigurations() else { return }
+        let home: Set<WidgetFamily> = [.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge]
+        let kinds: [WidgetFormat: String] = [
+            .next: NextLessonWidget.kind, .day: DayWidget.kind, .sport: SportWidget.kind, .pass: QrWidget.kind,
+        ]
+        for (format, kind) in kinds {
+            let count = configurations.filter { $0.kind == kind && home.contains($0.family) }.count
+            model.viewModel.onPlacedWidgets(format: format, count: Int32(count))
+        }
     }
 
     private func open(_ address: String) {

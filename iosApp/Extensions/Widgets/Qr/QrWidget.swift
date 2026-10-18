@@ -1,7 +1,7 @@
 import SwiftUI
 import WidgetKit
 
-/// The home-screen QR pass (master A9): small, one configuration for every placed widget, because Android keeps the
+/// The home-screen pass (`settings_widget_pass_title`): small, one configuration for every placed widget, because Android keeps the
 /// widget options global and they reach the extension in the pass snapshot, not through `AppIntentConfiguration`.
 struct QrWidget: Widget {
     /// A stable identifier (`StableIdentifiersTests`): placed widgets keep it, and the app reloads it by this name.
@@ -14,7 +14,7 @@ struct QrWidget: Widget {
         StaticConfiguration(kind: Self.kind, provider: QrWidgetProvider()) { entry in
             QrWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName(Text(.widgetQrCodeName))
+        .configurationDisplayName(Text(.StringsSettings.settingsWidgetPassTitle))
         .description(Text(.widgetQrCodeDescription))
         .supportedFamilies([.systemSmall])
         .contentMarginsDisabled()

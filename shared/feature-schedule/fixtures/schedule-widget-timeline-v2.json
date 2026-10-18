@@ -1,0 +1,5058 @@
+{
+  "version": 2,
+  "generatedAt": "2026-09-07T09:22:00Z",
+  "validUntil": "2026-09-08T21:00:00Z",
+  "entries": [
+    {
+      "validFrom": "2026-09-07T09:22:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "NOW",
+          "lesson": {
+            "subject": "Программирование",
+            "start": "11:40",
+            "end": "13:10",
+            "startMinute": 700,
+            "endMinute": 790,
+            "typeId": 2,
+            "state": "NOW",
+            "room": "1506",
+            "building": "Кронверкский проспект, 49",
+            "online": false,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 3,
+              "date": "2026-09-07",
+              "subjectName": "Программирование",
+              "typeId": 2,
+              "format": "",
+              "start": "11:40",
+              "end": "13:10",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49"
+            }
+          },
+          "until": "2026-09-07T10:10:00Z",
+          "since": "2026-09-07T08:40:00Z",
+          "window": false,
+          "rest": [
+            {
+              "subject": "Английский язык",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "online": true,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 4,
+                "date": "2026-09-07",
+                "subjectName": "Английский язык",
+                "typeId": 3,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "lastEnd": "18:30",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-07",
+          "tomorrow": false,
+          "summary": {
+            "kind": "REMAINING",
+            "lessons": 2,
+            "sport": true,
+            "to": "18:30"
+          },
+          "lessons": [
+            {
+              "subject": "Математический анализ",
+              "start": "08:20",
+              "end": "09:50",
+              "startMinute": 500,
+              "endMinute": 590,
+              "typeId": 1,
+              "state": "DONE",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 1,
+                "date": "2026-09-07",
+                "subjectName": "Математический анализ",
+                "typeId": 1,
+                "format": "",
+                "start": "08:20",
+                "end": "09:50",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Физика",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 3,
+              "state": "DONE",
+              "room": "2202",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": true,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 2,
+                "date": "2026-09-07",
+                "subjectName": "Физика",
+                "typeId": 3,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "2202",
+                "building": "улица Ломоносова, 9"
+              }
+            },
+            {
+              "subject": "Программирование",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 2,
+              "state": "NOW",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 3,
+                "date": "2026-09-07",
+                "subjectName": "Программирование",
+                "typeId": 2,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Английский язык",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "teacher": "Иванов И. И.",
+              "online": true,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 4,
+                "date": "2026-09-07",
+                "subjectName": "Английский язык",
+                "typeId": 3,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 480,
+          "axisEnd": 1115,
+          "now": 742
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "NOW",
+            "lesson": {
+              "subject": "Программирование",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 2,
+              "state": "NOW",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 3,
+                "date": "2026-09-07",
+                "subjectName": "Программирование",
+                "typeId": 2,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            "until": "2026-09-07T10:10:00Z",
+            "since": "2026-09-07T08:40:00Z",
+            "window": false,
+            "rest": [
+              {
+                "subject": "Английский язык",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "online": true,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 4,
+                  "date": "2026-09-07",
+                  "subjectName": "Английский язык",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "17:00",
+                "end": "18:30",
+                "startMinute": 1020,
+                "endMinute": 1110,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 5,
+                  "date": "2026-09-07",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "17:00",
+                  "end": "18:30",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "lastEnd": "18:30",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-07",
+            "tomorrow": false,
+            "summary": {
+              "kind": "REMAINING",
+              "lessons": 2,
+              "sport": true,
+              "to": "18:30"
+            },
+            "lessons": [
+              {
+                "subject": "Математический анализ",
+                "start": "08:20",
+                "end": "09:50",
+                "startMinute": 500,
+                "endMinute": 590,
+                "typeId": 1,
+                "state": "DONE",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 1,
+                  "date": "2026-09-07",
+                  "subjectName": "Математический анализ",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "08:20",
+                  "end": "09:50",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Физика",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 3,
+                "state": "DONE",
+                "room": "2202",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": true,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 2,
+                  "date": "2026-09-07",
+                  "subjectName": "Физика",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "2202",
+                  "building": "улица Ломоносова, 9"
+                }
+              },
+              {
+                "subject": "Программирование",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 2,
+                "state": "NOW",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 3,
+                  "date": "2026-09-07",
+                  "subjectName": "Программирование",
+                  "typeId": 2,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Английский язык",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "teacher": "Иванов И. И.",
+                "online": true,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 4,
+                  "date": "2026-09-07",
+                  "subjectName": "Английский язык",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "17:00",
+                "end": "18:30",
+                "startMinute": 1020,
+                "endMinute": 1110,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 5,
+                  "date": "2026-09-07",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "17:00",
+                  "end": "18:30",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 480,
+            "axisEnd": 1115,
+            "now": 742
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-07T10:10:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-07T09:25:00Z",
+          "minute": 745
+        },
+        {
+          "at": "2026-09-07T09:30:00Z",
+          "minute": 750
+        },
+        {
+          "at": "2026-09-07T09:35:00Z",
+          "minute": 755
+        },
+        {
+          "at": "2026-09-07T09:40:00Z",
+          "minute": 760
+        },
+        {
+          "at": "2026-09-07T09:45:00Z",
+          "minute": 765
+        },
+        {
+          "at": "2026-09-07T09:50:00Z",
+          "minute": 770
+        },
+        {
+          "at": "2026-09-07T09:55:00Z",
+          "minute": 775
+        },
+        {
+          "at": "2026-09-07T10:00:00Z",
+          "minute": 780
+        },
+        {
+          "at": "2026-09-07T10:05:00Z",
+          "minute": 785
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-07T10:10:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "NEXT",
+          "lesson": {
+            "subject": "Английский язык",
+            "start": "15:20",
+            "end": "16:50",
+            "startMinute": 920,
+            "endMinute": 1010,
+            "typeId": 3,
+            "state": "UPCOMING",
+            "online": true,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 4,
+              "date": "2026-09-07",
+              "subjectName": "Английский язык",
+              "typeId": 3,
+              "format": "",
+              "start": "15:20",
+              "end": "16:50"
+            }
+          },
+          "until": "2026-09-07T12:20:00Z",
+          "window": true,
+          "rest": [
+            {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "lastEnd": "18:30",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-07",
+          "tomorrow": false,
+          "summary": {
+            "kind": "REMAINING",
+            "lessons": 1,
+            "sport": true,
+            "to": "18:30"
+          },
+          "lessons": [
+            {
+              "subject": "Математический анализ",
+              "start": "08:20",
+              "end": "09:50",
+              "startMinute": 500,
+              "endMinute": 590,
+              "typeId": 1,
+              "state": "DONE",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 1,
+                "date": "2026-09-07",
+                "subjectName": "Математический анализ",
+                "typeId": 1,
+                "format": "",
+                "start": "08:20",
+                "end": "09:50",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Физика",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 3,
+              "state": "DONE",
+              "room": "2202",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": true,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 2,
+                "date": "2026-09-07",
+                "subjectName": "Физика",
+                "typeId": 3,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "2202",
+                "building": "улица Ломоносова, 9"
+              }
+            },
+            {
+              "subject": "Программирование",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 2,
+              "state": "DONE",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 3,
+                "date": "2026-09-07",
+                "subjectName": "Программирование",
+                "typeId": 2,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Английский язык",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "teacher": "Иванов И. И.",
+              "online": true,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 4,
+                "date": "2026-09-07",
+                "subjectName": "Английский язык",
+                "typeId": 3,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 480,
+          "axisEnd": 1115,
+          "now": 790
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "NEXT",
+            "lesson": {
+              "subject": "Английский язык",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "online": true,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 4,
+                "date": "2026-09-07",
+                "subjectName": "Английский язык",
+                "typeId": 3,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50"
+              }
+            },
+            "until": "2026-09-07T12:20:00Z",
+            "window": true,
+            "rest": [
+              {
+                "subject": "Плавание",
+                "start": "17:00",
+                "end": "18:30",
+                "startMinute": 1020,
+                "endMinute": 1110,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 5,
+                  "date": "2026-09-07",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "17:00",
+                  "end": "18:30",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "lastEnd": "18:30",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-07",
+            "tomorrow": false,
+            "summary": {
+              "kind": "REMAINING",
+              "lessons": 1,
+              "sport": true,
+              "to": "18:30"
+            },
+            "lessons": [
+              {
+                "subject": "Математический анализ",
+                "start": "08:20",
+                "end": "09:50",
+                "startMinute": 500,
+                "endMinute": 590,
+                "typeId": 1,
+                "state": "DONE",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 1,
+                  "date": "2026-09-07",
+                  "subjectName": "Математический анализ",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "08:20",
+                  "end": "09:50",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Физика",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 3,
+                "state": "DONE",
+                "room": "2202",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": true,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 2,
+                  "date": "2026-09-07",
+                  "subjectName": "Физика",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "2202",
+                  "building": "улица Ломоносова, 9"
+                }
+              },
+              {
+                "subject": "Программирование",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 2,
+                "state": "DONE",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 3,
+                  "date": "2026-09-07",
+                  "subjectName": "Программирование",
+                  "typeId": 2,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Английский язык",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "teacher": "Иванов И. И.",
+                "online": true,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 4,
+                  "date": "2026-09-07",
+                  "subjectName": "Английский язык",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "17:00",
+                "end": "18:30",
+                "startMinute": 1020,
+                "endMinute": 1110,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 5,
+                  "date": "2026-09-07",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "17:00",
+                  "end": "18:30",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 480,
+            "axisEnd": 1115,
+            "now": 790
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-07T12:20:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-07T10:15:00Z",
+          "minute": 795
+        },
+        {
+          "at": "2026-09-07T10:20:00Z",
+          "minute": 800
+        },
+        {
+          "at": "2026-09-07T10:25:00Z",
+          "minute": 805
+        },
+        {
+          "at": "2026-09-07T10:30:00Z",
+          "minute": 810
+        },
+        {
+          "at": "2026-09-07T10:35:00Z",
+          "minute": 815
+        },
+        {
+          "at": "2026-09-07T10:40:00Z",
+          "minute": 820
+        },
+        {
+          "at": "2026-09-07T10:45:00Z",
+          "minute": 825
+        },
+        {
+          "at": "2026-09-07T10:50:00Z",
+          "minute": 830
+        },
+        {
+          "at": "2026-09-07T10:55:00Z",
+          "minute": 835
+        },
+        {
+          "at": "2026-09-07T11:00:00Z",
+          "minute": 840
+        },
+        {
+          "at": "2026-09-07T11:05:00Z",
+          "minute": 845
+        },
+        {
+          "at": "2026-09-07T11:10:00Z",
+          "minute": 850
+        },
+        {
+          "at": "2026-09-07T11:15:00Z",
+          "minute": 855
+        },
+        {
+          "at": "2026-09-07T11:20:00Z",
+          "minute": 860
+        },
+        {
+          "at": "2026-09-07T11:25:00Z",
+          "minute": 865
+        },
+        {
+          "at": "2026-09-07T11:30:00Z",
+          "minute": 870
+        },
+        {
+          "at": "2026-09-07T11:35:00Z",
+          "minute": 875
+        },
+        {
+          "at": "2026-09-07T11:40:00Z",
+          "minute": 880
+        },
+        {
+          "at": "2026-09-07T11:45:00Z",
+          "minute": 885
+        },
+        {
+          "at": "2026-09-07T11:50:00Z",
+          "minute": 890
+        },
+        {
+          "at": "2026-09-07T11:55:00Z",
+          "minute": 895
+        },
+        {
+          "at": "2026-09-07T12:00:00Z",
+          "minute": 900
+        },
+        {
+          "at": "2026-09-07T12:05:00Z",
+          "minute": 905
+        },
+        {
+          "at": "2026-09-07T12:10:00Z",
+          "minute": 910
+        },
+        {
+          "at": "2026-09-07T12:15:00Z",
+          "minute": 915
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-07T12:20:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "NOW",
+          "lesson": {
+            "subject": "Английский язык",
+            "start": "15:20",
+            "end": "16:50",
+            "startMinute": 920,
+            "endMinute": 1010,
+            "typeId": 3,
+            "state": "NOW",
+            "online": true,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 4,
+              "date": "2026-09-07",
+              "subjectName": "Английский язык",
+              "typeId": 3,
+              "format": "",
+              "start": "15:20",
+              "end": "16:50"
+            }
+          },
+          "until": "2026-09-07T13:50:00Z",
+          "since": "2026-09-07T12:20:00Z",
+          "window": false,
+          "rest": [
+            {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "lastEnd": "18:30",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-07",
+          "tomorrow": false,
+          "summary": {
+            "kind": "REMAINING",
+            "lessons": 1,
+            "sport": true,
+            "to": "18:30"
+          },
+          "lessons": [
+            {
+              "subject": "Математический анализ",
+              "start": "08:20",
+              "end": "09:50",
+              "startMinute": 500,
+              "endMinute": 590,
+              "typeId": 1,
+              "state": "DONE",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 1,
+                "date": "2026-09-07",
+                "subjectName": "Математический анализ",
+                "typeId": 1,
+                "format": "",
+                "start": "08:20",
+                "end": "09:50",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Физика",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 3,
+              "state": "DONE",
+              "room": "2202",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": true,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 2,
+                "date": "2026-09-07",
+                "subjectName": "Физика",
+                "typeId": 3,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "2202",
+                "building": "улица Ломоносова, 9"
+              }
+            },
+            {
+              "subject": "Программирование",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 2,
+              "state": "DONE",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 3,
+                "date": "2026-09-07",
+                "subjectName": "Программирование",
+                "typeId": 2,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Английский язык",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 3,
+              "state": "NOW",
+              "teacher": "Иванов И. И.",
+              "online": true,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 4,
+                "date": "2026-09-07",
+                "subjectName": "Английский язык",
+                "typeId": 3,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 480,
+          "axisEnd": 1115,
+          "now": 920
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "NOW",
+            "lesson": {
+              "subject": "Английский язык",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 3,
+              "state": "NOW",
+              "online": true,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 4,
+                "date": "2026-09-07",
+                "subjectName": "Английский язык",
+                "typeId": 3,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50"
+              }
+            },
+            "until": "2026-09-07T13:50:00Z",
+            "since": "2026-09-07T12:20:00Z",
+            "window": false,
+            "rest": [
+              {
+                "subject": "Плавание",
+                "start": "17:00",
+                "end": "18:30",
+                "startMinute": 1020,
+                "endMinute": 1110,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 5,
+                  "date": "2026-09-07",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "17:00",
+                  "end": "18:30",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "lastEnd": "18:30",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-07",
+            "tomorrow": false,
+            "summary": {
+              "kind": "REMAINING",
+              "lessons": 1,
+              "sport": true,
+              "to": "18:30"
+            },
+            "lessons": [
+              {
+                "subject": "Математический анализ",
+                "start": "08:20",
+                "end": "09:50",
+                "startMinute": 500,
+                "endMinute": 590,
+                "typeId": 1,
+                "state": "DONE",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 1,
+                  "date": "2026-09-07",
+                  "subjectName": "Математический анализ",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "08:20",
+                  "end": "09:50",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Физика",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 3,
+                "state": "DONE",
+                "room": "2202",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": true,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 2,
+                  "date": "2026-09-07",
+                  "subjectName": "Физика",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "2202",
+                  "building": "улица Ломоносова, 9"
+                }
+              },
+              {
+                "subject": "Программирование",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 2,
+                "state": "DONE",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 3,
+                  "date": "2026-09-07",
+                  "subjectName": "Программирование",
+                  "typeId": 2,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Английский язык",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 3,
+                "state": "NOW",
+                "teacher": "Иванов И. И.",
+                "online": true,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 4,
+                  "date": "2026-09-07",
+                  "subjectName": "Английский язык",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "17:00",
+                "end": "18:30",
+                "startMinute": 1020,
+                "endMinute": 1110,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 5,
+                  "date": "2026-09-07",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "17:00",
+                  "end": "18:30",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 480,
+            "axisEnd": 1115,
+            "now": 920
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-07T13:50:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-07T12:25:00Z",
+          "minute": 925
+        },
+        {
+          "at": "2026-09-07T12:30:00Z",
+          "minute": 930
+        },
+        {
+          "at": "2026-09-07T12:35:00Z",
+          "minute": 935
+        },
+        {
+          "at": "2026-09-07T12:40:00Z",
+          "minute": 940
+        },
+        {
+          "at": "2026-09-07T12:45:00Z",
+          "minute": 945
+        },
+        {
+          "at": "2026-09-07T12:50:00Z",
+          "minute": 950
+        },
+        {
+          "at": "2026-09-07T12:55:00Z",
+          "minute": 955
+        },
+        {
+          "at": "2026-09-07T13:00:00Z",
+          "minute": 960
+        },
+        {
+          "at": "2026-09-07T13:05:00Z",
+          "minute": 965
+        },
+        {
+          "at": "2026-09-07T13:10:00Z",
+          "minute": 970
+        },
+        {
+          "at": "2026-09-07T13:15:00Z",
+          "minute": 975
+        },
+        {
+          "at": "2026-09-07T13:20:00Z",
+          "minute": 980
+        },
+        {
+          "at": "2026-09-07T13:25:00Z",
+          "minute": 985
+        },
+        {
+          "at": "2026-09-07T13:30:00Z",
+          "minute": 990
+        },
+        {
+          "at": "2026-09-07T13:35:00Z",
+          "minute": 995
+        },
+        {
+          "at": "2026-09-07T13:40:00Z",
+          "minute": 1000
+        },
+        {
+          "at": "2026-09-07T13:45:00Z",
+          "minute": 1005
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-07T13:50:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "NEXT",
+          "lesson": {
+            "subject": "Плавание",
+            "start": "17:00",
+            "end": "18:30",
+            "startMinute": 1020,
+            "endMinute": 1110,
+            "typeId": 11,
+            "state": "UPCOMING",
+            "room": "бассейн",
+            "building": "улица Ломоносова, 9",
+            "online": false,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 5,
+              "date": "2026-09-07",
+              "subjectName": "Плавание",
+              "typeId": 11,
+              "format": "",
+              "start": "17:00",
+              "end": "18:30",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9"
+            }
+          },
+          "until": "2026-09-07T14:00:00Z",
+          "window": false,
+          "rest": [],
+          "lastEnd": "18:30",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-07",
+          "tomorrow": false,
+          "summary": {
+            "kind": "REMAINING",
+            "lessons": 0,
+            "sport": true,
+            "to": "18:30"
+          },
+          "lessons": [
+            {
+              "subject": "Математический анализ",
+              "start": "08:20",
+              "end": "09:50",
+              "startMinute": 500,
+              "endMinute": 590,
+              "typeId": 1,
+              "state": "DONE",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 1,
+                "date": "2026-09-07",
+                "subjectName": "Математический анализ",
+                "typeId": 1,
+                "format": "",
+                "start": "08:20",
+                "end": "09:50",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Физика",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 3,
+              "state": "DONE",
+              "room": "2202",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": true,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 2,
+                "date": "2026-09-07",
+                "subjectName": "Физика",
+                "typeId": 3,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "2202",
+                "building": "улица Ломоносова, 9"
+              }
+            },
+            {
+              "subject": "Программирование",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 2,
+              "state": "DONE",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 3,
+                "date": "2026-09-07",
+                "subjectName": "Программирование",
+                "typeId": 2,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Английский язык",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 3,
+              "state": "DONE",
+              "teacher": "Иванов И. И.",
+              "online": true,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 4,
+                "date": "2026-09-07",
+                "subjectName": "Английский язык",
+                "typeId": 3,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 480,
+          "axisEnd": 1115,
+          "now": 1010
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "NEXT",
+            "lesson": {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            },
+            "until": "2026-09-07T14:00:00Z",
+            "window": false,
+            "rest": [],
+            "lastEnd": "18:30",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-07",
+            "tomorrow": false,
+            "summary": {
+              "kind": "REMAINING",
+              "lessons": 0,
+              "sport": true,
+              "to": "18:30"
+            },
+            "lessons": [
+              {
+                "subject": "Математический анализ",
+                "start": "08:20",
+                "end": "09:50",
+                "startMinute": 500,
+                "endMinute": 590,
+                "typeId": 1,
+                "state": "DONE",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 1,
+                  "date": "2026-09-07",
+                  "subjectName": "Математический анализ",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "08:20",
+                  "end": "09:50",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Физика",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 3,
+                "state": "DONE",
+                "room": "2202",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": true,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 2,
+                  "date": "2026-09-07",
+                  "subjectName": "Физика",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "2202",
+                  "building": "улица Ломоносова, 9"
+                }
+              },
+              {
+                "subject": "Программирование",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 2,
+                "state": "DONE",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 3,
+                  "date": "2026-09-07",
+                  "subjectName": "Программирование",
+                  "typeId": 2,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Английский язык",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 3,
+                "state": "DONE",
+                "teacher": "Иванов И. И.",
+                "online": true,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 4,
+                  "date": "2026-09-07",
+                  "subjectName": "Английский язык",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "17:00",
+                "end": "18:30",
+                "startMinute": 1020,
+                "endMinute": 1110,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 5,
+                  "date": "2026-09-07",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "17:00",
+                  "end": "18:30",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 480,
+            "axisEnd": 1115,
+            "now": 1010
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-07T14:00:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-07T13:55:00Z",
+          "minute": 1015
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-07T14:00:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "NOW",
+          "lesson": {
+            "subject": "Плавание",
+            "start": "17:00",
+            "end": "18:30",
+            "startMinute": 1020,
+            "endMinute": 1110,
+            "typeId": 11,
+            "state": "NOW",
+            "room": "бассейн",
+            "building": "улица Ломоносова, 9",
+            "online": false,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 5,
+              "date": "2026-09-07",
+              "subjectName": "Плавание",
+              "typeId": 11,
+              "format": "",
+              "start": "17:00",
+              "end": "18:30",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9"
+            }
+          },
+          "until": "2026-09-07T15:30:00Z",
+          "since": "2026-09-07T14:00:00Z",
+          "window": false,
+          "rest": [],
+          "lastEnd": "18:30",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-07",
+          "tomorrow": false,
+          "summary": {
+            "kind": "REMAINING",
+            "lessons": 0,
+            "sport": true,
+            "to": "18:30"
+          },
+          "lessons": [
+            {
+              "subject": "Математический анализ",
+              "start": "08:20",
+              "end": "09:50",
+              "startMinute": 500,
+              "endMinute": 590,
+              "typeId": 1,
+              "state": "DONE",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 1,
+                "date": "2026-09-07",
+                "subjectName": "Математический анализ",
+                "typeId": 1,
+                "format": "",
+                "start": "08:20",
+                "end": "09:50",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Физика",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 3,
+              "state": "DONE",
+              "room": "2202",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": true,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 2,
+                "date": "2026-09-07",
+                "subjectName": "Физика",
+                "typeId": 3,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "2202",
+                "building": "улица Ломоносова, 9"
+              }
+            },
+            {
+              "subject": "Программирование",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 2,
+              "state": "DONE",
+              "room": "1506",
+              "building": "Кронверкский проспект, 49",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 3,
+                "date": "2026-09-07",
+                "subjectName": "Программирование",
+                "typeId": 2,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49"
+              }
+            },
+            {
+              "subject": "Английский язык",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 3,
+              "state": "DONE",
+              "teacher": "Иванов И. И.",
+              "online": true,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 4,
+                "date": "2026-09-07",
+                "subjectName": "Английский язык",
+                "typeId": 3,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "NOW",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 480,
+          "axisEnd": 1115,
+          "now": 1020
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "NOW",
+            "lesson": {
+              "subject": "Плавание",
+              "start": "17:00",
+              "end": "18:30",
+              "startMinute": 1020,
+              "endMinute": 1110,
+              "typeId": 11,
+              "state": "NOW",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 5,
+                "date": "2026-09-07",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "17:00",
+                "end": "18:30",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            },
+            "until": "2026-09-07T15:30:00Z",
+            "since": "2026-09-07T14:00:00Z",
+            "window": false,
+            "rest": [],
+            "lastEnd": "18:30",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-07",
+            "tomorrow": false,
+            "summary": {
+              "kind": "REMAINING",
+              "lessons": 0,
+              "sport": true,
+              "to": "18:30"
+            },
+            "lessons": [
+              {
+                "subject": "Математический анализ",
+                "start": "08:20",
+                "end": "09:50",
+                "startMinute": 500,
+                "endMinute": 590,
+                "typeId": 1,
+                "state": "DONE",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 1,
+                  "date": "2026-09-07",
+                  "subjectName": "Математический анализ",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "08:20",
+                  "end": "09:50",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Физика",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 3,
+                "state": "DONE",
+                "room": "2202",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": true,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 2,
+                  "date": "2026-09-07",
+                  "subjectName": "Физика",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "2202",
+                  "building": "улица Ломоносова, 9"
+                }
+              },
+              {
+                "subject": "Программирование",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 2,
+                "state": "DONE",
+                "room": "1506",
+                "building": "Кронверкский проспект, 49",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 3,
+                  "date": "2026-09-07",
+                  "subjectName": "Программирование",
+                  "typeId": 2,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "1506",
+                  "building": "Кронверкский проспект, 49"
+                }
+              },
+              {
+                "subject": "Английский язык",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 3,
+                "state": "DONE",
+                "teacher": "Иванов И. И.",
+                "online": true,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 4,
+                  "date": "2026-09-07",
+                  "subjectName": "Английский язык",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "17:00",
+                "end": "18:30",
+                "startMinute": 1020,
+                "endMinute": 1110,
+                "typeId": 11,
+                "state": "NOW",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 5,
+                  "date": "2026-09-07",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "17:00",
+                  "end": "18:30",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 480,
+            "axisEnd": 1115,
+            "now": 1020
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-07T15:30:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-07T14:05:00Z",
+          "minute": 1025
+        },
+        {
+          "at": "2026-09-07T14:10:00Z",
+          "minute": 1030
+        },
+        {
+          "at": "2026-09-07T14:15:00Z",
+          "minute": 1035
+        },
+        {
+          "at": "2026-09-07T14:20:00Z",
+          "minute": 1040
+        },
+        {
+          "at": "2026-09-07T14:25:00Z",
+          "minute": 1045
+        },
+        {
+          "at": "2026-09-07T14:30:00Z",
+          "minute": 1050
+        },
+        {
+          "at": "2026-09-07T14:35:00Z",
+          "minute": 1055
+        },
+        {
+          "at": "2026-09-07T14:40:00Z",
+          "minute": 1060
+        },
+        {
+          "at": "2026-09-07T14:45:00Z",
+          "minute": 1065
+        },
+        {
+          "at": "2026-09-07T14:50:00Z",
+          "minute": 1070
+        },
+        {
+          "at": "2026-09-07T14:55:00Z",
+          "minute": 1075
+        },
+        {
+          "at": "2026-09-07T15:00:00Z",
+          "minute": 1080
+        },
+        {
+          "at": "2026-09-07T15:05:00Z",
+          "minute": 1085
+        },
+        {
+          "at": "2026-09-07T15:10:00Z",
+          "minute": 1090
+        },
+        {
+          "at": "2026-09-07T15:15:00Z",
+          "minute": 1095
+        },
+        {
+          "at": "2026-09-07T15:20:00Z",
+          "minute": 1100
+        },
+        {
+          "at": "2026-09-07T15:25:00Z",
+          "minute": 1105
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-07T15:30:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "TOMORROW",
+          "lesson": {
+            "subject": "Алгоритмы и структуры данных",
+            "start": "10:00",
+            "end": "11:30",
+            "startMinute": 600,
+            "endMinute": 690,
+            "typeId": 1,
+            "state": "UPCOMING",
+            "room": "1404",
+            "building": "Биржевая линия, 14",
+            "online": false,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 6,
+              "date": "2026-09-08",
+              "subjectName": "Алгоритмы и структуры данных",
+              "typeId": 1,
+              "format": "",
+              "start": "10:00",
+              "end": "11:30",
+              "room": "1404",
+              "building": "Биржевая линия, 14"
+            }
+          },
+          "window": false,
+          "rest": [
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "lastEnd": "16:50",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-08",
+          "tomorrow": true,
+          "summary": {
+            "kind": "OVER",
+            "lessons": 0,
+            "sport": false
+          },
+          "lessons": [
+            {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "UPCOMING",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 600,
+          "axisEnd": 1015
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "TOMORROW",
+            "lesson": {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "UPCOMING",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            "window": false,
+            "rest": [
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "lastEnd": "13:10",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": true,
+            "summary": {
+              "kind": "OVER",
+              "lessons": 0,
+              "sport": false
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "UPCOMING",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "gaps": [],
+            "axisStart": 600,
+            "axisEnd": 795
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-07T21:00:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": []
+    },
+    {
+      "validFrom": "2026-09-07T21:00:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "FIRST",
+          "lesson": {
+            "subject": "Алгоритмы и структуры данных",
+            "start": "10:00",
+            "end": "11:30",
+            "startMinute": 600,
+            "endMinute": 690,
+            "typeId": 1,
+            "state": "UPCOMING",
+            "room": "1404",
+            "building": "Биржевая линия, 14",
+            "online": false,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 6,
+              "date": "2026-09-08",
+              "subjectName": "Алгоритмы и структуры данных",
+              "typeId": 1,
+              "format": "",
+              "start": "10:00",
+              "end": "11:30",
+              "room": "1404",
+              "building": "Биржевая линия, 14"
+            }
+          },
+          "until": "2026-09-08T07:00:00Z",
+          "window": false,
+          "rest": [
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "lastEnd": "16:50",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-08",
+          "tomorrow": false,
+          "summary": {
+            "kind": "PLANNED",
+            "lessons": 2,
+            "sport": true,
+            "from": "10:00",
+            "to": "16:50"
+          },
+          "lessons": [
+            {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "UPCOMING",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 600,
+          "axisEnd": 1015
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "FIRST",
+            "lesson": {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "UPCOMING",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            "until": "2026-09-08T07:00:00Z",
+            "window": false,
+            "rest": [
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "lastEnd": "13:10",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "PLANNED",
+              "lessons": 2,
+              "sport": false,
+              "from": "10:00",
+              "to": "13:10"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "UPCOMING",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "gaps": [],
+            "axisStart": 600,
+            "axisEnd": 795
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-08T06:00:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": []
+    },
+    {
+      "validFrom": "2026-09-08T06:00:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "FIRST",
+          "lesson": {
+            "subject": "Алгоритмы и структуры данных",
+            "start": "10:00",
+            "end": "11:30",
+            "startMinute": 600,
+            "endMinute": 690,
+            "typeId": 1,
+            "state": "UPCOMING",
+            "room": "1404",
+            "building": "Биржевая линия, 14",
+            "online": false,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 6,
+              "date": "2026-09-08",
+              "subjectName": "Алгоритмы и структуры данных",
+              "typeId": 1,
+              "format": "",
+              "start": "10:00",
+              "end": "11:30",
+              "room": "1404",
+              "building": "Биржевая линия, 14"
+            }
+          },
+          "until": "2026-09-08T07:00:00Z",
+          "window": false,
+          "rest": [
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "lastEnd": "16:50",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-08",
+          "tomorrow": false,
+          "summary": {
+            "kind": "PLANNED",
+            "lessons": 2,
+            "sport": true,
+            "from": "10:00",
+            "to": "16:50"
+          },
+          "lessons": [
+            {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "UPCOMING",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 540,
+          "axisEnd": 1015,
+          "now": 540
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "FIRST",
+            "lesson": {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "UPCOMING",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            "until": "2026-09-08T07:00:00Z",
+            "window": false,
+            "rest": [
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "lastEnd": "13:10",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "PLANNED",
+              "lessons": 2,
+              "sport": false,
+              "from": "10:00",
+              "to": "13:10"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "UPCOMING",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "gaps": [],
+            "axisStart": 540,
+            "axisEnd": 795,
+            "now": 540
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-08T07:00:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-08T06:05:00Z",
+          "minute": 545
+        },
+        {
+          "at": "2026-09-08T06:10:00Z",
+          "minute": 550
+        },
+        {
+          "at": "2026-09-08T06:15:00Z",
+          "minute": 555
+        },
+        {
+          "at": "2026-09-08T06:20:00Z",
+          "minute": 560
+        },
+        {
+          "at": "2026-09-08T06:25:00Z",
+          "minute": 565
+        },
+        {
+          "at": "2026-09-08T06:30:00Z",
+          "minute": 570
+        },
+        {
+          "at": "2026-09-08T06:35:00Z",
+          "minute": 575
+        },
+        {
+          "at": "2026-09-08T06:40:00Z",
+          "minute": 580
+        },
+        {
+          "at": "2026-09-08T06:45:00Z",
+          "minute": 585
+        },
+        {
+          "at": "2026-09-08T06:50:00Z",
+          "minute": 590
+        },
+        {
+          "at": "2026-09-08T06:55:00Z",
+          "minute": 595
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-08T07:00:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "NOW",
+          "lesson": {
+            "subject": "Алгоритмы и структуры данных",
+            "start": "10:00",
+            "end": "11:30",
+            "startMinute": 600,
+            "endMinute": 690,
+            "typeId": 1,
+            "state": "NOW",
+            "room": "1404",
+            "building": "Биржевая линия, 14",
+            "online": false,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 6,
+              "date": "2026-09-08",
+              "subjectName": "Алгоритмы и структуры данных",
+              "typeId": 1,
+              "format": "",
+              "start": "10:00",
+              "end": "11:30",
+              "room": "1404",
+              "building": "Биржевая линия, 14"
+            }
+          },
+          "until": "2026-09-08T08:30:00Z",
+          "since": "2026-09-08T07:00:00Z",
+          "window": false,
+          "rest": [
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "lastEnd": "16:50",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-08",
+          "tomorrow": false,
+          "summary": {
+            "kind": "REMAINING",
+            "lessons": 2,
+            "sport": true,
+            "to": "16:50"
+          },
+          "lessons": [
+            {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "NOW",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 600,
+          "axisEnd": 1015,
+          "now": 600
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "NOW",
+            "lesson": {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "NOW",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            "until": "2026-09-08T08:30:00Z",
+            "since": "2026-09-08T07:00:00Z",
+            "window": false,
+            "rest": [
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "lastEnd": "13:10",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "REMAINING",
+              "lessons": 2,
+              "sport": false,
+              "to": "13:10"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "NOW",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "gaps": [],
+            "axisStart": 600,
+            "axisEnd": 795,
+            "now": 600
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-08T08:30:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-08T07:05:00Z",
+          "minute": 605
+        },
+        {
+          "at": "2026-09-08T07:10:00Z",
+          "minute": 610
+        },
+        {
+          "at": "2026-09-08T07:15:00Z",
+          "minute": 615
+        },
+        {
+          "at": "2026-09-08T07:20:00Z",
+          "minute": 620
+        },
+        {
+          "at": "2026-09-08T07:25:00Z",
+          "minute": 625
+        },
+        {
+          "at": "2026-09-08T07:30:00Z",
+          "minute": 630
+        },
+        {
+          "at": "2026-09-08T07:35:00Z",
+          "minute": 635
+        },
+        {
+          "at": "2026-09-08T07:40:00Z",
+          "minute": 640
+        },
+        {
+          "at": "2026-09-08T07:45:00Z",
+          "minute": 645
+        },
+        {
+          "at": "2026-09-08T07:50:00Z",
+          "minute": 650
+        },
+        {
+          "at": "2026-09-08T07:55:00Z",
+          "minute": 655
+        },
+        {
+          "at": "2026-09-08T08:00:00Z",
+          "minute": 660
+        },
+        {
+          "at": "2026-09-08T08:05:00Z",
+          "minute": 665
+        },
+        {
+          "at": "2026-09-08T08:10:00Z",
+          "minute": 670
+        },
+        {
+          "at": "2026-09-08T08:15:00Z",
+          "minute": 675
+        },
+        {
+          "at": "2026-09-08T08:20:00Z",
+          "minute": 680
+        },
+        {
+          "at": "2026-09-08T08:25:00Z",
+          "minute": 685
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-08T08:30:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "NEXT",
+          "lesson": {
+            "subject": "История",
+            "start": "11:40",
+            "end": "13:10",
+            "startMinute": 700,
+            "endMinute": 790,
+            "typeId": 3,
+            "state": "UPCOMING",
+            "room": "311",
+            "building": "улица Чайковского, 11",
+            "online": false,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 7,
+              "date": "2026-09-08",
+              "subjectName": "История",
+              "typeId": 3,
+              "format": "",
+              "start": "11:40",
+              "end": "13:10",
+              "room": "311",
+              "building": "улица Чайковского, 11"
+            }
+          },
+          "until": "2026-09-08T08:40:00Z",
+          "window": false,
+          "rest": [
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "lastEnd": "16:50",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-08",
+          "tomorrow": false,
+          "summary": {
+            "kind": "REMAINING",
+            "lessons": 1,
+            "sport": true,
+            "to": "16:50"
+          },
+          "lessons": [
+            {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "DONE",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 600,
+          "axisEnd": 1015,
+          "now": 690
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "NEXT",
+            "lesson": {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "UPCOMING",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            "until": "2026-09-08T08:40:00Z",
+            "window": false,
+            "rest": [],
+            "lastEnd": "13:10",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "REMAINING",
+              "lessons": 1,
+              "sport": false,
+              "to": "13:10"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "DONE",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "gaps": [],
+            "axisStart": 600,
+            "axisEnd": 795,
+            "now": 690
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-08T08:40:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-08T08:35:00Z",
+          "minute": 695
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-08T08:40:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "CONTENT",
+          "moment": "NOW",
+          "lesson": {
+            "subject": "История",
+            "start": "11:40",
+            "end": "13:10",
+            "startMinute": 700,
+            "endMinute": 790,
+            "typeId": 3,
+            "state": "NOW",
+            "room": "311",
+            "building": "улица Чайковского, 11",
+            "online": false,
+            "changed": false,
+            "cancelled": false,
+            "queued": false,
+            "queuePosition": 0,
+            "queueTotal": 0,
+            "lesson": {
+              "pairId": 7,
+              "date": "2026-09-08",
+              "subjectName": "История",
+              "typeId": 3,
+              "format": "",
+              "start": "11:40",
+              "end": "13:10",
+              "room": "311",
+              "building": "улица Чайковского, 11"
+            }
+          },
+          "until": "2026-09-08T10:10:00Z",
+          "since": "2026-09-08T08:40:00Z",
+          "window": false,
+          "rest": [
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "lastEnd": "16:50",
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-08",
+          "tomorrow": false,
+          "summary": {
+            "kind": "REMAINING",
+            "lessons": 1,
+            "sport": true,
+            "to": "16:50"
+          },
+          "lessons": [
+            {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "DONE",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "NOW",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 600,
+          "axisEnd": 1015,
+          "now": 700
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "CONTENT",
+            "moment": "NOW",
+            "lesson": {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "NOW",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            "until": "2026-09-08T10:10:00Z",
+            "since": "2026-09-08T08:40:00Z",
+            "window": false,
+            "rest": [],
+            "lastEnd": "13:10",
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "REMAINING",
+              "lessons": 1,
+              "sport": false,
+              "to": "13:10"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "DONE",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "NOW",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              }
+            ],
+            "gaps": [],
+            "axisStart": 600,
+            "axisEnd": 795,
+            "now": 700
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-08T10:10:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-08T08:45:00Z",
+          "minute": 705
+        },
+        {
+          "at": "2026-09-08T08:50:00Z",
+          "minute": 710
+        },
+        {
+          "at": "2026-09-08T08:55:00Z",
+          "minute": 715
+        },
+        {
+          "at": "2026-09-08T09:00:00Z",
+          "minute": 720
+        },
+        {
+          "at": "2026-09-08T09:05:00Z",
+          "minute": 725
+        },
+        {
+          "at": "2026-09-08T09:10:00Z",
+          "minute": 730
+        },
+        {
+          "at": "2026-09-08T09:15:00Z",
+          "minute": 735
+        },
+        {
+          "at": "2026-09-08T09:20:00Z",
+          "minute": 740
+        },
+        {
+          "at": "2026-09-08T09:25:00Z",
+          "minute": 745
+        },
+        {
+          "at": "2026-09-08T09:30:00Z",
+          "minute": 750
+        },
+        {
+          "at": "2026-09-08T09:35:00Z",
+          "minute": 755
+        },
+        {
+          "at": "2026-09-08T09:40:00Z",
+          "minute": 760
+        },
+        {
+          "at": "2026-09-08T09:45:00Z",
+          "minute": 765
+        },
+        {
+          "at": "2026-09-08T09:50:00Z",
+          "minute": 770
+        },
+        {
+          "at": "2026-09-08T09:55:00Z",
+          "minute": 775
+        },
+        {
+          "at": "2026-09-08T10:00:00Z",
+          "minute": 780
+        },
+        {
+          "at": "2026-09-08T10:05:00Z",
+          "minute": 785
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-08T10:10:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "EMPTY",
+          "window": false,
+          "rest": [],
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "CONTENT",
+          "date": "2026-09-08",
+          "tomorrow": false,
+          "summary": {
+            "kind": "REMAINING",
+            "lessons": 0,
+            "sport": true,
+            "to": "16:50"
+          },
+          "lessons": [
+            {
+              "subject": "Алгоритмы и структуры данных",
+              "start": "10:00",
+              "end": "11:30",
+              "startMinute": 600,
+              "endMinute": 690,
+              "typeId": 1,
+              "state": "DONE",
+              "room": "1404",
+              "building": "Биржевая линия, 14",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 6,
+                "date": "2026-09-08",
+                "subjectName": "Алгоритмы и структуры данных",
+                "typeId": 1,
+                "format": "",
+                "start": "10:00",
+                "end": "11:30",
+                "room": "1404",
+                "building": "Биржевая линия, 14"
+              }
+            },
+            {
+              "subject": "История",
+              "start": "11:40",
+              "end": "13:10",
+              "startMinute": 700,
+              "endMinute": 790,
+              "typeId": 3,
+              "state": "DONE",
+              "room": "311",
+              "building": "улица Чайковского, 11",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": false,
+              "queuePosition": 0,
+              "queueTotal": 0,
+              "lesson": {
+                "pairId": 7,
+                "date": "2026-09-08",
+                "subjectName": "История",
+                "typeId": 3,
+                "format": "",
+                "start": "11:40",
+                "end": "13:10",
+                "room": "311",
+                "building": "улица Чайковского, 11"
+              }
+            },
+            {
+              "subject": "Плавание",
+              "start": "15:20",
+              "end": "16:50",
+              "startMinute": 920,
+              "endMinute": 1010,
+              "typeId": 11,
+              "state": "UPCOMING",
+              "room": "бассейн",
+              "building": "улица Ломоносова, 9",
+              "teacher": "Иванов И. И.",
+              "online": false,
+              "changed": false,
+              "cancelled": false,
+              "queued": true,
+              "queuePosition": 2,
+              "queueTotal": 5,
+              "lesson": {
+                "pairId": 8,
+                "date": "2026-09-08",
+                "subjectName": "Плавание",
+                "typeId": 11,
+                "format": "",
+                "start": "15:20",
+                "end": "16:50",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9"
+              }
+            }
+          ],
+          "gaps": [
+            {
+              "startMinute": 790,
+              "endMinute": 920
+            }
+          ],
+          "axisStart": 600,
+          "axisEnd": 1015,
+          "now": 790
+        },
+        "officialFallback": {
+          "next": {
+            "kind": "EMPTY",
+            "window": false,
+            "rest": [],
+            "todayHadLessons": true
+          },
+          "day": {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": true,
+            "summary": {
+              "kind": "OVER",
+              "lessons": 0,
+              "sport": false
+            },
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          "compactTextSize": "NORMAL",
+          "fullTextSize": "LARGE"
+        },
+        "pendingValidUntil": "2026-09-08T12:20:00Z",
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": [
+        {
+          "at": "2026-09-08T10:15:00Z",
+          "minute": 795
+        },
+        {
+          "at": "2026-09-08T10:20:00Z",
+          "minute": 800
+        },
+        {
+          "at": "2026-09-08T10:25:00Z",
+          "minute": 805
+        },
+        {
+          "at": "2026-09-08T10:30:00Z",
+          "minute": 810
+        },
+        {
+          "at": "2026-09-08T10:35:00Z",
+          "minute": 815
+        },
+        {
+          "at": "2026-09-08T10:40:00Z",
+          "minute": 820
+        },
+        {
+          "at": "2026-09-08T10:45:00Z",
+          "minute": 825
+        },
+        {
+          "at": "2026-09-08T10:50:00Z",
+          "minute": 830
+        },
+        {
+          "at": "2026-09-08T10:55:00Z",
+          "minute": 835
+        },
+        {
+          "at": "2026-09-08T11:00:00Z",
+          "minute": 840
+        },
+        {
+          "at": "2026-09-08T11:05:00Z",
+          "minute": 845
+        },
+        {
+          "at": "2026-09-08T11:10:00Z",
+          "minute": 850
+        },
+        {
+          "at": "2026-09-08T11:15:00Z",
+          "minute": 855
+        },
+        {
+          "at": "2026-09-08T11:20:00Z",
+          "minute": 860
+        },
+        {
+          "at": "2026-09-08T11:25:00Z",
+          "minute": 865
+        },
+        {
+          "at": "2026-09-08T11:30:00Z",
+          "minute": 870
+        },
+        {
+          "at": "2026-09-08T11:35:00Z",
+          "minute": 875
+        },
+        {
+          "at": "2026-09-08T11:40:00Z",
+          "minute": 880
+        },
+        {
+          "at": "2026-09-08T11:45:00Z",
+          "minute": 885
+        },
+        {
+          "at": "2026-09-08T11:50:00Z",
+          "minute": 890
+        },
+        {
+          "at": "2026-09-08T11:55:00Z",
+          "minute": 895
+        },
+        {
+          "at": "2026-09-08T12:00:00Z",
+          "minute": 900
+        },
+        {
+          "at": "2026-09-08T12:05:00Z",
+          "minute": 905
+        },
+        {
+          "at": "2026-09-08T12:10:00Z",
+          "minute": 910
+        },
+        {
+          "at": "2026-09-08T12:15:00Z",
+          "minute": 915
+        }
+      ]
+    },
+    {
+      "validFrom": "2026-09-08T12:20:00Z",
+      "snapshot": {
+        "next": {
+          "kind": "EMPTY",
+          "window": false,
+          "rest": [],
+          "todayHadLessons": true
+        },
+        "day": {
+          "kind": "EMPTY",
+          "date": "2026-09-09",
+          "tomorrow": true,
+          "summary": {
+            "kind": "OVER",
+            "lessons": 0,
+            "sport": false
+          },
+          "lessons": [],
+          "gaps": [],
+          "axisStart": 0,
+          "axisEnd": 0
+        },
+        "compactTextSize": "NORMAL",
+        "fullTextSize": "LARGE"
+      },
+      "nowTicks": []
+    }
+  ]
+}

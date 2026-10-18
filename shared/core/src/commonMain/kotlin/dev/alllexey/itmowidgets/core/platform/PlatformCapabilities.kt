@@ -25,4 +25,8 @@ data class PlatformCapabilities(
     val qrCustomSpoiler: Boolean,
     /** The wallpaper's colours as a choice of the accent colour setting: Android 12+ only. */
     val wallpaperColors: Boolean,
+    /** The launcher places a widget the app asks for (`Добавить` in the widgets gallery); iOS says how to add one. */
+    val pinWidgets: Boolean,
+    /** Lock Screen widgets and the pass Control, listed in the widgets gallery. */
+    val lockScreenWidgets: Boolean,
 )

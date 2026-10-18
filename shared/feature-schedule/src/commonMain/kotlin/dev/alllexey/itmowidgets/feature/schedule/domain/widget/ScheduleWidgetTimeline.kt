@@ -17,8 +17,8 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * What the schedule widgets show from [generatedAt] to [validUntil]: each entry holds from its `validFrom` to the next
  * entry's, the last one to [validUntil]. Every entry equals [ScheduleWidgetSelector.select] at any instant of its
- * interval, except that a pending-sport snapshot's `pendingValidUntil` is the end of the entry. [palette] is the app's
- * colours while «Виджеты в цвет темы» is on, absent otherwise (additive in version 1).
+ * interval, except that a pending-sport snapshot's `pendingValidUntil` is the end of the entry and the day's `now`
+ * minute holds until the entry's next [NowTick]. [palette] is the app's colours while «Виджеты в цвет темы» is on.
  */
 @Serializable
 data class ScheduleWidgetTimeline(
@@ -39,15 +39,27 @@ data class ScheduleWidgetTimeline(
     fun validityEnd(index: Int): Instant = entries.getOrNull(index + 1)?.validFrom ?: validUntil
 }
 
+/**
+ * [nowTicks]: the instants inside the entry where the day widget's `сейчас` line moves to [NowTick.minute]; the reader
+ * shows the entry's snapshot with that `now` from each tick on.
+ */
 @Serializable
 data class ScheduleWidgetTimelineEntry(
     @SerialName("validFrom") @Serializable(with = IsoInstantSerializer::class) val validFrom: Instant,
     @SerialName("snapshot") val snapshot: ScheduleWidgetSnapshot,
+    @SerialName("nowTicks") val nowTicks: List<NowTick> = emptyList(),
+)
+
+/** From [at] on the day widget's `сейчас` line stands at [minute] of the day. */
+@Serializable
+data class NowTick(
+    @SerialName("at") @Serializable(with = IsoInstantSerializer::class) val at: Instant,
+    @SerialName("minute") val minute: Int,
 )
 
 /**
  * The timeline's JSON, the App Group contract read by iOS WidgetKit; reference fixture
- * `shared/feature-schedule/fixtures/schedule-widget-timeline-v1.json`. Snapshot keys and enum names are those of
+ * `shared/feature-schedule/fixtures/schedule-widget-timeline-v2.json`. Snapshot keys and enum names are those of
  * `widgets/schedule_snapshot.json`, nulls are omitted, defaults are written (Swift has no Kotlin defaults),
  * instants are ISO-8601 UTC strings that may carry fractional seconds. Data and keys only: labels such as lesson type
  * names are resolved on the reading side.
@@ -56,7 +68,8 @@ data class ScheduleWidgetTimelineEntry(
  * independent of the Android snapshot file's `formatVersion`.
  */
 object ScheduleWidgetTimelineJson {
-    const val VERSION = 1
+    /** 2: the next-lesson and day contents of the UX overhaul replaced the single lesson and the lesson list. */
+    const val VERSION = 2
     private const val VERSION_KEY = "version"
 
     private val json = Json {
@@ -72,7 +85,7 @@ object ScheduleWidgetTimelineJson {
     fun decode(text: String): ScheduleWidgetTimeline {
         val root = json.parseToJsonElement(text).jsonObject
         val version = root[VERSION_KEY]?.jsonPrimitive?.intOrNull
-        require(version != null && version in 1..VERSION) { "Unsupported schedule widget timeline version $version" }
+        require(version == VERSION) { "Unsupported schedule widget timeline version $version" }
         return json.decodeFromJsonElement(ScheduleWidgetTimeline.serializer(), root)
     }
 }

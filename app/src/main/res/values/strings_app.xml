@@ -8,4 +8,5 @@
     <string name="auth_title">Вход в ITMO.Widgets</string>
     <string name="app_link_unavailable_title">Ссылка не открывается</string>
     <string name="app_link_unavailable_text">Ссылка повреждена. Попросите отправить её ещё раз.</string>
+    <string name="widget_pin_failed">Не удалось добавить виджет</string>
 </resources>

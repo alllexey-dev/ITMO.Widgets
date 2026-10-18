@@ -17,6 +17,7 @@ class IosWidgetRefreshRequester(private val reloader: WidgetReloader) : WidgetRe
             "dev.alllexey.itmowidgets.widget.qr",
             "dev.alllexey.itmowidgets.widget.single-lesson",
             "dev.alllexey.itmowidgets.widget.day-schedule",
+            "dev.alllexey.itmowidgets.widget.sport",
         )
     }
 }

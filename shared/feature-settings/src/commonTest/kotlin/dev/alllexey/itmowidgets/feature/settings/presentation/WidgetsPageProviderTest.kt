@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -29,7 +30,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
-/** Widget pages built and handled by [WidgetsPageProvider]. */
+/** The widgets gallery built and handled by [WidgetsPageProvider]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class WidgetsPageProviderTest {
 
@@ -42,84 +43,94 @@ class WidgetsPageProviderTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun widgetPagesExposeOnlyTheirOwnControlsAndIndependentTeacherValues() = runTest(main.dispatcher) {
-        val local = LocalSettings(scheduleWidget = ScheduleWidgetSettings(
-            compact = CompactScheduleWidgetSettings(hideTeacher = true),
-            full = FullScheduleWidgetSettings(hideTeacher = false)
-        ))
-        val compact = createFixture(page = SettingsPage.COMPACT_SCHEDULE_WIDGET, local = local)
-        val full = createFixture(page = SettingsPage.FULL_SCHEDULE_WIDGET, local = local)
+    fun eachFormatsSheetHasOnlyItsOwnControlsAndTheTeacherIsShownAsTheInverseOfHidden() = runTest(main.dispatcher) {
+        val local = LocalSettings(scheduleWidget = ScheduleWidgetSettings(full = FullScheduleWidgetSettings(hideTeacher = false)))
+        val fixture = createFixture(page = SettingsPage.WIDGETS, local = local)
         advanceUntilIdle()
+
+        fun ids(format: WidgetFormat) = fixture.viewModel.card(format).settings.flatMap { it.items }.map { it.id }
+        assertEquals(listOf(SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY, SettingRowId.COMPACT_WIDGET_TEXT_SIZE), ids(WidgetFormat.NEXT))
         assertEquals(
-            setOf(
-                SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
-                SettingRowId.COMPACT_WIDGET_HIDE_TEACHER,
-                SettingRowId.COMPACT_WIDGET_TEXT_SIZE
-            ),
-            compact.viewModel.allItems().map { it.id }.toSet()
-        )
-        assertEquals(
-            setOf(
-                SettingRowId.FULL_WIDGET_HIDE_TEACHER,
+            listOf(
                 SettingRowId.FULL_WIDGET_HIDE_PAST,
+                SettingRowId.FULL_WIDGET_SHOW_TEACHER,
                 SettingRowId.FULL_WIDGET_SHOW_TOMORROW,
                 SettingRowId.FULL_WIDGET_TEXT_SIZE
             ),
-            full.viewModel.allItems().map { it.id }.toSet()
+            ids(WidgetFormat.DAY)
         )
-        assertTrue(compact.viewModel.toggle(SettingRowId.COMPACT_WIDGET_HIDE_TEACHER).checked)
-        assertFalse(full.viewModel.toggle(SettingRowId.FULL_WIDGET_HIDE_TEACHER).checked)
-        full.viewModel.onToggleChanged(SettingRowId.FULL_WIDGET_HIDE_TEACHER, true)
+        assertEquals(emptyList(), ids(WidgetFormat.SPORT))
+        assertEquals(listOf(SettingRowId.WIDGETS_FOLLOW_THEME), fixture.viewModel.uiState.value.sections.flatMap { it.items }.map { it.id })
+        assertTrue(fixture.viewModel.toggle(SettingRowId.FULL_WIDGET_SHOW_TEACHER).checked)
+
+        fixture.viewModel.onToggleChanged(SettingRowId.FULL_WIDGET_SHOW_TEACHER, false)
         advanceUntilIdle()
-        assertEquals(listOf(true), full.repository.fullWidgetTeacherHiddenRequests)
-        assertTrue(full.repository.widgetTeacherHiddenRequests.isEmpty())
-        assertEquals(1, full.widgetRefresher.refreshCount)
-        assertEquals(SettingsPage.COMPACT_SCHEDULE_WIDGET, SettingsPage.fromArgument("SCHEDULE_WIDGETS"))
+        assertEquals(listOf(true), fixture.repository.fullWidgetTeacherHiddenRequests)
+        assertEquals(1, fixture.widgetRefresher.refreshCount)
     }
 
     @Test
-    fun previewExistsOnlyOnWidgetSettingsPagesAndUsesStoredValues() =
+    fun theCardsPreviewTheirFormatWithTheStoredValuesAndOnlyTheGalleryHasThem() =
         runTest(main.dispatcher) {
             val local = LocalSettings(
                 qrWidget = QrWidgetSettings(dynamicColors = false, animationType = QrAnimationType.NONE),
-                scheduleWidget = ScheduleWidgetSettings(compact = CompactScheduleWidgetSettings(hideTeacher = true), full = FullScheduleWidgetSettings(hideTeacher = true))
+                scheduleWidget = ScheduleWidgetSettings(full = FullScheduleWidgetSettings(hideTeacher = true))
             )
             (SettingsPage.entries - setOf(SettingsPage.SERVICES, SettingsPage.PRIVACY, SettingsPage.NOTIFICATIONS)).forEach { page ->
                 val fixture = createFixture(page = page, local = local)
                 advanceUntilIdle()
-                assertEquals(
-                    when (page) {
-                        SettingsPage.QR_WIDGET -> WidgetPreviewSettings.Qr(local.qrWidget)
-                        SettingsPage.COMPACT_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT)
-                        SettingsPage.FULL_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL)
-                        else -> null
-                    },
-                    fixture.viewModel.uiState.value.previewSettings
-                )
+                assertEquals(page == SettingsPage.WIDGETS, fixture.viewModel.uiState.value.gallery != null, "$page")
             }
+            val fixture = createFixture(page = SettingsPage.WIDGETS, local = local)
+            advanceUntilIdle()
+            assertEquals(
+                listOf(
+                    WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT),
+                    WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL),
+                    WidgetPreviewSettings.Sport(),
+                    WidgetPreviewSettings.Qr(local.qrWidget),
+                ),
+                checkNotNull(fixture.viewModel.uiState.value.gallery).cards.map { it.preview }
+            )
         }
 
     @Test
     fun previewsCarryTheAccentOnlyWhileTheWidgetsFollowTheTheme() =
         runTest(main.dispatcher) {
             val themed = LocalSettings(theme = ThemeSpec(accent = AccentColor.TEAL), widgetsFollowTheme = true)
-            val own = themed.copy(widgetsFollowTheme = false)
-            listOf(SettingsPage.QR_WIDGET, SettingsPage.COMPACT_SCHEDULE_WIDGET, SettingsPage.FULL_SCHEDULE_WIDGET)
-                .forEach { page ->
-                    val on = createFixture(page = page, local = themed)
-                    val off = createFixture(page = page, local = own)
-                    advanceUntilIdle()
-                    assertEquals(ThemeSpec(accent = AccentColor.TEAL), on.viewModel.uiState.value.previewSettings?.theme)
-                    assertEquals(null, off.viewModel.uiState.value.previewSettings?.theme)
-                }
+            val on = createFixture(page = SettingsPage.WIDGETS, local = themed)
+            val off = createFixture(page = SettingsPage.WIDGETS, local = themed.copy(widgetsFollowTheme = false))
+            advanceUntilIdle()
+            assertTrue(checkNotNull(on.viewModel.uiState.value.gallery).cards.all { it.preview.theme == ThemeSpec(accent = AccentColor.TEAL) })
+            assertTrue(checkNotNull(off.viewModel.uiState.value.gallery).cards.all { it.preview.theme == null })
         }
 
     @Test
-    fun previewWaitsForStorageAndFollowsPersistedToggleAndAnimationChanges() =
+    fun placedWidgetsTurnAddIntoOnScreenAndCountInTheSubtitle() =
         runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.QR_WIDGET, localInitiallyAvailable = false)
+            val fixture = createFixture(page = SettingsPage.WIDGETS)
             advanceUntilIdle()
-            assertEquals(null, fixture.viewModel.uiState.value.previewSettings)
+            assertNull(checkNotNull(fixture.viewModel.uiState.value.gallery).subtitle)
+            assertTrue(checkNotNull(fixture.viewModel.uiState.value.gallery).cards.all { it.action == WidgetCardAction.ADD })
+
+            fixture.viewModel.onPlacedWidgets(WidgetFormat.DAY, 1)
+            fixture.viewModel.onPlacedWidgets(WidgetFormat.PASS, 1)
+            advanceUntilIdle()
+
+            val gallery = checkNotNull(fixture.viewModel.uiState.value.gallery)
+            assertEquals(UiText.Res(SettingsStrings.settings_widgets_placed, listOf(2)), gallery.subtitle)
+            assertEquals(
+                listOf(WidgetCardAction.ADD, WidgetCardAction.ON_SCREEN, WidgetCardAction.ADD, WidgetCardAction.ON_SCREEN),
+                gallery.cards.map { it.action }
+            )
+        }
+
+    @Test
+    fun theGalleryWaitsForStorageAndFollowsPersistedToggleAndAnimationChanges() =
+        runTest(main.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.WIDGETS, localInitiallyAvailable = false)
+            advanceUntilIdle()
+            assertEquals(null, fixture.viewModel.uiState.value.gallery)
             fixture.repository.publishLocalSettings()
             advanceUntilIdle()
             fixture.viewModel.onToggleChanged(SettingRowId.QR_DYNAMIC_COLORS, false)
@@ -127,7 +138,7 @@ class WidgetsPageProviderTest {
             advanceUntilIdle()
             assertEquals(
                 WidgetPreviewSettings.Qr(QrWidgetSettings(dynamicColors = false, animationType = QrAnimationType.FADE)),
-                fixture.viewModel.uiState.value.previewSettings
+                fixture.viewModel.card(WidgetFormat.PASS).preview
             )
         }
 
@@ -135,13 +146,13 @@ class WidgetsPageProviderTest {
     fun disabledSpoilerKeepsItsDependentControlsVisibleButUnavailable() =
         runTest(main.dispatcher) {
             val fixture = createFixture(
-                page = SettingsPage.QR_WIDGET,
+                page = SettingsPage.WIDGETS,
                 local = LocalSettings(qrWidget = QrWidgetSettings(spoilerEnabled = false))
             )
             fixture.viewModel.onCustomSpoilerChanged(configured = true)
             advanceUntilIdle()
 
-            assertEquals(5, fixture.viewModel.allItems().size)
+            assertEquals(5, fixture.viewModel.card(WidgetFormat.PASS).settings.flatMap { it.items }.size)
             assertFalse(fixture.viewModel.choice(SettingRowId.QR_ANIMATION).enabled)
             assertFalse(fixture.viewModel.action(SettingRowId.QR_CUSTOM_IMAGE).enabled)
             assertFalse(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
@@ -155,8 +166,8 @@ class WidgetsPageProviderTest {
                     compact = CompactScheduleWidgetSettings(textSize = WidgetTextSize.LARGE)
                 )
             )
-            val compact = createFixture(page = SettingsPage.COMPACT_SCHEDULE_WIDGET, local = local)
-            val full = createFixture(page = SettingsPage.FULL_SCHEDULE_WIDGET, local = local)
+            val compact = createFixture(page = SettingsPage.WIDGETS, local = local)
+            val full = createFixture(page = SettingsPage.WIDGETS, local = local)
             advanceUntilIdle()
 
             val choice = compact.viewModel.choice(SettingRowId.COMPACT_WIDGET_TEXT_SIZE)
@@ -188,7 +199,7 @@ class WidgetsPageProviderTest {
     fun qrAnimationChoicePersistsKnownOptionAndRefreshesWidgets() =
         runTest(main.dispatcher) {
             val fixture = createFixture(
-                page = SettingsPage.QR_WIDGET,
+                page = SettingsPage.WIDGETS,
                 local = LocalSettings(
                     qrWidget = QrWidgetSettings(
                         spoilerEnabled = true,
@@ -220,7 +231,7 @@ class WidgetsPageProviderTest {
     @Test
     fun customSpoilerStateControlsActionsAndOptionalWidgetRefresh() =
         runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.QR_WIDGET)
+            val fixture = createFixture(page = SettingsPage.WIDGETS)
             advanceUntilIdle()
 
             assertFalse(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
@@ -244,7 +255,7 @@ class WidgetsPageProviderTest {
 
     @Test
     fun imageActionsAreDisabledWhileSavingWithoutDisablingAnimation() = runTest(main.dispatcher) {
-        val fixture = createFixture(page = SettingsPage.QR_WIDGET)
+        val fixture = createFixture(page = SettingsPage.WIDGETS)
         advanceUntilIdle()
         fixture.viewModel.onCustomSpoilerChanged(configured = true, busy = true)
         advanceUntilIdle()
@@ -260,13 +271,13 @@ class WidgetsPageProviderTest {
     @Test
     fun theQRPageOffersTheTileOnlyWhereItCanBeRequestedAndUntilItIsAdded() =
         runTest(main.dispatcher) {
-            val unsupported = createFixture(page = SettingsPage.QR_WIDGET)
+            val unsupported = createFixture(page = SettingsPage.WIDGETS)
             advanceUntilIdle()
             assertTrue(unsupported.viewModel.allItems().none { it.id == SettingRowId.QR_TILE })
 
-            val fixture = createFixture(page = SettingsPage.QR_WIDGET, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
+            val fixture = createFixture(page = SettingsPage.WIDGETS, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
             advanceUntilIdle()
-            val first = fixture.viewModel.uiState.value.sections.first()
+            val first = fixture.viewModel.card(WidgetFormat.PASS).settings.last()
             assertNull(first.title)
             assertEquals(
                 listOf(
@@ -287,7 +298,7 @@ class WidgetsPageProviderTest {
     @Test
     fun tappingTheTileRowAsksTheSystemToAddTheTile() =
         runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.QR_WIDGET, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
+            val fixture = createFixture(page = SettingsPage.WIDGETS, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
             val events = recordEvents(fixture)
             advanceUntilIdle()
 
@@ -301,7 +312,7 @@ class WidgetsPageProviderTest {
     fun theSystemAnswerRemembersAnAddedTileAndExplainsOnlyWhatTheUserShouldKnow() =
         runTest(main.dispatcher) {
             fun answer(result: QrTileAddResult): Pair<List<Boolean>, List<SettingsEvent>> {
-                val fixture = createFixture(page = SettingsPage.QR_WIDGET, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
+                val fixture = createFixture(page = SettingsPage.WIDGETS, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
                 val events = recordEvents(fixture)
                 advanceUntilIdle()
                 fixture.viewModel.onQrTileResult(result)

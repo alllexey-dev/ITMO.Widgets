@@ -6,7 +6,7 @@
     <string name="ios_widget_qr_reveal">Нажмите, чтобы показать</string>
     <string name="ios_widget_qr_expired">Нажмите, чтобы обновить</string>
     <!-- QR Control in Control Center and on the Lock Screen. -->
-    <string name="ios_control_qr_description">Открывает QR-пропуск</string>
+    <string name="ios_control_qr_description">Открывает пропуск</string>
     <!-- Background App Refresh row in settings. -->
     <string name="ios_background_refresh_title">Обновление контента</string>
     <string name="ios_background_refresh_off">Выключено в настройках iOS. Без него проверки не приходят вовремя.</string>

@@ -13,7 +13,6 @@
     <string name="settings_privacy_all">Все</string>
     <string name="settings_privacy_friends">Друзья</string>
     <string name="settings_privacy_nobody">Никто</string>
-    <string name="settings_group_qr_widget">Виджет QR-кода</string>
     <string name="settings_qr_animation_title">Анимация открытия</string>
     <string name="settings_qr_animation_circle">Круг</string>
     <string name="settings_qr_animation_fade">Плавное появление</string>
@@ -53,8 +52,6 @@
     <string name="background_work_dialog_message">Чтобы проверки приходили вовремя, разрешите приложению работу без ограничений.</string>
     <string name="background_work_allow">Разрешить</string>
     <string name="background_work_later">Не сейчас</string>
-    <string name="settings_compact_schedule_widget_title">Компактное расписание</string>
-    <string name="settings_full_schedule_widget_title">Полное расписание</string>
     <string name="settings_qr_tile_title">Добавить в шторку</string>
     <string name="settings_qr_tile_description">Плитка «QR-пропуск» в быстрых настройках</string>
     <string name="settings_qr_tile_already_added">Плитка уже в шторке</string>
@@ -227,4 +224,28 @@
     <string name="notifications_sound">Звук и вибрация</string>
     <string name="notifications_sound_text">В настройках системы, для каждого типа</string>
     <string name="notifications_bell_note">Всё, что пришло, остаётся в колокольчике на «Сегодня».</string>
+    <!-- The widgets gallery -->
+    <string name="settings_widgets_placed">%1$d на главном экране</string>
+    <string name="settings_widgets_placed_home">%1$d на экране «Домой»</string>
+    <string name="settings_widgets_note">Настройки формата общие для всех его виджетов и применяются сразу.</string>
+    <string name="settings_widget_next_title">Пара</string>
+    <string name="settings_widget_next_description">Сейчас и далее</string>
+    <string name="settings_widget_day_title">Расписание на день</string>
+    <string name="settings_widget_day_description">С линией «сейчас»</string>
+    <string name="settings_widget_sport_title">Спорт</string>
+    <string name="settings_widget_sport_description">Баллы и запись</string>
+    <string name="settings_widget_pass_title">Пропуск</string>
+    <string name="settings_widget_pass_description">Под спойлером</string>
+    <string name="settings_widget_pass_open_description">QR-код сразу</string>
+    <string name="settings_widget_add">Добавить</string>
+    <string name="settings_widget_on_screen">на экране</string>
+    <string name="settings_widget_settings">Настройки виджета</string>
+    <string name="settings_widget_sample_note">Пример на 12:22, настройки применятся ко всем таким виджетам</string>
+    <string name="settings_widget_apply_note">Настройки применятся ко всем таким виджетам</string>
+    <string name="settings_widget_show_teacher_title">Показывать преподавателя</string>
+    <string name="settings_widgets_how_to_add">Как добавить</string>
+    <string name="settings_widgets_how_to_add_text">Нажмите и удерживайте экран «Домой», затем «Изменить» → «Добавить виджет» и найдите ITMO.Widgets.</string>
+    <string name="settings_widgets_lock_title">Экран блокировки</string>
+    <string name="settings_widgets_lock_text">Нажмите и удерживайте экран блокировки, затем «Настроить» → «Экран блокировки»: строка у даты, ближайшая пара и обратный отсчёт.</string>
+    <string name="settings_widgets_control_text">В пункте управления и на экране блокировки — кнопка «Пропуск».</string>
 </resources>

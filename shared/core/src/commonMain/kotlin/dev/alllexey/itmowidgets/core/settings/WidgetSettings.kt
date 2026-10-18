@@ -2,6 +2,13 @@ package dev.alllexey.itmowidgets.core.settings
 
 enum class ScheduleWidgetFormat { COMPACT, FULL }
 
+/**
+ * A widget of the widgets gallery: the next lesson (W1, the compact schedule widget), the day (W2, the full one), the
+ * sport score (W3) and the pass. Its settings apply to every placed widget of the format.
+ */
+enum class WidgetFormat { NEXT, DAY, SPORT, PASS }
+
+/** The next-lesson widget. It names no teacher: [hideTeacher] is read only by the first-run flow. */
 data class CompactScheduleWidgetSettings(
     val showNextLessonEarly: Boolean = true,
     val hideTeacher: Boolean = false,
@@ -11,7 +18,7 @@ data class CompactScheduleWidgetSettings(
 data class FullScheduleWidgetSettings(
     val hideTeacher: Boolean = false,
     val hidePastLessons: Boolean = false,
-    val showTomorrowWhenTodayIsOver: Boolean = false,
+    val showTomorrowWhenTodayIsOver: Boolean = true,
     val textSize: WidgetTextSize = WidgetTextSize.NORMAL
 )
 
@@ -49,4 +56,6 @@ sealed interface WidgetPreviewSettings {
         val format: ScheduleWidgetFormat,
         override val theme: ThemeSpec? = null,
     ) : WidgetPreviewSettings
+
+    data class Sport(override val theme: ThemeSpec? = null) : WidgetPreviewSettings
 }

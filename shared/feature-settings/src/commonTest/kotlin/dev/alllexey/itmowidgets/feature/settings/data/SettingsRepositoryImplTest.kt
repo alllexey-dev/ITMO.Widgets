@@ -67,7 +67,6 @@ class SettingsRepositoryImplTest {
 
         fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
         fixture.repository.setCompactWidgetNextLessonEarlyEnabled(false)
-        fixture.repository.setCompactWidgetTeacherHidden(true)
         fixture.repository.setFullWidgetPastLessonsHidden(true)
         fixture.repository.setFullWidgetTomorrowEnabled(true)
         fixture.repository.setQrDynamicColorsEnabled(false)
@@ -81,7 +80,7 @@ class SettingsRepositoryImplTest {
             LocalSettings(
                 customServicesEnabled = true,
                 scheduleWidget = ScheduleWidgetSettings(
-                    compact = CompactScheduleWidgetSettings(showNextLessonEarly = false, hideTeacher = true),
+                    compact = CompactScheduleWidgetSettings(showNextLessonEarly = false),
                     full = FullScheduleWidgetSettings(hidePastLessons = true, showTomorrowWhenTodayIsOver = true)
                 ),
                 qrWidget = QrWidgetSettings(

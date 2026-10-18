@@ -39,25 +39,22 @@ struct QrWidgetEntryView: View {
         }
     }
 
+    /// The pass under its spoiler: the code's symbol in a soft circle and its title; a tap reveals the code.
     private var spoiler: some View {
-        VStack(spacing: Layout.captionPadding / 2) {
-            noise
-            caption(Text(.iosWidgetQrReveal))
+        VStack(spacing: Layout.captionPadding) {
+            Image(systemName: AppSymbol.qrCode.systemName)
+                .font(.system(size: 30, weight: .semibold))
+                .foregroundStyle(tile.foreground)
+                .frame(width: 56, height: 56)
+                .background(tile.foreground.opacity(0.12), in: .circle)
+                .accessibilityHidden(true)
+            caption(Text(.StringsSettings.settingsWidgetPassTitle))
         }
         .padding(Layout.codePadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
-    }
-
-    private var noise: some View {
-        let pattern = QrNoisePattern(seed: UInt64(max(0, entry.date.timeIntervalSince1970) / 3600))
-        return ZStack {
-            ForEach(pattern.shades.indices, id: \.self) { shade in
-                QrNoiseShape(squares: pattern.shades[shade]).fill(tile.shade(shade))
-            }
-        }
-        .aspectRatio(1, contentMode: .fit)
-        .accessibilityHidden(true)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint(Text(.iosWidgetQrReveal))
     }
 
     private func code(_ matrix: [[Bool]], demo: Bool) -> some View {
