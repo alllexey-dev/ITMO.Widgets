@@ -92,6 +92,8 @@ private struct WidgetGalleryCard: View {
             }
             .padding(.top, ItmoSpacing.related)
         }
+        // A container keeps the children's own identifiers (the preview, the settings button).
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("settings.widgets.\(card.format.name.lowercased())")
     }
 
@@ -341,6 +343,7 @@ struct WidgetSettingsSheetContent: View {
                 WidgetGalleryRows(section: section, pendingToggles: pendingToggles, actions: actions)
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("settings.widgets.sheet.\(card.format.name.lowercased())")
     }
 }
