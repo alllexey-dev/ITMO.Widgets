@@ -14,6 +14,10 @@ new iOS app.
 
 - Friend requests say when they were sent, in the bell and in Друзья on both platforms (`12:05`, `вчера`, `28 сент.`), from Backend's new `UserProfile.requestedAt` (itmo-widgets-backend#53, contract from Backend f9dd1e0); requests still lead the bell, newest first. Without the time from an older Backend nothing changes.
 
+### Fixes (2026-10-18)
+
+- Another user's sport is titled by their given name (`Спорт: Иван`), from ITMO.ID's `given_name` or the second word of «Фамилия Имя», not by their surname.
+
 ### Data (2026-10-17)
 
 - `TeacherNowGateway`: the lesson a teacher gives now or next today, from My ITMO's teacher timetable (MyItmoApi 2.2.0 `getTeacherSchedule`), for the person card's «Сейчас ведёт»; parallel groups in one room are one lesson.

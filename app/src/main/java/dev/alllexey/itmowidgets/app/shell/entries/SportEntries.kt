@@ -80,7 +80,13 @@ import org.koin.core.parameter.parametersOf
  */
 internal fun EntryRegistry.Builder.sportEntries() {
     entry<AppRoutes.UserSport>(
-        args = { bundleOf(UserScreenArgs.ISU to it.isu, UserScreenArgs.NAME to it.name) },
+        args = {
+            bundleOf(
+                UserScreenArgs.ISU to it.isu,
+                UserScreenArgs.NAME to it.name,
+                UserScreenArgs.GIVEN_NAME to it.givenName,
+            )
+        },
     ) { key, navigator ->
         UserSportEntry(onBack = { navigator.close(key) })
     }
