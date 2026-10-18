@@ -27,6 +27,7 @@ final class QrPassUITests: XCTestCase {
         XCTAssertTrue(element(app, "qr.pass").waitForExistence(timeout: stepTimeout))
         let image = element(app, "qr_pass_image")
         XCTAssertTrue(image.waitForExistence(timeout: stepTimeout), "the demo pass shows its code")
+        XCTAssertTrue(image.waitUntilDrawn(timeout: stepTimeout), "the demo pass code is drawn")
         attachScreenshot(named: "demo-pass")
 
         let refresh = element(app, "qr_pass_refresh")

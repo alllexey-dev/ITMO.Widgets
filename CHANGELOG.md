@@ -14,6 +14,14 @@ new iOS app.
 
 - Friend requests say when they were sent, in the bell and in Друзья on both platforms (`12:05`, `вчера`, `28 сент.`), from Backend's new `UserProfile.requestedAt` (itmo-widgets-backend#53, contract from Backend f9dd1e0); requests still lead the bell, newest first. Without the time from an older Backend nothing changes.
 
+### iOS UI tests (2026-10-18)
+
+- iOS UI tests run on a pinned academic date, this week's Wednesday (`-itmoAcademicDate` in a Debug build), so
+  `ShellUITests.testTodayUrlOpensScheduleOnToday` and the schedule tests no longer fail on a Sunday; a new test pins a
+  Sunday and checks that the `today` link lands on the weekend's `Выходные` row.
+- The scroll loops and key checks of the UI tests (profile rows, the Me tab, the pass code, Сегодня, sport
+  sections, the record book, settings) also check that the element is drawn, not only hittable.
+
 ### Campus map (2026-10-17)
 
 - New module `:shared:feature-map` with the router of itmo-map-web ported to shared Kotlin (same routes as `router.js` on all 360 checked pairs of ITMO's six plans), the mapping of timetable rooms to plan rooms and the three-part «Маршрут» planner; `itmo_buildings.json` gains each building's campus-map id and Гастелло, 12. No screen yet.
