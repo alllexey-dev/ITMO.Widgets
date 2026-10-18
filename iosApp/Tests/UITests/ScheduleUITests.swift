@@ -5,13 +5,8 @@ import XCTest
 /// change from the bell, the today hero's lesson, the `today` route, another user's schedule from a profile, and the
 /// feed and the lesson sheet at the accessibility text size AX1. The ISUs are the demo set's (`DemoPeople`).
 final class ScheduleUITests: XCTestCase {
-    /// Today's date as the feed's row ids carry it: the demo's days follow the academic clock, Moscow time.
-    static var today: String {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Europe/Moscow") ?? .current
-        let day = calendar.dateComponents([.year, .month, .day], from: Date())
-        return String(format: "%04d-%02d-%02d", day.year ?? 0, day.month ?? 0, day.day ?? 0)
-    }
+    /// Today's date as the feed's row ids carry it: the pinned academic date, a Wednesday with lessons.
+    static let today = XCUIApplication.academicDate
 
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
@@ -28,6 +23,7 @@ final class ScheduleUITests: XCTestCase {
         let today = todayRow(app)
         XCTAssertTrue(today.waitForExistence(timeout: stepTimeout), "the feed opens on \(Self.today), shows \(rowIds(app))")
         XCTAssertTrue(waitUntilHittable(today))
+        XCTAssertTrue(today.waitUntilDrawn(timeout: stepTimeout), "today's row is drawn")
         XCTAssertTrue(firstLesson(app).waitForExistence(timeout: stepTimeout), "the demo week has lessons")
         XCTAssertTrue(element(app, "schedule.friends").isHittable)
         XCTAssertTrue(element(app, "schedule.strip").exists)
@@ -95,14 +91,7 @@ final class ScheduleUITests: XCTestCase {
         let todayAction = app.buttons.matching(NSPredicate(format: "label == %@", "Сегодня"))
             .allElementsBoundByIndex.first { $0.frame.maxY < strip.frame.maxY }
         try XCTUnwrap(todayAction).tap()
-        let todayRow = todayRow(app)
-        if calendar.component(.weekday, from: today) == 1 && !todayRow.exists {
-            let saturday = try XCTUnwrap(calendar.date(byAdding: .day, value: -1, to: today))
-            let weekend = element(app, "schedule.row.weekend-\(formatter.string(from: saturday))")
-            XCTAssertTrue(waitUntilHittable(weekend), "Today opens the current free weekend")
-        } else {
-            XCTAssertTrue(waitUntilHittable(todayRow), "Today returns after fast week paging")
-        }
+        XCTAssertTrue(waitUntilHittable(todayRow(app)), "Today returns after fast week paging")
     }
 
     func testLessonSheetShowsTheLessonAndCloses() {

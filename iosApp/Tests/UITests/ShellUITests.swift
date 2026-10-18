@@ -63,10 +63,25 @@ final class ShellUITests: XCTestCase {
         app.open(try XCTUnwrap(URL(string: "itmowidgets://route/today")))
 
         XCTAssertTrue(element(app, "shell.root.schedule").waitForExistence(timeout: stepTimeout))
-        let today = app.descendants(matching: .any).matching(
-            NSPredicate(format: "identifier BEGINSWITH 'schedule.row.' AND identifier CONTAINS %@", ScheduleUITests.today)
-        ).firstMatch
-        XCTAssertTrue(today.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "schedule.row.head-\(ScheduleUITests.today)").waitForExistence(timeout: stepTimeout))
+    }
+
+    /// On a free Sunday the feed has no row of its own for today: the link lands on the weekend's one row, which
+    /// stands for Saturday and Sunday (`ScheduleFeedBody.Days.indexOf`), not on Monday.
+    func testTodayUrlOnASundayOpensScheduleOnTheWeekend() throws {
+        let app = XCUIApplication.itmo(academicDate: XCUIApplication.dayOfThisWeek(7))
+        app.launch()
+        XCTAssertTrue(element(app, "shell.root.home").waitForExistence(timeout: rootTimeout))
+
+        app.open(try XCTUnwrap(URL(string: "itmowidgets://route/today")))
+
+        XCTAssertTrue(element(app, "shell.root.schedule").waitForExistence(timeout: stepTimeout))
+        let weekend = element(app, "schedule.row.weekend-\(XCUIApplication.dayOfThisWeek(6))")
+        XCTAssertTrue(weekend.waitForExistence(timeout: stepTimeout))
+        let onScreen = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: weekend)
+        XCTAssertEqual(XCTWaiter.wait(for: [onScreen], timeout: stepTimeout), .completed, "the feed went to the weekend")
+        XCTAssertTrue(weekend.waitUntilDrawn(timeout: stepTimeout), "the weekend row is drawn")
+        attachScreenshot(named: "today-sunday")
     }
 
     func testUnknownRouteExplainsTheLinkInASheet() throws {
@@ -96,7 +111,8 @@ final class ShellUITests: XCTestCase {
         friend.tap()
         let sportRow = element(app, "user_profile_sport")
         XCTAssertTrue(sportRow.waitForExistence(timeout: stepTimeout))
-        if !sportRow.isHittable { element(app, "user_profile_list").swipeUp() }
+        if !sportRow.isShown { element(app, "user_profile_list").swipeUp() }
+        XCTAssertTrue(sportRow.isShown, "the sport row is drawn")
         sportRow.tap()
         let sport = element(app, "sport.user")
         XCTAssertTrue(sport.waitForExistence(timeout: stepTimeout))
@@ -148,7 +164,7 @@ final class ShellUITests: XCTestCase {
         XCTAssertTrue(element(app, "shell.root.me").waitForExistence(timeout: stepTimeout))
 
         let signOut = element(app, "sign_out_row")
-        if !signOut.waitForExistence(timeout: stepTimeout) || !signOut.isHittable { element(app, "main").swipeUp() }
+        if !signOut.waitForExistence(timeout: stepTimeout) || !signOut.isShown { element(app, "main").swipeUp() }
         signOut.tap()
         // `me_sign_out` on the dialog's confirm button, the row's text too: the button is the one without the row's tag.
         let confirm = app.buttons

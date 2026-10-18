@@ -10,6 +10,14 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### iOS UI tests (2026-10-18)
+
+- iOS UI tests run on a pinned academic date, this week's Wednesday (`-itmoAcademicDate` in a Debug build), so
+  `ShellUITests.testTodayUrlOpensScheduleOnToday` and the schedule tests no longer fail on a Sunday; a new test pins a
+  Sunday and checks that the `today` link lands on the weekend's `Выходные` row.
+- The scroll loops and key checks of the UI tests (profile rows, the Me tab, the pass code, Сегодня, sport
+  sections, the record book, settings) also check that the element is drawn, not only hittable.
+
 ### Спорт lesson sheet data (2026-10-17)
 
 - The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.

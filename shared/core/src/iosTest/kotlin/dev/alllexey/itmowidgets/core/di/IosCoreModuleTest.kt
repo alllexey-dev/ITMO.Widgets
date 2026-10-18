@@ -32,6 +32,7 @@ import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.storage.TemporaryDirectory
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
@@ -45,6 +46,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDate
 import org.koin.core.Koin
 import org.koin.core.annotation.KoinInternalApi
 import org.koin.core.module.Module
@@ -91,6 +93,17 @@ class IosCoreModuleTest {
         val link = koin.get<ShareLinkFactory>().profile(100_001)
         assertEquals("$ORIGIN/u/100001", link)
         assertEquals(AppLink.Profile(100_001), AppLinks.parse(link))
+        koin.close()
+    }
+
+    @Test
+    fun aLaunchAcademicDatePinsTheAcademicDay() {
+        val pinned = LocalDate(2026, 10, 14)
+        val koin = graph(iosCoreModule(host, ORIGIN, academicDate = pinned), accountTypes, appGroupStandIn())
+        val time = koin.get<AcademicTimeProvider>()
+
+        assertEquals(pinned, time.today())
+        assertEquals(pinned, time.localNow().date)
         koin.close()
     }
 
