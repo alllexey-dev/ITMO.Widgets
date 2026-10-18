@@ -22,7 +22,7 @@
         android:layout_height="0dp"
         android:contentDescription="@null"
         android:scaleType="fitXY"
-        android:src="@drawable/widget_shape_block"
+        android:src="@drawable/widget_shape_block_top"
         android:visibility="gone" />
 
     <LinearLayout
