@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.app.widget
 
 import android.content.Context
+import android.util.SizeF
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
@@ -43,6 +44,16 @@ class ScheduleListRowsTest {
         assertEquals(context.getString(R.string.schedule_widget_end_today), text(rows.last(), R.id.end_marker))
         assertEquals(rows.size, rows.map { it.id }.toSet().size)
         assertEquals(rows.map { it.id }, ScheduleListRows(context).rows(snapshot).map { it.id })
+    }
+
+    @Test
+    fun theEndMarkerShowsOnlyWhereEveryRowFitsAboveIt() {
+        val snapshot = scenario.snapshot(ScheduleWidgetSettings(), SchedulePreviewMoment.LESSON, ScheduleSettingsPreview.labels(context))
+        val roomy = ScheduleListRows(context).rows(snapshot, SizeF(320f, 600f))
+        val tight = ScheduleListRows(context).rows(snapshot, SizeF(320f, 250f))
+
+        assertEquals(context.getString(R.string.schedule_widget_end_today), text(roomy.last(), R.id.end_marker))
+        assertEquals(roomy.dropLast(1).map { it.id }, tight.map { it.id })
     }
 
     @Test

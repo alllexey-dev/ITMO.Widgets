@@ -18,6 +18,8 @@ new iOS app.
 - Widgets placed as lists in 2.2 and the first iOS builds stay lists (Android `DayScheduleWidgetProvider`, iOS kind
   `.widget.day-schedule`); `Расписание на день` moves to its own provider and kind (`DayTimelineWidgetProvider`,
   `.widget.day-timeline`), so a day widget placed from a master build after #447 has to be added again.
+- The classic list's `На сегодня всё` no longer shows cut in half at the bottom of a full day: on Android it stays
+  only when every row fits above it (the list still scrolls), as on iOS, where the rows that do not fit are left out.
 - `Пара`, `Расписание на день` and `Спорт` are marked beta: `(бета)` in the system widget picker and a `Бета` pill in
   `Виджеты`.
 
