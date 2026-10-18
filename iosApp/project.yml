@@ -50,6 +50,10 @@ targets:
       # The known ITMO buildings of the lesson sheet's map: Android's raw resource by path, never a copy.
       - path: ../app/src/main/res/raw/itmo_buildings.json
         buildPhase: resources
+      # The campus app's map icons: the map module's resource folder by path, never a copy (bundle `map_sprites/`).
+      - path: ../shared/feature-map/src/commonMain/composeResources/files/map_sprites
+        type: folder
+        buildPhase: resources
       # The widget sources without their @main bundle, so the hosted tests reach the timelines and entry views
       # (recipe ios-snapshot-test); the app never registers them.
       - path: Extensions/Widgets

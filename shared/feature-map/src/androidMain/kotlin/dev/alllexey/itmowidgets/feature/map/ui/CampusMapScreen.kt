@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.map.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -184,11 +185,6 @@ private fun PlanContent(state: CampusMapUiState.Plan, actions: CampusMapActions,
                 state.room != null -> Room(state.room, actions)
                 state.notice != null -> ItmoCard { Text(state.notice.asString(), style = ItmoTheme.typography.bodyLarge) }
             }
-            Text(
-                state.map.attribution,
-                color = ItmoTheme.colorScheme.onSurfaceVariant,
-                style = ItmoTheme.typography.labelSmall,
-            )
         }
     }
 }
@@ -206,23 +202,43 @@ private fun BackButton(onBack: () -> Unit, modifier: Modifier = Modifier) {
 private fun Floors(levels: List<LevelChip>, onLevel: (Int) -> Unit, modifier: Modifier) {
     val colors = ItmoTheme.colorScheme
     val label = stringResource(Res.string.map_floors)
-    Surface(modifier.semantics { contentDescription = label }, shape = CircleShape, color = colors.surfaceContainerHigh) {
-        Column(Modifier.padding(ItmoTheme.spacing.compact), verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
+    // itmo-map-web's floor selector: a white column with a shadow, the floor in the accent, a dot on the route's floors.
+    Surface(
+        modifier.semantics { contentDescription = label },
+        shape = ItmoTheme.shapes.extraLarge,
+        color = colors.surface,
+        shadowElevation = ItmoTheme.spacing.compact,
+    ) {
+        Column(Modifier.padding(ItmoTheme.spacing.compact)) {
             levels.reversed().forEach { level ->
                 Box(
                     Modifier
                         .size(48.dp)
-                        .background(if (level.selected) colors.primary else colors.surfaceContainerHigh, CircleShape)
                         .clickable(role = Role.Tab) { onLevel(level.level) }
                         .semantics { selected = level.selected },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        level.label.asString(),
-                        color = if (level.selected) colors.onPrimary else colors.onSurface,
-                        style = ItmoTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    Box(
+                        Modifier.size(40.dp).background(if (level.selected) colors.primary else colors.surface, CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            level.label.asString(),
+                            color = if (level.selected) colors.onPrimary else colors.onSurfaceVariant,
+                            style = ItmoTheme.typography.titleSmall,
+                            fontWeight = if (level.selected) FontWeight.SemiBold else FontWeight.Normal,
+                        )
+                    }
+                    if (level.onRoute) {
+                        Box(
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(ItmoTheme.spacing.compact)
+                                .size(11.dp)
+                                .background(if (level.selected) colors.onPrimary else colors.primary, CircleShape)
+                                .border(2.dp, if (level.selected) colors.primary else colors.surface, CircleShape),
+                        )
+                    }
                 }
             }
         }

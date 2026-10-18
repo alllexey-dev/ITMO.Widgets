@@ -103,6 +103,13 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_friends
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_load_error
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_nobody
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_policy_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_data_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_value
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_note
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_license
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_maplibre_text
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_noto_text
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_retry
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_services_required
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_unknown
@@ -413,9 +420,35 @@ internal object SettingsPreviewData {
                     title = res(Res.string.settings_privacy_policy_title),
                     trailingIcon = AppIcon.OPEN_IN_NEW
                 ),
+                navigation(SettingsPage.LICENSES),
                 SettingItem.Info(SettingRowId.VERSION, res(Res.string.settings_version_title), UiText.Dynamic(VERSION))
             ),
             footer = res(CoreRes.string.app_unofficial_notice)
+        )
+    )
+
+    val Licenses = state(
+        SettingsPage.LICENSES,
+        SettingSection(
+            title = res(Res.string.settings_licenses_data_title),
+            items = listOf(
+                SettingItem.Info(
+                    SettingRowId.LICENSE_PLANS,
+                    res(Res.string.settings_licenses_plans_title),
+                    res(Res.string.settings_licenses_plans_value)
+                )
+            ),
+            footer = res(Res.string.settings_licenses_plans_note)
+        ),
+        SettingSection(
+            title = UiText.Dynamic("MapLibre Native"),
+            items = listOf(SettingItem.Info(SettingRowId.LICENSE_MAPLIBRE, res(Res.string.settings_licenses_license), UiText.Dynamic("BSD 2-Clause"))),
+            footer = res(Res.string.settings_licenses_maplibre_text)
+        ),
+        SettingSection(
+            title = UiText.Dynamic("Noto Sans"),
+            items = listOf(SettingItem.Info(SettingRowId.LICENSE_NOTO, res(Res.string.settings_licenses_license), UiText.Dynamic("SIL OFL 1.1"))),
+            footer = res(Res.string.settings_licenses_noto_text)
         )
     )
 

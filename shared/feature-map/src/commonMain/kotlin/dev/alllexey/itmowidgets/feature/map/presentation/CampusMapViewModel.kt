@@ -248,12 +248,12 @@ class CampusMapViewModel(
                 buildingId = building.id,
                 tilesPath = plan.tilesPath,
                 glyphsUrl = catalog.glyphsUrl,
-                attribution = catalog.attribution,
                 bounds = building.bounds,
                 bearing = building.bearing,
                 level = state.level,
                 route = CampusMapGeoJson.route(leg?.route, state.level, step?.part),
-                selection = CampusMapGeoJson.selection(selected, state.level),
+                selection = CampusMapGeoJson.selection(selected),
+                selectedRoomId = selected?.id,
                 focus = state.focus,
                 frame = step?.part?.let { part ->
                     val nodes = listOf(part.edges.first().from) + part.edges.map { it.to }
@@ -264,7 +264,9 @@ class CampusMapViewModel(
             buildings = catalog.buildings
                 .sortedBy { b -> directory.all.indexOfFirst { it.planBuildingId == b.id }.takeIf { it >= 0 } ?: Int.MAX_VALUE }
                 .map { BuildingChip(it.id, label(it.id), it.id == building.id) },
-            levels = building.levels.map { LevelChip(it, UiText.Res(MapStrings.map_floor_short, listOf(it + 1)), it == state.level) },
+            levels = building.levels.map { level ->
+                LevelChip(level, UiText.Res(MapStrings.map_floor_short, listOf(level + 1)), level == state.level, level in routeLevels(state, building.id))
+            },
             room = selected?.takeIf { state.trip == null }?.let { room -> roomCard(room, state) },
             trip = state.trip?.let { TripView(it.from, it.steps.map(PlannedStep::view), it.current) },
             search = search(state, plan),
@@ -273,6 +275,12 @@ class CampusMapViewModel(
             },
         )
     }
+
+    /** The floors the trip's parts in [buildingId] arrive at, as itmo-map-web marks them (stairs skip the floors between). */
+    private fun routeLevels(state: Model, buildingId: Int): Set<Int> = state.trip?.steps.orEmpty()
+        .mapNotNull { step -> step.leg?.takeIf { it.buildingId == buildingId }?.route }
+        .distinct()
+        .flatMapTo(HashSet()) { route -> route.parts.map { it.level } }
 
     private fun roomCard(room: MapRoom, state: Model) = RoomCard(
         roomId = room.id,

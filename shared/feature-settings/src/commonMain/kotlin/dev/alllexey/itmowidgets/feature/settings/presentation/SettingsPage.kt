@@ -17,7 +17,9 @@ enum class SettingsPage(val title: UiText) {
     SCHEDULE(UiText.Res(SettingsStrings.settings_group_schedule)),
     RECORDBOOK(UiText.Res(CoreStrings.title_recordbook)),
     SPORT(UiText.Res(SettingsStrings.settings_group_sport)),
-    MAINTENANCE(UiText.Res(SettingsStrings.settings_group_maintenance));
+    MAINTENANCE(UiText.Res(SettingsStrings.settings_group_maintenance)),
+    /** Where the campus plans come from and the licences of the bundled libraries and fonts. */
+    LICENSES(UiText.Res(SettingsStrings.settings_licenses_title));
 
     companion object {
         const val ARGUMENT = SettingsScreenArgs.PAGE

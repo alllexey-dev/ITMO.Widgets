@@ -31,20 +31,20 @@ sealed interface CampusMapUiState {
 }
 
 /**
- * What the platform map view draws: the [tilesPath] of the building's MBTiles on [level], the [route] and [selection]
- * GeoJSON (`CampusMapLayers`), and where the camera goes: the route step's [frame] (west, south, east, north), else
+ * What the platform map view draws: the [tilesPath] of the building's MBTiles on [level] with [selectedRoomId]
+ * highlighted, the [route] and [selection] GeoJSON (`CampusMapLayers`), and where the camera goes: the route step's [frame] (west, south, east, north), else
  * the [focus] point, else the building's [bounds].
  */
 data class MapScene(
     val buildingId: Int,
     val tilesPath: String,
     val glyphsUrl: String,
-    val attribution: String,
     val bounds: List<Double>,
     val bearing: Double,
     val level: Int,
     val route: String,
     val selection: String,
+    val selectedRoomId: Long?,
     val focus: MapPoint?,
     val frame: List<Double>? = null,
 )
@@ -52,8 +52,8 @@ data class MapScene(
 /** A building of the switcher: the directory's short [label]. */
 data class BuildingChip(val id: Int, val label: String, val selected: Boolean)
 
-/** A floor of the switcher: «1» for level 0. */
-data class LevelChip(val level: Int, val label: UiText, val selected: Boolean)
+/** A floor of the switcher: «1» for level 0; [onRoute] marks a floor the shown route passes, as itmo-map-web does. */
+data class LevelChip(val level: Int, val label: UiText, val selected: Boolean, val onRoute: Boolean = false)
 
 /** The selected room: «2403», «4 этаж, Кронверкский пр., 49», a [note] when the lesson room only nearly matched. */
 data class RoomCard(

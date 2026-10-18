@@ -55,7 +55,7 @@ class PlatformCapabilitiesPagesTest {
 
         val pages = withoutMarks.viewModel.allItems().filterIsInstance<SettingItem.Navigation>().map { it.page }
         assertEquals(
-            SettingsPage.entries.filter { it != SettingsPage.ROOT && it != SettingsPage.RECORDBOOK },
+            SettingsPage.entries.filter { it != SettingsPage.ROOT && it != SettingsPage.RECORDBOOK && it != SettingsPage.LICENSES },
             pages
         )
         assertTrue(

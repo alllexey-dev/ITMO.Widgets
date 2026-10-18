@@ -9,11 +9,12 @@ class SettingsPages(
     val schedule: SchedulePageProvider,
     recordbook: RecordbookPageProvider,
     sport: SportPageProvider,
-    maintenance: MaintenancePageProvider
+    maintenance: MaintenancePageProvider,
+    licenses: LicensesPageProvider = LicensesPageProvider(),
 ) {
 
     val providers: List<SettingsPageProvider> =
-        listOf(root, services, widgets, schedule, recordbook, sport, maintenance)
+        listOf(root, services, widgets, schedule, recordbook, sport, maintenance, licenses)
 
     private val byPage = providers.flatMap { provider -> provider.pages.map { it to provider } }.toMap()
     private val byRow = providers.flatMap { provider -> provider.rows.map { it to provider } }.toMap()

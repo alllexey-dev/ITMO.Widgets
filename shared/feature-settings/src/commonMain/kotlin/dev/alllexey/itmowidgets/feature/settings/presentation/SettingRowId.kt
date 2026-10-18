@@ -48,6 +48,10 @@ enum class SettingRowId(val key: String) {
     THEME_CONTRAST("theme_contrast"),
     DARK_BLACK("dark_black"),
     WIDGETS_FOLLOW_THEME("widgets_follow_theme"),
+    LICENSE_PLANS("license_plans"),
+    // No "map" in the key: the settings forbid map-provider rows by that word.
+    LICENSE_MAPLIBRE("license_renderer"),
+    LICENSE_NOTO("license_noto"),
 
     // Navigation rows: `page_` and the lowercase name of the page they open.
     PAGE_SERVICES("page_services"),
@@ -58,6 +62,7 @@ enum class SettingRowId(val key: String) {
     PAGE_RECORDBOOK("page_recordbook"),
     PAGE_SPORT("page_sport"),
     PAGE_MAINTENANCE("page_maintenance"),
+    PAGE_LICENSES("page_licenses"),
     PAGE_APPEARANCE("page_appearance");
 
     companion object {
@@ -72,6 +77,7 @@ enum class SettingRowId(val key: String) {
             SettingsPage.RECORDBOOK -> PAGE_RECORDBOOK
             SettingsPage.SPORT -> PAGE_SPORT
             SettingsPage.MAINTENANCE -> PAGE_MAINTENANCE
+            SettingsPage.LICENSES -> PAGE_LICENSES
             SettingsPage.APPEARANCE -> PAGE_APPEARANCE
         }
     }

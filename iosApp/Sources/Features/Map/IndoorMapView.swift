@@ -7,7 +7,6 @@ import SwiftUI
 /// and a tap reports the plan room under it.
 struct IndoorMapView: UIViewRepresentable {
     let scene: MapScene
-    let dark: Bool
     let tap: (KotlinLong?) -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -17,7 +16,9 @@ struct IndoorMapView: UIViewRepresentable {
         view.delegate = context.coordinator
         view.minimumZoomLevel = 16
         view.maximumZoomLevel = 22
-        view.logoView.isHidden = false
+        // The plan's source is in the licences, not on the map (docs/features/map.md).
+        view.logoView.isHidden = true
+        view.attributionButton.isHidden = true
         let gesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapped(_:)))
         view.gestureRecognizers?.compactMap { $0 as? UITapGestureRecognizer }.forEach { gesture.require(toFail: $0) }
         view.addGestureRecognizer(gesture)
@@ -26,7 +27,7 @@ struct IndoorMapView: UIViewRepresentable {
 
     func updateUIView(_ view: MLNMapView, context: Context) {
         context.coordinator.tap = tap
-        context.coordinator.apply(scene, dark: dark, to: view)
+        context.coordinator.apply(scene, to: view)
     }
 
     @MainActor
@@ -38,14 +39,14 @@ struct IndoorMapView: UIViewRepresentable {
         private var focused: MapPoint?
         private var framed: [KotlinDouble]?
 
-        func apply(_ scene: MapScene, dark: Bool, to view: MLNMapView) {
+        func apply(_ scene: MapScene, to view: MLNMapView) {
             self.scene = scene
-            let key = "\(scene.tilesPath)|\(dark)"
+            let key = scene.tilesPath
             if key != styleKey {
                 styleKey = key
                 style = nil
-                let url = FileManager.default.temporaryDirectory.appendingPathComponent("campus-map-\(scene.buildingId)-\(dark).json")
-                try? CampusMapStyle.shared.json(scene: scene, dark: dark).write(to: url, atomically: true, encoding: .utf8)
+                let url = FileManager.default.temporaryDirectory.appendingPathComponent("campus-map-\(scene.buildingId).json")
+                try? CampusMapStyle.shared.json(scene: scene).write(to: url, atomically: true, encoding: .utf8)
                 view.styleURL = url
                 fit(scene, in: view)
             }
@@ -73,6 +74,7 @@ struct IndoorMapView: UIViewRepresentable {
         nonisolated func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
             MainActor.assumeIsolated {
                 self.style = style
+                addSprites(to: style)
                 update(style)
             }
         }
@@ -99,7 +101,8 @@ struct IndoorMapView: UIViewRepresentable {
 
         private func update(_ style: MLNStyle) {
             guard let scene else { return }
-            for (id, filter) in CampusMapStyle.shared.filters(level: scene.level) {
+            let selected = scene.selectedRoomId
+            for (id, filter) in CampusMapStyle.shared.filters(level: scene.level, selectedRoomId: selected) {
                 guard let layer = style.layer(withIdentifier: id) as? MLNVectorStyleLayer,
                       let data = filter.data(using: .utf8),
                       let json = try? JSONSerialization.jsonObject(with: data) else { continue }
@@ -107,6 +110,17 @@ struct IndoorMapView: UIViewRepresentable {
             }
             shape(scene.route, of: CampusMapStyle.shared.ROUTE_SOURCE, in: style)
             shape(scene.selection, of: CampusMapStyle.shared.SELECTION_SOURCE, in: style)
+        }
+
+        /// The campus app's icons from the bundle's `map_sprites`, drawn for a pixel ratio of 3.
+        private func addSprites(to style: MLNStyle) {
+            let scale = CGFloat(CampusMapStyle.shared.SPRITE_PIXEL_RATIO)
+            for name in CampusMapStyle.shared.SPRITES {
+                guard let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "map_sprites"),
+                      let data = try? Data(contentsOf: url),
+                      let image = UIImage(data: data, scale: scale) else { continue }
+                style.setImage(image, forName: name)
+            }
         }
 
         private func shape(_ geoJson: String, of source: String, in style: MLNStyle) {

@@ -40,7 +40,8 @@ class RootPageProviderTest {
             assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
             val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
             assertEquals(
-                SettingsPage.entries.filter { it != SettingsPage.ROOT },
+                // Лицензии opens from Обслуживание, not from the root.
+                SettingsPage.entries.filter { it != SettingsPage.ROOT && it != SettingsPage.LICENSES },
                 navigation.map { it.page }
             )
             assertTrue(navigation.all { it.description == null })

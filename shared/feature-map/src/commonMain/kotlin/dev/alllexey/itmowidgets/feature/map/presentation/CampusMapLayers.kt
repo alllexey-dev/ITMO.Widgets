@@ -1,255 +1,219 @@
 package dev.alllexey.itmowidgets.feature.map.presentation
 
+import dev.alllexey.itmowidgets.feature.map.domain.graph.GraphNode
 import dev.alllexey.itmowidgets.feature.map.domain.graph.IndoorRoute
 import dev.alllexey.itmowidgets.feature.map.domain.graph.RoutePart
-import dev.alllexey.itmowidgets.feature.map.domain.graph.RoutePartType
 import dev.alllexey.itmowidgets.feature.map.domain.rooms.MapRoom
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
-import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
 /**
- * The one MapLibre style of both platforms (docs/features/map.md "MapLibre"): ITMO's vector plan from the local
- * MBTiles file, drawn in the app's colours, plus the `route` and `selection` GeoJSON sources. Floors switch by
- * per-layer filters ([filters]); the platform view applies them and replaces the GeoJSON on every scene.
+ * The MapLibre style of both platforms (docs/features/map.md "MapLibre"): ITMO's own campus style ([ITMO_STYLE]) over
+ * the local MBTiles file, with the `route` and `active` GeoJSON sources the campus app fills, the selection layers
+ * of itmo-map-web, Noto Sans instead of the app's SF Pro glyphs, and every legacy filter turned into an expression.
+ * Floors and the selected room switch by per-layer filters ([filters]); the icons are [SPRITES], added by each
+ * platform at [SPRITE_PIXEL_RATIO].
  */
 object CampusMapStyle {
     const val ROUTE_SOURCE = "route"
-    const val SELECTION_SOURCE = "selection"
+    const val SELECTION_SOURCE = "active"
 
-    /** The layers a tap looks at; their features carry the plan room id in `id`. */
-    val TAP_LAYERS: List<String> = listOf("labels", "poi", "rooms")
+    /** The campus app's icons (72 px PNGs drawn for a pixel ratio of 3), bundled as `map_sprites/<name>.png`. */
+    val SPRITES: List<String> = listOf(
+        "accelerator", "amenity.restroom.female", "amenity.restroom.male", "amenity.restroom.unisex",
+        "amenity.restroom.wheelchair", "amenity.water", "auditory", "canteen", "cash", "cloakroom", "conferenceroom",
+        "coworking", "default", "elevator", "entrance", "gym", "healthcare", "laboratory", "library", "lockerroom.female",
+        "lockerroom.male", "meetingroom", "museum", "office", "office.study", "parking.bike", "pc", "printer", "science",
+        "serviceroom", "stairs.down", "stairs", "stairs.up", "studoffice", "walkway", "yard",
+    )
+    const val SPRITE_PIXEL_RATIO: Int = 3
 
-    /** The style of [scene]'s building in light or [dark] colours, filtered to its level. */
-    fun json(scene: MapScene, dark: Boolean): String {
-        val palette = if (dark) MapPalette.DARK else MapPalette.LIGHT
-        return buildJsonObject {
-            put("version", 8)
-            put("glyphs", scene.glyphsUrl)
-            putJsonObject("sources") {
-                putJsonObject(PLAN_SOURCE) {
-                    put("type", "vector")
-                    put("url", "mbtiles://${scene.tilesPath}")
-                    put("attribution", scene.attribution)
-                }
-                put(ROUTE_SOURCE, geoJsonSource(scene.route))
-                put(SELECTION_SOURCE, geoJsonSource(scene.selection))
-            }
-            putJsonArray("layers") { layers(palette, scene.level).forEach(::add) }
-        }.toString()
+    /** The layers a tap looks at (itmo-map-web's); their features carry the plan room id in `id`. */
+    val TAP_LAYERS: List<String> = listOf(
+        "room", "room_restroom", "room_student_places", "room_services", "room_halls", "room_sport",
+        "area_name_auditory", "area_name_public", "poi",
+    )
+
+    /** The style of [scene]'s building on its level with its selected room. */
+    fun json(scene: MapScene): String {
+        val template = Json.parseToJsonElement(ITMO_STYLE).jsonObject
+        val filters = filters(scene.level, scene.selectedRoomId)
+        return JsonObject(
+            template + mapOf(
+                "glyphs" to JsonPrimitive(scene.glyphsUrl),
+                "sources" to sources(scene),
+                "layers" to JsonArray(layers().map { layer -> layer.styled(filters[layer.id]) }),
+            ),
+        ).toString()
     }
 
-    /** Layer id to its filter on [level], as MapLibre expression JSON. */
-    fun filters(level: Int): Map<String, String> = LEVEL_LAYERS.associate { (id, extra) -> id to filter(level, extra).toString() }
+    /** Layer id to its filter on [level] with [selectedRoomId], as MapLibre expression JSON. */
+    fun filters(level: Int, selectedRoomId: Long?): Map<String, String> = expressions.mapValues { (_, filter) ->
+        filter.bind(level.toString(), selectedRoomId?.toString() ?: NO_ROOM).toString()
+    }
+
+    /** The template's layers with the selection highlight under the walls. */
+    private fun layers(): List<JsonObject> {
+        val layers = Json.parseToJsonElement(ITMO_STYLE).jsonObject.getValue("layers").jsonArray.map { it.jsonObject }
+        val walls = layers.indexOfFirst { it.id == WALLS_LAYER }
+        return layers.take(walls) + selectionLayers() + layers.drop(walls)
+    }
+
+    /** Every filtered layer's filter as an expression, with the template's level and room placeholders. */
+    private val expressions: Map<String, JsonElement> by lazy {
+        layers().mapNotNull { layer -> layer["filter"]?.let { layer.id to expression(it) } }.toMap()
+    }
+
+    private val JsonObject.id: String get() = getValue("id").jsonPrimitive.content
+
+    private fun JsonObject.styled(filter: String?): JsonObject {
+        val layout = this["layout"]?.jsonObject?.let { layout ->
+            if ("text-font" in layout) JsonObject(layout + ("text-font" to JsonArray(listOf(JsonPrimitive(FONT))))) else layout
+        }
+        return JsonObject(
+            this + listOfNotNull(
+                layout?.let { "layout" to it },
+                filter?.let { "filter" to Json.parseToJsonElement(it) },
+            ),
+        )
+    }
+
+    private fun sources(scene: MapScene) = buildJsonObject {
+        putJsonObject(PLAN_SOURCE) {
+            put("type", "vector")
+            put("url", "mbtiles://${scene.tilesPath}")
+        }
+        put(ROUTE_SOURCE, geoJsonSource(scene.route))
+        put(SELECTION_SOURCE, geoJsonSource(scene.selection))
+    }
 
     private fun geoJsonSource(data: String) = buildJsonObject {
         put("type", "geojson")
-        put("data", kotlinx.serialization.json.Json.parseToJsonElement(data))
+        put("data", Json.parseToJsonElement(data))
     }
 
-    /** Per-level layers and the extra condition each adds to `level == N`. */
-    private val LEVEL_LAYERS: List<Pair<String, JsonElement?>> = listOf(
-        "floor" to null,
-        "areas" to expr("!=", get("class"), JsonPrimitive("room")),
-        "rooms" to expr("==", get("class"), JsonPrimitive("room")),
-        "outlines" to null,
-        "walls" to null,
-        "poi" to null,
-        "labels" to null,
+    /** itmo-map-web's highlight of the selected room, under the walls. */
+    private fun selectionLayers(): List<JsonObject> = listOf(
+        selection("selected_fill", "fill", mapOf("fill-color" to JsonPrimitive(ACCENT), "fill-opacity" to JsonPrimitive(0.12))),
+        selection("selected_line", "line", mapOf("line-color" to JsonPrimitive(ACCENT), "line-width" to JsonPrimitive(2))),
     )
 
-    private fun filter(level: Int, extra: JsonElement?): JsonElement {
-        val onLevel = expr("==", get("level"), JsonPrimitive(level.toString()))
-        return if (extra == null) onLevel else expr("all", onLevel, extra)
-    }
-
-    private fun layers(p: MapPalette, level: Int): List<JsonObject> {
-        val filters = LEVEL_LAYERS.toMap().mapValues { (_, extra) -> filter(level, extra) }
-        return listOf(
-            layer("background", "background", paint = mapOf("background-color" to JsonPrimitive(p.background))),
-            layer("footprint", "fill", "footprint", paint = mapOf("fill-color" to JsonPrimitive(p.footprint))),
-            layer("floor", "fill", "level", filters["floor"], mapOf("fill-color" to JsonPrimitive(p.floor))),
-            layer("areas", "fill", "area", filters["areas"], mapOf("fill-color" to JsonPrimitive(p.corridor))),
-            layer(
-                "rooms", "fill", "area", filters["rooms"],
-                mapOf(
-                    "fill-color" to expr(
-                        "match", get("subclass"),
-                        JsonPrimitive("education"), JsonPrimitive(p.classroom),
-                        JsonPrimitive(p.room),
-                    ),
-                ),
-            ),
-            layer("outlines", "line", "area", filters["outlines"], mapOf("line-color" to JsonPrimitive(p.outline), "line-width" to JsonPrimitive(0.6))),
-            layer("walls", "line", "walls", filters["walls"], mapOf("line-color" to JsonPrimitive(p.wall), "line-width" to zoomRamp(18, 1.0, 22, 4.0))),
-            routeLayer("route-other", p.routeMuted, current = false),
-            routeLayer("route", p.route, current = true),
-            buildJsonObject {
-                put("id", "route-ends")
-                put("type", "circle")
-                put("source", ROUTE_SOURCE)
-                put("filter", expr("==", JsonArray(listOf(JsonPrimitive("geometry-type"))), JsonPrimitive("Point")))
-                putJsonObject("paint") {
-                    put("circle-radius", 7)
-                    put("circle-color", expr("match", get("role"), JsonPrimitive("start"), JsonPrimitive(p.routeStart), JsonPrimitive(p.route)))
-                    put("circle-stroke-width", 2)
-                    put("circle-stroke-color", p.halo)
-                }
-            },
-            layer(
-                "poi", "circle", "poi", filters["poi"],
-                mapOf("circle-radius" to JsonPrimitive(4), "circle-color" to JsonPrimitive(p.poi)),
-            ),
-            buildJsonObject {
-                put("id", "selection")
-                put("type", "circle")
-                put("source", SELECTION_SOURCE)
-                putJsonObject("paint") {
-                    put("circle-radius", 10)
-                    put("circle-color", p.selection)
-                    put("circle-stroke-width", 3)
-                    put("circle-stroke-color", p.halo)
-                }
-            },
-            buildJsonObject {
-                put("id", "labels")
-                put("type", "symbol")
-                put("source", PLAN_SOURCE)
-                put("source-layer", "area_name")
-                put("minzoom", 17.5)
-                put("filter", filters.getValue("labels"))
-                putJsonObject("layout") {
-                    put("text-field", expr("coalesce", get("ref"), get("name")))
-                    putJsonArray("text-font") { add(FONT) }
-                    put("text-size", zoomRamp(18, 10.0, 21, 14.0))
-                    put("text-optional", true)
-                }
-                putJsonObject("paint") {
-                    put("text-color", p.label)
-                    put("text-halo-color", p.halo)
-                    put("text-halo-width", 1.2)
-                }
-            },
-        )
-    }
-
-    private fun layer(id: String, type: String, sourceLayer: String? = null, filter: JsonElement? = null, paint: Map<String, JsonElement>) =
-        buildJsonObject {
-            put("id", id)
-            put("type", type)
-            if (sourceLayer != null) {
-                put("source", PLAN_SOURCE)
-                put("source-layer", sourceLayer)
-            }
-            if (filter != null) put("filter", filter)
-            put("paint", JsonObject(paint))
-        }
-
-    private fun routeLayer(id: String, color: String, current: Boolean) = buildJsonObject {
+    private fun selection(id: String, type: String, paint: Map<String, JsonElement>) = buildJsonObject {
         put("id", id)
-        put("type", "line")
-        put("source", ROUTE_SOURCE)
-        put("filter", expr("all", expr("==", JsonArray(listOf(JsonPrimitive("geometry-type"))), JsonPrimitive("LineString")), expr("==", get("current"), JsonPrimitive(current))))
-        putJsonObject("layout") {
-            put("line-cap", "round")
-            put("line-join", "round")
-        }
-        putJsonObject("paint") {
-            put("line-color", color)
-            put("line-width", zoomRamp(18, if (current) 4.0 else 3.0, 22, if (current) 10.0 else 6.0))
+        put("type", type)
+        put("source", PLAN_SOURCE)
+        put("source-layer", "area")
+        put("filter", Json.parseToJsonElement("""["all",["==","level","0"],["==","id","-1"]]"""))
+        put("paint", JsonObject(paint))
+    }
+
+    /**
+     * A legacy filter (`all`, `==`, `!=`, `in`, `!in` over string properties, the only forms the template uses) as an
+     * expression: the `setFilter` of both SDKs takes expressions only.
+     */
+    private fun expression(filter: JsonElement): JsonElement {
+        val parts = filter.jsonArray
+        val op = parts[0].jsonPrimitive.content
+        if (op == "all") return JsonArray(listOf(JsonPrimitive("all")) + parts.drop(1).map(::expression))
+        val get = JsonArray(listOf(JsonPrimitive("get"), parts[1]))
+        return when (op) {
+            "==", "!=" -> JsonArray(listOf(JsonPrimitive(op), get, parts[2]))
+            "in", "!in" -> JsonArray(
+                // `match` labels must be unique; the template lists `stairs` twice in one filter.
+                listOf(JsonPrimitive("match"), get, JsonArray(parts.drop(2).distinct()), JsonPrimitive(op == "in"), JsonPrimitive(op != "in")),
+            )
+            else -> throw IllegalArgumentException("Unsupported legacy filter $op")
         }
     }
 
-    private fun zoomRamp(z1: Int, v1: Double, z2: Int, v2: Double) =
-        expr("interpolate", JsonArray(listOf(JsonPrimitive("linear"))), JsonArray(listOf(JsonPrimitive("zoom"))), JsonPrimitive(z1), JsonPrimitive(v1), JsonPrimitive(z2), JsonPrimitive(v2))
-
-    private fun get(name: String) = JsonArray(listOf(JsonPrimitive("get"), JsonPrimitive(name)))
-
-    private fun expr(op: String, vararg args: JsonElement) = JsonArray(listOf(JsonPrimitive(op)) + args)
-
-    private const val PLAN_SOURCE = "plan"
-    private const val FONT = "Noto Sans Regular"
-}
-
-/** The plan's colours. */
-internal data class MapPalette(
-    val background: String,
-    val footprint: String,
-    val floor: String,
-    val corridor: String,
-    val room: String,
-    val classroom: String,
-    val outline: String,
-    val wall: String,
-    val label: String,
-    val halo: String,
-    val poi: String,
-    val route: String,
-    val routeMuted: String,
-    val routeStart: String,
-    val selection: String,
-) {
-    companion object {
-        // The scheme roles of shared/designsystem/tokens/itmo-tokens.json: surfaces for the floor, primary for the way.
-        val LIGHT = MapPalette(
-            background = "#E2E2E9", footprint = "#D9D9E0", floor = "#F9F9FF", corridor = "#F9F9FF",
-            room = "#EDEDF4", classroom = "#E0E2EC", outline = "#C4C6D0", wall = "#74777F", label = "#1A1C20",
-            halo = "#FFFFFF", poi = "#705574", route = "#425E91", routeMuted = "#ABC7FF", routeStart = "#1A1C20",
-            selection = "#425E91",
-        )
-        val DARK = MapPalette(
-            background = "#0C0E13", footprint = "#191C20", floor = "#111318", corridor = "#111318",
-            room = "#1E2025", classroom = "#282A2F", outline = "#44474E", wall = "#8E9099", label = "#E2E2E9",
-            halo = "#111318", poi = "#DDBCE0", route = "#ABC7FF", routeMuted = "#425E91", routeStart = "#E2E2E9",
-            selection = "#ABC7FF",
-        )
+    /** [this] expression with every `level` and `id` comparison set to [level] and [room]. */
+    private fun JsonElement.bind(level: String, room: String): JsonElement {
+        if (this !is JsonArray) return this
+        val op = (getOrNull(0) as? JsonPrimitive)?.content
+        val key = (getOrNull(1) as? JsonArray)?.takeIf { it.size == 2 && it[0] == JsonPrimitive("get") }?.get(1)?.jsonPrimitive?.content
+        if ((op == "==" || op == "!=") && size == 3) {
+            when (key) {
+                "level" -> return JsonArray(listOf(this[0], this[1], JsonPrimitive(level)))
+                "id" -> return JsonArray(listOf(this[0], this[1], JsonPrimitive(room)))
+            }
+        }
+        return JsonArray(map { it.bind(level, room) })
     }
+
+    private const val PLAN_SOURCE = "openmaptiles"
+    private const val WALLS_LAYER = "borders"
+    private const val NO_ROOM = "-1"
+    private const val ACCENT = "#1846C7"
+
+    /** The closest weight to the campus app's SF Pro Text Semibold among the mirror's open fonts (no SF Pro). */
+    private const val FONT = "Noto Sans Bold"
 }
 
-/** The GeoJSON of the map's `route` and `selection` sources. */
+/** The GeoJSON of the map's `route` and `active` sources, with the properties the campus app's style reads. */
 internal object CampusMapGeoJson {
     val EMPTY: String = collection(emptyList())
 
-    /** [route]'s parts on [level]: the [current] part bold, the rest muted; the ends where they are on [level]. */
+    /**
+     * [route] as the campus app draws a step (itmo-map-web `Route.geoJson(level, activeStep)`): a line per part,
+     * `visible` and `active` on [level], `step` current for [current]; the start and end points.
+     */
     fun route(route: IndoorRoute?, level: Int, current: RoutePart?): String {
-        if (route == null || route.edges.isEmpty()) return EMPTY
-        val lines = route.parts.filter { it.onLevel(level) }.map { part ->
-            feature("LineString", coordinates(part), mapOf("current" to JsonPrimitive(part == current)))
-        }
-        val ends = listOfNotNull(
-            route.start?.takeIf { it.level == level }?.let { point(it.longitude, it.latitude, "start") },
-            route.end?.takeIf { it.level == level }?.let { point(it.longitude, it.latitude, "end") },
+        val start = route?.start ?: return EMPTY
+        val end = route.end ?: return EMPTY
+        fun onLevel(l: Int) = JsonPrimitive((l == level).toString())
+        fun state(l: Int) = JsonPrimitive(if (l == level) "active" else "inactive")
+        fun point(type: String, node: GraphNode) = feature(
+            "Point",
+            position(node.longitude, node.latitude),
+            mapOf("type" to JsonPrimitive(type), "visible" to onLevel(node.level), "state" to state(node.level), "level" to JsonPrimitive(node.level.toString())),
         )
-        return collection(lines + ends)
-    }
-
-    fun selection(room: MapRoom?, level: Int): String =
-        if (room == null || room.level != level) EMPTY else collection(listOf(point(room.longitude, room.latitude, "room")))
-
-    private fun RoutePart.onLevel(level: Int): Boolean = this.level == level ||
-        (type == RoutePartType.STAIRS_UP || type == RoutePartType.STAIRS_DOWN) && edges.first().from.level == level
-
-    private fun coordinates(part: RoutePart) = buildJsonArray {
-        (listOf(part.edges.first().from) + part.edges.map { it.to }).forEach { node ->
-            addJsonArray {
-                add(node.longitude)
-                add(node.latitude)
-            }
+        val lines = route.parts.map { part ->
+            // As the campus app: a part belongs to the floor it arrives at, a stair included.
+            val shown = part.level
+            feature(
+                "LineString",
+                JsonArray((listOf(part.edges.first().from) + part.edges.map { it.to }).map { position(it.longitude, it.latitude) }),
+                mapOf(
+                    "type" to JsonPrimitive("path"),
+                    "level" to JsonPrimitive(part.level.toString()),
+                    "visible" to onLevel(shown),
+                    "state" to state(shown),
+                    "step" to JsonPrimitive(if (part == current) "current" else "other"),
+                ),
+            )
         }
+        return collection(listOf(point("start-point", start), point("end-point", end)) + lines)
     }
 
-    private fun point(longitude: Double, latitude: Double, role: String) =
-        feature("Point", buildJsonArray { add(longitude); add(latitude) }, mapOf("role" to JsonPrimitive(role)))
+    /** The selected room as the campus app's `active` point: its kind's icon over its name, on its level. */
+    fun selection(room: MapRoom?): String {
+        room ?: return EMPTY
+        val properties = buildMap {
+            put("id", JsonPrimitive(room.id.toString()))
+            put("level", JsonPrimitive(room.level.toString()))
+            room.kind?.let { put("subclass", JsonPrimitive(it)) }
+            room.name?.let { put("name", JsonPrimitive(it)) }
+        }
+        return collection(listOf(feature("Point", position(room.longitude, room.latitude), properties)))
+    }
 
-    private fun feature(type: String, coordinates: JsonArray, properties: Map<String, JsonElement>) = buildJsonObject {
+    private fun position(longitude: Double, latitude: Double) = buildJsonArray {
+        add(longitude)
+        add(latitude)
+    }
+
+    private fun feature(type: String, coordinates: JsonElement, properties: Map<String, JsonElement>) = buildJsonObject {
         put("type", "Feature")
         putJsonObject("geometry") {
             put("type", type)

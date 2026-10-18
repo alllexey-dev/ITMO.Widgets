@@ -52,8 +52,8 @@ class MaintenancePageProviderTest {
 
             val keys = fixture.viewModel.allItems().map { it.id }
             assertEquals(
-                listOf(SettingRowId.PRIVACY_POLICY, SettingRowId.VERSION),
-                keys.takeLast(2)
+                listOf(SettingRowId.PRIVACY_POLICY, SettingRowId.PAGE_LICENSES, SettingRowId.VERSION),
+                keys.takeLast(3)
             )
             assertEquals(
                 UiText.Res(SettingsStrings.settings_privacy_policy_title),
