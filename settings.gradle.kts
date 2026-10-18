@@ -44,6 +44,7 @@ include(
     ":shared:feature-resources",
     ":shared:feature-reviews",
     ":shared:feature-account",
+    ":shared:feature-map",
     ":shared:ios",
 )
 include(":konsist")
