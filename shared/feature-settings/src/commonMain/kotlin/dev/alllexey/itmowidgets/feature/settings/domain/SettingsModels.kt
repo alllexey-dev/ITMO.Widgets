@@ -86,8 +86,6 @@ interface SettingsRepository {
 
     suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean)
 
-    suspend fun setCompactWidgetTeacherHidden(hidden: Boolean)
-
     suspend fun setFullWidgetTeacherHidden(hidden: Boolean)
 
     suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean)

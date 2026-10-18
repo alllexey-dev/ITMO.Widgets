@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-07T09:22:00Z",
+  "validUntil": "2026-09-13T21:00:00Z",
+  "entries": [
+    {
+      "validFrom": "2026-09-07T09:22:00Z",
+      "snapshot": {
+        "kind": "CONTENT",
+        "visits": 15,
+        "bonus": 15,
+        "items": [
+          {
+            "lessonId": 101,
+            "date": "2026-09-08",
+            "day": "TOMORROW",
+            "time": "15:20",
+            "section": "Плавание",
+            "building": "улица Ломоносова, 9",
+            "status": "QUEUE",
+            "position": 2,
+            "total": 5,
+            "predicted": false
+          },
+          {
+            "lessonId": 102,
+            "date": "2026-09-10",
+            "day": "LATER",
+            "time": "15:20",
+            "section": "Волейбол",
+            "building": "Кронверкский проспект, 49",
+            "status": "BOOKED",
+            "position": 0,
+            "total": 0,
+            "predicted": false
+          }
+        ]
+      }
+    },
+    {
+      "validFrom": "2026-09-07T21:00:00Z",
+      "snapshot": {
+        "kind": "CONTENT",
+        "visits": 65,
+        "bonus": 39,
+        "items": []
+      }
+    }
+  ]
+}

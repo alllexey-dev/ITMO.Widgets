@@ -769,18 +769,6 @@
         }
       }
     },
-    "settings_compact_schedule_widget_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Компактное расписание"
-          }
-        }
-      }
-    },
     "settings_connections_title" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -937,18 +925,6 @@
         }
       }
     },
-    "settings_full_schedule_widget_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Полное расписание"
-          }
-        }
-      }
-    },
     "settings_group_access" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -969,18 +945,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обслуживание"
-          }
-        }
-      }
-    },
-    "settings_group_qr_widget" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Виджет QR-кода"
           }
         }
       }
@@ -1941,6 +1905,282 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Версия"
+          }
+        }
+      }
+    },
+    "settings_widget_add" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить"
+          }
+        }
+      }
+    },
+    "settings_widget_apply_note" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки применятся ко всем таким виджетам"
+          }
+        }
+      }
+    },
+    "settings_widget_day_description" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "С линией «сейчас»"
+          }
+        }
+      }
+    },
+    "settings_widget_day_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание на день"
+          }
+        }
+      }
+    },
+    "settings_widget_next_description" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сейчас и далее"
+          }
+        }
+      }
+    },
+    "settings_widget_next_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пара"
+          }
+        }
+      }
+    },
+    "settings_widget_on_screen" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "на экране"
+          }
+        }
+      }
+    },
+    "settings_widget_pass_description" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Под спойлером"
+          }
+        }
+      }
+    },
+    "settings_widget_pass_open_description" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-код сразу"
+          }
+        }
+      }
+    },
+    "settings_widget_pass_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропуск"
+          }
+        }
+      }
+    },
+    "settings_widget_sample_note" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пример на 12:22, настройки применятся ко всем таким виджетам"
+          }
+        }
+      }
+    },
+    "settings_widget_settings" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки виджета"
+          }
+        }
+      }
+    },
+    "settings_widget_show_teacher_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать преподавателя"
+          }
+        }
+      }
+    },
+    "settings_widget_sport_description" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Баллы и запись"
+          }
+        }
+      }
+    },
+    "settings_widget_sport_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спорт"
+          }
+        }
+      }
+    },
+    "settings_widgets_control_text" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В пункте управления и на экране блокировки — кнопка «Пропуск»."
+          }
+        }
+      }
+    },
+    "settings_widgets_how_to_add" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как добавить"
+          }
+        }
+      }
+    },
+    "settings_widgets_how_to_add_text" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите и удерживайте экран «Домой», затем «Изменить» → «Добавить виджет» и найдите ITMO.Widgets."
+          }
+        }
+      }
+    },
+    "settings_widgets_lock_text" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите и удерживайте экран блокировки, затем «Настроить» → «Экран блокировки»: строка у даты, ближайшая пара и обратный отсчёт."
+          }
+        }
+      }
+    },
+    "settings_widgets_lock_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экран блокировки"
+          }
+        }
+      }
+    },
+    "settings_widgets_note" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки формата общие для всех его виджетов и применяются сразу."
+          }
+        }
+      }
+    },
+    "settings_widgets_placed" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld на главном экране"
+          }
+        }
+      }
+    },
+    "settings_widgets_placed_home" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld на экране «Домой»"
           }
         }
       }

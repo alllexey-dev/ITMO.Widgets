@@ -30,10 +30,10 @@ data class LessonSheetUiState(
     val friends: List<UserSummary>,
 )
 
-/** What an action tile does; `Маршрут` waits for the map. */
-enum class LessonActionKind { VIDEO, FRIENDS, LINKS, SUBJECT }
+/** What an action tile does: `Маршрут` opens the campus map, the rest as named. */
+enum class LessonActionKind { ROUTE, VIDEO, FRIENDS, LINKS, SUBJECT }
 
-/** An action tile: [label] `Друзья 2`; [url] the meeting of [LessonActionKind.VIDEO], [route] what the rest open. */
+/** An action tile: [label] `Друзья 2`; [url] the meeting of [LessonActionKind.VIDEO], [route] what the others open. */
 data class LessonAction(val kind: LessonActionKind, val label: UiText, val url: String? = null, val route: AppRoute? = null)
 
 /**

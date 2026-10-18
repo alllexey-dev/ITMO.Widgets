@@ -11,6 +11,8 @@ import dev.alllexey.itmowidgets.core.lesson.LessonTimelines
 import dev.alllexey.itmowidgets.core.lesson.isOnlinePlaceholder
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.navigation.CampusMapArgs
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
@@ -186,6 +188,15 @@ class LessonSheetViewModel(
     }
 
     private fun actions(friends: List<UserSummary>, subject: LessonSubject?): List<LessonAction> = buildList {
+        lesson?.takeIf { !sheet.online && (sheet.room != null || sheet.address != null) }?.let { args ->
+            add(
+                LessonAction(
+                    LessonActionKind.ROUTE,
+                    UiText.Res(ScheduleStrings.schedule_sheet_route),
+                    route = AppRoutes.CampusMap(CampusMapArgs(args, route = true)),
+                ),
+            )
+        }
         lesson?.zoomUrl?.let { add(LessonAction(LessonActionKind.VIDEO, UiText.Res(ScheduleStrings.schedule_sheet_video), url = it)) }
         if (friends.isNotEmpty()) {
             add(LessonAction(LessonActionKind.FRIENDS, UiText.Res(ScheduleStrings.schedule_sheet_friends, listOf(friends.size))))

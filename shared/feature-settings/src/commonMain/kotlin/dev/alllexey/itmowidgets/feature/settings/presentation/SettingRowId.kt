@@ -21,8 +21,8 @@ enum class SettingRowId(val key: String) {
     ICS_EXPORT("ics_export"),
     RETRY_PRIVACY("retry_privacy"),
     COMPACT_WIDGET_NEXT_LESSON_EARLY("compact_widget_next_lesson_early"),
-    COMPACT_WIDGET_HIDE_TEACHER("compact_widget_hide_teacher"),
-    FULL_WIDGET_HIDE_TEACHER("full_widget_hide_teacher"),
+    /** The day widget's teacher, shown while on: the inverse of the stored `full_widget_hide_teacher`. */
+    FULL_WIDGET_SHOW_TEACHER("full_widget_show_teacher"),
     FULL_WIDGET_HIDE_PAST("full_widget_hide_past"),
     FULL_WIDGET_SHOW_TOMORROW("full_widget_show_tomorrow"),
     COMPACT_WIDGET_TEXT_SIZE("compact_widget_text_size"),
@@ -52,9 +52,7 @@ enum class SettingRowId(val key: String) {
     // Navigation rows: `page_` and the lowercase name of the page they open.
     PAGE_SERVICES("page_services"),
     PAGE_PRIVACY("page_privacy"),
-    PAGE_COMPACT_SCHEDULE_WIDGET("page_compact_schedule_widget"),
-    PAGE_FULL_SCHEDULE_WIDGET("page_full_schedule_widget"),
-    PAGE_QR_WIDGET("page_qr_widget"),
+    PAGE_WIDGETS("page_widgets"),
     PAGE_HOME("page_home"),
     PAGE_SCHEDULE("page_schedule"),
     PAGE_RECORDBOOK("page_recordbook"),
@@ -68,9 +66,7 @@ enum class SettingRowId(val key: String) {
             SettingsPage.ROOT -> throw IllegalArgumentException("The root settings page has no navigation row")
             SettingsPage.SERVICES -> PAGE_SERVICES
             SettingsPage.PRIVACY -> PAGE_PRIVACY
-            SettingsPage.COMPACT_SCHEDULE_WIDGET -> PAGE_COMPACT_SCHEDULE_WIDGET
-            SettingsPage.FULL_SCHEDULE_WIDGET -> PAGE_FULL_SCHEDULE_WIDGET
-            SettingsPage.QR_WIDGET -> PAGE_QR_WIDGET
+            SettingsPage.WIDGETS -> PAGE_WIDGETS
             SettingsPage.HOME -> PAGE_HOME
             SettingsPage.SCHEDULE -> PAGE_SCHEDULE
             SettingsPage.RECORDBOOK -> PAGE_RECORDBOOK

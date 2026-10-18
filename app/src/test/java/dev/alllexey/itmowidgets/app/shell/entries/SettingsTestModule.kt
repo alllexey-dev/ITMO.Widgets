@@ -127,7 +127,6 @@ private class MemorySettings : SettingsRepository {
         local.value = local.value.copy(widgetsFollowTheme = enabled)
     }
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) = Unit
-    override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) = Unit
     override suspend fun setFullWidgetTeacherHidden(hidden: Boolean) = Unit
     override suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean) = Unit
     override suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean) = Unit

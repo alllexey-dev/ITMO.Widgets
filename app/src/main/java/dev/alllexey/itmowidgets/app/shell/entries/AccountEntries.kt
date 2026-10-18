@@ -19,9 +19,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
@@ -73,6 +73,7 @@ import dev.alllexey.itmowidgets.feature.onboarding.ui.onSpoilerCropped
 import dev.alllexey.itmowidgets.feature.onboarding.ui.onWidgetPinnedProvider
 import dev.alllexey.itmowidgets.feature.onboarding.ui.onboardingActions
 import dev.alllexey.itmowidgets.feature.onboarding.ui.openOnboardingLink
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.update.navigation.UpdateRoutes
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateRoute
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
@@ -136,7 +137,7 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenConnection = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
     // The settings root holds the notification and widget rows until their own pages exist.
     onOpenNotifications = { navigator.open(AppRoutes.Settings()) },
-    onOpenWidgets = { navigator.open(AppRoutes.Settings()) },
+    onOpenWidgets = { navigator.open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) },
     onOpenWebLogin = { navigator.open(AppRoutes.WebLogin()) },
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },

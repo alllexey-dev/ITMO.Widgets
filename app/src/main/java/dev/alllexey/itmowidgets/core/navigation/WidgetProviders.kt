@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.core.navigation
 
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
+
 /**
  * Widget providers addressed by class name.
  *
@@ -17,4 +19,15 @@ object WidgetProviders {
 
     const val QR_CODE =
         "dev.alllexey.itmowidgets.feature.qr.ui.widget.QrCodeWidgetProvider"
+
+    const val SPORT =
+        "dev.alllexey.itmowidgets.feature.sport.ui.widget.SportWidgetProvider"
+
+    /** The provider of each format of the widgets gallery. */
+    fun of(format: WidgetFormat): String = when (format) {
+        WidgetFormat.NEXT -> SINGLE_LESSON
+        WidgetFormat.DAY -> DAY_SCHEDULE
+        WidgetFormat.SPORT -> SPORT
+        WidgetFormat.PASS -> QR_CODE
+    }
 }

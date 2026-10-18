@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.di.bridge
 
+import dev.alllexey.itmowidgets.feature.schedule.data.TeacherNowGatewayImpl
+import dev.alllexey.itmowidgets.core.schedule.TeacherNowGateway
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
@@ -73,6 +75,14 @@ class ScheduleGraphTest {
         assertSame(koin.get<DefaultScheduleChangeTracking>(), koin.get<ScheduleChangeTracking>())
         assertSame(koin.get<CalendarSyncRepositoryImpl>(), koin.get<CalendarSyncRepository>())
         assertSame(koin.get<DefaultCalendarSync>(), koin.get<CalendarSync>())
+    }
+
+    @Test
+    fun `the person card's teacher timetable is bound to My ITMO's`() {
+        bootApplication()
+
+        // UserProfileViewModel takes it with getOrNull(): without this binding the card never shows `Сейчас ведёт`.
+        assertTrue(GlobalContext.get().getOrNull<TeacherNowGateway>() is TeacherNowGatewayImpl)
     }
 
     @Test

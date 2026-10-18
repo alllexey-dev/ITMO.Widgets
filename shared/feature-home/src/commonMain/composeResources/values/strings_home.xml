@@ -13,6 +13,7 @@
     <string name="today_stale">Данные на %1$s</string>
     <string name="today_online">Онлайн</string>
     <string name="today_join">Войти</string>
+    <string name="today_route">Маршрут</string>
     <string name="bell_new">Новое</string>
     <string name="bell_earlier">Раньше</string>
     <string name="bell_nothing_new">Ничего нового</string>

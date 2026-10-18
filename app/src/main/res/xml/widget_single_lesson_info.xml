@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- W1: small from 2 x 2, medium (4 x 2) by default; the layout follows the width (NextLessonWidgetRenderer). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_single_lesson_description"
-    android:initialKeyguardLayout="@layout/widget_single_lesson_dash"
-    android:initialLayout="@layout/widget_single_lesson_dash"
+    android:initialKeyguardLayout="@layout/widget_next_small"
+    android:initialLayout="@layout/widget_next_small"
     android:minWidth="250dp"
-    android:minHeight="56dp"
+    android:minHeight="110dp"
     android:previewImage="@drawable/widget_single_lesson_preview"
-    android:updatePeriodMillis="3600000"
     android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="3600000"
     android:widgetCategory="home_screen" />

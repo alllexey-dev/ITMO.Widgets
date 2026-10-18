@@ -214,10 +214,6 @@ class SettingsRepositoryImpl(
         widgetSettings.setCompactWidgetNextLessonEarlyEnabled(enabled)
     }
 
-    override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) {
-        widgetSettings.setCompactWidgetTeacherHidden(hidden)
-    }
-
     override suspend fun setFullWidgetTeacherHidden(hidden: Boolean) {
         widgetSettings.setFullWidgetTeacherHidden(hidden)
     }

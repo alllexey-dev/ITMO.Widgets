@@ -35,7 +35,10 @@ class WidgetSettingsLegacyKeysTest {
         storage.setFullWidgetTomorrowEnabled(false)
         assertEquals(compact, storage.getScheduleWidgetSettings().compact)
         val restored = WidgetSettingsPreferences(data)
-        assertEquals(ScheduleWidgetSettings(), restored.getScheduleWidgetSettings())
+        assertEquals(
+            ScheduleWidgetSettings(full = FullScheduleWidgetSettings(showTomorrowWhenTodayIsOver = false)),
+            restored.getScheduleWidgetSettings()
+        )
         assertEquals(restored.getScheduleWidgetSettings(), restored.observeScheduleWidgetSettings().first())
         assertTrue(data.data.value[booleanPreferencesKey("widget_hide_teacher_enabled")] == true)
         assertFalse(ServicesOptInPreferences(data).getCustomServicesEnabled())

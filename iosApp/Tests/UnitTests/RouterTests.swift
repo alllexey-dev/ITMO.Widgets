@@ -412,10 +412,35 @@ final class RouterTests: XCTestCase {
             ("itmowidgets://route/qr_pass/extra", linkUnavailableEntry),
             ("itmowidgets://other/qr_pass", nil),
             ("https://route/qr_pass", nil),
+            ("itmowidgets://route/lesson", EntryRoute(tab: .schedule)),
+            ("itmowidgets://route/lesson?args=broken", EntryRoute(tab: .schedule)),
+            ("itmowidgets://route/sport?lesson=42", sportEntry(42, predicted: false)),
+            ("itmowidgets://route/sport?lesson=42&predicted=1", sportEntry(42, predicted: true)),
+            ("itmowidgets://route/sport?lesson=x", EntryRoute(tab: .sport)),
         ]
         for (string, expected) in cases {
             XCTAssertEqual(RouteURL.entryRoute(url: try XCTUnwrap(URL(string: string))), expected, string)
         }
+    }
+
+    /// A widget's lesson row carries the lesson's `LessonDetailsArgs` JSON: the sheet opens over the schedule.
+    func testAWidgetsLessonUrlOpensItsSheet() throws {
+        let args = LessonDetailsArgs(
+            pairId: 3, date: "2026-09-07", subjectName: "Физика", typeId: 3, format: "", start: "10:00", end: "11:30",
+            teacherFio: nil, teacherIsu: nil, room: "2202", building: nil, buildingId: nil, mainBuildingId: nil, note: nil,
+            zoomUrl: nil, zoomPassword: nil, zoomInfo: nil, flowName: nil, subjectId: nil
+        )
+        let json = EntryRouteParser.shared.lessonJson(args: args)
+        let url = try XCTUnwrap(URL(string: "itmowidgets://route/lesson?args=\(WidgetRoute.base64URL(Data(json.utf8)))"))
+
+        let route = try XCTUnwrap(RouteURL.entryRoute(url: url))
+
+        XCTAssertEqual(route.tab, AppTab.schedule)
+        XCTAssertEqual((route.overlay as? AppRoutes.LessonDetails)?.args, args)
+    }
+
+    private func sportEntry(_ lesson: Int64, predicted: Bool) -> EntryRoute? {
+        IosRoutes.shared.sportRoute(lessonId: lesson, predicted: predicted)
     }
 
     func testRouteUrlsRoundTrip() throws {
@@ -534,6 +559,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.LinkActions(args: links, linkId: "link-1"), .composeSheet),
             (AppRoutes.LessonDetails(args: lesson), .swiftUISheet),
             (AppRoutes.PendingSportDetails(args: pendingSport), .swiftUISheet),
+            (AppRoutes.CampusMap(args: CampusMapArgs(lesson: lesson, route: true)), .swiftUI),
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .swiftUISheet),
             // The link report is a Compose dialog inside the sheet that asks for it.
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),

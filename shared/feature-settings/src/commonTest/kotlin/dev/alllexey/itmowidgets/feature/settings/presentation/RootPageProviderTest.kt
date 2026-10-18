@@ -29,18 +29,15 @@ class RootPageProviderTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun rootIsACompactCatalogueWithOneSwitchAndNoArbitraryOptionSummaries() =
+    fun rootIsACompactCatalogueWithoutSwitchesOrArbitraryOptionSummaries() =
         runTest(main.dispatcher) {
             val fixture = createFixture(local = LocalSettings(customServicesEnabled = true))
             advanceUntilIdle()
 
             assertEquals(SettingsPage.ROOT, fixture.viewModel.uiState.value.page)
             assertEquals(3, fixture.viewModel.uiState.value.sections.size)
-            assertEquals(14, fixture.viewModel.allItems().size)
-            assertEquals(
-                listOf(SettingRowId.WIDGETS_FOLLOW_THEME),
-                fixture.viewModel.allItems().filterIsInstance<SettingItem.Toggle>().map { it.id }
-            )
+            assertEquals(11, fixture.viewModel.allItems().size)
+            assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
             val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
             assertEquals(
                 SettingsPage.entries.filter { it != SettingsPage.ROOT },
@@ -123,15 +120,17 @@ class RootPageProviderTest {
         }
 
     @Test
-    fun widgetsFollowTheThemeOnlyWhenTurnedOnInTheWidgetsGroup() =
+    fun theWidgetsGroupIsOneRowToTheGalleryWhereTheWidgetsFollowTheTheme() =
         runTest(main.dispatcher) {
-            val fixture = createFixture()
+            val root = createFixture()
             advanceUntilIdle()
-
-            val widgets = fixture.viewModel.uiState.value.sections.single {
+            val widgets = root.viewModel.uiState.value.sections.single {
                 it.title == UiText.Res(SettingsStrings.settings_group_widgets)
             }
-            assertEquals(SettingRowId.WIDGETS_FOLLOW_THEME, widgets.items.last().id)
+            assertEquals(listOf(SettingRowId.PAGE_WIDGETS), widgets.items.map { it.id })
+
+            val fixture = createFixture(page = SettingsPage.WIDGETS)
+            advanceUntilIdle()
             val toggle = fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME)
             assertEquals(UiText.Res(SettingsStrings.settings_widgets_theme_title), toggle.title)
             assertFalse(toggle.checked)

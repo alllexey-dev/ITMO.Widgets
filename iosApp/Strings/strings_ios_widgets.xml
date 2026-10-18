@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy of the iOS widgets that Android has no surface for (ADR 0028): the Lock Screen line beside the date. -->
+<resources>
+    <!-- accessoryInline: the room and when the lesson ends or starts, «1506 до 13:10», «1506 в 08:20». -->
+    <string name="ios_widget_inline_until">%1$s до %2$s</string>
+    <string name="ios_widget_inline_at">%1$s в %2$s</string>
+</resources>

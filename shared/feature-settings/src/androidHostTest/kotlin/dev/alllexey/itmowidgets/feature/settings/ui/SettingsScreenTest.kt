@@ -38,8 +38,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
-import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.designsystem.theme.ColorSource
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -194,7 +192,7 @@ class SettingsScreenTest {
         val first = toggle(true)
         val second = toggle().copy(id = SettingRowId.SPORT_TEACHER_FILTER, title = text("Спорт"))
         state = page(SettingSection(null, listOf(first, second)))
-        restoration.setContent { Themed { SettingsScreen(state, actions, widgetPreview = {}) } }
+        restoration.setContent { Themed { SettingsScreen(state, actions) } }
 
         state = page(SettingSection(null, listOf(first.copy(checked = false), second.copy(checked = true))))
         restoration.emulateSavedInstanceStateRestore()
@@ -208,7 +206,7 @@ class SettingsScreenTest {
     fun `persisted switch and choice values show in the first frame`() {
         compose.mainClock.autoAdvance = false
         state = page(SettingSection(null, listOf(toggle(true), choice())))
-        compose.setContent { Themed { SettingsScreen(state, actions, widgetPreview = {}) } }
+        compose.setContent { Themed { SettingsScreen(state, actions) } }
 
         compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key).assertIsOn()
         compose.onNodeWithTag(SettingRowId.QR_ANIMATION.key).assert(hasText("Плавное исчезновение", substring = true))
@@ -226,7 +224,7 @@ class SettingsScreenTest {
         state = full
         restoration.setContent {
             scroll = rememberScrollState()
-            Themed { SettingsScreen(state, actions, widgetPreview = {}, scrollState = scroll) }
+            Themed { SettingsScreen(state, actions, scrollState = scroll) }
         }
         compose.runOnIdle { scroll.dispatchRawDelta(SCROLLED_PX) }
         val previous = compose.runOnIdle { scroll.value }
@@ -284,7 +282,6 @@ class SettingsScreenTest {
         val details = listOf(
             SettingsPreviewData.Root,
             SettingsPreviewData.Privacy,
-            SettingsPreviewData.QrWidget,
             SettingsPreviewData.Schedule,
         )
         for ((night, source) in schemes) for (detail in details) {
@@ -425,7 +422,7 @@ class SettingsScreenTest {
         )
         val dialogs = SettingsDialogState()
         state = SettingsPreviewData.Schedule
-        compose.setContent { Themed { SettingsScreen(state, hostActions, widgetPreview = {}, dialogs = dialogs) } }
+        compose.setContent { Themed { SettingsScreen(state, hostActions, dialogs = dialogs) } }
 
         for ((dialog, button) in listOf(
             SettingsDialog.BackgroundWorkHint to "Разрешить",
@@ -448,7 +445,7 @@ class SettingsScreenTest {
     fun `an open choice survives recreation and shows the current value`() {
         val restoration = StateRestorationTester(compose)
         state = SettingsPreviewData.Privacy
-        restoration.setContent { Themed { SettingsScreen(state, actions, widgetPreview = {}) } }
+        restoration.setContent { Themed { SettingsScreen(state, actions) } }
         compose.onNodeWithTag(SettingRowId.SPORT_SHARING.key).performClick()
         compose.onNode(dialogOption("Друзья")).assertIsSelected()
 
@@ -498,51 +495,12 @@ class SettingsScreenTest {
         compose.onNodeWithTag(SettingsTestTags.THEME_SAMPLE).assertDoesNotExist()
     }
 
-    @Test
-    fun `the widget preview is composed once above the rows and does not move when they change`() {
-        var created = 0
-        var released = 0
-        state = SettingsPreviewData.QrWidget
-        compose.setContent {
-            Themed {
-                SettingsScreen(state, actions, widgetPreview = { settings ->
-                    DisposableEffect(Unit) {
-                        created++
-                        onDispose { released++ }
-                    }
-                    Box(Modifier.height(PREVIEW_HEIGHT).testTag(PREVIEW + (settings as WidgetPreviewSettings.Qr).appearance))
-                })
-            }
-        }
-        val qr = QrWidgetSettings()
-        val bounds = compose.onNodeWithTag(PREVIEW + qr).getBoundsInRoot()
-        val rowsTop = compose.onNodeWithTag(SettingsTestTags.SCROLL).getBoundsInRoot().top
-
-        val changed = qr.copy(dynamicColors = false)
-        update(
-            SettingsPreviewData.QrWidget.copy(
-                sections = SettingsPreviewData.QrWidget.sections.drop(1),
-                previewSettings = WidgetPreviewSettings.Qr(changed),
-            ),
-        )
-
-        assertEquals(bounds, compose.onNodeWithTag(PREVIEW + changed).getBoundsInRoot())
-        assertEquals(rowsTop, compose.onNodeWithTag(SettingsTestTags.SCROLL).getBoundsInRoot().top)
-        assertTrue(bounds.bottom <= rowsTop)
-        assertEquals(1, created)
-        assertEquals(0, released)
-
-        update(SettingsPreviewData.Root)
-        compose.onNodeWithTag(SettingsTestTags.WIDGET_PREVIEW).assertDoesNotExist()
-        assertEquals(1, released)
-    }
-
     private fun show(initial: SettingsUiState, fontScale: Float = 1f) {
         state = initial
         compose.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
-                Themed { SettingsScreen(state, actions, widgetPreview = {}) }
+                Themed { SettingsScreen(state, actions) }
             }
         }
     }
@@ -577,7 +535,7 @@ class SettingsScreenTest {
     }
 
     private fun page(vararg sections: SettingSection) =
-        SettingsUiState(SettingsPage.QR_WIDGET, sections.toList(), loaded = true)
+        SettingsUiState(SettingsPage.HOME, sections.toList(), loaded = true)
 
     private fun privacyWith(schedule: String, sport: String): SettingsUiState {
         val values = mapOf(SettingRowId.SCHEDULE_SHARING to schedule, SettingRowId.SPORT_SHARING to sport)
@@ -617,9 +575,7 @@ class SettingsScreenTest {
         const val CONSENT_ENABLE = "Подключиться"
         const val LARGE_FONT = 1.3f
         const val SCROLLED_PX = 420f
-        const val PREVIEW = "preview:"
         const val GREEN_SEED = 0xFF087F5B.toInt()
-        val PREVIEW_HEIGHT = 120.dp
         val SHARING_ROWS = listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING, SettingRowId.FRIENDS_SHARING)
         val IsSwitch = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)
     }

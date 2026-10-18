@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.core.work
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import platform.Foundation.NSUserDefaults
 
@@ -19,21 +20,29 @@ class RefreshStep(
 
 /**
  * The steps of the iOS background runner (`shared/ios`) by key, in the order they run: widget snapshots
- * first, then the checks (schedule changes, marks with the BARS renewal, the calendar sync). Each later check adds
+ * first (the schedule timeline, then the sport widget), then the checks (schedule changes, marks with the BARS renewal, the calendar sync). Each later check adds
  * one line here and binds its [RefreshStep] under its key in its feature's iOS module.
  */
 object RefreshStepKeys {
     const val WIDGET_SNAPSHOTS = "widget-snapshots"
+    const val SPORT_WIDGET = "sport-widget"
     const val SCHEDULE_CHANGES = "schedule-changes"
     const val MARKS = "marks"
     const val CALENDAR_SYNC = "calendar-sync"
 
     val ORDER: List<String> = listOf(
         WIDGET_SNAPSHOTS,
+        SPORT_WIDGET,
         SCHEDULE_CHANGES,
         MARKS,
         CALENDAR_SYNC,
     )
+
+    /**
+     * The sport widget asks My ITMO for the score and the bookings; a booking made in the app writes at once, so
+     * the runner refreshes it at most this often.
+     */
+    val SPORT_WIDGET_PERIOD: Duration = 30.minutes
 
     /** Android's `SCHEDULE_CHANGES_SPEC.period`. */
     val SCHEDULE_CHANGES_PERIOD: Duration = 2.hours

@@ -21,9 +21,9 @@
     <string name="settings_widget_next_early_title">Следующая пара заранее</string>
     <string name="settings_widget_next_early_description">За 15 минут до конца текущей пары.</string>
     <string name="settings_widget_hide_teacher_title">Скрывать преподавателя</string>
-    <string name="settings_widget_hide_past_title">Скрывать прошедшие занятия</string>
-    <string name="settings_widget_tomorrow_title">Показывать расписание на завтра</string>
-    <string name="settings_widget_tomorrow_description">Когда сегодняшние пары закончились.</string>
+    <string name="settings_widget_hide_past_title">Скрывать прошедшие пары</string>
+    <string name="settings_widget_tomorrow_title">Завтрашние пары вечером</string>
+    <string name="settings_widget_tomorrow_description">После последней пары сегодня</string>
     <string name="settings_widget_text_size_title">Размер текста</string>
     <string name="settings_widget_text_size_normal">Обычный</string>
     <string name="settings_widget_text_size_large">Крупный</string>

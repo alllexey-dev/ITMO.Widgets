@@ -2,6 +2,7 @@
 
 package dev.alllexey.itmowidgets.ios.navigation
 
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
@@ -34,6 +35,7 @@ enum class RouteFeature {
     REVIEWS,
     RESOURCES,
     CALENDAR,
+    MAP,
     DEBUG,
 }
 
@@ -61,6 +63,17 @@ object IosRoutes {
 
     /** The route of an `AppEntryIntents` action without arguments (widget, Control, quick action ids). */
     fun entryRoute(action: String): EntryRoute? = EntryRouteParser.parse(action)
+
+    /**
+     * A widget's lesson row: the lesson sheet over the schedule; [json] is the row's `LessonDetailsArgs` JSON
+     * (`EntryRouteParser.lessonJson`), a malformed one opens the schedule alone.
+     */
+    fun lessonRoute(json: String): EntryRoute? =
+        EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_LESSON, lesson = json)
+
+    /** A widget's sport booking or queue: Спорт on [lessonId], the catalog lesson a [predicted] one repeats. */
+    fun sportRoute(lessonId: Long, predicted: Boolean): EntryRoute? =
+        EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_SPORT, sportLesson = lessonId, sportPredicted = predicted)
 
     /** The route of an `https` app link (`AppLinks`); null for a link that is not the app's. */
     fun linkRoute(link: String): EntryRoute? = EntryRouteParser.parse(EntryRouteParser.ACTION_VIEW, link = link)
@@ -94,6 +107,7 @@ object IosRoutes {
         AppRoutes.ScheduleMonth::class to RouteFeature.SCHEDULE,
         AppRoutes.LessonDetails::class to RouteFeature.SCHEDULE,
         AppRoutes.PendingSportDetails::class to RouteFeature.SCHEDULE,
+        AppRoutes.CampusMap::class to RouteFeature.MAP,
         AppRoutes.UserSport::class to RouteFeature.SPORT,
         AppRoutes.SportPoints::class to RouteFeature.SPORT,
         AppRoutes.CancelBookingConfirm::class to RouteFeature.SPORT,

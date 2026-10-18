@@ -9,6 +9,8 @@ import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
+import dev.alllexey.itmowidgets.feature.map.di.campusMapIosModule
+import dev.alllexey.itmowidgets.feature.map.di.campusMapModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
@@ -33,6 +35,7 @@ import dev.alllexey.itmowidgets.feature.social.di.socialIosModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.sport.di.sportIosModule
 import dev.alllexey.itmowidgets.feature.sport.di.sportModule
+import dev.alllexey.itmowidgets.feature.sport.di.sportWidgetIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppStoreListing
@@ -64,8 +67,8 @@ object IosKoinModules {
         // The recordbook graph with the BARS session on WebKit and the Keychain; the tab, the subject page
         // and `Мои баллы`.
         recordbookModule, recordbookIosModule(platform),
-        // The schedule widgets' App Group timeline and the schedule widget refresh port.
-        scheduleWidgetIosModule,
+        // The schedule and sport widgets' App Group timelines and the refresh port sport asks after a booking.
+        scheduleWidgetIosModule, sportWidgetIosModule,
         // The web sign-in sheet, pairing's CryptoKit and LocalAuthentication ports and the update offer on their iOS
         // ports.
         webLoginDataModule, webLoginModule, webLoginIosModule(platform), updateModule, updateIosModule,
@@ -88,6 +91,8 @@ object IosKoinModules {
         // The teacher reviews with the editor and the report, the teacher tones, and the subject links with their
         // sheets and report.
         reviewsModule, reviewsIosModule, resourcesModule, resourcesIosModule,
+        // The campus map over the mirror; the previous lesson comes from the schedule's `DayLessonsGateway`.
+        campusMapModule, campusMapIosModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record, the build's site until then. */

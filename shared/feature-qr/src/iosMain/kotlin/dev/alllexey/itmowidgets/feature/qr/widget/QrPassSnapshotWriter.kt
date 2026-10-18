@@ -9,10 +9,12 @@ import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.SnapshotFile
 import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
+import dev.alllexey.itmowidgets.feature.qr.data.demo.DemoQr
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -136,14 +138,7 @@ class QrPassSnapshotWriter(
         ::QrWidgetAppearance,
     ).distinctUntilChanged()
 
-    private fun matrixOf(hex: String): List<String> {
-        val code = generator.generate(hex)
-        return List(code.size) { y ->
-            buildString(code.size) {
-                repeat(code.size) { x -> append(if (code.getModule(x, y)) DARK else LIGHT) }
-            }
-        }
-    }
+    private fun matrixOf(hex: String): List<String> = generator.matrixOf(hex)
 
     companion object {
         val FILE = SnapshotFile(name = "qr-pass", version = 1, serializer = QrPassSnapshot.serializer())
@@ -151,9 +146,32 @@ class QrPassSnapshotWriter(
         /** The QR widget's WidgetKit kind, a stable identifier. */
         const val QR_WIDGET_KIND = "dev.alllexey.itmowidgets.widget.qr"
 
-        private const val DARK = '1'
-        private const val LIGHT = '0'
         private const val TAG = "QrPassSnapshot"
+
+        /**
+         * The widgets gallery's pass at [at] with [appearance]: the demo session's code (`DemoQr`), which no turnstile
+         * accepts, valid for a day; never the user's pass.
+         */
+        fun sample(appearance: QrWidgetAppearance, at: Instant): QrPassSnapshot = QrPassSnapshot(
+            generatedAt = at,
+            expiresAt = at + 1.days,
+            demo = false,
+            matrix = QrCodeGenerator().matrixOf(DemoQr.HEX),
+            spoiler = appearance.spoiler,
+            dynamicColors = appearance.dynamicColors,
+            animation = appearance.animation.name,
+            palette = appearance.palette,
+        )
+    }
+}
+
+/** One string per row from the top, `1` for a dark module. */
+private fun QrCodeGenerator.matrixOf(hex: String): List<String> {
+    val code = generate(hex)
+    return List(code.size) { y ->
+        buildString(code.size) {
+            repeat(code.size) { x -> append(if (code.getModule(x, y)) '1' else '0') }
+        }
     }
 }
 

@@ -14,6 +14,10 @@ new iOS app.
 
 - Friend requests say when they were sent, in the bell and in Друзья on both platforms (`12:05`, `вчера`, `28 сент.`), from Backend's new `UserProfile.requestedAt` (itmo-widgets-backend#53, contract from Backend f9dd1e0); requests still lead the bell, newest first. Without the time from an older Backend nothing changes.
 
+### Data (2026-10-17)
+
+- `TeacherNowGateway`: the lesson a teacher gives now or next today, from My ITMO's teacher timetable (MyItmoApi 2.2.0 `getTeacherSchedule`), for the person card's «Сейчас ведёт»; parallel groups in one room are one lesson.
+
 ### iOS UI tests (2026-10-18)
 
 - iOS UI tests run on a pinned academic date, this week's Wednesday (`-itmoAcademicDate` in a Debug build), so
@@ -24,7 +28,8 @@ new iOS app.
 
 ### Campus map (2026-10-17)
 
-- New module `:shared:feature-map` with the router of itmo-map-web ported to shared Kotlin (same routes as `router.js` on all 360 checked pairs of ITMO's six plans), the mapping of timetable rooms to plan rooms and the three-part «Маршрут» planner; `itmo_buildings.json` gains each building's campus-map id and Гастелло, 12. No screen yet.
+- New module `:shared:feature-map` with the router of itmo-map-web ported to shared Kotlin (same routes as `router.js` on all 360 checked pairs of ITMO's six plans), the mapping of timetable rooms to plan rooms and the three-part «Маршрут» planner; `itmo_buildings.json` gains each building's campus-map id and Гастелло, 12.
+- The campus map screen on both platforms (native MapLibre): the lesson's room on its floor, «Маршрут» from the day's previous lesson or the entrance with «По городу» in the system Maps between buildings, room view, search across buildings, place chips, «У корпуса нет плана». `Маршрут` in the lesson sheet and on the Сегодня hero opens it. Plans come from the mirror on map.alllexey.dev and stay on the device (ADR 0033).
 
 ### Спорт lesson sheet data (2026-10-17)
 
@@ -187,6 +192,15 @@ new iOS app.
   free slot; `Моё` lists the sections with the place (`3-й из 7 в секции`), an off switch and the next three dates,
   each of which can be skipped. `Только мои секции` in the filters sheet of `Запись` keeps the lessons of the sections. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
   awards by month with the day the credit was reached; no forecast. Another user's sport shows lesson cards.
+- Widgets are rebuilt on both platforms (RemoteViews on Android, WidgetKit on iOS, one shared snapshot): `Пара`
+  (small, and medium with the next two lessons) shows the lesson to go to with its room in large type and a live
+  countdown, and tomorrow after the last lesson; `Расписание на день` is the day to scale with the `сейчас` line,
+  the current lesson highlighted, past ones dimmed and gaps labelled `окно 2 ч 10 мин`; the new `Спорт` widget has
+  the score ring (visits and bonus, green and closed once the credit is reached) and, medium, the nearest booking
+  or queue in the words of Спорт. A lesson opens its sheet, a queue or booking its sport lesson. iOS adds Lock
+  Screen widgets and the `Пропуск` Control. `Виджеты` in settings is a gallery of live previews with `Добавить`
+  (Android) or `Как добавить` (iOS) and each format's settings in a sheet; it replaces the `Компактное
+  расписание`, `Полное расписание` and QR pages, and `Завтрашние пары вечером` is now on by default.
 - Профиль, Друзья and the person card are rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one
   view model per screen). Профиль is a hub under the one-line header with `Поделиться`: the identity card, `Друзья`
   as a counter (`3 друга, 1 заявка`) with the requests badge, `Приватность`, then `Подключение и данные` as a status,

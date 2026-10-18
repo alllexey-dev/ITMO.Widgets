@@ -493,6 +493,18 @@
         }
       }
     },
+    "schedule_sheet_route" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маршрут"
+          }
+        }
+      }
+    },
     "schedule_sheet_soon" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
@@ -589,6 +601,30 @@
         }
       }
     },
+    "widget_preview_subject_algorithms" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Алгоритмы и структуры данных"
+          }
+        }
+      }
+    },
+    "widget_preview_subject_english" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Английский язык"
+          }
+        }
+      }
+    },
     "widget_preview_subject_physics" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
@@ -601,6 +637,18 @@
         }
       }
     },
+    "widget_preview_subject_swimming" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плавание"
+          }
+        }
+      }
+    },
     "widget_preview_teacher" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",
@@ -609,90 +657,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Иванов И. И."
-          }
-        }
-      }
-    },
-    "widget_preview_time_description" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Изменить время в примере"
-          }
-        }
-      }
-    },
-    "widget_preview_time_evening" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "18:00 · после пар"
-          }
-        }
-      }
-    },
-    "widget_preview_time_evening_short" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "18:00"
-          }
-        }
-      }
-    },
-    "widget_preview_time_lesson" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "12:50 · во время пар"
-          }
-        }
-      }
-    },
-    "widget_preview_time_lesson_short" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "12:50"
-          }
-        }
-      }
-    },
-    "widget_preview_time_title" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Время в примере"
-          }
-        }
-      }
-    },
-    "widget_preview_title" : {
-      "comment" : "Generated from strings_schedule.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пример виджета"
           }
         }
       }

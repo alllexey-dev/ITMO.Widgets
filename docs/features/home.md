@@ -31,8 +31,8 @@ The bell opens its sheet over it. The spec is the design lab's
   placeholder room (`дистант`) means online. The big text never clips and
   never touches the button: at least the kit's `content` gap, the address or
   the button goes under it when the row is too narrow. `Маршрут`, the same
-  small button for in-person lessons, waits for the map (phase 8): it is not
-  shown.
+  small button next to the room of an in-person lesson, opens the
+  [campus map](map.md) with the route to it; the address goes under them.
 - The day is the kit's timeline built by the shared lesson rules
   (`core/lesson/LessonTimelines`, [design](../design.md#the-m3-expressive-kit)):
   `идёт`, `далее`, `изменена` and `отменена` from the found

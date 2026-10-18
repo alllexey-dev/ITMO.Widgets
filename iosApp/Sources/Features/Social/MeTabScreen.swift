@@ -143,7 +143,7 @@ struct MeContent: View {
                 symbol: .widgets,
                 tone: .primary,
                 chevron: true,
-                action: { actions.open(AppRoutes.Settings(page: "ROOT")) }
+                action: { actions.open(AppRoutes.Settings(page: "WIDGETS")) }
             )
             .accessibilityIdentifier("widgets_row")
             ItmoRow(

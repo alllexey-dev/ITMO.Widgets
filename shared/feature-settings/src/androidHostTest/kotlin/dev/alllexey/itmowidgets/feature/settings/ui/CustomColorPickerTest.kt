@@ -44,7 +44,7 @@ class CustomColorPickerTest {
         val state = SettingsPreviewData.appearance(ThemeSpec(AccentColor.CUSTOM, customArgb = 0xFF5C6BC0.toInt()))
         setContent {
             ItmoTheme(dark = false, colorSource = ColorSource.Theme(state.themePreview!!)) {
-                SettingsScreen(state, SettingsActions(onChoice = { id, key -> choices += id to key }), widgetPreview = {})
+                SettingsScreen(state, SettingsActions(onChoice = { id, key -> choices += id to key }))
             }
         }
         onNodeWithTag(SettingRowId.ACCENT_CUSTOM.key).assert(hasText("#5C6BC0")).performClick()

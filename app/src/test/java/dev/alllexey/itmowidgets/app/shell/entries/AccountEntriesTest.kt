@@ -232,7 +232,7 @@ class AccountEntriesTest {
         assertOpens(MeTestTags.PRIVACY_ROW, overlays = listOf(AppRoutes.Settings("PRIVACY")))
         assertOpens(MeTestTags.CONNECTION_ROW, overlays = listOf(AppRoutes.Settings("SERVICES")))
         assertOpens(MeTestTags.NOTIFICATIONS_ROW, overlays = listOf(AppRoutes.Settings()))
-        assertOpens(MeTestTags.WIDGETS_ROW, overlays = listOf(AppRoutes.Settings()))
+        assertOpens(MeTestTags.WIDGETS_ROW, overlays = listOf(AppRoutes.Settings("WIDGETS")))
         assertOpens(MeTestTags.SETTINGS_ROW, overlays = listOf(AppRoutes.Settings()))
         assertOpens(MeTestTags.DEBUG_TOOLS_ROW, overlays = listOf(AppRoutes.DebugTools))
         assertOpens(MeTestTags.WEB_LOGIN_ROW, floating = listOf(AppRoutes.WebLogin()))
@@ -473,9 +473,13 @@ class AccountEntriesTest {
         override suspend fun setQrSpoilerEnabled(enabled: Boolean) = Unit
     }
 
+    /** The onboarding's widget rows never ask (the appearance never answers); the widgets gallery gets empty views. */
     private object NoPreviews : WidgetPreviewFactory {
         override fun create(context: Context, scope: CoroutineScope, settings: WidgetPreviewSettings): WidgetPreview =
-            error("the appearance never answers")
+            object : WidgetPreview {
+                override val view: View = View(context)
+                override fun bind(settings: WidgetPreviewSettings) = Unit
+            }
     }
 
     private object NoUpdateAction : UpdateAction {

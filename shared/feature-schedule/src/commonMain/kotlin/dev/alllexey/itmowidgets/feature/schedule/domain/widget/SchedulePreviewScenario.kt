@@ -1,86 +1,138 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.lesson.DayLesson
+import dev.alllexey.itmowidgets.core.lesson.LessonChange
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
+import dev.alllexey.itmowidgets.core.lesson.LessonTarget
+import dev.alllexey.itmowidgets.core.lesson.QueuePlace
+import dev.alllexey.itmowidgets.core.lesson.SportMark
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.asTimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.atTime
-import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 
+/** The subjects of the sample day, from the platform's catalog (`widget_preview_*`). */
 data class SchedulePreviewLabels(
-    val history: String,
     val math: String,
-    val programming: String,
     val physics: String,
-    val teacher: String
+    val programming: String,
+    val english: String,
+    val swimming: String,
+    val algorithms: String,
+    val history: String,
+    val teacher: String,
 )
 
-/** Explicit, deterministic examples. Never a user's schedule or the current academic date. */
+/**
+ * When a sample is seen: during the third lesson (12:22, the gallery's moment), before the first (08:05), in the gap
+ * (13:40) or after the last one (19:40).
+ */
+enum class SchedulePreviewMoment(val hour: Int, val minute: Int) { LESSON(12, 22), MORNING(8, 5), GAP(13, 40), EVENING(19, 40) }
+
+/**
+ * The fixed sample day of the widgets gallery, the launcher previews and the screenshot tests (the design lab's
+ * Monday, 7 September): never a user's schedule or the current academic date.
+ */
 class SchedulePreviewScenario(private val selector: ScheduleWidgetSelector) {
-    fun snapshot(settings: ScheduleWidgetSettings, evening: Boolean, labels: SchedulePreviewLabels): ScheduleWidgetSnapshot {
-        val today = day(
+
+    fun snapshot(
+        settings: ScheduleWidgetSettings,
+        moment: SchedulePreviewMoment,
+        labels: SchedulePreviewLabels,
+    ): ScheduleWidgetSnapshot = selector.select(days(labels), instant(moment), ZONE, ScheduleWidgetPreferences(settings)).snapshot
+
+    fun instant(moment: SchedulePreviewMoment): Instant = DATE.atTime(moment.hour, moment.minute).toInstant(ZONE)
+
+    /** The sample from [moment] to the end of the Tuesday, the timeline iOS widgets would read then. */
+    fun timeline(
+        settings: ScheduleWidgetSettings,
+        moment: SchedulePreviewMoment,
+        labels: SchedulePreviewLabels,
+    ): ScheduleWidgetTimeline = selector.timeline(
+        days(labels),
+        instant(moment),
+        TOMORROW.plus(1, DateTimeUnit.DAY).atStartOfDayIn(ZONE),
+        ZONE,
+        ScheduleWidgetPreferences(settings),
+    )
+
+    fun days(labels: SchedulePreviewLabels): List<LessonDay> = listOf(
+        LessonDay(
             DATE,
-            lesson(1, "09:30", "11:00", labels.history, labels.teacher),
-            lesson(2, "11:30", "13:00", labels.math, labels.teacher),
-            lesson(3, "13:30", "15:00", labels.programming, labels.teacher)
-        )
-        val tomorrow = day(
-            DATE.plus(1, DateTimeUnit.DAY),
-            lesson(4, "10:00", "11:30", labels.physics, labels.teacher),
-            lesson(5, "11:40", "13:10", labels.programming, labels.teacher)
-        )
-        return selector.select(
-            schedule = listOf(today, tomorrow),
-            now = DATE.atTime(if (evening) 18 else 12, if (evening) 0 else 50).toInstant(ZONE),
-            timeZone = ZONE,
-            preferences = ScheduleWidgetPreferences(
-                smartScheduling = true,
-                display = settings,
-                singleLessonStyle = LessonStyle.DOT,
-                lessonListStyle = LessonStyle.DOT
-            )
-        ).snapshot
-    }
+            listOf(
+                lesson(DATE, 1, "08:20", "09:50", labels.math, LECTURE, "1506", KRONVA),
+                lesson(DATE, 2, "10:00", "11:30", labels.physics, PRACTICE, "2202", LOMO, moved = true),
+                lesson(DATE, 3, "11:40", "13:10", labels.programming, LAB, "1506", KRONVA),
+                lesson(DATE, 4, "15:20", "16:50", labels.english, PRACTICE, null, null, online = true),
+                lesson(DATE, 5, "17:00", "18:30", labels.swimming, SPORT, SWIMMING_POOL, LOMO, sport = SportMark.BOOKED),
+            ),
+            cachedAt = null,
+        ),
+        LessonDay(
+            TOMORROW,
+            listOf(
+                lesson(TOMORROW, 6, "10:00", "11:30", labels.algorithms, LECTURE, "1404", BIRZHA),
+                lesson(TOMORROW, 7, "11:40", "13:10", labels.history, PRACTICE, "311", CHAIKA),
+                lesson(TOMORROW, 8, "15:20", "16:50", labels.swimming, SPORT, SWIMMING_POOL, LOMO, sport = SportMark.QUEUED)
+                    .copy(queue = QueuePlace(2, 5)),
+            ),
+            cachedAt = null,
+        ),
+    ).map { day -> day.copy(lessons = day.lessons.map { it.copy(teacher = labels.teacher) }) }
 
-    private fun day(date: LocalDate, vararg lessons: Lesson) =
-        DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, lessons.toList())
-
-    private fun lesson(id: Long, start: String, end: String, title: String, teacher: String) = Lesson(
-        pairId = id,
+    private fun lesson(
+        date: LocalDate,
+        id: Long,
+        start: String,
+        end: String,
+        subject: String,
+        typeId: Int,
+        room: String?,
+        building: String?,
+        online: Boolean = false,
+        moved: Boolean = false,
+        sport: SportMark? = null,
+    ) = DayLesson(
         start = LocalTime.parse(start),
         end = LocalTime.parse(end),
-        type = "",
-        typeId = Lesson.TypeId(if (id == 3L) 2 else 1),
-        note = null,
-        subjectName = title,
-        subjectId = id,
-        groupName = "",
-        flowId = id,
-        flowTypeId = 2,
-        teacherIsu = null,
-        teacherFio = teacher,
-        room = Room("1506"),
-        building = Building("Кронверкский проспект, 49"),
-        buildingId = null,
-        mainBuildingId = null,
-        format = "",
-        formatId = 1,
-        zoomUrl = null,
-        zoomPassword = null,
-        zoomInfo = null
+        subject = subject,
+        typeId = typeId,
+        teacher = null,
+        room = room,
+        building = building,
+        online = online,
+        target = LessonTarget.Lesson(
+            LessonDetailsArgs(
+                pairId = id, date = date.toString(), subjectName = subject, typeId = typeId, format = "", start = start,
+                end = end, teacherFio = null, teacherIsu = null, room = room, building = building, buildingId = null,
+                mainBuildingId = null, note = null, zoomUrl = null, zoomPassword = null, zoomInfo = null,
+            ),
+        ),
+        change = if (moved) LessonChange(DATE.atTime(9, 0), previousRoom = "2304") else null,
+        sport = sport,
     )
 
     private companion object {
         val DATE: LocalDate = LocalDate(2026, 9, 7)
-        val ZONE = UtcOffset(hours = 3).asTimeZone()
+        val TOMORROW: LocalDate = DATE.plus(1, DateTimeUnit.DAY)
+        val ZONE: TimeZone = UtcOffset(hours = 3).asTimeZone()
+        const val LECTURE = 1
+        const val LAB = 2
+        const val PRACTICE = 3
+        const val SPORT = 11
+        const val KRONVA = "Кронверкский проспект, 49"
+        const val LOMO = "улица Ломоносова, 9"
+        const val BIRZHA = "Биржевая линия, 14"
+        const val CHAIKA = "улица Чайковского, 11"
+        const val SWIMMING_POOL = "бассейн"
     }
 }

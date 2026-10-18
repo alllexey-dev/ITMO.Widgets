@@ -33,7 +33,6 @@ class RootPageProvider(
         SettingRowId.THEME_PALETTE,
         SettingRowId.THEME_CONTRAST,
         SettingRowId.DARK_BLACK,
-        SettingRowId.WIDGETS_FOLLOW_THEME,
         SettingRowId.HOME_PASS_VISIBLE,
     )
 
@@ -92,19 +91,7 @@ class RootPageProvider(
         ),
         SettingSection(
             title = UiText.Res(SettingsStrings.settings_group_widgets),
-            items = listOf(
-                SettingRows.navigation(SettingsPage.COMPACT_SCHEDULE_WIDGET),
-                SettingRows.navigation(SettingsPage.FULL_SCHEDULE_WIDGET),
-                SettingRows.navigation(
-                    SettingsPage.QR_WIDGET,
-                    title = UiText.Res(SettingsStrings.settings_qr_short_title)
-                ),
-                SettingItem.Toggle(
-                    id = SettingRowId.WIDGETS_FOLLOW_THEME,
-                    title = UiText.Res(SettingsStrings.settings_widgets_theme_title),
-                    checked = state.local.widgetsFollowTheme
-                )
-            )
+            items = listOf(SettingRows.navigation(SettingsPage.WIDGETS))
         ),
         SettingSection(
             title = UiText.Res(CoreStrings.me_group_app),
@@ -178,7 +165,6 @@ class RootPageProvider(
         when (id) {
             SettingRowId.HOME_PASS_VISIBLE -> scope.updateLocalSetting { repository.setHomePassVisible(checked) }
             SettingRowId.DARK_BLACK -> updateTheme(scope) { it.copy(pureBlack = checked) }
-            SettingRowId.WIDGETS_FOLLOW_THEME -> scope.updateWidgetSetting { repository.setWidgetsFollowTheme(checked) }
             else -> Unit
         }
     }

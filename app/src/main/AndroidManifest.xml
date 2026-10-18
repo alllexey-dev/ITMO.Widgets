@@ -147,6 +147,22 @@
             android:exported="false" />
 
         <receiver
+            android:name=".feature.sport.ui.widget.SportWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_sport_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_sport_info" />
+        </receiver>
+
+        <receiver
+            android:name=".feature.sport.work.SportWidgetRefreshReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".app.WidgetBootReceiver"
             android:enabled="true"
             android:exported="true">
@@ -168,11 +184,6 @@
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             tools:node="remove" />
-
-        <service
-            android:name=".feature.schedule.ui.widget.ScheduleWidgetRemoteViewsService"
-            android:exported="false"
-            android:permission="android.permission.BIND_REMOTEVIEWS" />
 
     </application>
 

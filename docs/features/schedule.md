@@ -91,6 +91,19 @@ requests, all in parallel. Keeps `flowTypeId == 2` lessons with that
 - `clearSessionData()` deletes the file; an answer requested before the clear
   is not stored. The recordbook is not used (its teachers carry no ISU).
 
+
+## What a teacher gives now
+
+`core/schedule/TeacherNowGateway.lessonOf(teacherIsu)` is the data of the
+person card's «Сейчас ведёт». `TeacherNowGatewayImpl` asks My ITMO's teacher
+timetable (`MyItmoApi` `ScheduleApi.getTeacherSchedule`,
+`/api/schedule/teacher/{isu}`, from 2.2.0) for today on every call; the caller
+decides how often. `teacherNow` picks the lesson running at academic now, else
+the next one today (`isNow` false), else null; room bookings (`flowTypeId` 5)
+are left out and lessons with the same time, subject and place for several
+groups merge into one with every group. A student's or unknown ISU answers
+with days without lessons, so null. Demo answers from the demo week without a
+request. Read only: never uploaded, nothing is cached.
 ## The feed
 
 `ScheduleFeedViewModel` reads a window of whole weeks around the visible day from `ScheduleDays`
@@ -186,9 +199,10 @@ sheet otherwise. On iOS there is no shell route to the sport tab's sheet yet, so
 - The lesson's type and day as the sheet's title, the status pill (`отменена`, `изменена`, `очередь`, `идёт ещё
   48 мин`, `через 2 ч 58 мин`), the subject, the room big (`Онлайн` for an online lesson) with the time and its length
   and the building's full address (`BuildingDirectory`, else MyITMO's text).
-- Actions, only the relevant ones: `Видео` (the meeting link, opened, never shown), `Друзья 2` (scrolls to the friends
-  on the lesson), `Ссылки 3` and `Предмет` from the first `LessonSubjectSource` that knows the subject (an open set in
-  `core/lesson`). `Маршрут` waits for the map (phase 8).
+- Actions, only the relevant ones: `Маршрут` for an in-person lesson with a room or a building (the
+  [campus map](map.md) with the route from the day's previous lesson), `Видео` (the meeting link, opened, never shown),
+  `Друзья 2` (scrolls to the friends on the lesson), `Ссылки 3` and `Предмет` from the first `LessonSubjectSource` that
+  knows the subject (an open set in `core/lesson`).
 - The recordbook's source (`RecordbookLessonSubjects`) takes the record book subject of the lesson's half-year that the
   subject page would bind to the lesson's schedule subject (`SubjectContextResolver`: a confirmed binding or the same
   id, else the one subject of that name not bound elsewhere). `Предмет` opens its [page](subject-page.md), `Ссылки 3`
@@ -217,4 +231,4 @@ view touching the bar's edge takes the bar's height as a vertical content inset 
 (`ScheduleUITests.testWeekStripIsDrawnOnLaunchAndAfterATabSwitch` checks the pixels); `ScheduleSheets.swift` has the lesson sheet, the month sheet and the friend picker
 (`Routes+Schedule.swift`, all `.swiftUISheet`). The picker and the month sheet answer through `AppRouter.open(_:onResult:)`
 (`FriendPick`, `DatePick`). Snapshot references: `ScheduleSnapshotTests`. See also
-[schedule changes](schedule-changes.md#ios), [calendar](calendar.md#ios), [widgets](widgets.md#ios).
+[schedule changes](schedule-changes.md#ios), [calendar](calendar.md#ios), [widgets](widgets.md#timeline-widgetkit).

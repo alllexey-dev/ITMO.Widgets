@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrPreviewBitmapCache
 import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrSettingsPreview
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleSettingsPreview
+import dev.alllexey.itmowidgets.feature.sport.ui.widget.SportSettingsPreview
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -37,5 +38,6 @@ class DefaultWidgetPreviewFactory(
         when (settings) {
             is WidgetPreviewSettings.Qr -> QrSettingsPreview(context, scope, images, colors)
             is WidgetPreviewSettings.Schedule -> ScheduleSettingsPreview(context, scheduleScenario)
+            is WidgetPreviewSettings.Sport -> SportSettingsPreview(context)
         }.also { it.bind(settings) }
 }

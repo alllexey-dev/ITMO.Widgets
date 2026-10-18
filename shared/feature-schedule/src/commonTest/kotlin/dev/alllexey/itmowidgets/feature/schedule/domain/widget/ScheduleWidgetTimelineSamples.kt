@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
-import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
@@ -21,8 +20,9 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
-/** Synthetic schedules for the widget timeline tests and the WidgetKit reference fixture. */
+/** Synthetic schedules for the widget and schedule-days tests and the WidgetKit reference fixture. */
 internal object ScheduleWidgetTimelineSamples {
     val TODAY: LocalDate = LocalDate(2026, 8, 10)
     val TOMORROW: LocalDate = TODAY.plus(1, DateTimeUnit.DAY)
@@ -32,41 +32,39 @@ internal object ScheduleWidgetTimelineSamples {
     /** The end of tomorrow, where the timelines of these tests stop. */
     val END_OF_TOMORROW: Instant = DAY_AFTER.atStartOfDayIn(ZONE)
 
-    /**
-     * The reference fixture `fixtures/schedule-widget-timeline-v1.json`: two lessons with a break, a predicted pending
-     * sport row and one lesson tomorrow, generated at 10:00:30.25 today.
-     */
-    fun fixtureTimeline(): ScheduleWidgetTimeline = ScheduleWidgetSelector().timeline(
-        schedule = listOf(
-            day(
-                TODAY,
-                lesson(1, "10:00", "11:30", "Математика", teacher = "Тестовый преподаватель", room = "1404"),
-                lesson(2, "11:40", "13:10", "Физика")
-            ),
-            day(TOMORROW, lesson(3, "08:20", "09:50", "Алгоритмы")),
-        ),
-        from = at(TODAY, "10:00:30.25"),
-        until = END_OF_TOMORROW,
-        timeZone = ZONE,
-        preferences = preferences(forwardScheduling = true, showTomorrowWhenFinished = true),
-        pendingSport = listOf(pending(7, TODAY, "15:30", prediction = true)),
+    val LABELS = SchedulePreviewLabels(
+        math = "Математический анализ",
+        physics = "Физика",
+        programming = "Программирование",
+        english = "Английский язык",
+        swimming = "Плавание",
+        algorithms = "Алгоритмы и структуры данных",
+        history = "История",
+        teacher = "Иванов Иван Иванович",
     )
 
+    val scenario = SchedulePreviewScenario(ScheduleWidgetSelector())
+
+    /**
+     * The reference fixture `fixtures/schedule-widget-timeline-v2.json`: the sample Monday from 12:22 to the end of
+     * Tuesday, with a moved room, an online lesson, sport and a queue tomorrow.
+     */
+    fun fixtureTimeline(): ScheduleWidgetTimeline {
+        val from = scenario.instant(SchedulePreviewMoment.LESSON)
+        val until = from.toLocalDateTime(ZONE).date.plus(2, DateTimeUnit.DAY).atStartOfDayIn(ZONE)
+        return ScheduleWidgetSelector().timeline(scenario.days(LABELS), from, until, ZONE, preferences())
+    }
+
     fun preferences(
-        forwardScheduling: Boolean = false,
+        showNextLessonEarly: Boolean = false,
         hideTeacher: Boolean = false,
-        hidePreviousLessons: Boolean = false,
-        showTomorrowWhenFinished: Boolean = false,
+        hidePastLessons: Boolean = false,
+        showTomorrow: Boolean = true,
     ) = ScheduleWidgetPreferences(
-        smartScheduling = true,
-        display = ScheduleWidgetSettings(
-            compact = CompactScheduleWidgetSettings(forwardScheduling, hideTeacher, WidgetTextSize.NORMAL),
-            full = FullScheduleWidgetSettings(
-                hideTeacher, hidePreviousLessons, showTomorrowWhenFinished, WidgetTextSize.LARGE
-            )
-        ),
-        singleLessonStyle = LessonStyle.DOT,
-        lessonListStyle = LessonStyle.LINE
+        ScheduleWidgetSettings(
+            compact = CompactScheduleWidgetSettings(showNextLessonEarly, textSize = WidgetTextSize.NORMAL),
+            full = FullScheduleWidgetSettings(hideTeacher, hidePastLessons, showTomorrow, WidgetTextSize.LARGE),
+        )
     )
 
     fun at(date: LocalDate, time: String): Instant = LocalDateTime(date, LocalTime.parse(time)).toInstant(ZONE)
