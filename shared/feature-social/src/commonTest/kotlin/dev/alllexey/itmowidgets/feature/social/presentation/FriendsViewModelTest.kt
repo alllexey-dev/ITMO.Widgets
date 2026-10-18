@@ -379,7 +379,7 @@ class FriendsViewModelTest {
 
     @Test
     fun nobodyFoundIsTheEmptyState() = runTest(main.dispatcher) {
-        val viewModel = FriendsViewModel(FakeSocialRepository(), PagedPeopleSearch())
+        val viewModel = FriendsViewModel(FakeSocialRepository(), PagedPeopleSearch(), time)
         viewModel.onQueryChanged("никто")
         advanceUntilIdle()
         assertEquals(PeopleSearchResults.Empty, viewModel.uiState.value.search)
