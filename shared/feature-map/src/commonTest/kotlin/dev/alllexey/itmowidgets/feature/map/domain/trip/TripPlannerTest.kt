@@ -50,6 +50,21 @@ class TripPlannerTest {
     }
 
     @Test
+    fun aRoomWithoutAWayInIsReachedAsCloseAsThePlanGoes() {
+        // Room 9 has graph points of its own but no transition into them, as 1206 in ITMO's 273.
+        val walled = BuildingPlan(
+            13,
+            kronva.rooms + MapRoom(9, 13, 0, "room", "education", "9", "9", null, 30.0, 60.0),
+            IndoorGraph(kronva.graph.nodes + GraphNode(9, 9, 0, 30.0, 60.0, false, false, emptyList())),
+        )
+        val leg = assertIs<TripLeg.Indoor>(TripPlanner.plan(null, PlanPlace(13, walled.room(9)!!)) { walled }.single())
+
+        assertTrue(leg.nearTarget)
+        assertNotNull(leg.route)
+        assertEquals(9L, leg.to.id)
+    }
+
+        @Test
     fun aTargetWithoutAPlanHasNoTrip() {
         assertTrue(TripPlanner.plan(null, PlanPlace(5, kronva.room(3)!!), plans::get).isEmpty())
     }

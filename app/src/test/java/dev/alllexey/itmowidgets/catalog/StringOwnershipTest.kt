@@ -219,7 +219,7 @@ class StringOwnershipTest {
         val SHARED_FILES = setOf("common", PLATFORM)
         val CATALOG_FILES = setOf(
             "app", "common", "platform", "debug", "qr", "home", "schedule", "sport", "recordbook", "social",
-            "settings", "resources", "reviews", "auth", "onboarding", "me", "weblogin", "web", "update"
+            "settings", "resources", "reviews", "auth", "onboarding", "me", "weblogin", "web", "update", "map"
         )
         // Only production source sets: src/debug previews and the test source sets may show any module's screens.
         val PRODUCTION_SETS = listOf("main", "github", "play")

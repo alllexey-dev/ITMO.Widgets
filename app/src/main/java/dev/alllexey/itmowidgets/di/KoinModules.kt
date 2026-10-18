@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.di
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
+import dev.alllexey.itmowidgets.feature.map.di.campusMapModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
@@ -52,6 +53,7 @@ object KoinModules {
         qrModule,
         homeModule,
         resourcesModule,
+        campusMapModule,
         settingsDataModule,
         settingsModule,
         recordbookModule,
