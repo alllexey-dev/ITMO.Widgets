@@ -107,7 +107,9 @@ private fun userProfileExits(
     onInvite = { context.shareSocialInvitation() },
     onFriends = { page -> navigator.open(AppRoutes.UserFriends(page.isu, page.displayName.resolve(context))) },
     onSchedule = { page -> navigator.open(AppRoutes.UserSchedule(page.isu, page.displayName.resolve(context))) },
-    onSport = { page -> navigator.open(AppRoutes.UserSport(page.isu, page.displayName.resolve(context))) },
+    onSport = { page ->
+        navigator.open(AppRoutes.UserSport(page.isu, page.displayName.resolve(context), page.givenName))
+    },
     onReviewEditor = { page -> navigator.open(AppRoutes.ReviewEditor(page.reviewArgs())) },
     onReport = { page, reviewId -> navigator.open(AppRoutes.ReportReview(page.reviewArgs(), reviewId)) },
     onOpenProfile = navigator::openUserProfile,

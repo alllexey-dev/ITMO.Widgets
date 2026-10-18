@@ -124,6 +124,19 @@ class UserSportViewModelTest {
         assertEquals(listOf(12L), (viewModel.uiState.value as UserSportUiState.Content).bookings.map { it.lessonId })
     }
 
+    @Test
+    fun theTitleNamesTheUserByTheirGivenName() = runTest(main.dispatcher) {
+        val schedule = CatalogSportScheduleRepository(catalog = AppResult.Success(emptyList()))
+        val bookings = FakeUserSportRepository(AppResult.Success(UserSportBookings(emptyList(), emptyList())))
+        fun givenName(vararg args: Pair<String, Any?>) =
+            UserSportViewModel(SavedStateHandle(mapOf(UserScreenArgs.ISU to 5, *args)), bookings, schedule).givenName
+
+        assertEquals("Мария", givenName(UserScreenArgs.NAME to "Де Ла Круз Мария", UserScreenArgs.GIVEN_NAME to "Мария"))
+        assertEquals("Иван", givenName(UserScreenArgs.NAME to "Кузнецов Иван"))
+        assertEquals("", givenName())
+        advanceUntilIdle()
+    }
+
     private fun handle(isu: Int) = SavedStateHandle(mapOf(UserScreenArgs.ISU to isu, UserScreenArgs.NAME to "Friend"))
 
     private fun lesson(id: Long) = SportLesson(

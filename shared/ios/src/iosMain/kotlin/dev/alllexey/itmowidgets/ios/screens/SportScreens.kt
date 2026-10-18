@@ -18,9 +18,9 @@ import platform.UIKit.UIViewController
 
 /**
  * Another user's sport (`AppRoutes.UserSport`), as Android's shell hosts it: read-only cards whose building opens
- * in Apple Maps. [name] is the profile's display name for the title.
+ * in Apple Maps. [name] is the profile's display name and [givenName] ITMO.ID's, for the title.
  */
-fun userSportViewController(isu: Int, name: String, onBack: () -> Unit): UIViewController {
+fun userSportViewController(isu: Int, name: String, givenName: String?, onBack: () -> Unit): UIViewController {
     val koin = IosKoin.koin()
     val time = koin.get<AcademicTimeProvider>()
     val actions = koin.get<PlatformActions>()
@@ -31,7 +31,7 @@ fun userSportViewController(isu: Int, name: String, onBack: () -> Unit): UIViewC
                 .background(ItmoTheme.colorScheme.surface)
                 .windowInsetsPadding(WindowInsets.safeDrawing),
         ) {
-            UserSportIosRoute(isu, name, time, onBack = onBack, onOpenMap = { actions.openBuilding(it) })
+            UserSportIosRoute(isu, name, givenName, time, onBack = onBack, onOpenMap = { actions.openBuilding(it) })
         }
     }
 }

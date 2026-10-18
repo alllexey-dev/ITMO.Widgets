@@ -15,6 +15,7 @@ new iOS app.
 - iOS shows the pull-to-refresh spinner on every tab root (Спорт, Сегодня, Расписание, Зачётка, Профиль) under the
   header, and on every screen it stays until the refresh ends: the roots' hidden navigation bar took the refresh
   control with it, and the refresh action returned at once or was cancelled by the first state change.
+- Another user's sport is titled by their given name (`Спорт: Иван`), from ITMO.ID's `given_name` or the second word of «Фамилия Имя», not by their surname.
 
 ### Data (2026-10-17)
 
