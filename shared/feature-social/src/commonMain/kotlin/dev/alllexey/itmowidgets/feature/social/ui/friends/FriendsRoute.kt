@@ -5,53 +5,50 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.friends_action_failed
+import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * The viewer's friends and requests with their Koin ViewModel. A failed action shows a snackbar; a remove asks in a
- * confirmation first. Android hosts it in the Compose shell; the iOS shell hosts the same route.
- */
+/** Where Друзья leaves to; every exit is the host's. */
+class FriendsExits(
+    val onBack: () -> Unit = {},
+    val onOpenProfile: (Int) -> Unit = {},
+    val onConnect: () -> Unit = {},
+    val onShareProfile: (name: String, isu: Int) -> Unit = { _, _ -> },
+    /** `Пригласить` for someone without ITMO.Widgets. */
+    val onInvite: () -> Unit = {},
+)
+
+/** Друзья with its Koin ViewModel; a failed action shows a snackbar. Android hosts it in the Compose shell. */
 @Composable
-fun FriendsRoute(
-    onOpenProfile: (Int) -> Unit,
-    onOpenSearch: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onBack: () -> Unit,
-    viewModel: FriendsViewModel = koinViewModel(),
-) {
+fun FriendsRoute(exits: FriendsExits, viewModel: FriendsViewModel = koinViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
-    var pendingRemoval by remember { mutableStateOf<FriendsEvent.ConfirmRemove?>(null) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     LaunchedEffect(viewModel, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.events.collect { event ->
                 when (event) {
-                    // A snackbar waits until it is gone; the next event (a remove) must not wait behind it.
                     is FriendsEvent.ActionFailed -> launch {
+                        val reason = event.error.toUiText().resolve()
                         snackbars.showSnackbar(
-                            message = getString(Res.string.friends_action_failed, event.error.toUiText().resolve()),
+                            message = UiText.Res(SocialStrings.friends_action_failed, listOf(reason)).resolve(),
                             duration = SnackbarDuration.Long,
                         )
                     }
-                    is FriendsEvent.ConfirmRemove -> pendingRemoval = event
+                    is FriendsEvent.Invite -> exits.onInvite()
                 }
             }
         }
@@ -59,20 +56,18 @@ fun FriendsRoute(
 
     FriendsScreen(
         state = state,
-        onSelectTab = viewModel::selectTab,
-        onRefresh = { viewModel.refresh(RefreshMode.Pull) },
-        onRetry = { viewModel.refresh(RefreshMode.Force) },
-        onAction = viewModel::onAction,
-        onOpenProfile = onOpenProfile,
-        onOpenSearch = onOpenSearch,
-        onOpenSettings = onOpenSettings,
-        onBack = onBack,
-        pendingRemoval = pendingRemoval,
-        onConfirmRemoval = { isu ->
-            pendingRemoval = null
-            viewModel.removeFriend(isu)
-        },
-        onDismissRemoval = { pendingRemoval = null },
+        actions = FriendsActions(
+            onBack = exits.onBack,
+            onQueryChange = viewModel::onQueryChanged,
+            onRefresh = { viewModel.refresh(RefreshMode.Pull) },
+            onRetry = { viewModel.refresh(RefreshMode.Force) },
+            onRetrySearch = viewModel::retrySearch,
+            onLoadMore = viewModel::loadMore,
+            onAction = viewModel::onAction,
+            onOpenProfile = exits.onOpenProfile,
+            onConnect = exits.onConnect,
+            onShareProfile = exits.onShareProfile,
+        ),
         snackbarHostState = snackbars,
     )
 }

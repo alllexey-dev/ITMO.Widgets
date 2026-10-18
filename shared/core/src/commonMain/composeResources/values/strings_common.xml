@@ -85,6 +85,18 @@
         <item quantity="many">%1$d пар</item>
         <item quantity="other">%1$d пары</item>
     </plurals>
+    <plurals name="friends_count">
+        <item quantity="one">%1$d друг</item>
+        <item quantity="few">%1$d друга</item>
+        <item quantity="many">%1$d друзей</item>
+        <item quantity="other">%1$d друга</item>
+    </plurals>
+    <plurals name="friend_requests_count">
+        <item quantity="one">%1$d заявка</item>
+        <item quantity="few">%1$d заявки</item>
+        <item quantity="many">%1$d заявок</item>
+        <item quantity="other">%1$d заявки</item>
+    </plurals>
     <string name="common_retry">Повторить</string>
     <string name="common_load_error_title">Не удалось загрузить</string>
     <string name="common_close">Закрыть</string>

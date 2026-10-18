@@ -5,24 +5,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertContentDescriptionEquals
-import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.v2.runComposeUiTest
-import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.core.model.UserGroup
-import dev.alllexey.itmowidgets.core.model.UserSharing
-import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
@@ -31,6 +22,7 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
+import dev.alllexey.itmowidgets.feature.me.ui.preview.MeSamples
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
@@ -42,18 +34,14 @@ import kotlin.test.assertEquals
 class MeScreenTest {
 
     @Test
-    fun everyStateKeepsRowsAtLeast48DpAndEachRowIsOneTarget() = runComposeUiTest {
-        var state by mutableStateOf(Signed)
+    fun everyStateKeepsTouchTargets() = runComposeUiTest {
+        var state by mutableStateOf(Connected)
         setContent { ItmoTheme { MeScreen(state, showDebugTools = true, actions = MeActions()) } }
 
-        for (value in States) {
+        for (value in listOf(Connected, Offline, MeSamples.loading, MeSamples.longName)) {
             state = value
             waitForIdle()
             assertTouchTargets()
-            // Each row merges its icon, texts and badge into one target: share, the rows and three buttons.
-            val rows = if (value.friends == MeFriendsSummary.Disabled) 1 else 3
-            val appRows = 3 + if (value.webLoginAvailable) 1 else 0
-            assertEquals(1 + rows + appRows + 3, onAllNodes(hasClickAction()).fetchSemanticsNodes().size)
         }
     }
 
@@ -77,77 +65,53 @@ class MeScreenTest {
     }
 
     @Test
-    fun theFriendsRowReadsItsCountAndTheRequestsBadgeOnce() = runComposeUiTest {
-        setContent { ItmoTheme { MeScreen(Signed, showDebugTools = false, actions = MeActions()) } }
+    fun theFriendsRowCountsFriendsAndReadsTheRequests() = runComposeUiTest {
+        setContent { ItmoTheme { MeScreen(Connected, showDebugTools = false, actions = MeActions()) } }
 
         val row = onNodeWithTag(MeTestTags.FRIENDS_ROW).fetchSemanticsNode()
-        assertEquals(listOf("Друзья", "3"), row.config[SemanticsProperties.Text].map { it.text })
-        assertEquals(listOf("Входящих заявок: 2"), row.config[SemanticsProperties.ContentDescription])
-        onNodeWithTag(MeTestTags.REQUESTS_BADGE, useUnmergedTree = true)
-            .assertContentDescriptionEquals("Входящих заявок: 2")
+        assertEquals(listOf("Друзья", "3 друга, 1 заявка", "1"), row.config[SemanticsProperties.Text].map { it.text })
+        assertEquals(listOf("Входящих заявок: 1"), row.config[SemanticsProperties.ContentDescription])
     }
 
     @Test
-    fun noRequestsMeansNoBadge() = runComposeUiTest {
-        val state = Signed.copy(friends = MeFriendsSummary.Content(friends = 0, incomingRequests = 0))
-        setContent { ItmoTheme { MeScreen(state, showDebugTools = false, actions = MeActions()) } }
-
-        onNodeWithText("Пока никого", useUnmergedTree = true).assertExists()
-        onNodeWithTag(MeTestTags.REQUESTS_BADGE, useUnmergedTree = true).assertDoesNotExist()
-    }
-
-    @Test
-    fun theWebSignInRowAndItsDividerShowOnlyWithTheConnection() = runComposeUiTest {
-        var state by mutableStateOf(Signed)
-        setContent { ItmoTheme { MeScreen(state, showDebugTools = false, actions = MeActions()) } }
-
-        val web = onNodeWithTag(MeTestTags.WEB_LOGIN_ROW).getUnclippedBoundsInRoot()
-        val nextWithWeb = onNodeWithTag(MeTestTags.MY_ITMO_ROW).getUnclippedBoundsInRoot()
-        // The 1 dp divider separates the two rows.
-        assertEquals(1.dp, nextWithWeb.top - web.bottom)
-
-        state = Signed.copy(webLoginAvailable = false)
-        waitForIdle()
-
-        onNodeWithTag(MeTestTags.WEB_LOGIN_ROW).assertDoesNotExist()
-        // The next row takes the web row's place: neither the row nor its divider is left behind.
-        assertEquals(web.top, onNodeWithTag(MeTestTags.MY_ITMO_ROW).getUnclippedBoundsInRoot().top)
-    }
-
-    @Test
-    fun servicesOffReplacesTheSocialRowsWithOneRowToTheSettings() = runComposeUiTest {
+    fun withoutTheConnectionTheGateStandsInPlaceOfThePeopleRows() = runComposeUiTest {
         var opened = 0
         setContent {
-            ItmoTheme {
-                MeScreen(Offline, showDebugTools = false, actions = MeActions(onOpenServices = { opened++ }))
-            }
+            ItmoTheme { MeScreen(Offline, showDebugTools = false, actions = MeActions(onOpenConnection = { opened++ })) }
         }
 
-        for (tag in listOf(MeTestTags.FRIENDS_ROW, MeTestTags.FIND_PEOPLE_ROW, MeTestTags.PRIVACY_ROW)) {
-            onNodeWithTag(tag).assertDoesNotExist()
-        }
-        onNodeWithTag(MeTestTags.SERVICES_DISABLED_ROW).performClick()
-        assertEquals(1, opened)
+        onNodeWithTag(MeTestTags.FRIENDS_ROW).assertDoesNotExist()
+        onNodeWithTag(MeTestTags.PRIVACY_ROW).assertDoesNotExist()
+        onNodeWithText("Друзья недоступны").assertExists()
+        onNodeWithText("Подключить").performClick()
+        // Nothing is hidden: the web sign-in row stays and leads to the connection too.
+        scrollTo(MeTestTags.WEB_LOGIN_ROW)
+        onNodeWithText("Нужно подключение", useUnmergedTree = true).assertExists()
+        onNodeWithTag(MeTestTags.WEB_LOGIN_ROW).performClick()
+        assertEquals(2, opened)
     }
 
     @Test
     fun theDebugToolsRowFollowsTheHost() = runComposeUiTest {
         var debug by mutableStateOf(false)
-        setContent { ItmoTheme { MeScreen(Signed, showDebugTools = debug, actions = MeActions()) } }
+        setContent { ItmoTheme { MeScreen(Connected, showDebugTools = debug, actions = MeActions()) } }
 
         onNodeWithTag(MeTestTags.DEBUG_TOOLS_ROW).assertDoesNotExist()
         debug = true
         waitForIdle()
+        scrollTo(MeTestTags.DEBUG_TOOLS_ROW)
         onNodeWithTag(MeTestTags.DEBUG_TOOLS_ROW).assertExists()
     }
 
     @Test
-    fun everyRowAndButtonReachesTheHost() = runComposeUiTest {
+    fun everyRowReachesTheHost() = runComposeUiTest {
         val calls = mutableListOf<String>()
         val actions = MeActions(
             onOpenFriends = { calls += "friends" },
-            onFindPeople = { calls += "search" },
             onOpenPrivacy = { calls += "privacy" },
+            onOpenConnection = { calls += "connection" },
+            onOpenNotifications = { calls += "notifications" },
+            onOpenWidgets = { calls += "widgets" },
             onOpenWebLogin = { calls += "web" },
             onOpenMyItmo = { calls += "my itmo" },
             onOpenSettings = { calls += "settings" },
@@ -155,19 +119,22 @@ class MeScreenTest {
             onShareProfile = { name, isu -> calls += "share $name $isu" },
             onOpenProjectLink = { calls += it.name; true },
         )
-        setContent { ItmoTheme { MeScreen(Signed, showDebugTools = true, actions = actions) } }
+        setContent { ItmoTheme { MeScreen(Connected, showDebugTools = true, actions = actions) } }
 
+        onNodeWithTag(MeTestTags.SHARE).performClick()
         for (tag in listOf(
-            MeTestTags.SHARE, MeTestTags.FRIENDS_ROW, MeTestTags.FIND_PEOPLE_ROW, MeTestTags.PRIVACY_ROW,
-            MeTestTags.WEB_LOGIN_ROW, MeTestTags.MY_ITMO_ROW, MeTestTags.SETTINGS_ROW, MeTestTags.DEBUG_TOOLS_ROW, MeTestTags.GITHUB,
-            MeTestTags.TELEGRAM,
+            MeTestTags.FRIENDS_ROW, MeTestTags.PRIVACY_ROW, MeTestTags.CONNECTION_ROW, MeTestTags.NOTIFICATIONS_ROW,
+            MeTestTags.WIDGETS_ROW, MeTestTags.WEB_LOGIN_ROW, MeTestTags.MY_ITMO_ROW, MeTestTags.SETTINGS_ROW,
+            MeTestTags.DEBUG_TOOLS_ROW, MeTestTags.TELEGRAM, MeTestTags.GITHUB,
         )) {
-            onNodeWithTag(tag).performScrollTo().performClick()
+            scrollTo(tag)
+            onNodeWithTag(tag).performClick()
         }
 
         assertEquals(
             listOf(
-                "share $NAME $ISU", "friends", "search", "privacy", "web", "my itmo", "settings", "debug", "GITHUB", "TELEGRAM",
+                "share Александрова Мария 284731", "friends", "privacy", "connection", "notifications", "widgets", "web",
+                "my itmo", "settings", "debug", "TELEGRAM", "GITHUB",
             ),
             calls,
         )
@@ -175,13 +142,14 @@ class MeScreenTest {
 
     @Test
     fun signOutAsksFirstAndIsInertWhileItRuns() = runComposeUiTest {
-        var state by mutableStateOf(Signed)
+        var state by mutableStateOf(Connected)
         var signOuts = 0
         setContent {
             ItmoTheme { MeScreen(state, showDebugTools = false, actions = MeActions(onSignOut = { signOuts++ })) }
         }
 
-        onNodeWithTag(MeTestTags.SIGN_OUT).performScrollTo().assertIsEnabled().performClick()
+        scrollTo(MeTestTags.SIGN_OUT)
+        onNodeWithTag(MeTestTags.SIGN_OUT).performClick()
         onNodeWithText("Выйти из аккаунта?").assertExists()
         onNodeWithText("Отмена").performClick()
         assertEquals(0, signOuts)
@@ -191,9 +159,10 @@ class MeScreenTest {
         assertEquals(1, signOuts)
         onNode(isDialog()).assertDoesNotExist()
 
-        state = Signed.copy(signOutInProgress = true)
+        state = Connected.copy(signOutInProgress = true)
         waitForIdle()
-        onNodeWithTag(MeTestTags.SIGN_OUT).assertIsNotEnabled()
+        onNodeWithTag(MeTestTags.SIGN_OUT).performClick()
+        onNode(isDialog()).assertDoesNotExist()
     }
 
     @Test
@@ -206,27 +175,13 @@ class MeScreenTest {
         onNodeWithTag(MeTestTags.SHARE).assertDoesNotExist()
     }
 
+    private fun androidx.compose.ui.test.ComposeUiTest.scrollTo(tag: String) {
+        onNodeWithTag(MeTestTags.ROOT).performScrollToNode(hasTestTag(tag))
+    }
+
     private companion object {
-        const val ISU = 123456
-        const val NAME = "Александрова Мария Александровна"
-
-        val Signed = MeUiState(
-            user = CurrentUser(ISU, NAME, null),
-            backendUser = UserSummary(
-                ISU, NAME, null, listOf(UserGroup("M3205", 2, "ФИТиП")), UserSharing(true, true, true),
-            ),
-            friends = MeFriendsSummary.Content(friends = 3, incomingRequests = 2),
-            webLoginAvailable = true,
-        )
-
-        val Offline = MeUiState(user = CurrentUser(ISU, NAME, null), friends = MeFriendsSummary.Disabled)
-
-        val States = listOf(
-            Signed,
-            Offline,
-            Signed.copy(friends = MeFriendsSummary.Loading, backendUser = null),
-            Signed.copy(friends = MeFriendsSummary.Error, backendUser = null),
-            Signed.copy(signOutInProgress = true),
-        )
+        val Connected = MeSamples.state(connection = "on", requests = "yes")
+        val Offline = MeSamples.state(connection = "off")
+            .copy(friends = MeFriendsSummary.Disabled)
     }
 }

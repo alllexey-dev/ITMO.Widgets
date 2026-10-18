@@ -32,7 +32,7 @@ enum class GroupSurface {
  *
  * Under the iOS style the group is an inset group as in iOS Settings: one section rounded at
  * `IosMetrics.insetGroupRadius`, rows touching, a hairline separator under every row but the last, inset to the row's
- * text. The kit's rows ([GroupActionRow], `LinkRow`, `UserRow`) set that inset and show the pressed cell instead of a
+ * text. The kit's rows ([GroupActionRow], `LinkRow`) set that inset and show the pressed cell instead of a
  * ripple; [position] still decides which corners round and where separators go.
  */
 @Composable
