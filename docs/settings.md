@@ -523,6 +523,9 @@ system `geo:` intent and lets Android resolve the installed mapping application.
   [features/onboarding.md](features/onboarding.md).
 - `Политика конфиденциальности` (`ic_open_in_new`) opens
   `<WIDGETS_BASE_URL>/privacy.html` in the browser.
+- `Лицензии` opens a page with the source of the campus plans (`Планы корпусов`, `Университет ИТМО`: plans, routes,
+  style and icons from the ITMO Campus app) and the licences of MapLibre Native (BSD 2-Clause, its full text) and of
+  the map's Noto Sans labels (SIL OFL 1.1).
 - `Версия` displays the application version.
 - The group's footer is `Неофициальное приложение. Не связано с Университетом
   ИТМО.`; the sign-in screen shows the same line under its buttons.

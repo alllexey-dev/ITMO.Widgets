@@ -79,6 +79,12 @@ internal class SettingsScreenMaintenancePreview {
     fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Maintenance)
 }
 
+internal class SettingsScreenLicensesPreview {
+    @Preview(name = "licenses", heightDp = 1400)
+    @Composable
+    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Licenses)
+}
+
 internal class SettingsScreenLongTextPreview {
     @Preview(name = "long-text")
     @Composable

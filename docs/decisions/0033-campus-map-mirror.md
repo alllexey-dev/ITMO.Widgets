@@ -30,5 +30,11 @@ so only content hashes are trusted.
 - MapLibre Native is a dependency on both platforms (Android `org.maplibre.gl:android-sdk`, iOS
   `maplibre-gl-native-distribution`).
 
+**Amended (2026-10-18).** The owner asked for the look students know from the official app and map.alllexey.dev,
+so the map now uses the campus app's style and its 36 icons (from itmo-map-web), bundled in the app rather than
+served by the mirror (144 KB, offline from the first frame, no server change). The labels stay Noto Sans: the campus
+app's glyphs are cut from SF Pro, which may not be redistributed. The style and icons are ITMO's assets too, so they
+fall under the same permission request; the map shows no caption, and Settings, `Лицензии` names the source.
+
 **Revisit when.** ITMO publishes the plans under a licence or an official API for third parties, or
 the mirror needs per-user data.

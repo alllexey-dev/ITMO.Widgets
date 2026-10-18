@@ -10,9 +10,9 @@ object CampusMapSamples {
     private val kronva = MapDestination("Кронверкский пр., 49", "Кронверкский проспект, 49, Санкт-Петербург", 59.9567751, 30.308711)
 
     private val scene = MapScene(
-        buildingId = 13, tilesPath = "/sample/13.mbtiles", glyphsUrl = "", attribution = "План: Университет ИТМО",
+        buildingId = 13, tilesPath = "/sample/13.mbtiles", glyphsUrl = "",
         bounds = listOf(30.30767, 59.95599, 30.31108, 59.95753), bearing = 160.0, level = 3,
-        route = CampusMapGeoJson.EMPTY, selection = CampusMapGeoJson.EMPTY, focus = null,
+        route = CampusMapGeoJson.EMPTY, selection = CampusMapGeoJson.EMPTY, selectedRoomId = null, focus = null,
     )
 
     private val buildings = listOf(
@@ -53,6 +53,7 @@ object CampusMapSamples {
 
     val Route = Room.copy(
         room = null,
+        levels = levels.map { it.copy(onRoute = it.level == 0 || it.level == 3) },
         trip = TripView(
             from = UiText.Res(MapStrings.map_route_from_room, listOf(UiText.Dynamic("1124"))),
             steps = listOf(

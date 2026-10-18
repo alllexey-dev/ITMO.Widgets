@@ -6,7 +6,6 @@ import SwiftUI
 /// or the results at the bottom. "Open in Maps" opens Apple Maps through `PlatformActions`.
 struct CampusMapScreen: View {
     @State private var model: ObservableViewModel<CampusMapViewModel, CampusMapUiState>
-    @Environment(\.colorScheme) private var colorScheme
 
     init(route: AppRoutes.CampusMap) {
         _model = State(initialValue: ObservableViewModel(state: \.uiState) { store in
@@ -39,7 +38,7 @@ struct CampusMapScreen: View {
                 }
             )
         ) { scene in
-            IndoorMapView(scene: scene, dark: colorScheme == .dark) { viewModel.selectRoom(roomId: $0) }
+            IndoorMapView(scene: scene) { viewModel.selectRoom(roomId: $0) }
         }
         .itmoDetailHeader(title: AppStrings.string("map_title"), subtitle: "")
         .observing(model)
@@ -135,22 +134,35 @@ private struct PlanView<Map: View>: View {
         .padding(.top, ItmoSpacing.related)
     }
 
+    /// itmo-map-web's floor selector: a white column with a shadow, the floor in the accent, a dot on the route's floors.
     private var floors: some View {
         VStack(spacing: 2) {
             ForEach(plan.levels.reversed(), id: \.level) { level in
                 Button { actions.level(level.level) } label: {
                     Text(verbatim: level.label.resolved)
-                        .font(.itmo(.labelLarge, emphasized: true))
-                        .frame(width: 44, height: 44)
-                        .foregroundStyle(level.selected ? ItmoColor.onPrimary : ItmoColor.onSurface)
+                        .font(.itmo(.titleSmall, emphasized: level.selected))
+                        .frame(width: 40, height: 40)
+                        .foregroundStyle(level.selected ? ItmoColor.onPrimary : ItmoColor.onSurfaceVariant)
                         .background(level.selected ? ItmoColor.primary : Color.clear, in: Circle())
+                        .overlay(alignment: .topTrailing) {
+                            if level.onRoute {
+                                Circle()
+                                    .fill(level.selected ? ItmoColor.onPrimary : ItmoColor.primary)
+                                    .frame(width: 7, height: 7)
+                                    .overlay(Circle().stroke(level.selected ? ItmoColor.primary : ItmoColor.surface, lineWidth: 2))
+                                    .padding(5)
+                            }
+                        }
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(level.selected ? .isSelected : [])
             }
         }
         .padding(4)
-        .glassEffect(.regular, in: Capsule())
+        .background(ItmoColor.surface, in: RoundedRectangle(cornerRadius: 24))
+        .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(AppStrings.string("map_floors"))
     }
@@ -166,9 +178,6 @@ private struct PlanView<Map: View>: View {
             } else if let notice = plan.notice {
                 ItmoCard { Text(verbatim: notice.resolved).font(.itmo(.bodyLarge)) }
             }
-            Text(verbatim: plan.map.attribution)
-                .font(.itmo(.labelSmall))
-                .foregroundStyle(.secondary)
         }
         .padding(.horizontal, ItmoSpacing.screenMargin)
         .padding(.bottom, ItmoSpacing.compact)

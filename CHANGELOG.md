@@ -46,6 +46,7 @@ new iOS app.
 
 ### Campus map (2026-10-17)
 
+- The campus map looks like the official ITMO app and map.alllexey.dev: ITMO's own style with its colours, icons, labels, walls and route line, the selected room highlighted, the floor selector with dots on the route's floors; Noto Sans Bold for the labels instead of the app's SF Pro. No caption, MapLibre logo or attribution on the map; Settings, `Лицензии` names the plans' source and carries the MapLibre Native and Noto Sans licences (2026-10-18).
 - New module `:shared:feature-map` with the router of itmo-map-web ported to shared Kotlin (same routes as `router.js` on all 360 checked pairs of ITMO's six plans), the mapping of timetable rooms to plan rooms and the three-part «Маршрут» planner; `itmo_buildings.json` gains each building's campus-map id and Гастелло, 12.
 - The campus map screen on both platforms (native MapLibre): the lesson's room on its floor, «Маршрут» from the day's previous lesson or the entrance with «По городу» in the system Maps between buildings, room view, search across buildings, place chips, «У корпуса нет плана». `Маршрут` in the lesson sheet and on the Сегодня hero opens it. Plans come from the mirror on map.alllexey.dev and stay on the device (ADR 0033).
 

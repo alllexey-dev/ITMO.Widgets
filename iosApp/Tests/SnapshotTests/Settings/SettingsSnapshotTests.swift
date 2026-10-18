@@ -55,6 +55,12 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(state, named: "appearance", height: 620, ax1Height: 1100)
     }
 
+    /// The plans' source and the licence texts the map's MapLibre Native and Noto Sans ask for.
+    func testLicenses() {
+        let state = SettingsFixtures.page(.licenses, SettingsFixtures.pageState(notificationsGranted: false))
+        assertPage(state, named: "licenses", height: 1500, ax1Height: 2700)
+    }
+
     func testLoading() {
         let state = SettingsUiState(page: .root, sections: [], loaded: false, themePreview: nil, gallery: nil)
         assertPage(state, named: "loading", height: 320, ax1Height: 320)

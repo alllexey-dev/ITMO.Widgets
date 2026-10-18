@@ -38,6 +38,7 @@ class SettingsPreviewDataTest {
             SettingsPage.SCHEDULE to SettingsPreviewData.Schedule,
             SettingsPage.SPORT to SettingsPreviewData.Sport,
             SettingsPage.MAINTENANCE to SettingsPreviewData.Maintenance,
+            SettingsPage.LICENSES to SettingsPreviewData.Licenses,
             SettingsPage.APPEARANCE to SettingsPreviewData.Appearance,
         )
         for ((page, preview) in pages) {

@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.LicensesPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SchedulePageProvider
@@ -56,6 +57,7 @@ val settingsModule = module {
     factory { SchedulePageProvider(get(), get(), get()) }
     factoryOf(::SportPageProvider)
     factoryOf(::MaintenancePageProvider)
+    factoryOf(::LicensesPageProvider)
     factoryOf(::SettingsPages)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::ConnectionViewModel)

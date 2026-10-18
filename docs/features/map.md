@@ -40,9 +40,17 @@ The address is `CAMPUS_MAP_URL`: Android `BuildConfig` (`-PcampusMapUrl=<url>` f
 `/tmp/mirror/app/v1` over HTTPS, or copy it into the app's `cache/campus_map` (the stored copy serves when the
 mirror cannot be reached).
 
-The style is one JSON built in shared code (`CampusMapStyle`): the plan in the app's surface colours, rooms and
-classrooms, walls, labels, the route (current part bold), its ends and the selection. Floors switch by the per-layer
-`level` filters that `CampusMapStyle.filters` returns and each platform applies.
+The style is ITMO's own: the campus app's style JSON (as itmo-map-web serves it) is embedded unchanged in
+`presentation/ItmoStyle.kt`, so the plan looks like the official app and map.alllexey.dev: its room and corridor
+fills, walls with the 3D extrusion from zoom 19, the room labels and the POI and room-kind icons, the route (solid
+current part, dashed other parts, faded on other floors, `A` and `Б` ends) and the selected room's highlight from
+itmo-map-web. `CampusMapStyle` points it at the local MBTiles file, turns its legacy filters into expressions (the
+SDKs' `setFilter` takes only those) and replaces the campus app's SF Pro Text Semibold with Noto Sans Bold, the
+closest weight among the mirror's open fonts: SF Pro may not be redistributed, and MapLibre draws Latin and Cyrillic
+only from glyph files (`localIdeographFontFamily` covers CJK only), so iOS cannot use the system font either. The 36
+icons are bundled (`composeResources/files/map_sprites`, 144 KB; iOS references the same folder) and added at a pixel
+ratio of 3. Floors and the selected room switch by the filters `CampusMapStyle.filters` returns. The map shows no
+caption, MapLibre logo or attribution button; the plans' source and the licences are in Settings, `Лицензии`.
 
 ## Data
 

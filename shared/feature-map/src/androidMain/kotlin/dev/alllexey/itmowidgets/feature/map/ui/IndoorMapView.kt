@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.map.ui
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.DisplayMetrics
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -10,15 +13,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.map.presentation.CampusMapStyle
 import dev.alllexey.itmowidgets.feature.map.presentation.MapScene
+import dev.alllexey.itmowidgets.shared.feature.map.Res
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -42,13 +44,13 @@ import org.maplibre.android.style.sources.GeoJsonSource
 @Composable
 fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val dark = ItmoTheme.colorScheme.background.luminance() < DARK_LUMINANCE
     val mapView = remember {
         MapLibre.getInstance(context)
         MapView(context).apply { onCreate(null) }
     }
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
     var style by remember { mutableStateOf<Style?>(null) }
+    var sprites by remember { mutableStateOf<Map<String, Bitmap>?>(null) }
     val tap by rememberUpdatedState(onRoomTap)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
@@ -69,11 +71,15 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
             mapView.onDestroy()
         }
     }
+    LaunchedEffect(Unit) { sprites = loadSprites() }
     LaunchedEffect(mapView) {
         mapView.getMapAsync { loaded ->
             loaded.setMinZoomPreference(MIN_ZOOM)
             loaded.setMaxZoomPreference(MAX_ZOOM)
             loaded.uiSettings.isRotateGesturesEnabled = true
+            // The plan's source is in the licences, not on the map (docs/features/map.md).
+            loaded.uiSettings.isLogoEnabled = false
+            loaded.uiSettings.isAttributionEnabled = false
             loaded.addOnMapClickListener { point ->
                 val screen = loaded.projection.toScreenLocation(point)
                 val feature = loaded.queryRenderedFeatures(screen, *CampusMapStyle.TAP_LAYERS.toTypedArray()).firstOrNull()
@@ -83,10 +89,12 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
             map = loaded
         }
     }
-    LaunchedEffect(map, scene.tilesPath, dark) {
+    LaunchedEffect(map, sprites, scene.tilesPath) {
         val loaded = map ?: return@LaunchedEffect
+        val icons = sprites ?: return@LaunchedEffect
         style = null
-        loaded.setStyle(Style.Builder().fromJson(CampusMapStyle.json(scene, dark))) { style = it }
+        val builder = icons.entries.fold(Style.Builder().fromJson(CampusMapStyle.json(scene))) { b, (name, icon) -> b.withImage(name, icon) }
+        loaded.setStyle(builder) { style = it }
         val (west, south, east, north) = scene.bounds
         val bounds = LatLngBounds.from(north, east, south, west)
         loaded.setLatLngBoundsForCameraTarget(bounds)
@@ -94,7 +102,7 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
     }
     LaunchedEffect(style, scene.level, scene.route, scene.selection) {
         val current = style ?: return@LaunchedEffect
-        CampusMapStyle.filters(scene.level).forEach { (id, filter) ->
+        CampusMapStyle.filters(scene.level, scene.selectedRoomId).forEach { (id, filter) ->
             val expression = Expression.Converter.convert(filter)
             when (val layer = current.getLayer(id)) {
                 is FillLayer -> layer.setFilter(expression)
@@ -130,12 +138,21 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
     AndroidView(factory = { mapView }, modifier = modifier)
 }
 
+/**
+ * The campus app's icons from the module's resources, at its pixel ratio of 3 (the bitmap's density says it); 36
+ * PNGs of 72 px, which the resource reader loads off the main thread.
+ */
+private suspend fun loadSprites(): Map<String, Bitmap> =
+    CampusMapStyle.SPRITES.associateWith { name ->
+        val bytes = Res.readBytes("files/map_sprites/$name.png")
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size).apply { density = DisplayMetrics.DENSITY_DEFAULT * CampusMapStyle.SPRITE_PIXEL_RATIO }
+    }
+
 private operator fun List<Double>.component1() = this[0]
 private operator fun List<Double>.component2() = this[1]
 private operator fun List<Double>.component3() = this[2]
 private operator fun List<Double>.component4() = this[3]
 
-private const val DARK_LUMINANCE = 0.5f
 private const val MIN_ZOOM = 16.0
 private const val MAX_ZOOM = 22.0
 private const val FOCUS_ZOOM = 19.5

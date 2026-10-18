@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
-/** Widget refresh, the onboarding replay, diagnostics, the privacy policy and the version. */
+/** Widget refresh, the onboarding replay, diagnostics, the privacy policy, the licences and the version. */
 class MaintenancePageProvider(
     private val widgetRefreshRequester: WidgetRefreshRequester,
     private val onboardingRepository: OnboardingRepository,
@@ -62,6 +62,7 @@ class MaintenancePageProvider(
                     title = UiText.Res(SettingsStrings.settings_privacy_policy_title),
                     trailingIcon = AppIcon.OPEN_IN_NEW
                 ),
+                SettingRows.navigation(SettingsPage.LICENSES),
                 SettingItem.Info(
                     id = SettingRowId.VERSION,
                     title = UiText.Res(SettingsStrings.settings_version_title),
