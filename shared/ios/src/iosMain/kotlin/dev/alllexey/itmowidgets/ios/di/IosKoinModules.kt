@@ -9,6 +9,8 @@ import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
+import dev.alllexey.itmowidgets.feature.map.di.campusMapIosModule
+import dev.alllexey.itmowidgets.feature.map.di.campusMapModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
@@ -89,6 +91,8 @@ object IosKoinModules {
         // The teacher reviews with the editor and the report, the teacher tones, and the subject links with their
         // sheets and report.
         reviewsModule, reviewsIosModule, resourcesModule, resourcesIosModule,
+        // The campus map over the mirror; the previous lesson comes from the schedule's `DayLessonsGateway`.
+        campusMapModule, campusMapIosModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record, the build's site until then. */

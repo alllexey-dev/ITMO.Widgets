@@ -1,0 +1,35 @@
+package dev.alllexey.itmowidgets.feature.map.ui
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
+import dev.alllexey.itmowidgets.feature.map.presentation.CampusMapViewModel
+
+/** The campus map over its view model; «Открыть в Картах» goes to the system map app through the host. */
+@Composable
+fun CampusMapRoute(viewModel: CampusMapViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val platform = LocalPlatformActions.current
+    CampusMapScreen(
+        state = state,
+        actions = CampusMapActions(
+            onBack = onBack,
+            onRetry = viewModel::retry,
+            onBuilding = viewModel::selectBuilding,
+            onLevel = viewModel::selectLevel,
+            onRoomTap = viewModel::selectRoom,
+            onSearch = viewModel::search,
+            onPlace = viewModel::selectPlace,
+            onResult = viewModel::openResult,
+            onRoute = viewModel::route,
+            onStep = viewModel::step,
+            onCloseTrip = viewModel::closeTrip,
+            onCloseRoom = viewModel::closeRoom,
+            onOpenMaps = { platform.openMap(it) },
+        ),
+        modifier = modifier,
+        map = { scene, mapModifier -> IndoorMapView(scene, viewModel::selectRoom, mapModifier) },
+    )
+}

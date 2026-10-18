@@ -10,6 +10,8 @@ KEYCHAIN_GROUP = $(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared
 // from reading `//` as a comment.
 BACKEND_BASE_URL = https:/$()/dev.widgets.alllexey.dev
 BACKEND_BASE_URL[config=Release] = https:/$()/widgets.alllexey.dev
+// The campus-map mirror (srvscripts stacks/itmomap), the same for every configuration.
+CAMPUS_MAP_URL = https:/$()/map.alllexey.dev/app/v1/
 
 // The App Store record of the app, AppStoreID in the app's Info.plist: the update offer opens
 // https://apps.apple.com/app/id$(APP_STORE_ID) and offers nothing while it is empty. Empty until the App Store

@@ -31,6 +31,7 @@ content_copy	content_copy	0	shared	doc.on.doc	-
 content_paste	content_paste	0	shared	doc.on.clipboard	-
 delete	delete	0	shared	trash	-
 devices	devices	0	shared	laptopcomputer.and.iphone	-
+directions	directions	0	shared	arrow.triangle.turn.up.right.diamond	-
 download	download	0	shared	arrow.down.to.line	-
 edit	edit	0	shared	pencil	-
 edit_calendar	edit_calendar	0	shared	calendar	SF Symbols has no calendar with a pencil
@@ -64,6 +65,7 @@ location_on	location_on	0	shared	mappin.and.ellipse	-
 lock	lock	0	shared	lock	-
 login	login	0	shared	arrow.right.to.line	-
 logout	logout	0	shared	rectangle.portrait.and.arrow.right	-
+map	map	0	shared	map	-
 menu_book	menu_book	0	shared	book	-
 more_vert	more_vert	0	shared	ellipsis	iOS shows the overflow menu horizontally
 notification	notifications	0	shared	bell	id differs from the symbol name
@@ -88,6 +90,7 @@ shortcut_today	schedule	0	android	-	Adaptive launcher shortcut wrapper of shortc
 shortcut_today_foreground	schedule	0	android	-	Launcher shortcut foreground in the adaptive safe zone
 sprint	sprint	0	shared	figure.run	Bottom navigation tab
 sprint_filled	sprint	1	shared	figure.run	Selected bottom navigation tab; SF Symbols has no filled figure
+stairs	stairs	0	shared	stairs	-
 star	star	0	shared	star	-
 star_shine	star_shine	0	shared	sparkle	-
 stat_notifications	notifications	0	android	-	Monochrome notification mask; SystemUI tints it

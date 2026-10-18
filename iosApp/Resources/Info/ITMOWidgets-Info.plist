@@ -24,6 +24,8 @@
 	<string>$(KEYCHAIN_GROUP)</string>
 	<key>BackendBaseURL</key>
 	<string>$(BACKEND_BASE_URL)</string>
+	<key>CampusMapURL</key>
+	<string>$(CAMPUS_MAP_URL)</string>
 	<key>AppStoreID</key>
 	<string>$(APP_STORE_ID)</string>
 	<key>NSCameraUsageDescription</key>

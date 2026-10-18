@@ -229,6 +229,18 @@
         }
       }
     },
+    "today_route" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маршрут"
+          }
+        }
+      }
+    },
     "today_stale" : {
       "comment" : "Generated from strings_home.xml",
       "extractionState" : "manual",
