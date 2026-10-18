@@ -3,14 +3,28 @@ package dev.alllexey.itmowidgets.feature.onboarding.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.core.lesson.DayMoment
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
+import dev.alllexey.itmowidgets.core.lesson.LessonState
+import dev.alllexey.itmowidgets.core.lesson.LessonTimelines
+import dev.alllexey.itmowidgets.core.lesson.TimelineItem
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
+import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
-import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
-import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
-import kotlinx.coroutines.CancellationException
+import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.personInitials
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,24 +33,31 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.plus
 
 /**
- * The first-run flow.
- *
- * Every choice is written through its own repository the moment it is made, so
- * leaving at any step leaves a consistent app and nothing has to be replayed at
- * the end. The step itself lives in the saved state: process death in the middle
- * of the flow returns to the same page.
+ * The first-run flow (DECISIONS.md, Первый запуск): three steps, no `Включить всё`. The first shows the user's own
+ * data (today's lesson, the sport score) as it loads; the second asks each permission with its own button, and
+ * `Далее` works without any; the third connects to ITMO.Widgets through the consent sheet or leaves it with
+ * `Не сейчас`. Every choice is written through its own repository the moment it is made, so leaving at any step
+ * leaves a consistent app. The step lives in the saved state: process death returns to the same page.
  */
 class OnboardingViewModel(
     private val onboardingRepository: OnboardingRepository,
     private val customServicesRepository: CustomServicesRepository,
-    private val widgetAppearanceRepository: WidgetAppearanceRepository,
-    private val customSpoilerRepository: CustomSpoilerRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val sessionRepository: SessionRepository,
+    private val days: DayLessonsGateway,
+    private val sportScores: SportScoreRepository,
+    private val calendarSync: CalendarSync,
+    private val time: AcademicTimeProvider,
+    capabilities: PlatformCapabilities,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val mutableState = MutableStateFlow(OnboardingUiState(step = restoredStep()))
+    private val mutableState = MutableStateFlow(
+        OnboardingUiState(step = restoredStep(), calendarSynced = false.takeIf { capabilities.calendarExport }),
+    )
     val uiState: StateFlow<OnboardingUiState> = mutableState.asStateFlow()
 
     private val eventQueue = EventQueue<OnboardingEvent>()
@@ -44,144 +65,46 @@ class OnboardingViewModel(
 
     init {
         customServicesRepository.observeEnabled()
-            .onEach { enabled ->
-                mutableState.update { it.copy(servicesEnabled = enabled) }
-                // The notifications step exists only behind the opt-in; losing it lands on the opt-in.
-                if (!enabled && mutableState.value.step == OnboardingStep.NOTIFICATIONS) {
-                    moveTo(OnboardingStep.SERVICES)
+            .onEach { enabled -> mutableState.update { it.copy(servicesEnabled = enabled) } }
+            .launchIn(viewModelScope)
+        sessionRepository.state
+            .onEach { session ->
+                val me = (session as? SessionState.SignedIn)?.user?.let { user ->
+                    user.name?.trim()?.takeIf { it.isNotEmpty() }?.let { name ->
+                        OnboardingMe(name, personInitials(name, user.familyName, user.givenName), user.pictureUrl)
+                    }
                 }
+                mutableState.update { it.copy(me = me) }
             }
             .launchIn(viewModelScope)
-        widgetAppearanceRepository.observeAppearance()
-            .onEach { appearance -> mutableState.update { it.copy(appearance = appearance) } }
-            .launchIn(viewModelScope)
-        viewModelScope.launch {
-            val configured = customSpoilerRepository.hasImage()
-            // A picked image may be saved before the initial disk read answers.
-            mutableState.update {
-                if (it.customSpoiler == null && !it.spoilerBusy) it.copy(customSpoiler = configured) else it
-            }
+        if (capabilities.calendarExport) {
+            calendarSync.observeState()
+                .onEach { calendar -> mutableState.update { it.copy(calendarSynced = calendar.enabled) } }
+                .launchIn(viewModelScope)
         }
+        val today = time.today()
+        days.observe(today, today.plus(DatePeriod(days = 1)))
+            .onEach { loaded -> mutableState.update { it.copy(lesson = lessonOf(loaded)) } }
+            .launchIn(viewModelScope)
+        viewModelScope.launch { days.refresh(today, today.plus(DatePeriod(days = 1))) }
+        viewModelScope.launch { loadSport() }
     }
 
     /** The footer's primary action: one step forward, or the end of the flow on its last step. */
     fun next() {
         val current = mutableState.value
-        if (current.isLastStep) complete() else moveTo(current.steps[current.stepIndex + 1])
+        val following = OnboardingStep.entries.getOrNull(current.stepIndex + 1)
+        if (following == null) complete() else moveTo(following)
     }
 
     fun back() {
-        val current = mutableState.value
-        if (current.stepIndex > 0) moveTo(current.steps[current.stepIndex - 1])
-    }
-
-    /** Leaving early is a valid answer: what was chosen is already stored. */
-    fun skip() {
-        complete()
-    }
-
-    fun setOption(option: WidgetOption, enabled: Boolean) {
-        viewModelScope.launch {
-            try {
-                with(widgetAppearanceRepository) {
-                    when (option) {
-                        WidgetOption.COMPACT_NEXT_LESSON_EARLY -> setCompactNextLessonEarly(enabled)
-                        WidgetOption.COMPACT_HIDE_TEACHER -> setCompactTeacherHidden(enabled)
-                        WidgetOption.FULL_HIDE_TEACHER -> setFullTeacherHidden(enabled)
-                        WidgetOption.FULL_HIDE_PAST_LESSONS -> setFullPastLessonsHidden(enabled)
-                        WidgetOption.FULL_SHOW_TOMORROW -> setFullTomorrowEnabled(enabled)
-                        WidgetOption.QR_DYNAMIC_COLORS -> setQrDynamicColorsEnabled(enabled)
-                        WidgetOption.QR_SPOILER -> setQrSpoilerEnabled(enabled)
-                    }
-                }
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Exception) {
-                eventQueue.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
-            }
-        }
-    }
-
-    fun setTextSize(kind: WidgetKind, size: WidgetTextSize) {
-        viewModelScope.launch {
-            try {
-                when (kind) {
-                    WidgetKind.SINGLE_LESSON -> widgetAppearanceRepository.setCompactTextSize(size)
-                    WidgetKind.DAY_SCHEDULE -> widgetAppearanceRepository.setFullTextSize(size)
-                    WidgetKind.QR -> Unit
-                }
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Exception) {
-                eventQueue.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
-            }
-        }
-    }
-
-    /** The picked and cropped image; the repository refreshes the pinned widgets itself. */
-    fun saveSpoilerImage(sourceUri: String) = updateSpoilerImage(configured = true) {
-        customSpoilerRepository.saveImage(sourceUri)
-    }
-
-    fun resetSpoilerImage() = updateSpoilerImage(configured = false) {
-        customSpoilerRepository.resetImage()
-    }
-
-    private fun updateSpoilerImage(configured: Boolean, write: suspend () -> Boolean) {
-        if (mutableState.value.spoilerBusy) return
-        mutableState.update { it.copy(spoilerBusy = true) }
-        viewModelScope.launch {
-            val changed = try {
-                write()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (_: Exception) {
-                false
-            }
-            mutableState.update {
-                if (changed) {
-                    it.copy(spoilerBusy = false, customSpoiler = configured, spoilerRevision = it.spoilerRevision + 1)
-                } else {
-                    it.copy(spoilerBusy = false)
-                }
-            }
-            if (!changed) eventQueue.send(OnboardingEvent.SpoilerImageFailed)
-        }
-    }
-
-    fun setServicesEnabled(enabled: Boolean) {
-        val current = mutableState.value
-        if (current.servicesEnabled == enabled || current.servicesBusy) return
-        mutableState.update { it.copy(servicesBusy = true) }
-        viewModelScope.launch {
-            try {
-                customServicesRepository.setEnabled(enabled)
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Exception) {
-                eventQueue.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
-            } finally {
-                mutableState.update { it.copy(servicesBusy = false) }
-            }
-        }
-    }
-
-    fun pinWidget(kind: WidgetKind) {
-        if (kind in mutableState.value.pinnedWidgets) return
-        send(OnboardingEvent.RequestPinWidget(kind))
-    }
-
-    fun onWidgetPinned(kind: WidgetKind) {
-        mutableState.update { it.copy(pinnedWidgets = it.pinnedWidgets + kind) }
-    }
-
-    fun onPinSupportChanged(supported: Boolean) {
-        mutableState.update { it.copy(pinSupported = supported) }
+        val previous = OnboardingStep.entries.getOrNull(mutableState.value.stepIndex - 1) ?: return
+        moveTo(previous)
     }
 
     /**
-     * Granted: the system page is where channels live. Denied once: Android will not
-     * ask again, so the second tap has to reach the same page.
+     * Granted: the system page is where the types live. Denied once: Android will not ask again, so the second tap
+     * has to reach the same page.
      */
     fun requestNotifications() {
         val current = mutableState.value
@@ -195,6 +118,74 @@ class OnboardingViewModel(
 
     fun onNotificationPermission(granted: Boolean) {
         mutableState.update { it.copy(notificationsGranted = granted) }
+    }
+
+    /** `Добавить пары`: the host asks for the calendar, then calls [onCalendarAccessGranted]. */
+    fun addLessonsToCalendar() {
+        if (mutableState.value.calendarSynced != false) return
+        send(OnboardingEvent.RequestCalendarAccess)
+    }
+
+    fun onCalendarAccessGranted() {
+        viewModelScope.launch {
+            when (calendarSync.enable()) {
+                CalendarSyncResult.DONE, CalendarSyncResult.NO_PERMISSION -> Unit
+                CalendarSyncResult.FAILED -> eventQueue.send(OnboardingEvent.ShowError(AppError.Unknown()))
+                CalendarSyncResult.DEMO_UNAVAILABLE -> eventQueue.send(OnboardingEvent.ShowError(AppError.DemoUnavailable))
+            }
+        }
+    }
+
+    /** `Подключить` of the last step: the consent sheet first; already connected, the flow ends. */
+    fun connect() {
+        if (mutableState.value.servicesEnabled) complete() else send(OnboardingEvent.ShowConsent)
+    }
+
+    /** The consent sheet's `Подключить`: the opt-in turns on and the flow ends. */
+    fun onConsent() {
+        if (mutableState.value.servicesBusy) return
+        mutableState.update { it.copy(servicesBusy = true) }
+        viewModelScope.launch {
+            try {
+                customServicesRepository.setEnabled(true)
+                complete()
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                eventQueue.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
+            } finally {
+                mutableState.update { it.copy(servicesBusy = false) }
+            }
+        }
+    }
+
+    /** `Не сейчас`: leaving the connection off is a valid answer. */
+    fun notNow() = complete()
+
+    private suspend fun loadSport() {
+        val periods = sportScores.getScorePeriods() as? AppResult.Success ?: return
+        val current = periods.value.firstOrNull { it.current } ?: return
+        val summary = sportScores.getScoreSummary(current.id) as? AppResult.Success ?: return
+        mutableState.update {
+            it.copy(sport = UiText.Res(AccountStrings.onboarding_value_sport_score, listOf(summary.value.totalCapped)))
+        }
+    }
+
+    /** Today's lesson now or next by the timeline's rules, else tomorrow's first. */
+    private fun lessonOf(loaded: List<LessonDay>): OnboardingLesson? {
+        val today = time.today()
+        val now = time.localNow()
+        val todays = loaded.firstOrNull { it.date == today }?.lessons.orEmpty()
+        LessonTimelines.build(todays, DayMoment.Today(now.time), today)
+            .filterIsInstance<TimelineItem.Lesson>()
+            .firstOrNull { it.lesson.state == LessonState.NOW || it.lesson.state == LessonState.NEXT }
+            ?.let { item ->
+                val title = if (item.lesson.state == LessonState.NOW) AccountStrings.onboarding_value_now else AccountStrings.onboarding_value_next
+                return OnboardingLesson(UiText.Res(title), item.lesson)
+            }
+        val tomorrow = today.plus(DatePeriod(days = 1))
+        val first = loaded.firstOrNull { it.date == tomorrow }?.lessons?.minByOrNull { it.start } ?: return null
+        return OnboardingLesson(UiText.Res(AccountStrings.onboarding_value_tomorrow), LessonTimelines.lesson(first, LessonState.UPCOMING))
     }
 
     private fun send(event: OnboardingEvent) {
@@ -214,7 +205,7 @@ class OnboardingViewModel(
 
     private fun restoredStep(): OnboardingStep {
         val stored = savedStateHandle.get<String>(KEY_STEP)
-        return OnboardingStep.entries.firstOrNull { it.name == stored } ?: OnboardingStep.COMPACT_WIDGET
+        return OnboardingStep.entries.firstOrNull { it.name == stored } ?: OnboardingStep.VALUE
     }
 
     private companion object {

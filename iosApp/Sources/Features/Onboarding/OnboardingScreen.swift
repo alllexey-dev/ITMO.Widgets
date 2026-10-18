@@ -3,15 +3,18 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// The first-run flow over the shared `OnboardingViewModel` (`docs/features/onboarding.md`): Android's steps
-/// in SwiftUI. A widget step explains how to add the widget (iOS lets no app place one) beside its appearance rows;
-/// the services step is the shared opt-in; the notifications step asks iOS (`requestAuthorization`). Every choice is
-/// stored as it is made; `finished` runs once the flow ends, after the stored flag is written.
+/// The first-run flow over the shared `OnboardingViewModel` (DECISIONS.md, first run), as Android's
+/// `OnboardingScreen`: what the app does with the user's own data, the permissions one by one (notifications through
+/// `requestAuthorization`, the calendar through `CalendarAccess`), the connection through `ServicesConsentSheet` or
+/// `onboarding_connection_not_now`. Every choice is stored as it is made; `finished` runs once the flow ends, after the stored flag is
+/// written.
 struct OnboardingScreen: View {
     let finished: () -> Void
+    var calendarAccess = CalendarAccess()
 
     @State private var model = Self.makeModel()
     @State private var errorText: String?
+    @State private var showsConsent = false
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
 
@@ -19,17 +22,19 @@ struct OnboardingScreen: View {
         OnboardingContent(state: model.state, actions: actions)
             .observing(model)
             .onEvents(of: model, \.events, perform: handle)
-            .task {
-                // iOS has no programmatic pin: every widget step shows the how-to instead of the pin button.
-                model.viewModel.onPinSupportChanged(supported: false)
-                await readNotificationPermission()
-            }
+            .task { await readNotificationPermission() }
             .onChange(of: scenePhase) { _, phase in
-                // Back from the notification settings: the status row follows what the user chose there.
+                // Back from the notification settings: the row follows what the user chose there.
                 if phase == .active { Task { await readNotificationPermission() } }
             }
             .onChange(of: model.state.finished, initial: true) { _, done in
                 if done { finished() }
+            }
+            .sheet(isPresented: $showsConsent) {
+                ServicesConsentSheet {
+                    showsConsent = false
+                    model.viewModel.onConsent()
+                }
             }
             .alert(
                 Text(verbatim: errorText ?? ""),
@@ -58,12 +63,11 @@ struct OnboardingScreen: View {
         return OnboardingActions(
             next: viewModel.next,
             back: viewModel.back,
-            skip: viewModel.skip,
-            setOption: { option, enabled in viewModel.setOption(option: option, enabled: enabled) },
-            setTextSize: { kind, size in viewModel.setTextSize(kind: kind, size: size) },
-            setServicesEnabled: { viewModel.setServicesEnabled(enabled: $0) },
             requestNotifications: viewModel.requestNotifications,
-            openLink: { url in if let url = URL(string: url) { openURL(url) } }
+            addCalendar: viewModel.addLessonsToCalendar,
+            connect: viewModel.connect,
+            notNow: viewModel.notNow,
+            details: { showsConsent = true }
         )
     }
 
@@ -73,15 +77,18 @@ struct OnboardingScreen: View {
             Task { await requestNotificationPermission() }
         case .openNotificationSettings:
             if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
+        case .requestCalendarAccess:
+            Task {
+                if await calendarAccess.turnOn() == .granted { model.viewModel.onCalendarAccessGranted() }
+            }
+        case .showConsent:
+            showsConsent = true
         case let .showError(event):
             errorText = AppErrorTextsKt.toUiText(event.error).resolved
-        case .requestPinWidget, .spoilerImageFailed:
-            // Neither is sent on iOS: no programmatic pin, no custom spoiler image.
-            break
         }
     }
 
-    /// The system dialog; its answer is the status row's, and the push registration's `alertsAllowed`.
+    /// The system dialog; its answer is the row's, and the push registration's `alertsAllowed`.
     private func requestNotificationPermission() async {
         let center = UNUserNotificationCenter.current()
         let granted = (try? await center.requestAuthorization(options: [.alert, .badge, .sound])) ?? false
@@ -101,20 +108,19 @@ struct OnboardingScreen: View {
     }
 }
 
-/// The callbacks of the flow, one per `OnboardingViewModel` entry point iOS uses, plus opening a link.
+/// The callbacks of the flow, one per `OnboardingViewModel` entry point, plus the consent sheet to read.
 struct OnboardingActions {
     var next: () -> Void = {}
     var back: () -> Void = {}
-    var skip: () -> Void = {}
-    var setOption: (WidgetOption, Bool) -> Void = { _, _ in }
-    var setTextSize: (WidgetKind, WidgetTextSize) -> Void = { _, _ in }
-    var setServicesEnabled: (Bool) -> Void = { _ in }
     var requestNotifications: () -> Void = {}
-    var openLink: (String) -> Void = { _ in }
+    var addCalendar: () -> Void = {}
+    var connect: () -> Void = {}
+    var notNow: () -> Void = {}
+    var details: () -> Void = {}
 }
 
-/// The flow for one `OnboardingUiState`, without the ViewModel (snapshot tests render it directly): the step dots with
-/// the back button, the current step, and the footer with `onboarding_skip` and `onboarding_next` or `onboarding_done`.
+/// The flow for one `OnboardingUiState`, without the ViewModel (snapshot tests render it directly): the step dots
+/// with `onboarding_step_progress` and the back button, the step's title and line over its body, and its actions pinned at the bottom.
 struct OnboardingContent: View {
     let state: OnboardingUiState
     let actions: OnboardingActions
@@ -124,95 +130,119 @@ struct OnboardingContent: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            step
-                .frame(maxHeight: .infinity)
+            ScrollView {
+                VStack(alignment: .leading, spacing: ItmoKit.gap) {
+                    Text(verbatim: AppStrings.string(title))
+                        .font(.largeTitle.bold())
+                        .padding(.horizontal, 4)
+                        .padding(.top, ItmoSpacing.compact)
+                        .accessibilityAddTraits(.isHeader)
+                    Text(verbatim: AppStrings.string(line))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
+                        .padding(.bottom, 12)
+                    step
+                }
+                .padding(.horizontal, ItmoKit.margin)
+                .padding(.bottom, ItmoSpacing.group)
+            }
+            .id(state.step)
+            .transition(.opacity)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: state.step)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("onboarding.step.\(state.step.name.lowercased())")
             footer
         }
-        .background(Color(uiColor: .systemBackground))
+        .background(Color(.systemGroupedBackground))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("onboarding.screen")
     }
 
     private var stepIndex: Int { Int(state.stepIndex) }
 
-    private var header: some View {
-        ZStack {
-            OnboardingStepDots(count: state.steps.count, current: stepIndex)
-            HStack {
-                Button(action: actions.back) {
-                    AppSymbol.arrowBack.image
-                        .frame(minWidth: ItmoMetrics.touchTarget, minHeight: ItmoMetrics.touchTarget)
-                }
-                .itmoTint()
-                .accessibilityLabel(Text(verbatim: AppStrings.string("common_back")))
-                .accessibilityIdentifier("onboarding.back")
-                // The first step has nowhere to go back to; the button keeps its place.
-                .opacity(stepIndex > 0 ? 1 : 0)
-                .disabled(stepIndex == 0 || state.finished)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, ItmoSpacing.compact)
+    private var title: String {
+        switch state.step {
+        case .value: "onboarding_value_title"
+        case .permissions: "onboarding_permissions_title"
+        case .connection: "onboarding_connection_title"
         }
+    }
+
+    private var line: String {
+        switch state.step {
+        case .value: "onboarding_value_text"
+        case .permissions: "onboarding_permissions_text"
+        case .connection: "onboarding_connection_text"
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: ItmoSpacing.compact) {
+            Button(action: actions.back) {
+                AppSymbol.arrowBack.image
+                    .frame(minWidth: ItmoMetrics.touchTarget, minHeight: ItmoMetrics.touchTarget)
+            }
+            .itmoTint()
+            .accessibilityLabel(Text(verbatim: AppStrings.string("common_back")))
+            .accessibilityIdentifier("onboarding.back")
+            // The first step has nowhere to go back to; the button keeps its place.
+            .opacity(stepIndex > 0 ? 1 : 0)
+            .disabled(stepIndex == 0 || state.finished)
+            OnboardingStepDots(count: Int(state.stepCount), current: stepIndex)
+            Spacer(minLength: 0)
+            Text(verbatim: AppStrings.string("onboarding_step_progress", [stepIndex + 1, Int(state.stepCount)]))
+                .font(.itmo(.bodyMedium))
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, ItmoSpacing.screenMargin - ItmoSpacing.compact)
         .padding(.top, ItmoSpacing.compact)
     }
 
     @ViewBuilder
     private var step: some View {
-        Group {
-            switch state.step {
-            case .compactWidget:
-                OnboardingWidgetStep(kind: .singleLesson, state: state, actions: actions)
-            case .fullWidget:
-                OnboardingWidgetStep(kind: .daySchedule, state: state, actions: actions)
-            case .qrWidget:
-                OnboardingWidgetStep(kind: .qr, state: state, actions: actions)
-            case .services:
-                OnboardingServicesStep(state: state, actions: actions)
-            case .notifications:
-                OnboardingNotificationsStep(state: state, actions: actions)
-            }
+        switch state.step {
+        case .value: OnboardingValueStep(state: state)
+        case .permissions: OnboardingPermissionsStep(state: state, actions: actions)
+        case .connection: OnboardingConnectionStep(state: state, actions: actions)
         }
-        .id(state.step)
-        .transition(.opacity)
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: state.step)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("onboarding.step.\(state.step.name.lowercased())")
     }
 
-    /// `onboarding_skip` until the last step, then only `onboarding_done`.
+    /// `onboarding_next` on the first two steps; `onboarding_connection_connect` and `onboarding_connection_not_now` on
+    /// the last, `onboarding_done` once connected.
     private var footer: some View {
-        HStack(spacing: ItmoSpacing.group) {
-            if !state.isLastStep {
-                Button(action: actions.skip) {
-                    Text(verbatim: AppStrings.string("onboarding_skip"))
-                        .font(.itmo(.labelLarge))
-                        .frame(minHeight: ItmoMetrics.touchTarget)
-                }
-                .itmoTint()
-                .disabled(state.finished)
-                .accessibilityIdentifier("onboarding.skip")
-            }
-            Spacer(minLength: 0)
-            Button(action: actions.next) {
-                Text(verbatim: AppStrings.string(state.isLastStep ? "onboarding_done" : "onboarding_next"))
-                    .font(.itmo(.labelLarge))
+        let last = state.step == .connection
+        let primary = !last ? "onboarding_next" : (state.servicesEnabled ? "onboarding_done" : "onboarding_connection_connect")
+        return VStack(spacing: 10) {
+            Button(action: last ? actions.connect : actions.next) {
+                Text(verbatim: AppStrings.string(primary))
+                    .font(.itmo(.titleMedium, emphasized: true))
                     .foregroundStyle(ItmoColor.onPrimary)
-                    .padding(.vertical, ItmoSpacing.compact)
-                    .frame(minWidth: 96, minHeight: ItmoMetrics.touchTarget)
+                    .frame(maxWidth: .infinity)
+                    .opacity(state.servicesBusy ? 0 : 1)
+                    .overlay { if state.servicesBusy { ProgressView().tint(ItmoColor.onPrimary) } }
             }
-            .buttonStyle(.borderedProminent)
-            .buttonBorderShape(.roundedRectangle(radius: ItmoCorner.large))
+            .buttonStyle(.glassProminent)
+            .controlSize(.extraLarge)
             .itmoTint()
-            .disabled(state.finished)
+            .disabled(state.finished || state.servicesBusy)
             .accessibilityIdentifier("onboarding.next")
+            if last && !state.servicesEnabled {
+                Button(action: actions.notNow) {
+                    Text(verbatim: AppStrings.string("onboarding_connection_not_now")).frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glass)
+                .controlSize(.extraLarge)
+                .disabled(state.finished || state.servicesBusy)
+                .accessibilityIdentifier("onboarding.notNow")
+            }
         }
-        .padding(.horizontal, ItmoSpacing.screenMargin)
-        .padding(.top, ItmoSpacing.compact)
-        .padding(.bottom, ItmoSpacing.group)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 12)
     }
 }
 
-/// The step progress: one dot per step, the current one in the primary role, read as `onboarding_step_progress`.
+/// The step progress: one dot per step, the current one wide, read as `onboarding_step_progress`.
 struct OnboardingStepDots: View {
     let count: Int
     let current: Int
@@ -221,14 +251,139 @@ struct OnboardingStepDots: View {
         HStack(spacing: ItmoSpacing.compact) {
             ForEach(0..<count, id: \.self) { index in
                 Capsule()
-                    .fill(index == current ? ItmoColor.primary : ItmoColor.outlineVariant)
+                    .fill(index <= current ? AnyShapeStyle(ItmoColor.primary) : AnyShapeStyle(Color(.systemFill)))
                     .frame(width: index == current ? 24 : 8, height: 8)
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            Text(verbatim: AppStrings.string("onboarding_step_progress", [current + 1, count]))
-        )
+        .accessibilityLabel(Text(verbatim: AppStrings.string("onboarding_step_progress", [current + 1, count])))
         .accessibilityIdentifier("onboarding.steps")
+    }
+}
+
+/// Step 1: the person, the lesson that matters now and what else is there, from their own data as it loads.
+struct OnboardingValueStep: View {
+    let state: OnboardingUiState
+
+    var body: some View {
+        if let me = state.me {
+            HStack(spacing: ItmoSpacing.compact) {
+                ItmoAvatar(initials: me.initials, pictureUrl: me.pictureUrl, size: 28)
+                Text(verbatim: me.name).font(.itmo(.labelLarge, emphasized: true))
+            }
+            .padding(4)
+            .padding(.trailing, 10)
+            .background(Color(.secondarySystemGroupedBackground), in: .capsule)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("onboarding.me")
+        }
+        if let lesson = state.lesson {
+            ItmoSectionHeader(title: lesson.title.resolved)
+            ItmoLessonCard(lesson: lesson.lesson.kitLesson(id: "onboarding"))
+                .accessibilityIdentifier("onboarding.lesson")
+        }
+        ItmoSectionHeader(title: AppStrings.string("onboarding_value_more"))
+        ItmoListGroup {
+            ItmoRow(title: AppStrings.string("onboarding_value_pass"), subtitle: AppStrings.string("onboarding_value_pass_text"), symbol: .qrCode, tone: .tertiary)
+            ItmoRow(title: AppStrings.string("onboarding_value_scores"), subtitle: AppStrings.string("onboarding_value_scores_text"), symbol: .book2, tone: .primary)
+            ItmoRow(
+                title: AppStrings.string("onboarding_value_sport"),
+                subtitle: state.sport?.resolved ?? AppStrings.string("onboarding_value_sport_text"),
+                symbol: .sprint,
+                tone: .ok
+            )
+            ItmoRow(title: AppStrings.string("onboarding_value_widgets"), subtitle: AppStrings.string("ios_onboarding_value_widgets_text"), symbol: .widgets, tone: .neutral)
+        }
+    }
+}
+
+/// Step 2: each permission with its own button, or `onboarding_permission_granted` once granted.
+struct OnboardingPermissionsStep: View {
+    let state: OnboardingUiState
+    let actions: OnboardingActions
+
+    var body: some View {
+        ItmoListGroup {
+            OnboardingPermissionRow(
+                symbol: .notification,
+                title: "onboarding_notifications_title",
+                text: "onboarding_notifications_text",
+                action: state.notificationsAsked ? "onboarding_notifications_open_settings" : "onboarding_notifications_allow",
+                granted: state.notificationsGranted,
+                run: actions.requestNotifications,
+                id: "notifications"
+            )
+            if let synced = state.calendarSynced {
+                OnboardingPermissionRow(
+                    symbol: .calendarAdd,
+                    title: "onboarding_calendar_title",
+                    text: "onboarding_calendar_text",
+                    action: "onboarding_calendar_add",
+                    granted: synced.boolValue,
+                    run: actions.addCalendar,
+                    id: "calendar"
+                )
+            }
+        }
+        ItmoGroupNote(text: AppStrings.string("onboarding_permissions_widgets"))
+    }
+}
+
+/// One permission, one explicit choice: its own button or the granted state.
+struct OnboardingPermissionRow: View {
+    let symbol: AppSymbol
+    let title: String
+    let text: String
+    let action: String
+    let granted: Bool
+    let run: () -> Void
+    let id: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: ItmoSpacing.content) {
+            ItmoIconTile(symbol: symbol, tone: granted ? .ok : .primary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: AppStrings.string(title)).font(.itmo(.titleMedium, emphasized: true))
+                Text(verbatim: AppStrings.string(text)).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+                Group {
+                    if granted {
+                        ItmoStatusPill(pill: ItmoPill(text: AppStrings.string("onboarding_permission_granted"), tone: .ok, symbol: .check))
+                            .accessibilityIdentifier("onboarding.\(id).granted")
+                    } else {
+                        Button(AppStrings.string(action), action: run)
+                            .buttonStyle(.glass)
+                            .itmoTint()
+                            .accessibilityIdentifier("onboarding.\(id).button")
+                    }
+                }
+                .padding(.top, ItmoSpacing.compact)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(ItmoKit.padding)
+    }
+}
+
+/// Step 3: what the connection gives, a way to read what the server keeps, and where to turn it on later.
+struct OnboardingConnectionStep: View {
+    let state: OnboardingUiState
+    let actions: OnboardingActions
+
+    var body: some View {
+        ItmoListGroup {
+            ItmoRow(title: AppStrings.string("onboarding_connection_friends"), subtitle: AppStrings.string("onboarding_connection_friends_text"), symbol: .group, tone: .primary)
+            ItmoRow(title: AppStrings.string("onboarding_connection_queue"), subtitle: AppStrings.string("onboarding_connection_queue_text"), symbol: .sprint, tone: .primary)
+            ItmoRow(title: AppStrings.string("onboarding_connection_links"), subtitle: AppStrings.string("onboarding_connection_links_text"), symbol: .link, tone: .primary)
+        }
+        ItmoListGroup {
+            ItmoRow(title: AppStrings.string("onboarding_connection_details"), symbol: .info, chevron: true, action: actions.details)
+        }
+        .accessibilityIdentifier("onboarding.connection.details")
+        if state.servicesEnabled {
+            ItmoStatusPill(pill: ItmoPill(text: AppStrings.string("onboarding_connection_connected"), tone: .ok, symbol: .check))
+                .padding(.leading, ItmoSpacing.compact)
+        } else {
+            ItmoGroupNote(text: AppStrings.string("onboarding_connection_later_note"))
+        }
     }
 }

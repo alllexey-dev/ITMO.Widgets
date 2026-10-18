@@ -26,7 +26,8 @@
       "familyName": "Друг",
       "givenName": "Первый"
     },
-    "relationship": "OUTGOING"
+    "relationship": "OUTGOING",
+    "requestedAt": "2026-10-04T18:30:00Z"
   },
   "error": null
 }

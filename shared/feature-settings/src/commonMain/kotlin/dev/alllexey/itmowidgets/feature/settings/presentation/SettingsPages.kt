@@ -4,17 +4,15 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 /** Every settings page provider, listed once; the ViewModel finds a page's builder and a row's handler here. */
 class SettingsPages(
     root: RootPageProvider,
-    services: ServicesPageProvider,
     val widgets: WidgetsPageProvider,
     val schedule: SchedulePageProvider,
-    recordbook: RecordbookPageProvider,
     sport: SportPageProvider,
     maintenance: MaintenancePageProvider,
     licenses: LicensesPageProvider = LicensesPageProvider(),
 ) {
 
     val providers: List<SettingsPageProvider> =
-        listOf(root, services, widgets, schedule, recordbook, sport, maintenance, licenses)
+        listOf(root, widgets, schedule, sport, maintenance, licenses)
 
     private val byPage = providers.flatMap { provider -> provider.pages.map { it to provider } }.toMap()
     private val byRow = providers.flatMap { provider -> provider.rows.map { it to provider } }.toMap()

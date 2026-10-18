@@ -12,9 +12,7 @@ class SettingsDialogStateTest {
         val dialogs = listOf(
             SettingsDialog.Choice(SettingRowId.FULL_WIDGET_TEXT_SIZE),
             SettingsDialog.Choice(SettingRowId.QR_ANIMATION),
-            SettingsDialog.Choice(SettingRowId.FRIENDS_SHARING),
-            SettingsDialog.CustomServicesConsent,
-            SettingsDialog.BackgroundWorkHint,
+            SettingsDialog.Choice(SettingRowId.ACCENT_COLOR),
             SettingsDialog.CalendarAccess(locked = false),
             SettingsDialog.CalendarAccess(locked = true),
         )
@@ -36,9 +34,9 @@ class SettingsDialogStateTest {
     @Test
     fun `close hands the dialog out once`() {
         val state = SettingsDialogState()
-        state.show(SettingsDialog.BackgroundWorkHint)
+        state.show(SettingsDialog.CalendarAccess(locked = false))
 
-        assertEquals(SettingsDialog.BackgroundWorkHint, state.close())
+        assertEquals(SettingsDialog.CalendarAccess(locked = false), state.close())
         assertNull(state.close())
         assertNull(state.dialog)
     }

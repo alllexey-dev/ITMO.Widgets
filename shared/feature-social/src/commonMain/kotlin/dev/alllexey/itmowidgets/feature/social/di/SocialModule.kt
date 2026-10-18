@@ -29,7 +29,7 @@ val socialBellQualifier: Qualifier = named("social")
  * The social data and screens. Koin is the only graph for these types: one `SocialRepositoryImpl` serves the
  * screens, the bell, the session cleaners and the schedule's friend picker (through `FriendRepository`). The core types
  * (`BackendGate`, Core 2.0's `UsersApi` and `FriendsApi`, `MyItmoClient`, the application `CoroutineScope`,
- * `DemoMode`, `AppDispatchers`, the services opt-in, the current user) come from the platform's Koin
+ * `DemoMode`, `AppDispatchers`, the services opt-in, the current user, the academic time) come from the platform's Koin
  * modules, the teacher reviews from `reviewsModule`, the viewer's lessons with a teacher (`TeacherLessonsGateway`) from
  * the schedule's data module. The `SavedStateHandle` holds the host's arguments
  * (`user_isu`, `user_name`) under the same keys.

@@ -19,8 +19,6 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -77,105 +75,18 @@ class SchedulePageProviderTest {
         }
 
     @Test
-    fun schedulePagePutsTheChangesSwitchInItsOwnSectionAboveAutoSign() =
+    fun schedulePageLinksToTheNotificationsAboveAutoSign() =
         runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.SCHEDULE, local = LocalSettings(scheduleChangesEnabled = false))
+            val fixture = createFixture(page = SettingsPage.SCHEDULE)
             advanceUntilIdle()
 
-            val (changes, autoSign) = fixture.viewModel.uiState.value.sections
-            val toggle = fixture.viewModel.toggle(SettingRowId.SCHEDULE_CHANGES)
-            assertEquals(listOf(toggle), changes.items)
-            assertEquals(null, changes.title)
-            assertEquals(null, changes.footer)
-            assertEquals(UiText.Res(SettingsStrings.settings_schedule_changes_title), toggle.title)
-            assertFalse(toggle.checked)
+            val (notifications, autoSign) = fixture.viewModel.uiState.value.sections
+            val link = notifications.items.single() as SettingItem.Navigation
+            assertEquals(SettingsPage.NOTIFICATIONS, link.page)
+            assertEquals(UiText.Res(SettingsStrings.settings_schedule_notifications_title), link.title)
+            assertEquals(null, notifications.title)
             assertEquals(listOf(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN), autoSign.items.map { it.id })
             assertEquals(UiText.Res(SettingsStrings.settings_schedule_footer), autoSign.footer)
-
-            fixture.tracking.enabled.value = true
-            advanceUntilIdle()
-            assertTrue(fixture.viewModel.toggle(SettingRowId.SCHEDULE_CHANGES).checked)
-        }
-
-    @Test
-    fun scheduleChangesSwitchGoesThroughTrackingAndAsksForNotificationsOnlyWhenTheyAreOff() =
-        runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.SCHEDULE)
-            fixture.viewModel.onNotificationPermissionChanged(granted = true)
-            advanceUntilIdle()
-
-            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_CHANGES, false)
-            advanceUntilIdle()
-            assertEquals(listOf(false), fixture.tracking.setCalls)
-            assertFalse(fixture.viewModel.toggle(SettingRowId.SCHEDULE_CHANGES).checked)
-
-            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_CHANGES, true)
-            advanceUntilIdle()
-            assertEquals(listOf(false, true), fixture.tracking.setCalls)
-
-            fixture.viewModel.onNotificationPermissionChanged(granted = false)
-            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_CHANGES, true)
-            advanceUntilIdle()
-            assertEquals(listOf(false, true, true), fixture.tracking.setCalls)
-            assertEquals(listOf(SettingsEvent.RequestNotificationPermission), fixture.viewModel.events.take(1).toList())
-            assertEquals(0, fixture.widgetRefresher.refreshCount)
-        }
-
-    @Test
-    fun scheduleChangesDescriptionSaysWhenNotificationsAreOff() =
-        runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.SCHEDULE)
-            advanceUntilIdle()
-            val description = { fixture.viewModel.toggle(SettingRowId.SCHEDULE_CHANGES).description }
-            assertEquals(UiText.Res(SettingsStrings.settings_schedule_changes_description), description())
-
-            fixture.viewModel.onNotificationPermissionChanged(granted = false)
-            advanceUntilIdle()
-            assertEquals(UiText.Res(SettingsStrings.settings_schedule_changes_notifications_off), description())
-
-            fixture.viewModel.onNotificationPermissionChanged(granted = true)
-            advanceUntilIdle()
-            assertEquals(UiText.Res(SettingsStrings.settings_schedule_changes_description), description())
-        }
-
-    @Test
-    fun schedulePageShowsTheBackgroundWorkRowAfterTheChangesSwitchOnlyWhileRestrictedAndOn() =
-        runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.SCHEDULE, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
-            advanceUntilIdle()
-            val keys = { fixture.viewModel.uiState.value.sections.first().items.map { it.id } }
-            // Not asked yet: the row stays out rather than flash in.
-            assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES), keys())
-
-            fixture.viewModel.onBackgroundWorkChanged()
-            advanceUntilIdle()
-            assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES, SettingRowId.BACKGROUND_WORK), keys())
-            val row = fixture.viewModel.action(SettingRowId.BACKGROUND_WORK)
-            assertEquals(UiText.Res(SettingsStrings.settings_background_work_title), row.title)
-            assertEquals(UiText.Res(SettingsStrings.background_work_hint), row.description)
-            assertEquals(AppIcon.OPEN_IN_NEW, row.trailingIcon)
-            assertTrue(row.enabled)
-
-            fixture.tracking.enabled.value = false
-            advanceUntilIdle()
-            assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES), keys())
-
-            fixture.tracking.enabled.value = true
-            fixture.backgroundWork.unrestricted = true
-            fixture.viewModel.onBackgroundWorkChanged()
-            advanceUntilIdle()
-            assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES), keys())
-        }
-
-    @Test
-    fun theBackgroundWorkRowOpensTheSystemPage() =
-        runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.SCHEDULE, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
-            advanceUntilIdle()
-
-            fixture.viewModel.onAction(SettingRowId.BACKGROUND_WORK)
-
-            assertEquals(SettingsEvent.OpenBackgroundWorkSettings, fixture.viewModel.events.first())
         }
 
     @Test
@@ -346,7 +257,7 @@ class SchedulePageProviderTest {
     @Test
     fun pagesOtherThanScheduleDoNotReadTheCalendarState() = runTest(main.dispatcher) {
         val sync = FakeCalendarSync(CalendarSyncState(enabled = true))
-        val fixture = createFixture(page = SettingsPage.RECORDBOOK, calendarSync = sync)
+        val fixture = createFixture(page = SettingsPage.SPORT, calendarSync = sync)
         advanceUntilIdle()
 
         assertTrue(fixture.viewModel.allItems().none { it.id.key.startsWith("calendar") || it.id == SettingRowId.ICS_EXPORT })

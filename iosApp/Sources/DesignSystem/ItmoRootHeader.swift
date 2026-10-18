@@ -40,6 +40,9 @@ private struct ItmoRootHeader<Actions: View>: ViewModifier {
     func body(content: Content) -> some View {
         content
             .navigationTitle(Text(verbatim: title))
+            // A root's title is large by default, and SwiftUI then hosts the refresh control of the scroll view in
+            // the bar's large title, which is hidden here: inline keeps the control in the scroll view, under the header.
+            .toolbarTitleDisplayMode(.inline)
             .toolbarVisibility(.hidden, for: .navigationBar)
             .safeAreaBar(edge: .top) {
                 HStack(spacing: ItmoSpacing.content) {

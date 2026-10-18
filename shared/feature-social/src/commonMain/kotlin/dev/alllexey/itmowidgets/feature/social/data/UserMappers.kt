@@ -9,7 +9,8 @@ import dev.alllexey.itmowidgets.client.common.UserProfile as ClientUserProfile
 fun ClientUserProfile.toModel(): UserProfile {
     return UserProfile(
         user = user.toUserSummary(),
-        relationship = relationship.toModel()
+        relationship = relationship.toModel(),
+        requestedAt = requestedAt,
     )
 }
 

@@ -29,7 +29,11 @@ struct UserProfileScreen: View {
     var body: some View {
         let page = model.state as? UserProfileUiStateContent
         UserProfileContent(state: model.state, actions: actions)
-            .refreshable { model.viewModel.refresh(mode: .pull) }
+            .refreshable {
+                await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                    $0.isRefreshing
+                })
+            }
             .userProfileBar(page) { SocialSharing.profile(name: $0.displayName.resolved, isu: $0.isu) }
             .alert(
                 Text(verbatim: AppStrings.string("friends_remove_confirm_title")),
@@ -81,7 +85,7 @@ struct UserProfileScreen: View {
             },
             removeFriend: { viewModel.requestRemoveFriend() },
             schedule: { open(AppRoutes.UserSchedule(isu: $0.isu, name: $0.displayName.resolved)) },
-            sport: { open(AppRoutes.UserSport(isu: $0.isu, name: $0.displayName.resolved)) },
+            sport: { open(AppRoutes.UserSport(isu: $0.isu, name: $0.displayName.resolved, givenName: $0.givenName)) },
             friends: { open(AppRoutes.UserFriends(isu: $0.isu, name: $0.displayName.resolved)) },
             toggleSummary: { viewModel.toggleSummaryScales() },
             review: TeacherReviewActions(

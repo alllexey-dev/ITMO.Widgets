@@ -31,6 +31,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
 import dev.alllexey.itmowidgets.feature.social.presentation.subtitleText
 import dev.alllexey.itmowidgets.feature.social.presentation.userProfileUiState
 import dev.alllexey.itmowidgets.feature.social.ui.reviews.ReviewPreviewFixtures
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
@@ -61,13 +62,16 @@ object SocialSamples {
         UserRowUi(user.isu, user.name, null, user.subtitleText(), status, primary, secondary)
 
     /** Друзья: [state] `list` or `empty`. */
+    /** A request's status with when it was sent, as `requestStatus` builds it. */
+    private fun sent(status: String, moment: UiText) = UiText.Joined(listOf(UiText.Res(status), moment), ", ")
+
     fun friends(state: String = "list"): FriendsUiState = FriendsUiState(
         lists = if (state == "empty") {
             FriendLists.Content(emptyList(), emptyList(), emptyList())
         } else {
             FriendLists.Content(
-                incoming = listOf(row(vera, UserAction.ACCEPT, UserAction.REJECT, UiText.Res(SocialStrings.user_status_incoming))),
-                outgoing = listOf(row(sofia, secondary = UserAction.CANCEL, status = UiText.Res(SocialStrings.user_status_outgoing))),
+                incoming = listOf(row(vera, UserAction.ACCEPT, UserAction.REJECT, sent(SocialStrings.user_status_incoming, UiText.Dynamic("12:05")))),
+                outgoing = listOf(row(sofia, secondary = UserAction.CANCEL, status = sent(SocialStrings.user_status_outgoing, UiText.Res(CoreStrings.event_moment_yesterday)))),
                 friends = friends.map { row(it) },
             )
         },

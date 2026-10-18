@@ -85,8 +85,6 @@ object SettingsSemantics {
 
     fun hasScroll(root: View): Boolean = node(root, SettingsTestTags.SCROLL) != null
 
-    fun hasProgress(root: View): Boolean = node(root, SettingsTestTags.PROGRESS) != null
-
     /** Every row is at least the 48 dp touch target, one pixel of slack for rounding. */
     fun assertTouchTargets(root: View) {
         val min = 48 * root.resources.displayMetrics.density - 1

@@ -1,23 +1,17 @@
 package dev.alllexey.itmowidgets.feature.settings.ui
 
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -36,6 +30,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -48,7 +43,6 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.feature.settings.ui.preview.SettingsPreviewData
-import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import org.junit.Assert.assertEquals
@@ -93,7 +87,7 @@ class SettingsScreenTest {
         val original = choice()
         val section = SettingSection(text("Раздел"), listOf(toggle(), original), text("Подсказка"))
         show(page(section))
-        val toggleNode = nodeId(SettingRowId.SCHEDULE_CHANGES)
+        val toggleNode = nodeId(SettingRowId.HOME_PASS_VISIBLE)
         val choiceNode = nodeId(SettingRowId.QR_ANIMATION)
         val updated = original.copy(value = text("Круг"), selectedOptionKey = "circle")
 
@@ -109,9 +103,9 @@ class SettingsScreenTest {
             ),
         )
 
-        assertEquals(toggleNode, nodeId(SettingRowId.SCHEDULE_CHANGES))
+        assertEquals(toggleNode, nodeId(SettingRowId.HOME_PASS_VISIBLE))
         assertEquals(choiceNode, nodeId(SettingRowId.QR_ANIMATION))
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key).assertIsOn()
+        compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertIsOn()
         compose.onNodeWithText("Новый раздел").assertExists()
         compose.onNodeWithText("Новая подсказка").assertExists()
         compose.onNodeWithTag(SettingRowId.QR_ANIMATION.key).assert(hasText("Круг"))
@@ -129,11 +123,11 @@ class SettingsScreenTest {
         show(page(SettingSection(null, listOf(toggle().copy(stateKnown = false)))))
         for (item in listOf(toggle().copy(stateKnown = false), toggle().copy(enabled = false))) {
             update(page(SettingSection(null, listOf(item))))
-            val row = compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key)
+            val row = compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key)
             row.assertIsNotEnabled()
             row.performClick()
         }
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key).assertIsOff()
+        compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertIsOff()
 
         assertTrue(toggles.isEmpty())
     }
@@ -143,15 +137,15 @@ class SettingsScreenTest {
         val section = SettingSection(null, listOf(toggle(true)))
         show(page(section))
         update(page(section.copy()))
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key).assertIsOn()
+        compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertIsOn()
         assertTrue(toggles.isEmpty())
 
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key).assertHasClickAction().performClick()
-        assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES to false), toggles)
+        compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertHasClickAction().performClick()
+        assertEquals(listOf(SettingRowId.HOME_PASS_VISIBLE to false), toggles)
 
         update(page(section.copy()))
         // The switch shows the state, which the tap alone did not change.
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key).assertIsOn()
+        compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertIsOn()
         assertEquals(1, toggles.size)
     }
 
@@ -197,7 +191,7 @@ class SettingsScreenTest {
         state = page(SettingSection(null, listOf(first.copy(checked = false), second.copy(checked = true))))
         restoration.emulateSavedInstanceStateRestore()
 
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key).assertIsOff()
+        compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertIsOff()
         compose.onNodeWithTag(SettingRowId.SPORT_TEACHER_FILTER.key).assertIsOn()
         assertTrue(toggles.isEmpty())
     }
@@ -208,7 +202,7 @@ class SettingsScreenTest {
         state = page(SettingSection(null, listOf(toggle(true), choice())))
         compose.setContent { Themed { SettingsScreen(state, actions) } }
 
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_CHANGES.key).assertIsOn()
+        compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertIsOn()
         compose.onNodeWithTag(SettingRowId.QR_ANIMATION.key).assert(hasText("Плавное исчезновение", substring = true))
         assertTrue(toggles.isEmpty())
     }
@@ -281,7 +275,7 @@ class SettingsScreenTest {
         val schemes = listOf(false to ColorSource.Platform, true to ColorSource.Platform, false to ColorSource.Seed(GREEN_SEED))
         val details = listOf(
             SettingsPreviewData.Root,
-            SettingsPreviewData.Privacy,
+            SettingsPreviewData.Home,
             SettingsPreviewData.Schedule,
         )
         for ((night, source) in schemes) for (detail in details) {
@@ -305,118 +299,9 @@ class SettingsScreenTest {
     }
 
     @Test
-    @Config(qualifiers = "w320dp-h891dp")
-    fun `privacy loading error and disabled states show no switch and no made-up audience`() {
-        show(SettingsPreviewData.PrivacyLoading, fontScale = LARGE_FONT)
-        compose.onNodeWithTag(SettingsTestTags.PROGRESS).assertExists()
-        compose.onNodeWithTag(SettingsTestTags.SCROLL).assertDoesNotExist()
-
-        for (privacy in listOf(SettingsPreviewData.PrivacyError, SettingsPreviewData.PrivacyDisabled)) {
-            update(privacy)
-            compose.onNodeWithTag(SettingsTestTags.PROGRESS).assertDoesNotExist()
-            for (id in SHARING_ROWS) {
-                compose.onNodeWithTag(id.key).assertIsNotEnabled().assert(hasText(UNKNOWN))
-            }
-            compose.onAllNodes(IsSwitch).assertCountEquals(0)
-            compose.assertNoTextOverflow()
-            compose.assertTouchTargets()
-        }
-    }
-
-    @Test
-    @Config(qualifiers = "w320dp-h891dp")
-    fun `privacy audiences fit a narrow screen in light dark and a dynamic palette`() {
-        val audiences = privacyWith(schedule = "Все", sport = "Никто")
-        show(audiences, fontScale = LARGE_FONT)
-        for ((night, source) in listOf(false to ColorSource.Platform, true to ColorSource.Seed(GREEN_SEED))) {
-            dark = night
-            colors = source
-            compose.waitForIdle()
-            for ((id, value) in listOf(
-                SettingRowId.SCHEDULE_SHARING to "Все",
-                SettingRowId.SPORT_SHARING to "Никто",
-                SettingRowId.FRIENDS_SHARING to "Все",
-            )) {
-                compose.onNodeWithTag(id.key).assertIsEnabled().assertHasClickAction().assert(hasText(value))
-            }
-            compose.onAllNodes(IsSwitch).assertCountEquals(0)
-            compose.assertTouchTargets()
-            compose.assertNoTextOverflow()
-            assertTitleAboveValue("Кто видит моё расписание", "Все")
-        }
-    }
-
-    @Test
-    fun `privacy rows use the current audience and keep their identity when an update locks them`() {
-        show(SettingsPreviewData.Privacy)
-        val schedule = nodeId(SettingRowId.SCHEDULE_SHARING)
-        val sport = nodeId(SettingRowId.SPORT_SHARING)
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_SHARING.key).assert(hasText("Друзья"))
-        compose.onNodeWithTag(SettingRowId.SPORT_SHARING.key).assert(hasText("Друзья"))
-
-        val options = SettingsPreviewData.Privacy.sections.flatMap { it.items }
-            .filterIsInstance<SettingItem.Choice>().first { it.id == SettingRowId.SCHEDULE_SHARING }.options
-        assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), options.map(ChoiceOption::key))
-        assertEquals(
-            listOf(
-                SettingsStrings.settings_privacy_all,
-                SettingsStrings.settings_privacy_friends,
-                SettingsStrings.settings_privacy_nobody
-            ).map { UiText.Res(it) },
-            options.map(ChoiceOption::label),
-        )
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_SHARING.key).performClick()
-        compose.onNode(dialogOption("Друзья")).assertIsSelected()
-        compose.onNode(dialogOption("Все")).assertIsNotSelected()
-        compose.onNode(dialogOption("Никто")).assertIsNotSelected().performClick()
-        assertEquals(listOf(SettingRowId.SCHEDULE_SHARING to "NOBODY"), choices)
-
-        update(
-            SettingsPreviewData.Privacy.copy(
-                sections = SettingsPreviewData.Privacy.sections.map { section ->
-                    section.copy(items = section.items.map { if (it is SettingItem.Choice) it.copy(enabled = false) else it })
-                },
-            ),
-        )
-        assertEquals(schedule, nodeId(SettingRowId.SCHEDULE_SHARING))
-        assertEquals(sport, nodeId(SettingRowId.SPORT_SHARING))
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_SHARING.key).assertIsNotEnabled().performClick()
-        compose.onNodeWithTag(SettingRowId.SPORT_SHARING.key).assertIsNotEnabled().performClick()
-        assertEquals(1, choices.size)
-        compose.onNodeWithTag(SettingRowId.SCHEDULE_SHARING.key).assert(hasText("Друзья"))
-    }
-
-    @Test
-    fun `turning the custom services on asks first and a cancel leaves the switch at its state`() {
-        val services = SettingItem.Toggle(SettingRowId.CUSTOM_SERVICES, text("Подключение"), checked = false)
-        show(page(SettingSection(null, listOf(services))))
-
-        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).performClick()
-        compose.onNode(isDialog()).assertExists()
-        compose.onNodeWithText(CONSENT_TITLE).assertExists()
-        compose.onNode(dialogButton(CANCEL)).performClick()
-        compose.onNode(isDialog()).assertDoesNotExist()
-        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).assertIsOff()
-        assertTrue(toggles.isEmpty())
-
-        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).performClick()
-        compose.onNode(dialogButton(CONSENT_ENABLE)).performClick()
-        compose.onNode(isDialog()).assertDoesNotExist()
-        assertEquals(listOf(SettingRowId.CUSTOM_SERVICES to true), toggles)
-        // Until the state says otherwise, a refused or failed opt-in still shows the switch off.
-        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).assertIsOff()
-
-        update(page(SettingSection(null, listOf(services.copy(checked = true)))))
-        compose.onNodeWithTag(SettingRowId.CUSTOM_SERVICES.key).performClick()
-        compose.onNode(isDialog()).assertDoesNotExist()
-        assertEquals(SettingRowId.CUSTOM_SERVICES to false, toggles.last())
-    }
-
-    @Test
     fun `the host dialogs hand their buttons to the host once and dismiss does nothing`() {
         val calls = mutableListOf<String>()
         val hostActions = actions.copy(
-            onAllowBackgroundWork = { calls += "background" },
             onAllowCalendarAccess = { calls += "calendar" },
             onOpenAppSettings = { calls += "app-settings" },
         )
@@ -425,7 +310,6 @@ class SettingsScreenTest {
         compose.setContent { Themed { SettingsScreen(state, hostActions, dialogs = dialogs) } }
 
         for ((dialog, button) in listOf(
-            SettingsDialog.BackgroundWorkHint to "Разрешить",
             SettingsDialog.CalendarAccess(locked = false) to "Разрешить",
             SettingsDialog.CalendarAccess(locked = true) to "Открыть настройки",
         )) {
@@ -437,21 +321,21 @@ class SettingsScreenTest {
             compose.onNode(isDialog()).assertDoesNotExist()
         }
 
-        assertEquals(listOf("background", "calendar", "app-settings"), calls)
+        assertEquals(listOf("calendar", "app-settings"), calls)
         assertTrue(toggles.isEmpty())
     }
 
     @Test
     fun `an open choice survives recreation and shows the current value`() {
         val restoration = StateRestorationTester(compose)
-        state = SettingsPreviewData.Privacy
+        state = SettingsPreviewData.Appearance
         restoration.setContent { Themed { SettingsScreen(state, actions) } }
-        compose.onNodeWithTag(SettingRowId.SPORT_SHARING.key).performClick()
-        compose.onNode(dialogOption("Друзья")).assertIsSelected()
+        compose.onNodeWithTag(SettingRowId.THEME_CONTRAST.key).performScrollTo().performClick()
+        compose.onNode(dialogOption("Обычный")).assertIsSelected()
 
         restoration.emulateSavedInstanceStateRestore()
 
-        compose.onNode(dialogOption("Друзья")).assertIsSelected()
+        compose.onNode(dialogOption("Обычный")).assertIsSelected()
         compose.onNode(dialogButton(CANCEL)).performClick()
         compose.onNode(isDialog()).assertDoesNotExist()
         assertTrue(choices.isEmpty())
@@ -537,22 +421,8 @@ class SettingsScreenTest {
     private fun page(vararg sections: SettingSection) =
         SettingsUiState(SettingsPage.HOME, sections.toList(), loaded = true)
 
-    private fun privacyWith(schedule: String, sport: String): SettingsUiState {
-        val values = mapOf(SettingRowId.SCHEDULE_SHARING to schedule, SettingRowId.SPORT_SHARING to sport)
-        return SettingsPreviewData.Privacy.copy(
-            sections = SettingsPreviewData.Privacy.sections.map { section ->
-                section.copy(
-                    items = section.items.map { item ->
-                        val value = values[item.id]
-                        if (item is SettingItem.Choice && value != null) item.copy(value = text(value)) else item
-                    },
-                )
-            },
-        )
-    }
-
     private fun toggle(checked: Boolean = false) =
-        SettingItem.Toggle(SettingRowId.SCHEDULE_CHANGES, text("Расписание"), checked = checked)
+        SettingItem.Toggle(SettingRowId.HOME_PASS_VISIBLE, text("Расписание"), checked = checked)
 
     private fun choice() = SettingItem.Choice(
         SettingRowId.QR_ANIMATION,
@@ -568,15 +438,11 @@ class SettingsScreenTest {
         const val LONG_TITLE = "Анимация скрытия и раскрытия изображения QR-кода"
         const val LONG_VALUE = "Плавное исчезновение пользовательского изображения"
         const val LONG_TOGGLE = "Показывать расписание следующего дня после окончания сегодняшних занятий"
-        const val UNKNOWN = "Не загрузилось"
         const val CANCEL = "Отмена"
         const val LATER = "Не сейчас"
-        const val CONSENT_TITLE = "Подключиться к ITMO.Widgets?"
-        const val CONSENT_ENABLE = "Подключиться"
         const val LARGE_FONT = 1.3f
         const val SCROLLED_PX = 420f
         const val GREEN_SEED = 0xFF087F5B.toInt()
-        val SHARING_ROWS = listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING, SettingRowId.FRIENDS_SHARING)
         val IsSwitch = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)
     }
 }

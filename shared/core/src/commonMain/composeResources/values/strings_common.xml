@@ -43,6 +43,7 @@
     <string name="spoiler_crop_done">Готово</string>
     <string name="spoiler_crop_rotate">Повернуть</string>
     <string name="link_open_failed">Нет приложения, чтобы открыть ссылку</string>
+    <string name="event_moment_yesterday">вчера</string>
     <string name="user_name_placeholder">Пользователь ИСУ %1$d</string>
     <string name="common_error_restricted">Действие ограничено модерацией</string>
     <string name="links_category_scores">Таблица баллов</string>
@@ -149,4 +150,17 @@
     <string name="duration_minutes">%1$d мин</string>
     <string name="duration_hours">%1$d ч</string>
     <string name="duration_hours_minutes">%1$d ч %2$d мин</string>
+    <string name="services_consent_title">Подключить ITMO.Widgets?</string>
+    <string name="services_consent_text">Сервер один раз проверит ваш токен ITMO.ID, чтобы убедиться, что это вы. Сам токен не сохраняется.</string>
+    <string name="services_consent_stored">Сервер будет хранить</string>
+    <string name="services_consent_privacy">Расписание и спорт сначала видят только друзья. Выключить и удалить всё можно на странице «Подключение и данные».</string>
+    <string name="services_consent_connect">Подключить</string>
+    <string name="services_consent_later">Не сейчас</string>
+    <string name="services_stored_identity">ИСУ, имя и фото из ITMO.ID</string>
+    <string name="services_stored_group">Учебная группа</string>
+    <string name="services_stored_schedule">Расписание на ближайшие недели</string>
+    <string name="services_stored_sport">Записи и очереди на спорт</string>
+    <string name="services_stored_links">Ваши ссылки к предметам</string>
+    <string name="services_stored_device">Токен уведомлений этого устройства</string>
+    <string name="services_stored_token">Токен ITMO.ID сервер проверяет один раз и не сохраняет. Пароль он не видит никогда.</string>
 </resources>

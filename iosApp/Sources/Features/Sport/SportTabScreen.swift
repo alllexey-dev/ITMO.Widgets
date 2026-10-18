@@ -17,7 +17,16 @@ struct SportTabScreen: View {
     var body: some View {
         SportContent(tab: $tab, my: my.state, sign: sign.state, actions: actions)
             .refreshable {
-                if tab == .my { my.viewModel.refresh(mode: .pull) } else { sign.viewModel.refresh(mode: .pull) }
+                switch tab {
+                case .my:
+                    await my.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                        ($0.uiState.value.body as? SportMyBodyContent)?.refreshing == true
+                    })
+                case .sign:
+                    await sign.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                        ($0.uiState.value.body as? SportSignBodyDay)?.refreshing == true
+                    })
+                }
             }
             .itmoRootHeader(title: ShellTab.sport.title, subtitle: nil)
             .sheet(item: $lesson) { item in
@@ -685,11 +694,12 @@ extension View {
 struct UserSportScreen: View {
     let isu: Int32
     let name: String
+    let givenName: String?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ComposeHost { [isu, name, dismiss] in
-            userSportViewController(isu: isu, name: name, onBack: { dismiss() })
+        ComposeHost { [isu, name, givenName, dismiss] in
+            userSportViewController(isu: isu, name: name, givenName: givenName, onBack: { dismiss() })
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("sport.user")

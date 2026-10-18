@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.ui
 
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
-import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
@@ -35,10 +34,8 @@ class SettingsPreviewDataTest {
     fun everyPagePreviewIsWhatItsProviderBuilds() {
         val pages = mapOf(
             SettingsPage.ROOT to SettingsPreviewData.Root,
-            SettingsPage.SERVICES to SettingsPreviewData.Services,
             SettingsPage.WIDGETS to SettingsPreviewData.widgets(local = LocalSettings(customServicesEnabled = true)),
             SettingsPage.SCHEDULE to SettingsPreviewData.Schedule,
-            SettingsPage.RECORDBOOK to SettingsPreviewData.Recordbook,
             SettingsPage.SPORT to SettingsPreviewData.Sport,
             SettingsPage.MAINTENANCE to SettingsPreviewData.Maintenance,
             SettingsPage.LICENSES to SettingsPreviewData.Licenses,
@@ -47,23 +44,6 @@ class SettingsPreviewDataTest {
         for ((page, preview) in pages) {
             assertEquals(preview, built(page), "$page")
         }
-    }
-
-    @Test
-    fun privacyPreviewsAreWhatThePrivacyProviderBuilds() {
-        assertEquals(
-            SettingsPreviewData.Privacy,
-            built(SettingsPage.PRIVACY, sharing = SharingSettingsState.Content(SharingSettings())),
-        )
-        assertEquals(SettingsPreviewData.PrivacyError, built(SettingsPage.PRIVACY, sharing = SharingSettingsState.Error))
-        assertEquals(
-            SettingsPreviewData.PrivacyDisabled,
-            built(SettingsPage.PRIVACY, local = LocalSettings(customServicesEnabled = false)),
-        )
-        assertEquals(
-            SettingsPreviewData.PrivacyLoading,
-            built(SettingsPage.PRIVACY, sharing = SharingSettingsState.Loading),
-        )
     }
 
     private fun built(

@@ -4,22 +4,16 @@ import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
-import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.presentation.EveryPlatformCapability
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPageState
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetGalleryRows
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
-import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
-import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
-import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
-import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.presentation.ChoiceOption
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
@@ -29,21 +23,9 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.compose.strings.app_unofficial_notice
 import dev.alllexey.itmowidgets.shared.compose.strings.me_group_app
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_custom_image_default
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_custom_image_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_dynamic_colors_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_spoiler_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_spoiler_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_hide_past_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_hide_teacher_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_next_early_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_next_early_title
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_extra_large
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_large
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_normal
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_tomorrow_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_tomorrow_title
 import dev.alllexey.itmowidgets.shared.feature.settings.Res
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_group_colors
@@ -82,56 +64,30 @@ import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_ti
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_wallpaper
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_custom_services_toggle
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_diagnostics_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_friends_sharing_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_access
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_spoiler
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_widgets
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_myitmo_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_sheets_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_allowed
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_all
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_friends
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_load_error
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_nobody
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_policy_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_data_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_value
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_note
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_license
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_maplibre_text
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_noto_text
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_retry
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_services_required
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_unknown
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_note
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_value
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_circle
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_fade
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_none
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_reset_image_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_short_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_widgets_theme_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_refresh_widgets_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_changes_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_changes_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sharing_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_notifications_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sport_auto_sign_description
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sport_auto_sign_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_enabled
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_sharing_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_teacher_filter_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_time_filter_title
 import dev.alllexey.itmowidgets.shared.feature.settings.settings_version_title
@@ -139,7 +95,7 @@ import org.jetbrains.compose.resources.StringResource
 
 /**
  * The settings pages of the previews, as the page providers build them over the presentation tests'
- * fixture: custom services on, notifications allowed, no background restriction, no quick-settings tile, no custom
+ * fixture: custom services on, notifications allowed, no quick-settings tile, no custom
  * spoiler image, no diagnostics records, version `2.1-test`. `SettingsPreviewDataTest` checks every page against
  * the real providers, so a provider change that these previews miss fails a test instead of drifting.
  */
@@ -154,18 +110,7 @@ internal object SettingsPreviewData {
             title = res(Res.string.settings_group_access),
             items = listOf(
                 navigation(SettingsPage.SERVICES, value = res(Res.string.settings_services_enabled)),
-                navigation(SettingsPage.PRIVACY),
-                SettingItem.Action(
-                    id = SettingRowId.CONNECTIONS,
-                    title = UiText.Res(SettingsStrings.settings_connections_title),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
-                ),
-                SettingItem.Action(
-                    id = SettingRowId.NOTIFICATIONS,
-                    title = res(Res.string.settings_notifications_title),
-                    value = res(Res.string.settings_notifications_allowed),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
-                )
+                navigation(SettingsPage.NOTIFICATIONS)
             )
         ),
         SettingSection(
@@ -178,7 +123,6 @@ internal object SettingsPreviewData {
                 navigation(SettingsPage.APPEARANCE),
                 navigation(SettingsPage.HOME),
                 navigation(SettingsPage.SCHEDULE),
-                navigation(SettingsPage.RECORDBOOK),
                 navigation(SettingsPage.SPORT),
                 navigation(SettingsPage.MAINTENANCE)
             )
@@ -248,55 +192,6 @@ internal object SettingsPreviewData {
         return state(SettingsPage.APPEARANCE, colors, contrast).copy(themePreview = theme)
     }
 
-    val Services = state(
-        SettingsPage.SERVICES,
-        SettingSection(
-            title = null,
-            items = listOf(
-                SettingItem.Toggle(
-                    id = SettingRowId.CUSTOM_SERVICES,
-                    title = res(Res.string.settings_custom_services_toggle),
-                    checked = true
-                )
-            ),
-            footer = res(Res.string.settings_services_footer)
-        ),
-        SettingSection(
-            title = null,
-            items = listOf(
-                SettingItem.Action(
-                    id = SettingRowId.DELETE_ACCOUNT,
-                    title = res(Res.string.settings_delete_account_title),
-                    description = res(Res.string.settings_delete_account_description),
-                    trailingIcon = AppIcon.OPEN_IN_NEW
-                )
-            )
-        )
-    )
-
-    /** Backend's default audiences: schedule and sport to friends, friends to everyone. */
-    val Privacy = privacy(
-        footer = res(Res.string.settings_privacy_footer),
-        schedule = SharingVisibility.FRIENDS,
-        sport = SharingVisibility.FRIENDS,
-        friends = SharingVisibility.ALL
-    )
-
-    /** Backend did not answer: the rows say so, stay locked, and a retry row follows them. */
-    val PrivacyError = privacy(
-        footer = res(Res.string.settings_privacy_load_error),
-        extra = SettingItem.Action(SettingRowId.RETRY_PRIVACY, res(Res.string.settings_privacy_retry))
-    )
-
-    /** Custom services off: nothing to load, the rows lead to the connection page. */
-    val PrivacyDisabled = privacy(
-        footer = res(Res.string.settings_privacy_services_required),
-        extra = navigation(SettingsPage.SERVICES)
-    )
-
-    /** The minimum loading time of privacy: the page is loaded, its rows are not. */
-    val PrivacyLoading = SettingsUiState(page = SettingsPage.PRIVACY, loaded = true)
-
     /** The gallery with every format, one placed widget and the pass under its spoiler. */
     val Widgets = widgets(placed = mapOf(WidgetFormat.DAY to 1))
 
@@ -307,11 +202,9 @@ internal object SettingsPreviewData {
     ): SettingsUiState {
         val state = SettingsPageState(
             local = local,
-            sharing = SharingSettingsState.Disabled,
             notificationsGranted = true,
             hasCustomSpoiler = false,
             imageBusy = false,
-            backgroundWorkRestricted = false,
             placedWidgets = placed,
         )
         val rows = WidgetGalleryRows(capabilities, canAddTile = false)
@@ -323,12 +216,7 @@ internal object SettingsPreviewData {
         SettingSection(
             title = null,
             items = listOf(
-                SettingItem.Toggle(
-                    id = SettingRowId.SCHEDULE_CHANGES,
-                    title = res(Res.string.settings_schedule_changes_title),
-                    description = res(Res.string.settings_schedule_changes_description),
-                    checked = true
-                )
+                navigation(SettingsPage.NOTIFICATIONS, title = res(Res.string.settings_schedule_notifications_title))
             )
         ),
         SettingSection(
@@ -359,18 +247,6 @@ internal object SettingsPreviewData {
                     trailingIcon = AppIcon.DOWNLOAD
                 )
             )
-        )
-    )
-
-    val Recordbook = state(
-        SettingsPage.RECORDBOOK,
-        SettingSection(
-            title = null,
-            items = listOf(
-                SettingItem.Toggle(SettingRowId.MYITMO_MARKS, res(Res.string.settings_marks_myitmo_title), checked = true),
-                SettingItem.Toggle(SettingRowId.SHEET_MARKS, res(Res.string.settings_marks_sheets_title), checked = true)
-            ),
-            footer = res(Res.string.settings_marks_footer)
         )
     )
 
@@ -505,41 +381,6 @@ internal object SettingsPreviewData {
         )
     )
 
-    private fun privacy(
-        footer: UiText,
-        schedule: SharingVisibility? = null,
-        sport: SharingVisibility? = null,
-        friends: SharingVisibility? = null,
-        extra: SettingItem? = null
-    ): SettingsUiState {
-        val editable = schedule != null
-        val items = listOfNotNull(
-            sharing(SettingRowId.SCHEDULE_SHARING, Res.string.settings_schedule_sharing_title, schedule, editable),
-            sharing(SettingRowId.SPORT_SHARING, Res.string.settings_sport_sharing_title, sport, editable),
-            sharing(SettingRowId.FRIENDS_SHARING, Res.string.settings_friends_sharing_title, friends, editable),
-            extra
-        )
-        return state(SettingsPage.PRIVACY, SettingSection(title = null, items = items, footer = footer))
-    }
-
-    private fun sharing(id: SettingRowId, title: StringResource, visibility: SharingVisibility?, enabled: Boolean) =
-        SettingItem.Choice(
-            id = id,
-            title = res(title),
-            value = visibility?.label() ?: res(Res.string.settings_privacy_unknown),
-            options = SharingVisibility.entries.map { ChoiceOption(it.name, it.label()) },
-            selectedOptionKey = visibility?.name,
-            enabled = enabled
-        )
-
-    private fun textSize(id: SettingRowId) = SettingItem.Choice(
-        id = id,
-        title = res(CoreRes.string.settings_widget_text_size_title),
-        value = WidgetTextSize.NORMAL.label(),
-        options = WidgetTextSize.entries.map { ChoiceOption(it.name, it.label()) },
-        selectedOptionKey = WidgetTextSize.NORMAL.name
-    )
-
     private fun navigation(page: SettingsPage, title: UiText = page.title, value: UiText? = null) =
         SettingItem.Navigation(SettingRowId.navigation(page), title, value, page = page)
 
@@ -547,14 +388,6 @@ internal object SettingsPreviewData {
         SettingsUiState(page, sections.toList(), loaded = true)
 
     private fun res(resource: StringResource) = UiText.Res(resource.key)
-
-    private fun SharingVisibility.label() = res(
-        when (this) {
-            SharingVisibility.ALL -> Res.string.settings_privacy_all
-            SharingVisibility.FRIENDS -> Res.string.settings_privacy_friends
-            SharingVisibility.NOBODY -> Res.string.settings_privacy_nobody
-        }
-    )
 
     private fun WidgetTextSize.label() = res(
         when (this) {

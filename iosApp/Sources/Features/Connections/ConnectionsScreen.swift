@@ -59,10 +59,13 @@ struct ConnectionsList: View {
             ItmoEmptyView(symbol: .computer, title: AppStrings.string("connections_empty"))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case let .content(content):
-            List {
-                ForEach(content.rows, id: \.id) { row in
-                    ConnectionRowView(row: row, enabled: !content.revoking) { actions.revoke(row) }
+            ItmoScreenStack {
+                ItmoListGroup(inset: 66) {
+                    ForEach(content.rows, id: \.id) { row in
+                        ConnectionRowView(row: row, enabled: !content.revoking) { actions.revoke(row) }
+                    }
                 }
+                .padding(.top, ItmoSpacing.compact)
             }
             .confirmationDialog(
                 Text(verbatim: content.revoke?.revokeTitle.resolved ?? ""),
@@ -89,41 +92,32 @@ struct ConnectionRowView: View {
     let enabled: Bool
     let revoke: () -> Void
 
-    @ScaledMetric(relativeTo: .title3) private var symbolSize: CGFloat = 22
-
     var body: some View {
-        HStack(alignment: .top, spacing: ItmoSpacing.group) {
-            (row.kind == .web ? AppSymbol.computer : AppSymbol.codeBlocks).image
-                .font(.system(size: symbolSize))
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: ItmoSpacing.related) {
+        HStack(alignment: .top, spacing: ItmoSpacing.content) {
+            ItmoIconTile(symbol: row.kind == .web ? .computer : .codeBlocks, tone: .primary)
+            VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: row.title.resolved)
-                    .font(.itmo(.titleMedium))
+                    .font(.itmo(.bodyLarge, emphasized: true))
                 ForEach([row.connected, row.lastUsed].compactMap { $0?.resolved }, id: \.self) { line in
                     Text(verbatim: line)
                         .font(.itmo(.bodyMedium))
                         .foregroundStyle(.secondary)
                 }
                 if row.itmoSession {
-                    Text(verbatim: AppStrings.string("connections_itmo_badge"))
-                        .font(.itmo(.labelMedium))
-                        .padding(.horizontal, ItmoSpacing.compact)
-                        .padding(.vertical, ItmoSpacing.related)
-                        .background(Capsule().fill(ItmoColor.secondaryContainer))
-                        .foregroundStyle(ItmoColor.onSecondaryContainer)
+                    ItmoStatusPill(pill: ItmoPill(text: AppStrings.string("connections_itmo_badge"), tone: .tertiary))
+                        .padding(.top, 4)
                 }
                 Button(role: .destructive, action: revoke) {
                     Text(verbatim: AppStrings.string("connections_revoke"))
-                        .font(.itmo(.labelLarge))
-                        .frame(minHeight: ItmoMetrics.touchTarget)
                 }
-                .buttonStyle(.borderless)
+                .buttonStyle(.glass)
                 .disabled(!enabled)
+                .padding(.top, ItmoSpacing.compact)
                 .accessibilityIdentifier("connections.revoke")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .padding(ItmoKit.padding)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("connections.row")
     }

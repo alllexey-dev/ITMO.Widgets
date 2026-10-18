@@ -8,10 +8,10 @@ listed here is not a setting. Screens are built declaratively; see the
 
 The settings root is a compact catalogue, not a scrolling list of every switch:
 
-- `Доступ`: `Подключение к ITMO.Widgets` (with account deletion), `Друзья и приватность`, and the Android notifications action.
+- `Доступ`: `Подключение и данные` (with its state) and `Уведомления` (saying
+  when the system denies them); both are screens of their own, below.
 - `Виджеты`: one row to the widgets gallery (`Виджеты`, `AppRoutes.Settings("WIDGETS")`).
-- `Приложение`: `Оформление`, home screen, schedule, recordbook
-  (`Зачётка`), sport, and maintenance.
+- `Приложение`: `Оформление`, home screen, schedule, sport, and maintenance.
 
 Each category opens a separate back-stack entry with its own title and scroll
 position. Notification permissions open Android settings directly. Rows show a
@@ -36,7 +36,7 @@ the tab that was open before.
 Navigation rows have a minimum 48 dp touch target and expand for large text.
 Settings use quiet surface-container cards without a stroke or elevation. The
 profile uses the same compact surfaces, with a settings entry and a separate,
-confirmed sign-out action. Privacy is available only inside settings.
+confirmed sign-out action. Privacy lives on «Подключение и данные».
 A category appears only when its functionality is delivered.
 
 ### iOS
@@ -44,16 +44,14 @@ A category appears only when its functionality is delivered.
 The iOS app renders the same pages from the same page model
 (`SettingsViewModel`, one page per `AppRoutes.Settings` key) as SwiftUI forms
 pushed on the Me tab's stack; the Me tab's settings row opens the root, its
-privacy row the privacy page ([iOS app](ios.md#settings-and-diagnostics)).
+privacy row «Подключение и данные» ([iOS app](ios.md#settings-and-diagnostics)).
 Nothing renders until the page is loaded, so stored values never animate in.
 Rows a platform does not offer are hidden through `PlatformCapabilities`: on
 iOS the quick settings tile, the spoiler animation and the custom spoiler
-image. The notification row says `Разрешены в iOS` or `Запрещены в iOS`, asks
-for the permission while iOS has never asked, then opens the app's
-notification settings. The background work row is `Обновление контента`
-(Background App Refresh): it shows while a background check is on and
-Background App Refresh is off or restricted for the app, and opens the app's
-page in Settings. The error journal shares
+image. The notifications row says `Запрещены в iOS` while iOS denies them. On
+«Уведомления» the background work row is `Обновление контента` (Background
+App Refresh): it shows while a background check is on and Background App
+Refresh is off or restricted for the app, and opens the app's page in Settings. The error journal shares
 the plain-text journal through the share sheet; a Kotlin crash shows on the
 next launch, Swift crashes are not recorded.
 
@@ -150,34 +148,53 @@ shells observe changes immediately. The setting works offline and without custom
 
 ## Account and services
 
-- `Подключение к ITMO.Widgets` enables Backend-dependent features. It is disabled
-  by default and requires explicit consent. Without it subject links stay
-  private on the device; turning it on uploads them as private links on the
-  next refresh of a subject (see [resources](features/resources.md)).
-- `Удалить аккаунт ITMO.Widgets` (`Как удалить данные с сервера ITMO.Widgets`,
-  `ic_open_in_new`) is an action row in its own untitled group under the
-  switch on the `Подключение к ITMO.Widgets` page. It is shown with the switch
-  off too, since an account may remain from an earlier connection, and opens
-  `<WIDGETS_BASE_URL>/delete-account` in the browser. Deletion itself is a
-  request handled by hand (Backend `docs/ops/account-deletion.md`); the app has
+`Подключение и данные` (`AppRoutes.Settings` `SERVICES`; the old `PRIVACY` key
+opens it too) is the one home of the connection to ITMO.Widgets (DECISIONS.md,
+Screens): `ConnectionViewModel` (`:shared:feature-settings`,
+`presentation/connection`) under a Compose and a SwiftUI screen.
+
+- The status card with the `Подключение` switch. It is off by default; turning it
+  on always goes through the consent sheet (`ServicesConsentSheet`: what the
+  server checks, what it will keep, who sees what first, `Подключить` and `Не
+  сейчас`), turning it off needs none and stops every Backend call at once. Without
+  it subject links stay private on the device; turning it on uploads them as
+  private links on the next refresh of a subject (see [resources](features/resources.md)).
+  Every change redraws the widgets. In the demo the switch is disabled.
+- `Что даёт подключение`: friends (with the friends and new requests counted
+  while connected), the sport queue and subject links; while connected the rows
+  open Друзья, the Спорт tab and the Зачётка tab.
+- `Работает и без подключения`: what talks to My ITMO and BARS directly.
+- `Что хранит сервер` (`Что будет хранить сервер` before connecting):
+  `ServicesStoredData`, which mirrors the Backend tables, and `Код сервера на
+  GitHub`; the token note under it.
+- `Кто видит`: the audiences below while connected, `Только вы` otherwise.
+- `БАРС`: connected (BARS has answered for this account, `bars_marks_enabled`
+  set), the session ended (`BarsLoginPrompt` is not `NONE`) with `Войти`, or not
+  connected with `Подключить`; both open the BARS sign-in.
+- `Устройства`: `Подключить устройство` ([web sign-in](features/web-login.md)) and
+  `Подключённые устройства`; both need the connection and say so without it.
+- `Удалить аккаунт ITMO.Widgets` (`Всё с сервера, без возврата`) is shown with
+  the switch off too, since an account may remain from an earlier connection,
+  and opens `<WIDGETS_BASE_URL>/delete-account` in the browser. Deletion itself is
+  a request handled by hand (Backend `docs/ops/account-deletion.md`); the app has
   no deletion screen.
-- `Уведомления` shows the current Android notification-permission state and opens
-  the system application settings when permission is missing.
 - `Выйти` remains an account action in the profile and requires confirmation.
 - ITMO.ID login and refresh-token entry exist only on the signed-out screen.
   Tokens are not editable settings.
 
 ## Privacy and social access
 
-Initial privacy loading and explicit retries remain visible for at least 300 ms
-to avoid a flash on fast connections. Requests start immediately; slower requests
-do not incur an additional delay. Disabling services takes effect immediately.
+The audiences are `Кто видит` on «Подключение и данные», each a menu of the three
+choices. Connecting reloads them from Backend; the loading and explicit retries
+(`Сервер не ответил`, `Повторить`) remain visible for at least 300 ms to avoid a
+flash on fast connections. Requests start immediately; slower requests do not
+incur an additional delay. Disconnecting forgets them at once.
 
 - Name, group, and ISU are always visible to authenticated users. The application
   does not offer controls that imply these official identity fields can be hidden.
-- `Кто видит расписание` and `Кто видит спорт` are independent audience choices:
+- `Расписание` and `Спорт` are independent audience choices:
   `Все`, `Друзья` (the default for new users), and `Никто`.
-- `Кто видит список друзей` uses the same three audiences and defaults to `Все`
+- `Список друзей` uses the same three audiences and defaults to `Все`
   for existing and new accounts. Schedule and sport defaults are unchanged.
 - `Все` allows any authenticated application user, regardless of that viewer's
   own privacy choices. `Друзья` requires mutual friendship. `Никто` allows only
@@ -287,21 +304,8 @@ spoiler image is v2.4.
 
 ## Schedule
 
-- `Изменения расписания` turns on the background check of the own schedule
-  for changes, its notifications, the bell's events and the marks on lessons
-  ([schedule changes](features/schedule-changes.md)). It is enabled by
-  default and stored as `schedule_changes_enabled` (absent means on). It does
-  not need `Подключение к ITMO.Widgets`: the check talks only to My ITMO.
-- Switching it off cancels the background work and forgets the snapshot; the
-  history of changes stays. Switching it on schedules the work again, and the
-  first check only takes a new snapshot.
-- The description is `Уведомлять о переносах и отменах пар.`, or
-  `Уведомления выключены.` while Android notifications are off for the app.
-  Switching it on without the permission asks for it on Android 13+ while the
-  system dialog can still appear, otherwise opens the app's notification page.
-  The switch stays on whatever the answer is.
-- Below the switch, `Работа в фоне` appears while the switch is on and Android
-  restricts the app in the background ([background work](#background-work)).
+- The first row, `Уведомления об изменениях`, opens «Уведомления», where the
+  schedule change check has its switch ([notifications](#notifications)).
 - `Автозапись на спорт` displays pending sport auto-sign entries in the user's own
   schedule in the application and schedule widgets. It is disabled by default
   and does not represent a confirmed booking.
@@ -332,7 +336,7 @@ spoiler image is v2.4.
 - `Выгрузить в .ics` (`ic_download`, `Файл с парами за выбранный период`)
   opens the export sheet ([`.ics` export](features/calendar.md#ics-export)).
 - The page is an offline settings category with three untitled groups: the
-  schedule-changes switch with `Работа в фоне`, the auto-sign switch with a
+  link to «Уведомления», the auto-sign switch with a
   footer that explains the user-services requirement and that pending entries
   are not confirmed bookings, then the calendar group without a footer:
   `Синхронизация с календарём` (`Пары на 4 недели вперёд в системном календаре
@@ -347,51 +351,72 @@ The iOS schedule page has the same rows. `Синхронизация с кале
 for full calendar access (EventKit) once; after a refusal for good it shows
 `Доступ к календарю` with `Открыть настройки`, which opens the app's page in
 Settings ([calendar](features/calendar.md#ios)). `Выгрузить в .ics` shares the
-file through the share sheet. The change check runs as a step of the app's
-background refresh, so `Работа в фоне` is `Обновление контента` there.
+file through the share sheet.
 
-## Recordbook
+## Notifications
 
-`Зачётка` (`SettingsPage.RECORDBOOK`, after `Расписание`) is an offline page
-with one untitled group for the background mark check
-([mark tracking](features/marks-tracking.md)). No switch needs
-`Подключение к ITMO.Widgets`: the check talks only to My ITMO, BARS and public
-Google Sheets.
+«Уведомления» (`AppRoutes.Settings` `NOTIFICATIONS`; the old `RECORDBOOK` key
+opens it) is the one home of notification settings (DECISIONS.md, Screens):
+`NotificationSettingsViewModel` (`:shared:feature-settings`,
+`presentation/notifications`) under a Compose and a SwiftUI screen. The subtitle
+is `включено N из M` (the local checks that are on) or `запрещены в системе`.
 
-| Switch | Key | Default |
+- While the system denies notifications, a gate (`Уведомления запрещены`,
+  `Разрешить`: the permission dialog while it can still appear, else the app's
+  system page) stands first; the settings below stay, dimmed.
+- Every type shows how it arrives (the notifiers' titles with sample values).
+- `Баллы` turns the background mark check ([mark tracking](features/marks-tracking.md))
+  on or off as a whole; while on, its sources follow under it. None needs
+  `Подключение к ITMO.Widgets`: the check talks only to My ITMO, BARS and public
+  Google Sheets.
+
+| Source | Key | Default |
 |---|---|---|
-| `Оценки My ITMO` | `myitmo_marks_enabled` | on (absent means on); a device setting that survives sign-out |
-| `Оценки БАРС` | `bars_marks_enabled` | absent: the switch is hidden. The first successful BARS answer of the account (sign-in, BARS connected in the recordbook or the background read) stores on; cleared with the BARS session on sign-out |
-| `Оценки из таблиц` | `sheet_marks_enabled` | on (absent means on); always shown, a device setting that survives sign-out |
+| `My ITMO` | `myitmo_marks_enabled` | on (absent means on); a device setting that survives sign-out |
+| `БАРС` | `bars_marks_enabled` | absent: the row is hidden. The first successful BARS answer of the account (sign-in, BARS connected in the recordbook or the background read) stores on; cleared with the BARS session on sign-out |
+| `Таблицы преподавателей` | `sheet_marks_enabled` | on (absent means on); always shown, a device setting that survives sign-out |
 
-- `Оценки БАРС` appears only once BARS has answered for this account; before
-  that there is nothing to check.
+- `Баллы` off stores off in every source; on stores on in My ITMO and the sheets,
+  and in BARS once BARS has answered. `БАРС` also carries the `Войдите в БАРС`
+  reminder; switching it off withdraws it.
 - Switching a source off forgets its snapshot and stops its part of the check;
-  the unread subjects stay. The work is cancelled when both are off. Switching
-  `Оценки БАРС` off also withdraws the `Войдите в БАРС` reminder. Switching on
-  schedules the work, and the first check of that source only takes a snapshot.
-- `Оценки из таблиц` follows `Оценки БАРС` (or `Оценки My ITMO` while BARS is
-  hidden). Off keeps the totals of the connected sheets, which the subject pages
-  show, and untracks every connection, so the first background read after
-  switching on only takes a baseline
-  ([sheet scores](features/sheet-scores.md#background-check-of-sheets)). The work
-  is cancelled only when all three are off.
-- The footer is `Уведомлять о новых и изменённых оценках.`, or
-  `Уведомления выключены.` while Android notifications are off for the app.
-  Switching either on without the permission asks for it as on the schedule
-  page; the switch stays on whatever the answer is.
-- Below the switches, `Работа в фоне` appears while at least one of the three is on and
-  Android restricts the app in the background ([background work](#background-work)).
+  the unread subjects stay. The work is cancelled only when all three are off.
+  Switching on schedules the work, and the first check of that source only takes
+  a snapshot. Sheets off keeps the totals of the connected sheets, which the
+  subject pages show, and untracks every connection, so the first background read
+  after switching on only takes a baseline
+  ([sheet scores](features/sheet-scores.md#background-check-of-sheets)).
+- `Изменения расписания` turns on the background check of the own schedule
+  for changes, its notifications, the bell's events and the marks on lessons
+  ([schedule changes](features/schedule-changes.md)). It is enabled by
+  default and stored as `schedule_changes_enabled` (absent means on). It does
+  not need `Подключение к ITMO.Widgets`: the check talks only to My ITMO.
+  Switching it off cancels the background work and forgets the snapshot; the
+  history of changes stays. Switching it on schedules the work again, and the
+  first check only takes a new snapshot.
+- Turning a check on without the permission asks for it as the gate does; the
+  switch stays on whatever the answer is.
+- The pushes of ITMO.Widgets (`Спорт и очереди`, `Заявки в друзья`, `Новые
+  устройства`) have no switch of the app. Without the connection the row says
+  `Нужно подключение к ITMO.Widgets` and opens «Подключение и данные». On Android
+  the row shows its channel's state (`Включены` or `Выключены`) and opens the
+  channel's system page; on iOS, which has no switch per type, the app's
+  notification settings.
+- A note says that nothing of marks and schedule changes arrives 00:00-06:00:
+  it comes in the morning (the notifiers' fixed rule).
+- `Работа в фоне` ([background work](#background-work)) appears while a check is
+  on and the system restricts the app.
+- `Звук и вибрация` opens the app's notification settings of the system; the
+  last line says that everything that came stays in the bell on Сегодня.
 
 ### iOS
 
-The iOS app lists `Зачётка` (`PlatformCapabilities.marks`), after
-`Расписание`, with the same switches, keys, defaults and footer, rendered by
-the SwiftUI settings form. The switches run the `marks` step of the app's one
-refresh task instead of WorkManager work
-([mark tracking](features/marks-tracking.md#ios)); the background work row
-is `Обновление контента` (Background App Refresh), shown while it is off for
-the app, and opens the app's page in Settings.
+The same page; the checks run as steps of the app's one refresh task instead of
+WorkManager work ([mark tracking](features/marks-tracking.md#ios)), the BARS and
+sheets sources only where `PlatformCapabilities.marks` holds (marks absent: the
+`Баллы` block is absent). The background work row is `Обновление контента`
+(Background App Refresh), shown while it is off for the app, and opens the app's
+page in Settings. iOS never asked: no gate, the first check turned on asks.
 
 ## Background work
 
@@ -400,8 +425,8 @@ battery restrictions: on Xiaomi (MIUI, HyperOS) the default `Умный режи
 leaves a backgrounded app without network.
 
 - The row `Работа в фоне` (`Разрешите работу без ограничений.`, an action row
-  with `ic_open_in_new`; the whole row is the button) sits on the `Расписание`
-  and `Зачётка` pages while that page's check is on and
+  with `ic_open_in_new`; the whole row is the button) sits on «Уведомления»
+  while a check is on and
   `PowerManager.isIgnoringBatteryOptimizations` is false
   (`BackgroundWorkAccess` in `feature/settings/domain`, implemented by
   `AndroidBackgroundWorkAccess` in `data`). The state is read when the page is created and on
@@ -420,9 +445,8 @@ leaves a backgrounded app without network.
 - The app does not hold `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` and never shows
   the system exemption dialog: Google Play allows it only for apps whose core
   function needs it. It only opens the page.
-- Turning on `Изменения расписания`, `Оценки My ITMO`, `Оценки БАРС` or
-  `Оценки из таблиц` while the
-  app is restricted shows a dialog once per device: the title `Работа в фоне`,
+- Turning on `Изменения расписания` or a source of `Баллы` while the app is
+  restricted shows a dialog once per device: the title `Работа в фоне`,
   the text
   `Чтобы проверки приходили вовремя, разрешите приложению работу без ограничений.`,
   `Разрешить` (opens the same page) and `Не сейчас`. The fact is stored as
@@ -432,15 +456,14 @@ leaves a backgrounded app without network.
 
 ## Notification channels
 
-`Уведомления` opens Android's application notification settings. FCM categories
-are `Спорт: автозапись` (`sport`) and `Друзья` (`friends`); the local schedule
-check posts to `Изменения расписания` (`schedule_changes`) and the mark check to
-`Оценки` (`marks`). All four are at default importance. Android controls
-permission, sound and category visibility; there are no duplicate in-app
-switches, and `Изменения расписания`, `Оценки My ITMO`, `Оценки БАРС` and `Оценки из таблиц` switch
-the checks themselves, not the categories. Disabled notification permission
-suppresses only the visual alert, not sport automation already enabled by the
-user or the background checks. Disabling
+FCM categories are `Спорт: автозапись` (`sport`), `Друзья` (`friends`) and
+`Подключения устройств` (`connections`); the local schedule check posts to
+`Изменения расписания` (`schedule_changes`) and the mark check to `Оценки`
+(`marks`). All five are at default importance. Android controls permission,
+sound and category visibility; there are no duplicate in-app switches, and the
+switches of «Уведомления» switch the checks themselves, not the categories.
+Disabled notification permission suppresses only the visual alert, not sport
+automation already enabled by the user or the background checks. Disabling
 user services suppresses FCM actions and attempts to unregister this device.
 
 ## Sport
@@ -515,6 +538,12 @@ model (`SettingItem`, `SettingSection`, `SettingsPage`, `SettingRowId`,
 `SettingsEvent`) is platform-neutral: `UiText` and `AppIcon`, never Android,
 `R`, Compose or a resource id (`SettingsRulesTest`). iOS renders the same
 pages and the journal as SwiftUI forms over the shared view models.
+«Подключение и данные» (`ConnectionViewModel`, `ConnectionScreen`) and
+«Уведомления» (`NotificationSettingsViewModel`, `NotificationSettingsScreen`)
+are screens of their own in the same module, drawn on the kit; iOS has
+`ConnectionDataScreen` and `NotificationSettingsScreen`. The hosts route their
+keys before a `SettingsViewModel` is made (`SettingsEntries.kt` with
+`AccessEntries.kt`, `Routes+Settings.swift`).
 
 Android keeps the hosts in `app/`: `SettingsEntries` (permissions, system
 pages, the gallery's widget previews and pinning), `DiagnosticsFragment` (the

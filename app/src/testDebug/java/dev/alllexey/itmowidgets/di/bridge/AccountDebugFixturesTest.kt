@@ -4,21 +4,21 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
 import dev.alllexey.itmowidgets.core.session.SessionState
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
-import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.testing.FakeDayLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import kotlin.reflect.KClass
-import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -94,8 +94,12 @@ class AccountDebugFixturesTest {
         val onboarding = OnboardingViewModel(
             FakeOnboardingRepository(),
             FakeCustomServicesRepository(false),
-            DefaultAppearance,
-            FakeCustomSpoilerRepository(),
+            FakeSessionRepository(SessionState.SignedOut),
+            FakeDayLessonsGateway(),
+            FakeSportScoreRepository(),
+            FakeCalendarSync(),
+            FixedAcademicTime(),
+            AndroidPlatformCapabilities,
             SavedStateHandle(),
         )
 
@@ -105,20 +109,6 @@ class AccountDebugFixturesTest {
             handle = savedStateHandle
             return onboarding
         }
-    }
-
-    /** A fresh install's widget appearance that is never written. */
-    private object DefaultAppearance : WidgetAppearanceRepository {
-        override fun observeAppearance() = flowOf(WidgetAppearance())
-        override suspend fun setCompactNextLessonEarly(enabled: Boolean) = Unit
-        override suspend fun setCompactTeacherHidden(hidden: Boolean) = Unit
-        override suspend fun setFullTeacherHidden(hidden: Boolean) = Unit
-        override suspend fun setFullPastLessonsHidden(hidden: Boolean) = Unit
-        override suspend fun setFullTomorrowEnabled(enabled: Boolean) = Unit
-        override suspend fun setCompactTextSize(size: WidgetTextSize) = Unit
-        override suspend fun setFullTextSize(size: WidgetTextSize) = Unit
-        override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) = Unit
-        override suspend fun setQrSpoilerEnabled(enabled: Boolean) = Unit
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin is up. */

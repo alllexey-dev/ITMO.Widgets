@@ -26,7 +26,8 @@
       "familyName": "Друг",
       "givenName": "Первый"
     },
-    "relationship": "NONE"
+    "relationship": "NONE",
+    "requestedAt": null
   },
   "error": null
 }

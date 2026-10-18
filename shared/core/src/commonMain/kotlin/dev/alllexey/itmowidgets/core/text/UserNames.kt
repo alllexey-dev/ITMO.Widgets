@@ -45,5 +45,15 @@ fun personInitials(name: String, familyName: String?, givenName: String?): Strin
     return parts.joinToString("") { it.take(1) }.uppercase()
 }
 
+/**
+ * The name to call a person by, as in `Спорт: Иван`: ITMO.ID's [givenName] when it is there; otherwise word 2 of
+ * [name] («Фамилия Имя [Отчество]»), or its only word. Empty for an empty [name].
+ */
+fun personGivenName(name: String, givenName: String?): String {
+    givenName?.trim()?.takeIf(String::isNotEmpty)?.let { return it }
+    val parts = name.trim().split(Regex("\\s+")).filter(String::isNotEmpty)
+    return parts.getOrNull(1) ?: parts.firstOrNull().orEmpty()
+}
+
 /** [personInitials] of a name without ITMO.ID's parts. */
 fun personInitials(name: String): String = personInitials(name, null, null)

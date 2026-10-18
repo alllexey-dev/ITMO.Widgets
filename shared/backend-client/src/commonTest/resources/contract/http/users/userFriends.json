@@ -27,7 +27,8 @@
         "familyName": "Друг",
         "givenName": "Первый"
       },
-      "relationship": "FRIENDS"
+      "relationship": "FRIENDS",
+      "requestedAt": null
     },
     {
       "user": {
@@ -55,7 +56,8 @@
         "familyName": "Однокурсник",
         "givenName": "Третий"
       },
-      "relationship": "INCOMING"
+      "relationship": "INCOMING",
+      "requestedAt": "2026-10-04T18:30:00Z"
     },
     {
       "user": {
@@ -83,7 +85,8 @@
         "familyName": "Однокурсник",
         "givenName": "Четвёртый"
       },
-      "relationship": "OUTGOING"
+      "relationship": "OUTGOING",
+      "requestedAt": "2026-10-04T18:30:00Z"
     },
     {
       "user": {
@@ -100,7 +103,8 @@
         "familyName": null,
         "givenName": null
       },
-      "relationship": "NONE"
+      "relationship": "NONE",
+      "requestedAt": null
     }
   ],
   "error": null

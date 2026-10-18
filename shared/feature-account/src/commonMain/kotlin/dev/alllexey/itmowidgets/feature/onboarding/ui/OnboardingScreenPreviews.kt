@@ -1,90 +1,64 @@
 package dev.alllexey.itmowidgets.feature.onboarding.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import dev.alllexey.itmowidgets.designsystem.components.services.ServicesConsentContent
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
-import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingStep
-import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiState
-import dev.alllexey.itmowidgets.feature.onboarding.ui.preview.OnboardingPreviewSamples
-import dev.alllexey.itmowidgets.feature.onboarding.ui.preview.OnboardingWidgetPreviewSample
+import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.onboarding.ui.preview.OnboardingSamples
 
 /*
- * The harness names a baseline `<function>_<@Preview name>`, and the baselines are named
- * `OnboardingScreen_<state>`. Each state therefore is a function called `OnboardingScreen` in a holder class of its
- * own; the scanner instantiates each holder by reflection.
+ * The harness names a baseline `<function>_<@Preview name>`; each step is a function called `OnboardingScreen` in a
+ * holder class of its own, at the design lab's axes and the answered states.
  */
 
 @Composable
-private fun OnboardingPreview(state: OnboardingUiState) = ItmoPreview {
-    OnboardingScreen(state, OnboardingActions(), widgetPreview = { kind, modifier ->
-        OnboardingWidgetPreviewSample(kind, modifier)
-    })
+private fun OnboardingPreview(step: String) = ItmoPreview { OnboardingScreen(OnboardingSamples.state(step), OnboardingActions()) }
+
+internal class OnboardingScreenValuePreview {
+    @Preview(name = "value")
+    @Composable
+    fun OnboardingScreen() = OnboardingPreview("value")
 }
 
-internal class OnboardingScreenSingleLessonPreview {
-    @Preview(name = "widget-single-lesson")
+internal class OnboardingScreenValueEmptyPreview {
+    @Preview(name = "value-empty")
     @Composable
-    fun OnboardingScreen() = OnboardingPreview(OnboardingPreviewSamples.state(OnboardingStep.COMPACT_WIDGET))
+    fun OnboardingScreen() = OnboardingPreview("value-empty")
 }
 
-internal class OnboardingScreenDaySchedulePreview {
-    @Preview(name = "widget-day-schedule")
+internal class OnboardingScreenPermissionsPreview {
+    @Preview(name = "permissions")
     @Composable
-    fun OnboardingScreen() = OnboardingPreview(OnboardingPreviewSamples.state(OnboardingStep.FULL_WIDGET))
+    fun OnboardingScreen() = OnboardingPreview("permissions")
 }
 
-internal class OnboardingScreenQrPreview {
-    @Preview(name = "widget-qr")
+internal class OnboardingScreenPermissionsNonePreview {
+    @Preview(name = "permissions-none")
     @Composable
-    fun OnboardingScreen() = OnboardingPreview(OnboardingPreviewSamples.state(OnboardingStep.QR_WIDGET))
+    fun OnboardingScreen() = OnboardingPreview("permissions-none")
 }
 
-internal class OnboardingScreenNoPinningPreview {
-    @Preview(name = "widget-no-pinning")
+internal class OnboardingScreenConnectionPreview {
+    @Preview(name = "connection")
     @Composable
-    fun OnboardingScreen() =
-        OnboardingPreview(OnboardingPreviewSamples.state(OnboardingStep.COMPACT_WIDGET, pinSupported = false))
+    fun OnboardingScreen() = OnboardingPreview("connection")
 }
 
-internal class OnboardingScreenServicesOffPreview {
-    @Preview(name = "services-off")
+internal class OnboardingScreenConnectedPreview {
+    @Preview(name = "connected")
     @Composable
-    fun OnboardingScreen() = OnboardingPreview(OnboardingPreviewSamples.state(OnboardingStep.SERVICES))
+    fun OnboardingScreen() = OnboardingPreview("connected")
 }
 
-internal class OnboardingScreenServicesOnPreview {
-    @Preview(name = "services-on")
+/** The consent sheet the last step opens, on the sheet's colour. */
+internal class OnboardingScreenConsentPreview {
+    @Preview(name = "consent", heightDp = 900)
     @Composable
-    fun OnboardingScreen() =
-        OnboardingPreview(OnboardingPreviewSamples.state(OnboardingStep.SERVICES, servicesEnabled = true))
-}
-
-internal class OnboardingScreenServicesBusyPreview {
-    @Preview(name = "services-busy")
-    @Composable
-    fun OnboardingScreen() =
-        OnboardingPreview(OnboardingPreviewSamples.state(OnboardingStep.SERVICES, servicesBusy = true))
-}
-
-internal class OnboardingScreenNotificationsAskPreview {
-    @Preview(name = "notifications-ask")
-    @Composable
-    fun OnboardingScreen() =
-        OnboardingPreview(OnboardingPreviewSamples.state(OnboardingStep.NOTIFICATIONS, servicesEnabled = true))
-}
-
-internal class OnboardingScreenNotificationsDeniedPreview {
-    @Preview(name = "notifications-denied")
-    @Composable
-    fun OnboardingScreen() = OnboardingPreview(
-        OnboardingPreviewSamples.state(OnboardingStep.NOTIFICATIONS, servicesEnabled = true, notificationsAsked = true),
-    )
-}
-
-internal class OnboardingScreenNotificationsGrantedPreview {
-    @Preview(name = "notifications-granted")
-    @Composable
-    fun OnboardingScreen() = OnboardingPreview(
-        OnboardingPreviewSamples.state(OnboardingStep.NOTIFICATIONS, servicesEnabled = true, notificationsGranted = true),
-    )
+    fun OnboardingScreen() = ItmoPreview {
+        Box(Modifier.background(ItmoTheme.colorScheme.surfaceContainerLow)) { ServicesConsentContent(onConnect = {}, onDismiss = {}) }
+    }
 }

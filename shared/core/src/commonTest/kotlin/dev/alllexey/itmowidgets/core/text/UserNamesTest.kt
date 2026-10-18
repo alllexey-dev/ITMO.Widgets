@@ -60,4 +60,13 @@ class UserNamesTest {
         assertEquals(null, personName(" ", "Алексей"))
         assertEquals(null, personName(null, null))
     }
+
+    @Test
+    fun theGivenNameComesFromItmoIdFirst() {
+        assertEquals("Мария", personGivenName("Де Ла Круз Мария", " Мария "))
+        assertEquals("Иван", personGivenName("Кузнецов Иван", null))
+        assertEquals("Иван", personGivenName("  Кузнецов   Иван Петрович ", " "))
+        assertEquals("Преподаватель", personGivenName(" Преподаватель ", null))
+        assertEquals("", personGivenName("  ", null))
+    }
 }

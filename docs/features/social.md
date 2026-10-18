@@ -105,7 +105,9 @@ screens through the shared framework) are the first letters of the two parts whe
   count (rows open the card; removing a friend lives in the card) and `Поделиться профилем` (the viewer's Backend
   profile, `FriendsUiState.self`). The header subtitle is `3 друга, 1 заявка`. An empty screen says `Пока никого` and
   offers the link; without the connection the screen is a gate with `Подключить` (`SettingsPage.SERVICES`). A row in
-  flight keeps its buttons inert.
+  flight keeps its buttons inert. A request's status line says when it was sent (`Хочет добавить вас, вчера`) from
+  `UserProfile.requestedAt` (Backend's `requestedAt` from f9dd1e0) through `requestStatus` and the shared
+  `eventMoment` (`12:05`, `вчера`, `28 сент.`), the bell's wording; without the time it is the status alone.
 - People search, in Друзья: a query searches 300 ms after the last keystroke through `PeopleSearchRepository` and
   stands in place of the lists (`PeopleSearchResults`: `В ITMO.Widgets` first, then `Остальные`, `Показать ещё`);
   clearing the field returns to the lists at once. Actions update the found row from the returned profile without a

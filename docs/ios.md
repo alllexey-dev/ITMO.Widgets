@@ -97,7 +97,8 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   the gate or `.notOnIOS`. `RouterTests` fails for a key no feature claims.
 - Debug launch arguments replace Android's debug tools: `-itmoDemo`, `-itmoSignedOut`, `-itmoShellSession <state>`,
   `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoWebLoginFixture`, `-itmoBarsLogin`,
-  `-itmoAcademicDate <yyyy-mm-dd>` (the academic date at the real wall time, Android's test academic date).
+  `-itmoAcademicDate <yyyy-mm-dd>` (the academic date at the real wall time, Android's test academic date),
+  `-itmoSlowRefresh` (a pull's spinner stays 5 s).
 
 | Route id | URL | Opens |
 |---|---|---|
@@ -130,6 +131,11 @@ Swift reaches Kotlin through `Shared` and SKIE (`shared/ios/build.gradle.kts`): 
   owns a `ScreenViewModelStore`, resolves the ViewModel from Koin on first use, follows `uiState` with
   `.observing(model)` and delivers events with `.onEvents(of:_:perform:)`. Its `deinit` clears the store, which
   cancels `viewModelScope`. Arguments are Koin parameters; there is no `SavedStateHandle` on this path.
+- Pull to refresh. Every `.refreshable` awaits `model.pullRefresh({ $0.refresh(mode: .pull) }, while:)` with the
+  ViewModel's `refreshing` flag, so the system spinner stays until the refresh ends (at least 0.5 s, at most 60 s). The
+  wait runs in its own task: SwiftUI cancels the refresh action once the state it shows changes. The root header sets
+  the inline title mode on its hidden bar, since with the default large title SwiftUI moves the scroll view's refresh
+  control into the hidden bar and nothing is drawn (`RefreshUITests`).
 - Compose screens. Only `shared/ios` builds a `ComposeUIViewController`, through `screenController { }` in
   `screens/ScreenControllers.kt`, which wraps `ItmoTheme` and `LocalPlatformActions`; each feature has
   `screens/<Feature>Screens.kt` with the factories Swift calls. `ComposeHost { factory() }`
@@ -148,6 +154,12 @@ Android with `strings_ios*.xml` rows; the background work row is Background App 
 notification permission and Background App Refresh to the ViewModel on appear and on every return to the app. The
 calendar switch asks EventKit for access in Swift (`Features/Calendar/`). `DiagnosticsScreen` lists `AppDiagnostics`
 records and shares the journal.
+
+The `SERVICES` and `PRIVACY` keys open `ConnectionDataScreen` (`Features/Connection/`, over `ConnectionViewModel`,
+with `ServicesConsentSheet`, which the first-run flow shares) and `NOTIFICATIONS` opens `NotificationSettingsScreen`
+(over `NotificationSettingsViewModel`; iOS has no switch per push type, so those rows open the app's notification
+settings). Both report the system state as `SettingsScreen` does. The connected devices (`ConnectionsScreen`) and the
+pairing sheet (`WebLoginSheet`) are drawn on the kit; their logic is the shared one.
 
 ## Strings and icons
 

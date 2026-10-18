@@ -54,7 +54,7 @@ class FriendRequestsBellSource(
         return BellItem(
             id = "friend:${user.isu}",
             kind = BellKind.FRIEND_REQUEST,
-            at = null,
+            at = profile.requestedAt,
             title = UiText.Res(SocialStrings.social_bell_request, listOf(userDisplayName(user.name, user.isu))),
             text = user.primaryGroup()?.name?.let(UiText::Dynamic),
             lead = user.name,

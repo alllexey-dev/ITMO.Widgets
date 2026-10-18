@@ -23,9 +23,9 @@ builds every text of the screen (`MeUiState`), so the Compose and SwiftUI views 
   opens the connection while the opt-in is off. Nothing is hidden without the connection.
 - `Приложение`: `My ITMO` ([My ITMO in the app](my-itmo-web.md); the demo refuses it), the settings, developer tools
   only in Android debug builds ([Debug tools](debug.md)), the Telegram channel and GitHub; then `Выйти`.
-- The rows name no route themselves: `MeActions` reaches the host, which maps them. Today the connection opens
-  `AppRoutes.Settings(SERVICES)`, widgets the widgets gallery `AppRoutes.Settings(WIDGETS)` and notifications the
-  settings root (its own page comes with phase 7 of the overhaul and only the host mapping changes).
+- The rows name no route themselves: `MeActions` reaches the host, which maps them. The connection and privacy open
+  «Подключение и данные» (`AppRoutes.Settings(SERVICES)`, `PRIVACY`), notifications «Уведомления»
+  (`AppRoutes.Settings(NOTIFICATIONS)`) and widgets the widgets gallery (`AppRoutes.Settings(WIDGETS)`).
 - The first frame shows the cached state; a recreated tab is never blank. `StoreScreenshotCapture` sets
   `MeHost.releaseLook`, so a debug build shows the release screen without the developer tools row.
 

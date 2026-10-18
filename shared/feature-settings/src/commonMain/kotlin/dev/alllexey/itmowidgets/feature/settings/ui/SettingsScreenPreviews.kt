@@ -61,46 +61,10 @@ internal class SettingsScreenAppearanceCustomPreview {
     )
 }
 
-internal class SettingsScreenServicesPreview {
-    @Preview(name = "services")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Services)
-}
-
-internal class SettingsScreenPrivacyPreview {
-    @Preview(name = "privacy")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Privacy)
-}
-
-internal class SettingsScreenPrivacyLoadingPreview {
-    @Preview(name = "privacy-loading")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.PrivacyLoading)
-}
-
-internal class SettingsScreenPrivacyErrorPreview {
-    @Preview(name = "privacy-error")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.PrivacyError)
-}
-
-internal class SettingsScreenPrivacyDisabledPreview {
-    @Preview(name = "privacy-disabled")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.PrivacyDisabled)
-}
-
 internal class SettingsScreenSchedulePreview {
     @Preview(name = "schedule")
     @Composable
     fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Schedule)
-}
-
-internal class SettingsScreenRecordbookPreview {
-    @Preview(name = "recordbook")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Recordbook)
 }
 
 internal class SettingsScreenSportPreview {

@@ -24,14 +24,15 @@ class BellRepositoryImplTest {
         val bell = BellRepositoryImpl(
             listOf(
                 Source(bellItem("old", at = Instant.parse("2026-09-06T09:00:00Z"))),
-                Source(bellItem("request", at = null, request = 1)),
+                Source(bellItem("request", at = Instant.parse("2026-09-01T09:00:00Z"), request = 1)),
+                Source(bellItem("older-request", at = null, request = 2)),
                 Source(bellItem("new", at = Instant.parse("2026-09-07T09:00:00Z"))),
                 Broken,
             ),
             stores.bell,
         )
 
-        assertEquals(listOf("request", "new", "old"), bell.observeItems().first().map { it.id })
+        assertEquals(listOf("request", "older-request", "new", "old"), bell.observeItems().first().map { it.id })
     }
 
     @Test

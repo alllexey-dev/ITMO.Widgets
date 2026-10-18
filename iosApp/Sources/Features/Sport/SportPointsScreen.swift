@@ -13,7 +13,11 @@ struct SportPointsScreen: View {
             select: { model.viewModel.select(filter: $0) },
             retry: { model.viewModel.refresh(mode: .force) }
         )
-        .refreshable { model.viewModel.refresh(mode: .pull) }
+        .refreshable {
+            await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                ($0.uiState.value as? SportPointsUiStateContent)?.refreshing == true
+            })
+        }
         .itmoDetailHeader(title: AppStrings.string("sport_points_title"), subtitle: AppStrings.string("sport_points_subtitle"))
         .observing(model)
         .accessibilityElement(children: .contain)

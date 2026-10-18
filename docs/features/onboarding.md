@@ -5,8 +5,7 @@ Product behaviour: [Как это работает: вход и аккаунт](
 The flow runs inside `MainActivity` as the gate key `AppRoutes.Onboarding`, not
 a separate activity, after [sign-in](auth.md). Every choice is written through
 its own repository the moment it is made, so leaving at any point leaves a
-consistent app and nothing is replayed at the end; `Пропустить` is a valid
-answer.
+consistent app and nothing is replayed at the end.
 
 ## The gate
 
@@ -24,50 +23,44 @@ answer.
 
 ## Steps
 
-- `AccountEntries.kt` registers the key with `OnboardingContent` (`:app`,
-  `feature/onboarding/ui/`), which draws the stateless `OnboardingScreen` from
-  `:shared:feature-account`. The pager has `userScrollEnabled = false`; only the
-  footer moves it.
-- `OnboardingViewModel` (`OnboardingModule.kt`) lives in the entry's own store,
-  and the entry is the only collector of its events: they are one queue, and a
-  second collector would take them away.
-- The entry does what only Android can: the launcher pin, the notification
-  permission and settings page, the spoiler photo picker and crop, links,
-  snackbars for failed writes.
-- `OnboardingUiState.steps`: three widget steps, the services opt-in, and the
-  notifications step only while the opt-in is on. Switching the opt-in off on
-  the notifications step returns to the opt-in.
+Three steps (DECISIONS.md, Первый запуск), the same on both platforms over one
+`OnboardingViewModel` (`:shared:feature-account`, `feature/onboarding`): the step
+dots with `1 из 3`, the step's title and line over its scrolling body, and its
+actions pinned at the bottom. Back (the system back on Android, the back button
+on iOS) goes one step back. There is no `Включить всё` and no `Пропустить`:
+`Далее` works without any permission, and `Не сейчас` is a valid answer on the
+last step.
 
-Widget steps (`OnboardingWidgetStep` per `WidgetKind`):
+1. `Всё уже на месте` (`OnboardingStep.VALUE`): the user's own data as it loads,
+   never samples. The chip with the name and initials from the ID token; today's
+   lesson now or next by the timeline's rules (`LessonTimelines`), else
+   tomorrow's first, as the kit's lesson card under `Сейчас`, `Далее` or
+   `Завтра` (`DayLessonsGateway`, refreshed once); the sport total of the
+   current period (`SportScoreRepository`, `30 из 100`). Without data the rows
+   keep their descriptions and the lesson block is absent. The pass, the
+   sourced scores and the widgets are rows that say what they are.
+2. `Разрешения` (`PERMISSIONS`): each permission with its own button, or the
+   `разрешено` pill once granted. Notifications ask once (Android 13+
+   `RequestPermission`, iOS `requestAuthorization`); after a refusal the button
+   opens the system page. `Добавить пары` (where `PlatformCapabilities.calendarExport`)
+   asks for the calendar and then turns on the calendar sync
+   (`CalendarSync.enable`, [calendar](calendar.md)). The note says widgets can
+   be added later in Профиль, «Виджеты».
+3. `Друзья и очередь` (`CONNECTION`): what the connection gives, a row that
+   opens the consent sheet to read what the server keeps, then `Подключить`
+   and `Не сейчас`. `Подключить` opens the consent sheet (`ServicesConsentSheet`,
+   the one of «Подключение и данные», [settings](../settings.md#account-and-services));
+   only its own `Подключить` turns the opt-in on, and the flow ends. Already
+   connected (a replay), the step says so and the button is `Готово`.
 
-- The preview is the settings renderer (`WidgetPreviewFactory`), hosted by
-  `OnboardingWidgetPreviews` as an `AndroidView` and closed when the page is
-  released. Rows are the settings rows (`SettingsToggleRow`,
-  `SettingsChoiceRow`), wait for the stored appearance instead of showing
-  defaults, and write through `WidgetAppearanceRepository`, which refreshes
-  installed widgets.
-- The QR spoiler image goes through `core/settings/CustomSpoilerRepository`
-  (picker and crop shared with settings, `core/ui/spoiler`); `spoilerRevision`
-  makes the preview re-read the image.
-- Pinning: `AppWidgetManager.requestPinAppWidget` with a broadcast
-  `PendingIntent`; `core/ui/widget/WidgetPinRequester` owns the receiver for
-  the whole entry lifetime, because the launcher confirms while the screen is
-  stopped. Without `isRequestPinAppWidgetSupported` a hint replaces the button.
-- Providers are addressed by name through `core/navigation/WidgetProviders`:
-  the flow must not import `feature/schedule` or `feature/qr`;
-  `WidgetProvidersTest` fails if a provider is renamed.
-
-Services and notifications:
-
-- **The stored-data list must match the Backend schema.** It mirrors the
-  tables `users`, `user_groups`, `lessons`, `user_sport_lessons`,
-  `sport_*_sign_entries` and `devices`. A new table with user data adds a line
-  to `StoredFields` in `OnboardingServicesStep.kt` and its string to
-  `strings_onboarding.xml`.
-- The notifications step exists only behind the opt-in, because pushes are
-  what services send. Its button asks via
-  `ActivityResultContracts.RequestPermission` on Android 13+, otherwise or after
-  a denial it opens the system settings.
+- The entry (`AccountEntries.kt`, `OnboardingContent` in `:app`) does what only
+  Android can: the notification and calendar permissions and the consent sheet
+  kept in its saved state. Its events are one queue with one collector.
+- **The stored-data list must match the Backend schema.** `ServicesStoredData`
+  (`core/services`) mirrors the tables `users`, `user_groups`, `lessons`,
+  `user_sport_lessons`, `sport_*_sign_entries`, the private links and
+  `devices`; a new table with user data adds a line and its `services_stored_*`
+  string. The connection page, the consent sheet and this step read the same list.
 
 ## Replay
 
@@ -78,11 +71,10 @@ replay starts on the first step with nothing carried over.
 ## iOS
 
 - `OnboardingScreen` (SwiftUI, `iosApp/Sources/Features/Onboarding/`) runs the
-  shared `OnboardingViewModel`; the shell's session gate reads the flag
+  shared `OnboardingViewModel` with a fresh `SavedStateHandle`
+  (`OnboardingIosParameters`) per launch; the shell's session gate reads the flag
   ([iOS app](../ios.md#data-sharing)).
-- A fresh `SavedStateHandle` (`OnboardingIosParameters`) per launch.
-- iOS lets no app place a widget, so widget steps show how-to text instead of
-  pin and live preview, without the custom spoiler row
-  ([degradations](../ios.md#degradations)).
+- The same three steps; the calendar asks through `CalendarAccess`, the consent
+  is the SwiftUI `ServicesConsentSheet`.
 - Notifications ask via `UNUserNotificationCenter`, re-read on foreground.
 - Debug: `-itmoOnboarding` shows the flow over the demo session.
