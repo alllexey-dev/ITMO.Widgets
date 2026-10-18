@@ -13,7 +13,7 @@ class BuildingDirectoryTest {
     @Test
     fun `the shipped directory lists every known campus with coordinates in Saint Petersburg`() {
         assertEquals(
-            listOf("kronva", "lomo", "vyazma", "griva", "birzha", "pesochka", "chaika"),
+            listOf("kronva", "lomo", "vyazma", "griva", "birzha", "pesochka", "chaika", "gastello"),
             directory.all.map { it.id }
         )
         directory.all.forEach { building ->
@@ -21,6 +21,14 @@ class BuildingDirectoryTest {
             assertTrue(building.id, building.longitude in 30.15..30.45)
             assertTrue(building.id, building.aliases.isNotEmpty() && building.label.isNotBlank())
         }
+    }
+
+    @Test
+    fun `the six buildings with a campus-map plan carry its id`() {
+        assertEquals(
+            mapOf("kronva" to 13, "lomo" to 273, "griva" to 279, "birzha" to 275, "pesochka" to 15, "gastello" to 6),
+            directory.all.mapNotNull { building -> building.planBuildingId?.let { building.id to it } }.toMap(),
+        )
     }
 
     @Test
