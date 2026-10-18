@@ -10,6 +10,12 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Fixes (2026-10-18)
+
+- iOS shows the pull-to-refresh spinner on every tab root (Спорт, Сегодня, Расписание, Зачётка, Профиль) under the
+  header, and on every screen it stays until the refresh ends: the roots' hidden navigation bar took the refresh
+  control with it, and the refresh action returned at once or was cancelled by the first state change.
+
 ### iOS UI tests (2026-10-18)
 
 - iOS UI tests run on a pinned academic date, this week's Wednesday (`-itmoAcademicDate` in a Debug build), so

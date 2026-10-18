@@ -17,7 +17,11 @@ struct FriendsScreen: View {
         let state = model.state
         FriendsContent(state: state, query: $query, actions: actions)
             .onChange(of: query) { _, text in model.viewModel.onQueryChanged(text: text) }
-            .refreshable { model.viewModel.refresh(mode: .pull) }
+            .refreshable {
+                await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                    ($0.uiState.value.lists as? FriendListsContent)?.refreshing == true
+                })
+            }
             .itmoDetailHeader(
                 title: AppStrings.string("friends_title"),
                 subtitle: (state.lists as? FriendListsContent)?.subtitle?.resolved

@@ -65,6 +65,10 @@ class UserProfileViewModel(
     /** The teacher's lesson now or next today; it settles together with [teachesPart]. */
     private val nowLesson = MutableStateFlow<TeacherNowLesson?>(null)
     private val refreshes = RefreshTracker(viewModelScope)
+
+    /** A pull's or a retry's refresh is in flight; the iOS host's pull-to-refresh reads it while its spinner shows. */
+    val isRefreshing: Boolean get() = refreshes.refreshing.value
+
     /**
      * A load of any mode is running. Unlike `refreshes.refreshing` it covers the silent load on entry too: while
      * it is set, a page on screen is not replaced by a skeleton or an error before the load has its answers.

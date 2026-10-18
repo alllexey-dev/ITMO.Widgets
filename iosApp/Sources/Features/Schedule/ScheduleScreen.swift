@@ -122,7 +122,11 @@ private struct ScheduleFeedView: View {
                     .accessibilityIdentifier("schedule.backToMine")
                 }
             }
-            .refreshable { model.viewModel.refresh(mode: .pull) }
+            .refreshable {
+                await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                    $0.uiState.value.refreshing
+                })
+            }
             .observing(model)
             .onEvents(of: model, \.events) { event in
                 switch onEnum(of: event) {
