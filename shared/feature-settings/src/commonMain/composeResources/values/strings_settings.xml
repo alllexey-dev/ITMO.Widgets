@@ -232,6 +232,10 @@
     <string name="settings_widget_next_description">Сейчас и далее</string>
     <string name="settings_widget_day_title">Расписание на день</string>
     <string name="settings_widget_day_description">С линией «сейчас»</string>
+    <string name="settings_widget_list_title">Список пар</string>
+    <string name="settings_widget_list_description">Пары дня по порядку, как раньше</string>
+    <string name="settings_widget_list_note">Эти настройки общие с «Расписанием на день».</string>
+    <string name="settings_widget_beta">Бета</string>
     <string name="settings_widget_sport_title">Спорт</string>
     <string name="settings_widget_sport_description">Баллы и запись</string>
     <string name="settings_widget_pass_title">Пропуск</string>

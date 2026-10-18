@@ -1,9 +1,11 @@
 <resources>
     <string name="app_name">ITMO.Widgets</string>
-    <string name="widget_single_lesson_name">Пара</string>
+    <string name="widget_single_lesson_name">Пара (бета)</string>
     <string name="widget_single_lesson_description">Сейчас и далее</string>
-    <string name="widget_lesson_list_name">Расписание на день</string>
-    <string name="widget_lesson_list_description">День с линией «сейчас»</string>
+    <string name="widget_lesson_list_name">Список пар</string>
+    <string name="widget_lesson_list_description">Пары дня по порядку</string>
+    <string name="widget_day_name">Расписание на день (бета)</string>
+    <string name="widget_day_description">День с линией «сейчас»</string>
     <string name="widget_qr_code_name">Пропуск</string>
     <string name="widget_qr_code_description">QR-пропуск в корпус</string>
     <string name="schedule_widget_loading">Обновляем расписание</string>
@@ -136,6 +138,6 @@
     <string name="widget_sport_later">%1$s %2$s</string>
     <string name="widget_sport_loading">Загружаем баллы</string>
     <string name="widget_sport_error">Не удалось загрузить баллы</string>
-    <string name="widget_sport_name">Спорт</string>
+    <string name="widget_sport_name">Спорт (бета)</string>
     <string name="widget_sport_description">Баллы и запись</string>
 </resources>

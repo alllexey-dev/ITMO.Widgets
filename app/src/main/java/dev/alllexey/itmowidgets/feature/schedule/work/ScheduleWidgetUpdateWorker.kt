@@ -34,7 +34,7 @@ class ScheduleWidgetUpdateWorker(
 }
 
 /**
- * One update of both schedule widgets: select (after a fetch with [run]'s `refresh`), store, draw, and plan the next
+ * One update of the schedule widgets: select (after a fetch with [run]'s `refresh`), store, draw, and plan the next
  * one: the next boundary through the worker and, while a countdown or the `сейчас` line runs, the next minute from
  * the cache.
  */
@@ -48,8 +48,10 @@ internal class ScheduleWidgetUpdate(koin: Koin, private val context: Context) {
 
     suspend fun run(refresh: Boolean) {
         val singleIds = ScheduleWidgetProviders.singleLessonIds(context)
-        val dayIds = ScheduleWidgetProviders.dayScheduleIds(context)
-        if (singleIds.isEmpty() && dayIds.isEmpty()) {
+        val dayIds = ScheduleWidgetProviders.dayIds(context)
+        // The classic list draws no clock: a minute tick (refresh = false) leaves it alone.
+        val listIds = if (refresh) ScheduleWidgetProviders.listIds(context) else ScheduleWidgetProviders.NONE
+        if (singleIds.isEmpty() && dayIds.isEmpty() && listIds.isEmpty()) {
             ScheduleWidgetWork.cancelIfUnused(context)
             return
         }
@@ -77,9 +79,9 @@ internal class ScheduleWidgetUpdate(koin: Koin, private val context: Context) {
         currentCoroutineContext().ensureActive()
         if (store.currentGeneration() != generation) return
         val now = time.now()
-        ScheduleWidgetProviders.render(context, snapshot, palettes.current(), now, singleIds, dayIds)
+        ScheduleWidgetProviders.render(context, snapshot, palettes.current(), now, singleIds, dayIds, listIds)
         if (refresh) ScheduleWidgetWork.scheduleNext(context, nextUpdate)
-        if (snapshot.isLive) ScheduleWidgetWork.scheduleTick(context, untilNextMinute(now.toEpochMilliseconds()))
+        if (snapshot.isLive && (singleIds.isNotEmpty() || dayIds.isNotEmpty())) ScheduleWidgetWork.scheduleTick(context, untilNextMinute(now.toEpochMilliseconds()))
         else ScheduleWidgetWork.cancelTick(context)
     }
 

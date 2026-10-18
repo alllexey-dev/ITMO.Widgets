@@ -19,11 +19,13 @@ data class WidgetGallery(
 /**
  * One format: [preview] draws the real widget on sample data, [action] is `Добавить` or `на экране`, and the sheet
  * behind the settings button shows the preview again above [settings] (no button when empty) and [settingsNote].
+ * [beta] marks the widgets of the UX overhaul with `Бета` while they are refined.
  */
 data class WidgetCard(
     val format: WidgetFormat,
     val title: UiText,
     val description: UiText,
+    val beta: Boolean,
     val preview: WidgetPreviewSettings,
     val action: WidgetCardAction,
     val settings: List<SettingSection>,

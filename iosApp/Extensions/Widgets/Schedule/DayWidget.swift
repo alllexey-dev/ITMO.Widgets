@@ -5,15 +5,16 @@ import WidgetKit
 /// and the now line; tomorrow once today is over, as Kotlin decided. The medium family is not offered: a
 /// time-scaled day does not fit it.
 struct DayWidget: Widget {
-    /// A stable identifier (`StableIdentifiersTests`): placed widgets keep it, and the app reloads it by this name.
-    static let kind = "dev.alllexey.itmowidgets.widget.day-schedule"
+    /// A stable identifier (`StableIdentifiersTests`): placed widgets keep it, and the app reloads it by this name. The
+    /// first builds' `.day-schedule` stays the classic list's (`ClassicListWidget`).
+    static let kind = "dev.alllexey.itmowidgets.widget.day-timeline"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: Self.kind, provider: ScheduleWidgetProvider()) { entry in
             DayEntryView(entry: entry)
         }
-        .configurationDisplayName(Text(.widgetLessonListName))
-        .description(Text(.widgetLessonListDescription))
+        .configurationDisplayName(Text(.widgetDayName))
+        .description(Text(.widgetDayDescription))
         .supportedFamilies([.systemLarge])
     }
 }

@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
+import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders.NONE
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetWork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +18,10 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-/** The day widget (W2); the class name is a stable identifier of placed widgets (ADR 0016). */
+/**
+ * The classic list widget (`Список пар`), the day list of 2.2: placed list widgets kept this class, a stable identifier
+ * (ADR 0016), so they stay lists.
+ */
 class DayScheduleWidgetProvider : AppWidgetProvider(), KoinComponent {
 
     // Resolved on first use, after onReceive() has started Koin.
@@ -51,7 +55,7 @@ class DayScheduleWidgetProvider : AppWidgetProvider(), KoinComponent {
         val pending = goAsync()
         scope.launch {
             try {
-                ScheduleWidgetProviders.render(context, store.read(), palettes.current(), time.now(), singleIds = IntArray(0), dayIds = ids)
+                ScheduleWidgetProviders.render(context, store.read(), palettes.current(), time.now(), singleIds = NONE, dayIds = NONE, listIds = ids)
                 // WorkManager toggling its own components re-sends APPWIDGET_UPDATE: only the throttled
                 // enqueue and the kept periodic job may follow, or the widget refreshes in a loop.
                 if (scheduleUpdate) {

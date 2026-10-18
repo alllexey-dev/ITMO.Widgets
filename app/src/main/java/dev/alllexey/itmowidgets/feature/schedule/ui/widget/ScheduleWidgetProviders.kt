@@ -9,33 +9,30 @@ import dev.alllexey.itmowidgets.core.ui.widget.widgetWidth
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import kotlin.time.Instant
 
-/** The placed next-lesson and day widgets, and one render of all of them. */
+/** The placed next-lesson, day and classic list widgets, and one render of all of them. */
 object ScheduleWidgetProviders {
 
-    fun singleLessonIds(context: Context): IntArray {
-        return AppWidgetManager.getInstance(context).getAppWidgetIds(
-            ComponentName(context, SingleLessonWidgetProvider::class.java)
-        )
-    }
+    /** No widget of a kind, for a render of the others. */
+    val NONE = IntArray(0)
 
-    fun dayScheduleIds(context: Context): IntArray {
-        return AppWidgetManager.getInstance(context).getAppWidgetIds(
-            ComponentName(context, DayScheduleWidgetProvider::class.java)
-        )
-    }
+    fun singleLessonIds(context: Context): IntArray = ids(context, SingleLessonWidgetProvider::class.java)
 
-    fun hasAnyWidget(context: Context): Boolean {
-        return singleLessonIds(context).isNotEmpty() || dayScheduleIds(context).isNotEmpty()
-    }
+    fun dayIds(context: Context): IntArray = ids(context, DayTimelineWidgetProvider::class.java)
 
-    /** Draws [snapshot] at [now] on [singleIds] and [dayIds], every placed widget by default. */
+    fun listIds(context: Context): IntArray = ids(context, DayScheduleWidgetProvider::class.java)
+
+    fun hasAnyWidget(context: Context): Boolean =
+        singleLessonIds(context).isNotEmpty() || dayIds(context).isNotEmpty() || listIds(context).isNotEmpty()
+
+    /** Draws [snapshot] at [now] on [singleIds], [dayIds] and [listIds], every placed widget by default. */
     fun render(
         context: Context,
         snapshot: ScheduleWidgetSnapshot,
         palette: WidgetPalette?,
         now: Instant,
         singleIds: IntArray = singleLessonIds(context),
-        dayIds: IntArray = dayScheduleIds(context),
+        dayIds: IntArray = dayIds(context),
+        listIds: IntArray = listIds(context),
     ) {
         val manager = AppWidgetManager.getInstance(context)
         singleIds.forEach { id ->
@@ -44,5 +41,11 @@ object ScheduleWidgetProviders {
         dayIds.forEach { id ->
             manager.updateAppWidget(id, DayWidgetRenderer.views(context, snapshot, palette, manager.widgetSizes(id), id))
         }
+        listIds.forEach { id ->
+            manager.updateAppWidget(id, ScheduleListWidgetRenderer.views(context, snapshot, palette, id))
+        }
     }
+
+    private fun ids(context: Context, provider: Class<*>): IntArray =
+        AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, provider))
 }

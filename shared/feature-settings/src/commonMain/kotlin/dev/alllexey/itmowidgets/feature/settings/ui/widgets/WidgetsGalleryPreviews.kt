@@ -25,7 +25,11 @@ import dev.alllexey.itmowidgets.feature.settings.ui.preview.SettingsPreviewData
 @Composable
 internal fun WidgetPlaceholder(settings: WidgetPreviewSettings, modifier: Modifier) {
     val height = when (settings) {
-        is WidgetPreviewSettings.Schedule -> if (settings.format == ScheduleWidgetFormat.COMPACT) 180.dp else 330.dp
+        is WidgetPreviewSettings.Schedule -> when (settings.format) {
+            ScheduleWidgetFormat.COMPACT -> 180.dp
+            ScheduleWidgetFormat.FULL -> 330.dp
+            ScheduleWidgetFormat.LIST -> 250.dp
+        }
         is WidgetPreviewSettings.Sport, is WidgetPreviewSettings.Qr -> 150.dp
     }
     Box(modifier.height(height).background(ItmoTheme.colorScheme.surfaceContainerHighest, ItmoTheme.shapes.cardContent))

@@ -10,6 +10,17 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Widgets (2026-10-18)
+
+- The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in
+  rows under `Сегодня · 7 сентября`, past ones faded, tomorrow once today is over, with the day widget's settings; on
+  Android it scrolls. It draws the same snapshot as the new widgets.
+- Widgets placed as lists in 2.2 and the first iOS builds stay lists (Android `DayScheduleWidgetProvider`, iOS kind
+  `.widget.day-schedule`); `Расписание на день` moves to its own provider and kind (`DayTimelineWidgetProvider`,
+  `.widget.day-timeline`), so a day widget placed from a master build after #447 has to be added again.
+- `Пара`, `Расписание на день` and `Спорт` are marked beta: `(бета)` in the system widget picker and a `Бета` pill in
+  `Виджеты`.
+
 ### Friend request time (2026-10-18)
 
 - Friend requests say when they were sent, in the bell and in Друзья on both platforms (`12:05`, `вчера`, `28 сент.`), from Backend's new `UserProfile.requestedAt` (itmo-widgets-backend#53, contract from Backend f9dd1e0); requests still lead the bell, newest first. Without the time from an older Backend nothing changes.

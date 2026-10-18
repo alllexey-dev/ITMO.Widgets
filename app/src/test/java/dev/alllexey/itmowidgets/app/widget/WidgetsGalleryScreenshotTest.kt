@@ -59,6 +59,7 @@ class WidgetsGalleryScreenshotTest(private val case: Case, private val appearanc
         Gallery("WidgetsGalleryLive", null),
         NextSheet("WidgetsGalleryLiveNext", WidgetFormat.NEXT),
         DaySheet("WidgetsGalleryLiveDay", WidgetFormat.DAY),
+        ListSheet("WidgetsGalleryLiveList", WidgetFormat.LIST),
     }
 
     private val window = object : ExternalResource() {
@@ -97,7 +98,7 @@ class WidgetsGalleryScreenshotTest(private val case: Case, private val appearanc
 
     private fun widget(context: Context, settings: WidgetPreviewSettings) = when (settings) {
         is WidgetPreviewSettings.Schedule -> FrameLayout(context).apply {
-            addView(ScheduleSettingsPreview.views(context, scenario, settings).apply(context, this))
+            addView(ScheduleSettingsPreview.view(context, scenario, settings))
         }
         is WidgetPreviewSettings.Sport -> FrameLayout(context).apply {
             addView(SportSettingsPreview.views(context, settings, medium = false).apply(context, this))
@@ -114,8 +115,11 @@ class WidgetsGalleryScreenshotTest(private val case: Case, private val appearanc
     }
 
     private fun height(settings: WidgetPreviewSettings) = when (settings) {
-        is WidgetPreviewSettings.Schedule ->
-            if (settings.format == ScheduleWidgetFormat.COMPACT) ScheduleSettingsPreview.NEXT_HEIGHT_DP.dp else ScheduleSettingsPreview.DAY_HEIGHT_DP.dp
+        is WidgetPreviewSettings.Schedule -> when (settings.format) {
+            ScheduleWidgetFormat.COMPACT -> ScheduleSettingsPreview.NEXT_HEIGHT_DP.dp
+            ScheduleWidgetFormat.FULL -> ScheduleSettingsPreview.DAY_HEIGHT_DP.dp
+            ScheduleWidgetFormat.LIST -> ScheduleSettingsPreview.LIST_HEIGHT_DP.dp
+        }
         is WidgetPreviewSettings.Sport -> SportSettingsPreview.HEIGHT_DP.dp
         is WidgetPreviewSettings.Qr -> 140.dp
     }

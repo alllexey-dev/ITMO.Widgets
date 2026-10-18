@@ -7,8 +7,9 @@ import XCTest
 /// The widget entry views at their family size, on the shared sample (`IosWidgetPreviews`: the design lab's Monday,
 /// 7 September, through the real selectors and writers) at the design's moments: before the first lesson (08:05),
 /// during the third (12:22), in the gap (13:40) and after the last (19:40). The next-lesson widget small and medium
-/// with its Lock Screen families, the day widget large, the sport widget's states, the pass widget's options, the
-/// placeholders, and each in the app's theme (the teal preset). Time is frozen at the moment, so nothing moves.
+/// with its Lock Screen families, the day widget large, the classic list medium and large, the sport widget's states,
+/// the pass widget's options, the placeholders, and each in the app's theme (the teal preset). Time is frozen at the
+/// moment, so nothing moves.
 /// WidgetKit's container background is ignored outside a widget, so each entry view paints its own tile; the home
 /// screen clips the corners.
 @MainActor
@@ -90,6 +91,28 @@ final class WidgetSnapshotTests: XCTestCase {
     func testDayPlaceholders() {
         assertDay(entry(.placeholder(.signedOut)), named: "signed-out")
         assertDay(entry(.placeholder(.loading)), named: "loading")
+    }
+
+    // MARK: Classic list
+
+    func testListNow() async throws {
+        let entry = try await schedule(at: .lesson)
+        assertList(entry, family: .systemMedium, named: "now", appearances: SnapshotAppearance.all)
+        assertList(entry, family: .systemLarge, named: "now-large")
+    }
+
+    func testListTomorrow() async throws {
+        assertList(try await schedule(at: .evening), family: .systemLarge, named: "tomorrow")
+    }
+
+    /// The teacher on, in the app's theme.
+    func testListInTheAppTheme() async throws {
+        assertList(try await schedule(at: .lesson, teacher: true, theme: Self.teal), family: .systemLarge, named: "now-large")
+    }
+
+    func testListPlaceholders() {
+        assertList(entry(.placeholder(.signedOut)), family: .systemMedium, named: "signed-out")
+        assertList(entry(.placeholder(.noMoreToday)), family: .systemMedium, named: "no-more-today")
     }
 
     // MARK: Sport
@@ -238,6 +261,23 @@ final class WidgetSnapshotTests: XCTestCase {
     ) {
         assertAppearances(
             of: DayEntryView(entry: entry),
+            named: name, appearances: appearances, width: size.width, height: size.height,
+            file: file, testName: testName, line: line
+        )
+    }
+
+    private func assertList(
+        _ entry: ScheduleWidgetEntry,
+        family: WidgetFamily,
+        named name: String,
+        appearances: [SnapshotAppearance] = [.light, .dark],
+        file: StaticString = #filePath,
+        testName: String = #function,
+        line: UInt = #line
+    ) {
+        let size = Self.size(of: family)
+        assertAppearances(
+            of: ClassicListEntryView(entry: entry, family: family),
             named: name, appearances: appearances, width: size.width, height: size.height,
             file: file, testName: testName, line: line
         )

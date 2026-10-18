@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -77,6 +79,7 @@ object WidgetsGalleryTags {
     fun card(format: WidgetFormat) = "widget_card_${format.name.lowercase()}"
     fun add(format: WidgetFormat) = "widget_add_${format.name.lowercase()}"
     fun settings(format: WidgetFormat) = "widget_settings_${format.name.lowercase()}"
+    fun beta(format: WidgetFormat) = "widget_beta_${format.name.lowercase()}"
 }
 
 /** `Добавить` pins a widget of a format through the launcher. */
@@ -115,7 +118,7 @@ fun WidgetsGalleryScreen(
                 .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
             verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
         ) {
-            val (wide, narrow) = gallery.cards.partition { it.format == WidgetFormat.NEXT || it.format == WidgetFormat.DAY }
+            val (wide, narrow) = gallery.cards.partition { it.format in WIDE }
             wide.forEach { card -> GalleryCard(card, galleryActions, widgetPreview, onSettings = { sheet = card.format }, wide = true) }
             Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content)) {
                 narrow.forEach { card ->
@@ -130,6 +133,7 @@ fun WidgetsGalleryScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun GalleryCard(
     card: WidgetCard,
@@ -143,7 +147,20 @@ private fun GalleryCard(
         Wallpaper { widgetPreview(card.preview, Modifier.fillMaxWidth()) }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f).padding(start = ItmoTheme.spacing.related)) {
-                Text(card.title.asString(), style = ItmoTheme.typography.titleMedium, color = ItmoTheme.colorScheme.onSurface)
+                // The pill wraps under a long title rather than squeezing it.
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related),
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(card.title.asString(), style = ItmoTheme.typography.titleMedium, color = ItmoTheme.colorScheme.onSurface)
+                    if (card.beta) {
+                        StatusPill(
+                            UiText.Res(SettingsStrings.settings_widget_beta).asString(),
+                            Modifier.testTag(WidgetsGalleryTags.beta(card.format)),
+                            tone = Tone.Tertiary,
+                        )
+                    }
+                }
                 Text(card.description.asString(), style = ItmoTheme.typography.bodySmall, color = ItmoTheme.colorScheme.onSurfaceVariant)
             }
             if (wide) CardAction(card, actions)
@@ -302,3 +319,6 @@ private fun ChoiceRow(item: SettingItem.Choice, actions: SettingsActions, modifi
 }
 
 private const val SEGMENTS = 4
+
+/** The formats drawn across the screen; the others share a row. */
+private val WIDE = setOf(WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.LIST)

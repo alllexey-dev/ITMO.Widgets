@@ -233,12 +233,15 @@ cannot place a widget from the app: it shows `Как добавить` and, belo
 cards, the Lock Screen widgets and the `Пропуск` Control. A format's settings
 open in a sheet with its preview again and `Пример на 12:22, настройки
 применятся ко всем таким виджетам`; every change applies at once to all placed
-widgets of the format. Below the cards: `Виджеты в цвет темы`.
+widgets of the format. The widgets of the UX overhaul (`Пара`, `Расписание на день`, `Спорт`) carry a `Бета` pill
+while they are refined (`WidgetCard.beta`); the classic `Список пар` and `Пропуск` do not. Below the cards: `Виджеты в
+цвет темы`.
 
 | Format | Settings | Defaults |
 |---|---|---|
 | `Пара` (W1, next lesson) | `Следующая пара заранее`, `Размер текста` | early switch on; `Обычный` |
 | `Расписание на день` (W2) | `Скрывать прошедшие пары`, `Показывать преподавателя`, `Завтрашние пары вечером`, `Размер текста` | past lessons shown; teacher shown; tomorrow on; `Обычный` |
+| `Список пар` (the classic list of 2.2) | the same rows and keys as `Расписание на день`, with `Эти настройки общие с «Расписанием на день».` | as `Расписание на день` |
 | `Спорт` (W3) | none | |
 | `Пропуск` | [QR widget](#qr-widget) | |
 

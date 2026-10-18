@@ -174,7 +174,8 @@ struct SettingsScreen: View {
         guard let configurations = try? await WidgetCenter.shared.currentConfigurations() else { return }
         let home: Set<WidgetFamily> = [.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge]
         let kinds: [WidgetFormat: String] = [
-            .next: NextLessonWidget.kind, .day: DayWidget.kind, .sport: SportWidget.kind, .pass: QrWidget.kind,
+            .next: NextLessonWidget.kind, .day: DayWidget.kind, .list: ClassicListWidget.kind, .sport: SportWidget.kind,
+            .pass: QrWidget.kind,
         ]
         for (format, kind) in kinds {
             let count = configurations.filter { $0.kind == kind && home.contains($0.family) }.count

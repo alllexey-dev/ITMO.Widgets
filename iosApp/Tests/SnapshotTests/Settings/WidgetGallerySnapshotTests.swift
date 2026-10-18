@@ -19,6 +19,7 @@ final class WidgetGallerySnapshotTests: XCTestCase {
         let previews = await WidgetGalleryPreviews.load(gallery.cards)
         XCTAssertNotNil(previews.next)
         XCTAssertNotNil(previews.day)
+        XCTAssertNotNil(previews.list)
         XCTAssertNotNil(previews.sport)
         XCTAssertNotNil(previews.pass)
 
@@ -27,8 +28,8 @@ final class WidgetGallerySnapshotTests: XCTestCase {
                 .navigationTitle(Text(verbatim: state.page.title.resolved))
                 .navigationSubtitle(Text(verbatim: gallery.subtitle?.resolved ?? ""))
         }
-        assertScreenAppearances(of: view, named: "gallery", appearances: [.light, .dark], height: 1950)
-        assertScreenAppearances(of: view, named: "gallery", appearances: [.lightAX1], height: 3400)
+        assertScreenAppearances(of: view, named: "gallery", appearances: [.light, .dark], height: 2350)
+        assertScreenAppearances(of: view, named: "gallery", appearances: [.lightAX1], height: 4000)
     }
 
     func testDaySheet() async throws {

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- W2: the day to scale needs 4 x 3 cells at least; 4 x 4 by default. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_day_description"
+    android:initialKeyguardLayout="@layout/widget_day"
+    android:initialLayout="@layout/widget_day"
+    android:minWidth="250dp"
+    android:minHeight="250dp"
+    android:previewImage="@drawable/widget_day_preview"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="3600000"
+    android:widgetCategory="home_screen" />
